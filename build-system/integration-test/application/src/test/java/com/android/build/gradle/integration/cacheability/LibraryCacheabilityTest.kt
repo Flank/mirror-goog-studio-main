@@ -56,7 +56,6 @@ class LibraryCacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":lib:compileReleaseJavaWithJavac",
-                    ":lib:copyReleaseJniLibsProjectAndLocalJars",
                     ":lib:extractReleaseAnnotations",
                     ":lib:generateReleaseBuildConfig",
                     ":lib:generateReleaseResValues",
@@ -81,6 +80,7 @@ class LibraryCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":lib:copyReleaseJniLibsProjectAndLocalJars", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.LibraryJniLibsTask] */
                     ":lib:prepareReleaseArtProfile", /* No Bug, task is just file copy */
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
                     ":lib:mergeReleaseJavaResource", /* Bug 181142260 */

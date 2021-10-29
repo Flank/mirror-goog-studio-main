@@ -36,7 +36,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -44,6 +43,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.ByteBuffer
@@ -54,8 +54,13 @@ private val pattern = Pattern.compile("lib/[^/]+/[^/]+\\.so")
 
 /**
  * A task that copies the project native libs (and optionally the native libs from local jars)
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The task moves files around on the disk, doing no substantial computation.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     @get:InputFiles
