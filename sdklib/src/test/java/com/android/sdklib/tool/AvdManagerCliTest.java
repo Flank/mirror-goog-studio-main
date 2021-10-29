@@ -78,7 +78,8 @@ public class AvdManagerCliTest {
         mFileOp = new MockFileOp();
         RepositoryPackages packages = new RepositoryPackages();
         String gApiPath = "system-images;android-25;google_apis;x86";
-        FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage(gApiPath, mFileOp);
+        FakePackage.FakeLocalPackage p1 =
+                new FakePackage.FakeLocalPackage(gApiPath, mFileOp.toPath("/sdk/gapi"));
         DetailsTypes.SysImgDetailsType details1 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details1.getTags().add(IdDisplay.create("google_apis", "Google APIs"));
@@ -90,7 +91,8 @@ public class AvdManagerCliTest {
         mFileOp.recordExistingFile(p1.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         String gPlayPath = "system-images;android-25;google_apis_playstore;x86";
-        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(gPlayPath, mFileOp);
+        FakePackage.FakeLocalPackage p2 =
+                new FakePackage.FakeLocalPackage(gPlayPath, mFileOp.toPath("/sdk/play"));
         DetailsTypes.SysImgDetailsType details2 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details2.getTags().add(IdDisplay.create("google_apis_playstore", "Google Play"));
@@ -102,7 +104,8 @@ public class AvdManagerCliTest {
         mFileOp.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         String wearPath = "system-images;android-26;android-wear;armeabi-v7a";
-        FakePackage.FakeLocalPackage p3 = new FakePackage.FakeLocalPackage(wearPath, mFileOp);
+        FakePackage.FakeLocalPackage p3 =
+                new FakePackage.FakeLocalPackage(wearPath, mFileOp.toPath("/sdk/wear"));
         DetailsTypes.SysImgDetailsType details3 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details3.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
@@ -116,7 +119,8 @@ public class AvdManagerCliTest {
 
         // Create a representative hardware configuration file
         String emuPath = "emulator";
-        FakePackage.FakeLocalPackage p4 = new FakePackage.FakeLocalPackage(emuPath, mFileOp);
+        FakePackage.FakeLocalPackage p4 =
+                new FakePackage.FakeLocalPackage(emuPath, mFileOp.toPath("/sdk/emulator"));
         File hardwareDefs = new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI);
         createHardwarePropertiesFile(hardwareDefs.getPath());
 
@@ -301,7 +305,8 @@ public class AvdManagerCliTest {
         RepoManager repoManager = mSdkHandler.getSdkManager(new FakeProgressIndicator());
 
         String p1Path = "platforms;android-25";
-        FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage(p1Path, mFileOp);
+        FakePackage.FakeLocalPackage p1 =
+                new FakePackage.FakeLocalPackage(p1Path, mFileOp.toPath("/sdk/p1"));
         DetailsTypes.PlatformDetailsType details1 =
                 AndroidSdkHandler.getRepositoryModule()
                         .createLatestFactory()
@@ -310,7 +315,8 @@ public class AvdManagerCliTest {
         p1.setTypeDetails((TypeDetails) details1);
         mFileOp.recordExistingFile(p1.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
         String p2Path = "platforms;android-O";
-        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(p2Path, mFileOp);
+        FakePackage.FakeLocalPackage p2 =
+                new FakePackage.FakeLocalPackage(p2Path, mFileOp.toPath("/sdk/p2"));
         DetailsTypes.PlatformDetailsType details2 =
                 AndroidSdkHandler.getRepositoryModule()
                         .createLatestFactory()

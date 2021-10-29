@@ -32,7 +32,6 @@ import com.android.repository.impl.meta.Archive;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -75,12 +74,6 @@ public abstract class FakePackage implements RepoPackage {
         public FakeLocalPackage(@NonNull String path, @NonNull Path location) {
             super(path);
             mLocation = location;
-        }
-
-        public FakeLocalPackage(@NonNull String path, @NonNull FileOp fileOp) {
-            super(path);
-            String location = packagePathToFilesystemLocation(path);
-            mLocation = fileOp.toPath(location);
         }
 
         @Override

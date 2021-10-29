@@ -40,18 +40,18 @@ public class AndroidSdkHandlerTest extends TestCase {
 
     public void testGetLatestPackage() {
         FileOp fop = new MockFileOp();
-        FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1", fop);
+        FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1", fop.toPath("/sdk/p/1.1"));
         p1_1.setRevision(Revision.parseRevision("1.1"));
-        FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20", fop);
+        FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20", fop.toPath("/sdk/p/1.20"));
         p1_20.setRevision(Revision.parseRevision("1.20"));
-        FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1", fop);
+        FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1", fop.toPath("/sdk/p/2.1"));
         p2_1.setRevision(Revision.parseRevision("2.1"));
-        FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3", fop);
+        FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3", fop.toPath("/sdk/p/2.2-rc3"));
         p2_2_rc3.setRevision(Revision.parseRevision("2.2-rc3"));
 
-        FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0", fop);
+        FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0", fop.toPath("/sdk/q/r/2.0"));
         qr2_0.setRevision(Revision.parseRevision("2.0"));
-        FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1", fop);
+        FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1", fop.toPath("/sdk/q/r/2.1"));
         qr2_1.setRevision(Revision.parseRevision("2.1"));
 
         RepositoryPackages packages = new RepositoryPackages();

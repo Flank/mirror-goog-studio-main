@@ -60,7 +60,9 @@ public class SdkMavenRepositoryTest extends TestCase {
         String path = String.format("extras;%s;m2repository", vendor);
         // Create and add the package
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
-        LocalPackage pkg = new FakePackage.FakeLocalPackage(path, mFileOp);
+        LocalPackage pkg =
+                new FakePackage.FakeLocalPackage(
+                        path, mFileOp.toPath("/sdk/extras/" + vendor + "/m2repository"));
         existing.put(path, pkg);
         mRepositoryPackages.setLocalPkgInfos(existing.values());
         // SdkMavenRepo requires that the path exists.
@@ -185,7 +187,11 @@ public class SdkMavenRepositoryTest extends TestCase {
     private void addLocalVersion(@NonNull HashMap<String, LocalPackage> existing, String revision) {
         String basePath = "extras;m2repository;com;android;tools;build;gradle;";
         FakePackage.FakeLocalPackage fakePackage =
-                new FakePackage.FakeLocalPackage(basePath + revision, mFileOp);
+                new FakePackage.FakeLocalPackage(
+                        basePath + revision,
+                        mFileOp.toPath(
+                                "/sdk/extras/m2repository/com/android/tools/build/gradle/"
+                                        + revision));
         fakePackage.setRevision(Revision.parseRevision(revision));
         existing.put(basePath + revision, fakePackage);
     }

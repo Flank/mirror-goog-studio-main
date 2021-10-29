@@ -604,7 +604,8 @@ public class DeviceManagerTest {
         AndroidSdkHandler handler = sdkManager.getSdkHandler();
         Path sdkPath = handler.getLocation();
         FakePackage.FakeLocalPackage p =
-                new FakePackage.FakeLocalPackage("sample", sdkManager.getFileOp());
+                new FakePackage.FakeLocalPackage(
+                        "sample", sdkManager.getFileOp().toPath("/sdk/sample"));
 
         // Create a local DeviceManager, get the number of devices, and verify one device
         DeviceManager localDeviceManager = createDeviceManager();
@@ -673,7 +674,7 @@ public class DeviceManagerTest {
     }
 
     @Test
-    public final void testWriteUserDevice() throws Exception {
+    public final void testWriteUserDevice() {
         Device testDeviceBefore = dm.getDevice("Test Round User Wear Device", "User");
         assertThat(testDeviceBefore).isNull();
 
