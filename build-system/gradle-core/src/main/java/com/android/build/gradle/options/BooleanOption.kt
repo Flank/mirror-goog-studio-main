@@ -168,8 +168,6 @@ enum class BooleanOption(
     MINIMAL_KEEP_RULES("android.useMinimalKeepRules", true, FeatureStage.Experimental),
     EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES("android.bundle.excludeResSourcesForRelease", true, FeatureStage.Experimental),
     ENABLE_BUILD_CONFIG_AS_BYTECODE("android.enableBuildConfigAsBytecode", false, FeatureStage.Experimental),
-    ENABLE_SOURCE_SET_PATHS_MAP("android.experimental.enableSourceSetPathsMap", false, FeatureStage.Experimental),
-    RELATIVE_COMPILE_LIB_RESOURCES("android.experimental.cacheCompileLibResources", false, FeatureStage.Experimental),
     /** Whether lint should be run in process; the default is true. */
     RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", true, FeatureStage.Experimental),
 
@@ -215,6 +213,17 @@ enum class BooleanOption(
 
     ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION(
         "android.enableJacocoTransformInstrumentation",
+        true,
+        FeatureStage.SoftlyEnforced(VERSION_8_0)
+    ),
+
+    ENABLE_SOURCE_SET_PATHS_MAP(
+        "android.enableSourceSetPathsMap",
+        true,
+        FeatureStage.SoftlyEnforced(VERSION_8_0)
+    ),
+    RELATIVE_COMPILE_LIB_RESOURCES(
+        "android.cacheCompileLibResources",
         true,
         FeatureStage.SoftlyEnforced(VERSION_8_0)
     ),
