@@ -44,8 +44,10 @@ fun getTestFixturesCapabilityForProject(project: Project): Capability {
 /**
  * A testFixtures component of a project will have the capability (group = project.group,
  * name = project.name + "-test-fixtures", version = null)
+ * When the capability is cloned into an immutable capability instance, the `null` version is
+ * converted into a string with value "unspecified".
  * See [DefaultDependencyHandler.testFixtures](https://github.com/gradle/gradle/blob/master/subprojects/dependency-management/src/main/java/org/gradle/api/internal/artifacts/dsl/dependencies/DefaultDependencyHandler.java)
  * to know how testFixtures capability is created.
  */
 fun Capability.isProjectTestFixturesCapability(projectName: String) =
-    version == null && name == "$projectName-$testFixturesClassifier"
+    (version == null || version == "unspecified") && name == "$projectName-$testFixturesClassifier"
