@@ -71,7 +71,6 @@ class MinifyCacheabilityTest {
             ":processMinifiedManifest",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified",
-            ":writeMinifiedAppMetadata",
             ":writeMinifiedSigningConfigVersions"
 
         ).plus(
@@ -88,7 +87,8 @@ class MinifyCacheabilityTest {
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedResources",
             ":packageMinified",
-            ":processMinifiedResources"
+            ":processMinifiedResources",
+            ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
         ).plus(
                 if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                     setOf(":mapMinifiedSourceSetPaths")

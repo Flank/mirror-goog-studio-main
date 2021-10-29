@@ -33,14 +33,21 @@ import com.google.common.io.Files
 import java.io.File
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
-/** A task that writes the app metadata */
-@CacheableTask
+/**
+ * A task that writes the app metadata
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input values are written to a minimal Properties file and no computation is required.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class AppMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile abstract val outputFile: RegularFileProperty

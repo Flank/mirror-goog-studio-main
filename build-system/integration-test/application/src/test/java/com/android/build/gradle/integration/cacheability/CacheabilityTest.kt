@@ -77,7 +77,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "process", "ManifestForPackage", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "test", "", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "validateSigning", "", listOf("Debug")),
-            TaskInfo(FROM_CACHE, "write", "AppMetadata", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "write", "SigningConfigVersions", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "compile", "ArtProfile", listOf("Release")),
 
@@ -105,6 +104,8 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "package", "", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "merge", "ArtProfile", listOf("Release")),
             TaskInfo(DID_WORK, "sdk", "DependencyData", listOf("Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
+            TaskInfo(DID_WORK, "write", "AppMetadata", listOf("Debug", "Release")),
 
             TaskInfo(UP_TO_DATE, "clean", ""),
             TaskInfo(UP_TO_DATE,"generate", "Assets", listOf("Debug", "Release")),
