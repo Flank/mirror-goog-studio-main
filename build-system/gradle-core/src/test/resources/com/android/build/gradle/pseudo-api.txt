@@ -1627,10 +1627,12 @@ com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getAbi: java.lang.Str
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getApiLevel: int ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getDevice: java.lang.String ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getName: java.lang.String ()
+com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getRequire64Bit: boolean ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getSystemImageSource: java.lang.String ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setAbi: void (java.lang.String)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setApiLevel: void (int)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setDevice: void (java.lang.String)
+com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setRequire64Bit: void (boolean)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setSystemImageSource: void (java.lang.String)
 com.android.build.gradle.internal.dsl.ModulePropertyKeys extends java.lang.Enum
 com.android.build.gradle.internal.dsl.ModulePropertyKeys.getValue: java.lang.Object (java.util.Map<java.lang.String, ?>)

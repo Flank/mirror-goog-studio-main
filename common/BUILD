@@ -72,6 +72,7 @@ maven_library(
         "@maven//:com.google.guava.guava",
     ],
     deps = [
+        "@maven//:net.java.dev.jna.jna-platform",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )

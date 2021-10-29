@@ -570,10 +570,12 @@ com.android.build.api.dsl.ManagedVirtualDevice implements com.android.build.api.
 com.android.build.api.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()
 com.android.build.api.dsl.ManagedVirtualDevice.getApiLevel: int ()
 com.android.build.api.dsl.ManagedVirtualDevice.getDevice: java.lang.String ()
+com.android.build.api.dsl.ManagedVirtualDevice.getRequire64Bit: boolean ()
 com.android.build.api.dsl.ManagedVirtualDevice.getSystemImageSource: java.lang.String ()
 com.android.build.api.dsl.ManagedVirtualDevice.setAbi: void (java.lang.String)
 com.android.build.api.dsl.ManagedVirtualDevice.setApiLevel: void (int)
 com.android.build.api.dsl.ManagedVirtualDevice.setDevice: void (java.lang.String)
+com.android.build.api.dsl.ManagedVirtualDevice.setRequire64Bit: void (boolean)
 com.android.build.api.dsl.ManagedVirtualDevice.setSystemImageSource: void (java.lang.String)
 com.android.build.api.dsl.Ndk
 com.android.build.api.dsl.Ndk.getAbiFilters: java.util.Set<java.lang.String> ()

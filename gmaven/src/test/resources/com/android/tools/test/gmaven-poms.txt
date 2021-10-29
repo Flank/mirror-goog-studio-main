@@ -164,6 +164,7 @@ com.android.tools:common
   dependencies:
     com.android.tools:annotations (compile)
     com.google.guava:guava (compile)
+    net.java.dev.jna:jna-platform (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools:draw9patch

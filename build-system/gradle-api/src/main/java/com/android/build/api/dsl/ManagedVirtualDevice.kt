@@ -42,4 +42,17 @@ interface ManagedVirtualDevice : Device {
      * The application binary interface for the device image.
      */
     var abi: String
+
+    /**
+     * Whether the image must be a 64 bit image. Defaults to false.
+     *
+     * On x86_64 machines:
+     *   When false, the managed device will use the 32 bit image if available with the given api
+     *   level and source, otherwise fallback to the 64 bit image.
+     *   When true, the 64 image must be used and setup will fail if an appropriate image does not
+     *   exist.
+     * On arm machines:
+     *   The value of this parameter has no effect. An arm64 image is always selected.
+     */
+    var require64Bit: Boolean
 }

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
@@ -360,7 +361,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.avdName.setDisallowChanges(computeAvdName(device))
 
             task.apiLevel.setDisallowChanges(device.apiLevel)
-            task.abi.setDisallowChanges(device.abi)
+            task.abi.setDisallowChanges(computeAbiFromArchitecture(device))
 
             task.avdComponents.setDisallowChanges(avdComponents)
 
