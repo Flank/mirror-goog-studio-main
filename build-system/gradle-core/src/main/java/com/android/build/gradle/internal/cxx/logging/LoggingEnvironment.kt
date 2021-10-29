@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.logging
 
 import com.android.utils.ILogger
 import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxBugDiagnosticCode
 import com.google.protobuf.GeneratedMessageV3
 import org.gradle.api.logging.Logging
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
@@ -39,6 +40,18 @@ import com.android.build.gradle.internal.cxx.string.StringEncoder
  * The purpose is to separate the concerns of other classes and functions from the need to log
  * and warn.
  */
+
+/**
+ * Report a bug in Android Gradle Plugin.
+ *
+ * Unlike [errorln], this function requires a diagnostic code [CxxBugDiagnosticCode] and that
+ * diagnostic code is the Issue Tracker bug number.
+ */
+fun bugln(bugCode: CxxBugDiagnosticCode, format: String, vararg args: Any) =
+    ThreadLoggingEnvironment.reportFormattedBugToCurrentLogger(
+        checkedFormat(format, args),
+        bugCode
+    )
 
 /**
  * Report an error.
@@ -199,6 +212,15 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         @JvmStatic // error: using non-JVM static members protected in the superclass companion
                    // is unsupported yet
         fun parentLogger() = loggerStack.get()?.next?.logger ?: BOTTOM_LOGGING_ENVIRONMENT
+
+        /**
+         * Report a bug.
+         */
+        fun reportFormattedBugToCurrentLogger(
+            message: String,
+            bugCode: CxxBugDiagnosticCode
+        ) =
+            logger.log(bugRecordOf(message, bugCode))
 
         /**
          * Report an error.

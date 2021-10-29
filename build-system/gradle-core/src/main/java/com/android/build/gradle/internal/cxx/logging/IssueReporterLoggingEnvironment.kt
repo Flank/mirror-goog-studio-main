@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.BUG
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
@@ -36,6 +38,7 @@ import java.io.File
 class IssueReporterLoggingEnvironment private constructor(
     private val issueReporter: IssueReporter,
     rootBuildGradleFolder: File,
+    private val cxxFolder: File?,
     private val internals: CxxDiagnosticCodesTrackingInternals?
 ) : PassThroughDeduplicatingLoggingEnvironment() {
     private val structuredLogEncoder : CxxStructuredLogEncoder?
@@ -60,8 +63,9 @@ class IssueReporterLoggingEnvironment private constructor(
 
     constructor(
         issueReporter: IssueReporter,
-        rootBuildGradleFolder: File
-        ) : this(issueReporter, rootBuildGradleFolder, null)
+        rootBuildGradleFolder: File,
+        cxxFolder: File?
+        ) : this(issueReporter, rootBuildGradleFolder, cxxFolder, null)
 
     constructor(
         issueReporter: IssueReporter,
@@ -70,6 +74,7 @@ class IssueReporterLoggingEnvironment private constructor(
     ) : this(
         issueReporter,
         variant.module.project.rootBuildGradleFolder,
+        variant.module.cxxFolder,
         CxxDiagnosticCodesTrackingInternals(
             analyticsService,
             variant,
@@ -97,7 +102,7 @@ class IssueReporterLoggingEnvironment private constructor(
             INFO -> logger.info(message.text())
             LIFECYCLE -> logger.lifecycle(message.text())
             WARN -> {
-                message.diagnosticCode?.let { internals?.cxxDiagnosticCodes?.add(it) }
+                internals?.cxxDiagnosticCodes?.add(message.diagnosticCode)
                 issueReporter.reportWarning(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                     message.text()
@@ -105,12 +110,26 @@ class IssueReporterLoggingEnvironment private constructor(
                 logger.warn(message.text())
             }
             ERROR -> {
-                message.diagnosticCode?.let { internals?.cxxDiagnosticCodes?.add(it) }
+                internals?.cxxDiagnosticCodes?.add(message.diagnosticCode)
                 issueReporter.reportError(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                     message.text()
                 )
                 logger.error(message.text())
+            }
+            BUG -> {
+                internals?.cxxDiagnosticCodes?.add(message.diagnosticCode)
+                val sb = StringBuilder(message.text())
+                sb.append("Please refer to bug https://b.corp.google.com/issues/${message.diagnosticCode} for more information.\n")
+                if (cxxFolder != null) {
+                    sb.append("If possible, please also attach a zipped copy of $cxxFolder to the bug to assist in diagnosing the issue.\n")
+                }
+                sb.append("The current Android Gradle Plugin Version is $ANDROID_GRADLE_PLUGIN_VERSION.\n")
+                issueReporter.reportError(
+                    EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                    sb.toString()
+                )
+                logger.error(sb.toString())
             }
         }
     }

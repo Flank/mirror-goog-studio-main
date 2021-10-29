@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.external.cmake.server;
 
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.bugln;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveProgress;
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
+import com.android.utils.cxx.CxxBugDiagnosticCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -515,13 +518,28 @@ public class ServerProtocolV1 implements Server {
      * ignored.
      */
     private void readExpected(@NonNull String expectedString) throws IOException {
+        StringBuilder sb = new StringBuilder();
         String line = readLine();
-        while (!line.equals(expectedString)) {
+        while (line != null && !line.equals(expectedString)) {
+            sb.append(line);
+            sb.append("\n");
+
             // Skip a blank line if there is one.
             if (!line.isEmpty() && serverReceiver.getDiagnosticReceiver() != null) {
                 serverReceiver.getDiagnosticReceiver().receive(line);
             }
             line = readLine();
+        }
+
+        if (line == null) {
+            // See b/194020297
+            // We failed to find the expected line so something has gone wrong in the handshake
+            // with CMake server. Send a hopefully useful diagnostic error.
+            bugln(
+                    CxxBugDiagnosticCode.CMAKE_SERVER_HANDSHAKE_FAILED,
+                    "Handshake with CMake Server failed, please consider upgrading to CMake 3.18.1 or higher.\n"
+                            + "The raw CMake Server log was:\n"
+                            + sb);
         }
     }
 
