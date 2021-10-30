@@ -43,8 +43,7 @@ public class LegacyRemoteTest extends TestCase {
 
     public void testLegacyRemoteSdk() throws Exception {
         MockFileOp fop = new MockFileOp();
-        final AndroidSdkHandler handler =
-                new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER), fop);
+        final AndroidSdkHandler handler = new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();

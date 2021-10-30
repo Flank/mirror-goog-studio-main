@@ -22,7 +22,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
-import com.android.repository.testframework.MockFileOp;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
@@ -112,9 +111,7 @@ public class TempSdkManager extends ExternalResource {
      * will be reparsed.
      */
     private void createSdkAvdManagers() {
-        mSdkHandler =
-                new AndroidSdkHandler(
-                        mFakeSdk, mFakeAndroidFolder, new MockFileOp(mFakeSdk.getFileSystem()));
+        mSdkHandler = new AndroidSdkHandler(mFakeSdk, mFakeAndroidFolder);
     }
 
     /**

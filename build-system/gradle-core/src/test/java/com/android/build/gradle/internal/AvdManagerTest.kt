@@ -267,7 +267,7 @@ class AvdManagerTest {
             emulatorFolder.resolve(SdkConstants.FD_LIB).resolve(SdkConstants.FN_HARDWARE_INI))
         recordSysImg()
 
-        return AndroidSdkHandler(sdkFolder, androidPrefsFolder, fileOp)
+        return AndroidSdkHandler(sdkFolder, androidPrefsFolder)
     }
 
     private fun recordSysImg() {

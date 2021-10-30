@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
@@ -38,7 +39,6 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.Library;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -66,8 +66,7 @@ public class LegacyLocalRepoTest extends TestCase {
 
         Path root = mockFop.toPath("/sdk");
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        RepoManager mgr =
-                new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
+        RepoManager mgr = new AndroidSdkHandler(root, null).getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();
 
         LocalRepoLoader sdk =
@@ -274,7 +273,7 @@ public class LegacyLocalRepoTest extends TestCase {
             throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         Path root = mockFop.toPath(rootPath);
-        RepoManager mgr = new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
+        RepoManager mgr = new AndroidSdkHandler(root, null).getSdkManager(progress);
 
         if (!allowWarnings) {
             progress.assertNoErrorsOrWarnings();
@@ -287,7 +286,7 @@ public class LegacyLocalRepoTest extends TestCase {
         Repository repo =
                 (Repository)
                         SchemaModuleUtil.unmarshal(
-                                mockFop.newFileInputStream(new File(rootPath, packagePath)),
+                                CancellableFileIo.newInputStream(root.resolve(packagePath)),
                                 extensions,
                                 true,
                                 progress);

@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.io.CancellableFileIo;
 import com.android.prefs.AbstractAndroidLocations;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
@@ -78,11 +77,7 @@ public class AvdManagerTest extends TestCase {
         recordWearSysImgChina(root);
         recordChromeOsSysImg(root);
         Path prefsRoot = root.resolve(ANDROID_PREFS_ROOT);
-        mAndroidSdkHandler =
-                new AndroidSdkHandler(
-                        root.resolve("sdk"),
-                        prefsRoot,
-                        new MockFileOp(mMockFs));
+        mAndroidSdkHandler = new AndroidSdkHandler(root.resolve("sdk"), prefsRoot);
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,

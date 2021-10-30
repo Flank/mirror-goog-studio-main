@@ -356,6 +356,6 @@ public class UnmarshalTest extends TestCase {
     @NonNull
     private static AndroidSdkHandler getAndroidSdkHandler() {
         MockFileOp fileOp = new MockFileOp();
-        return new AndroidSdkHandler(fileOp.toPath("/sdk"), null, fileOp);
+        return new AndroidSdkHandler(fileOp.toPath("/sdk"), null);
     }
 }
