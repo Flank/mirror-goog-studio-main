@@ -34,7 +34,7 @@ class DeviceTest {
   private val fileOp = MockFileOp()
   val repoPackages = RepositoryPackages()
   val repoMgr = FakeRepoManager(fileOp.toPath(SDK_LOCATION), repoPackages)
-  val sdkHandler = AndroidSdkHandler(fileOp.toPath(SDK_LOCATION), fileOp.toPath(AVD_LOCATION), fileOp, repoMgr)
+  val sdkHandler = AndroidSdkHandler(fileOp.toPath(SDK_LOCATION), fileOp.toPath(AVD_LOCATION), repoMgr)
   val devMgr = DeviceManager.createInstance(sdkHandler, NoErrorsOrWarningsLogger())
 
   val qvgaPhone = devMgr.getDevice("2.7in QVGA", "Generic")

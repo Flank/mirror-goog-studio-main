@@ -89,7 +89,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         // Assert that before installation, source path is not set thus deprecated value is returned
-        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, fop, mgr);
+        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, mgr);
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
@@ -126,7 +126,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         // Assert that before un-installation, source path is set to correct value
-        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, fop, mgr);
+        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, mgr);
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);

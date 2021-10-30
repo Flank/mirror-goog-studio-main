@@ -130,7 +130,7 @@ public class AvdManagerCliTest {
 
         mSdkHandler =
                 new AndroidSdkHandler(
-                        mFileOp.toPath(SDK_LOCATION), mFileOp.toPath(AVD_LOCATION), mFileOp, mgr);
+                        mFileOp.toPath(SDK_LOCATION), mFileOp.toPath(AVD_LOCATION), mgr);
         mLogger = new MockLog();
         mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
         mAvdManager =

@@ -52,7 +52,6 @@ public class SdkMavenRepositoryTest extends TestCase {
                 new AndroidSdkHandler(
                         SDK_HOME,
                         null,
-                        mFileOp,
                         new FakeRepoManager(SDK_HOME, mRepositoryPackages));
     }
 

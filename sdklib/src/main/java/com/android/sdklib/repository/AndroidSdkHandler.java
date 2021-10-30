@@ -261,9 +261,8 @@ public final class AndroidSdkHandler {
     public AndroidSdkHandler(
             @Nullable Path localPath,
             @Nullable Path androidFolder,
-            @NonNull FileOp fop,
             @NonNull RepoManager repoManager) {
-        this(localPath, androidFolder, fop);
+        this(localPath, androidFolder, FileOpUtils.create(localPath));
         mRepoManager = repoManager;
     }
 
