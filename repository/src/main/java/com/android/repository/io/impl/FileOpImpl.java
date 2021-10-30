@@ -16,7 +16,6 @@
 
 package com.android.repository.io.impl;
 
-import com.android.annotations.NonNull;
 import com.android.io.CancellableFileIo;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
@@ -49,22 +48,6 @@ public class FileOpImpl extends FileOp {
     @Override
     public FileSystem getFileSystem() {
         return fileSystem;
-    }
-
-    @Override
-    public File ensureRealFile(@NonNull File in) {
-        return in;
-    }
-
-    @Override
-    public void deleteOnExit(File file) {
-        file.deleteOnExit();
-    }
-
-    @NonNull
-    @Override
-    public File toFile(@NonNull Path path) {
-        return path.toFile();
     }
 
     @Override

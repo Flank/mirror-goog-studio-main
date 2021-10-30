@@ -95,7 +95,7 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
     @Nullable
     public LocalPackage parseLegacyLocalPackage(
             @NonNull Path dirPath, @NonNull ProgressIndicator progress) {
-        File dir = mFop.toFile(dirPath);
+        File dir = FileOpUtils.toFile(dirPath);
         if (!mFop.exists(new File(dir, FN_SOURCE_PROP))) {
             return null;
         }

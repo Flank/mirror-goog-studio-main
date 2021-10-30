@@ -27,7 +27,6 @@ import com.android.annotations.NonNull;
 import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.OsType;
 import com.android.testutils.file.InMemoryFileSystems;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -156,44 +155,6 @@ public class MockFileOpTest {
     }
 
     @Test
-    public void testRenameTo() {
-        m.recordExistingFile("/dir1/dir2/dir6/file7");
-        m.recordExistingFolder("/dir1/dir2/dir3/dir4");
-
-        assertExpectedFiles("/dir1/dir2/dir6/file7");
-        assertExpectedFolders(
-                "/dir1",
-                "/dir1/dir2",
-                "/dir1/dir2/dir3",
-                "/dir1/dir2/dir3/dir4",
-                "/dir1/dir2/dir6");
-
-        assertTrue(m.renameTo(createFile("/dir1", "dir2"), createFile("/dir1", "newDir2")));
-        assertExpectedFiles("/dir1/newDir2/dir6/file7");
-
-        assertExpectedFolders(
-                "/dir1",
-                "/dir1/newDir2",
-                "/dir1/newDir2/dir3",
-                "/dir1/newDir2/dir3/dir4",
-                "/dir1/newDir2/dir6");
-
-        assertTrue(m.renameTo(
-                createFile("/dir1", "newDir2", "dir6", "file7"),
-                createFile("/dir1", "newDir2", "dir6", "newFile7")));
-        assertTrue(m.renameTo(
-                createFile("/dir1", "newDir2", "dir3", "dir4"),
-                createFile("/dir1", "newDir2", "dir3", "newDir4")));
-        assertExpectedFiles("/dir1/newDir2/dir6/newFile7");
-        assertExpectedFolders(
-                "/dir1",
-                "/dir1/newDir2",
-                "/dir1/newDir2/dir3",
-                "/dir1/newDir2/dir3/newDir4",
-                "/dir1/newDir2/dir6");
-    }
-
-    @Test
     public void testToString() throws Exception {
         m.recordExistingFile("/root/blah", "foo");
         assertEquals("foo", m.readText(new File("/root/blah")));
@@ -204,22 +165,6 @@ public class MockFileOpTest {
         catch (Exception expected) {
             // nothing
         }
-    }
-
-    @Test
-    public void testListWithFilter() {
-        m.recordExistingFile("/root/foo/a.txt");
-        m.recordExistingFile("/root/foo/b.csv");
-        m.recordExistingFile("/root/foo/c.txt");
-        m.recordExistingFile("/root/foo/d.txt/d.txtWasActuallyAFolder");
-        m.recordExistingFile("/root/foofoo/blah");
-        m.recordExistingFile("/root/foo/bar/baz.txt");
-        String[] result = m.list(new File("/root/foo"), (dir, name) -> name.endsWith(".txt"));
-        assertEquals(result.length, 3);
-        List<String> resultList = Lists.newArrayList(result);
-        assertTrue(resultList.contains("a.txt"));
-        assertTrue(resultList.contains("c.txt"));
-        assertTrue(resultList.contains("d.txt"));
     }
 
     private void assertExpectedFiles(String... expected) {

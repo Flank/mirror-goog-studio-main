@@ -18,6 +18,7 @@ package com.android.sdklib.repository.legacy.local;
 
 import com.android.SdkConstants;
 import com.android.repository.Revision;
+import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
@@ -40,7 +41,9 @@ public class LocalSdkTest extends TestCase {
     @Override
     protected void setUp() {
         mFOp = new MockFileOp();
-        mRoot = mFOp.toFile(InMemoryFileSystems.getSomeRoot(mFOp.getFileSystem()).resolve("sdk"));
+        mRoot =
+                FileOpUtils.toFile(
+                        InMemoryFileSystems.getSomeRoot(mFOp.getFileSystem()).resolve("sdk"));
         mLS = new LocalSdk(mFOp);
         mLS.setLocation(mRoot);
     }

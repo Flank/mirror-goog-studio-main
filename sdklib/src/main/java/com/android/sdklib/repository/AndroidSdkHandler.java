@@ -725,7 +725,7 @@ public final class AndroidSdkHandler {
                 // any legacy packages.
                 FileOp fop = FileOpUtils.create(localLocation);
                 result.setFallbackLocalRepoLoader(
-                        new LegacyLocalRepoLoader(fop.toFile(localLocation), fop));
+                        new LegacyLocalRepoLoader(FileOpUtils.toFile(localLocation), fop));
 
                 // If a location is set we'll always want at least the local packages loaded, so
                 // load them now.

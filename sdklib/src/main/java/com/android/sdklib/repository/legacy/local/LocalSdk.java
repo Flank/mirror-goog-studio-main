@@ -190,23 +190,6 @@ public class LocalSdk {
     private BuildToolInfo mLegacyBuildTools;
 
     /**
-     * Creates an initial LocalSdk instance with an unknown location.
-     */
-    public LocalSdk() {
-        mFileOp = FileOpUtils.create();
-    }
-
-    /**
-     * Creates an initial LocalSdk instance for a known SDK location.
-     *
-     * @param sdkRoot The location of the SDK root folder.
-     */
-    public LocalSdk(@NonNull File sdkRoot) {
-        this();
-        setLocation(sdkRoot);
-    }
-
-    /**
      * Creates an initial LocalSdk instance with an unknown location. This is designed for unit
      * tests to override the {@link FileOp} being used.
      *

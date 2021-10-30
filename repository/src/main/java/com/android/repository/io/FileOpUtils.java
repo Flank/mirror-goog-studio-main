@@ -23,7 +23,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.impl.FileOpImpl;
 import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -66,6 +65,7 @@ public final class FileOpUtils {
      * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
      *     InMemoryFileSystems} directly.
      */
+    @Deprecated
     @NonNull
     public static FileOp create(@Nullable Path path) {
         if (path != null) {
@@ -84,50 +84,6 @@ public final class FileOpUtils {
             }
         }
         return new FileOpImpl();
-    }
-
-    /**
-     * Copies a file or directory tree to the given location. {@code dest} should not exist: with
-     * the file system currently looking like
-     *
-     * <pre>{@code
-     * /
-     *   dir1/
-     *     a.txt
-     *   dir2/
-     *
-     * }</pre>
-     *
-     * Running {@code recursiveCopy(new File("/dir1"), new File("/dir2"), fOp)} will result in an
-     * exception, while {@code recursiveCopy(new File("/dir1"), new File("/dir2/foo")} will result
-     * in
-     *
-     * <pre>{@code
-     * /
-     *   dir1/
-     *     a.txt
-     *   dir2/
-     *     foo/
-     *       a.txt
-     *
-     * }</pre>
-     *
-     * This is equivalent to the behavior of {@code cp -r} when the target does not exist.
-     *
-     * @param src File to copy
-     * @param dest Destination.
-     * @param fop The FileOp to use for file operations.
-     * @throws IOException If the destination already exists, or if there is a problem copying the
-     *     files or creating directories.
-     * @deprecated Use {@link #recursiveCopy(Path, Path, boolean, Predicate, ProgressIndicator)}.
-     */
-    public static void recursiveCopy(
-            @NonNull File src,
-            @NonNull File dest,
-            @NonNull FileOp fop,
-            @NonNull ProgressIndicator progress)
-            throws IOException {
-        recursiveCopy(src, dest, false, fop, progress);
     }
 
     @VisibleForTesting
@@ -207,8 +163,8 @@ public final class FileOpUtils {
      * during the copy, the original files are moved back into place.
      *
      * @param src File to move
-     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(File, File, FileOp,
-     *     ProgressIndicator)}}.
+     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(File, File, boolean,
+     *     FileOp, ProgressIndicator)}}.
      * @param progress Currently only used for error logging.
      * @throws IOException If some problem occurs during copies or directory creation.
      */
@@ -319,6 +275,7 @@ public final class FileOpUtils {
      *
      * @deprecated Use {@link #getNewTempDir(String, FileSystem)}.
      */
+    @Deprecated
     @Nullable
     public static Path getNewTempDir(@NonNull String base, @NonNull FileOp fileOp) {
         return getNewTempDir(base, fileOp.getFileSystem());
@@ -354,18 +311,6 @@ public final class FileOpUtils {
             base = new File(base, segment);
         }
         return base;
-    }
-
-    /**
-     * Appends the given {@code segments} to the {@code base} file.
-     *
-     * @param base     A base file path, non-empty and non-null.
-     * @param segments Individual folder or filename segments to append to the base path.
-     * @return A new file representing the concatenation of the base path with all the segments.
-     */
-    @NonNull
-    public static File append(@NonNull String base, @NonNull String... segments) {
-        return append(new File(base), segments);
     }
 
     /**
@@ -440,17 +385,6 @@ public final class FileOpUtils {
         }
 
         return result.toString();
-    }
-
-    /**
-     * Deletes the given file if it exists. Does nothing and returns successfully if the file didn't
-     * exist to begin with.
-     *
-     * @return true if the file no longer exists, false if we failed to delete it
-     * @deprecated Use {@link Files#deleteIfExists(Path)}.
-     */
-    public static boolean deleteIfExists(File file, FileOp fop) {
-        return !fop.exists(file) || fop.delete(file);
     }
 
     private FileOpUtils() {

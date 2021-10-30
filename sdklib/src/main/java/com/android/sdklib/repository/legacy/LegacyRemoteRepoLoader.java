@@ -156,7 +156,6 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                                         false));
                     }
                 }
-                ProgressIndicator progress = new ConsoleProgressIndicator();
                 mDetails =
                         LegacyRepoUtils.createTypeDetails(
                                 mWrapped.getPkgDesc(),

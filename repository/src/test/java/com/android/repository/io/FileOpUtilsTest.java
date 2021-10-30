@@ -16,21 +16,6 @@
 
 package com.android.repository.io;
 
-import com.android.annotations.NonNull;
-import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
-import com.android.testutils.file.DelegatingFileSystemProvider;
-import org.junit.Assume;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.CopyOption;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystem;
 import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystemAndFolder;
 import static com.android.testutils.file.InMemoryFileSystems.getExistingFiles;
@@ -40,6 +25,20 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.android.annotations.NonNull;
+import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.DelegatingFileSystemProvider;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Assume;
+import org.junit.Test;
 
 /**
  * Tests for FileOpUtils
@@ -114,7 +113,11 @@ public class FileOpUtilsTest {
         fop.recordExistingFile(s4.getPath(), "content4");
         fop.recordExistingFile(s5.getPath(), "content5");
 
-        FileOpUtils.recursiveCopy(new File("/root/src/"), new File("/root/dest"), fop,
+        FileOpUtils.recursiveCopy(
+                new File("/root/src/"),
+                new File("/root/dest"),
+                false,
+                fop,
                 new FakeProgressIndicator());
 
         assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
@@ -147,7 +150,11 @@ public class FileOpUtilsTest {
         fop.recordExistingFile(d1.getPath(), "content3");
 
         try {
-            FileOpUtils.recursiveCopy(new File("/root/src/"), new File("/root/dest"), fop,
+            FileOpUtils.recursiveCopy(
+                    new File("/root/src/"),
+                    new File("/root/dest"),
+                    false,
+                    fop,
                     new FakeProgressIndicator());
             fail("Expected exception");
         } catch (IOException expected) {
