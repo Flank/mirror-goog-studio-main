@@ -131,7 +131,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         variant: ConsumableCreationConfig,
         checkDependencies: Boolean = false
     ) : BaseCreationAction(
-        VariantWithTests(variant, androidTest = null, unitTest = null),
+        VariantWithTests(variant, androidTest = null, unitTest = null, testFixtures = null),
         checkDependencies
     ) {
 

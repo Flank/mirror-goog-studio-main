@@ -637,6 +637,10 @@ abstract class VariantInputs {
     @get:Optional
     abstract val androidTestArtifact: Property<AndroidArtifactInput>
 
+    @get:Nested
+    @get:Optional
+    abstract val testFixturesArtifact: Property<AndroidArtifactInput>
+
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
@@ -762,6 +766,18 @@ abstract class VariantInputs {
                         includeGeneratedSourceFolders = false
                     )
         })
+
+        testFixturesArtifact.setDisallowChanges(
+            variantWithTests.testFixtures?.let { testFixtures ->
+                creationConfig.services.newInstance(AndroidArtifactInput::class.java)
+                    .initialize(
+                        testFixtures,
+                        checkDependencies = false,
+                        addBaseModuleLintModel,
+                        warnIfProjectTreatedAsExternalDependency
+                    )
+            }
+        )
         mergedManifest.setDisallowChanges(
             creationConfig.artifacts.get(SingleArtifact.MERGED_MANIFEST)
         )
@@ -856,6 +872,7 @@ abstract class VariantInputs {
             includeClassesOutputDirectories = false
         ))
         androidTestArtifact.disallowChanges()
+        testFixturesArtifact.disallowChanges()
         namespace.setDisallowChanges("")
         minSdkVersion.initializeEmpty()
         targetSdkVersion.initializeEmpty()
