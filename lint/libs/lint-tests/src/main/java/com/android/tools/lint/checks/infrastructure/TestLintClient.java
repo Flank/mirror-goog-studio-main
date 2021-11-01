@@ -50,6 +50,8 @@ import com.android.ide.common.resources.ResourceSet;
 import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.LintCliClient;
@@ -133,6 +135,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import kotlin.Pair;
 import kotlin.io.FilesKt;
+import kotlin.text.StringsKt;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UFile;
@@ -1739,21 +1742,31 @@ public class TestLintClient extends LintCliClient {
     @Nullable
     @Override
     public IAndroidTarget getCompileTarget(@NonNull Project project) {
-        IAndroidTarget compileTarget = super.getCompileTarget(project);
+        final IAndroidTarget compileTarget = super.getCompileTarget(project);
+        String targetHash = project.getBuildTargetHash();
         if (compileTarget == null) {
-            if (task.requireCompileSdk && project.getBuildTargetHash() != null) {
+            if (task.requireCompileSdk && targetHash != null) {
                 fail(
                         "Could not find SDK to compile with ("
-                                + project.getBuildTargetHash()
+                                + targetHash
                                 + "). "
                                 + "Either allow the test to use any installed SDK (it defaults to the "
                                 + "highest version) via TestLintTask#requireCompileSdk(false), or make "
                                 + "sure the SDK being used is the right  one via "
                                 + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
                                 + "platform (platforms/"
-                                + project.getBuildTargetHash()
+                                + targetHash
                                 + " is installed "
                                 + "there");
+            }
+        } else if (targetHash != null && !compileTarget.hashString().equals(targetHash)) {
+            // Pretend to the test that the target is the right one
+            String targetName =
+                    StringsKt.removePrefix(targetHash, AndroidTargetHash.PLATFORM_HASH_PREFIX);
+            try {
+                return new AndroidTestTargetWrapper(compileTarget, new AndroidVersion(targetName));
+            } catch (AndroidVersion.AndroidVersionException e) {
+                fail("Invalid `compileSdkVersion` " + targetName);
             }
         }
 
