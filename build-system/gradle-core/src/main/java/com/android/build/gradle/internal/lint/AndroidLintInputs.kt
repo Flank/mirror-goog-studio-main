@@ -694,6 +694,10 @@ abstract class VariantInputs {
     @get:Nested
     abstract val testSourceProviders: ListProperty<SourceProviderInput>
 
+    @get:Nested
+    @get:Optional
+    abstract val testFixturesSourceProviders: ListProperty<SourceProviderInput>
+
     @get:Input
     abstract val debuggable: Property<Boolean>
 
@@ -838,6 +842,17 @@ abstract class VariantInputs {
                 }
             )
         }
+        variantWithTests.testFixtures?.let { testFixturesCreationConfig ->
+            testFixturesSourceProviders.setDisallowChanges(
+                testFixturesCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                    creationConfig.services
+                        .newInstance(SourceProviderInput::class.java)
+                        .initialize(
+                            sourceProvider,
+                            isForAnalysis
+                        )
+                })
+        }
         testSourceProviders.setDisallowChanges(testSourceProviderList.toList())
         debuggable.setDisallowChanges(
             if (creationConfig is ApkCreationConfig) {
@@ -906,6 +921,7 @@ abstract class VariantInputs {
                 )
             )
         }
+        testFixturesSourceProviders.disallowChanges()
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
