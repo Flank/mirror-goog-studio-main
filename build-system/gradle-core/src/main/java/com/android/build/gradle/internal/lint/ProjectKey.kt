@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.getBuildId
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.dependencies.hasProjectTestFixturesCapability
-import com.android.tools.lint.model.LintModelModuleSourceSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
@@ -31,7 +30,7 @@ internal data class ProjectKey(
     val buildId: String,
     val projectPath: String,
     val variantName: String?,
-    val sourceSet: LintModelModuleSourceSet
+    val sourceSet: LintModuleSourceSet
 ) {
 
     override fun toString(): String {
@@ -39,6 +38,8 @@ internal data class ProjectKey(
             append(buildId)
             append(" ")
             append(projectPath)
+            append(" ")
+            append(sourceSet.sourceSetName)
             if (variantName != null) {
                 append(" (").append(variantName).append(")")
             }
@@ -53,9 +54,9 @@ internal fun asProjectKey(buildMapping: BuildMapping, artifact: ResolvedArtifact
         id.projectPath,
         artifact.getVariantName(),
         sourceSet = if (artifact.hasProjectTestFixturesCapability()) {
-            LintModelModuleSourceSet.TEST_FIXTURES
+            LintModuleSourceSet.TEST_FIXTURES
         } else {
-            LintModelModuleSourceSet.MAIN
+            LintModuleSourceSet.MAIN
         }
     )
 }

@@ -137,7 +137,7 @@ internal class CheckDependenciesLintModelArtifactHandler(
         variantName: String?,
         addressSupplier: () -> String
     ): LintModelLibrary {
-        val key = ProjectKey(buildId, projectPath, variantName, LintModelModuleSourceSet.MAIN)
+        val key = ProjectKey(buildId, projectPath, variantName, LintModuleSourceSet.MAIN)
         val hasLintModel = (key.buildId == thisProject.buildId && key.projectPath == thisProject.projectPath) || projectDependencyLintModels.contains(key)
         if (hasLintModel) {
             return DefaultLintModelModuleLibrary(
