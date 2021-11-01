@@ -331,6 +331,7 @@ com.android.build.gradle.LintLifecycleExtensionImpl.finalizeDsl: void (org.gradl
 com.android.build.gradle.LintPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.LintPlugin.<init>: com.android.build.gradle.LintPlugin ()
 com.android.build.gradle.LintPlugin.access$getLintOptions$p: com.android.build.gradle.internal.dsl.LintOptions (com.android.build.gradle.LintPlugin)
+com.android.build.gradle.LintPlugin.access$getProjectServices$p: com.android.build.gradle.internal.services.ProjectServices (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$registerTasks: void (com.android.build.gradle.LintPlugin, org.gradle.api.Project, com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar)
 com.android.build.gradle.LintPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.LintPlugin.apply: void (org.gradle.api.Project)
