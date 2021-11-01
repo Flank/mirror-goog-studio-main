@@ -127,6 +127,7 @@ class GradleModelMocker @JvmOverloads constructor(
     private val main = DepConf()
     private val test = DepConf()
     private val androidTest = DepConf()
+    private val testFixtures = DepConf()
 
     private val severityOverrides = HashMap<String, LintModelSeverity>()
     private val flags = LintCliFlags()
@@ -325,6 +326,7 @@ class GradleModelMocker @JvmOverloads constructor(
 
         val dependencies = createDependencies(main)
         val androidTestDependencies = createDependencies(androidTest)
+        val testFixturesDependencies = createDependencies(testFixtures)
         val testDependencies = createDependencies(test)
 
         val variantCoordinates = generateVariants()
@@ -381,6 +383,16 @@ class GradleModelMocker @JvmOverloads constructor(
                         generatedSourceFolders = emptyList(),
                         generatedResourceFolders = emptyList(),
                         classOutputs = listOf(File(projectDir, "instrumentation-classes")),
+                    ),
+                    testFixturesArtifact = TestLintModelAndroidArtifact(
+                        applicationId = mergedFlavorsAndBuildType.applicationId.orEmpty(),
+                        dependencies = testFixturesDependencies,
+                        generatedSourceFolders = emptyList(),
+                        generatedResourceFolders = emptyList(),
+                        classOutputs = listOf(
+                            File(projectDir, "build/intermediates/javac/${variantName}TestFixtures/classes"),
+                            File(projectDir, "build/tmp/kotlin-classes/${variantName}TestFixtures")
+                        ),
                     ),
                     mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
                     manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
@@ -2216,6 +2228,7 @@ private data class TestLintModelVariant(
     override val useSupportLibraryVectorDrawables: Boolean,
     override val mainArtifact: LintModelAndroidArtifact,
     override val testArtifact: LintModelJavaArtifact?,
+    override val testFixturesArtifact: LintModelAndroidArtifact?,
     override val androidTestArtifact: LintModelAndroidArtifact?,
     override val mergedManifest: File?,
     override val manifestMergeReport: File?,

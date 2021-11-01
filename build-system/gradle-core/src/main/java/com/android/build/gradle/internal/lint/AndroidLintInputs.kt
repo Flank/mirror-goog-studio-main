@@ -927,6 +927,7 @@ abstract class VariantInputs {
             mainArtifact = mainArtifact.toLintModel(dependencyCaches),
             testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches),
             androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches),
+            testFixturesArtifact = testFixturesArtifact.orNull?.toLintModel(dependencyCaches),
             mergedManifest = mergedManifest.orNull?.asFile,
             manifestMergeReport = manifestMergeReport.orNull?.asFile,
             `package` = namespace.get(),

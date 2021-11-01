@@ -322,6 +322,10 @@ class LintModelSerializationTest {
                       classOutputs="instrumentation-classes"
                       applicationId="com.android.tools.test">
                   </androidTestArtifact>
+                  <testFixturesArtifact
+                      classOutputs="build/intermediates/javac/freeBetaDebugTestFixtures/classes:build/tmp/kotlin-classes/freeBetaDebugTestFixtures"
+                      applicationId="com.android.tools.test">
+                  </testFixturesArtifact>
                   <testArtifact
                       classOutputs="test-classes">
                   </testArtifact>
@@ -683,6 +687,10 @@ class LintModelSerializationTest {
                           classOutputs="instrumentation-classes"
                           applicationId="com.android.tools.test">
                       </androidTestArtifact>
+                      <testFixturesArtifact
+                          classOutputs="build/intermediates/javac/paidNormalReleaseTestFixtures/classes:build/tmp/kotlin-classes/paidNormalReleaseTestFixtures"
+                          applicationId="com.android.tools.test">
+                      </testFixturesArtifact>
                       <testArtifact
                           classOutputs="test-classes">
                       </testArtifact>
@@ -1326,7 +1334,8 @@ class LintModelSerializationTest {
                     artifactName in listOf(
                         "mainArtifact",
                         "testArtifact",
-                        "androidTestArtifact"
+                        "androidTestArtifact",
+                        "testFixturesArtifact"
                     )
                 ) {
                     val mapKey = getMapKey(fileType, variant.name, artifactName)

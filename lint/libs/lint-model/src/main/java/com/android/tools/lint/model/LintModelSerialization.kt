@@ -835,6 +835,9 @@ private class LintModelVariantWriter(
         variant.androidTestArtifact?.let { artifact ->
             writeArtifact(artifact, "androidTestArtifact", indent + 1, writeDependencies)
         }
+        variant.testFixturesArtifact?.let { artifact ->
+            writeArtifact(artifact, "testFixturesArtifact", indent + 1, writeDependencies)
+        }
         variant.testArtifact?.let { artifact ->
             writeArtifact(artifact, "testArtifact", indent + 1, writeDependencies)
         }
@@ -1642,6 +1645,7 @@ private class LintModelVariantReader(
             var mainArtifact: LintModelAndroidArtifact? = null
             var testArtifact: LintModelJavaArtifact? = null
             var androidTestArtifact: LintModelAndroidArtifact? = null
+            var testFixturesArtifact: LintModelAndroidArtifact? = null
             val mergedManifest: File? = getOptionalFile("mergedManifest")
             val manifestMergeReport: File? = getOptionalFile("manifestMergeReport")
             val packageName = getOptionalAttribute("package")
@@ -1676,6 +1680,9 @@ private class LintModelVariantReader(
                         "testArtifact" ->
                             testArtifact =
                                 readJavaArtifact(parser.name, readDependencies)
+                        "testFixturesArtifact" ->
+                            testFixturesArtifact =
+                                readAndroidArtifact(parser.name, readDependencies)
                         "sourceProviders" -> sourceProviders = readSourceProviders(parser.name)
                         "testSourceProviders" ->
                             testSourceProviders =
@@ -1700,6 +1707,7 @@ private class LintModelVariantReader(
                 mainArtifact = mainArtifact!!,
                 androidTestArtifact = androidTestArtifact,
                 testArtifact = testArtifact,
+                testFixturesArtifact = testFixturesArtifact,
                 mergedManifest = mergedManifest,
                 manifestMergeReport = manifestMergeReport,
                 `package` = packageName,
