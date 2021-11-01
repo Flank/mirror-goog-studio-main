@@ -48,6 +48,8 @@
         assetsDirectories="src/androidTestDebug/assets"
         androidTest="true"/>
   </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
   <mainArtifact
       classOutputs="build/intermediates/javac/debug/classes:build/tmp/kotlin-classes/debug:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar"
       applicationId="com.example.android.lint.kotlin"

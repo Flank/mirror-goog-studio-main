@@ -284,6 +284,23 @@ class LintModelSerializationTest {
                         assetsDirectories="src/testFree/assets"
                         unitTest="true"/>
                   </testSourceProviders>
+                  <testFixturesSourceProviders>
+                    <sourceProvider
+                        manifest="src/testFixtures/AndroidManifest.xml"
+                        javaDirectories="src/testFixtures/java:src/testFixtures/kotlin"
+                        resDirectories="src/testFixtures/res"
+                        assetsDirectories="src/testFixtures/assets"/>
+                    <sourceProvider
+                        manifest="src/testFixturesBeta/AndroidManifest.xml"
+                        javaDirectories="src/testFixturesBeta/java:src/testFixturesBeta/kotlin"
+                        resDirectories="src/testFixturesBeta/res"
+                        assetsDirectories="src/testFixturesBeta/assets"/>
+                    <sourceProvider
+                        manifest="src/testFixturesFree/AndroidManifest.xml"
+                        javaDirectories="src/testFixturesFree/java:src/testFixturesFree/kotlin"
+                        resDirectories="src/testFixturesFree/res"
+                        assetsDirectories="src/testFixturesFree/assets"/>
+                  </testFixturesSourceProviders>
                   <resValues>
                     <resValue
                         type="string"
@@ -660,6 +677,23 @@ class LintModelSerializationTest {
                             assetsDirectories="src/testPaid/assets"
                             unitTest="true"/>
                       </testSourceProviders>
+                      <testFixturesSourceProviders>
+                        <sourceProvider
+                            manifest="src/testFixtures/AndroidManifest.xml"
+                            javaDirectories="src/testFixtures/java:src/testFixtures/kotlin"
+                            resDirectories="src/testFixtures/res"
+                            assetsDirectories="src/testFixtures/assets"/>
+                        <sourceProvider
+                            manifest="src/testFixturesNormal/AndroidManifest.xml"
+                            javaDirectories="src/testFixturesNormal/java:src/testFixturesNormal/kotlin"
+                            resDirectories="src/testFixturesNormal/res"
+                            assetsDirectories="src/testFixturesNormal/assets"/>
+                        <sourceProvider
+                            manifest="src/testFixturesPaid/AndroidManifest.xml"
+                            javaDirectories="src/testFixturesPaid/java:src/testFixturesPaid/kotlin"
+                            resDirectories="src/testFixturesPaid/res"
+                            assetsDirectories="src/testFixturesPaid/assets"/>
+                      </testFixturesSourceProviders>
                       <resValues>
                         <resValue
                             type="string"

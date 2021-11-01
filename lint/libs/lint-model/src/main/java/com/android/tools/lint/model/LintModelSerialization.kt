@@ -827,6 +827,7 @@ private class LintModelVariantWriter(
         writeBuildFeatures(variant.buildFeatures, indent + 1)
         writeSourceProviders(variant.sourceProviders, "sourceProviders", indent + 1)
         writeSourceProviders(variant.testSourceProviders, "testSourceProviders", indent + 1)
+        writeSourceProviders(variant.testFixturesSourceProviders, "testFixturesSourceProviders", indent + 1)
 
         writeResValues(variant.resValues, indent + 1)
         writeManifestPlaceholders(variant.manifestPlaceholders, indent + 1)
@@ -1657,6 +1658,7 @@ private class LintModelVariantReader(
             var manifestPlaceholders: Map<String, String> = emptyMap()
             var sourceProviders: List<LintModelSourceProvider> = emptyList()
             var testSourceProviders: List<LintModelSourceProvider> = emptyList()
+            var testFixturesSourceProviders: List<LintModelSourceProvider> = emptyList()
             var buildFeatures: LintModelBuildFeatures? = null
 
             expectTag("variant")
@@ -1682,6 +1684,9 @@ private class LintModelVariantReader(
                         "sourceProviders" -> sourceProviders = readSourceProviders(parser.name)
                         "testSourceProviders" ->
                             testSourceProviders =
+                                readSourceProviders(parser.name)
+                        "testFixturesSourceProviders" ->
+                            testFixturesSourceProviders =
                                 readSourceProviders(parser.name)
                         "buildFeatures" -> buildFeatures = readBuildFeatures()
                         else -> unexpectedTag()
@@ -1716,6 +1721,7 @@ private class LintModelVariantReader(
                 manifestPlaceholders = manifestPlaceholders,
                 sourceProviders = sourceProviders,
                 testSourceProviders = testSourceProviders,
+                testFixturesSourceProviders = testFixturesSourceProviders,
                 debuggable = debuggable,
                 shrinkable = shrinkable,
                 buildFeatures = buildFeatures!!,

@@ -963,6 +963,9 @@ abstract class VariantInputs {
             consumerProguardFiles = consumerProguardFiles.orNull ?: listOf(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() },
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
+            testFixturesSourceProviders = testFixturesSourceProviders.getOrElse(emptyList()).map {
+                it.toLintModel()
+            },
             debuggable = debuggable.get(),
             shrinkable = mainArtifact.shrinkable.get(),
             buildFeatures = buildFeatures.toLintModel(),

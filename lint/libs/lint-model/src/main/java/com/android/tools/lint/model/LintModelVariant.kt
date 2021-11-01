@@ -44,6 +44,7 @@ interface LintModelVariant {
 
     val sourceProviders: List<LintModelSourceProvider>
     val testSourceProviders: List<LintModelSourceProvider>
+    val testFixturesSourceProviders: List<LintModelSourceProvider>
 
     val debuggable: Boolean
     val shrinkable: Boolean
@@ -102,6 +103,7 @@ class DefaultLintModelVariant(
 
     override val sourceProviders: List<LintModelSourceProvider>,
     override val testSourceProviders: List<LintModelSourceProvider>,
+    override val testFixturesSourceProviders: List<LintModelSourceProvider>,
 
     override val debuggable: Boolean,
     override val shrinkable: Boolean,
