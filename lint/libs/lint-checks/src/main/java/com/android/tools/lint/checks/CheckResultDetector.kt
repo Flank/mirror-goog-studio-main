@@ -32,10 +32,12 @@ import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.nextStatement
 import com.android.tools.lint.detector.api.previousStatement
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiSynchronizedStatement
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiWildcardType
 import org.jetbrains.uast.UAnnotationMethod
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UBlockExpression
@@ -87,6 +89,17 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         if (isExpressionValueUnused(element)) {
+            if (context.evaluator.isSuspend(method)) {
+                // For coroutines the suspend methods return context rather than the intended return type,
+                // which is encoded in a continuation parameter at the end of the parameter list
+                val classReference = method.parameterList.parameters.lastOrNull()?.type as? PsiClassType ?: return
+                val wildcard = classReference.parameters.singleOrNull() as? PsiWildcardType ?: return
+                val bound = wildcard.bound ?: return
+                if (bound == PsiType.VOID || bound.canonicalText == "kotlin.Unit") {
+                    return
+                }
+            }
+
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
             if (usageInfo.anyCloser { it.qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE }) {
