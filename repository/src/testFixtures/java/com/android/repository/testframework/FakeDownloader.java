@@ -80,7 +80,9 @@ public class FakeDownloader implements Downloader {
         if (fileName.startsWith("/")) {
             fileName = fileName.substring(1);
         }
-        Path file = FileOpUtils.getNewTempDir("FakeDownloader", mFileOp).resolve(fileName);
+        Path file =
+                FileOpUtils.getNewTempDir("FakeDownloader", mFileOp.getFileSystem())
+                        .resolve(fileName);
         mFileOp.recordExistingFile(file, 0, mRegisteredFiles.get(url));
         return file;
     }

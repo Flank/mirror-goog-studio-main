@@ -23,7 +23,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestUtils;
@@ -39,7 +38,7 @@ import junit.framework.TestCase;
 public class AndroidSdkHandlerTest extends TestCase {
 
     public void testGetLatestPackage() {
-        FileOp fop = new MockFileOp();
+        MockFileOp fop = new MockFileOp();
         FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1", fop.toPath("/sdk/p/1.1"));
         p1_1.setRevision(Revision.parseRevision("1.1"));
         FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20", fop.toPath("/sdk/p/1.20"));

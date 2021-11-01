@@ -35,8 +35,6 @@ import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SchemaModule;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.sources.LocalSourceProvider;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.legacy.LegacyLocalRepoLoader;
@@ -723,9 +721,7 @@ public final class AndroidSdkHandler {
             if (localLocation != null) {
                 // If we have a local sdk path set, set up the old-style loader so we can parse
                 // any legacy packages.
-                FileOp fop = FileOpUtils.create(localLocation);
-                result.setFallbackLocalRepoLoader(
-                        new LegacyLocalRepoLoader(FileOpUtils.toFile(localLocation), fop));
+                result.setFallbackLocalRepoLoader(new LegacyLocalRepoLoader(localLocation));
 
                 // If a location is set we'll always want at least the local packages loaded, so
                 // load them now.

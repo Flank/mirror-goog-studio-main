@@ -29,8 +29,6 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.Archive;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
@@ -209,7 +207,6 @@ public final class RemoteSdkUpdater {
         Archive.sHostConfig = new Archive.HostConfig(platform);
 
         ProgressIndicator progress = new ConsoleProgressIndicator(System.out, System.err);
-        FileOp fop = FileOpUtils.create();
         SettingsController settings =
                 new SettingsController() {
                     @Override
@@ -237,7 +234,7 @@ public final class RemoteSdkUpdater {
         RepoManager repoManager =
                 AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, null)
                         .getSdkManager(progress);
-        repoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, settings), settings);
+        repoManager.loadSynchronously(0, progress, new LegacyDownloader(settings), settings);
 
         RepositoryPackages packages = repoManager.getPackages();
 

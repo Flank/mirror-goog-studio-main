@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.CancellableFileIo;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.impl.FileOpImpl;
 import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -40,57 +39,9 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-/**
- * Some convenience methods for working with {@link File}s/{@link FileOp}s.
- */
+/** Some convenience methods for working with {@link Path}s. TODO: merge with InMemoryFileSystems */
 public final class FileOpUtils {
     private static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
-
-    /**
-     * The standard way to create a {@link FileOp} that interacts with the real filesystem.
-     *
-     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
-     *     InMemoryFileSystems} directly.
-     */
-    @NonNull
-    public static FileOp create() {
-        return new FileOpImpl();
-    }
-
-    /**
-     * Create a {@link FileOp} that supports the provided {@code path}. This should be used where
-     * code using only {@link Path}s directly has to interact with code that still uses {@link
-     * FileOp}.
-     *
-     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
-     *     InMemoryFileSystems} directly.
-     */
-    @Deprecated
-    @NonNull
-    public static FileOp create(@Nullable Path path) {
-        if (path != null) {
-            try {
-                FileSystem desiredFs = path.getFileSystem();
-                if (desiredFs != FileSystems.getDefault()) {
-                    Class<?> mockFileOp =
-                            FileOp.class
-                                    .getClassLoader()
-                                    .loadClass("com.android.repository.testframework.MockFileOp");
-                    return (FileOp)
-                            mockFileOp.getConstructor(FileSystem.class).newInstance(desiredFs);
-                }
-            } catch (Exception ignore) {
-                // We'll just return the default
-            }
-        }
-        return new FileOpImpl();
-    }
-
-    @VisibleForTesting
-    static void recursiveCopy(@NonNull File src, @NonNull File dest, boolean merge,
-            @NonNull FileOp fop, @NonNull ProgressIndicator progress) throws IOException {
-        recursiveCopy(fop.toPath(src), fop.toPath(dest), merge, null, progress);
-    }
 
     /**
      * Copies a file or directory tree to the given location.
@@ -163,8 +114,8 @@ public final class FileOpUtils {
      * during the copy, the original files are moved back into place.
      *
      * @param src File to move
-     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(File, File, boolean,
-     *     FileOp, ProgressIndicator)}}.
+     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(Path, Path, boolean,
+     *     Predicate, ProgressIndicator)}}.
      * @param progress Currently only used for error logging.
      * @throws IOException If some problem occurs during copies or directory creation.
      */
@@ -272,15 +223,7 @@ public final class FileOpUtils {
     /**
      * Creates a new subdirectory of the system temp directory. The directory will be named {@code
      * <base> + NN}, where NN makes the directory distinct from any existing directories.
-     *
-     * @deprecated Use {@link #getNewTempDir(String, FileSystem)}.
      */
-    @Deprecated
-    @Nullable
-    public static Path getNewTempDir(@NonNull String base, @NonNull FileOp fileOp) {
-        return getNewTempDir(base, fileOp.getFileSystem());
-    }
-
     @Nullable
     public static Path getNewTempDir(@NonNull String base, @NonNull FileSystem fileSystem) {
         for (int i = 1; i < 100; i++) {
@@ -436,18 +379,6 @@ public final class FileOpUtils {
             return false;
         }
         return !sawException[0];
-    }
-
-    /**
-     * Temporary functionality to help with File-to-Path migration. Should only be called when a
-     * FileOp is not available and with a Path that is backed by the default FileSystem (notably not
-     * in the context of any tests that use MockFileOp or jimfs).
-     *
-     * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
-     */
-    @NonNull
-    public static File toFileUnsafe(@NonNull Path path) {
-        return path.toFile();
     }
 
     public static void setExecutablePermission(@NonNull Path path) throws IOException {

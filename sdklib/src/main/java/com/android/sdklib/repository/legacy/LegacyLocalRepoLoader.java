@@ -36,6 +36,7 @@ import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
+import com.android.repository.io.impl.FileOpImpl;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.descriptors.PkgType;
@@ -48,6 +49,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -76,14 +79,41 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
     /**
      * Create a new LegacyLocalRepoLoader, based on {@link LocalSdk}.
      *
-     * @param root    The root directory of the SDK.
-     * @param fop     {@link FileOp} to use. For normal operation should be {@link
-     *                FileOpUtils#create()}.
+     * @param root The root directory of the SDK.
      */
-    public LegacyLocalRepoLoader(@NonNull File root, @NonNull FileOp fop) {
+    public LegacyLocalRepoLoader(@NonNull Path root) {
+        FileOp fop = createFileOp(root);
         mLocalSdk = new LocalSdk(fop);
-        mLocalSdk.setLocation(root);
+        mLocalSdk.setLocation(FileOpUtils.toFile(root));
         mFop = fop;
+    }
+
+    /**
+     * Create a {@link FileOp} that supports the provided {@code path}. This should be used where
+     * code using only {@link Path}s directly has to interact with code that still uses {@link
+     * FileOp}.
+     *
+     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
+     *     InMemoryFileSystems} directly.
+     */
+    @NonNull
+    private FileOp createFileOp(@Nullable Path path) {
+        if (path != null) {
+            try {
+                FileSystem desiredFs = path.getFileSystem();
+                if (desiredFs != FileSystems.getDefault()) {
+                    Class<?> mockFileOp =
+                            FileOp.class
+                                    .getClassLoader()
+                                    .loadClass("com.android.repository.testframework.MockFileOp");
+                    return (FileOp)
+                            mockFileOp.getConstructor(FileSystem.class).newInstance(desiredFs);
+                }
+            } catch (Exception ignore) {
+                // We'll just return the default
+            }
+        }
+        return new FileOpImpl();
     }
 
     /**
@@ -157,7 +187,7 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
                                 mFop.toPath(mWrapped.getLocalDir()), mProgress);
             }
             return LegacyRepoUtils.createTypeDetails(
-                    mWrapped.getDesc(), layoutVersion, addonLibraries, getLocation(), mFop);
+                    mWrapped.getDesc(), layoutVersion, addonLibraries, getLocation());
         }
 
         @NonNull

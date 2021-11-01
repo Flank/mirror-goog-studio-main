@@ -21,7 +21,6 @@ import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import java.io.BufferedReader;
@@ -78,12 +77,7 @@ public class SdkManagerCli {
         }
         AndroidSdkHandler handler =
                 AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, localPath);
-        new SdkManagerCli(
-                        settings,
-                        System.out,
-                        System.in,
-                        new LegacyDownloader(FileOpUtils.create(), settings),
-                        handler)
+        new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(settings), handler)
                 .run(settings.getProgressIndicator());
         System.out.println();
     }

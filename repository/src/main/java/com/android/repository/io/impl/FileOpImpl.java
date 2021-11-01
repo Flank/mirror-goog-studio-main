@@ -38,11 +38,7 @@ public class FileOpImpl extends FileOp {
     private final FileSystem fileSystem;
 
     public FileOpImpl() {
-        this(FileSystems.getDefault());
-    }
-
-    public FileOpImpl(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
+        this.fileSystem = FileSystems.getDefault();
     }
 
     @Override

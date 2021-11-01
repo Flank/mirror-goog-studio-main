@@ -97,8 +97,7 @@ public class OfflineRepoCreator {
                 return null;
             }
         };
-        mgr.loadSynchronously(
-                0, progress, new LegacyDownloader(FileOpUtils.create(), settings), settings);
+        mgr.loadSynchronously(0, progress, new LegacyDownloader(settings), settings);
 
         Map<String, RemotePackage> remotes = mgr.getPackages().getRemotePackages();
         List<RemotePackageImpl> toWrite = new ArrayList<>();

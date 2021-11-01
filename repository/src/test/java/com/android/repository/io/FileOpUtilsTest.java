@@ -114,10 +114,10 @@ public class FileOpUtilsTest {
         fop.recordExistingFile(s5.getPath(), "content5");
 
         FileOpUtils.recursiveCopy(
-                new File("/root/src/"),
-                new File("/root/dest"),
+                fop.toPath("/root/src/"),
+                fop.toPath("/root/dest"),
                 false,
-                fop,
+                null,
                 new FakeProgressIndicator());
 
         assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
@@ -151,10 +151,10 @@ public class FileOpUtilsTest {
 
         try {
             FileOpUtils.recursiveCopy(
-                    new File("/root/src/"),
-                    new File("/root/dest"),
+                    fop.toPath("/root/src/"),
+                    fop.toPath("/root/dest"),
                     false,
-                    fop,
+                    null,
                     new FakeProgressIndicator());
             fail("Expected exception");
         } catch (IOException expected) {
@@ -223,7 +223,11 @@ public class FileOpUtilsTest {
         fop.recordExistingFile(d2.getPath(), "content5");
         fop.recordExistingFile(d3.getPath(), "content6");
 
-        FileOpUtils.recursiveCopy(new File("/root/src/"), new File("/root/dest"), true, fop,
+        FileOpUtils.recursiveCopy(
+                fop.toPath("/root/src/"),
+                fop.toPath("/root/dest"),
+                true,
+                null,
                 new FakeProgressIndicator());
 
         // Verify the existing dest files
@@ -252,7 +256,11 @@ public class FileOpUtilsTest {
         fop.recordExistingFile(d1.getPath(), "content3");
 
         try {
-            FileOpUtils.recursiveCopy(new File("/root/src/"), new File("/root/dest"), true, fop,
+            FileOpUtils.recursiveCopy(
+                    fop.toPath("/root/src/"),
+                    fop.toPath("/root/dest"),
+                    true,
+                    null,
                     new FakeProgressIndicator());
             fail();
         } catch (IOException expected) {

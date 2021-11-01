@@ -58,7 +58,7 @@ class SdkLibDataFactory(
 
     private fun getDownloader(settingsController: SettingsController): Downloader {
         return LocalFileAwareDownloader(
-            LegacyDownloader(FileOpUtils.create(), settingsController)
+            LegacyDownloader(settingsController)
         )
     }
 
