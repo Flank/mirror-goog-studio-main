@@ -45,6 +45,9 @@ const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
 private val KOTLIN_MPP_PLUGIN_IDS = listOf("kotlin-multiplatform", "org.jetbrains.kotlin.multiplatform")
 
+private val irBackendByDefault = KotlinVersion(1, 5)
+private val irBackendIntroduced = KotlinVersion(1, 3, 70)
+
 /**
  * Returns `true` if any of the Kotlin plugins is applied (there are many Kotlin plugins). If we
  * want to check a specific Kotlin plugin, use another method (e.g.,
@@ -128,20 +131,19 @@ fun recordIrBackendForAnalytics(allPropertiesList: List<ComponentCreationConfig>
                         return@configure
                     }
 
-                    // We need reflection because AGP and KGP can be in different class loaders.
-                    val getKotlinOptions = task.javaClass.getMethod("getKotlinOptions")
-                    val taskOptions = getKotlinOptions.invoke(task)
-                    val getUseIR = taskOptions.javaClass.getMethod("getUseIR")
-                    if (getUseIR.invoke(taskOptions) as Boolean) {
-                        setIrUsedInAnalytics(creationConfig, project)
-                        return@configure
+                    val kotlinVersion = getProjectKotlinPluginKotlinVersion(project)
+                    val irBackendEnabled = when {
+                        kotlinVersion == null -> return@configure
+                        kotlinVersion >= irBackendByDefault -> {
+                            !getKotlinOptionsValueIfSet(task, extension, "getUseOldBackend", false)
+                        }
+                        kotlinVersion >= irBackendIntroduced -> {
+                            getKotlinOptionsValueIfSet(task, extension, "getUseIR", false)
+                        }
+                        else -> null
                     }
-
-                    val kotlinDslOptions =
-                            (extension as ExtensionAware).extensions.getByName("kotlinOptions")
-                    if (getUseIR.invoke(kotlinDslOptions) as Boolean) {
+                    irBackendEnabled?.let {
                         setIrUsedInAnalytics(creationConfig, project)
-                        return@configure
                     }
                 } catch (ignored: Throwable) {
                 }
@@ -149,6 +151,22 @@ fun recordIrBackendForAnalytics(allPropertiesList: List<ComponentCreationConfig>
         } catch (ignored: Throwable) {
         }
     }
+}
+
+private fun getKotlinOptionsValueIfSet(task: Task, extension: BaseExtension, methodName: String, defaultValue: Boolean): Boolean {
+    // We need reflection because AGP and KGP can be in different class loaders.
+    val getKotlinOptions = task.javaClass.getMethod("getKotlinOptions")
+    val taskOptions = getKotlinOptions.invoke(task)
+    val method = taskOptions.javaClass.getMethod(methodName)
+    val taskValue = method.invoke(taskOptions) as Boolean
+    if (defaultValue != taskValue) return taskValue
+
+    // If not specified on the task, check global DSL extension
+    val kotlinDslOptions = (extension as ExtensionAware).extensions.getByName("kotlinOptions")
+    val globalValue = method.invoke(kotlinDslOptions) as Boolean
+    if (defaultValue != globalValue) return globalValue
+
+    return defaultValue
 }
 
 private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, project: Project) {
@@ -183,9 +201,15 @@ fun addComposeArgsToKotlinCompile(
         false
     }
 
+    val kotlinVersion = getProjectKotlinPluginKotlinVersion(task.project)
     task.doFirst {
         it as KotlinCompile
-        it.kotlinOptions.useIR = true
+        kotlinVersion?.let { version ->
+            when {
+                version >= irBackendByDefault -> return@let // IR is enabled by default
+                version >= irBackendIntroduced -> it.kotlinOptions.useIR = true
+            }
+        }
         val extraFreeCompilerArgs = mutableListOf(
                 "-Xplugin=${compilerExtension.files.first().absolutePath}",
                 "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
