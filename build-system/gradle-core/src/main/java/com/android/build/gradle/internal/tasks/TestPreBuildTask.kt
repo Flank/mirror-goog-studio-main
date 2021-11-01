@@ -18,18 +18,17 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.GradleException
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Pre build task that checks that there are not differences between artifact versions between the
  * runtime classpath of tested variant, and runtime classpath of test variant.
+ *
+ * Caching disabled by default for this task in line with behavior of parent: [ClasspathComparisonTask]
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class TestPreBuildTask : ClasspathComparisonTask() {
 
     override fun onDifferentVersionsFound(

@@ -30,6 +30,10 @@ import java.io.File
  * artifacts. This is useful to warn user about potential issues that could arise from such
  * differences. E.g. for application, differences in runtime and compile classpath could result in
  * runtime failure.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
 @DisableCachingByDefault
 abstract class ClasspathComparisonTask : NonIncrementalTask() {
