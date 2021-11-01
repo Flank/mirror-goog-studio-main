@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -73,7 +72,7 @@ class LintStandaloneCustomRuleTest {
         // (/sdcard references) which are not included in that report, but *are*
         // included in the Android app report.
         project.executor().run(":app:clean", ":lint:lint", ":app:lint")
-        val result = project.executor().run(":app:clean", ":lint:lint", ":app:lint")
+        project.executor().run(":app:clean", ":lint:lint", ":app:lint")
 
         val lintReport = project.getSubproject("lint").file("lint-results.txt")
         val appReport = project.getSubproject("app").file("lint-report.txt")
@@ -90,11 +89,6 @@ class LintStandaloneCustomRuleTest {
             "MyDetector.java:38: Warning: New lint checks should be implemented in Kotlin to take advantage of a lot of Kotlin-specific mechanisms in the Lint API"
         assertThat(lintReport).contains(jdkSpecific)
         assertThat(appReport).doesNotContain(jdkSpecific)
-
-        // This is also regression test for b/204552946: without the fix but with the additional
-        // attribute as applied in app/build.gradle the above issues would be missing and the below
-        // warning would be present.
-        assertThat(result.stdout).doesNotContain("Apply the 'com.android.lint' plugin")
     }
 
     private fun isCheckSum(fileName: String): Boolean {

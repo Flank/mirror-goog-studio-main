@@ -28,17 +28,3 @@ dependencies {
     // works correctly
     compileOnly project(':lint')
 }
-
-// Add the category attribute to a consuming configuration as a regression test for b/204552946
-configurations {
-    debugCompileClasspath {
-        attributes {
-            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
-        }
-    }
-    debugRuntimeClasspath {
-        attributes {
-            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
-        }
-    }
-}
