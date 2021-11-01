@@ -18,7 +18,6 @@ package com.android.repository.testframework;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.impl.FileOpImpl;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -30,7 +29,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.List;
 
 /**
- * Mock version of {@link FileOpImpl} that wraps some common {@link File} operations on files and
+ * Mock version of {@link FileOp} that wraps some common {@link File} operations on files and
  * folders.
  *
  * <p>This version does not perform any file operation. Instead it records a textual representation
@@ -40,8 +39,8 @@ import java.util.List;
  * rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3". When processing {@link File},
  * you can convert them using {@link #getPlatformSpecificPath(File)}.
  *
- * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystems} and
- *     {@code com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystems} and {@code
+ *     com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
 @Deprecated
 public class MockFileOp extends FileOp {

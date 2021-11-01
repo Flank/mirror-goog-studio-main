@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 
 /**
- * Unit-test for the {@link MockFileOp}, which is a mock of {@link FileOpImpl} that doesn't touch
- * the file system. Just testing the test.
+ * Unit-test for the {@link MockFileOp}, which is a mock of FileOp that doesn't touch the file
+ * system. Just testing the test.
  */
 public class MockFileOpTest {
 

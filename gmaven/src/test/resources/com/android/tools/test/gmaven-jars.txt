@@ -2272,7 +2272,6 @@ com/android/tools/repository
   com/android/repository/impl/sources/generated/
   com/android/repository/impl/sources/generated/v1/
   com/android/repository/io/
-  com/android/repository/io/impl/
   com/android/repository/util/
   xsd/
   xsd/catalog.xml
@@ -2809,6 +2808,7 @@ com/android/tools/sdklib
   com/android/sdklib/repository/installer/
   com/android/sdklib/repository/legacy/
   com/android/sdklib/repository/legacy/descriptors/
+  com/android/sdklib/repository/legacy/io/
   com/android/sdklib/repository/legacy/local/
   com/android/sdklib/repository/legacy/remote/
   com/android/sdklib/repository/legacy/remote/internal/
