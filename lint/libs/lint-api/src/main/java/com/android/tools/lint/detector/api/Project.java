@@ -149,6 +149,8 @@ public class Project {
     protected List<File> javaLibraries;
     protected List<File> testSourceFolders;
     protected List<File> testLibraries;
+    protected List<File> testFixturesSourceFolders;
+    protected List<File> testFixturesLibraries;
     protected List<File> resourceFolders;
     protected List<File> generatedResourceFolders;
     protected List<File> assetFolders;
@@ -662,6 +664,16 @@ public class Project {
         }
 
         return testLibraries;
+    }
+
+    @NonNull
+    public List<File> getTestFixturesSourceFolders() {
+        return Collections.emptyList();
+    }
+
+    @NonNull
+    public List<File> getTestFixturesLibraries() {
+        return Collections.emptyList();
     }
 
     /**
@@ -1779,6 +1791,9 @@ public class Project {
                 merge(getGeneratedResourceFolders(), p.getGeneratedResourceFolders());
         testSourceFolders = merge(getTestSourceFolders(), p.getTestSourceFolders());
         testLibraries = merge(getTestLibraries(), p.getTestLibraries());
+        testFixturesSourceFolders =
+                merge(getTestFixturesSourceFolders(), p.getTestFixturesSourceFolders());
+        testFixturesLibraries = merge(getTestFixturesLibraries(), p.getTestFixturesLibraries());
         nonProvidedJavaLibraries = merge(getJavaLibraries(false), p.getJavaLibraries(false));
         javaLibraries = merge(getJavaLibraries(true), p.getJavaLibraries(true));
     }

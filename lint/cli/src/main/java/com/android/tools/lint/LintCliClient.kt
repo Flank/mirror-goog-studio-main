@@ -1371,6 +1371,11 @@ open class LintCliClient : LintClient {
             if (includeTests) {
                 classpathRoots.addAll(project.testLibraries)
             }
+            if (!flags.isIgnoreTestFixturesSources) {
+                sourceRoots.addAll(project.testFixturesSourceFolders)
+                classpathRoots.addAll(project.testFixturesLibraries)
+            }
+
             // Don't include all class folders:
             //  files.addAll(project.getJavaClassFolders());
             // These are the outputs from the sources and generated sources, which we will

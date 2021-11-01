@@ -329,6 +329,17 @@ public class Main {
                                 module.getModulePath(),
                                 variant.getName());
                     }
+                    int testFixturesSourceProviderIndex = 0;
+                    for (LintModelSourceProvider testFixturesSourceProvider :
+                            variant.getTestFixturesSourceProviders()) {
+                        addSourceProviderPathVariables(
+                                pathVariables,
+                                testFixturesSourceProvider,
+                                "testFixturesSourceProvider",
+                                testFixturesSourceProviderIndex++,
+                                module.getModulePath(),
+                                variant.getName());
+                    }
                 }
             }
 

@@ -96,6 +96,9 @@ open class LintModelModuleProject(
     private val testSourceProviders: List<LintModelSourceProvider>
         get() = variant.testSourceProviders
 
+    private val testFixturesSourceProviders: List<LintModelSourceProvider>
+        get() = variant.testFixturesSourceProviders
+
     override fun getBuildModule(): LintModelModule = variant.module
     override fun getBuildVariant(): LintModelVariant = variant
     override fun isLibrary(): Boolean = model.type === LintModelModuleType.LIBRARY ||
@@ -280,6 +283,31 @@ open class LintModelModuleProject(
             }
         }
         return testLibraries
+    }
+
+    override fun getTestFixturesSourceFolders(): MutableList<File> {
+        if (testFixturesSourceFolders == null) {
+            testFixturesSourceFolders = Lists.newArrayList()
+            testFixturesSourceProviders.forEach { provider ->
+                // model returns path whether or not it exists
+                provider.javaDirectories.filter { it.exists() }.forEach {
+                    testFixturesSourceFolders.add(it)
+                }
+            }
+        }
+        return testFixturesSourceFolders
+    }
+
+    override fun getTestFixturesLibraries(): MutableList<File> {
+        if (testFixturesLibraries == null) {
+            testFixturesLibraries = Lists.newArrayList()
+            variant.testFixturesArtifact?.let { artifact ->
+                artifact.dependencies.getAll().filterIsInstance<LintModelExternalLibrary>().forEach {
+                    it.addJars(testFixturesLibraries, false)
+                }
+            }
+        }
+        return testFixturesLibraries
     }
 
     override fun getPackage(): String? {
