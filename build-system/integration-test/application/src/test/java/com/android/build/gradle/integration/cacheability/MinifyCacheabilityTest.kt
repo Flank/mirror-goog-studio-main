@@ -71,7 +71,6 @@ class MinifyCacheabilityTest {
             ":processMinifiedManifest",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified",
-            ":writeMinifiedSigningConfigVersions"
 
         ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
@@ -89,6 +88,7 @@ class MinifyCacheabilityTest {
             ":packageMinified",
             ":processMinifiedResources",
             ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
+            ":writeMinifiedSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
         ).plus(
                 if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                     setOf(":mapMinifiedSourceSetPaths")
