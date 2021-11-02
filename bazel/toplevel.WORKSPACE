@@ -201,7 +201,6 @@ local_maven_repository(
         "javax.inject:javax.inject:1",
         "javax.xml.bind:jaxb-api:2.3.1",
         "junit:junit:4.13.2",
-        "org.junit:junit-bom:pom:5.7.2", # Added because of http://b/202838125
         "log4j:log4j:1.2.17",
         "net.java.dev.jna:jna:5.6.0",
         "net.java.dev.jna:jna-platform:5.6.0",
