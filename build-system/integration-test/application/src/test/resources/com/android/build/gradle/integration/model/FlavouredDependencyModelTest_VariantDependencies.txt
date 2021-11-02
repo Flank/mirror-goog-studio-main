@@ -66,9 +66,10 @@
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":lib1"
-            - buildType   = "debug"
+            - buildId        = ":"
+            - projectPath    = ":lib1"
+            - isTestFixtures = false
+            - buildType      = "debug"
             - productFlavors:
                * "market -> play"
                * "model -> basic"
@@ -87,9 +88,10 @@
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":lib1"
-            - buildType   = "debug"
+            - buildId        = ":"
+            - projectPath    = ":lib1"
+            - isTestFixtures = false
+            - buildType      = "debug"
             - productFlavors:
                * "market -> play"
                * "model -> basic"
@@ -108,9 +110,10 @@
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":lib2"
-            - buildType   = "debug"
+            - buildId        = ":"
+            - projectPath    = ":lib2"
+            - isTestFixtures = false
+            - buildType      = "debug"
             - productFlavors:
                * "market -> play"
                * "model -> basic"
@@ -129,9 +132,10 @@
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":lib2"
-            - buildType   = "debug"
+            - buildId        = ":"
+            - projectPath    = ":lib2"
+            - isTestFixtures = false
+            - buildType      = "debug"
             - productFlavors:
                * "market -> play"
                * "model -> basic"
@@ -150,9 +154,10 @@
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":lib3"
-            - buildType   = "debug"
+            - buildId        = ":"
+            - projectPath    = ":lib3"
+            - isTestFixtures = false
+            - buildType      = "debug"
             - productFlavors:
                * "market -> play"
             - attributes:

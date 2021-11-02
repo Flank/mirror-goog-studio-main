@@ -46,6 +46,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -66,6 +67,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -83,15 +85,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {PROJECT}/lib/lib.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
+         > libraryInfo:
             - group          = "__wrapped_aars__"
             - name           = ":|:lib"
             - version        = "unspecified"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes     = []
             - capabilities:
                * "project:lib:unspecified"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/jars/classes.jar{F}]

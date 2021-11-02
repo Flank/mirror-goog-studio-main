@@ -25,7 +25,8 @@ data class ProjectInfoImpl(
     override val attributes: Map<String, String>,
     override val capabilities: List<String>,
     override val buildId: String,
-    override val projectPath: String
+    override val projectPath: String,
+    override val isTestFixtures: Boolean
 ) : ProjectInfo, Serializable {
     companion object {
         @JvmStatic

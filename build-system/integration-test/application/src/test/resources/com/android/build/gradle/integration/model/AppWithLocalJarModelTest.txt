@@ -29,6 +29,7 @@
             - group          = "__local_aars__"
             - name           = {PROJECT}/libs/foo.jar{F}
             - version        = "unspecified"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes     = []

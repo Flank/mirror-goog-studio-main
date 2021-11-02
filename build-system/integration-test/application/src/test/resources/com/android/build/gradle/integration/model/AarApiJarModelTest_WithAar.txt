@@ -36,6 +36,7 @@
             - group          = "com.example"
             - name           = "myaar"
             - version        = "1"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -71,6 +72,7 @@
             - group          = "com.example"
             - name           = "myaar"
             - version        = "1"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:

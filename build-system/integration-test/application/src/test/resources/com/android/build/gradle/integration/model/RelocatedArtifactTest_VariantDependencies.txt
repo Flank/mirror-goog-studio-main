@@ -231,6 +231,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -251,6 +252,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -272,6 +274,7 @@
             - group          = "org.jetbrains.kotlinx"
             - name           = "kotlinx-coroutines-android"
             - version        = "1.5.2"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -297,6 +300,7 @@
             - group          = "org.jetbrains.kotlinx"
             - name           = "kotlinx-coroutines-android"
             - version        = "1.5.2"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -322,6 +326,7 @@
             - group          = "org.jetbrains.kotlinx"
             - name           = "kotlinx-coroutines-core-jvm"
             - version        = "1.5.2"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -343,6 +348,7 @@
             - group          = "org.jetbrains.kotlinx"
             - name           = "kotlinx-coroutines-core-jvm"
             - version        = "1.5.2"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -364,6 +370,7 @@
             - group          = "org.jetbrains.kotlinx"
             - name           = "kotlinx-coroutines-core"
             - version        = "1.5.2"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -385,6 +392,7 @@
             - group          = "org.jetbrains.kotlinx"
             - name           = "kotlinx-coroutines-core"
             - version        = "1.5.2"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -406,6 +414,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib-common"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -427,6 +436,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib-common"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -448,6 +458,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib-jdk7"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -469,6 +480,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib-jdk7"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -490,6 +502,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib-jdk8"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -511,6 +524,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib-jdk8"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -532,6 +546,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -553,6 +568,7 @@
             - group          = "org.jetbrains.kotlin"
             - name           = "kotlin-stdlib"
             - version        = "1.5.30"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -574,6 +590,7 @@
             - group          = "org.jetbrains"
             - name           = "annotations"
             - version        = "13.0"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -595,6 +612,7 @@
             - group          = "org.jetbrains"
             - name           = "annotations"
             - version        = "13.0"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:

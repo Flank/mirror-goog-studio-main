@@ -49,6 +49,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":lib"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -68,6 +69,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":lib"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -89,6 +91,7 @@
             - group          = "__local_aars__"
             - name           = {PROJECT}/lib/libs/foo.jar{F}
             - version        = "unspecified"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes     = []

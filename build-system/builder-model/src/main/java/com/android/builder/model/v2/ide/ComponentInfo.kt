@@ -47,4 +47,10 @@ interface ComponentInfo {
      * The list of capabilities associated with the component
      */
     val capabilities: List<String>
+
+    /**
+     * Indicates whether this component (library or module) is a test fixtures component (i.e. has
+     * a test fixtures capability).
+     */
+    val isTestFixtures: Boolean
 }

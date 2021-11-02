@@ -61,6 +61,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -81,6 +82,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -102,6 +104,7 @@
             - group          = "com.example"
             - name           = "aar"
             - version        = "1"
+            - isTestFixtures = true
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -138,6 +141,7 @@
             - group          = "com.example"
             - name           = "aar"
             - version        = "1"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -174,6 +178,7 @@
             - group          = "com.example"
             - name           = "aar"
             - version        = "1"
+            - isTestFixtures = true
             - buildType      = (null)
             - productFlavors = []
             - attributes:
@@ -210,6 +215,7 @@
             - group          = "com.example"
             - name           = "aar"
             - version        = "1"
+            - isTestFixtures = false
             - buildType      = (null)
             - productFlavors = []
             - attributes:

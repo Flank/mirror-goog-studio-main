@@ -17,6 +17,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:

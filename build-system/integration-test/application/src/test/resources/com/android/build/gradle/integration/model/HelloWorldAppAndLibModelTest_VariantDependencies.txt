@@ -49,6 +49,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -69,6 +70,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":app"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -88,6 +90,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":lib"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -107,6 +110,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":lib"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:

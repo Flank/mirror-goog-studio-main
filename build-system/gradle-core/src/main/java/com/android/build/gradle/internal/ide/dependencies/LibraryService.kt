@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.v2.LibraryImpl
 import com.android.build.gradle.internal.ide.v2.LibraryInfoImpl
 import com.android.build.gradle.internal.ide.v2.ProjectInfoImpl
+import com.android.build.gradle.internal.testFixtures.isLibraryTestFixturesCapability
+import com.android.build.gradle.internal.testFixtures.isProjectTestFixturesCapability
 import com.android.builder.model.v2.ide.Library
 import com.android.ide.common.caching.CreatingCache
 import com.android.utils.FileUtils
@@ -130,7 +132,10 @@ class LibraryServiceImpl(
                     getAttributeMap(it),
                     getCapabilityList(it),
                     stringCache.cacheString(component.build.name),
-                    stringCache.cacheString(component.projectPath)
+                    stringCache.cacheString(component.projectPath),
+                    it.capabilities.any { capability ->
+                        capability.isProjectTestFixturesCapability(component.projectName)
+                    }
                 )
             }
 
@@ -156,7 +161,12 @@ class LibraryServiceImpl(
                             getCapabilityList(it),
                             stringCache.cacheString(component.group),
                             stringCache.cacheString(component.module),
-                            stringCache.cacheString(component.version)
+                            stringCache.cacheString(component.version),
+                            it.capabilities.any { capability ->
+                                capability.isLibraryTestFixturesCapability(
+                                    libraryName = component.module
+                                )
+                            }
                         )
                     }
                 }
@@ -169,7 +179,8 @@ class LibraryServiceImpl(
                             capabilities = listOf(),
                             group = stringCache.cacheString(LOCAL_AAR_GROUPID),
                             name = stringCache.cacheString(it.absolutePath),
-                            version = stringCache.cacheString("unspecified")
+                            version = stringCache.cacheString("unspecified"),
+                            isTestFixtures = false
                         )
                     }
                 }
@@ -186,7 +197,8 @@ class LibraryServiceImpl(
                                 capabilities = getCapabilityList(it),
                                 group = WRAPPED_AAR_GROUPID,
                                 name = stringCache.cacheString("${component.build.name}|${component.projectPath}"),
-                                version = stringCache.cacheString("unspecified")
+                                version = stringCache.cacheString("unspecified"),
+                                isTestFixtures = false
                             )
                         }
                     }

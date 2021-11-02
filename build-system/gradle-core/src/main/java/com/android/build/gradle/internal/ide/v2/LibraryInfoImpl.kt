@@ -26,7 +26,8 @@ data class LibraryInfoImpl(
     override val capabilities: List<String>,
     override val group: String,
     override val name: String,
-    override val version: String
+    override val version: String,
+    override val isTestFixtures: Boolean
 ) : LibraryInfo, Serializable {
     companion object {
         @JvmStatic

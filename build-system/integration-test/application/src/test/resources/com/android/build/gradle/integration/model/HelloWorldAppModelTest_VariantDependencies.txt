@@ -30,6 +30,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
@@ -50,6 +51,7 @@
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":"
+            - isTestFixtures = false
             - buildType      = "debug"
             - productFlavors = []
             - attributes:
