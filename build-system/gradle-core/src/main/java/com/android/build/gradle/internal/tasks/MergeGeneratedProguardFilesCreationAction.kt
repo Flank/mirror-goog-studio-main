@@ -24,6 +24,10 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.builder.dexing.isProguardRule
 import org.gradle.api.tasks.TaskProvider
 
+/**
+ * Configuration action for a task to merge generated proguard files.
+ * See [MergeFileTask] for Task implementation.
+ */
 class MergeGeneratedProguardFilesCreationAction(
     creationConfig: VariantCreationConfig
 ) : VariantTaskCreationAction<MergeFileTask, VariantCreationConfig>(

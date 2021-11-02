@@ -24,7 +24,10 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import org.gradle.api.tasks.TaskProvider
 
-/** Configuration action for a task to merge aapt proguard files  */
+/**
+ * Configuration action for a task to merge aapt proguard files.
+ * See [MergeFileTask] for Task implementation.
+ */
 class MergeAaptProguardFilesCreationAction(
     creationConfig: VariantCreationConfig
 ) : VariantTaskCreationAction<MergeFileTask, VariantCreationConfig>(
