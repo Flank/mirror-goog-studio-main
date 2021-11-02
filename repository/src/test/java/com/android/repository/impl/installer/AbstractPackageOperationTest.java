@@ -32,7 +32,7 @@ import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -51,15 +51,18 @@ public class AbstractPackageOperationTest {
      */
     @Test
     public void resumeOperation() throws Exception {
-        MockFileOp fop = new MockFileOp();
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         RepositoryPackages packages = new RepositoryPackages();
         FakePackage.FakeRemotePackage remotePackage = new FakePackage.FakeRemotePackage("foo");
-        RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
+        RepoManager mgr = new FakeRepoManager(sdkRoot, packages);
         AtomicReference<PackageOperation.InstallStatus> status = new AtomicReference<>(
                 InstallStatus.NOT_STARTED);
         TestOperation op =
                 new TestOperation(
-                        remotePackage, mgr, new FakeDownloader(fop.toPath("tmp")), status);
+                        remotePackage,
+                        mgr,
+                        new FakeDownloader(sdkRoot.getRoot().resolve("tmp")),
+                        status);
         op.registerStateChangeListener((operation, progress) -> {
             if (operation.getInstallStatus() == InstallStatus.PREPARED) {
                 assertTrue(status.compareAndSet(InstallStatus.PREPARING,

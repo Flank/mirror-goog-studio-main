@@ -32,10 +32,13 @@ import com.android.repository.impl.meta.RevisionType;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
@@ -52,41 +55,41 @@ import org.xml.sax.SAXParseException;
 public class LocalRepoTest extends TestCase {
 
     // Test that we can parse a basic package.
-    public void testParseGeneric() {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFolder("/repo/random");
-        mockFop.recordExistingFile("/repo/random/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "\n"
-                        + "    <license type=\"text\" id=\"license1\">\n"
-                        + "        This is the license\n"
-                        + "        for this platform.\n"
-                        + "    </license>\n"
-                        + "\n"
-                        + "    <localPackage path=\"random\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "        <uses-license ref=\"license1\"/>\n"
-                        + "        <dependencies>\n"
-                        + "            <dependency path=\"tools\">\n"
-                        + "                <min-revision>\n"
-                        + "                    <major>2</major>\n"
-                        + "                    <micro>1</micro>\n"
-                        + "                </min-revision>\n"
-                        + "            </dependency>\n"
-                        + "        </dependencies>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>"
-        );
+    public void testParseGeneric() throws Exception {
+        Path sdkRoot =
+                InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo/random").getParent();
+        Files.write(
+                sdkRoot.resolve("random/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "\n"
+                                + "    <license type=\"text\" id=\"license1\">\n"
+                                + "        This is the license\n"
+                                + "        for this platform.\n"
+                                + "    </license>\n"
+                                + "\n"
+                                + "    <localPackage path=\"random\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "        <uses-license ref=\"license1\"/>\n"
+                                + "        <dependencies>\n"
+                                + "            <dependency path=\"tools\">\n"
+                                + "                <min-revision>\n"
+                                + "                    <major>2</major>\n"
+                                + "                    <micro>1</micro>\n"
+                                + "                </min-revision>\n"
+                                + "            </dependency>\n"
+                                + "        </dependencies>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
 
         RepoManager manager = RepoManager.create();
-        LocalRepoLoader localLoader =
-                new LocalRepoLoaderImpl(mockFop.toPath("/repo"), manager, null);
+        LocalRepoLoader localLoader = new LocalRepoLoaderImpl(sdkRoot, manager, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         progress.assertNoErrorsOrWarnings();
@@ -187,26 +190,27 @@ public class LocalRepoTest extends TestCase {
     }
 
     // Test that a package in an inconsistent location gives a warning.
-    public void testWrongPath() {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFile("/repo/bogus/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "\n"
-                        + "    <localPackage path=\"random\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>"
-        );
+    public void testWrongPath() throws Exception {
+        Path sdkRoot =
+                InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo/bogus").getParent();
+        Files.write(
+                sdkRoot.resolve("bogus/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "\n"
+                                + "    <localPackage path=\"random\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
 
         RepoManager manager = RepoManager.create();
-        LocalRepoLoader localLoader =
-                new LocalRepoLoaderImpl(mockFop.toPath("/repo"), manager, null);
+        LocalRepoLoader localLoader = new LocalRepoLoaderImpl(sdkRoot, manager, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         assertEquals(new Revision(3), p.getVersion());
@@ -214,40 +218,43 @@ public class LocalRepoTest extends TestCase {
     }
 
     // Test that a package in an inconsistent is overridden by one in the right place
-    public void testDuplicate() {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFile("/repo/bogus/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "\n"
-                        + "    <localPackage path=\"random\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>1</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>"
-        );
-        mockFop.recordExistingFile("/repo/random/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "\n"
-                        + "    <localPackage path=\"random\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>"
-        );
+    public void testDuplicate() throws Exception {
+        Path sdkRoot =
+                InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo/bogus").getParent();
+        Files.createDirectory(sdkRoot.resolve("random"));
+        Files.write(
+                sdkRoot.resolve("bogus/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "\n"
+                                + "    <localPackage path=\"random\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>1</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
+        Files.write(
+                sdkRoot.resolve("random/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "\n"
+                                + "    <localPackage path=\"random\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
 
         RepoManager manager = RepoManager.create();
-        LocalRepoLoader localLoader =
-                new LocalRepoLoaderImpl(mockFop.toPath("/repo"), manager, null);
+        LocalRepoLoader localLoader = new LocalRepoLoaderImpl(sdkRoot, manager, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         assertEquals(new Revision(3), p.getVersion());

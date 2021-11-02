@@ -31,7 +31,8 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Test;
@@ -41,136 +42,145 @@ import org.junit.Test;
  */
 public class AbstractInstallerTest {
     @Test
-    public void cantInstallInChild() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile("/sdk/foo/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "    <localPackage path=\"foo\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>");
+    public void cantInstallInChild() throws Exception {
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk/foo").getParent();
+        Files.write(
+                sdkRoot.resolve("foo/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "    <localPackage path=\"foo\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(sdkRoot.getRoot().resolve("tmp"));
 
         assertFalse(new TestInstaller(remote, mgr, downloader).prepare(progress));
         assertTrue(progress.getWarnings().stream().anyMatch(warning -> warning.contains("child")));
     }
 
     @Test
-    public void cantInstallInParent() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile("/sdk/foo/bar/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "    <localPackage path=\"foo;bar\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>");
+    public void cantInstallInParent() throws Exception {
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        Files.createDirectories(sdkRoot.resolve("foo/bar"));
+        Files.write(
+                sdkRoot.resolve("foo/bar/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "    <localPackage path=\"foo;bar\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
         FakeRemotePackage remote = new FakeRemotePackage("foo");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(sdkRoot.getRoot().resolve("tmp"));
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         // Install will still work, but in a different directory
         assertTrue(installer.prepare(progress));
-        assertEquals(fop.toPath("/sdk/foo-2"), installer.getLocation(progress));
+        assertEquals(sdkRoot.resolve("foo-2"), installer.getLocation(progress));
     }
 
     @Test
-    public void dontOverwriteExisting() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile(
-                "/sdk/foo/bar/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "    <localPackage path=\"foo;notbar\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>");
+    public void dontOverwriteExisting() throws Exception {
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        Files.createDirectories(sdkRoot.resolve("foo/bar"));
+        Files.write(
+                sdkRoot.resolve("foo/bar/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "    <localPackage path=\"foo;notbar\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(sdkRoot.getRoot().resolve("tmp"));
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertTrue(installer.prepare(progress));
         assertTrue(
                 progress.getWarnings().stream()
                         .anyMatch(warning -> warning.contains("(foo;notbar)")));
-        assertEquals(fop.toPath("/sdk/foo/bar-2"), installer.getLocation(progress));
+        assertEquals(sdkRoot.resolve("foo/bar-2"), installer.getLocation(progress));
     }
 
     @Test
-    public void useExistingPath() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile(
-                "/sdk/foo/notbar/package.xml",
-                "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                        + "    <localPackage path=\"foo;bar\">\n"
-                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                        + "        <revision>\n"
-                        + "            <major>3</major>\n"
-                        + "        </revision>\n"
-                        + "        <display-name>The first Android platform ever</display-name>\n"
-                        + "    </localPackage>\n"
-                        + "</repo:repository>");
+    public void useExistingPath() throws Exception {
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        Files.createDirectories(sdkRoot.resolve("foo/notbar"));
+        Files.write(
+                sdkRoot.resolve("foo/notbar/package.xml"),
+                ("<repo:repository\n"
+                                + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                                + "    <localPackage path=\"foo;bar\">\n"
+                                + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                                + "        <revision>\n"
+                                + "            <major>3</major>\n"
+                                + "        </revision>\n"
+                                + "        <display-name>The first Android platform ever</display-name>\n"
+                                + "    </localPackage>\n"
+                                + "</repo:repository>")
+                        .getBytes(StandardCharsets.UTF_8));
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(sdkRoot.getRoot().resolve("tmp"));
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertTrue(installer.prepare(progress));
         assertEquals(
-                fop.getPlatformSpecificPath("/sdk/foo/notbar"),
+                InMemoryFileSystems.getPlatformSpecificPath("/sdk/foo/notbar"),
                 installer.getLocation(progress).toString());
     }
 
     @Test
     public void deleteUnusedDirs() {
-        MockFileOp fop = new MockFileOp();
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(sdkRoot.getRoot().resolve("tmp"));
         // Consume temp dir 1
         AbstractPackageOperation.getNewPackageOperationTempDir(
                 mgr, AbstractPackageOperation.TEMP_DIR_PREFIX);
@@ -200,16 +210,18 @@ public class AbstractInstallerTest {
 
     @Test
     public void installerProperties() {
-        MockFileOp fop = new MockFileOp();
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         RemotePackage remote = new FakeRemotePackage("foo;bar");
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(sdkRoot.getRoot().resolve("tmp"));
         AbstractInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertSame(installer.getPackage(), remote);
-        assertEquals(installer.getName(), String.format("Install %1$s (revision: %2$s)",
-                                                        remote.getDisplayName(),
-                                                        remote.getVersion().toString()));
+        assertEquals(
+                installer.getName(),
+                String.format(
+                        "Install %1$s (revision: %2$s)",
+                        remote.getDisplayName(), remote.getVersion()));
     }
 
     private static class TestInstaller extends AbstractInstaller {
