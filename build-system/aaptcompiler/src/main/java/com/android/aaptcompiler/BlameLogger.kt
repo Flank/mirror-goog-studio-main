@@ -20,7 +20,6 @@ import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.SourcePosition
 import com.android.utils.ILogger
 import java.io.File
-import java.lang.IllegalStateException
 import javax.xml.stream.Location
 
 internal fun blameSource(
@@ -37,40 +36,19 @@ internal fun blameSource(
     BlameLogger.Source(source.path, location.lineNumber, location.columnNumber)
 
 class BlameLogger(
-        val logger: ILogger,
-        val identifiedResSourceSets: Map<String, String>,
-        val blameMap: (Source) -> Source = { it }) {
+    val logger: ILogger,
+    private val userVisibleSourceTransform: (String) -> String,
+    val blameMap: (Source) -> Source = { it }
+) {
 
     constructor(logger: ILogger, blameMap: (Source) -> Source = { it })
-            : this(logger, emptyMap(), blameMap)
+            : this(logger, { it }, blameMap)
 
     data class Source(
             val sourcePath: String,
             val line: Int = -1,
             val column: Int = -1
     ) {
-        fun getAbsoluteSourcePath(identifiedResSourceSets: Map<String, String>) : String {
-            if (identifiedResSourceSets.none()) {
-                throw IllegalStateException(
-                        """Unable to get absolute path from $sourcePath
-                   because no relative root paths are present.""")
-            }
-            val separatorIndex = sourcePath.indexOf(':')
-            if (separatorIndex == -1) {
-                throw IllegalArgumentException(
-                        """Source set identifier and relative path must be separated by ':'.
-                   Relative path: $sourcePath""")
-            }
-            val sourceSetPrefix = sourcePath.substring(0, separatorIndex)
-            val resourcePathFromSourceSet =
-                    sourcePath.substring(separatorIndex + 1, sourcePath.length)
-            val absolutePath = identifiedResSourceSets[sourceSetPrefix]
-                    ?: throw NoSuchElementException(
-                            """Unable to get absolute path from $sourcePath
-                       because $sourceSetPrefix is not key in sourceSetPathMap.""")
-
-            return "$absolutePath$resourcePathFromSourceSet"
-        }
 
         override fun toString(): String {
             var result = sourcePath
@@ -145,13 +123,9 @@ class BlameLogger(
     }
 
     internal fun getOutputSource(source: Source) : Source {
-        return if (identifiedResSourceSets.any()) {
-            getOriginalSource(
-                    source.copy(sourcePath = source.getAbsoluteSourcePath(identifiedResSourceSets))
+        return getOriginalSource(
+                source.copy(sourcePath = userVisibleSourceTransform(source.sourcePath))
             )
-        } else {
-            getOriginalSource(source)
-        }
     }
 
     fun getOriginalSource(source: Source): Source {

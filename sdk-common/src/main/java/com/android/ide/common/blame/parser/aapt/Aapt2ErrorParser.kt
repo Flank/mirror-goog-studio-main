@@ -19,8 +19,8 @@ package com.android.ide.common.blame.parser.aapt
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.parser.ParsingFailedException
 import com.android.ide.common.blame.parser.util.OutputLineReader
+import com.android.ide.common.resources.isRelativeSourceSetResource
 import com.android.ide.common.resources.relativeResourcePathToAbsolutePath
-import com.android.ide.common.resources.relativeResourceSeparator
 import com.android.utils.ILogger
 import java.util.ArrayList
 import java.util.regex.Matcher
@@ -101,8 +101,8 @@ class Aapt2ErrorParser(val identifiedSourceSetMap: Map<String, String> = emptyMa
             return if (!m.matches()) {
                 null
             } else {
-                val rawSourcePath = getSourcePath(m)
-                val absoluteSourcePath = if (relativeResourceSeparator() in rawSourcePath) {
+                val rawSourcePath =  getSourcePath(m)
+                val absoluteSourcePath = if (isRelativeSourceSetResource(rawSourcePath)) {
                     relativeResourcePathToAbsolutePath(rawSourcePath, sourceSetMap)
                 } else {
                     rawSourcePath

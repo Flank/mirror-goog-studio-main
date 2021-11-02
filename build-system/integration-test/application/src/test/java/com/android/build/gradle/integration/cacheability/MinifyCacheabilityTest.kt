@@ -76,7 +76,7 @@ class MinifyCacheabilityTest {
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
                 setOf(":generateMinifiedManifestClass")
             } else {
-                emptySet()
+                setOf(":processMinifiedResources")
             }
         ),
         DID_WORK to setOf(
@@ -86,14 +86,13 @@ class MinifyCacheabilityTest {
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedResources",
             ":packageMinified",
-            ":processMinifiedResources",
             ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
             ":writeMinifiedSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
         ).plus(
                 if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                     setOf(":mapMinifiedSourceSetPaths")
                 } else {
-                    emptySet()
+                    setOf(":processMinifiedResources")
                 }
         ),
         SKIPPED to setOf(

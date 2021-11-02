@@ -17,10 +17,8 @@
 package com.android.aaptcompiler
 
 import com.android.utils.ILogger
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.File
 
 class BlameLoggerTest {
 
@@ -47,40 +45,6 @@ class BlameLoggerTest {
         assertThat(loggedError.second).isNull()
     }
 
-    @Test
-    fun testLogErrorCompatibleWithRelativeResources() {
-        val mockLogger = MockLogger()
-        val sourceSetMap = mapOf("com.example.test-app-0" to "/baz")
-        val blameLogger = BlameLogger(mockLogger, sourceSetMap)
-        blameLogger.error("Failed to read file",
-                BlameLogger.Source("com.example.test-app-0:/bar.xml", 3, 5))
-        assertThat(mockLogger.errors).hasSize(1)
-        val loggedError = mockLogger.errors.single()
-        assertThat(loggedError.first).contains("/baz/bar.xml:3:5: Failed to read file")
-    }
-
-    @Test
-    fun testGetOutputSourceChangesRelativeSourceSetPathToAbsolute() {
-        val mockLogger = MockLogger()
-        val sourceSetMap = mapOf("com.example.test-app-0" to "/baz")
-        val blameLogger = BlameLogger(mockLogger, sourceSetMap)
-        val relativeSourceFile = BlameLogger.Source("com.example.test-app-0:/foo.xml", 1)
-        assertThat(blameLogger.getOutputSource(relativeSourceFile).sourcePath)
-                .isEqualTo("/baz/foo.xml")
-    }
-
-    @Test
-    fun testShouldConvertRelativePathFormatToAbsolutePathFormat() {
-        val sourceSetPathMap =
-                mapOf("com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main")
-        val testRelativePath = "com.foobar.myproject.app-0:/res/layout/activity_map_tv.xml"
-        val expectedAbsolutePath = "/usr/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml"
-        val blameLoggerSource = BlameLogger.Source(testRelativePath)
-
-        assertThat(blameLoggerSource.getAbsoluteSourcePath(sourceSetPathMap))
-                .isEqualTo(expectedAbsolutePath)
-    }
-
     class MockLogger: ILogger {
         val warnings: MutableList<String> = mutableListOf()
         val infos: MutableList<String> = mutableListOf()
@@ -105,9 +69,9 @@ class BlameLoggerTest {
     }
 }
 
-fun getMockBlameLogger(
-        mockLogger: BlameLoggerTest.MockLogger,
-        identifiedSourceSetMap : Map<String, String> = emptyMap()) =
-    BlameLogger(mockLogger, identifiedSourceSetMap) {
+fun getMockBlameLogger(mockLogger: BlameLoggerTest.MockLogger) =
+    BlameLogger(
+        mockLogger
+    ) {
         BlameLogger.Source(it.sourcePath + ".rewritten", it.line + 1, it.column + 2)
     }
