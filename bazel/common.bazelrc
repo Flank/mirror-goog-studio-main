@@ -59,9 +59,9 @@ build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
 build --crosstool_top=@native_toolchain//:toolchain
 
 # cpp sandbox is very slow on mac and linux
-build --strategy=CppCompile=standalone
-build --strategy=CppLink=standalone
-build --strategy=CcStrip=standalone
+build --strategy=CppCompile=local
+build --strategy=CppLink=local
+build --strategy=CcStrip=local
 build --stripopt=--strip-unneeded
 
 # lnzipper expects workspace filesystem state (i.e. symlinks) which may not
