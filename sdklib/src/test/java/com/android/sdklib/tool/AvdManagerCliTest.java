@@ -273,7 +273,7 @@ public class AvdManagerCliTest {
             "create", "avd",
             "--name", "testWearApi",
             "-k", "system-images;android-26;android-wear;armeabi-v7a",
-            "-d", "wear_round"
+            "-d", "wearos_small_round"
           });
         mAvdManager.reloadAvds(mLogger);
         mLogger.clear();
@@ -290,7 +290,7 @@ public class AvdManagerCliTest {
                         + "P   Sdcard: 512 MB\n"
                         + "P ---------\n"
                         + "P     Name: testWearApi\n"
-                        + "P   Device: wear_roundP  (Google)P \n"
+                        + "P   Device: wearos_small_roundP  (Google)P \n"
                         + "P     Path: "
                         + InMemoryFileSystems.getPlatformSpecificPath("/avd/testWearApi.avd")
                         + "\n"
@@ -381,9 +381,9 @@ public class AvdManagerCliTest {
                         "P pixel_c\n",
                         "P pixel_xl\n",
                         "P resizable\n",
-                        "P wear_round\n",
-                        "P wear_round_chin_320_290\n",
-                        "P wear_square\n",
+                        "P wearos_large_round\n",
+                        "P wearos_small_round\n",
+                        "P wearos_square\n",
                         "P 2.7in QVGA\n",
                         "P 2.7in QVGA slider\n",
                         "P 3.2in HVGA slider (ADP1)\n",
@@ -407,7 +407,7 @@ public class AvdManagerCliTest {
                 mLogger.getMessages().stream()
                         .filter(s -> s.startsWith("P"))
                         .collect(Collectors.toList()));
-        assertTrue(mLogger.getMessages().contains("P wear_round_chin_320_290\n"));
+        assertTrue(mLogger.getMessages().contains("P wearos_small_round\n"));
         assertTrue(mLogger.getMessages().contains("P Nexus 6P\n"));
         assertTrue(mLogger.getMessages().contains("P tv_1080p\n"));
         mLogger.clear();

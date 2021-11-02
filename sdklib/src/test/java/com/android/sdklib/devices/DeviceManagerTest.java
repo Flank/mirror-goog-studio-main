@@ -116,9 +116,9 @@ public class DeviceManagerTest {
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Wear OS Round",
-                        "Wear OS Round Chin",
+                        "Wear OS Small Round",
                         "Wear OS Square",
+                        "Wear OS Large Round",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -174,9 +174,9 @@ public class DeviceManagerTest {
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Wear OS Round",
-                        "Wear OS Round Chin",
+                        "Wear OS Small Round",
                         "Wear OS Square",
+                        "Wear OS Large Round",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -280,9 +280,9 @@ public class DeviceManagerTest {
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Wear OS Round",
-                        "Wear OS Round Chin",
+                        "Wear OS Small Round",
                         "Wear OS Square",
+                        "Wear OS Large Round",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -336,9 +336,9 @@ public class DeviceManagerTest {
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Wear OS Round",
-                        "Wear OS Round Chin",
+                        "Wear OS Small Round",
                         "Wear OS Square",
+                        "Wear OS Large Round",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "My Custom Tablet",
@@ -436,9 +436,9 @@ public class DeviceManagerTest {
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Wear OS Round",
-                        "Wear OS Round Chin",
+                        "Wear OS Small Round",
                         "Wear OS Square",
+                        "Wear OS Large Round",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -492,9 +492,9 @@ public class DeviceManagerTest {
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Wear OS Round",
-                        "Wear OS Round Chin",
+                        "Wear OS Small Round",
                         "Wear OS Square",
+                        "Wear OS Large Round",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Mock Tag 1 Device Name",
@@ -610,8 +610,8 @@ public class DeviceManagerTest {
         // Create a local DeviceManager, get the number of devices, and verify one device
         DeviceManager localDeviceManager = createDeviceManager();
         int count = localDeviceManager.getDevices(EnumSet.allOf(DeviceFilter.class)).size();
-        Device localDevice = localDeviceManager.getDevice("wear_round", "Google");
-        assertThat(localDevice.getDisplayName()).isEqualTo("Wear OS Round");
+        Device localDevice = localDeviceManager.getDevice("wearos_small_round", "Google");
+        assertThat(localDevice.getDisplayName()).isEqualTo("Wear OS Small Round");
 
         // Create two system image directories with different definitions of the
         // device that we just checked. The version in android-25 should override
@@ -629,7 +629,7 @@ public class DeviceManagerTest {
                         "x86",
                         new Path[] {},
                         p);
-        sdkManager.makeSystemImageFolder(imageWithDevice22, "wear_round");
+        sdkManager.makeSystemImageFolder(imageWithDevice22, "wearos_small_round");
 
         DetailsTypes.AddonDetailsType details25 = AndroidSdkHandler.getAddonModule()
           .createLatestFactory().createAddonDetailsType();
@@ -644,7 +644,7 @@ public class DeviceManagerTest {
                         "arm",
                         new Path[] {},
                         p);
-        sdkManager.makeSystemImageFolder(imageWithDevice25, "wear_round");
+        sdkManager.makeSystemImageFolder(imageWithDevice25, "wearos_small_round");
 
         // Re-create the local DeviceManager using the new directory,
         // fetch the device, and verify that it is the right one.
@@ -652,13 +652,13 @@ public class DeviceManagerTest {
         sdkManager.getSdkHandler().getSdkManager(progress).markLocalCacheInvalid();
         localDeviceManager = createDeviceManager();
 
-        localDevice = localDeviceManager.getDevice("wear_round", "Google");
+        localDevice = localDeviceManager.getDevice("wearos_small_round", "Google");
         // (The "Android wear" part comes from the tag "android-wear")
         assertThat(localDevice.getDisplayName()).isEqualTo("Mock Android wear Device Name");
         assertThat(localDevice.getDefaultState().getHardware().getCpu()).isEqualTo("arm");
 
         // Change the name of that device and add it to our local DeviceManager again
-        Device dmDevice = dm.getDevice("wear_round", "Google");
+        Device dmDevice = dm.getDevice("wearos_small_round", "Google");
         Builder b = new Device.Builder(dmDevice);
         b.setName("Custom");
         localDeviceManager.addUserDevice(b.build());
@@ -666,7 +666,7 @@ public class DeviceManagerTest {
 
         // Fetch the device from our local DeviceManager and verify
         // that it has the updated name
-        localDevice = localDeviceManager.getDevice("wear_round", "Google");
+        localDevice = localDeviceManager.getDevice("wearos_small_round", "Google");
         assertThat(localDevice.getDisplayName()).isEqualTo("Custom");
 
         // Verify that the total number of devices is unchanged
@@ -678,7 +678,7 @@ public class DeviceManagerTest {
         Device testDeviceBefore = dm.getDevice("Test Round User Wear Device", "User");
         assertThat(testDeviceBefore).isNull();
 
-        Device squareDevice = dm.getDevice("wear_square", "Google");
+        Device squareDevice = dm.getDevice("wearos_square", "Google");
         String squareName = squareDevice.getDisplayName();
         assertThat(squareName).isEqualTo("Wear OS Square");
         assertThat(squareDevice.isScreenRound()).isFalse();
