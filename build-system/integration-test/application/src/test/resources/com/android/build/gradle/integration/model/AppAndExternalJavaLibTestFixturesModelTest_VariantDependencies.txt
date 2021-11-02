@@ -13,7 +13,7 @@
    < mainArtifact
    > androidTestArtifact:
       > compileDependencies:
-         - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:1:
+         - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
                - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib:1:
@@ -26,7 +26,7 @@
             - dependencies = "*visited*"
       < compileDependencies
       - runtimeDependencies:
-         - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:1:
+         - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
                - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1:
@@ -94,7 +94,7 @@
          - lintJar            = (null)
          - androidLibraryData = (null)
       < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
-      > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:1:
+      > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:unspecified:
          - type               = JAVA_LIBRARY
          - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1-test-fixtures.jar{F}
          - projectInfo        = (null)
@@ -111,11 +111,11 @@
                * "org.gradle.status -> release"
                * "org.gradle.usage -> java-api"
             - capabilities:
-               * "com.example:random-lib-test-fixtures:1"
+               * "com.example:random-lib-test-fixtures:unspecified"
          < libraryInfo
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:1
+      < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:unspecified
       > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib:1:
          - type               = JAVA_LIBRARY
          - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1.jar{F}
@@ -138,7 +138,7 @@
          - lintJar            = (null)
          - androidLibraryData = (null)
       < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib:1
-      > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:1:
+      > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:unspecified:
          - type               = JAVA_LIBRARY
          - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1-test-fixtures.jar{F}
          - projectInfo        = (null)
@@ -155,11 +155,11 @@
                * "org.gradle.status -> release"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
-               * "com.example:random-lib-test-fixtures:1"
+               * "com.example:random-lib-test-fixtures:unspecified"
          < libraryInfo
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:1
+      < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:unspecified
       > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1:
          - type               = JAVA_LIBRARY
          - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1.jar{F}
