@@ -62,7 +62,7 @@ public class AbstractInstallerTest {
 
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
 
         assertFalse(new TestInstaller(remote, mgr, downloader).prepare(progress));
         assertTrue(progress.getWarnings().stream().anyMatch(warning -> warning.contains("child")));
@@ -90,7 +90,7 @@ public class AbstractInstallerTest {
 
         FakeRemotePackage remote = new FakeRemotePackage("foo");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         // Install will still work, but in a different directory
@@ -121,7 +121,7 @@ public class AbstractInstallerTest {
 
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertTrue(installer.prepare(progress));
@@ -154,7 +154,7 @@ public class AbstractInstallerTest {
 
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertTrue(installer.prepare(progress));
@@ -170,7 +170,7 @@ public class AbstractInstallerTest {
         mgr.setLocalPath(fop.toPath("/sdk"));
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         // Consume temp dir 1
         AbstractPackageOperation.getNewPackageOperationTempDir(
                 mgr, AbstractPackageOperation.TEMP_DIR_PREFIX);
@@ -204,7 +204,7 @@ public class AbstractInstallerTest {
         RepoManager mgr = new RepoManagerImpl();
         mgr.setLocalPath(fop.toPath("/sdk"));
         RemotePackage remote = new FakeRemotePackage("foo;bar");
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         AbstractInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertSame(installer.getPackage(), remote);
         assertEquals(installer.getName(), String.format("Install %1$s (revision: %2$s)",

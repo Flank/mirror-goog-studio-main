@@ -81,7 +81,7 @@ public class SdkManagerCliTest {
 
     @Before
     public void setUp() throws Exception {
-        mDownloader = new FakeDownloader(mFileOp);
+        mDownloader = new FakeDownloader(mFileOp.toPath("tmp"));
 
         RemoteRepoLoader loader = createRemoteRepo();
 

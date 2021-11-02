@@ -76,7 +76,7 @@ public class SourceInstallListenerTest extends TestCase {
         mgr.registerSchemaModule(AndroidSdkHandler.getRepositoryModule());
 
         // Create the archive and register the URL
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
             zos.putNextEntry(new ZipEntry("top-level/sources"));

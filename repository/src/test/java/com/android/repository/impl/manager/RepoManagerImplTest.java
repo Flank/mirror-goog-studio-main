@@ -75,7 +75,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(remoteCallback),
                 ImmutableList.of(errorCallback),
                 runner,
-                new FakeDownloader(fop),
+                new FakeDownloader(fop.toPath("tmp")),
                 null);
 
         assertEquals(4, counter.get());
@@ -106,7 +106,7 @@ public class RepoManagerImplTest extends TestCase {
                     ImmutableList.of(remoteCallback),
                     ImmutableList.of(errorCallback),
                     runner,
-                    new FakeDownloader(fop),
+                    new FakeDownloader(fop.toPath("tmp")),
                     null);
         } catch (Exception e) {
             // expected
@@ -138,7 +138,7 @@ public class RepoManagerImplTest extends TestCase {
                     ImmutableList.of(remoteCallback),
                     ImmutableList.of(errorCallback),
                     runner,
-                    new FakeDownloader(fop),
+                    new FakeDownloader(fop.toPath("tmp")),
                     null);
         } catch (Exception e) {
             // expected
@@ -202,7 +202,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(remoteCallback1),
                 ImmutableList.of(errorCallback),
                 runner,
-                new FakeDownloader(fop),
+                new FakeDownloader(fop.toPath("tmp")),
                 null);
         mgr.load(
                 0,
@@ -210,7 +210,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(remoteCallback2),
                 ImmutableList.of(errorCallback),
                 runner,
-                new FakeDownloader(fop),
+                new FakeDownloader(fop.toPath("tmp")),
                 null);
         runLocal.release();
 
@@ -262,7 +262,7 @@ public class RepoManagerImplTest extends TestCase {
                 null,
                 null,
                 runner,
-                new FakeDownloader(fop),
+                new FakeDownloader(fop.toPath("tmp")),
                 null);
         assertFalse(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
@@ -274,13 +274,14 @@ public class RepoManagerImplTest extends TestCase {
                 null,
                 null,
                 runner,
-                new FakeDownloader(fop),
+                new FakeDownloader(fop.toPath("tmp")),
                 null);
         assertFalse(localDidRun.get());
         assertFalse(remoteDidRun.get());
 
         // now we will timeout, so they should run again
-        mgr.loadSynchronously(-1, null, null, null, runner, new FakeDownloader(fop), null);
+        mgr.loadSynchronously(
+                -1, null, null, null, runner, new FakeDownloader(fop.toPath("tmp")), null);
         assertTrue(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
     }
@@ -356,7 +357,7 @@ public class RepoManagerImplTest extends TestCase {
         mgr.setLocalPath(fop.toPath("/repo"));
 
         FakeProgressRunner runner = new FakeProgressRunner();
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
 
         @SuppressWarnings("ConstantConditions")
         RepositorySourceProvider provider = new FakeRepositorySourceProvider(

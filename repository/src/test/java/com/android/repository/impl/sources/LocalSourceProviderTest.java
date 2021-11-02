@@ -242,7 +242,7 @@ public class LocalSourceProviderTest {
         provider.addSource(source);
         provider.addSource(source2);
         // We don't actually need the urls to be registered for this test
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
                         ImmutableList.of(

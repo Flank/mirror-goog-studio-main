@@ -57,7 +57,9 @@ public class AbstractPackageOperationTest {
         RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
         AtomicReference<PackageOperation.InstallStatus> status = new AtomicReference<>(
                 InstallStatus.NOT_STARTED);
-        TestOperation op = new TestOperation(remotePackage, mgr, new FakeDownloader(fop), status);
+        TestOperation op =
+                new TestOperation(
+                        remotePackage, mgr, new FakeDownloader(fop.toPath("tmp")), status);
         op.registerStateChangeListener((operation, progress) -> {
             if (operation.getInstallStatus() == InstallStatus.PREPARED) {
                 assertTrue(status.compareAndSet(InstallStatus.PREPARING,

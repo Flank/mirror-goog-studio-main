@@ -88,7 +88,7 @@ public class BasicInstallerTest extends TestCase {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 runner,
-                new FakeDownloader(fop),
+                new FakeDownloader(fop.toPath("tmp")),
                 new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         RepositoryPackages pkgs = mgr.getPackages();
@@ -150,7 +150,7 @@ public class BasicInstallerTest extends TestCase {
         RepoManager mgr = new RepoManagerImpl();
         Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         URL repoUrl = new URL("http://example.com/myrepo.xml");
 
         // The repo we're going to download
@@ -247,7 +247,7 @@ public class BasicInstallerTest extends TestCase {
         RepoManager mgr = new RepoManagerImpl();
         Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         URL repoUrl = new URL("http://example.com/myrepo.xml");
 
         // The repo we're going to download
@@ -371,7 +371,7 @@ public class BasicInstallerTest extends TestCase {
         mgr.setLocalPath(root);
 
         // Create the archive and register the repo to be downloaded.
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         URL repoUrl = new URL("http://example.com/myrepo.xml");
         downloader.registerUrl(repoUrl, getClass().getResourceAsStream("/testRepo.xml"));
         URL archiveUrl = new URL("http://example.com/2/arch1");
@@ -460,7 +460,7 @@ public class BasicInstallerTest extends TestCase {
         Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
         FakeDownloader downloader =
-                new FakeDownloader(fop) {
+                new FakeDownloader(fop.toPath("tmp")) {
                     @Override
                     public void downloadFully(
                             @NonNull URL url,

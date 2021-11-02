@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.Checksum;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.FileOpUtils;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -29,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -38,12 +38,17 @@ import java.util.Map;
  */
 public class FakeDownloader implements Downloader {
 
-    private final MockFileOp mFileOp;
+    private final Path mDownloadLocation;
 
     private final Map<URL, byte[]> mRegisteredFiles = Maps.newHashMap();
 
-    public FakeDownloader(MockFileOp fop) {
-        mFileOp = fop;
+    public FakeDownloader(Path downloadLocation) {
+        mDownloadLocation = downloadLocation;
+        try {
+            Files.createDirectories(mDownloadLocation);
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     public void registerUrl(URL url, byte[] data) {
@@ -80,10 +85,14 @@ public class FakeDownloader implements Downloader {
         if (fileName.startsWith("/")) {
             fileName = fileName.substring(1);
         }
-        Path file =
-                FileOpUtils.getNewTempDir("FakeDownloader", mFileOp.getFileSystem())
-                        .resolve(fileName);
-        mFileOp.recordExistingFile(file, 0, mRegisteredFiles.get(url));
+        Path file = mDownloadLocation.resolve(fileName);
+        if (Files.notExists(file)) {
+            Files.createFile(file);
+        }
+        byte[] contents = mRegisteredFiles.get(url);
+        if (contents != null) {
+            Files.write(file, mRegisteredFiles.get(url));
+        }
         return file;
     }
 
@@ -103,7 +112,7 @@ public class FakeDownloader implements Downloader {
      */
     static class ReopeningInputStream extends InputStream {
 
-        private InputStream mWrapped;
+        private final InputStream mWrapped;
 
         public ReopeningInputStream(InputStream toWrap) {
             toWrap.mark(Integer.MAX_VALUE);

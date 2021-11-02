@@ -65,7 +65,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 "Source UI Name", true,
                 ImmutableSet.of(RepoManager.getGenericModule()),
                 null);
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(
                 new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo2.xml"));
@@ -106,7 +106,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                                                              ImmutableSet.of(RepoManager.getCommonModule(),
                                                                      RepoManager.getGenericModule()),
                                                              null);
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepoWithChannels.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -161,7 +161,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         ImmutableSet.of(
                                 RepoManager.getCommonModule(), RepoManager.getGenericModule()),
                         null);
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo.xml"));
         downloader.registerUrl(new URL(legacyUrl),
@@ -204,7 +204,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         ImmutableSet.of(
                                 RepoManager.getCommonModule(), RepoManager.getGenericModule()),
                         null);
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(
                 new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo2.xml"));
@@ -274,7 +274,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         true,
                         ImmutableSet.of(RepoManager.getGenericModule()),
                         new FakeRepositorySourceProvider(ImmutableList.of()));
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
@@ -293,7 +293,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         assertEquals("file", pkgs.get("mypackage;foo").getDisplayName());
 
         // file preferred over url: absolute paths
-        downloader = new FakeDownloader(new MockFileOp());
+        downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(new URL("file:///foo/bar"),
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "http", "http://example.com").getBytes());
         downloader.registerUrl(new URL("file:///foo/bar2"),
@@ -302,7 +302,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         assertEquals("file", pkgs.get("mypackage;foo").getDisplayName());
 
         // newer http preferred over file
-        downloader = new FakeDownloader(new MockFileOp());
+        downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(new URL("http://www.example.com"),
                 String.format(TEST_LOCAL_PREFERRED_REPO, 2, "http", "foo").getBytes());
         downloader.registerUrl(new URL("file:///foo/bar"),
@@ -329,7 +329,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         ImmutableSet.of(
                                 RepoManager.getCommonModule(), RepoManager.getGenericModule()),
                         null);
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         downloader.registerUrl(
                 new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo2.xml"));
@@ -387,7 +387,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         + "        </complete></archive></archives>\n"
                         + "    </remotePackage>\n";
 
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
         for (int i = 1; i <= 5; i++) {
             String package1 = String.format(packageTemplate, i, "bad");
             String package2 = String.format(packageTemplate, i + 1, "good");
@@ -436,7 +436,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         ImmutableList.of(new FakeRepositorySourceProvider(sourceList)), null);
         CyclicBarrier barrier = new CyclicBarrier(sourceList.size());
         FakeDownloader downloader =
-                new FakeDownloader(new MockFileOp()) {
+                new FakeDownloader(new MockFileOp().toPath("tmp")) {
                     private void awaitBarrier() {
                         try {
                             barrier.await();

@@ -40,7 +40,7 @@ public class AddonListSourceProviderTest extends TestCase {
 
     public void testRemoteSource() throws Exception {
         MockFileOp fop = new MockFileOp();
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         AndroidSdkHandler handler = new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();

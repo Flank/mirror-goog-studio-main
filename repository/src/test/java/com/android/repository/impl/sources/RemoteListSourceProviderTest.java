@@ -52,7 +52,7 @@ public class RemoteListSourceProviderTest extends TestCase {
                 ImmutableList.of(RepoManager.getCommonModule()));
         RemoteListSourceProvider provider = RemoteListSourceProvider
                 .create("http://example.com/sourceList.xml", null, permittedModules);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
                 getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -80,7 +80,7 @@ public class RemoteListSourceProviderTest extends TestCase {
                 ImmutableList.of(RepoManager.getCommonModule()));
         RemoteListSourceProvider provider = RemoteListSourceProvider
                 .create("http://example.com/sourceList.xml", null, permittedModules);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
                 getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -139,7 +139,7 @@ public class RemoteListSourceProviderTest extends TestCase {
                 ImmutableList.of(RepoManager.getCommonModule()));
         RemoteListSourceProvider provider = RemoteListSourceProvider
                 .create("http://example.com/sourceList.xml", null, permittedModules);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
                 getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();

@@ -86,7 +86,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         URL repoUrl = new URL("http://example.com/sample.xml");
 
         // The repo we're going to download
@@ -204,7 +204,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         URL repoUrl = new URL("http://example.com/sample.xml");
 
         // The repo we're going to download
@@ -372,7 +372,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
         FakeProgressRunner runner = new FakeProgressRunner();
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         // Reload
         mgr.loadSynchronously(
                 0,
@@ -455,7 +455,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
         FakeProgressRunner runner = new FakeProgressRunner();
-        FakeDownloader downloader = new FakeDownloader(fop);
+        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
         // Reload
         mgr.loadSynchronously(
                 0,
