@@ -30,7 +30,7 @@ fun androidManifestXml(
 
         <receiver
             android:name="${packageName}.${className}"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -41,7 +41,7 @@ fun androidManifestXml(
         </receiver>
 
 ${renderIf(configurable) {"""
-        <activity android:name="${packageName}.${className}ConfigureActivity" android:exported="true">
+        <activity android:name="${packageName}.${className}ConfigureActivity" android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
