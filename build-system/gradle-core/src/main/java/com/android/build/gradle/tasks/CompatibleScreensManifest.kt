@@ -35,21 +35,26 @@ import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 
 /**
  * Task to generate a manifest snippet that just contains a compatible-screens node with the given
  * density and the given list of screen sizes.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input files are written to a minimal XML file and no computation is required.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class CompatibleScreensManifest : NonIncrementalTask() {
 
     @get:Input

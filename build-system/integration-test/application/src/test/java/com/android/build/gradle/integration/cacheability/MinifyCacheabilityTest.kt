@@ -56,7 +56,6 @@ class MinifyCacheabilityTest {
             ":checkMinifiedDuplicateClasses",
             ":compileMinifiedJavaWithJavac",
             ":compressMinifiedAssets",
-            ":createMinifiedCompatibleScreenManifests",
             ":extractDeepLinksMinified",
             ":generateMinifiedBuildConfig",
             ":generateMinifiedResValues",
@@ -81,6 +80,7 @@ class MinifyCacheabilityTest {
         ),
         DID_WORK to setOf(
             ":createMinifiedApkListingFileRedirect",
+            ":createMinifiedCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
             ":extractProguardFiles",
             ":generateMinifiedJacocoPropertiesFile", /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
             ":mergeMinifiedJavaResource", /* Bug 181142260 */

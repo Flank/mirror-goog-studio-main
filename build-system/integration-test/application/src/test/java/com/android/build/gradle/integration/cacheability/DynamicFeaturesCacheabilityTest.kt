@@ -72,7 +72,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:checkDebugLibraries",
                     ":app:compileDebugJavaWithJavac",
                     ":app:compressDebugAssets",
-                    ":app:createDebugCompatibleScreenManifests",
                     ":app:desugarDebugFileDependencies",
                     ":app:dexBuilderDebug",
                     ":app:extractDeepLinksDebug",
@@ -97,7 +96,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:checkDebugDuplicateClasses",
                     ":feature1:compileDebugJavaWithJavac",
                     ":feature1:compressDebugAssets",
-                    ":feature1:createDebugCompatibleScreenManifests",
                     ":feature1:desugarDebugFileDependencies",
                     ":feature1:dexBuilderDebug",
                     ":feature1:extractDeepLinksDebug",
@@ -122,7 +120,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:checkDebugDuplicateClasses",
                     ":feature2:compileDebugJavaWithJavac",
                     ":feature2:compressDebugAssets",
-                    ":feature2:createDebugCompatibleScreenManifests",
                     ":feature2:desugarDebugFileDependencies",
                     ":feature2:dexBuilderDebug",
                     ":feature2:extractDeepLinksDebug",
@@ -166,6 +163,7 @@ class DynamicFeaturesCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:createDebugApkListingFileRedirect",
+                    ":app:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":app:copyDebugAndroidLintReports", // intentionally not cacheable
                     ":app:extractProguardFiles", // intentionally not cacheable
                     ":app:generateDebugLintModel", // intentionally not cacheable
@@ -180,6 +178,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:writeDebugSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
 
                     ":feature1:createDebugApkListingFileRedirect",
+                    ":feature1:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":feature1:extractProguardFiles", // intentionally not cacheable
                     ":feature1:featureDebugWriter",
                     ":feature1:generateDebugLintModel", // intentionally not cacheable
@@ -189,6 +188,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
 
                     ":feature2:createDebugApkListingFileRedirect",
+                    ":feature2:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":feature2:extractProguardFiles", // intentionally not cacheable
                     ":feature2:featureDebugWriter",
                     ":feature2:generateDebugLintModel", // intentionally not cacheable

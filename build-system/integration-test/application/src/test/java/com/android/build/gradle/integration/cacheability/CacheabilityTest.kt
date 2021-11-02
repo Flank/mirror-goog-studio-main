@@ -52,8 +52,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "compile", "JavaWithJavac",
                     listOf("Debug", "DebugUnitTest", "Release", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "compress", "Assets", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "create", "CompatibleScreenManifests",
-                    listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "desugar", "FileDependencies", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "dexBuilder", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "extractDeepLinks", "", listOf("Debug", "Release")),
@@ -87,6 +85,9 @@ class CacheabilityTest {
              */
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
             TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
+            TaskInfo(DID_WORK, "create", "CompatibleScreenManifests",
+                    listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
             TaskInfo(DID_WORK, "generate", "JacocoPropertiesFile", listOf("Debug")),
