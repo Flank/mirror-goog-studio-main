@@ -561,6 +561,9 @@ com.android.build.api.dsl.LintOptions.textOutput: void (java.io.File)
 com.android.build.api.dsl.LintOptions.textOutput: void (java.lang.String)
 com.android.build.api.dsl.LintOptions.warning: void (java.lang.String)
 com.android.build.api.dsl.LintOptions.warning: void (java.lang.String[])
+com.android.build.api.dsl.ManagedDevices
+com.android.build.api.dsl.ManagedDevices.getDevices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> ()
+com.android.build.api.dsl.ManagedDevices.getGroups: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> ()
 com.android.build.api.dsl.ManagedVirtualDevice implements com.android.build.api.dsl.Device
 com.android.build.api.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()
 com.android.build.api.dsl.ManagedVirtualDevice.getApiLevel: int ()
@@ -707,6 +710,7 @@ com.android.build.api.dsl.TestOptions.getDevices: org.gradle.api.ExtensiblePolym
 com.android.build.api.dsl.TestOptions.getEmulatorSnapshots: com.android.build.api.dsl.EmulatorSnapshots ()
 com.android.build.api.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getFailureRetention: com.android.build.api.dsl.FailureRetention ()
+com.android.build.api.dsl.TestOptions.getManagedDevices: com.android.build.api.dsl.ManagedDevices ()
 com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getResultsDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()

@@ -1612,6 +1612,11 @@ com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.Strin
 com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.Lockable
 com.android.build.gradle.internal.dsl.Lockable.lock: void ()
+com.android.build.gradle.internal.dsl.ManagedDevices implements com.android.build.api.dsl.ManagedDevices
+com.android.build.gradle.internal.dsl.ManagedDevices.<init>: com.android.build.gradle.internal.dsl.ManagedDevices (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.ManagedDevices.getDevices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> ()
+com.android.build.gradle.internal.dsl.ManagedDevices.getGroups: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> ()
+com.android.build.gradle.internal.dsl.ManagedDevices.setDevices: void (org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device>)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice implements com.android.build.api.dsl.ManagedVirtualDevice
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.<init>: com.android.build.gradle.internal.dsl.ManagedVirtualDevice (java.lang.String)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()
@@ -1798,12 +1803,13 @@ com.android.build.gradle.internal.dsl.TestOptions.getEmulatorSnapshots: com.andr
 com.android.build.gradle.internal.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getExecutionEnum: com.android.builder.model.TestOptions$Execution ()
 com.android.build.gradle.internal.dsl.TestOptions.getFailureRetention: com.android.build.api.dsl.FailureRetention ()
+com.android.build.gradle.internal.dsl.TestOptions.getManagedDevices: com.android.build.api.dsl.ManagedDevices ()
+com.android.build.gradle.internal.dsl.TestOptions.getManagedDevices: com.android.build.gradle.internal.dsl.ManagedDevices ()
 com.android.build.gradle.internal.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getResultsDir: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()
 com.android.build.gradle.internal.dsl.TestOptions.getUnitTests: com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions ()
 com.android.build.gradle.internal.dsl.TestOptions.setAnimationsDisabled: void (boolean)
-com.android.build.gradle.internal.dsl.TestOptions.setDevices: void (org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device>)
 com.android.build.gradle.internal.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang.String)
