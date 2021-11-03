@@ -36,19 +36,18 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.RepositoryPackages;
+import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeSettingsController;
-import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -67,18 +66,22 @@ import junit.framework.TestCase;
 public class BasicInstallerTest extends TestCase {
 
     public void testDelete() throws Exception {
-        MockFileOp fop = new MockFileOp();
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         // Record package.xmls for two packages.
-        fop.recordExistingFile(
-                "/repo/mypackage/foo/package.xml",
-                ByteStreams.toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
-        fop.recordExistingFile(
-                "/repo/mypackage/bar/package.xml",
-                ByteStreams.toByteArray(getClass().getResourceAsStream("/testPackage2.xml")));
+        InMemoryFileSystems.recordExistingFile(
+                repoRoot.resolve("mypackage/foo/package.xml"),
+                new String(
+                        ByteStreams.toByteArray(
+                                getClass().getResourceAsStream("/testPackage.xml"))));
+        InMemoryFileSystems.recordExistingFile(
+                repoRoot.resolve("mypackage/bar/package.xml"),
+                new String(
+                        ByteStreams.toByteArray(
+                                getClass().getResourceAsStream("/testPackage2.xml"))));
 
         // Set up a RepoManager.
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/repo"));
+        mgr.setLocalPath(repoRoot);
 
         FakeProgressRunner runner = new FakeProgressRunner();
         // Load the local packages.
@@ -88,7 +91,7 @@ public class BasicInstallerTest extends TestCase {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 runner,
-                new FakeDownloader(fop.toPath("tmp")),
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                 new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         RepositoryPackages pkgs = mgr.getPackages();
@@ -101,8 +104,8 @@ public class BasicInstallerTest extends TestCase {
         uninstaller.prepare(new FakeProgressIndicator(true));
         uninstaller.complete(new FakeProgressIndicator(true));
         // Verify that the deleted dir is gone.
-        assertFalse(fop.exists(new File("/repo/mypackage/foo")));
-        assertTrue(fop.exists(new File("/repo/mypackage/bar/package.xml")));
+        assertFalse(Files.exists(repoRoot.resolve("mypackage/foo")));
+        assertTrue(Files.exists(repoRoot.resolve("mypackage/bar/package.xml")));
     }
 
     public void testDeleteNonstandardLocation() throws IOException {
@@ -142,15 +145,16 @@ public class BasicInstallerTest extends TestCase {
 
     // Test installing a new package
     public void testInstallFresh() throws Exception {
-        MockFileOp fop = new MockFileOp();
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         // We have a different package installed already.
-        fop.recordExistingFile(
-                "/repo/mypackage/foo/package.xml",
-                ByteStreams.toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("mypackage/foo/package.xml"),
+                new String(
+                        ByteStreams.toByteArray(
+                                getClass().getResourceAsStream("/testPackage.xml"))));
         RepoManager mgr = new RepoManagerImpl();
-        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         URL repoUrl = new URL("http://example.com/myrepo.xml");
 
         // The repo we're going to download
@@ -198,14 +202,16 @@ public class BasicInstallerTest extends TestCase {
         // Install one of the packages.
         RemotePackage p = pkgs.getRemotePackages().get("mypackage;bar");
         Installer basicInstaller = new BasicInstallerFactory().createInstaller(p, mgr, downloader);
-        File repoTempDir =
-                new File(mgr.getLocalPath().toString(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
-        File packageOperationDir = new File(repoTempDir, String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
-        File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
-        assertFalse(fop.exists(unzipDir));
+        Path repoTempDir = mgr.getLocalPath().resolve(AbstractPackageOperation.REPO_TEMP_DIR_FN);
+        Path packageOperationDir =
+                repoTempDir.resolve(
+                        String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
+        Path unzipDir = packageOperationDir.resolve(BasicInstaller.FN_UNZIP_DIR);
+        assertFalse(Files.exists(unzipDir));
         basicInstaller.prepare(progress.createSubProgress(0.5));
-        // Verify that downloading & unzipping happens at the temp directory under the repo root, not at the system temp directory.
-        assertTrue(fop.exists(unzipDir));
+        // Verify that downloading & unzipping happens at the temp directory under the repo root,
+        // not at the system temp directory.
+        assertTrue(Files.exists(unzipDir));
         basicInstaller.complete(progress.createSubProgress(1));
         progress.assertNoErrorsOrWarnings();
 
@@ -239,15 +245,16 @@ public class BasicInstallerTest extends TestCase {
 
     // Test cancellation along the way - the partial installation should be cleaned up.
     public void testCleanupWhenCancelled() throws Exception {
-        MockFileOp fop = new MockFileOp();
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         // We have a different package installed already.
-        fop.recordExistingFile(
-                "/repo/mypackage/foo/package.xml",
-                ByteStreams.toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("mypackage/foo/package.xml"),
+                new String(
+                        ByteStreams.toByteArray(
+                                getClass().getResourceAsStream("/testPackage.xml"))));
         RepoManager mgr = new RepoManagerImpl();
-        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         URL repoUrl = new URL("http://example.com/myrepo.xml");
 
         // The repo we're going to download
@@ -320,11 +327,11 @@ public class BasicInstallerTest extends TestCase {
                 downloader,
                 new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
-        File[] contents = fop.listFiles(new File(root.toString(), "mypackage"));
+        Path[] contents = FileOpUtils.listFiles(root.resolve("mypackage"));
 
         // Ensure the package we cancelled the installation for is not on the filesystem
         assertEquals(1, contents.length);
-        assertEquals(new File(root.toString(), "mypackage/foo"), contents[0]);
+        assertEquals(root.resolve("mypackage/foo"), contents[0]);
 
         // Ensure it was not recognized as a package.
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
@@ -357,21 +364,23 @@ public class BasicInstallerTest extends TestCase {
 
     // Test installing an upgrade to an existing package.
     public void testInstallUpgrade() throws Exception {
-        MockFileOp fop = new MockFileOp();
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         // Record a couple existing packages.
-        fop.recordExistingFile(
-                "/repo/mypackage/foo/package.xml",
-                ByteStreams.toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
-        fop.recordExistingFile(
-                "/repo/mypackage/bar/package.xml",
-                ByteStreams.toByteArray(
-                        getClass().getResourceAsStream("/testPackage2-lowerVersion.xml")));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("mypackage/foo/package.xml"),
+                new String(
+                        ByteStreams.toByteArray(
+                                getClass().getResourceAsStream("/testPackage.xml"))));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("mypackage/bar/package.xml"),
+                new String(
+                        ByteStreams.toByteArray(
+                                getClass().getResourceAsStream("/testPackage2-lowerVersion.xml"))));
         RepoManager mgr = new RepoManagerImpl();
-        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
 
         // Create the archive and register the repo to be downloaded.
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         URL repoUrl = new URL("http://example.com/myrepo.xml");
         downloader.registerUrl(repoUrl, getClass().getResourceAsStream("/testRepo.xml"));
         URL archiveUrl = new URL("http://example.com/2/arch1");
@@ -455,12 +464,11 @@ public class BasicInstallerTest extends TestCase {
     }
 
     public void testExistingDownload() throws Exception {
-        MockFileOp fop = new MockFileOp();
         RepoManager mgr = new RepoManagerImpl();
-        Path root = fop.toPath("/repo");
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         mgr.setLocalPath(root);
         FakeDownloader downloader =
-                new FakeDownloader(fop.toPath("tmp")) {
+                new FakeDownloader(root.getRoot().resolve("tmp")) {
                     @Override
                     public void downloadFully(
                             @NonNull URL url,

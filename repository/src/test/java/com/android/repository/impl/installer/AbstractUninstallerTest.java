@@ -26,7 +26,7 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RepoManagerImpl;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.nio.file.Path;
 import org.junit.Test;
 
@@ -36,10 +36,10 @@ import org.junit.Test;
 public class AbstractUninstallerTest {
     @Test
     public void uninstallerProperties() {
-        MockFileOp fop = new MockFileOp();
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
-        LocalPackage local = new FakeLocalPackage("foo;bar", fop.toPath("/sdk/foo/bar"));
+        mgr.setLocalPath(sdkRoot);
+        LocalPackage local = new FakeLocalPackage("foo;bar", sdkRoot.resolve("foo/bar"));
         AbstractUninstaller uninstaller = new TestUninstaller(local, mgr);
         assertSame(uninstaller.getPackage(), local);
         assertEquals(
