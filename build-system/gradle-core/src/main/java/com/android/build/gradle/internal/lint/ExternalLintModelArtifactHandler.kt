@@ -105,9 +105,9 @@ class ExternalLintModelArtifactHandler private constructor(
             projectPath = projectPath,
             variantName = variantName,
             sourceSet = if (isDependencyOnTestFixtures) {
-                LintModuleSourceSet.TEST_FIXTURES
+                LintModelModuleSourceSet.TEST_FIXTURES
             } else {
-                LintModuleSourceSet.MAIN
+                LintModelModuleSourceSet.MAIN
             }
         )
         val folder = projectExplodedAarsMap[key] ?: throw IllegalStateException("unable to find project exploded aar for $key")
@@ -166,7 +166,7 @@ class ExternalLintModelArtifactHandler private constructor(
         addressSupplier: () -> String
     ): LintModelLibrary {
         val artifactAddress = addressSupplier()
-        val key = ProjectKey(buildId, projectPath, variantName, LintModuleSourceSet.MAIN)
+        val key = ProjectKey(buildId, projectPath, variantName, LintModelModuleSourceSet.MAIN)
         if (key in baseModuleModelFileMap) {
             return DefaultLintModelModuleLibrary(
                 artifactAddress = addressSupplier(),

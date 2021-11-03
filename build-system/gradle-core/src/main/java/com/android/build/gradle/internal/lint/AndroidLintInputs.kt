@@ -70,6 +70,7 @@ import com.android.tools.lint.model.LintModelJavaArtifact
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelModuleSourceSet
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelNamespacingMode
 import com.android.tools.lint.model.LintModelSeverity
@@ -1562,7 +1563,7 @@ abstract class ArtifactInput {
                         artifactCollectionsInputs.buildMapping.currentBuild,
                         artifactCollectionsInputs.projectPath,
                         artifactCollectionsInputs.variantName,
-                        LintModuleSourceSet.MAIN
+                        LintModelModuleSourceSet.MAIN
                     )
                 CheckDependenciesLintModelArtifactHandler(
                     dependencyCaches,
