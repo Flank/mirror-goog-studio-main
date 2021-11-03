@@ -58,6 +58,7 @@ function copy_bazel_artifacts() {(
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/base/deploy/service/deploy.service_deploy.jar ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/bazel/local_maven_repository_generator_deploy.jar ${artifacts_dir}/generator.jar
   cp -a ${bin_dir}/tools/base/gmaven/gmaven.zip ${artifacts_dir}/gmaven_repo.zip
 )}
@@ -172,6 +173,7 @@ function run_bazel_test() {
     //tools/adt/idea/studio:test_studio \
     //tools/vendor/google/game-tools/packaging:packaging-linux \
     //tools/vendor/google/game-tools/packaging:packaging-win \
+    //tools/base/deploy/service:deploy.service_deploy.jar \
     //tools/base/ddmlib:tools.ddmlib \
     //tools/base/ddmlib:incfs \
     //tools/base/lint/libs/lint-tests:lint-tests \
