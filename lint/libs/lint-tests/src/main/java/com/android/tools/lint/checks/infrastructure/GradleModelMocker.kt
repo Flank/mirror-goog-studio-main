@@ -357,7 +357,7 @@ class GradleModelMocker @JvmOverloads constructor(
 
             val testFixturesSourceProviders =
                 listOfNotNull(defaultConfig.testFixturesSourceProvider, buildType.testFixturesSourceProvider) +
-                        productFlavorsInConfigOrder.mapNotNull { it.testFixturesSourceProvider }
+                    productFlavorsInConfigOrder.mapNotNull { it.testFixturesSourceProvider }
             val generated = File(projectDir, "generated")
             val mergedFlavorsAndBuildType = merge(defaultConfig, productFlavors, buildType)
             variants.add(

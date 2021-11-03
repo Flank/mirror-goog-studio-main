@@ -405,7 +405,7 @@ class TypoDetector : ResourceXmlDetector() {
         context.report(ISSUE, node, context.getLocation(node, begin, end), message, fix)
     }
 
-    /** Reports a repeated word  */
+    /** Reports a repeated word */
     private fun reportRepeatedWord(
         context: XmlContext,
         node: Node,

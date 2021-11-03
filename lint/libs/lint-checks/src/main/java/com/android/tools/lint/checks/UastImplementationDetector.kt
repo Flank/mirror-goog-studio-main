@@ -28,17 +28,16 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiMember
+import com.intellij.psi.util.InheritanceUtil
+import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UTypeReferenceExpression
 
-/**
- * A special check that detects uses of UAST implementations
- */
+/** A special check that detects uses of UAST implementations */
 class UastImplementationDetector : Detector(), SourceCodeScanner {
     companion object {
         private val IMPLEMENTATION =
@@ -77,7 +76,7 @@ class UastImplementationDetector : Detector(), SourceCodeScanner {
             return isUastImplementation(fqName) && !isAllowedUastImplementation(fqName)
         }
 
-        private fun isAllowedUastImplementation(fqName: String): Boolean = when(fqName) {
+        private fun isAllowedUastImplementation(fqName: String): Boolean = when (fqName) {
             "org.jetbrains.uast.java.JavaUastLanguagePlugin", // plugin
             "org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin", // plugin
             "org.jetbrains.uast.kotlin.KotlinUastResolveProviderService", // service
@@ -107,9 +106,9 @@ class UastImplementationDetector : Detector(), SourceCodeScanner {
         context: JavaContext
     ): UElementHandler = object : UElementHandler() {
         override fun visitClassLiteralExpression(node: UClassLiteralExpression) {
-            val fqName = (node.type as? PsiClassType)?.resolve()?.qualifiedName
-            if (fqName != null && isNotAllowedUastImplementation(fqName)) {
-                reportUastImplementation(node, fqName)
+            val fqName = node.type?.canonicalText ?: return
+            if (isNotAllowedUastImplementation(fqName)) {
+                reportUastImplementation(node, fqName, (node.type as? PsiClassType)?.resolve())
             }
         }
 
@@ -126,14 +125,14 @@ class UastImplementationDetector : Detector(), SourceCodeScanner {
                 is PsiClass -> {
                     val fqName = resolvedElement.qualifiedName ?: return
                     if (isNotAllowedUastImplementation(fqName)) {
-                        reportUastImplementation(uElement, fqName)
+                        reportUastImplementation(uElement, fqName, resolvedElement)
                     }
                 }
-                is PsiMethod, is PsiField -> {
-                    val parent = resolvedElement.parent as? PsiClass ?: return
-                    val fqName = parent.qualifiedName ?: return
+                is PsiMember -> {
+                    val containingClass = resolvedElement.containingClass ?: return
+                    val fqName = containingClass.qualifiedName ?: return
                     if (isNotAllowedUastImplementation(fqName)) {
-                        reportUastImplementation(uElement, fqName)
+                        reportUastImplementation(uElement, fqName, containingClass)
                     }
                 }
             }
@@ -142,17 +141,26 @@ class UastImplementationDetector : Detector(), SourceCodeScanner {
         private fun checkUastImplementation(node: UTypeReferenceExpression) {
             val fqName = node.getQualifiedName() ?: return
             if (isNotAllowedUastImplementation(fqName)) {
-                reportUastImplementation(node, fqName)
+                reportUastImplementation(node, fqName, PsiTypesUtil.getPsiClass(node.type))
             }
         }
 
-        private fun reportUastImplementation(node: UElement, fqName: String) {
-            context.report(
-                ISSUE,
-                node,
-                context.getLocation(node),
-                "$fqName is UAST implementation. Consider using its corresponding UAST interface."
-            )
+        private fun reportUastImplementation(node: UElement, fqName: String, psiClass: PsiClass?) {
+            val superClasses: Set<PsiClass> = psiClass?.let { InheritanceUtil.getSuperClasses(it) } ?: emptySet<PsiClass>()
+            val filtered = superClasses
+                .filter { it.isInterface }
+                .filter {
+                    val qualified = it.qualifiedName ?: ""
+                    qualified.startsWith(UAST_PREFIX) && !isNotAllowedUastImplementation(qualified)
+                }
+                .map { it.name }
+                .filter { it != "UElement" && it != "UMultiResolvable" }
+                .toList().let { LinkedHashSet(it) }.toList() // Remove duplicates while preserving order
+                .joinToString(", ") { "`$it`" }
+            val message = "$fqName is UAST implementation. Consider using one of its corresponding UAST interfaces${
+            if (filtered.isEmpty()) "." else ": $filtered"
+            }"
+            context.report(ISSUE, node, context.getLocation(node), message)
         }
     }
 }

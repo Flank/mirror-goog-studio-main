@@ -12,6 +12,8 @@ lint check authors, see the API Guide.
   ------------------------|-----------------------------------
   `AssertionSideEffect`   | Assertions that have side effects
   `BidiSpoofing`          | Misleading bidirectional Unicode strings
+  `MotionLayoutMissingId` | Views inside MotionLayout require an id
+  `UastImplementation`    | Avoid UAST implementation classes
 
 **7.1**
 
@@ -29,6 +31,10 @@ lint check authors, see the API Guide.
   ------------------------|-----------------------------------
   `FileEndsWithExt`       | Flags suspicious usages of File.endsWith(extension)
   `DataExtractionRules`   | Missing data extraction rules
+  `RedundantLabel`        | Redundant label on activity in manifest
+  `DiscouragedApi`        | Using APIs annotated with @Discouraged
+  `ViewBindingType`       | Validation for `tools:viewBindingType`
+  `AppBundleLocaleChanges`| Handling runtime locale changes
 
 * Updated lint checks:
 
@@ -63,6 +69,7 @@ lint check authors, see the API Guide.
   `UnspecifiedImmutableFlag`       | Missing `PendingIntent` mutability flag
   `WatchFaceEditor`                | Watch face editor must use launchMode=“standard”
   `WebViewClientOnReceivedSslError`| Proceeds with the HTTPS connection despite SSL errors
+  `IntentFilterUniqueDataAttributes` | Data tags should only declare unique attributes
 
 * Lint checks now include information for reported incidents where the
   lint check came from, such as which library artifact provided it.

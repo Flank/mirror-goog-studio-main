@@ -2270,7 +2270,10 @@ fun isNumberString(s: String?): Boolean {
     return true
 }
 
-/** Returns true if the given [UElement] is a polyadic form from [KtStringTemplateExpression] */
+/**
+ * Returns true if the given [UElement] is a polyadic form from
+ * [KtStringTemplateExpression]
+ */
 @OptIn(ExperimentalContracts::class)
 fun isPolyadicFromStringTemplate(element: UElement?): Boolean {
     contract {
