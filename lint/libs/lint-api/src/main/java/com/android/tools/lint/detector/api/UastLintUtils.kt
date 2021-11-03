@@ -493,3 +493,19 @@ fun UElement.previousStatement(): UExpression? {
 
     return null
 }
+
+/**
+ * Returns true if [this] element is a child or indirect child of the
+ * given [parent]. If [strict] is false, this method will return true when
+ * [parent] is the same as [this].
+ */
+fun UElement.isBelow(parent: UElement, strict: Boolean = false): Boolean {
+    var curr = if (strict) uastParent else this
+    while (curr != null) {
+        if (curr == parent) {
+            return true
+        }
+        curr = curr.uastParent
+    }
+    return false
+}

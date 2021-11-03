@@ -136,4 +136,23 @@ public class IntRangeConstraintTest {
         assertThat(atLeast(2).and(atMost(-1)).toString())
                 .isEqualTo("Value must be ≥ 2 and ≤ -1 (not possible)");
     }
+
+    @Test
+    @SuppressWarnings("ConstantConditions")
+    public void testRemove() {
+        assertThat(atLeast(-1).remove(range(-1, -1)).toString()).isEqualTo("Value must be ≥ 0");
+        assertThat(atLeast(2).remove(range(0, 3)).toString()).isEqualTo("Value must be ≥ 4");
+        assertThat(atMost(10).remove(range(10, 10)).toString()).isEqualTo("Value must be ≤ 9");
+        assertThat(atMost(10).remove(range(9, 12)).toString()).isEqualTo("Value must be ≤ 8");
+        assertThat(atLeast(-1).remove(range(-2, -2))).isNull();
+        assertThat(atLeast(-1).remove(FloatRangeConstraint.range(-1, -1)).toString())
+                .isEqualTo("Value must be > -1.0");
+    }
+
+    @Test
+    public void testInfinite() {
+        assertThat(atLeast(-1).getInfinite()).isTrue();
+        assertThat(atMost(1).getInfinite()).isTrue();
+        assertThat(range(1, 5).getInfinite()).isFalse();
+    }
 }

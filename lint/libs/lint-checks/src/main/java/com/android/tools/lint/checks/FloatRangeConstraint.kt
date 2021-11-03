@@ -46,6 +46,9 @@ class FloatRangeConstraint private constructor(
             (toInclusive && value <= to || !toInclusive && value < to)
     }
 
+    override val infinite: Boolean
+        get() = from == NEGATIVE_INFINITY || to == POSITIVE_INFINITY
+
     fun describe(argument: Double): String {
         return describe(null, argument)
     }
@@ -244,6 +247,21 @@ class FloatRangeConstraint private constructor(
             endInclusive = range.toInclusive
         }
         return FloatRangeConstraint(start, end, startInclusive, endInclusive)
+    }
+
+    override fun remove(other: RangeConstraint): RangeConstraint? {
+        if (other is FloatRangeConstraint) {
+            if (from <= other.to) {
+                if (other.to != POSITIVE_INFINITY && to > other.to + 1) {
+                    return FloatRangeConstraint(other.to, to, false, toInclusive)
+                } else if (other.from != NEGATIVE_INFINITY && from < other.from - 1) {
+                    return FloatRangeConstraint(from, other.from, fromInclusive, false)
+                }
+            }
+        } else if (other is IntRangeConstraint) {
+            return remove(FloatRangeConstraint(other))
+        }
+        return super.remove(other)
     }
 
     override fun contains(other: RangeConstraint): Boolean? {

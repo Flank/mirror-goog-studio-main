@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.isBelow
 import com.android.tools.lint.detector.api.isJava
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
@@ -682,17 +683,6 @@ abstract class DataFlowAnalyzer(
             }
         }
         super.afterVisitBinaryExpression(node)
-    }
-
-    private fun UElement.isBelow(parent: UElement, strict: Boolean = false): Boolean {
-        var curr = if (strict) uastParent else this
-        while (curr != null) {
-            if (curr == parent) {
-                return true
-            }
-            curr = curr.uastParent
-        }
-        return false
     }
 
     override fun afterVisitReturnExpression(node: UReturnExpression) {
