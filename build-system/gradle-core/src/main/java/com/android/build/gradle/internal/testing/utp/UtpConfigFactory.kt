@@ -490,6 +490,14 @@ class UtpConfigFactory {
 
                     // TODO(b/201577913): remove
                     if (shardConfig != null) {
+                        require(
+                            !testData.instrumentationRunnerArguments.containsKey("numShards") &&
+                            !testData.instrumentationRunnerArguments.containsKey("shardIndex")) {
+                            "testInstrumentationRunnerArguments.[numShards | shardIndex] is " +
+                            "currently incompatible with sharding support for Gradle Managed " +
+                            "Devices, and you should try running this test again without setting " +
+                            "this property."
+                        }
                         putArgsMap("numShards", shardConfig.totalCount.toString())
                         putArgsMap("shardIndex", shardConfig.index.toString())
                     }

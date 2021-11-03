@@ -28,8 +28,10 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat.escapeDoubleQuotesAndBackslashes
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
+import java.lang.IllegalArgumentException
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -475,6 +477,17 @@ class UtpConfigFactoryTest {
                 shard_index: 2
             """
         )
+    }
+
+    @Test
+    fun userSuppliedShardArgsAreNotSupportedWithShardConfig() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            createForManagedDevice(
+                testData = testData.copy(instrumentationRunnerArguments = mapOf("numShards" to "2")),
+                shardConfig = ShardConfig(totalCount = 10, index = 2))
+        }
+        assertThat(exception).hasMessageThat().contains(
+            "testInstrumentationRunnerArguments.[numShards | shardIndex] is currently incompatible")
     }
 
     @Test
