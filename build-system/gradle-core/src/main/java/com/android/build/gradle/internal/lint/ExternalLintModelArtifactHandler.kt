@@ -51,7 +51,7 @@ import java.util.Properties
 class ExternalLintModelArtifactHandler private constructor(
     private val localJarCache: CreatingCache<File, List<File>>,
     mavenCoordinatesCache: MavenCoordinatesCacheBuildService,
-    private val projectExplodedAarsMap: Map<ProjectKey, File>,
+    private val projectExplodedAarsMap: Map<ProjectSourceSetKey, File>,
     private val projectJarsMap: Map<ProjectKey, File>,
     private val baseModuleModelFileMap: Map<ProjectKey, File>,
     private val lintModelMetadataMap: Map<ProjectKey, File>
@@ -92,17 +92,27 @@ class ExternalLintModelArtifactHandler private constructor(
         projectPath: String,
         buildId: String,
         variantName: String?,
-        isDependencyOnTestFixtures: Boolean,
+        isTestFixtures: Boolean,
         aarFile: File,
         lintJar: File?,
         isProvided: Boolean,
         coordinatesSupplier: () -> MavenCoordinates,
         addressSupplier: () -> String
     ): LintModelLibrary {
-        val key = ProjectKey( buildId = buildId, projectPath = projectPath, variantName = variantName)
-        val folder = projectExplodedAarsMap[key] ?: throw IllegalStateException("unable to find project exploded aar for $key")
+        val sourceSetKey = ProjectSourceSetKey(
+            buildId = buildId,
+            projectPath = projectPath,
+            variantName = variantName,
+            isTestFixtures = isTestFixtures
+        )
+        val folder = projectExplodedAarsMap[sourceSetKey] ?: throw IllegalStateException("unable to find project exploded aar for $sourceSetKey")
+        val mainKey = ProjectKey(
+            buildId = buildId,
+            projectPath = projectPath,
+            variantName = variantName
+        )
         val resolvedCoordinates: LintModelMavenName =
-            lintModelMetadataMap[key]?.let { file ->
+            lintModelMetadataMap[mainKey]?.let { file ->
                 val properties = Properties()
                 file.inputStream().use {
                     properties.load(it)
@@ -213,12 +223,12 @@ class ExternalLintModelArtifactHandler private constructor(
             buildMapping: BuildMapping
         ): ExternalLintModelArtifactHandler {
             var projectExplodedAarsMap =
-                projectCompileExplodedAars?.asProjectKeyedMap(buildMapping) ?: emptyMap()
+                projectCompileExplodedAars?.asProjectSourceSetKeyedMap(buildMapping) ?: emptyMap()
             projectRuntimeExplodedAars?.let {
-                projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectKeyedMap(buildMapping)
+                projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectSourceSetKeyedMap(buildMapping)
             }
             testedProjectExplodedAars?.let {
-                projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectKeyedMap(buildMapping)
+                projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectSourceSetKeyedMap(buildMapping)
             }
             val projectJarsMap =
                 compileProjectJars.asProjectKeyedMap(buildMapping) + runtimeProjectJars.asProjectKeyedMap(buildMapping)

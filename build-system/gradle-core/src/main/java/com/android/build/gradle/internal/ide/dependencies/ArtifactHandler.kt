@@ -128,7 +128,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
         projectPath: String,
         buildId: String,
         variantName: String?,
-        isDependencyOnTestFixtures: Boolean,
+        isTestFixtures: Boolean,
         aarFile: File,
         lintJar: File?,
         isProvided: Boolean,
