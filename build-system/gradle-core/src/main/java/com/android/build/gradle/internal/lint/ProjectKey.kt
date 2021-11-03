@@ -19,20 +19,13 @@ package com.android.build.gradle.internal.lint
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.getBuildId
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
-import com.android.build.gradle.internal.ide.dependencies.hasProjectTestFixturesCapability
-import com.android.tools.lint.model.LintModelModuleSourceSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
 import java.lang.StringBuilder
 
-internal data class ProjectKey(
-    val buildId: String,
-    val projectPath: String,
-    val variantName: String?,
-    val sourceSet: LintModelModuleSourceSet
-) {
+internal data class ProjectKey(val buildId: String, val projectPath: String, val variantName: String?) {
 
     override fun toString(): String {
         return StringBuilder().apply {
@@ -48,16 +41,7 @@ internal data class ProjectKey(
 
 internal fun asProjectKey(buildMapping: BuildMapping, artifact: ResolvedArtifactResult): ProjectKey {
     val id = artifact.id.componentIdentifier as ProjectComponentIdentifier
-    return ProjectKey(
-        id.getBuildId(buildMapping)!!,
-        id.projectPath,
-        artifact.getVariantName(),
-        sourceSet = if (artifact.hasProjectTestFixturesCapability()) {
-            LintModelModuleSourceSet.TEST_FIXTURES
-        } else {
-            LintModelModuleSourceSet.MAIN
-        }
-    )
+    return ProjectKey(id.getBuildId(buildMapping)!!, id.projectPath, artifact.getVariantName())
 }
 
 internal fun ArtifactCollection.asProjectKeyedMap(buildMapping: BuildMapping): Map<ProjectKey, File> {

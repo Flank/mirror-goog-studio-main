@@ -31,7 +31,6 @@ import com.android.tools.lint.model.DefaultLintModelModuleLibrary
 import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
-import com.android.tools.lint.model.LintModelModuleSourceSet
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
 import java.io.File
@@ -100,16 +99,7 @@ class ExternalLintModelArtifactHandler private constructor(
         coordinatesSupplier: () -> MavenCoordinates,
         addressSupplier: () -> String
     ): LintModelLibrary {
-        val key = ProjectKey(
-            buildId = buildId,
-            projectPath = projectPath,
-            variantName = variantName,
-            sourceSet = if (isDependencyOnTestFixtures) {
-                LintModelModuleSourceSet.TEST_FIXTURES
-            } else {
-                LintModelModuleSourceSet.MAIN
-            }
-        )
+        val key = ProjectKey( buildId = buildId, projectPath = projectPath, variantName = variantName)
         val folder = projectExplodedAarsMap[key] ?: throw IllegalStateException("unable to find project exploded aar for $key")
         val resolvedCoordinates: LintModelMavenName =
             lintModelMetadataMap[key]?.let { file ->
@@ -166,14 +156,13 @@ class ExternalLintModelArtifactHandler private constructor(
         addressSupplier: () -> String
     ): LintModelLibrary {
         val artifactAddress = addressSupplier()
-        val key = ProjectKey(buildId, projectPath, variantName, LintModelModuleSourceSet.MAIN)
+        val key = ProjectKey(buildId, projectPath, variantName)
         if (key in baseModuleModelFileMap) {
             return DefaultLintModelModuleLibrary(
                 artifactAddress = addressSupplier(),
                 projectPath = projectPath,
                 lintJar = null,
-                provided = false,
-                sourceSet = LintModelModuleSourceSet.MAIN
+                provided = false
             )
         }
         val jar = getProjectJar(key)

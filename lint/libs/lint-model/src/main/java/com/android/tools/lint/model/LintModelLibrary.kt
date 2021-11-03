@@ -43,16 +43,6 @@ interface LintModelLibrary : Comparable<LintModelLibrary> {
     }
 }
 
-/**
- * A source set in an Android module.
- */
-enum class LintModelModuleSourceSet(val sourceSetName: String) {
-    MAIN("main"),
-    TEST_FIXTURES("testFixtures"),
-    UNIT_TEST("unitTest"),
-    ANDROID_TEST("androidTest")
-}
-
 interface LintModelModuleLibrary : LintModelLibrary {
     /**
      * The path to a local project represented in terms of the current
@@ -62,11 +52,6 @@ interface LintModelModuleLibrary : LintModelLibrary {
      * support composite builds.
      */
     val projectPath: String
-
-    /**
-     * The sourceSet associated with the library module.
-     */
-    val sourceSet: LintModelModuleSourceSet
 }
 
 interface LintModelExternalLibrary : LintModelLibrary {
@@ -110,11 +95,10 @@ abstract class DefaultLintModelLibrary : LintModelLibrary {
 class DefaultLintModelModuleLibrary(
     override val artifactAddress: String,
     override val projectPath: String,
-    override val sourceSet: LintModelModuleSourceSet,
     override val lintJar: File?,
     override val provided: Boolean
 ) : DefaultLintModelLibrary(), LintModelModuleLibrary {
-    override fun toString(): String = "LocalLibrary(path = $projectPath, sourceSet = ${sourceSet.sourceSetName})"
+    override fun toString(): String = "LocalLibrary($projectPath)"
 }
 
 class DefaultLintModelAndroidLibrary(

@@ -1071,7 +1071,6 @@ private class LintModelLibrariesWriter(
         }
         if (library is LintModelModuleLibrary) {
             library.projectPath.let { printer.printAttribute("project", it, indent) }
-            library.sourceSet.let { printer.printAttribute("sourceSet", it.sourceSetName, indent) }
         }
         if (library.provided) {
             printer.printAttribute("provided", VALUE_TRUE, indent)
@@ -1200,9 +1199,6 @@ private abstract class LintModelReader(
             }
         } ?: emptyList()
     }
-
-    protected fun getSourceSet(sourceSetName: String) =
-        LintModelModuleSourceSet.values().firstOrNull { it.sourceSetName == sourceSetName } ?: LintModelModuleSourceSet.MAIN
 
     protected fun readSourceProvider(tag: String = "sourceProvider"): LintModelSourceProvider {
         expectTag(tag)
@@ -1906,7 +1902,6 @@ private class LintModelLibrariesReader(
         val artifactAddress = getName()
         val jars = getFiles("jars")
         val project = getOptionalAttribute("project")
-        val sourceSetName = getOptionalAttribute("sourceSet") ?: LintModelModuleSourceSet.MAIN.sourceSetName
         val resolved = getOptionalAttribute("resolved")?.toMavenCoordinate()
         val provided = getOptionalBoolean("provided", false)
 
@@ -1940,7 +1935,6 @@ private class LintModelLibrariesReader(
         return when {
             project != null -> DefaultLintModelModuleLibrary(
                 projectPath = project,
-                sourceSet = getSourceSet(sourceSetName),
                 artifactAddress = artifactAddress,
                 lintJar = lintJar,
                 provided = provided

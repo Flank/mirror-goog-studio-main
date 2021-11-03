@@ -26,7 +26,6 @@ import com.android.tools.lint.model.DefaultLintModelMavenName
 import com.android.tools.lint.model.DefaultLintModelModuleLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
-import com.android.tools.lint.model.LintModelModuleSourceSet
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.logging.Logging
@@ -110,12 +109,7 @@ internal class CheckDependenciesLintModelArtifactHandler(
             artifactAddress = addressSupplier(),
             projectPath = projectPath,
             lintJar = lintJar,
-            provided = isProvided,
-            sourceSet = if (isDependencyOnTestFixtures) {
-                LintModelModuleSourceSet.TEST_FIXTURES
-            } else {
-                LintModelModuleSourceSet.MAIN
-            }
+            provided = isProvided
         )
 
     override fun handleJavaLibrary(
@@ -137,15 +131,14 @@ internal class CheckDependenciesLintModelArtifactHandler(
         variantName: String?,
         addressSupplier: () -> String
     ): LintModelLibrary {
-        val key = ProjectKey(buildId, projectPath, variantName, LintModelModuleSourceSet.MAIN)
+        val key = ProjectKey(buildId, projectPath, variantName)
         val hasLintModel = (key.buildId == thisProject.buildId && key.projectPath == thisProject.projectPath) || projectDependencyLintModels.contains(key)
         if (hasLintModel) {
             return DefaultLintModelModuleLibrary(
                 artifactAddress = addressSupplier(),
                 projectPath = projectPath,
                 lintJar = null,
-                provided = false,
-                sourceSet = LintModelModuleSourceSet.MAIN
+                provided = false
             )
         } else {
             // Fallback for java or java-library project dependencies that do not apply the
