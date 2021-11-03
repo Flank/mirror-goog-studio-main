@@ -39,17 +39,15 @@ enum class Desugaring(val constant: Int) {
     /** Try-with-resource statements. */
     TRY_WITH_RESOURCES(DESUGARING_TRY_WITH_RESOURCES),
 
-    /** Inlining Objects.requireNonNull. */
-    OBJECTS_REQUIRE_NON_NULL(DESUGARING_OBJECTS_REQUIRE_NON_NULL),
-
-    /** Rewriting Long.compare to lcmp. */
-    LONG_COMPARE(DESUGARING_LONG_COMPARE),
-
     /** Rewriting some Java 8 library calls into backport library. */
     JAVA_8_LIBRARY(DESUGARING_JAVA_8_LIBRARY);
 
     companion object {
-        /** No desugaring in effect. */
+        /**
+         * No desugaring in effect. (Note however that R8 will always
+         * perform some built-in ones, such as Objects.requireNonNull
+         * etc.)
+         */
         @JvmField
         val NONE: Set<Desugaring> = EnumSet.noneOf(Desugaring::class.java)
 
@@ -60,14 +58,14 @@ enum class Desugaring(val constant: Int) {
         @JvmField
         val DEFAULT: Set<Desugaring> = EnumSet.of(
             LAMBDAS, METHOD_REFERENCES, TYPE_ANNOTATIONS,
-            INTERFACE_METHODS, TRY_WITH_RESOURCES, OBJECTS_REQUIRE_NON_NULL, LONG_COMPARE
+            INTERFACE_METHODS, TRY_WITH_RESOURCES
         )
 
         /** Full desugaring. */
         @JvmField
         val FULL: Set<Desugaring> = EnumSet.of(
             LAMBDAS, METHOD_REFERENCES, TYPE_ANNOTATIONS,
-            INTERFACE_METHODS, TRY_WITH_RESOURCES, OBJECTS_REQUIRE_NON_NULL, LONG_COMPARE,
+            INTERFACE_METHODS, TRY_WITH_RESOURCES,
             JAVA_8_LIBRARY
         )
 
@@ -78,8 +76,6 @@ enum class Desugaring(val constant: Int) {
                 DESUGARING_TYPE_ANNOTATIONS -> TYPE_ANNOTATIONS
                 DESUGARING_INTERFACE_METHODS -> INTERFACE_METHODS
                 DESUGARING_TRY_WITH_RESOURCES -> TRY_WITH_RESOURCES
-                DESUGARING_OBJECTS_REQUIRE_NON_NULL -> OBJECTS_REQUIRE_NON_NULL
-                DESUGARING_LONG_COMPARE -> LONG_COMPARE
                 DESUGARING_JAVA_8_LIBRARY -> JAVA_8_LIBRARY
                 else -> error("Unexpected constant $constant")
             }
@@ -92,6 +88,4 @@ const val DESUGARING_METHOD_REFERENCES = 2
 const val DESUGARING_TYPE_ANNOTATIONS = 3
 const val DESUGARING_INTERFACE_METHODS = 4
 const val DESUGARING_TRY_WITH_RESOURCES = 5
-const val DESUGARING_OBJECTS_REQUIRE_NON_NULL = 6
-const val DESUGARING_LONG_COMPARE = 7
 const val DESUGARING_JAVA_8_LIBRARY = 8

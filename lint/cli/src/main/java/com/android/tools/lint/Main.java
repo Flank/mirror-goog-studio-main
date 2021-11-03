@@ -29,11 +29,13 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_USAGE;
 import static com.android.tools.lint.detector.api.Lint.endsWith;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.checks.DesugaredMethodLookup;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -1451,6 +1453,18 @@ public class Main {
                 flags.setAllowSuppress(false);
             } else if (arg.equals("--XallowBaselineSuppress")) {
                 flags.setAllowBaselineSuppress(true);
+            } else if (arg.equals("--Xdesugared-methods")) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing desugared methods file");
+                    return ERRNO_INVALID_ARGS;
+                }
+                String path = args[++index];
+                File input = getInArgumentPath(path);
+                if (!input.isFile()) {
+                    System.err.println("Desugared methods file " + input + " does not exist.");
+                    return ERRNO_INVALID_ARGS;
+                }
+                DesugaredMethodLookup.Companion.setDesugaredMethods(FilesKt.readText(input, UTF_8));
             } else if (arg.equals(ARG_PRINT_INTERNAL_ERROR_STACKTRACE)) {
                 flags.setPrintInternalErrorStackTrace(true);
             } else if (arg.equals(ARG_ANALYZE_ONLY)) {
