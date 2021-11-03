@@ -230,8 +230,6 @@ message StartFetchCommand {
     // If continuous, layout events will keep coming until a |StopFetchCommand| is sent.
     // Otherwise, only a single |LayoutEvent| will be sent.
     bool continuous = 1;
-    // If true, only show view nodes created by the user's own app
-    bool skip_system_views = 2;
 }
 message StartFetchResponse {
     // Empty if start is successful, otherwise an appropriate error message.

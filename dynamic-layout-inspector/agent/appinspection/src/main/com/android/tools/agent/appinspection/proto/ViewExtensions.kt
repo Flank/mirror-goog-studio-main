@@ -26,7 +26,6 @@ import android.view.WindowManager
 import android.webkit.WebView
 import com.android.tools.agent.appinspection.framework.getChildren
 import com.android.tools.agent.appinspection.framework.getTextValue
-import com.android.tools.agent.appinspection.framework.isSystemView
 import com.android.tools.agent.appinspection.proto.property.PropertyCache
 import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
 import com.android.tools.agent.appinspection.proto.resource.convert
@@ -46,7 +45,7 @@ import kotlin.math.roundToInt
  *
  * This method must be called on the main thread to avoid race conditions when querying the tree.
  */
-fun View.toNode(stringTable: StringTable, skipSystemViews: Boolean): ViewNode {
+fun View.toNode(stringTable: StringTable): ViewNode {
     ThreadUtils.assertOnMainThread()
 
     // Screen location is (0, 0) for main window but useful inside floating dialogs
@@ -54,63 +53,19 @@ fun View.toNode(stringTable: StringTable, skipSystemViews: Boolean): ViewNode {
     getLocationOnScreen(screenLocation)
 
     val absPos = Point(screenLocation[0], screenLocation[1])
-    val rootNode = this.toNodeImpl(stringTable, absPos)
-    populateNodesRecursively(stringTable, skipSystemViews, rootNode, absPos)
-
-    return rootNode.build()
+    return toNodeImpl(stringTable, absPos).build()
 }
 
 /**
- * Run through all views and, if not filtered out, created nodes for them.
- *
- * It is because of the fact we can filter out some intermediate nodes that we need to have a
- * separate method for populating nodes and creating them (see: [toNodeImpl]
- *
- * Any valid children of intermediate views that got filtered out will be added to their first
- * valid ancestor.
- */
-private fun View.populateNodesRecursively(
-    stringTable: StringTable,
-    skipSystemViews: Boolean,
-    lastParent: ViewNode.Builder,
-    parentPos: Point,
-) {
-    if (this is ViewGroup) {
-        for (child in getChildren()) {
-            val childPos =
-                Point(parentPos.x + child.left - scrollX, parentPos.y + child.top - scrollY)
-            val childNode =
-                if (!(skipSystemViews && child.isSystemView())) {
-                    child.toNodeImpl(stringTable, childPos)
-                } else null
-
-            // Filling out protos requires populating children before parents, since "addChildren"
-            // takes a snapshot of the current node when you call it.
-            child.populateNodesRecursively(
-                stringTable,
-                skipSystemViews,
-                childNode ?: lastParent,
-                childPos
-            )
-            if (childNode != null) {
-                lastParent.addChildren(childNode)
-            }
-        }
-    }
-}
-
-/**
- * Directly convert a view to a node, without adding children.
- *
- * Adding children will be handled by [populateNodesRecursively], which may skip over intermediate
- * nodes.
+ * Directly convert a view to a node, recursively adding children.
  */
 private fun View.toNodeImpl(
     stringTable: StringTable,
-    absPos: Point
+    absOffset: Point
 ): ViewNode.Builder {
     val view = this
     val viewClass = view::class.java
+    val absPos = Point(absOffset.x + view.left, absOffset.y + view.top)
 
     return ViewNode.newBuilder().apply {
         id = uniqueDrawingId
@@ -159,6 +114,11 @@ private fun View.toNodeImpl(
 
         view.getTextValue()?.let { text ->
             textValue = stringTable.put(text)
+        }
+        if (view is ViewGroup) {
+            view.getChildren().forEach { child ->
+                addChildren(child.toNodeImpl(stringTable, Point(absPos.x - scrollX, absPos.y - scrollY)))
+            }
         }
     }
 }

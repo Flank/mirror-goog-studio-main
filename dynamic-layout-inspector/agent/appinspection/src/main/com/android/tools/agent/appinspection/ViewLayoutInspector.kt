@@ -381,12 +381,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         var fetchContinuously: Boolean = false
 
         /**
-         * When true, future layout events should exclude System views, only returning trees of
-         * views created by the user's app.
-         */
-        var skipSystemViews: Boolean = false
-
-        /**
          * Settings that determine the format of screenshots taken when doing a layout capture.
          */
         var screenshotSettings = ScreenshotSettings(Screenshot.Type.BITMAP)
@@ -479,20 +473,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 var snapshotRequest: SnapshotRequest?
                 var context: CaptureContext
                 var screenshotSettings: ScreenshotSettings
-                var skipSystemViews: Boolean
                 synchronized(stateLock) {
                     snapshotRequest = state.snapshotRequests[root.uniqueDrawingId]
                     if (snapshotRequest?.state?.compareAndSet(
                             SnapshotRequest.State.NEW, SnapshotRequest.State.PROCESSING) != true) {
                         snapshotRequest = null
                     }
-                    if (snapshotRequest != null) {
-                        skipSystemViews = false
-                        screenshotSettings = ScreenshotSettings(Screenshot.Type.SKP)
-                    }
-                    else {
-                        skipSystemViews = state.skipSystemViews
-                        screenshotSettings = state.screenshotSettings
+                    screenshotSettings = if (snapshotRequest != null) {
+                        ScreenshotSettings(Screenshot.Type.SKP)
+                    } else {
+                        state.screenshotSettings
                     }
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
@@ -514,8 +504,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot.newBuilder()
                 }
                 else null
-
-                run { // Prepare and send LayoutEvent
+                run {
+                    // Prepare and send LayoutEvent
                     // Triggers image fetch into `os`
                     // We always have to do this even if we don't use the bytes it gives us,
                     // because otherwise an internal queue backs up
@@ -532,90 +522,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         return@run
                     }
 
-                    val screenshot = when(screenshotSettings.type) {
-                        Screenshot.Type.SKP -> ByteString.copyFrom(os.toByteArray())
-                        Screenshot.Type.BITMAP -> {
-                            // If this is the lowest z-index window (the normal case) we can be more
-                            // efficient because we don't need alpha information.
-                            val bitmapType =
-                                if (root.uniqueDrawingId == rootsDetector.lastRootIds.firstOrNull())
-                                    BitmapType.RGB_565 else BitmapType.ABGR_8888
-                            root.takeScreenshot(screenshotSettings.scale, bitmapType)
-                                ?.toByteArray()
-                                ?.compress()
-                                ?.let { ByteString.copyFrom(it) }
-                                ?: ByteString.EMPTY
-                        }
-                        else -> ByteString.EMPTY
-                    }
-                    os.reset() // Clear stream, ready for next frame
-                    checkpoint = ProgressCheckpoint.SCREENSHOT_CAPTURED
-                    if (context.isLastCapture) {
-                        context.shutdown()
-                    }
-
-                    val stringTable = StringTable()
-                    val appContext = root.createAppContext(stringTable)
-                    val configuration = root.createConfiguration(stringTable)
-
-                    val (rootView, rootOffset) = ThreadUtils.runOnMainThread {
-                        val rootView = root.toNode(stringTable, skipSystemViews)
-                        val rootOffset = IntArray(2)
-                        root.getLocationInSurface(rootOffset)
-
-                        (rootView to rootOffset)
-                    }.get()
-                    checkpoint = ProgressCheckpoint.VIEW_HIERARCHY_CAPTURED
-                    val layout = LayoutEvent.newBuilder().apply {
-                        addAllStrings(stringTable.toStringEntries())
-                        this.appContext = appContext
-                        if (configuration != previousConfig) {
-                            previousConfig = configuration
-                            this.configuration = configuration
-                        }
-                        this.rootView = rootView
-                        this.rootOffset = Point.newBuilder().apply {
-                            x = rootOffset[0]
-                            y = rootOffset[1]
-                        }.build()
-                        this.screenshot = Screenshot.newBuilder().apply {
-                            type = screenshotSettings.type
-                            bytes = screenshot
-                        }.build()
-                    }.build()
-                    if (snapshotResponse != null) {
-                        snapshotResponse.layout = layout
-                    }
-                    else {
-                        checkpoint = ProgressCheckpoint.RESPONSE_SENT
-                        connection.sendEvent {
-                            layoutEvent = layout
-                        }
-                    }
+                    sendLayoutEvent(root, context, screenshotSettings, os, snapshotResponse)
                 }
-
                 if (snapshotResponse != null || context.isLastCapture) {
-                    // Prepare and send PropertiesEvent
-                    // We get here either if the client requested a one-time snapshot of the layout
-                    // or if the client just stopped an in-progress fetch. Collect and send all
-                    // properties, so that the user can continue to explore all values in the UI and
-                    // they will match exactly the layout at this moment in time.
-                    val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
-                    val stringTable = StringTable()
-                    val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
-                    val properties = PropertiesEvent.newBuilder().apply {
-                        rootId = root.uniqueDrawingId
-                        addAllPropertyGroups(propertyGroups)
-                        addAllStrings(stringTable.toStringEntries())
-                    }.build()
-                    if (snapshotResponse != null) {
-                        snapshotResponse.properties = properties
-                    }
-                    else {
-                        connection.sendEvent {
-                            propertiesEvent = properties
-                        }
-                    }
+                    sendAllPropertiesEvent(root, snapshotResponse)
 
                     // Send the updated fold state, in case we haven't been sending it continuously.
                     sendFoldStateEventNow()
@@ -639,6 +549,128 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         root.invalidate() // Force a re-render so we send the current screen
     }
 
+    private fun sendAllPropertiesEvent(
+        root: View,
+        snapshotResponse: LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot.Builder?
+    ) {
+        // Prepare and send PropertiesEvent
+        // We get here either if the client requested a one-time snapshot of the layout
+        // or if the client just stopped an in-progress fetch. Collect and send all
+        // properties, so that the user can continue to explore all values in the UI and
+        // they will match exactly the layout at this moment in time.
+
+        val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
+        val stringTable = StringTable()
+        val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
+        val properties = PropertiesEvent.newBuilder().apply {
+            rootId = root.uniqueDrawingId
+            addAllPropertyGroups(propertyGroups)
+            addAllStrings(stringTable.toStringEntries())
+        }.build()
+        if (snapshotResponse != null) {
+            snapshotResponse.properties = properties
+        } else {
+            connection.sendEvent {
+                propertiesEvent = properties
+            }
+        }
+    }
+
+    private fun sendLayoutEvent(
+        root: View,
+        context: CaptureContext,
+        screenshotSettings: ScreenshotSettings,
+        os: ByteArrayOutputStream,
+        snapshotResponse: LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot.Builder?
+    ) {
+        val screenshot = takeScreenshot(screenshotSettings, os, root)
+
+        os.reset() // Clear stream, ready for next frame
+        checkpoint = ProgressCheckpoint.SCREENSHOT_CAPTURED
+        if (context.isLastCapture) {
+            context.shutdown()
+        }
+
+        val stringTable = StringTable()
+        val appContext = root.createAppContext(stringTable)
+        val configuration = root.createConfiguration(stringTable)
+
+        val (rootView, rootOffset) = ThreadUtils.runOnMainThread {
+            val rootView = root.toNode(stringTable)
+            val rootOffset = IntArray(2)
+            root.getLocationInSurface(rootOffset)
+
+            (rootView to rootOffset)
+        }.get()
+
+        checkpoint = ProgressCheckpoint.VIEW_HIERARCHY_CAPTURED
+        val layout =
+            createLayoutMessage(
+                stringTable,
+                appContext,
+                configuration,
+                rootView,
+                rootOffset,
+                screenshotSettings,
+                screenshot
+            )
+        if (snapshotResponse != null) {
+            snapshotResponse.layout = layout
+        } else {
+            checkpoint = ProgressCheckpoint.RESPONSE_SENT
+            connection.sendEvent {
+                layoutEvent = layout
+            }
+        }
+    }
+
+    private fun takeScreenshot(
+        screenshotSettings: ScreenshotSettings,
+        os: ByteArrayOutputStream,
+        root: View
+    ) = when (screenshotSettings.type) {
+        Screenshot.Type.SKP -> ByteString.copyFrom(os.toByteArray())
+        Screenshot.Type.BITMAP -> {
+            // If this is the lowest z-index window (the normal case) we can be more
+            // efficient because we don't need alpha information.
+            val bitmapType =
+                if (root.uniqueDrawingId == rootsDetector.lastRootIds.firstOrNull())
+                    BitmapType.RGB_565 else BitmapType.ABGR_8888
+            root.takeScreenshot(screenshotSettings.scale, bitmapType)
+                ?.toByteArray()
+                ?.compress()
+                ?.let { ByteString.copyFrom(it) }
+                ?: ByteString.EMPTY
+        }
+        else -> ByteString.EMPTY
+    }
+
+    private fun createLayoutMessage(
+        stringTable: StringTable,
+        appContext: LayoutInspectorViewProtocol.AppContext,
+        configuration: Configuration,
+        rootView: LayoutInspectorViewProtocol.ViewNode,
+        rootOffset: IntArray,
+        screenshotSettings: ScreenshotSettings,
+        screenshot: ByteString?
+    ) = LayoutEvent.newBuilder().apply {
+        addAllStrings(stringTable.toStringEntries())
+        this.appContext = appContext
+        if (configuration != previousConfig) {
+            previousConfig = configuration
+            this.configuration = configuration
+        }
+        this.rootView = rootView
+        this.rootOffset = Point.newBuilder().apply {
+            x = rootOffset[0]
+            y = rootOffset[1]
+        }.build()
+        this.screenshot = Screenshot.newBuilder().apply {
+            type = screenshotSettings.type
+            bytes = screenshot
+        }.build()
+    }.build()
+
     private fun handleStartFetchCommand(
         startFetchCommand: StartFetchCommand,
         callback: CommandCallback
@@ -648,7 +680,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
         synchronized(stateLock) {
             state.fetchContinuously = startFetchCommand.continuous
-            state.skipSystemViews = startFetchCommand.skipSystemViews
         }
 
         if (startFetchCommand.continuous) {
@@ -763,6 +794,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     state.snapshotRequests[view.uniqueDrawingId] = it
                 }.result
             }
+
             ThreadUtils.runOnMainThread { roots.forEach { it.invalidate() } }
 
             val reply = LayoutInspectorViewProtocol.CaptureSnapshotResponse.newBuilder().apply {
