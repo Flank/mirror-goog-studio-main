@@ -269,6 +269,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 .setSplitsConfig(splitsConfig)
                 .setUncompressNativeLibraries(uncompressNativeLibrariesConfig)
 
+            parameters.bundleOptions.get().enableStoreArchive?.let {
+                bundleOptimizations.setStoreArchive(Config.StoreArchive.newBuilder().setEnabled(it))
+            }
+
             if (parameters.bundleNeedsFusedStandaloneConfig.get()) {
                 bundleOptimizations.setStandaloneConfig(
                     Config.StandaloneConfig.newBuilder()
@@ -422,7 +426,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val enableDeviceTier: Boolean?,
         @get:Input
         @get:Optional
-        val defaultDeviceTier: String?
+        val defaultDeviceTier: String?,
+        @get:Input
+        @get:Optional
+        val enableStoreArchive: Boolean?,
     ) : Serializable
 
     data class AssetPackOptionsForAssetPackBundle(
@@ -606,13 +613,14 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
 private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
     PackageBundleTask.BundleOptions(
-        enableAbi = abi.enableSplit,
-        enableDensity = density.enableSplit,
-        enableLanguage = language.enableSplit,
-        enableTexture = texture.enableSplit,
-        textureDefaultFormat = texture.defaultFormat,
-        enableDeviceTier = deviceTier.enableSplit,
-        defaultDeviceTier = deviceTier.defaultTier
+      enableAbi = abi.enableSplit,
+      enableDensity = density.enableSplit,
+      enableLanguage = language.enableSplit,
+      enableTexture = texture.enableSplit,
+      textureDefaultFormat = texture.defaultFormat,
+      enableDeviceTier = deviceTier.enableSplit,
+      defaultDeviceTier = deviceTier.defaultTier,
+      enableStoreArchive = storeArchive.enable,
     )
 
 private fun AssetPackBundleExtension.convert() =
@@ -623,7 +631,8 @@ private fun AssetPackBundleExtension.convert() =
         enableTexture = texture.enableSplit,
         textureDefaultFormat = texture.defaultFormat,
         enableDeviceTier = deviceTier.enableSplit,
-        defaultDeviceTier = deviceTier.defaultTier
+        defaultDeviceTier = deviceTier.defaultTier,
+        enableStoreArchive = null,
     )
 
 /**

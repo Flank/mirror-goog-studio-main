@@ -30,6 +30,7 @@ abstract class BundleOptions : Bundle {
     abstract override val texture: BundleOptionsTexture
     abstract override val deviceTier: BundleOptionsDeviceTier
     abstract override val codeTransparency: BundleCodeTransparency
+    abstract override val storeArchive: BundleOptionsStoreArchive
 
     abstract val integrityConfigDir: DirectoryProperty
 
@@ -38,4 +39,5 @@ abstract class BundleOptions : Bundle {
     abstract fun language(action: Action<BundleOptionsLanguage>)
     abstract fun texture(action: Action<BundleOptionsTexture>)
     abstract fun deviceTier(action: Action<BundleOptionsDeviceTier>)
+    abstract fun storeArchive(action: Action<BundleOptionsStoreArchive>)
 }
