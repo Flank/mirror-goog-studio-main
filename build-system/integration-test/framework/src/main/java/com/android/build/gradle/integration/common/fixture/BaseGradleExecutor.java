@@ -75,11 +75,23 @@ import org.gradle.tooling.events.ProgressListener;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
-    private static final long TIMEOUT_MINUTES = 10;
+    // An internal timeout for executing Gradle. This aims to be less than the overall test timeout
+    // to give more instructive error messages
+    private static final long TIMEOUT_SECONDS;
 
     private static Path jvmLogDir;
 
     static {
+        String timeoutOverride = System.getenv("TEST_TIMEOUT");
+        if (timeoutOverride != null) {
+            // Allow for longer build times within a test, while still trying to avoid having the
+            // overal test timeout be hit. If TEST_TIMEOUT is set, potentially increase the timeout
+            // to 1 minute less than the overall test timeout, if that's more than the default 10
+            // minute timeout.
+            TIMEOUT_SECONDS = Math.max(600, Integer.parseInt(timeoutOverride) - 60);
+        } else {
+            TIMEOUT_SECONDS = 600;
+        }
         try {
             jvmLogDir = Files.createTempDirectory("GRADLE_JVM_LOGS");
         } catch (IOException e) {
@@ -471,7 +483,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                     }
                 });
         try {
-            return future.get(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
             throw (GradleConnectionException) e.getCause();
         } catch (InterruptedException e) {
