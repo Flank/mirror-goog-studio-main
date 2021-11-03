@@ -31,15 +31,8 @@ import org.junit.runners.Parameterized
  * Tests frames will be fixed when setting the frames computation mode to something other than to
  * copy frames.
  */
-@RunWith(FilterableParameterized::class)
-class AsmTransformApiFixFramesTest(val packageName: String) {
+class AsmTransformApiFixFramesTest {
 
-    companion object {
-
-        @Parameterized.Parameters(name = "variant_api_package_{0}")
-        @JvmStatic
-        fun parameters() = listOf("com.android.build.api.variant", "com.android.build.api.extension")
-    }
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("asmTransformApi")
@@ -172,15 +165,6 @@ class AsmTransformApiFixFramesTest(val packageName: String) {
     }
 
     private fun configureVisitor(framesMode: String) {
-        if (packageName != "com.android.build.api.extension") {
-            TestFileUtils.searchAndReplace(
-                project.getSubproject(":buildSrc")
-                    .file("src/main/java/com/example/buildsrc/plugin/InstrumentationPlugin.kt"),
-
-                "import com.android.build.api.extension.AndroidComponentsExtension",
-                "import $packageName.AndroidComponentsExtension"
-            )
-        }
 
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":buildSrc")

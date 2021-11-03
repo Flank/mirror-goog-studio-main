@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.ComponentIdentity
 import com.google.common.collect.ImmutableList
 
 /**

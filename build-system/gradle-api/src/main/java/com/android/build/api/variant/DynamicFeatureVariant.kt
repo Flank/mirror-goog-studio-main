@@ -16,13 +16,4 @@
 package com.android.build.api.variant
 
 interface DynamicFeatureVariant : Variant, GeneratesApk, HasAndroidTest, HasTestFixtures {
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message= "Use the com.android.build.api.variant.AndroidTest",
-        replaceWith = ReplaceWith(
-            "AndroidTest?",
-            "com.android.build.api.variant.AndroidTest"),
-        level = DeprecationLevel.WARNING
-    )
-    override val androidTest: com.android.build.api.component.AndroidTest?
 }
