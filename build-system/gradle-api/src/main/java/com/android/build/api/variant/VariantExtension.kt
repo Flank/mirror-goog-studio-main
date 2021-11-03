@@ -20,7 +20,7 @@ package com.android.build.api.variant
  * Marker type for [Variant] extension objects.
  *
  * Variant extension must be registered using the
- * [com.android.build.api.extension.AndroidComponentsExtension.registerExtension] API and can be
+ * [AndroidComponentsExtension.registerExtension] API and can be
  * retrieved from a [Variant] instance using the [Variant.getExtension] API.
  */
 interface VariantExtension

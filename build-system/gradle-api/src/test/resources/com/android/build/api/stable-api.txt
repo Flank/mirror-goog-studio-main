@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-76e3d6562c433f8fb0f79850e2f4e13ba117d5bd5fe735071d856e26783ceb17
+c52d5d9fc4a142ab087fdfe039fc21fbe8791fec7133743cb738af4e33205503
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -92,10 +92,6 @@ com.android.build.api.attributes.AgpVersionAttr$Companion
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
-com.android.build.api.component.Component implements com.android.build.api.variant.Component
-com.android.build.api.component.ComponentBuilder implements com.android.build.api.variant.ComponentBuilder
-com.android.build.api.component.ComponentIdentity implements com.android.build.api.variant.ComponentIdentity
-com.android.build.api.component.TestComponent implements com.android.build.api.component.Component, com.android.build.api.variant.TestComponent
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
@@ -255,39 +251,6 @@ com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension$DefaultImpls
 com.android.build.api.dsl.VariantDimension.getJavaCompileOptions: com.android.build.api.dsl.JavaCompileOptions ()
 com.android.build.api.dsl.VariantDimension.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension implements com.android.build.api.variant.DslLifecycle
-com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls
-com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.beforeVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)
-com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.onVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)
-com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.onVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, org.gradle.api.Action, int, java.lang.Object)
-com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.onVariants: void (com.android.build.api.extension.AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT>, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
-com.android.build.api.extension.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
-com.android.build.api.extension.AndroidComponentsExtension.finalizeDsl: void (kotlin.jvm.functions.Function1<? super DslExtensionT, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.getPluginVersion: com.android.build.api.AndroidPluginVersion ()
-com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantT>)
-com.android.build.api.extension.AndroidComponentsExtension.selector: com.android.build.api.extension.VariantSelector ()
-com.android.build.api.extension.ApplicationAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
-com.android.build.api.extension.ApplicationAndroidComponentsExtension$DefaultImpls
-com.android.build.api.extension.ApplicationAndroidComponentsExtension$DefaultImpls.onVariants: void (com.android.build.api.extension.ApplicationAndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApplicationVariant, kotlin.Unit>)
-com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
-com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension$DefaultImpls
-com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension$DefaultImpls.onVariants: void (com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.DynamicFeatureVariant, kotlin.Unit>)
-com.android.build.api.extension.LibraryAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
-com.android.build.api.extension.LibraryAndroidComponentsExtension$DefaultImpls
-com.android.build.api.extension.LibraryAndroidComponentsExtension$DefaultImpls.onVariants: void (com.android.build.api.extension.LibraryAndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryVariant, kotlin.Unit>)
-com.android.build.api.extension.TestAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
-com.android.build.api.extension.TestAndroidComponentsExtension$DefaultImpls
-com.android.build.api.extension.TestAndroidComponentsExtension$DefaultImpls.onVariants: void (com.android.build.api.extension.TestAndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.TestVariant, kotlin.Unit>)
-com.android.build.api.extension.VariantExtensionConfig implements com.android.build.api.variant.VariantExtensionConfig
-com.android.build.api.extension.VariantSelector implements com.android.build.api.variant.VariantSelector
-com.android.build.api.extension.VariantSelector.all: com.android.build.api.extension.VariantSelector ()
-com.android.build.api.extension.VariantSelector.withBuildType: com.android.build.api.extension.VariantSelector (java.lang.String)
-com.android.build.api.extension.VariantSelector.withFlavor: com.android.build.api.extension.VariantSelector (kotlin.Pair<java.lang.String, java.lang.String>)
-com.android.build.api.extension.VariantSelector.withName: com.android.build.api.extension.VariantSelector (java.lang.String)
-com.android.build.api.extension.VariantSelector.withName: com.android.build.api.extension.VariantSelector (java.util.regex.Pattern)
 com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
 com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassContext, org.objectweb.asm.ClassVisitor)
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()
@@ -424,8 +387,6 @@ com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
 com.android.build.api.variant.ApplicationAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.GeneratesApk, com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest, com.android.build.api.variant.HasTestFixtures
-com.android.build.api.variant.ApplicationVariant$DefaultImpls
-com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
@@ -478,8 +439,6 @@ com.android.build.api.variant.DexPackagingOptions
 com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.GeneratesApk, com.android.build.api.variant.HasAndroidTest, com.android.build.api.variant.HasTestFixtures
-com.android.build.api.variant.DynamicFeatureVariant$DefaultImpls
-com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder, com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.ExternalNativeBuild
 com.android.build.api.variant.ExternalNativeBuild.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()
@@ -525,8 +484,6 @@ com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.a
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.LibraryAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidTest, com.android.build.api.variant.HasTestFixtures
-com.android.build.api.variant.LibraryVariant$DefaultImpls
-com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder, com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.Packaging
@@ -560,7 +517,7 @@ com.android.build.api.variant.TestVariant implements com.android.build.api.varia
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
-com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.variant.HasAndroidResources
+com.android.build.api.variant.Variant implements com.android.build.api.variant.Component, com.android.build.api.variant.HasAndroidResources
 com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.Variant.getExtension: T (java.lang.Class<T>)
 com.android.build.api.variant.Variant.getExternalNativeBuild: com.android.build.api.variant.ExternalNativeBuild ()
@@ -572,7 +529,7 @@ com.android.build.api.variant.Variant.getPackaging: com.android.build.api.varian
 com.android.build.api.variant.Variant.getProguardFiles: org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> ()
 com.android.build.api.variant.Variant.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
-com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder
+com.android.build.api.variant.VariantBuilder implements com.android.build.api.variant.ComponentBuilder
 com.android.build.api.variant.VariantBuilder.getEnableUnitTest: boolean ()
 com.android.build.api.variant.VariantBuilder.getMaxSdk: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdk: java.lang.Integer ()

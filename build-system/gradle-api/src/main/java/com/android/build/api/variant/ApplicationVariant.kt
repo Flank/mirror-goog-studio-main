@@ -44,16 +44,6 @@ interface ApplicationVariant : GeneratesApk, Variant, HasAndroidTest, HasTestFix
      */
     val signingConfig: SigningConfig?
 
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message= "Use the com.android.build.api.variant.AndroidTest",
-        replaceWith = ReplaceWith(
-            "AndroidTest?",
-            "com.android.build.api.variant.AndroidTest"),
-        level = DeprecationLevel.WARNING
-    )
-    override val androidTest: com.android.build.api.component.AndroidTest?
-
     /**
      * Variant's information related to the bundle creation configuration.
      * @return Variant's [BundleConfig].

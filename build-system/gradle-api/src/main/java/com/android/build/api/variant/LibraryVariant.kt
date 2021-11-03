@@ -23,15 +23,4 @@ interface LibraryVariant : Variant, GeneratesAar, HasAndroidTest, HasTestFixture
      * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
      */
     val renderscript: Renderscript?
-
-    @Suppress("DEPRECATION")
-    @Deprecated(
-        message= "Use the com.android.build.api.variant.AndroidTest",
-        replaceWith = ReplaceWith(
-            "AndroidTest?",
-            "com.android.build.api.variant.AndroidTest"),
-        level = DeprecationLevel.WARNING
-    )
-    override val androidTest: com.android.build.api.component.AndroidTest?
-
 }

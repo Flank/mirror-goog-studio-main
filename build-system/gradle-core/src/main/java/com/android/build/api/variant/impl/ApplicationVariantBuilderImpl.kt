@@ -15,18 +15,16 @@
  */
 package com.android.build.api.variant.impl
 
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantBuilder
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.DependenciesInfo
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.DependenciesInfoBuilder
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
 import javax.inject.Inject
 
 open class ApplicationVariantBuilderImpl @Inject constructor(

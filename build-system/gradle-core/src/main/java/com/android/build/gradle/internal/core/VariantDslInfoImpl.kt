@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.BuildType
@@ -25,6 +24,7 @@ import com.android.build.api.dsl.LibraryVariantDimension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.VariantDimension
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.api.variant.impl.ResValueKeyImpl
@@ -46,7 +46,6 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.Version
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantType
