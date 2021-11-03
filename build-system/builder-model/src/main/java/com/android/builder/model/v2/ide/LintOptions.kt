@@ -20,8 +20,6 @@ import java.io.File
 
 /**
  * Options for lint.
- *
- * @since 4.2
 */
 interface LintOptions: AndroidModel {
     /**
@@ -34,76 +32,83 @@ interface LintOptions: AndroidModel {
      */
     val enable: Set<String>
 
+    /** Issues that have severity overridden to 'informational' */
+    val informational: Set<String>
+
+    /** Issues that have severity overridden to 'warning' */
+    val warning: Set<String>
+
+    /** Issues that have severity overridden to 'error' */
+    val error: Set<String>
+
+    /** Issues that have severity overridden to 'fatal' */
+    val fatal: Set<String>
+
     /**
-     * The exact set of issues to check, or null to run the issues that are enabled
-     * by default plus any issues enabled via [enable] and without issues disabled
-     * via [disable]. If non-null, callers are allowed to modify this collection.
+     * The exact set of issues to check. If empty lint will detect the issues that are enabled
+     * by default plus any issues enabled via [enable] and without issues disabled via [disable].
      */
-    val check: Set<String>?
+    val checkOnly: Set<String>
 
     /** Whether lint should abort the build if errors are found  */
-    val isAbortOnError: Boolean
+    val abortOnError: Boolean
 
     /**
      * Whether lint should display full paths in the error output. By default the paths
      * are relative to the path lint was invoked from.
      */
-    val isAbsolutePaths: Boolean
+    val absolutePaths: Boolean
 
     /**
      * Whether lint should include the source lines in the output where errors occurred
      * (true by default)
      */
-    val isNoLines: Boolean
+    val noLines: Boolean
 
     /**
      * Returns whether lint should be quiet (for example, not write informational messages
      * such as paths to report files written)
      */
-    val isQuiet: Boolean
+    val quiet: Boolean
 
     /** Returns whether lint should check all warnings, including those off by default  */
-    val isCheckAllWarnings: Boolean
+    val checkAllWarnings: Boolean
 
     /** Returns whether lint will only check for errors (ignoring warnings)  */
-    val isIgnoreWarnings: Boolean
+    val ignoreWarnings: Boolean
 
     /** Returns whether lint should treat all warnings as errors  */
-    val isWarningsAsErrors: Boolean
+    val warningsAsErrors: Boolean
 
     /**
      * Returns whether lint should run all checks on test sources, instead of just the
      * lint checks that have been specifically written to include tests (e.g. checks
      * looking for specific test errors, or checks that need to consider testing code
      * such as the unused resource detector)
-     *
-     * @return true to check tests, defaults to false
      */
-    val isCheckTestSources: Boolean
+    val checkTestSources: Boolean
 
     /**
      * Like [.isCheckTestSources], but always skips analyzing tests -- meaning that it also
      * ignores checks that have explicitly asked to look at test sources, such as the unused
      * resource check.
      */
-    val isIgnoreTestSources: Boolean
+    val ignoreTestSources: Boolean
 
     /**
      * Returns whether lint should run checks on generated sources.
-     *
-     * @return true to check generated sources, defaults to false
      */
-    val isCheckGeneratedSources: Boolean
+    val checkGeneratedSources: Boolean
 
     /** Returns whether lint should include explanations for issue errors. (Note that
      * HTML and XML reports intentionally do this unconditionally, ignoring this setting.)  */
-    val isExplainIssues: Boolean
+    val explainIssues: Boolean
 
     /**
      * Returns whether lint should include all output (e.g. include all alternate
      * locations, not truncating long messages, etc.)
      */
-    val isShowAll: Boolean
+    val showAll: Boolean
 
     /**
      * Returns an optional path to a lint.xml configuration file
@@ -151,13 +156,13 @@ interface LintOptions: AndroidModel {
      * Returns whether lint should check for fatal errors during release builds. Default is true.
      * If issues with severity "fatal" are found, the release build is aborted.
      */
-    val isCheckReleaseBuilds: Boolean
+    val checkReleaseBuilds: Boolean
 
     /**
      * Returns whether lint should check all dependencies too as part of its analysis. Default is
      * false.
      */
-    val isCheckDependencies: Boolean
+    val checkDependencies: Boolean
 
     /**
      * Returns the baseline file to use, if any. The baseline file is
@@ -169,42 +174,6 @@ interface LintOptions: AndroidModel {
      * this lets you set a baseline and only see newly introduced warnings
      * until you get a chance to go back and address the "technical debt"
      * of the earlier warnings.
-     *
-     * @return the baseline file, if any
      */
-    val baselineFile: File?
-
-    /**
-     * An optional map of severity overrides. The map maps from issue id's to the corresponding
-     * severity to use, which must be "fatal", "error", "warning", or "ignore".
-     *
-     * @return a map of severity overrides, or null. The severities are one of the constants
-     * [.SEVERITY_FATAL], [.SEVERITY_ERROR], [.SEVERITY_WARNING],
-     * [.SEVERITY_INFORMATIONAL], [.SEVERITY_IGNORE]
-     */
-    val severityOverrides: Map<String, Int>?
-
-    companion object {
-        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#FATAL  */
-        const val SEVERITY_FATAL = 1
-
-        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#ERROR  */
-        const val SEVERITY_ERROR = 2
-
-        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#WARNING  */
-        const val SEVERITY_WARNING = 3
-
-        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#INFORMATIONAL  */
-        const val SEVERITY_INFORMATIONAL = 4
-
-        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#IGNORE  */
-        const val SEVERITY_IGNORE = 5
-
-        /**
-         * A severity for lint. This severity means that the severity should be whatever the default
-         * is for this issue (this is used when the DSL just says "enable", and Gradle doesn't know
-         * what the default severity is.)
-         */
-        const val SEVERITY_DEFAULT_ENABLED = 6
-    }
+    val baseline: File?
 }

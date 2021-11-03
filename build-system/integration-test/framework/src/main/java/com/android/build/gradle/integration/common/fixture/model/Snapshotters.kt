@@ -501,19 +501,23 @@ private fun ModelSnapshotter<out AbstractArtifact>.snapshotBaseArtifact() {
 private fun ModelSnapshotter<LintOptions>.snapshotLintOptions() {
     list("disable", LintOptions::disable)
     list("enable", LintOptions::enable)
-    list("check", LintOptions::check)
-    item("isAbortOnError", LintOptions::isAbortOnError)
-    item("isAbsolutePaths", LintOptions::isAbsolutePaths)
-    item("isNoLines", LintOptions::isNoLines)
-    item("isQuiet", LintOptions::isQuiet)
-    item("isCheckAllWarnings", LintOptions::isCheckAllWarnings)
-    item("isIgnoreWarnings", LintOptions::isIgnoreWarnings)
-    item("isWarningsAsErrors", LintOptions::isWarningsAsErrors)
-    item("isCheckTestSources", LintOptions::isCheckTestSources)
-    item("isIgnoreTestSources", LintOptions::isIgnoreTestSources)
-    item("isCheckGeneratedSources", LintOptions::isCheckGeneratedSources)
-    item("isExplainIssues", LintOptions::isExplainIssues)
-    item("isShowAll", LintOptions::isShowAll)
+    list("informational", LintOptions::informational)
+    list("warning", LintOptions::warning)
+    list("error", LintOptions::error)
+    list("fatal", LintOptions::fatal)
+    list("checkOnly", LintOptions::checkOnly)
+    item("abortOnError", LintOptions::abortOnError)
+    item("absolutePaths", LintOptions::absolutePaths)
+    item("noLines", LintOptions::noLines)
+    item("quiet", LintOptions::quiet)
+    item("checkAllWarnings", LintOptions::checkAllWarnings)
+    item("ignoreWarnings", LintOptions::ignoreWarnings)
+    item("warningsAsErrors", LintOptions::warningsAsErrors)
+    item("checkTestSources", LintOptions::checkTestSources)
+    item("ignoreTestSources", LintOptions::ignoreTestSources)
+    item("checkGeneratedSources", LintOptions::checkGeneratedSources)
+    item("explainIssues", LintOptions::explainIssues)
+    item("showAll", LintOptions::showAll)
     item("lintConfig", LintOptions::lintConfig)
     item("textReport", LintOptions::textReport)
     item("textOutput", LintOptions::textOutput)
@@ -523,16 +527,9 @@ private fun ModelSnapshotter<LintOptions>.snapshotLintOptions() {
     item("xmlOutput", LintOptions::xmlOutput)
     item("sarifReport", LintOptions::sarifReport)
     item("sarifOutput", LintOptions::sarifOutput)
-    item("isCheckReleaseBuilds", LintOptions::isCheckReleaseBuilds)
-    item("isCheckDependencies", LintOptions::isCheckDependencies)
-    item("baselineFile", LintOptions::baselineFile)
-    valueList(
-        name = "severityOverrides",
-        propertyAction = { severityOverrides?.entries },
-        formatAction = { "$key -> $value" }
-    ) { collection ->
-            collection?.sortedBy { it.key }
-    }
+    item("checkReleaseBuilds", LintOptions::checkReleaseBuilds)
+    item("checkDependencies", LintOptions::checkDependencies)
+    item("baseline", LintOptions::baseline)
 }
 
 internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies() {
