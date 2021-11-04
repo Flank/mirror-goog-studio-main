@@ -405,7 +405,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             val infoLoggingEnabled =
                 Logging.getLogger(ManagedDeviceInstrumentationTestTask::class.java).isInfoEnabled()
             task.testRunnerFactory.utpLoggingLevel.set(
-                if (infoLoggingEnabled) Level.INFO else Level.WARNING
+                if (infoLoggingEnabled) Level.INFO else Level.OFF
             )
 
             task.testRunnerFactory
