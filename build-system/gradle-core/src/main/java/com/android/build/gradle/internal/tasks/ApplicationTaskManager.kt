@@ -204,22 +204,13 @@ class ApplicationTaskManager(
 
         if (assetPacks.isNotEmpty()) {
             val assetPackManifest =
-                assetPackManifestConfiguration.incoming.files
+                assetPackManifestConfiguration.incoming.artifacts
             val assetFiles = assetPackFilesConfiguration.incoming.files
 
             taskFactory.register(
                 ProcessAssetPackManifestTask.CreationAction(
                         appVariant,
-                    assetPackManifest,
-                    assetPacks
-                        .stream()
-                        .map { assetPackName: String ->
-                            assetPackName.replace(
-                                ":",
-                                File.separator
-                            )
-                        }
-                        .collect(Collectors.toSet())
+                    assetPackManifest
                 )
             )
             taskFactory.register(
