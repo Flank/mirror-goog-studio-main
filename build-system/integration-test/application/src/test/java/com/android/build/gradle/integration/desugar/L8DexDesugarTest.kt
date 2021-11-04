@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
+import com.android.build.gradle.options.IntegerOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.AndroidArchive.checkValidClassName
 import com.android.testutils.apk.Dex
@@ -44,6 +45,7 @@ class L8DexDesugarTest {
         MinimalSubProject.app("com.example.test")).create()
 
     private val desugarClass = "Lj$/util/stream/Stream;"
+    private val desugarClassCompanion = "Lj$/util/stream/Stream$-CC;"
     private val normalClass = "Lcom/example/test/BuildConfig;"
 
     @Before
@@ -185,6 +187,33 @@ class L8DexDesugarTest {
         result.stderr.use {
             ScannerSubject.assertThat(it).contains(MISSING_DEPS_ERROR)
         }
+    }
+
+    /** Regression test for b/204795033. */
+    @Test
+    fun testL8HandlesTargetDevice() {
+        normalSetUp()
+        project.buildFile.appendText("\n" +
+                """
+            android.defaultConfig.minSdkVersion = 21
+        """.trimIndent()
+        )
+
+        project.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
+                .run("assembleDebug")
+        val apkApi24 = project.getApk(
+                GradleTestProject.ApkType.DEBUG,
+                GradleTestProject.ApkLocation.Intermediates)
+        assertThatApk(apkApi24).doesNotContainClass(desugarClassCompanion)
+
+        project.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 23)
+                .run("assembleDebug")
+        val apkApi23 = project.getApk(
+                GradleTestProject.ApkType.DEBUG,
+                GradleTestProject.ApkLocation.Intermediates)
+        assertThatApk(apkApi23).hasClass(desugarClassCompanion)
     }
 
     private fun normalSetUp() {

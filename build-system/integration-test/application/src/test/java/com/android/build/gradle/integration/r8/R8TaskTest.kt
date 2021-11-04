@@ -20,10 +20,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -147,6 +149,44 @@ class R8TaskTest {
                 "WARNING:Using multiDexKeepFile property with R8 is deprecated and will be fully " +
                         "removed in AGP 8.0. Please migrate to use multiDexKeepProguard instead.")
         }
+    }
+
+    @Test
+    fun testInjectedDeviceApi() {
+        project.buildFile.appendText("""
+
+            android.defaultConfig.minSdkVersion 21
+        """.trimIndent())
+        project.mainSrcDir.resolve("example/MyInterface.java").also {
+            it.parentFile.mkdirs()
+            it.resolveSibling("MyInterface.java").writeText("""
+                package example;
+
+                interface MyInterface {
+                    static void printContent() { System.out.println("hello"); }
+                }
+            """.trimIndent())
+        }
+        project.file("proguard-rules.pro").appendText("""
+            -keep class example.MyInterface* { *; }
+            -dontobfuscate
+        """.trimIndent())
+
+        project.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
+                .run("assembleDebug")
+        val apkApi24 = project.getApk(
+                GradleTestProject.ApkType.DEBUG,
+                GradleTestProject.ApkLocation.Intermediates)
+        assertThatApk(apkApi24).doesNotContainClass("Lexample/MyInterface$-CC;")
+
+        project.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 23)
+                .run("assembleDebug")
+        val apkApi23 = project.getApk(
+                GradleTestProject.ApkType.DEBUG,
+                GradleTestProject.ApkLocation.Intermediates)
+        assertThatApk(apkApi23).hasClass("Lexample/MyInterface$-CC;")
     }
 
     private fun enableMultiDex() {
