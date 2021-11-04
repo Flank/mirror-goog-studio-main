@@ -16,6 +16,8 @@
 
 package com.android.repository.impl.sources;
 
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystemAndFolder;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.Checksum;
@@ -27,7 +29,6 @@ import com.android.repository.api.RepositorySource;
 import com.android.repository.api.SchemaModule;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.InputStream;
@@ -44,15 +45,13 @@ import junit.framework.TestCase;
 public class RemoteListSourceProviderTest extends TestCase {
 
     public void testSimple() throws Exception {
-        MockFileOp fop = new MockFileOp();
-
         Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> permittedModules =
                 Maps.newHashMap();
         permittedModules.put(RemoteListSourceProvider.GenericSite.class,
                 ImmutableList.of(RepoManager.getCommonModule()));
         RemoteListSourceProvider provider = RemoteListSourceProvider
                 .create("http://example.com/sourceList.xml", null, permittedModules);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(createInMemoryFileSystemAndFolder("tmp"));
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
                 getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -72,15 +71,13 @@ public class RemoteListSourceProviderTest extends TestCase {
     }
 
     public void testCache() throws Exception {
-        MockFileOp fop = new MockFileOp();
-
         Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> permittedModules =
                 Maps.newHashMap();
         permittedModules.put(RemoteListSourceProvider.GenericSite.class,
                 ImmutableList.of(RepoManager.getCommonModule()));
         RemoteListSourceProvider provider = RemoteListSourceProvider
                 .create("http://example.com/sourceList.xml", null, permittedModules);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(createInMemoryFileSystemAndFolder("tmp"));
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
                 getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -131,15 +128,13 @@ public class RemoteListSourceProviderTest extends TestCase {
     }
 
     public void testForceRefresh() throws Exception {
-        MockFileOp fop = new MockFileOp();
-
         Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> permittedModules =
                 Maps.newHashMap();
         permittedModules.put(RemoteListSourceProvider.GenericSite.class,
                 ImmutableList.of(RepoManager.getCommonModule()));
         RemoteListSourceProvider provider = RemoteListSourceProvider
                 .create("http://example.com/sourceList.xml", null, permittedModules);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(createInMemoryFileSystemAndFolder("tmp"));
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
                 getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();

@@ -15,6 +15,7 @@
  */
 package com.android.repository.impl.sources;
 
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystemAndFolder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -37,7 +38,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
-import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -242,7 +242,7 @@ public class LocalSourceProviderTest {
         provider.addSource(source);
         provider.addSource(source2);
         // We don't actually need the urls to be registered for this test
-        FakeDownloader downloader = new FakeDownloader(new MockFileOp().toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(createInMemoryFileSystemAndFolder("tmp"));
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
                         ImmutableList.of(

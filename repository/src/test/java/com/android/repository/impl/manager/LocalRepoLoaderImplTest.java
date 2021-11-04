@@ -23,10 +23,10 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.installer.AbstractPackageOperation;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
-import java.io.File;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Map;
 import org.junit.Test;
 
@@ -66,8 +66,7 @@ public class LocalRepoLoaderImplTest {
     @Test
     public void testHashFile() throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        MockFileOp fop = new MockFileOp();
-        Path repoRoot = fop.toPath("/repo");
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         Path knownPackagesFile = repoRoot.resolve(LocalRepoLoaderImpl.KNOWN_PACKAGES_HASH_FN);
         Files.createDirectories(repoRoot);
         RepoManager mgr = new RepoManagerImpl();
@@ -82,7 +81,7 @@ public class LocalRepoLoaderImplTest {
 
         // check that the file is created when loading when there are packages
         Path package1 = repoRoot.resolve("foo/package.xml");
-        fop.recordExistingFile(package1.toString(), LOCAL_PACKAGE.getBytes());
+        InMemoryFileSystems.recordExistingFile(package1, LOCAL_PACKAGE);
         // loader caches the packages it found, so we need to recreate it
         loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
         loader.getPackages(progress);
@@ -90,23 +89,23 @@ public class LocalRepoLoaderImplTest {
 
         // check that iff the file exists and is newer than the last update,
         // shallow check returns true
-        fop.setLastModified(knownPackagesFile, 1000);
+        Files.setLastModifiedTime(knownPackagesFile, FileTime.fromMillis(1000L));
         assertTrue(loader.needsUpdate(1, false));
         assertFalse(loader.needsUpdate(2000, false));
 
         // check that deep check returns false if knownpackages is updated more recently than
         // package.xml
-        fop.setLastModified(package1, 1);
+        Files.setLastModifiedTime(package1, FileTime.fromMillis(1L));
         assertFalse(loader.needsUpdate(2000, true));
 
         // check that deep check returns true if package.xml is updated more recently than
         // knownpackages
-        fop.setLastModified(package1, 2000);
+        Files.setLastModifiedTime(package1, FileTime.fromMillis(2000L));
         assertTrue(loader.needsUpdate(2000, true));
 
         // check that deep check returns true if there's an unknown package
-        fop.recordExistingFile(
-                repoRoot.resolve("bar/package.xml").toString(), LOCAL_PACKAGE_2.getBytes());
+        InMemoryFileSystems.recordExistingFile(
+                repoRoot.resolve("bar/package.xml"), LOCAL_PACKAGE_2);
         loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
         assertTrue(loader.needsUpdate(2000, true));
 
@@ -123,35 +122,29 @@ public class LocalRepoLoaderImplTest {
 
         // but deep check does
         assertTrue(loader.needsUpdate(currentTime + 1000, true));
-
     }
 
     @Test
     public void testNoScanningForMetadataFolders() {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        MockFileOp fop = new MockFileOp();
         // Allow the repo root name to start with metadata prefix. Although it wouldn't normally
         // be the case, there is no reason to disallow that.
-        File repoRoot =
-                new File("/" + AbstractPackageOperation.METADATA_FILENAME_PREFIX + "repo")
-                        .getAbsoluteFile();
-        fop.mkdirs(repoRoot);
+        Path repoRoot =
+                InMemoryFileSystems.createInMemoryFileSystemAndFolder(
+                        AbstractPackageOperation.METADATA_FILENAME_PREFIX + "repo");
         RepoManager mgr = new RepoManagerImpl();
 
         // Check that the metadata folders are not scanned for packages.
-        File package1 = new File(repoRoot, "foo/package.xml");
-        fop.recordExistingFile(package1.getPath(),
-                               LOCAL_PACKAGE.getBytes());
-        File package2 = new File(repoRoot, AbstractPackageOperation.METADATA_FILENAME_PREFIX + "bar/package.xml");
-        fop.recordExistingFile(package2.getPath(),
-                               LOCAL_PACKAGE_2.getBytes());
+        Path package1 = repoRoot.resolve("foo/package.xml");
+        InMemoryFileSystems.recordExistingFile(package1, LOCAL_PACKAGE);
+        Path package2 =
+                repoRoot.resolve(
+                        AbstractPackageOperation.METADATA_FILENAME_PREFIX + "bar/package.xml");
+        InMemoryFileSystems.recordExistingFile(package2, LOCAL_PACKAGE_2);
         // loader caches the packages it found, so we need to recreate it
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(fop.toPath(repoRoot), mgr, null);
+        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
         Map<String, LocalPackage> localPackages = loader.getPackages(progress);
         assertEquals(1, localPackages.size());
-        assertEquals(
-                package1.getParent(),
-                localPackages.values().iterator().next().getLocation().toString());
+        assertEquals(package1.getParent(), localPackages.values().iterator().next().getLocation());
     }
-
 }

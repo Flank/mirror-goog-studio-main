@@ -33,9 +33,10 @@ import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeLoader;
 import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -52,7 +53,6 @@ public class RepoManagerImplTest extends TestCase {
 
     // test load with local and remote, fake loaders, callbacks called in order
     public void testLoadOperationsInOrder() {
-        MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(1, counter, false));
@@ -64,10 +64,10 @@ public class RepoManagerImplTest extends TestCase {
                 packages -> assertEquals(4, counter.addAndGet(1));
         Runnable errorCallback = Assert::fail;
 
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
         RepoManagerImpl mgr = new RepoManagerImpl(localFactory, remoteFactory);
-        mgr.setLocalPath(fop.toPath("/repo"));
-        mgr.registerSourceProvider(new FakeRepositorySourceProvider(
-                ImmutableList.of()));
+        mgr.setLocalPath(repoRoot);
+        mgr.registerSourceProvider(new FakeRepositorySourceProvider(ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         mgr.loadSynchronously(
                 0,
@@ -75,7 +75,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(remoteCallback),
                 ImmutableList.of(errorCallback),
                 runner,
-                new FakeDownloader(fop.toPath("tmp")),
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                 null);
 
         assertEquals(4, counter.get());
@@ -83,7 +83,6 @@ public class RepoManagerImplTest extends TestCase {
 
     // test error causes error callbacks to be called
     public void testErrorCallbacks1() {
-        MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(1, counter, false));
@@ -95,7 +94,8 @@ public class RepoManagerImplTest extends TestCase {
         Runnable errorCallback = () -> assertEquals(4, counter.addAndGet(1));
 
         RepoManagerImpl mgr = new RepoManagerImpl(localFactory, remoteFactory);
-        mgr.setLocalPath(fop.toPath("/repo"));
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        mgr.setLocalPath(repoRoot);
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -106,7 +106,7 @@ public class RepoManagerImplTest extends TestCase {
                     ImmutableList.of(remoteCallback),
                     ImmutableList.of(errorCallback),
                     runner,
-                    new FakeDownloader(fop.toPath("tmp")),
+                    new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                     null);
         } catch (Exception e) {
             // expected
@@ -116,7 +116,6 @@ public class RepoManagerImplTest extends TestCase {
 
     // test error causes error callbacks to be called
     public void testErrorCallbacks2() {
-        MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(1, counter, true));
@@ -127,7 +126,8 @@ public class RepoManagerImplTest extends TestCase {
         Runnable errorCallback = () -> assertEquals(2, counter.addAndGet(1));
 
         RepoManagerImpl mgr = new RepoManagerImpl(localFactory, remoteFactory);
-        mgr.setLocalPath(fop.toPath("/repo"));
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        mgr.setLocalPath(repoRoot);
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -138,7 +138,7 @@ public class RepoManagerImplTest extends TestCase {
                     ImmutableList.of(remoteCallback),
                     ImmutableList.of(errorCallback),
                     runner,
-                    new FakeDownloader(fop.toPath("tmp")),
+                    new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                     null);
         } catch (Exception e) {
             // expected
@@ -148,7 +148,6 @@ public class RepoManagerImplTest extends TestCase {
 
     // test multiple loads at same time only kick off one load, and callbacks are invoked
     public void testMultiLoad() throws Exception {
-        MockFileOp fop = new MockFileOp();
         final AtomicBoolean localStarted = new AtomicBoolean(false);
         AtomicBoolean localCallback1Run = new AtomicBoolean(false);
         AtomicBoolean localCallback2Run = new AtomicBoolean(false);
@@ -192,7 +191,8 @@ public class RepoManagerImplTest extends TestCase {
         Runnable errorCallback = Assert::fail;
 
         RepoManagerImpl mgr = new RepoManagerImpl(localFactory, new TestLoaderFactory());
-        mgr.setLocalPath(fop.toPath("/repo"));
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        mgr.setLocalPath(repoRoot);
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -202,7 +202,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(remoteCallback1),
                 ImmutableList.of(errorCallback),
                 runner,
-                new FakeDownloader(fop.toPath("tmp")),
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                 null);
         mgr.load(
                 0,
@@ -210,7 +210,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(remoteCallback2),
                 ImmutableList.of(errorCallback),
                 runner,
-                new FakeDownloader(fop.toPath("tmp")),
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                 null);
         runLocal.release();
 
@@ -225,7 +225,6 @@ public class RepoManagerImplTest extends TestCase {
 
     // test timeout makes/doesn't make load happen
     public void testTimeout() {
-        MockFileOp fop = new MockFileOp();
         final AtomicBoolean localDidRun = new AtomicBoolean(false);
         final AtomicBoolean remoteDidRun = new AtomicBoolean(false);
 
@@ -240,7 +239,8 @@ public class RepoManagerImplTest extends TestCase {
                 new RunningLoader<>(remoteDidRun));
 
         RepoManagerImpl mgr = new RepoManagerImpl(localRunningFactory, remoteRunningFactory);
-        mgr.setLocalPath(fop.toPath("/repo"));
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        mgr.setLocalPath(repoRoot);
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -262,7 +262,7 @@ public class RepoManagerImplTest extends TestCase {
                 null,
                 null,
                 runner,
-                new FakeDownloader(fop.toPath("tmp")),
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                 null);
         assertFalse(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
@@ -274,21 +274,26 @@ public class RepoManagerImplTest extends TestCase {
                 null,
                 null,
                 runner,
-                new FakeDownloader(fop.toPath("tmp")),
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
                 null);
         assertFalse(localDidRun.get());
         assertFalse(remoteDidRun.get());
 
         // now we will timeout, so they should run again
         mgr.loadSynchronously(
-                -1, null, null, null, runner, new FakeDownloader(fop.toPath("tmp")), null);
+                -1,
+                null,
+                null,
+                null,
+                runner,
+                new FakeDownloader(repoRoot.getRoot().resolve("tmp")),
+                null);
         assertTrue(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
     }
 
     // test that we do the local repo needsUpdate check correctly
     public void testCheckForNewPackages() {
-        MockFileOp fop = new MockFileOp();
         AtomicBoolean didRun = new AtomicBoolean(false);
         final AtomicBoolean shallowResult = new AtomicBoolean(false);
         final AtomicBoolean deepResult = new AtomicBoolean(false);
@@ -300,7 +305,8 @@ public class RepoManagerImplTest extends TestCase {
         };
 
         RepoManager mgr = new RepoManagerImpl(new TestLoaderFactory<>(loader), null);
-        mgr.setLocalPath(fop.toPath("/repo"));
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        mgr.setLocalPath(repoRoot);
         FakeProgressRunner runner = new FakeProgressRunner();
 
         // First time we should load, despite not being out of date
@@ -340,10 +346,10 @@ public class RepoManagerImplTest extends TestCase {
 
     // test local/remote change listeners
     public void testChangeListeners() {
-        MockFileOp fop = new MockFileOp();
         final Map<String, LocalPackage> localPackages = new HashMap<>();
         FakeLoader<LocalPackage> localLoader = new FakeLoader<>(localPackages);
-        localPackages.put("foo", new FakeLocalPackage("foo", fop.toPath("/repo/foo")));
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        localPackages.put("foo", new FakeLocalPackage("foo", repoRoot.resolve("foo")));
 
         final Map<String, RemotePackage> remotePackages = Maps.newHashMap();
         FakeLoader<RemotePackage> remoteLoader = new FakeLoader<>(remotePackages);
@@ -354,10 +360,10 @@ public class RepoManagerImplTest extends TestCase {
         TestLoaderFactory localFactory = new TestLoaderFactory<>(localLoader);
         TestLoaderFactory remoteFactory = new TestLoaderFactory<>(remoteLoader);
         RepoManager mgr = new RepoManagerImpl(localFactory, remoteFactory);
-        mgr.setLocalPath(fop.toPath("/repo"));
+        mgr.setLocalPath(repoRoot);
 
         FakeProgressRunner runner = new FakeProgressRunner();
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(repoRoot.getRoot().resolve("tmp"));
 
         @SuppressWarnings("ConstantConditions")
         RepositorySourceProvider provider = new FakeRepositorySourceProvider(
@@ -378,7 +384,7 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
-        localPackages.put("bar", new FakeLocalPackage("bar", fop.toPath("/repo/bar")));
+        localPackages.put("bar", new FakeLocalPackage("bar", repoRoot.resolve("bar")));
         mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());
