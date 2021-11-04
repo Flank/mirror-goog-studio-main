@@ -45,6 +45,7 @@ import com.android.tools.agent.appinspection.testutils.property.companions.ViewI
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.decompress
 import com.android.tools.agent.shared.FoldObserver
+import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BITMAP_HEADER_SIZE
 import com.android.tools.layoutinspector.BitmapType
 import com.android.tools.layoutinspector.toBytes
@@ -57,7 +58,6 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchCommand
 import org.junit.After
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -65,6 +65,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 class ViewLayoutInspectorTest {
 
@@ -494,6 +495,124 @@ class ViewLayoutInspectorTest {
         checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
             assertThat(event.propertiesEvent.rootId).isEqualTo(tree3.uniqueDrawingId)
+        }
+    }
+
+    @Test
+    fun onlyMostRecentRequestProcessed() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(7)
+
+        val picture1Latch = CountDownLatch(1)
+        val picture1Started = CountDownLatch(1)
+        val picture2Started = CountDownLatch(1)
+
+        inspectorRule.connection.eventListeners.add { bytes ->
+            val event = Event.parseFrom(bytes)
+            val pictureBytes = event.layoutEvent?.screenshot?.bytes
+            if (pictureBytes?.equals(ByteString.copyFrom(byteArrayOf(1, 1))) == true) {
+                picture1Started.countDown()
+                picture1Latch.await()
+            }
+            else if (pictureBytes?.equals(ByteString.copyFrom(byteArrayOf(2, 1))) == true) {
+                picture2Started.countDown()
+            }
+            eventQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val tree1 = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        val tree2 = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(tree1, tree2))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+        val tree1FakePicture1 = Picture(byteArrayOf(1, 1))
+        val tree1FakePicture2 = Picture(byteArrayOf(1, 2))
+        val tree1FakePicture3 = Picture(byteArrayOf(1, 3))
+        val tree2FakePicture1 = Picture(byteArrayOf(2, 1))
+        val tree2FakePicture2 = Picture(byteArrayOf(2, 2))
+
+        thread {
+            // This will block
+            tree1.forcePictureCapture(tree1FakePicture1)
+            picture1Started.await()
+
+            // This will queue up but should be skipped
+            tree1.forcePictureCapture(tree1FakePicture2)
+            // This one will be run once the first is unblocked
+            tree1.forcePictureCapture(tree1FakePicture3)
+
+            // Different tree--these should both be processed
+            tree2.forcePictureCapture(tree2FakePicture1)
+            picture2Started.await()
+            tree2.forcePictureCapture(tree2FakePicture2)
+        }
+
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree2.uniqueDrawingId
+            )
+        }
+
+        // We should get the two events for tree2
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree2.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree2FakePicture1.bytes)
+            }
+        }
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree2.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree2FakePicture2.bytes)
+            }
+        }
+
+        // Now continue the initial capture for tree1
+        picture1Latch.countDown()
+
+        // We should get the first and third capture for tree1
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture1.bytes)
+            }
+        }
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture3.bytes)
+            }
         }
     }
 

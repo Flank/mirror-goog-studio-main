@@ -85,6 +85,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 private const val LAYOUT_INSPECTION_ID = "layoutinspector.view.inspection"
@@ -466,10 +467,18 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         // We might get multiple callbacks for the same view while still processing an earlier
         // one. Let's avoid processing these in parallel to avoid confusion.
         val sequentialExecutor = Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
-
+        val currentRequestId = AtomicLong()
         val captureExecutor = Executor { command ->
+            val requestId = currentRequestId.incrementAndGet()
             checkpoint = ProgressCheckpoint.VIEW_INVALIDATION_CALLBACK
             sequentialExecutor.execute {
+                if (requestId != currentRequestId.get()) {
+                    // This request is obsolete, just return
+                    command.run()
+                    os.reset()
+                    return@execute
+                }
+
                 var snapshotRequest: SnapshotRequest?
                 var context: CaptureContext
                 var screenshotSettings: ScreenshotSettings
