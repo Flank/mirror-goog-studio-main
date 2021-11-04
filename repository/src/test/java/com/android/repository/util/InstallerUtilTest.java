@@ -26,7 +26,7 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.nio.file.Files;
@@ -463,8 +463,9 @@ public class InstallerUtilTest extends TestCase {
     }
 
     public void testInstallInChild() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile("/sdk/foo/package.xml",
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("foo/package.xml"),
                 "<repo:repository\n"
                         + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -477,16 +478,17 @@ public class InstallerUtilTest extends TestCase {
                         + "    </localPackage>\n"
                         + "</repo:repository>");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertFalse(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo/bar"), mgr, progress));
+        assertFalse(InstallerUtil.checkValidPath(sdkRoot.resolve("foo/bar"), mgr, progress));
         assertFalse(progress.getWarnings().isEmpty());
     }
 
     public void testInstallInParent() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile("/sdk/foo/bar/package.xml",
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("foo/bar/package.xml"),
                 "<repo:repository\n"
                         + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -499,16 +501,17 @@ public class InstallerUtilTest extends TestCase {
                         + "    </localPackage>\n"
                         + "</repo:repository>");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertFalse(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo"), mgr, progress));
+        assertFalse(InstallerUtil.checkValidPath(sdkRoot.resolve("foo"), mgr, progress));
         assertFalse(progress.getWarnings().isEmpty());
     }
 
     public void testInstallSeparately() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile("/sdk/foo2/package.xml",
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("foo2/package.xml"),
                 "<repo:repository\n"
                         + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -521,16 +524,17 @@ public class InstallerUtilTest extends TestCase {
                         + "    </localPackage>\n"
                         + "</repo:repository>");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertTrue(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo"), mgr, progress));
+        assertTrue(InstallerUtil.checkValidPath(sdkRoot.resolve("foo"), mgr, progress));
         progress.assertNoErrorsOrWarnings();
     }
 
     public void testInstallSeparately2() {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile("/sdk/foo/package.xml",
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("foo/package.xml"),
                 "<repo:repository\n"
                         + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -543,10 +547,10 @@ public class InstallerUtilTest extends TestCase {
                         + "    </localPackage>\n"
                         + "</repo:repository>");
         RepoManager mgr = new RepoManagerImpl();
-        mgr.setLocalPath(fop.toPath("/sdk"));
+        mgr.setLocalPath(sdkRoot);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertTrue(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo2"), mgr, progress));
+        assertTrue(InstallerUtil.checkValidPath(sdkRoot.resolve("foo2"), mgr, progress));
         progress.assertNoErrorsOrWarnings();
     }
 

@@ -26,9 +26,9 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,8 +39,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 public class SdkMavenRepositoryTest extends TestCase {
-    private final MockFileOp mFileOp = new MockFileOp();
-    private final Path SDK_HOME = mFileOp.toPath("/sdk");
+    private final Path SDK_HOME = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
 
     private AndroidSdkHandler mSdkHandler;
     private final RepositoryPackages mRepositoryPackages = new RepositoryPackages();
@@ -61,7 +60,7 @@ public class SdkMavenRepositoryTest extends TestCase {
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
         LocalPackage pkg =
                 new FakePackage.FakeLocalPackage(
-                        path, mFileOp.toPath("/sdk/extras/" + vendor + "/m2repository"));
+                        path, SDK_HOME.resolve("extras/" + vendor + "/m2repository"));
         existing.put(path, pkg);
         mRepositoryPackages.setLocalPkgInfos(existing.values());
         // SdkMavenRepo requires that the path exists.
@@ -113,11 +112,13 @@ public class SdkMavenRepositoryTest extends TestCase {
         assertEquals("google", SdkMavenRepository.GOOGLE.getDirName());
     }
 
-    public void testGetByGroupId() {
-        mFileOp.recordExistingFolder(
-                "/sdk/extras/android/m2repository/com/android/support/appcompat-v7/19.0.0");
-        mFileOp.recordExistingFolder(
-                "/sdk/extras/google/m2repository/com/google/android/gms/play-services/5.2.08");
+    public void testGetByGroupId() throws Exception {
+        Files.createDirectories(
+                SDK_HOME.resolve(
+                        "extras/android/m2repository/com/android/support/appcompat-v7/19.0.0"));
+        Files.createDirectories(
+                SDK_HOME.resolve(
+                        "extras/google/m2repository/com/google/android/gms/play-services/5.2.08"));
 
         assertSame(
                 SdkMavenRepository.ANDROID,
@@ -188,9 +189,8 @@ public class SdkMavenRepositoryTest extends TestCase {
         FakePackage.FakeLocalPackage fakePackage =
                 new FakePackage.FakeLocalPackage(
                         basePath + revision,
-                        mFileOp.toPath(
-                                "/sdk/extras/m2repository/com/android/tools/build/gradle/"
-                                        + revision));
+                        SDK_HOME.resolve(
+                                "extras/m2repository/com/android/tools/build/gradle/" + revision));
         fakePackage.setRevision(Revision.parseRevision(revision));
         existing.put(basePath + revision, fakePackage);
     }
