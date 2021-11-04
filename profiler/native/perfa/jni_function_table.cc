@@ -88,7 +88,8 @@ bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
     Log::E(Log::Tag::PROFILER, "Failed to set new JNI table");
     return false;
   }
-  Log::V(Log::Tag::PROFILER, "New JNI table set");
+  Log::V(Log::Tag::PROFILER, "New JNI table set with %s global ref listener",
+         gref_listener != nullptr ? "NEW" : "ORIGINAL");
 
   return true;
 }
