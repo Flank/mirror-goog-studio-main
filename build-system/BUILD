@@ -210,14 +210,20 @@ maven_repository(
 maven_repository(
     name = "performance_test_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS + [
-        # TODO(b/201790375): Update Kotlin deps.
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.4.32",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.4.32",
-        "@maven//:androidx.activity.activity-compose_1.3.0-alpha02",
-        "@maven//:androidx.compose.compiler.compiler_1.0.0-beta07",
-        "@maven//:androidx.compose.material.material_1.0.0-beta07",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.5.30",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
+        "@maven//:androidx.activity.activity-compose_1.3.0-alpha02",
+        "@maven//:androidx.compose.compiler.compiler_1.0.5",
+        "@maven//:androidx.compose.material.material_1.0.5",
+        "@maven//:androidx.compose.material.material-icons-extended_1.0.5",
+        "@maven//:androidx.compose.ui.ui-tooling_1.0.5",
+        "@maven//:androidx.compose.runtime.runtime-livedata_1.0.5",
+        "@maven//:androidx.appcompat.appcompat_1.3.0-beta01",
+        "@maven//:androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
     ],
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )

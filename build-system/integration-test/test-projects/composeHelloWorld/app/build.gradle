@@ -34,17 +34,19 @@ android {
     }
 
 }
-
+ext {
+    composeVersion = '1.0.5'
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.kotlinVersion}"
     implementation 'androidx.appcompat:appcompat:1.3.+'
     implementation 'androidx.fragment:fragment:1.3.+'
     implementation 'androidx.core:core-ktx:1.1.0'
-    implementation 'androidx.activity:activity-compose:+'
-    implementation 'androidx.compose.ui:ui:+'
-    implementation 'androidx.compose.material:material:+'
-    implementation 'androidx.compose.ui:ui-tooling:+'
+    implementation "androidx.activity:activity-compose:1.3.1"
+    implementation "androidx.compose.ui:ui:$composeVersion"
+    implementation "androidx.compose.material:material:$composeVersion"
+    implementation "androidx.compose.ui:ui-tooling:$composeVersion"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core-common:+'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
