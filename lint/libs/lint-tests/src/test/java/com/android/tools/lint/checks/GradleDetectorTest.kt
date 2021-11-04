@@ -207,8 +207,8 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testVersionsFromGradleCache() {
         val expected = "" +
-            "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
-            "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
+            "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.4.0-alpha3 is available: 3.6.0-alpha01 [AndroidGradlePluginVersion]\n" +
+            "        classpath 'com.android.tools.build:gradle:3.4.0-alpha3'\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:11: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
             "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
@@ -230,7 +230,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        jcenter()\n" +
                     "    }\n" +
                     "    dependencies {\n" +
-                    "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.4.0-alpha3'\n" +
                     "    }\n" +
                     "}\n" +
                     "dependencies {\n" +
@@ -245,10 +245,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                    "Fix for build.gradle line 7: Change to 3.5.0-alpha10:\n" +
+                    "Fix for build.gradle line 7: Change to 3.6.0-alpha01:\n" +
                     "@@ -7 +7\n" +
-                    "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
-                    "+         classpath 'com.android.tools.build:gradle:3.5.0-alpha10'\n" +
+                    "-         classpath 'com.android.tools.build:gradle:3.4.0-alpha3'\n" +
+                    "+         classpath 'com.android.tools.build:gradle:3.6.0-alpha01'\n" +
                     "Fix for build.gradle line 11: Change to 4.4:\n" +
                     "@@ -11 +11\n" +
                     "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
@@ -274,8 +274,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        jcenter()\n" +
                     "    }\n" +
                     "    dependencies {\n" +
-                    "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
-                    "        classpath 'com.android.tools.build:gradle:3.0.+'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.3.0'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.3.+'\n" +
                     "        classpath 'com.android.tools.build:gradle:3.+'\n" +
                     "    }\n" +
                     "}\n"
@@ -286,21 +286,21 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 "" +
-                    "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [AndroidGradlePluginVersion]\n" +
-                    "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
+                    "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.3.0 is available: 3.5.0. (There is also a newer version of 3.3.\uD835\uDC65 available, if upgrading to 3.5.0 is difficult: 3.3.2) [AndroidGradlePluginVersion]\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.3.0'\n" +
                     "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
             .expectFixDiffs(
                 "" +
+                    "Fix for build.gradle line 7: Change to 3.5.0:\n" +
+                    "@@ -7 +7\n" +
+                    "-         classpath 'com.android.tools.build:gradle:3.3.0'\n" +
+                    "+         classpath 'com.android.tools.build:gradle:3.5.0'\n" +
                     "Fix for build.gradle line 7: Change to 3.3.2:\n" +
                     "@@ -7 +7\n" +
-                    "-         classpath 'com.android.tools.build:gradle:3.0.0'\n" +
-                    "+         classpath 'com.android.tools.build:gradle:3.3.2'\n" +
-                    "Fix for build.gradle line 7: Change to 3.0.1:\n" +
-                    "@@ -7 +7\n" +
-                    "-         classpath 'com.android.tools.build:gradle:3.0.0'\n" +
-                    "+         classpath 'com.android.tools.build:gradle:3.0.1'"
+                    "-         classpath 'com.android.tools.build:gradle:3.3.0'\n" +
+                    "+         classpath 'com.android.tools.build:gradle:3.3.2'"
             )
     }
 
@@ -868,11 +868,11 @@ class GradleDetectorTest : AbstractCheckTest() {
         // Regression test for https://issuetracker.google.com/119210741
         // Don't offer Gradle plugin versions newer than the IDE (when running in the IDE)
         // Same (older) version of Studio and Gradle:
-        // Studio 3.0, gradle: 3.0.0-alpha4: Offer latest 3.0.0, not 3.1 or 3.2 etc
+        // Studio 3.3, gradle: 3.3.0-alpha04: Offer latest 3.3.0, not 3.4 etc
         val expected = "" +
-            "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]\n" +
-            "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.3.0-alpha04 is available: 3.3.2 [AndroidGradlePluginVersion]\n" +
+            "    classpath 'com.android.tools.build:gradle:3.3.0-alpha04'\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings"
 
         lint().files(
@@ -884,7 +884,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     mavenCentral()
                   }
                   dependencies {
-                    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
+                    classpath 'com.android.tools.build:gradle:3.3.0-alpha04'
                   }
                 }
 
@@ -899,8 +899,8 @@ class GradleDetectorTest : AbstractCheckTest() {
             .clientFactory({
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
-                    // Studio 3.0.0
-                    override fun getClientRevision(): String = "3.0.0.0"
+                    // Studio 3.3.0
+                    override fun getClientRevision(): String = "3.3.0.0"
                 }
             })
             .run().expect(expected)
@@ -910,7 +910,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         // Regression test for https://issuetracker.google.com/119210741
         // Don't offer Gradle plugin versions newer than the IDE (when running in the IDE)
         // Newer Studio than Gradle:
-        // Studio 3.1, Gradle 3.0: Offer 3.1
+        // Studio 3.4, Gradle 3.3: Offer 3.4
         lint().files(
             gradle(
                 """
@@ -920,7 +920,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     mavenCentral()
                   }
                   dependencies {
-                    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'
+                    classpath 'com.android.tools.build:gradle:3.3.0-alpha01'
                   }
                 }
 
@@ -935,14 +935,14 @@ class GradleDetectorTest : AbstractCheckTest() {
             .clientFactory({
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
-                    // Studio 3.0.0
-                    override fun getClientRevision(): String = "3.1.0"
+                    // Studio 3.4.0
+                    override fun getClientRevision(): String = "3.4.0"
                 }
             })
             .run().expect(
                 "" +
-                    "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [AndroidGradlePluginVersion]\n" +
-                    "    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'\n" +
+                    "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.3.0-alpha01 is available: 3.4.1 [AndroidGradlePluginVersion]\n" +
+                    "    classpath 'com.android.tools.build:gradle:3.3.0-alpha01'\n" +
                     "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
@@ -961,7 +961,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     mavenCentral()
                   }
                   dependencies {
-                    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
+                    classpath 'com.android.tools.build:gradle:3.3.0-alpha04'
                   }
                 }
 
@@ -982,9 +982,9 @@ class GradleDetectorTest : AbstractCheckTest() {
             })
             .run().expect(
                 """
-                build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]
-                    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.3.0-alpha04 is available: 3.3.2 [AndroidGradlePluginVersion]
+                    classpath 'com.android.tools.build:gradle:3.3.0-alpha04'
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
                 """
             )
@@ -1608,19 +1608,18 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPreviewVersions() {
         val expected = "" +
-            "build.gradle:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            "build.gradle:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is " +
+            GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " +
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
             " [GradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
-            GRADLE_PLUGIN_RECOMMENDED_VERSION +
-            " [AndroidGradlePluginVersion]\n" +
-            "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
+            "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 3.2.1 is available: 3.5.0 [AndroidGradlePluginVersion]\n" +
+            "        classpath 'com.android.tools.build:gradle:3.2.1'\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
-            "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 3.3.0-alpha04 is available: 3.6.0-alpha01 [AndroidGradlePluginVersion]\n" +
+            "        classpath 'com.android.tools.build:gradle:3.3.0-alpha04'\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 2 warnings\n"
 
         lint().files(
@@ -1633,8 +1632,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "    dependencies {\n" +
                     "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
-                    "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
-                    "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.2.1'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.3.0-alpha04'\n" +
                     "    }\n" +
                     "}\n" +
                     "\n" +
@@ -1649,19 +1648,18 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPreviewVersionsKts() {
         val expected = "" +
-            "build.gradle.kts:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            "build.gradle.kts:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is " +
+            GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " +
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
             " [GradlePluginVersion]\n" +
             "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle.kts:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
-            GRADLE_PLUGIN_RECOMMENDED_VERSION +
-            " [AndroidGradlePluginVersion]\n" +
-            "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+            "build.gradle.kts:8: Warning: A newer version of com.android.tools.build:gradle than 3.2.1 is available: 3.5.0 [AndroidGradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:3.2.1\")\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle.kts:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
-            "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle.kts:9: Warning: A newer version of com.android.tools.build:gradle than 3.3.0-alpha04 is available: 3.6.0-alpha01 [AndroidGradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:3.3.0-alpha04\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 2 warnings\n"
 
         lint().files(
@@ -1674,8 +1672,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "    dependencies {\n" +
                     "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
-                    "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
-                    "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:3.2.1\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:3.3.0-alpha04\")\n" +
                     "    }\n" +
                     "}\n" +
                     "\n" +
@@ -1692,7 +1690,8 @@ class GradleDetectorTest : AbstractCheckTest() {
         // regression test for b/144442233: if we don't have google() in buildscript repositories,
         // we probably shouldn't unconditionally update AGP version dependencies.
         val expected = "" +
-            "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is " +
+            GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " +
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
             " [GradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
@@ -1708,8 +1707,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "    dependencies {\n" +
                     "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
-                    "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
-                    "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.3.0'\n" +
+                    "        classpath 'com.android.tools.build:gradle:3.4.0-alpha04'\n" +
                     "    }\n" +
                     "}\n" +
                     "\n" +
@@ -1729,7 +1728,8 @@ class GradleDetectorTest : AbstractCheckTest() {
         // 0-argument calls, even if it's unrealistic that any .build.kts file suffers from this
         // precise problem.
         val expected = "" +
-            "build.gradle.kts:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            "build.gradle.kts:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is " +
+            GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " +
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
             " [GradlePluginVersion]\n" +
             "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
@@ -1745,8 +1745,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "    dependencies {\n" +
                     "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
-                    "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
-                    "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:3.3.0\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:3.4.0-alpha04\")\n" +
                     "    }\n" +
                     "}\n" +
                     "\n" +
@@ -4523,8 +4523,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0," +
                     "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03,3.2.0-alpha04,3.2.0-alpha05,3.2.0-alpha06,3.2.0-alpha07,3.2.0-alpha08,3.2.0-alpha09,3.2.0-alpha10,3.2.0-alpha11,3.2.0-alpha12,3.2.0-alpha13,3.2.0-alpha14,3.2.0-alpha15,3.2.0-alpha16,3.2.0-alpha17,3.2.0-alpha18,3.2.0-beta01,3.2.0-beta02,3.2.0-beta03,3.2.0-beta04,3.2.0-beta05,3.2.0-rc01,3.2.0-rc02,3.2.0-rc03,3.2.0,3.2.1," +
                     "3.3.0-alpha01,3.3.0-alpha02,3.3.0-alpha03,3.3.0-alpha04,3.3.0-alpha05,3.3.0-alpha06,3.3.0-alpha07,3.3.0-alpha08,3.3.0-alpha09,3.3.0-alpha10,3.3.0-alpha11,3.3.0-alpha12,3.3.0-alpha13,3.3.0-beta01,3.3.0-beta02,3.3.0-beta03,3.3.0-beta04,3.3.0-rc01,3.3.0-rc02,3.3.0-rc03,3.3.0,3.3.1,3.3.2," +
-                    "3.4.0-alpha01,3.4.0-alpha02,3.4.0-alpha03,3.4.0-alpha04,3.4.0-alpha05,3.4.0-alpha06,3.4.0-alpha07,3.4.0-alpha08,3.4.0-alpha09,3.4.0-alpha10,3.4.0-beta01,3.4.0-beta02,3.4.0-beta03,3.4.0-beta04,3.4.0-beta05,3.4.0-rc01,3.4.0-rc02,3.4.0-rc03," +
-                    "3.5.0-alpha01,3.5.0-alpha02,3.5.0-alpha03,3.5.0-alpha04,3.5.0-alpha05,3.5.0-alpha06,3.5.0-alpha07,3.5.0-alpha08,3.5.0-alpha09,3.5.0-alpha10\"/>\n" +
+                    "3.4.0-alpha01,3.4.0-alpha02,3.4.0-alpha03,3.4.0-alpha04,3.4.0-alpha05,3.4.0-alpha06,3.4.0-alpha07,3.4.0-alpha08,3.4.0-alpha09,3.4.0-alpha10,3.4.0-beta01,3.4.0-beta02,3.4.0-beta03,3.4.0-beta04,3.4.0-beta05,3.4.0-rc01,3.4.0-rc02,3.4.0-rc03,3.4.0,3.4.1," +
+                    "3.5.0-alpha01,3.5.0-alpha02,3.5.0-alpha03,3.5.0-alpha04,3.5.0-alpha05,3.5.0-alpha06,3.5.0-alpha07,3.5.0-alpha08,3.5.0-alpha09,3.5.0-alpha10,3.5.0," + "" +
+                    "3.6.0-alpha01\"/>\n" +
                     "</com.android.tools.build>"
             )
             task.networkData(

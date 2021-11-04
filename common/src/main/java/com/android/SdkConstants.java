@@ -2864,8 +2864,18 @@ public final class SdkConstants {
      */
     public static final String GRADLE_LATEST_VERSION = "7.3-rc-1";
 
-    public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
-    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";
+    /**
+     * The minimum released version of the Android Gradle Plugin that this version of Studio will
+     * support. (Support of the development series leading up to it is unknown.)
+     */
+    public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "3.2.0";
+
+    /**
+     * A version of the Android Gradle Plugin that this version of Studio and associated tools (e.g.
+     * lint) can safely recommend during its development cycle. If an up-to-date version is
+     * required, consider using `LatestKnownPluginVersionProvider` instead.
+     */
+    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "7.0.3";
 
     /** use api or implementation */
     @Deprecated public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
