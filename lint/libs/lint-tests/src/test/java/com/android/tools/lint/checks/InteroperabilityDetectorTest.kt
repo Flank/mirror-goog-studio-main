@@ -1000,7 +1000,93 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             src/test/pkg/Foo.kt:7: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
                 fun takeRequest(timeout: Long, unit: TimeUnit) = requestQueue.poll(timeout, unit) // ERROR
                     ~~~~~~~~~~~
-            0 errors, 1 warnings
+            src/test/pkg/Foo.kt:11: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
+                val type = Integer.TYPE // ERROR
+                    ~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testPlatformPropagation2() {
+        // Regression test for
+        // 202559682: UnknownNullness check false positives on kotlin properties
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.NonNull;
+                import androidx.annotation.Nullable;
+
+                public class MyClass {
+                    @NonNull
+                    public static String nonnull() {
+                        return "";
+                    }
+                    @Nullable
+                    public static String nullable() {
+                        return null;
+                    }
+                    public static String platform() { // ERROR 1
+                        return null;
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import androidx.annotation.Nullable;
+                public interface Answer<T> {
+                    T answer(@Nullable String invocation) throws Throwable;
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                fun kotlinNonNull() = MyClass.nonnull() // OK 1
+                fun kotlinNullable() = MyClass.nullable() // OK 2
+                fun kotlinPlatform(): String? = MyClass.platform() // OK 3
+                fun kotlinPlatform2() = MyClass.platform() // ERROR 2
+                fun kotlinNonNull2() = run { MyClass.nonnull() } // OK 4
+                fun kotlinPlatform3() = run { MyClass.platform() } // ERROR 3
+
+                var kotlinNonNullProp = MyClass.nonnull() // OK 5
+                var kotlinNonNullProp2: String = MyClass.nonnull() // OK 6
+                var kotlinPlatformProp = MyClass.platform() // ERROR 4
+                var kotlinPlatformProp2: String = MyClass.platform() // OK 7
+                val lazyValue by lazy { MyClass.platform() } // ERROR 5
+                val lazyValue2 by lazy { MyClass.nullable() } // OK 8
+
+                val ANSWER_THROWS = Answer { 42 } // ERROR 7
+                val ANSWER_THROWS: Answer<Int?> = Answer { 42 } // OK 9
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/MyClass.java:15: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                public static String platform() { // ERROR 1
+                              ~~~~~~
+            src/test/pkg/test.kt:6: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
+            fun kotlinPlatform2() = MyClass.platform() // ERROR 2
+                ~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:8: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
+            fun kotlinPlatform3() = run { MyClass.platform() } // ERROR 3
+                ~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
+            var kotlinPlatformProp = MyClass.platform() // ERROR 4
+                ~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:14: Warning: Should explicitly declare type here since implicit type does not specify nullness (Lazy<(String or String?)>) [UnknownNullness]
+            val lazyValue by lazy { MyClass.platform() } // ERROR 5
+                ~~~~~~~~~
+            src/test/pkg/test.kt:17: Warning: Should explicitly declare type here since implicit type does not specify nullness (Answer<(Int or Int?)>) [UnknownNullness]
+            val ANSWER_THROWS = Answer { 42 } // ERROR 7
+                ~~~~~~~~~~~~~
+            0 errors, 6 warnings
             """
         )
     }

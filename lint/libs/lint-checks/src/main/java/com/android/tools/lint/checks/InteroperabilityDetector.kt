@@ -42,21 +42,26 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeParameter
+import org.jetbrains.kotlin.psi.KtCallableDeclaration
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.isDynamic
+import org.jetbrains.kotlin.types.isFlexible
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnonymousClass
-import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParameter
-import org.jetbrains.uast.UReferenceExpression
-import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 
 /**
  * Checks for issues around creating APIs that make it harder to
@@ -238,8 +243,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         override fun visitMethod(node: UMethod) {
             if (isApi(context, node) && node.returnTypeReference == null) {
                 // Not explicitly setting return type. See if it's a nullable type:
-                val type = node.returnType ?: return
-                if (type is PsiPrimitiveType) {
+                val uastType = node.returnType ?: return
+                if (uastType is PsiPrimitiveType) {
                     return
                 }
 
@@ -248,54 +253,50 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     return
                 }
 
-                val body = node.uastBody as? UBlockExpression ?: return
-                val expressions = body.expressions
-                if (expressions.size == 1) {
-                    val statement = expressions[0] as? UReturnExpression ?: return
-                    val expression = statement.returnExpression as? UReferenceExpression ?: return
-                    val resolved = expression.resolve() ?: return
-                    if (isKotlin(resolved)) {
-                        return
-                    }
+                // Based on SpecifyTypeExplicitlyIntention, the IntelliJ inspection for
+                // adding explicit types. However, that code runs in the IDE which has
+                // access to more resolve machinery; here, instead of looking up
+                // CallableDescriptor for the return type we look at the right hand side
+                // where the type is.
 
-                    if (resolved is PsiModifierListOwner && hasNullnessAnnotation(resolved)) {
-                        return
-                    }
-
-                    reportMissingExplicitType(node)
+                val declaration = node.sourcePsi as? KtCallableDeclaration ?: return
+                when (declaration) {
+                    is KtFunction -> if (declaration.isLocal || declaration.hasDeclaredReturnType()) return
+                    is KtProperty -> if (declaration.isLocal || declaration.typeReference != null) return
+                    else -> return
                 }
+                if (declaration.containingClassOrObject?.isLocal == true) return
+                val expression = when (declaration) {
+                    is KtProperty -> declaration.initializer ?: declaration.delegateExpression ?: return
+                    is KtFunction -> declaration.bodyExpression ?: declaration.bodyBlockExpression ?: return
+                    else -> return
+                }
+                val service = declaration.project.getService(KotlinUastResolveProviderService::class.java)
+                val bindingContext = service.getBindingContext(declaration)
+                val type = bindingContext.getType(expression) ?: return
+                if (type.isDynamic()) return
+
+                // We're considering flexible types as platform types since Kotlin doesn't support union types yet.
+                // In the future this may need to be refined.
+                if (!type.isFlexibleRecursive()) return
+                val typeString = if (type.isFlexible()) null else type.toString().replace("..", " or ")
+                reportMissingExplicitType(node, typeString)
             }
+        }
+
+        private fun KotlinType.isFlexibleRecursive(): Boolean {
+            if (isFlexible()) return true
+            return arguments.any { !it.isStarProjection && it.type.isFlexibleRecursive() }
         }
 
         override fun visitField(node: UField) {
-            // Currently this provides a type reference even for implicit types
-            // which is not correct
-            if (isApi(context, node) && node.typeReference == null) {
-                // Not explicitly setting return type. See if it's a nullable type:
-                val type = node.type
-                if (type is PsiPrimitiveType) {
-                    return
-                }
-
-                // Already annotated?
-                if (hasNullnessAnnotation(node as UAnnotated)) {
-                    return
-                }
-
-                val expression = node.uastInitializer as? UReferenceExpression ?: return
-                val resolved = expression.resolve() ?: return
-                if (isKotlin(resolved)) {
-                    return
-                }
-
-                reportMissingExplicitType(node)
-            }
         }
 
-        private fun reportMissingExplicitType(node: UElement) {
+        private fun reportMissingExplicitType(node: UElement, typeString: String? = null) {
             context.report(
                 PLATFORM_NULLNESS, node, context.getNameLocation(node),
-                "Should explicitly declare type here since implicit type does not specify nullness"
+                "Should explicitly declare type here since implicit type does not specify nullness" +
+                    if (typeString != null) " ($typeString)" else ""
             )
         }
 
