@@ -389,6 +389,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 StringFormatDetector.ARG_TYPES,
                 StringFormatDetector.INVALID,
                 StringFormatDetector.POTENTIAL_PLURAL,
+                StringFormatDetector.TRIVIAL,
                 SyntheticAccessorDetector.ISSUE,
                 SystemPermissionsDetector.ISSUE,
                 TextFieldDetector.ISSUE,
@@ -526,7 +527,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 scope.contains(Scope.ALL_RESOURCE_FILES) -> initialSize += 12
             }
             when {
-                scope.contains(Scope.JAVA_FILE) -> initialSize += 150
+                scope.contains(Scope.JAVA_FILE) -> initialSize += 151
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
                 scope.contains(Scope.MANIFEST) -> initialSize += 70
                 scope.contains(Scope.GRADLE_FILE) -> initialSize += 24

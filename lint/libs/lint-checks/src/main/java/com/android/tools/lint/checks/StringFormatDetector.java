@@ -175,6 +175,23 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     Severity.WARNING,
                     IMPLEMENTATION_XML);
 
+    /** Whether the string format used in a String.format call is trivial */
+    public static final Issue TRIVIAL =
+            Issue.create(
+                            "StringFormatTrivial",
+                            "`String.format` string only contains trivial conversions",
+                            "Every call to `String.format` creates a new `Formatter` instance, which will "
+                                    + "decrease the performance of your app. `String.format` should only be used when "
+                                    + "necessary--if the formatted string contains only trivial conversions "
+                                    + "(e.g. `b`, `s`, `c`) and there are no translation concerns, it will be "
+                                    + "more efficient to replace them and concatenate with `+`.",
+                            Category.PERFORMANCE,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION_XML_AND_JAVA)
+                    .setAndroidSpecific(true)
+                    .setEnabledByDefault(false);
+
     /** Whether the string format supplied in a call to String.format matches the format string */
     public static final Issue ARG_TYPES =
             Issue.create(
@@ -1015,6 +1032,65 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         return max;
     }
 
+    /** Given a format string returns whether it has any flags/width/precision modifiers. */
+    static boolean hasFormatArgumentModifiers(@NonNull String s, int argument) {
+        Matcher matcher = FORMAT.matcher(s);
+        int index = 0;
+        int prevIndex = 0;
+        int nextNumber = 1;
+        while (true) {
+            if (matcher.find(index)) {
+                String value = matcher.group(6);
+                if ("%".equals(value) || "n".equals(value)) {
+                    index = matcher.end();
+                    continue;
+                }
+                int matchStart = matcher.start();
+                // Make sure this is not an escaped '%'
+                for (; prevIndex < matchStart; prevIndex++) {
+                    char c = s.charAt(prevIndex);
+                    if (c == '\\') {
+                        prevIndex++;
+                    }
+                }
+                if (prevIndex > matchStart) {
+                    // We're in an escape, ignore this result
+                    index = prevIndex;
+                    continue;
+                }
+
+                // Shouldn't throw a number format exception since we've already
+                // matched the pattern in the regexp
+                int number;
+                String numberString = matcher.group(1);
+                if (numberString != null) {
+                    // Strip off trailing $
+                    numberString = numberString.substring(0, numberString.length() - 1);
+                    number = Integer.parseInt(numberString);
+                    nextNumber = number + 1;
+                } else {
+                    number = nextNumber++;
+                }
+
+                if (number == argument) {
+                    // The regex for matching flags uses '*', so a format argument with no flags
+                    // returns "".
+                    String flags = matcher.group(2);
+                    String width = matcher.group(3);
+                    String precision = matcher.group(4);
+                    return (flags != null && flags.length() > 0)
+                            || (width != null && width.length() > 0)
+                            || (precision != null && precision.length() > 0);
+                }
+                index = matcher.end();
+            } else {
+                break;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Determines whether the given {@link String#format(String, Object...)} formatting string is
      * "locale dependent", meaning that its output depends on the locale. This is the case if it for
@@ -1407,6 +1483,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                         // flag parameters on the Object[] instead of the wrapped parameters
                         return;
                     }
+                    boolean trivial = true;
+                    boolean uppercase = false;
                     for (int i = 1; i <= count; i++) {
                         int argumentIndex = i + argIndex;
                         PsiType type = args.get(argumentIndex).getExpressionType();
@@ -1425,6 +1503,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 // TODO
                                 continue;
                             }
+                            // If uppercase formatting is used but all format types are trivial,
+                            // String.toUpperCase() will be suggested.
+                            if (Character.isUpperCase(last)) {
+                                uppercase = true;
+                            }
                             switch (last) {
                                     // Booleans. It's okay to pass objects to these;
                                     // it will print "true" if non-null, but it's
@@ -1432,6 +1515,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 case 'b':
                                 case 'B':
                                     valid = isBooleanType(type);
+                                    // '+' concatenation of Booleans does not exist in Kotlin,
+                                    // so "%b" should not be flagged as a trivial conversion.
+                                    if (Lint.isKotlin(calledMethod)) {
+                                        trivial = false;
+                                    }
                                     break;
 
                                     // Numeric: integer and floats in various formats
@@ -1447,6 +1535,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 case 'a':
                                 case 'A':
                                     valid = isNumericType(type, true);
+                                    trivial = false;
                                     break;
                                 case 'c':
                                 case 'C':
@@ -1462,6 +1551,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                     // We'll still warn about %s since you may have intended
                                     // numeric formatting, but hex printing seems pretty well
                                     // intended.
+                                    trivial = false;
                                     continue;
                                 case 's':
                                 case 'S':
@@ -1471,6 +1561,12 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                     // explanation for this?
                                     valid = !isBooleanType(type) && !isNumericType(type, false);
                                     break;
+                            }
+
+                            // Strings with formatting arguments that contain modifiers (precision,
+                            // justification, etc.) will not be flagged as trivial.
+                            if (trivial && hasFormatArgumentModifiers(s, i)) {
+                                trivial = false;
                             }
 
                             if (!valid) {
@@ -1554,6 +1650,19 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 reported.add(s);
                             }
                         }
+                    }
+                    // Creates the lint check message based on the conversions in the format string.
+                    if (trivial) {
+                        String message =
+                                "This formatting string is trivial. Rather than using "
+                                        + "`String.format` to create your String, it will be more "
+                                        + "performant to concatenate your arguments with `+`. ";
+                        if (uppercase) {
+                            message +=
+                                    "If uppercase formatting is necessary, use `String.toUpperCase()`.";
+                        }
+                        context.report(
+                                TRIVIAL, call, context.getLocation(args.get(argIndex)), message);
                     }
                 }
             }
