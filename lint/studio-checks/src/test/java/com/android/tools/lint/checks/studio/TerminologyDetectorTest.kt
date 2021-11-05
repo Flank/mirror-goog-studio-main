@@ -36,7 +36,6 @@ class TerminologyDetectorTest {
         val w2 = "\u0077\u0068\u0069\u0074\u0065\u006c\u0069\u0073\u0074"
         val w3 = "\u0067\u0065\u0074\u0057\u0068\u0069\u0074\u0065\u004c\u0069\u0073\u0074"
         val w4 = "\u0077\u0068\u0069\u0074\u0065-\u006c\u0069\u0073\u0074\u0065\u0064"
-        val w5 = "\u0077\u0068\u0069\u0074\u0065\u006c\u0069\u0073\u0074"
         val w6 = "\u0077\u0068\u0069\u0074\u0065\u006c\u0069\u0073\u0074\u0065\u0064"
         val w7 = "\u0067\u0065\u0074\u0057\u0068\u0069\u0074\u0065\u004c\u0069\u0073\u00742"
         val w8 = "\u0077\u0068\u0069\u0074\u0065\u004c\u0069\u0073\u0074"
@@ -62,7 +61,7 @@ class TerminologyDetectorTest {
                         // This is the $w2 variable
                         public int $w3() { return 0; }
                         /** This is $w4 */
-                        public String $w5() {
+                        public String $w2() {
                             return "This is $w6";
                         }
                         @SuppressWarnings("WrongTerminology")
@@ -84,8 +83,8 @@ class TerminologyDetectorTest {
                       }
                     """
                 ).indented(),
-                source("src/main/resources/cts/${w5}_devices.json", "something"),
-                source("src/main/resources/something", "device $w5:")
+                source("src/main/resources/cts/${w2}_devices.json", "something"),
+                source("src/main/resources/something", "device $w2:")
             )
             .issues(TerminologyDetector.ISSUE)
             .run()
@@ -103,17 +102,14 @@ class TerminologyDetectorTest {
                 src/test/pkg/Test.java:12: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                      /** This is $w4 */
                                  ~~~~~~~~~~
-                src/test/pkg/Test.java:13: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
-                     public String $w5() {
+                src/test/pkg/Test.java:13: Error: Avoid using "$w2"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                     public String $w2() {
                                    ~~~~~~~~~
-                src/test/pkg/Test.java:14: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                src/test/pkg/Test.java:14: Error: Avoid using "$w2"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                          return "This is $w6";
                                          ~~~~~~~~~
-                src/test/pkg/Test.java:18: Error: Avoid using "$w2"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
-                         // Random $w2 comment
-                                   ~~~~~~~~~
-                src/main/resources/something:1: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
-                device $w5:
+                src/main/resources/something:1: Error: Avoid using "$w2"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                device $w2:
                        ~~~~~~~~~
                 test/test.kt:1: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                 // Random $w4 comment
@@ -121,14 +117,14 @@ class TerminologyDetectorTest {
                 test/test.kt:2: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                 /** This is $w4 */
                             ~~~~~~~~~~
-                test/test.kt:4: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
-                      // Random $w5 comment
+                test/test.kt:4: Error: Avoid using "$w2"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                      // Random $w2 comment
                                 ~~~~~~~~~
                 test/test.kt:5: Error: Avoid using "$w12" in "$w11"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                       val $w11: String = ""
                                     ~~~~~~~~~
-                src/main/resources/cts/${w5}_devices.json: Error: Avoid using "$w5" in filename; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
-                13 errors, 0 warnings
+                src/main/resources/cts/${w2}_devices.json: Error: Avoid using "$w2" in filename; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                12 errors, 0 warnings
                 """
             )
     }
