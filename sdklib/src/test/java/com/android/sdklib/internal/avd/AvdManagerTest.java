@@ -28,6 +28,7 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
 import com.android.testutils.file.InMemoryFileSystems;
+import com.android.testutils.truth.PathSubject;
 import com.android.utils.NullLogger;
 import com.google.common.collect.Maps;
 import java.io.BufferedWriter;
@@ -641,7 +642,7 @@ public class AvdManagerTest extends TestCase {
         assertTrue("Expected AVD .ini in " + parentFolder, Files.exists(avdIniFile));
         AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
         assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);
-        assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder.toAbsolutePath().toString());
+        PathSubject.assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder);
 
         // Check a bad AVD .ini file.
         // Append garbage to make the file invalid.

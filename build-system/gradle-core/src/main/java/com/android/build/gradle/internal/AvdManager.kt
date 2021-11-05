@@ -85,11 +85,11 @@ class AvdManager(
             info?.let {
                 logger.info("Device: $deviceName already exists. AVD creation skipped.")
                 // already generated the avd
-                return info.configFile
+                return info.configFile.toFile()
             }
 
             val newInfo = createAvd(imageProvider, imageHash, deviceName, hardwareProfile)
-            return newInfo?.configFile ?: error("AVD could not be created.")
+            return newInfo?.configFile?.toFile() ?: error("AVD could not be created.")
         }
     }
 

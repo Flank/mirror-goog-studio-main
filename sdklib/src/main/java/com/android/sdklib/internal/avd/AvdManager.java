@@ -901,8 +901,13 @@ public class AvdManager {
                 if (hardwareConfig != null) {
                     String oldSdCardPath = hardwareConfig.get(AVD_INI_SDCARD_PATH);
                     if (oldSdCardPath != null && oldSdCardPath.startsWith(oldAvdFolderPath)) {
-                        // The hardware config points to the old directory. Substitute the new directory.
-                        hardwareConfig.put(AVD_INI_SDCARD_PATH, oldSdCardPath.replace(oldAvdFolderPath, newAvdInfo.getDataFolderPath()));
+                        // The hardware config points to the old directory. Substitute the new
+                        // directory.
+                        hardwareConfig.put(
+                                AVD_INI_SDCARD_PATH,
+                                oldSdCardPath.replace(
+                                        oldAvdFolderPath,
+                                        newAvdInfo.getDataFolderPath().toString()));
                     }
                 }
             }
@@ -1041,12 +1046,7 @@ public class AvdManager {
                             newAvdName, destAvdFolder, false, systemImage.getAndroidVersion());
 
             // Create an AVD object from these files
-            return new AvdInfo(
-                    newAvdName,
-                    iniFile,
-                    destAvdFolder.toAbsolutePath().toString(),
-                    systemImage,
-                    configVals);
+            return new AvdInfo(newAvdName, iniFile, destAvdFolder, systemImage, configVals);
         } catch (AndroidLocationsException | IOException e) {
             log.warning("Exception while duplicating an AVD: %1$s", e);
             return null;
@@ -1118,13 +1118,14 @@ public class AvdManager {
             // Remove the SDK root path, e.g. /sdk/dir1/dir2 -> /dir1/dir2
             imageFullPath = imageFullPath.substring(sdkLocation.length());
             // The path is relative, so it must not start with a file separator
-            if (imageFullPath.charAt(0) == File.separatorChar) {
-                imageFullPath = imageFullPath.substring(1);
+            String separator = folder.getFileSystem().getSeparator();
+            if (imageFullPath.startsWith(separator)) {
+                imageFullPath = imageFullPath.substring(separator.length());
             }
             // For compatibility with previous versions, we denote folders
             // by ending the path with file separator
-            if (!imageFullPath.endsWith(File.separator)) {
-                imageFullPath += File.separator;
+            if (!imageFullPath.endsWith(separator)) {
+                imageFullPath += separator;
             }
 
             return imageFullPath;
@@ -1226,7 +1227,7 @@ public class AvdManager {
                 error = true;
             }
 
-            String path = avdInfo.getDataFolderPath();
+            Path path = avdInfo.getDataFolderPath();
             f = mBaseAvdFolder.resolve(path);
             if (!FileOpUtils.deleteFileOrFolder(f)) {
                 if (CancellableFileIo.exists(f)) {
@@ -1269,7 +1270,7 @@ public class AvdManager {
     public boolean moveAvd(
             @NonNull AvdInfo avdInfo,
             @Nullable String newName,
-            @Nullable String paramFolderPath,
+            @Nullable Path paramFolderPath,
             @NonNull ILogger log) {
         try {
             if (paramFolderPath != null) {
@@ -1346,7 +1347,7 @@ public class AvdManager {
         } catch (IOException exception) {
             return false;
         }
-        return true;
+        return success;
     }
 
     /**
@@ -1438,9 +1439,10 @@ public class AvdManager {
     public AvdInfo parseAvdInfo(@NonNull Path iniPath, @NonNull ILogger log) {
         Map<String, String> map = parseIniFile(new PathFileWrapper(iniPath), log);
 
-        String avdPath = null;
+        Path avdPath = null;
         if (map != null) {
-            avdPath = map.get(AVD_INFO_ABS_PATH);
+            String path = map.get(AVD_INFO_ABS_PATH);
+            avdPath = path == null ? null : iniPath.resolve(path);
             if (avdPath == null
                     || !(CancellableFileIo.isDirectory(mBaseAvdFolder.resolve(avdPath)))) {
                 // Try to fallback on the relative path, if present.
@@ -1452,7 +1454,7 @@ public class AvdManager {
                                     ? mSdkHandler.toCompatiblePath(relPath)
                                     : androidFolder.resolve(relPath);
                     if (CancellableFileIo.isDirectory(f)) {
-                        avdPath = f.toAbsolutePath().toString();
+                        avdPath = f;
                     }
                 }
             }
@@ -1464,15 +1466,10 @@ public class AvdManager {
                 avdName = avdName.substring(0, avdName.length() - 4);
             }
             return new AvdInfo(
-                    avdName,
-                    iniPath,
-                    iniPath.toString(),
-                    null,
-                    null,
-                    AvdStatus.ERROR_CORRUPTED_INI);
+                    avdName, iniPath, iniPath, null, null, AvdStatus.ERROR_CORRUPTED_INI);
         }
 
-        PathFileWrapper configIniFile = null;
+        PathFileWrapper configIniFile;
         Map<String, String> properties = null;
         LoggerProgressIndicatorWrapper progress =
                 new LoggerProgressIndicatorWrapper(log) {
@@ -1682,7 +1679,7 @@ public class AvdManager {
             }
             reader = new BufferedReader(new InputStreamReader(propFile.getContents(), charset));
 
-            String line = null;
+            String line;
             Map<String, String> map = new HashMap<>();
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -2267,13 +2264,7 @@ public class AvdManager {
             throws AvdMgrException {
 
         // create the AvdInfo object, and add it to the list
-        AvdInfo theAvdInfo =
-                new AvdInfo(
-                        avdName,
-                        iniFile,
-                        avdFolder.toAbsolutePath().toString(),
-                        systemImage,
-                        values);
+        AvdInfo theAvdInfo = new AvdInfo(avdName, iniFile, avdFolder, systemImage, values);
 
         synchronized (mAllAvdList) {
             if (oldAvdInfo != null && (removePrevious || editExisting)) {

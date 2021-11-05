@@ -29,7 +29,6 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.PathFileWrapper;
@@ -45,7 +44,7 @@ import com.android.testutils.MockLog;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -60,12 +59,11 @@ import org.junit.Test;
  */
 public class AvdManagerCliTest {
 
-    private static final String EMU_LIB_LOCATION =
-            InMemoryFileSystems.getPlatformSpecificPath("/sdk/emulator/lib");
-    private static final String SDK_LOCATION = InMemoryFileSystems.getPlatformSpecificPath("/sdk");
-    private static final String AVD_LOCATION = InMemoryFileSystems.getPlatformSpecificPath("/avd");
+    private final FileSystem fileSystem = InMemoryFileSystems.createInMemoryFileSystem();
+    private final Path sdkPath = InMemoryFileSystems.getSomeRoot(fileSystem).resolve("sdk");
+    private final Path avdPath = InMemoryFileSystems.getSomeRoot(fileSystem).resolve("avd");
+    private final Path emuLibPath = sdkPath.resolve("emulator/lib");
 
-    private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;
     private MockLog mLogger;
     private AvdManagerCli mCli;
@@ -75,11 +73,10 @@ public class AvdManagerCliTest {
 
     @Before
     public void setUp() throws Exception {
-        mFileOp = new MockFileOp();
         RepositoryPackages packages = new RepositoryPackages();
         String gApiPath = "system-images;android-25;google_apis;x86";
         FakePackage.FakeLocalPackage p1 =
-                new FakePackage.FakeLocalPackage(gApiPath, mFileOp.toPath("/sdk/gapi"));
+                new FakePackage.FakeLocalPackage(gApiPath, sdkPath.resolve("gapi"));
         DetailsTypes.SysImgDetailsType details1 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details1.getTags().add(IdDisplay.create("google_apis", "Google APIs"));
@@ -87,12 +84,13 @@ public class AvdManagerCliTest {
         details1.setVendor(IdDisplay.create("google", "Google"));
         details1.setApiLevel(25);
         p1.setTypeDetails((TypeDetails) details1);
-        mFileOp.recordExistingFile(p1.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
-        mFileOp.recordExistingFile(p1.getLocation().resolve(AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                p1.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
+        InMemoryFileSystems.recordExistingFile(p1.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         String gPlayPath = "system-images;android-25;google_apis_playstore;x86";
         FakePackage.FakeLocalPackage p2 =
-                new FakePackage.FakeLocalPackage(gPlayPath, mFileOp.toPath("/sdk/play"));
+                new FakePackage.FakeLocalPackage(gPlayPath, sdkPath.resolve("play"));
         DetailsTypes.SysImgDetailsType details2 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details2.getTags().add(IdDisplay.create("google_apis_playstore", "Google Play"));
@@ -100,12 +98,13 @@ public class AvdManagerCliTest {
         details2.setVendor(IdDisplay.create("google", "Google"));
         details2.setApiLevel(25);
         p2.setTypeDetails((TypeDetails) details2);
-        mFileOp.recordExistingFile(p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
-        mFileOp.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
+        InMemoryFileSystems.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         String wearPath = "system-images;android-26;android-wear;armeabi-v7a";
         FakePackage.FakeLocalPackage p3 =
-                new FakePackage.FakeLocalPackage(wearPath, mFileOp.toPath("/sdk/wear"));
+                new FakePackage.FakeLocalPackage(wearPath, sdkPath.resolve("wear"));
         DetailsTypes.SysImgDetailsType details3 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details3.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
@@ -114,28 +113,27 @@ public class AvdManagerCliTest {
         details3.setExtensionLevel(5);
         details3.setBaseExtension(false);
         p3.setTypeDetails((TypeDetails)details3);
-        mFileOp.recordExistingFile(p3.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
-        mFileOp.recordExistingFile(p3.getLocation().resolve(AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                p3.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
+        InMemoryFileSystems.recordExistingFile(p3.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         // Create a representative hardware configuration file
         String emuPath = "emulator";
         FakePackage.FakeLocalPackage p4 =
-                new FakePackage.FakeLocalPackage(emuPath, mFileOp.toPath("/sdk/emulator"));
-        File hardwareDefs = new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI);
-        createHardwarePropertiesFile(hardwareDefs.getPath());
+                new FakePackage.FakeLocalPackage(emuPath, sdkPath.resolve("emulator"));
+        Path hardwareDefs = emuLibPath.resolve(SdkConstants.FN_HARDWARE_INI);
+        createHardwarePropertiesFile(hardwareDefs);
 
         packages.setLocalPkgInfos(ImmutableList.of(p1, p2, p3, p4));
 
-        RepoManager mgr = new FakeRepoManager(mFileOp.toPath(SDK_LOCATION), packages);
+        RepoManager mgr = new FakeRepoManager(sdkPath, packages);
 
-        mSdkHandler =
-                new AndroidSdkHandler(
-                        mFileOp.toPath(SDK_LOCATION), mFileOp.toPath(AVD_LOCATION), mgr);
+        mSdkHandler = new AndroidSdkHandler(sdkPath, avdPath, mgr);
         mLogger = new MockLog();
-        mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
-        mAvdManager =
-                AvdManager.getInstance(
-                        mSdkHandler, mSdkHandler.toCompatiblePath(AVD_LOCATION), mLogger);
+        mCli =
+                new AvdManagerCli(
+                        mLogger, mSdkHandler, sdkPath.toString(), avdPath.toString(), null);
+        mAvdManager = AvdManager.getInstance(mSdkHandler, avdPath, mLogger);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
@@ -163,7 +161,7 @@ public class AvdManagerCliTest {
         assertEquals(new AndroidVersion(25, null), info.getAndroidVersion());
         assertEquals(mGapiImage, info.getSystemImage());
 
-        Path avdConfigFile = mFileOp.toPath(info.getDataFolderPath()).resolve("config.ini");
+        Path avdConfigFile = info.getDataFolderPath().resolve("config.ini");
         assertTrue(
                 "Expected config.ini in " + info.getDataFolderPath(), Files.exists(avdConfigFile));
         Map<String, String> config =
@@ -193,7 +191,7 @@ public class AvdManagerCliTest {
         assertEquals(new AndroidVersion(25, null), info.getAndroidVersion());
         assertEquals(mGPlayImage, info.getSystemImage());
 
-        Path avdConfigFile = mFileOp.toPath(info.getDataFolderPath()).resolve("config.ini");
+        Path avdConfigFile = info.getDataFolderPath().resolve("config.ini");
         assertTrue(
                 "Expected config.ini in " + info.getDataFolderPath(), Files.exists(avdConfigFile));
         Map<String, String> config =
@@ -244,19 +242,19 @@ public class AvdManagerCliTest {
             "-k", "system-images;android-25;google_apis;x86",
             "-d", "Nexus 6P"
           });
-        File moved = new File(AVD_LOCATION, "moved");
+        Path moved = avdPath.resolve("moved");
         mCli.run(
                 new String[] {
                     "move", "avd",
                     "--name", "testAvd1",
-                    "-p", moved.getAbsolutePath(),
+                    "-p", moved.toAbsolutePath().toString(),
                     "-r", "newName"
                 });
         mAvdManager.reloadAvds(mLogger);
         assertEquals(1, mAvdManager.getAllAvds().length);
 
         AvdInfo info = mAvdManager.getAvd("newName", true);
-        assertEquals(moved.getAbsolutePath(), info.getDataFolderPath());
+        assertEquals(moved.toAbsolutePath(), info.getDataFolderPath());
     }
 
     @Test
@@ -306,17 +304,18 @@ public class AvdManagerCliTest {
 
         String p1Path = "platforms;android-25";
         FakePackage.FakeLocalPackage p1 =
-                new FakePackage.FakeLocalPackage(p1Path, mFileOp.toPath("/sdk/p1"));
+                new FakePackage.FakeLocalPackage(p1Path, sdkPath.resolve("p1"));
         DetailsTypes.PlatformDetailsType details1 =
                 AndroidSdkHandler.getRepositoryModule()
                         .createLatestFactory()
                         .createPlatformDetailsType();
         details1.setApiLevel(25);
         p1.setTypeDetails((TypeDetails) details1);
-        mFileOp.recordExistingFile(p1.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
+        InMemoryFileSystems.recordExistingFile(
+                p1.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
         String p2Path = "platforms;android-O";
         FakePackage.FakeLocalPackage p2 =
-                new FakePackage.FakeLocalPackage(p2Path, mFileOp.toPath("/sdk/p2"));
+                new FakePackage.FakeLocalPackage(p2Path, sdkPath.resolve("p2"));
         DetailsTypes.PlatformDetailsType details2 =
                 AndroidSdkHandler.getRepositoryModule()
                         .createLatestFactory()
@@ -324,7 +323,8 @@ public class AvdManagerCliTest {
         details2.setApiLevel(25);
         details2.setCodename("O");
         p2.setTypeDetails((TypeDetails) details2);
-        mFileOp.recordExistingFile(p2.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
+        InMemoryFileSystems.recordExistingFile(
+                p2.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
 
         repoManager.getPackages().setLocalPkgInfos(ImmutableList.of(p1, p2));
 
@@ -411,7 +411,9 @@ public class AvdManagerCliTest {
         assertTrue(mLogger.getMessages().contains("P Nexus 6P\n"));
         assertTrue(mLogger.getMessages().contains("P tv_1080p\n"));
         mLogger.clear();
-        mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
+        mCli =
+                new AvdManagerCli(
+                        mLogger, mSdkHandler, sdkPath.toString(), avdPath.toString(), null);
         mCli.run(new String[] {"list", "devices"});
         assertTrue(
                 Joiner.on("")
@@ -430,7 +432,7 @@ public class AvdManagerCliTest {
 
     @Test
     public void validateResponse() {
-        Path hardwareDefs = mFileOp.toPath(EMU_LIB_LOCATION).resolve(SdkConstants.FN_HARDWARE_INI);
+        Path hardwareDefs = emuLibPath.resolve(SdkConstants.FN_HARDWARE_INI);
         Map<String, HardwareProperties.HardwareProperty> hwMap =
                 HardwareProperties.parseHardwareDefinitions(
                         new PathFileWrapper(hardwareDefs), mLogger);
@@ -561,51 +563,46 @@ public class AvdManagerCliTest {
                 Joiner.on("").join(mLogger.getMessages()));
     }
 
-    private void createHardwarePropertiesFile(String filePath) {
-        mFileOp.recordExistingFile(filePath,
-                                   "name        = booleanPropName\n"
-                                   + "type        = boolean\n"
-                                   + "default     = yes\n"
-                                   + "abstract    = A bool\n"
-                                   + "description = A bool value\n"
-
-                                   + "name        = integerPropName\n"
-                                   + "type        = integer\n"
-                                   + "default     = 123\n"
-                                   + "abstract    = An integer\n"
-                                   + "description = A value that is integral\n"
-
-                                   + "name        = integerEnumPropName\n"
-                                   + "type        = integer\n"
-                                   + "enum        = 10, 20, 30, 40\n"
-                                   + "default     = 10\n"
-                                   + "abstract    = An integer enum\n"
-                                   + "description = One of a set of allowed integer values\n"
-
-                                   + "name        = stringPropName\n"
-                                   + "type        = string\n"
-                                   + "default     = defString\n"
-                                   + "abstract    = A string\n"
-                                   + "description = A property that is a string\n"
-
-                                   + "name        = stringEnumPropName\n"
-                                   + "type        = string\n"
-                                   + "enum        = okString0, okString1\n"
-                                   + "default     = okString1\n"
-                                   + "abstract    = A restricted string\n"
-                                   + "description = One of a set of allowed values\n"
-
-                                   + "name        = stringEnumTemplatePropName\n"
-                                   + "type        = string\n"
-                                   + "enum        = fixedString, anotherFixedString, extensibleString0, ...\n"
-                                   + "default     = fixedString\n"
-                                   + "abstract    = An extensible string\n"
-                                   + "description = One of a set of extensible allowed values\n"
-
-                                   + "name        = diskSizePropName\n"
-                                   + "type        = diskSize\n"
-                                   + "default     = 50MB\n"
-                                   + "abstract    = A size with units\n"
-                                   + "description = A string-like size with units\n");
+    private void createHardwarePropertiesFile(Path filePath) {
+        InMemoryFileSystems.recordExistingFile(
+                filePath,
+                "name        = booleanPropName\n"
+                        + "type        = boolean\n"
+                        + "default     = yes\n"
+                        + "abstract    = A bool\n"
+                        + "description = A bool value\n"
+                        + "name        = integerPropName\n"
+                        + "type        = integer\n"
+                        + "default     = 123\n"
+                        + "abstract    = An integer\n"
+                        + "description = A value that is integral\n"
+                        + "name        = integerEnumPropName\n"
+                        + "type        = integer\n"
+                        + "enum        = 10, 20, 30, 40\n"
+                        + "default     = 10\n"
+                        + "abstract    = An integer enum\n"
+                        + "description = One of a set of allowed integer values\n"
+                        + "name        = stringPropName\n"
+                        + "type        = string\n"
+                        + "default     = defString\n"
+                        + "abstract    = A string\n"
+                        + "description = A property that is a string\n"
+                        + "name        = stringEnumPropName\n"
+                        + "type        = string\n"
+                        + "enum        = okString0, okString1\n"
+                        + "default     = okString1\n"
+                        + "abstract    = A restricted string\n"
+                        + "description = One of a set of allowed values\n"
+                        + "name        = stringEnumTemplatePropName\n"
+                        + "type        = string\n"
+                        + "enum        = fixedString, anotherFixedString, extensibleString0, ...\n"
+                        + "default     = fixedString\n"
+                        + "abstract    = An extensible string\n"
+                        + "description = One of a set of extensible allowed values\n"
+                        + "name        = diskSizePropName\n"
+                        + "type        = diskSize\n"
+                        + "default     = 50MB\n"
+                        + "abstract    = A size with units\n"
+                        + "description = A string-like size with units\n");
     }
 }
