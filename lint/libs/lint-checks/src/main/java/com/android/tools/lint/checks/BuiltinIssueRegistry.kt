@@ -137,7 +137,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DuplicateResourceDetector.TYPE_MISMATCH,
                 EllipsizeMaxLinesDetector.ISSUE,
                 ExifInterfaceDetector.ISSUE,
-                ExportedReceiverDetector.ISSUE,
+                ExportedFlagDetector.ISSUE,
                 ExtraTextDetector.ISSUE,
                 FileEndsWithDetector.ISSUE,
                 FineLocationDetector.ISSUE,

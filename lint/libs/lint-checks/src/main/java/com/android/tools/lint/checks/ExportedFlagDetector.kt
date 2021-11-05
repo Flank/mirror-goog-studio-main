@@ -30,9 +30,8 @@ import com.android.utils.subtag
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
 
-class ExportedReceiverDetector : Detector(), XmlScanner {
-    override fun getApplicableElements() =
-        listOf(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS, TAG_SERVICE, TAG_RECEIVER, TAG_PROVIDER)
+class ExportedFlagDetector : Detector(), XmlScanner {
+    override fun getApplicableElements() = listOf(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS, TAG_SERVICE, TAG_RECEIVER)
 
     override fun visitElement(context: XmlContext, element: Element) {
         val intentFilter = element.subtag(TAG_INTENT_FILTER)
@@ -125,7 +124,7 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
             priority = 5,
             severity = Severity.WARNING,
             implementation = Implementation(
-                ExportedReceiverDetector::class.java,
+                ExportedFlagDetector::class.java,
                 Scope.MANIFEST_SCOPE
             )
         )

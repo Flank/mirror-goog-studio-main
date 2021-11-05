@@ -18,9 +18,9 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
 
-class ExportedReceiverDetectorTest : AbstractCheckTest() {
+class ExportedFlagDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
-        return ExportedReceiverDetector()
+        return ExportedFlagDetector()
     }
 
     fun testNoExportReceiver() {
@@ -245,6 +245,30 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                             android:exported="true">
                             <nav-graph android:value="@navigation/navigation_root" />
                         </activity>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testProvider() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <provider
+                            android:name="MyProvider"
+                            android:exported="true">
+                            <intent-filter>
+                                <action android:name="foo"/>
+                            </intent-filter>
+                        </provider>
                     </application>
                 </manifest>
                 """
