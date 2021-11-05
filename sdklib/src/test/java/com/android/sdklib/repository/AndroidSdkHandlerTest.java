@@ -24,9 +24,10 @@ import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestUtils;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -38,19 +39,19 @@ import junit.framework.TestCase;
 public class AndroidSdkHandlerTest extends TestCase {
 
     public void testGetLatestPackage() {
-        MockFileOp fop = new MockFileOp();
-        FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1", fop.toPath("/sdk/p/1.1"));
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1", sdkRoot.resolve("p/1.1"));
         p1_1.setRevision(Revision.parseRevision("1.1"));
-        FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20", fop.toPath("/sdk/p/1.20"));
+        FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20", sdkRoot.resolve("p/1.20"));
         p1_20.setRevision(Revision.parseRevision("1.20"));
-        FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1", fop.toPath("/sdk/p/2.1"));
+        FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1", sdkRoot.resolve("p/2.1"));
         p2_1.setRevision(Revision.parseRevision("2.1"));
-        FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3", fop.toPath("/sdk/p/2.2-rc3"));
+        FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3", sdkRoot.resolve("p/2.2-rc3"));
         p2_2_rc3.setRevision(Revision.parseRevision("2.2-rc3"));
 
-        FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0", fop.toPath("/sdk/q/r/2.0"));
+        FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0", sdkRoot.resolve("q/r/2.0"));
         qr2_0.setRevision(Revision.parseRevision("2.0"));
-        FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1", fop.toPath("/sdk/q/r/2.1"));
+        FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1", sdkRoot.resolve("q/r/2.1"));
         qr2_1.setRevision(Revision.parseRevision("2.1"));
 
         RepositoryPackages packages = new RepositoryPackages();

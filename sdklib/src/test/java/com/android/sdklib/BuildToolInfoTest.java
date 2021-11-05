@@ -18,16 +18,17 @@ package com.android.sdklib;
 
 import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.file.InMemoryFileSystems;
+import java.nio.file.Path;
 import junit.framework.TestCase;
 
 public class BuildToolInfoTest extends TestCase {
 
     public void testGetCurrentJvmVersion() {
-        MockFileOp fop = new MockFileOp();
-        recordBuildTool23(fop);
-        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordBuildTool23(sdkRoot);
+        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo bt = sdkHandler.getBuildToolInfo(new Revision(23, 0, 2), progress);
         progress.assertNoErrorsOrWarnings();
@@ -79,9 +80,9 @@ public class BuildToolInfoTest extends TestCase {
         assertTrue(BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(rev28));
     }
 
-    private static void recordBuildTool23(MockFileOp fop) {
-        fop.recordExistingFile(
-                "/sdk/build-tools/23.0.2/package.xml",
+    private static void recordBuildTool23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("build-tools/23.0.2/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "

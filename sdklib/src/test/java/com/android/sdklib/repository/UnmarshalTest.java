@@ -30,9 +30,9 @@ import com.android.repository.impl.meta.Archive;
 import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
@@ -355,7 +355,7 @@ public class UnmarshalTest extends TestCase {
 
     @NonNull
     private static AndroidSdkHandler getAndroidSdkHandler() {
-        MockFileOp fileOp = new MockFileOp();
-        return new AndroidSdkHandler(fileOp.toPath("/sdk"), null);
+        return new AndroidSdkHandler(
+                InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk"), null);
     }
 }

@@ -19,7 +19,6 @@ import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestResources;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.android.utils.FileUtils;
@@ -36,12 +35,12 @@ import junit.framework.TestCase;
  */
 public class AddonListSourceProviderTest extends TestCase {
 
-    public static final String ANDROID_FOLDER = "/android-home";
+    private static final Path androidFolder =
+            InMemoryFileSystems.createInMemoryFileSystemAndFolder("android-home");
 
     public void testRemoteSource() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
-        AndroidSdkHandler handler = new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER));
+        FakeDownloader downloader = new FakeDownloader(androidFolder.getRoot().resolve("tmp"));
+        AndroidSdkHandler handler = new AndroidSdkHandler(null, androidFolder);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepositorySourceProvider provider = handler.getRemoteListSourceProvider(progress);
@@ -86,14 +85,13 @@ public class AddonListSourceProviderTest extends TestCase {
     }
 
     public void testLocalSource() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        Path androidFolder = fop.toPath(ANDROID_FOLDER);
         Files.createDirectories(androidFolder);
         File testFile = TestResources.getFile(getClass(), "/repositories.xml");
         InMemoryFileSystems.recordExistingFile(
                 androidFolder.resolve(AndroidSdkHandler.LOCAL_ADDONS_FILENAME),
                 FileUtils.loadFileWithUnixLineSeparators(testFile));
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), androidFolder);
+        AndroidSdkHandler handler =
+                new AndroidSdkHandler(androidFolder.getRoot().resolve("sdk"), androidFolder);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         handler.getSdkManager(progress);
         RepositorySourceProvider provider = handler.getUserSourceProvider(progress);
