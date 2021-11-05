@@ -593,10 +593,11 @@ public class MergedResourceWriter
                                 mergeWriterRequest
                                         .getResourceCompilationService()
                                         .compileOutputFor(request);
-                        mMergingLog.logSource(new SourceFile(file), getSourcePath(file), blame);
+                        String fileSourcePath = getSourceFilePath(file);
+                        mMergingLog.logSource(new SourceFile(file), fileSourcePath, blame);
 
-                        String sourcePath = getSourceFilePath(outFile);
-                        mMergingLog.logSource(new SourceFile(outFile), sourcePath, blame);
+                        String outFileSourcePath = getSourceFilePath(outFile);
+                        mMergingLog.logSource(new SourceFile(outFile), outFileSourcePath, blame);
                     }
 
                     mergeWriterRequest.getResourceCompilationService().submitCompile(request);

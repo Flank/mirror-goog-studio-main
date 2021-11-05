@@ -304,8 +304,8 @@ public class MergingLog {
 
     @NonNull
     private static String getShard(@NonNull SourceFile sourceFile) {
-        File file = sourceFile.getSourceFile();
-        return file != null ? file.getParentFile().getName() : "unknown";
+        String sourcePath = sourceFile.getSourcePath();
+        return sourcePath != null ? sourceFile.getSourceFile().getParentFile().getName() : "unknown";
     }
 
     /**

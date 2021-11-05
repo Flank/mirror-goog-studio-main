@@ -141,5 +141,8 @@ fun getIdentifiedSourceSetMap(
                 appId to sourceSet.absolutePath
             }
 }
+fun isRelativeSourceSetResource(filepath: String) : Boolean {
+    return filepath.contains(separator)
+}
 
 fun relativeResourceSeparator(): String = separator
