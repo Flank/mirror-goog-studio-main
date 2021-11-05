@@ -19,8 +19,10 @@ package com.android.build.gradle.integration.testing.testFixtures
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class TestFixturesTest {
 
@@ -220,6 +222,89 @@ class TestFixturesTest {
         val mainVariantAar = "testrepo/com/example/lib/lib/1.0/lib-1.0.aar"
         assertThat(project.projectDir.resolve(testFixtureAar)).doesNotExist()
         assertThat(project.projectDir.resolve(mainVariantAar)).exists()
+    }
+
+    @Test
+    fun `lint analyzes local and library module testFixtures sources`() {
+        setUpProjectForLint(
+            ignoreTestFixturesSourcesInApp = false
+        )
+        setUpProject(
+            publishAndroidLib = false,
+            publishJavaLib = false
+        )
+        project.executor().run(":app:lintRelease")
+        val reportFile = File(project.getSubproject("app").projectDir, "lint-results.txt")
+        assertThat(reportFile).exists()
+        assertThat(reportFile).containsAllOf(
+            "AppInterfaceTester.java:22: Error: STOPSHIP comment found;",
+            "LibResourcesTester.java:35: Error: Missing permissions required by LibResourcesTester.methodWithUnavailablePermission: android.permission.ACCESS_COARSE_LOCATION [MissingPermission]"
+        )
+    }
+
+    @Test
+    fun `lint ignores local testFixtures sources`() {
+        setUpProjectForLint(
+            ignoreTestFixturesSourcesInApp = true
+        )
+        setUpProject(
+            publishAndroidLib = false,
+            publishJavaLib = false
+        )
+        project.executor().run(":app:lintRelease")
+        val reportFile = File(project.getSubproject("app").projectDir, "lint-results.txt")
+        assertThat(reportFile).exists()
+        assertThat(reportFile).containsAllOf(
+            "LibResourcesTester.java:35: Error: Missing permissions required by LibResourcesTester.methodWithUnavailablePermission: android.permission.ACCESS_COARSE_LOCATION [MissingPermission]"
+        )
+    }
+
+    private fun setUpProjectForLint(ignoreTestFixturesSourcesInApp: Boolean) {
+        project.getSubproject(":app").buildFile.appendText(
+            """
+                android {
+                    testBuildType "release"
+                    lint {
+                        abortOnError false
+                        enable 'StopShip'
+                        textOutput file("lint-results.txt")
+                        checkDependencies true
+                        ignoreTestFixturesSources $ignoreTestFixturesSourcesInApp
+                    }
+                }
+            """.trimIndent()
+        )
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app")
+                .file("src/testFixtures/java/com/example/app/testFixtures/AppInterfaceTester.java"),
+            "public class AppInterfaceTester {",
+            "// STOPSHIP\n" + "public class AppInterfaceTester {"
+        )
+        project.getSubproject(":lib").buildFile.appendText(
+            """
+                android {
+                    testBuildType "release"
+                }
+
+                dependencies {
+                    testFixturesApi 'androidx.annotation:annotation:1.1.0'
+                }
+            """.trimIndent()
+        )
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":lib")
+                .file("src/testFixtures/java/com/example/lib/testFixtures/LibResourcesTester.java"),
+            "public void test() {",
+            """
+                @androidx.annotation.RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                public void methodWithUnavailablePermission() {
+                }
+
+                public void test() {
+                    methodWithUnavailablePermission();
+            """.trimIndent()
+        )
+        FileUtils.createFile(project.file("gradle.properties"), "android.useAndroidX=true")
     }
 
     private fun addNewPublishingDslForAndroidLibrary() {
