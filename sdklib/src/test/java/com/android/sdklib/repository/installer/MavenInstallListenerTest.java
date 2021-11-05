@@ -37,13 +37,11 @@ import com.android.repository.testframework.FakeInstallListenerFactory;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeSettingsController;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,8 +75,7 @@ public class MavenInstallListenerTest {
                     + "  <name>test package 1 version 1.2.3</name>\n"
                     + "</project>";
 
-    private final MockFileOp fop = new MockFileOp();
-    private final Path root = InMemoryFileSystems.getSomeRoot(fop.getFileSystem()).resolve("repo");
+    private final Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
 
     @Test
     public void testInstallFirst() throws Exception {
@@ -86,7 +83,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         URL repoUrl = new URL("http://example.com/sample.xml");
 
         // The repo we're going to download
@@ -184,7 +181,8 @@ public class MavenInstallListenerTest {
 
     @Test
     public void testInstallAdditional() throws Exception {
-        fop.recordExistingFile("/repo/m2repository/com/android/group1/artifact1/maven-metadata.xml",
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/maven-metadata.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<metadata>\n"
                         + "  <groupId>com.android.group1</groupId>\n"
@@ -197,14 +195,14 @@ public class MavenInstallListenerTest {
                         + "    <lastUpdated>20151006162600</lastUpdated>\n"
                         + "  </versioning>\n"
                         + "</metadata>\n");
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom",
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom"),
                 POM_1_0_0_CONTENTS);
         RepoManager mgr = new RepoManagerImpl();
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         URL repoUrl = new URL("http://example.com/sample.xml");
 
         // The repo we're going to download
@@ -301,8 +299,8 @@ public class MavenInstallListenerTest {
 
     @Test
     public void testRemove() {
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.2.3/package.xml",
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.2.3/package.xml"),
                 "<repo:sdk-addon\n"
                         + "        xmlns:repo=\"http://schemas.android.com/sdk/android/repo/addon2/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -319,13 +317,12 @@ public class MavenInstallListenerTest {
                         + "        </revision>\n"
                         + "        <display-name>A Maven artifact</display-name>\n"
                         + "    </localPackage>\n"
-                        + "</repo:sdk-addon>"
-        );
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom",
+                        + "</repo:sdk-addon>");
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom"),
                 POM_1_2_3_CONTENTS);
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.0.0/package.xml",
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.0.0/package.xml"),
                 "<repo:sdk-addon\n"
                         + "        xmlns:repo=\"http://schemas.android.com/sdk/android/repo/addon2/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -342,15 +339,14 @@ public class MavenInstallListenerTest {
                         + "        </revision>\n"
                         + "        <display-name>Another Maven artifact</display-name>\n"
                         + "    </localPackage>\n"
-                        + "</repo:sdk-addon>"
-        );
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom",
+                        + "</repo:sdk-addon>");
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom"),
                 POM_1_0_0_CONTENTS);
 
-        String metadataPath
-                = "/repo/m2repository/com/android/group1/artifact1/maven-metadata.xml";
-        fop.recordExistingFile(
+        Path metadataPath =
+                root.resolve("m2repository/com/android/group1/artifact1/maven-metadata.xml");
+        InMemoryFileSystems.recordExistingFile(
                 metadataPath,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<metadata>\n"
@@ -372,7 +368,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
         FakeProgressRunner runner = new FakeProgressRunner();
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         // Reload
         mgr.loadSynchronously(
                 0,
@@ -397,9 +393,7 @@ public class MavenInstallListenerTest {
         progress.assertNoErrorsOrWarnings();
         MavenInstallListener.MavenMetadata metadata =
                 MavenInstallListener.unmarshal(
-                        fop.toPath(metadataPath),
-                        MavenInstallListener.MavenMetadata.class,
-                        progress);
+                        metadataPath, MavenInstallListener.MavenMetadata.class, progress);
         progress.assertNoErrorsOrWarnings();
         assertNotNull(metadata);
         assertEquals(ImmutableList.of("1.0.0"), metadata.versioning.versions.version);
@@ -408,8 +402,8 @@ public class MavenInstallListenerTest {
 
     @Test
     public void testRemoveAll() {
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.2.3/package.xml",
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.2.3/package.xml"),
                 "<repo:sdk-addon\n"
                         + "        xmlns:repo=\"http://schemas.android.com/sdk/android/repo/addon2/01\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
@@ -426,15 +420,14 @@ public class MavenInstallListenerTest {
                         + "        </revision>\n"
                         + "        <display-name>A Maven artifact</display-name>\n"
                         + "    </localPackage>\n"
-                        + "</repo:sdk-addon>"
-        );
-        fop.recordExistingFile(
-                "/repo/m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom",
+                        + "</repo:sdk-addon>");
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom"),
                 POM_1_2_3_CONTENTS);
 
-        String metadataPath
-                = "/repo/m2repository/com/android/group1/artifact1/maven-metadata.xml";
-        fop.recordExistingFile(
+        Path metadataPath =
+                root.resolve("m2repository/com/android/group1/artifact1/maven-metadata.xml");
+        InMemoryFileSystems.recordExistingFile(
                 metadataPath,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<metadata>\n"
@@ -455,7 +448,7 @@ public class MavenInstallListenerTest {
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
         FakeProgressRunner runner = new FakeProgressRunner();
-        FakeDownloader downloader = new FakeDownloader(fop.toPath("tmp"));
+        FakeDownloader downloader = new FakeDownloader(root.getRoot().resolve("tmp"));
         // Reload
         mgr.loadSynchronously(
                 0,
@@ -478,7 +471,6 @@ public class MavenInstallListenerTest {
         uninstaller.prepare(progress);
         uninstaller.complete(progress);
         progress.assertNoErrorsOrWarnings();
-        assertFalse(fop.exists(new File(metadataPath)));
+        assertFalse(Files.exists(metadataPath));
     }
-
 }
