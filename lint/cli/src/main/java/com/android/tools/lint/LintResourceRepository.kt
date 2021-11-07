@@ -33,7 +33,9 @@ import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.sdklib.IAndroidTarget
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.getBaseName
@@ -439,29 +441,74 @@ open class LintResourceRepository constructor(
             return MergedResourceRepository(project, repositories, ResourceNamespace.TODO())
         }
 
+        /** Whether we've already flagged a persisence problem */
+        private var warned = false
+
+        private fun getOrCreateRepository(
+            serializedFile: File,
+            client: LintClient,
+            root: File?,
+            project: Project?,
+            factory: () -> LintResourceRepository
+        ): LintResourceRepository {
+            // For leaf repositories, try to load from storage
+            if (serializedFile.isFile) {
+                val serialized = serializedFile.readText()
+                try {
+                    return LintResourcePersistence.deserialize(serialized, client.pathVariables, root, project)
+                } catch (e: Throwable) {
+                    // Some sort of problem deserializing the lint resource repository. Try to gracefully recover
+                    // and also generate a warning for this. See issues b/204437054 and b/204437195
+                    if (!warned) {
+                        warned = true
+                        val sb = StringBuilder()
+                        sb.append(
+                            "Failed to deserialize cached resource repository.\n" +
+                                "This is an internal lint error which typically means that lint is being passed a\n" +
+                                "serialized file that was created with an older version of lint or with a different\n" +
+                                "set of path variable names. Attempting to gracefully recover.\n"
+                        )
+
+                        sb.append("The serialized content was:\n")
+                        sb.append(serialized)
+                        sb.append("\nStack: `")
+                        sb.append(e.toString())
+                        sb.append("`:")
+                        LintDriver.appendStackTraceSummary(e, sb)
+                        LintClient.report(
+                            client = client, issue = IssueRegistry.LINT_ERROR, message = sb.toString(),
+                            file = serializedFile, project = project
+                        )
+                    }
+
+                    // Continue to gracefully recover: this means we'll unnecessarily recreate the repository
+                    // but this is better than a hard failure. We still flag it since this is not an ideal
+                    // situation.
+                }
+            }
+
+            // Must construct from files now and cache for future use
+            val repository = factory()
+
+            // Write for future usage
+            serializedFile.parentFile?.mkdirs()
+            val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
+            serializedFile.writeText(serialized)
+            return repository
+        }
+
         /**
          * Returns the resource repository for the given [project],
          * *not* including dependencies.
          */
         private fun getForProjectOnly(client: LintCliClient, project: Project): LintResourceRepository {
             return project.getClientProperty<LintResourceRepository>(ResourceRepositoryScope.PROJECT_ONLY)
-                ?: run {
-                    // For leaf repositories, try to load from storage
-                    val file = client.getSerializationFile(project, XmlFileType.RESOURCE_REPOSITORY)
-                    return if (file.isFile) {
-                        val serialized = file.readText()
-                        LintResourcePersistence.deserialize(serialized, client.pathVariables, project.dir, project)
-                    } else {
-                        // Must construct from files now
-                        val repository = createFromFolder(client, project, ResourceNamespace.TODO())
-
-                        // Write for future usage
-                        file.parentFile?.mkdirs()
-                        val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
-                        file.writeText(serialized)
-                        repository
-                    }.also { project.putClientProperty(ResourceRepositoryScope.PROJECT_ONLY, it) }
-                }
+                ?: getOrCreateRepository(
+                    client.getSerializationFile(project, XmlFileType.RESOURCE_REPOSITORY),
+                    client, project.dir, project
+                ) {
+                    createFromFolder(client, project, ResourceNamespace.TODO())
+                }.also { project.putClientProperty(ResourceRepositoryScope.PROJECT_ONLY, it) }
         }
 
         private fun getLibraryResourceCacheFile(
@@ -543,22 +590,9 @@ open class LintResourceRepository constructor(
             cache: MutableMap<String, LintResourceRepository>
         ): LintResourceRepository {
             return cache[hash]
-                ?: run {
-                    // For leaf repositories, try to load from storage
-                    val file = getFrameworkResourceCacheFile(client, hash)
-                    return if (file.isFile) {
-                        val serialized = file.readText()
-                        LintResourcePersistence.deserialize(serialized, client.pathVariables, null, null)
-                    } else {
-                        // Must construct from files now
-                        val repository = createFromFolder(client, sequenceOf(res), null, null, ResourceNamespace.ANDROID)
-                        // Write for future usage
-                        file.parentFile?.mkdirs()
-                        val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
-                        file.writeText(serialized)
-                        repository
-                    }.also { cache[hash] = it }
-                }
+                ?: getOrCreateRepository(getFrameworkResourceCacheFile(client, hash), client, null, null) {
+                    createFromFolder(client, sequenceOf(res), null, null, ResourceNamespace.ANDROID)
+                }.also { cache[hash] = it }
         }
 
         /** Returns a resource repository for an AAR library. */
@@ -568,23 +602,10 @@ open class LintResourceRepository constructor(
             cache: MutableMap<LintModelAndroidLibrary, LintResourceRepository>
         ): LintResourceRepository {
             return cache[library]
-                ?: run {
-                    // For leaf repositories, try to load from storage
-                    val file = getLibraryResourceCacheFile(client, library)
-                    return if (file.isFile) {
-                        val serialized = file.readText()
-                        // TODO: Handle relative paths over in AAR folders under ~/.gradle/
-                        LintResourcePersistence.deserialize(serialized, client.pathVariables, null, null)
-                    } else {
-                        // Must construct from files now
-                        val repository = LintLibraryRepository(client, library, ResourceNamespace.TODO())
-                        // Write for future usage
-                        file.parentFile?.mkdirs()
-                        val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
-                        file.writeText(serialized)
-                        repository
-                    }.also { cache[library] = it }
-                }
+                // TODO: Handle relative paths over in AAR folders under ~/.gradle/
+                ?: getOrCreateRepository(getLibraryResourceCacheFile(client, library), client, null, null) {
+                    LintLibraryRepository(client, library, ResourceNamespace.TODO())
+                }.also { cache[library] = it }
         }
 
         private fun createFromFolder(
