@@ -30,16 +30,29 @@ import com.android.ide.common.rendering.api.TextResourceValue
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.resources.ResourceType
-import com.android.tools.lint.LintResourceRepository.Companion.get
+import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.image
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.ResourceRepositoryScope
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.PathVariables
+import com.intellij.psi.PsiMethod
+import org.jetbrains.uast.UCallExpression
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -48,6 +61,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.EnumSet
+import java.util.regex.Pattern
 
 class LintResourceRepositoryTest {
     @get:Rule
@@ -554,6 +569,165 @@ class LintResourceRepositoryTest {
         val pathVariables = PathVariables()
         pathVariables.add("ROOT", temporaryFolder.root)
         return pathVariables
+    }
+
+    @Test
+    fun testCheckRecovery() {
+        lint().sdkHome(TestUtils.getSdk().toFile()).files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                    <uses-sdk android:minSdkVersion="14" />
+                    <application android:fullBackupContent="@xml/backup">
+                        <service
+                            android:process="@string/location_process"
+                            android:enabled="@bool/enable_wearable_location_service">
+                        </service>
+                    </application>
+                </manifest>
+                """
+            ).indented(),
+            xml(
+                "res/values/values.xml",
+                """
+                <resources>
+                    <string name="location_process">Location Process</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values/bools.xml",
+                """
+                <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+                    <bool name="enable_wearable_location_service">true</bool>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-en-rUS/values.xml",
+                """
+                <resources>
+                    <string name="location_process">Location Process (English)</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-watch/bools.xml",
+                """
+                <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+                    <bool name="enable_wearable_location_service">false</bool>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                </full-backup-content>
+                """
+            ).indented(),
+            xml(
+                "res/xml-mcc/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="mcc"/>
+                </full-backup-content>
+                """
+            ).indented(),
+            kotlin(
+                """
+                fun test() = TODO()
+                """
+            ).indented()
+        )
+            .issues(RepositoryRecoveryDetector.ISSUE)
+            .allowAbsolutePathsInMessages(true)
+            // This behavior does not apply to the AGP resource repository so would fail TestMode.RESOURCE_REPOSITORIES
+            .testModes(TestMode.DEFAULT)
+            .run().expectMatches(
+                Pattern.quote(
+                    "build/lint-resources-all.xml: Error: Failed to deserialize cached resource repository.\n" +
+                        "This is an internal lint error which typically means that lint is being passed a\n" +
+                        "serialized file that was created with an older version of lint or with a different\n" +
+                        "set of path variable names. Attempting to gracefully recover.\n" +
+                        "The serialized content was:\n" +
+                        "http://schemas.android.com/apk/res-auto;;＄TEST_ROOT/default/app/res/values/bools.xml,＄TEST_ROOT/default/app/res/xml-mcc/backup.xml,+bool:enable_wearable_location_service,0,V\"true\";enable_wearable_location_service,1,V\"false\";+string:location_process,2,V\"Location Process\";location_process,3,V\"Location Process (English)\";+xml:backup,4,F;backup,5,F;\n" +
+                        "Stack: java.lang.IndexOutOfBoundsException: Index 2 out of bounds for length 2:Preconditions.outOfBounds(Preconditions.java:"
+                ) + ".*\\) \\[LintError]\n" +
+                    "1 errors, 0 warnings"
+            )
+    }
+
+    /** Detector used by [testCheckRecovery] */
+    @SuppressWarnings("ALL")
+    class RepositoryRecoveryDetector : Detector(), Detector.UastScanner, Detector.XmlScanner {
+        override fun getApplicableMethodNames(): List<String> {
+            return listOf("TODO")
+        }
+
+        override fun visitMethodCall(
+            context: JavaContext,
+            node: UCallExpression,
+            method: PsiMethod
+        ) {
+            val project = context.project
+            val client = context.project.client as LintCliClient
+
+            // Write out a corrupt version of the resource repository to the cache file. Since this
+            // test is run in isolation we know that the resource repository hasn't been initialized
+            // yet, so it will try to read and deserialize this file first, and if that fails,
+            // it will log an error (which we'll verify from the unit test which uses this detector)
+            // and then it will recover by reading the files manually (which we'll verify by pretty printing
+            // the resource repository and checking its contents with assertEquals below.)
+            val mangled = "http://schemas.android.com/apk/res-auto;;" +
+                "\$TEST_ROOT/default/app/res/values/bools.xml," +
+                // "\$TEST_ROOT/default/app/res/values-watch/bools.xml," +
+                // "\$TEST_ROOT/default/app/res/values/values.xml," +
+                // "\$TEST_ROOT/default/app/res/values-en-rUS/values.xml," +
+                // "\$TEST_ROOT/default/app/res/xml/backup.xml," +
+                "\$TEST_ROOT/default/app/res/xml-mcc/backup.xml," +
+                "+bool:enable_wearable_location_service,0,V\"true\";enable_wearable_location_service,1,V\"false\";" +
+                "+string:location_process,2,V\"Location Process\";location_process,3,V\"Location Process (English)\";" +
+                "+xml:backup,4,F;backup,5,F;"
+
+            val file = client.getSerializationFile(project, XmlFileType.RESOURCE_REPOSITORY)
+            file.parentFile?.mkdirs()
+            file.writeText(mangled)
+
+            val repository: ResourceRepository = client.getResources(project, ResourceRepositoryScope.PROJECT_ONLY)
+            val resources = repository.prettyPrint(project.dir)
+            assertEquals(
+                """
+                namespace:apk/res-auto
+                  @bool/enable_wearable_location_service (value) config=Watch,API 20 source=/res/values-watch/bools.xml;  false
+                  @bool/enable_wearable_location_service (value) config=default source=/res/values/bools.xml;  true
+                  @string/location_process (value) config=default source=/res/values/values.xml;  Location Process
+                  @string/location_process (value) config=en,US source=/res/values-en-rUS/values.xml;  Location Process (English)
+                  @xml/backup (file) config=default source=/res/xml/backup.xml;  /res/xml/backup.xml
+                  @xml/backup (file) config=mcc source=/res/xml-mcc/backup.xml;  /res/xml-mcc/backup.xml
+
+                """.trimIndent(),
+                resources
+            )
+        }
+
+        companion object {
+            @JvmField
+            val ISSUE = Issue.create(
+                id = "_ResourceRepositoryRecovery",
+                briefDescription = "Lint check for testing out resource recovery",
+                explanation = "Tests mangling the resource repository and making sure it's manually created",
+                category = Category.TESTING, priority = 10, severity = Severity.WARNING,
+                implementation = Implementation(
+                    RepositoryRecoveryDetector::class.java,
+                    EnumSet.of(Scope.JAVA_FILE, Scope.RESOURCE_FILE)
+                )
+            )
+        }
     }
 }
 

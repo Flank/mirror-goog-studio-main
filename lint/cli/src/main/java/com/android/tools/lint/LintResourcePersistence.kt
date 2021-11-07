@@ -403,9 +403,7 @@ object LintResourcePersistence {
         val namespaceUri = reader.readString(';')
         val namespace = ResourceNamespace.fromNamespaceUri(namespaceUri)
             ?: ResourceNamespace.RES_AUTO
-        val libraryName = reader.readString(';').let {
-            if (it.isBlank()) null else it
-        }
+        val libraryName = reader.readString(';').ifBlank { null }
 
         val size = if (namespace == ResourceNamespace.ANDROID) 11000 else 100
         val fileList = ArrayList<File>(size)
