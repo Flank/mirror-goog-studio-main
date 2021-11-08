@@ -280,7 +280,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/utp/android-test-plugin-host-retention-proto:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-result-listener-gradle:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-result-listener-gradle-proto:agp_gradle_build_files",
-    "//tools/base/zipflinger:agp_gradle_build_files",
     "//tools/buildSrc:agp_gradle_build_files",
     "//tools/buildSrc/base:agp_gradle_build_files",
 ]

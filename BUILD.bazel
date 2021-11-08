@@ -94,6 +94,7 @@ AGP_ARTIFACTS = [
     "//tools/base/repository:tools.repository",
     "//tools/base/sdk-common:tools.sdk-common",
     "//tools/base/sdklib:tools.sdklib",
+    "//tools/base/zipflinger",
     "//tools/data-binding:tools.baseLibrary",
     "//tools/data-binding:tools.baseLibrarySupport",
     "//tools/data-binding:tools.compilerCommon",

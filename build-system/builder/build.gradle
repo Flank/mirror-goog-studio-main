@@ -12,7 +12,7 @@ dependencies {
     implementation libs.com.android.tools.common
     api project(':base:manifest-merger')
     implementation libs.com.android.tools.ddms.ddmlib
-    api project(':base:zipflinger')
+    api libs.com.android.zipflinger
     implementation project(':base:signflinger')
 
     implementation libs.com.android.tools.analyticsLibrary.protos

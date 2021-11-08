@@ -8,7 +8,9 @@ maven_library(
         "src/com/android/zipflinger/**/*.java",
     ]),
     coordinates = "com.android:zipflinger:" + BUILD_VERSION,
+    description = "Library used to build and incrementally modify zip files",
     visibility = [
+        "//tools/base:__pkg__",
         "//tools/base/bazel:__subpackages__",
         "//tools/base/build-system:__subpackages__",
         "//tools/base/deploy/deployer:__subpackages__",
@@ -208,12 +210,4 @@ iml_module(
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/com/android/zipflinger/**/*.java",
-    ]) + ["build.gradle"],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )
