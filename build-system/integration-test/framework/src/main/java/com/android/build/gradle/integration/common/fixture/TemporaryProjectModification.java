@@ -170,6 +170,19 @@ public class TemporaryProjectModification {
         TestUtils.waitForFileSystemTick();
     }
 
+    public void addDir(@NonNull String relativePath) throws IOException, InterruptedException {
+        File file = getFile(relativePath);
+
+        if (file.exists()) {
+            throw new RuntimeException("File already exists: " + file);
+        }
+
+        FileUtils.mkdirs(file);
+        mFileEvents.put(relativePath, FileEvent.added());
+
+        TestUtils.waitForFileSystemTick();
+    }
+
     public void appendToFile(
             @NonNull String relativePath,
             @NonNull String toAppend) throws IOException, InterruptedException {

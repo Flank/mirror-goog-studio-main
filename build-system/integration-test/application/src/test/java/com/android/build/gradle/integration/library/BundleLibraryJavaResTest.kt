@@ -36,31 +36,39 @@ class BundleLibraryJavaResTest {
         // first test that the task is skipped when there are no java resources.
         val result1 = project.executor().run(":lib:bundleLibResDebug")
         assertThat(result1.skippedTasks).containsAtLeastElementsIn(
-            listOf(":lib:bundleLibResDebug")
+                listOf(":lib:bundleLibResDebug")
         )
         // then test that the task does work if we add a java resource.
         doTest(project) {
             it.addFile("lib/src/main/resources/foo.txt", "foo")
             val result2 = project.executor().run(":lib:bundleLibResDebug")
             assertThat(result2.didWorkTasks).containsAtLeastElementsIn(
-                listOf(":lib:bundleLibResDebug")
+                    listOf(":lib:bundleLibResDebug")
             )
+
+            it.addDir("lib/src/main/resources/test_dir")
+            project.executor().run(":lib:bundleLibResDebug").run {
+                assertThat(this.didWorkTasks).containsAtLeastElementsIn(
+                        listOf(":lib:bundleLibResDebug", ":lib:processDebugJavaRes")
+                )
+            }
+
             // then test that the task is up-to-date if nothing changes.
             val result3 = project.executor().run(":lib:bundleLibResDebug")
             assertThat(result3.upToDateTasks).containsAtLeastElementsIn(
-                listOf(":lib:bundleLibResDebug")
+                    listOf(":lib:bundleLibResDebug")
             )
         }
         // then test that the task does work after the java resource is removed (since it must be
         // removed from the task's output).
         val result4 = project.executor().run(":lib:bundleLibResDebug")
         assertThat(result4.didWorkTasks).containsAtLeastElementsIn(
-            listOf(":lib:bundleLibResDebug")
+                listOf(":lib:bundleLibResDebug")
         )
         // finally test that the task is skipped if we build again with no java resources.
         val result5 = project.executor().run(":lib:bundleLibResDebug")
         assertThat(result5.skippedTasks).containsAtLeastElementsIn(
-            listOf(":lib:bundleLibResDebug")
+                listOf(":lib:bundleLibResDebug")
         )
     }
 }
