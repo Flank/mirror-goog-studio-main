@@ -94,6 +94,9 @@ build:_remote_base --remote_instance_name=projects/google.com:android-studio-alp
 # Building runfile trees is unnecessary, unless executing binaries in bazel-bin/ manually (use 'bazel run' instead)
 # See: https://github.com/bazelbuild/bazel/commit/03246077f948f2790a83520e7dccc2625650e6df
 build:_remote_base --nobuild_runfile_links
+# Input file attribute affects the output of zipper. It should always run
+# locally (b/198297058#comment42)
+build:_remote_base --strategy=zipper=local
 
 ## Base config to upload build results to ResultStore.
 build:_resultstore --bes_backend=buildeventservice.googleapis.com
@@ -149,8 +152,6 @@ build:dynamic --strategy=JavaSourceJar=dynamic
 build:dynamic --strategy=Turbine=dynamic
 build:dynamic --strategy=JavacTurbine=dynamic
 # Studio build actions, see b/171900265 for details
-# Run zipper action locally to workaround b/198297058
-build:dynamic --strategy=zipper=local
 build:dynamic --strategy=zipmerger=dynamic
 build:dynamic --strategy=chkplugin=dynamic
 build:dynamic --strategy=stamper=dynamic
