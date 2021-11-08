@@ -833,7 +833,6 @@ coverage_report(
         "//tools/adt/idea/profilers:intellij.android.profilers_tests",
         "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
         "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
-        "//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
         "//tools/adt/idea/project-system-gradle-upgrade:intellij.android.projectSystem.gradle.upgrade.tests_tests",
         "//tools/adt/idea/sdk-updates:intellij.android.sdkUpdates.tests_tests",
         "//tools/adt/idea/smali:intellij.android.smali_tests",
