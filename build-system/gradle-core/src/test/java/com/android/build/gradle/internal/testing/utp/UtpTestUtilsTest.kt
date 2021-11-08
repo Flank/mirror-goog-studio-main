@@ -295,4 +295,39 @@ class UtpTestUtilsTest {
 
         assertThat(shouldEnableUtp(projectOptions, testOptions = null, variantType)).isFalse()
     }
+
+    @Test
+    fun resultHasEmulatorTimeoutException() {
+        val testResult = TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
+            platformErrorBuilder.apply {
+                errorDetailBuilder.apply {
+                    causeBuilder.apply {
+                        summaryBuilder.apply {
+                            stackTrace = "EmulatorTimeoutException"
+                        }
+                    }
+                }
+            }
+        }.build()
+
+        assertThat(hasEmulatorTimeoutException(testResult)).isTrue()
+    }
+
+    @Test
+    fun resultDoesNotHaveEmulatorTimeoutException() {
+        val testResult = TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
+            platformErrorBuilder.apply {
+                errorDetailBuilder.apply {
+                    causeBuilder.apply {
+                        summaryBuilder.apply {
+                            stackTrace = "Exception"
+                        }
+                    }
+                }
+            }
+        }.build()
+
+        assertThat(hasEmulatorTimeoutException(testResult)).isFalse()
+        assertThat(hasEmulatorTimeoutException(null)).isFalse()
+    }
 }
