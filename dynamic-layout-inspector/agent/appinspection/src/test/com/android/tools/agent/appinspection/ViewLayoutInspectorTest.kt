@@ -1225,6 +1225,101 @@ class ViewLayoutInspectorTest {
         }
     }
 
+
+    @Test
+    fun correctScreenshotTypeForConnectType() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(5)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val fakeBitmapHeader = byteArrayOf(1, 2, 3) // trailed by 0s
+        val fakePicture1 = Picture(byteArrayOf(2, 1)) // Will be ignored because of BITMAP mode
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val root = ViewGroup(context).apply {
+            width = 100
+            height = 200
+            setAttachInfo(View.AttachInfo())
+        }
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+        run {
+            val startFetchCommand = Command.newBuilder().apply {
+                startFetchCommandBuilder.apply {
+                    continuous = true
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                startFetchCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            }
+            ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+            // We connected in live mode, so the screenshot type should be bitmap
+            root.viewRootImpl = ViewRootImpl()
+            root.viewRootImpl.mSurface = Surface()
+            root.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
+            root.forcePictureCapture(fakePicture1)
+            checkNonProgressEvent(eventQueue) { event ->
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            }
+            checkNonProgressEvent(eventQueue) { event ->
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+                assertThat(event.layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
+            }
+        }
+        val stopFetchCommand = Command.newBuilder().apply {
+            stopFetchCommand = StopFetchCommand.getDefaultInstance()
+        }.build()
+        viewInspector.onReceiveCommand(
+            stopFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.STOP_FETCH_RESPONSE)
+        }
+
+        run {
+            // reconnect in non-live mode
+            val startFetchCommand = Command.newBuilder().apply {
+                startFetchCommandBuilder.apply {
+                    continuous = false
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                startFetchCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            }
+            ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+            // Now the screenshot should be an skp
+            root.forcePictureCapture(fakePicture1)
+            checkNonProgressEvent(eventQueue) { event ->
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            }
+            checkNonProgressEvent(eventQueue) { event ->
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+                assertThat(event.layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
+            }
+        }
+    }
+
     @Test
     fun settingScreenshotTypeAffectsCaptureOutput() = createViewInspector { viewInspector ->
         val responseQueue = ArrayBlockingQueue<ByteArray>(1)

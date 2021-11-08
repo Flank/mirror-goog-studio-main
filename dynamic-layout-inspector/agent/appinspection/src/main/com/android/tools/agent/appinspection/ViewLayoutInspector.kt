@@ -689,6 +689,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
         synchronized(stateLock) {
             state.fetchContinuously = startFetchCommand.continuous
+            if (!startFetchCommand.continuous) {
+                state.screenshotSettings =
+                    ScreenshotSettings(Screenshot.Type.SKP, state.screenshotSettings.scale)
+            }
         }
 
         if (startFetchCommand.continuous) {
