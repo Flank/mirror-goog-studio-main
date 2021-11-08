@@ -717,7 +717,7 @@ class R8ToolTest {
         val mainDexConfig = MainDexListConfig(listOf(), listOf())
         val toolConfig = ToolConfig(
                 minSdkVersion = 21,
-                isDebuggable = true,
+                isDebuggable = false,
                 disableTreeShaking = true,
                 disableDesugaring = true,
                 disableMinification = true,

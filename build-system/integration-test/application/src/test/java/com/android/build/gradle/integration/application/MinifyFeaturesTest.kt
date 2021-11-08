@@ -41,6 +41,7 @@ import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.truth.Truth
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -571,6 +572,8 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
         TestFileUtils.appendToFile(project.gradlePropertiesFile, getGradleProperties())
     }
 
+    // TODO(b/205264185): To re-enable
+    @Ignore
     @Test
     fun testApksAreMinified() {
 
@@ -659,6 +662,8 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
         }
     }
 
+    // TODO(b/205264185): Re-enable
+    @Ignore
     @Test
     fun testBundleIsMinified() {
         project.executor().run("bundleMinified")

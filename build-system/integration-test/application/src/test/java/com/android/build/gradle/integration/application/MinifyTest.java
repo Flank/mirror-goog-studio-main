@@ -43,6 +43,7 @@ import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -75,6 +76,8 @@ public class MinifyTest {
         assertThat(debugShrinker).isNull();
     }
 
+    // TODO(b/205264185): Re-enable test and publicize
+    @Ignore
     @Test
     public void appApkIsMinified() throws Exception {
         GradleBuildResult result = project.executor().run("assembleMinified");
@@ -237,6 +240,8 @@ public class MinifyTest {
         assertThat(minified).doesNotContainClass("Lexample/ToBeRemoved;");
     }
 
+    // TODO(b/205264185): Re-enabel and publicize
+    @Ignore
     @Test
     public void testApkIsNotMinified_butMappingsAreApplied() throws Exception {
         // Run just a single task, to make sure task dependencies are correct.
@@ -285,7 +290,6 @@ public class MinifyTest {
     @Test
     public void testAndroidTestIsNotUpToDate() throws IOException, InterruptedException {
         project.executor().run("assembleMinified", "assembleMinifiedAndroidTest");
-
         TestFileUtils.appendToFile(project.file("proguard-rules.pro"), "\n-keep class **");
         GradleBuildResult minifiedAndroidTest =
                 project.executor().run("assembleMinifiedAndroidTest");

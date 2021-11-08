@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -57,6 +58,8 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     }
 
+    // TODO(b/205264185): Re-enable and make public
+    @Ignore
     @Test
     public void checkMappingsApplied() throws Exception {
         project.executor().run("clean", ":test:assembleMinified");
