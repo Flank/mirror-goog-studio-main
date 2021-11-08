@@ -52,6 +52,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -149,6 +150,7 @@ abstract class RenderscriptCompile : NdkTask() {
     private lateinit var sourceDirs: FileCollection
 
     @InputFiles
+    @IgnoreEmptyDirectories
     @PathSensitive(PathSensitivity.RELATIVE)
     @SkipWhenEmpty
     fun getSourceDirs(): FileCollection {
