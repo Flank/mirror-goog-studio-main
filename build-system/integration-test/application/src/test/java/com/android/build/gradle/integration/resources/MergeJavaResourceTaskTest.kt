@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -179,5 +180,19 @@ class MergeJavaResourceTaskTest {
         val gradleBuildResult = project.executor().run("assembleDebug")
         val javaResTask = gradleBuildResult.findTask(":mergeDebugJavaResource")
         assertThat(javaResTask?.wasUpToDate()).isFalse()
+    }
+
+    @Test
+    fun ensureJavaResIsRunningWhenDirIsAdded() {
+        project.execute(":mergeDebugJavaResource")
+        val newResourcesDir = File(project.mainJavaResDir, "com/android/tests/empty_dir")
+        assertThat(newResourcesDir).doesNotExist()
+        assertThat(newResourcesDir.mkdirs()).isTrue()
+        project.executor().run(":mergeDebugJavaResource").run {
+            // This expectation will fail once we update to Gradle 7.4 as having only empty
+            // directories as inputs to ProcessJavaResTask will not skip this task.
+            assertThat(getTask(":processDebugJavaRes")).wasSkipped()
+            assertThat(getTask(":mergeDebugJavaResource")).wasUpToDate()
+        }
     }
 }
