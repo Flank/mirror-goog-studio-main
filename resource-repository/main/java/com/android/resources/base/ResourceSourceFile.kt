@@ -15,6 +15,7 @@
  */
 package com.android.resources.base
 
+import com.android.utils.Base128OutputStream
 import it.unimi.dsi.fastutil.objects.Object2IntMap
 import java.io.IOException
 

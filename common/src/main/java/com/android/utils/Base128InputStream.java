@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.resources.base;
+package com.android.utils;
 
 import com.android.io.CancellableFileIo;
 import java.io.BufferedInputStream;
@@ -209,7 +209,7 @@ public final class Base128InputStream extends BufferedInputStream {
    * @return true if the stream content matches, false otherwise.
    * @throws IOException in case of a premature end of stream or an I/O error
    */
-  public boolean validateContents(byte @NotNull [] expected) throws IOException {
+  public boolean validateContents(@NotNull byte[] expected) throws IOException {
     boolean result = true;
     for (byte b : expected) {
       if (b != readByte()) {

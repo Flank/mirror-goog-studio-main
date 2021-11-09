@@ -15,11 +15,9 @@
  */
 package com.android.resources.aar;
 
-import com.android.resources.base.Base128OutputStream;
+import com.android.utils.Base128OutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.util.io.FileUtil;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -34,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A command-line program for packaging framework resources into framework_res.jar. The jar file

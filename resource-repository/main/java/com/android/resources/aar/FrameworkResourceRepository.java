@@ -15,6 +15,9 @@
  */
 package com.android.resources.aar;
 
+import static com.android.SdkConstants.DOT_9PNG;
+import static com.android.SdkConstants.FD_RES_RAW;
+
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -22,8 +25,6 @@ import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.ide.common.util.PathString;
 import com.android.io.CancellableFileIo;
 import com.android.resources.ResourceType;
-import com.android.resources.base.Base128InputStream;
-import com.android.resources.base.Base128OutputStream;
 import com.android.resources.base.BasicResourceItem;
 import com.android.resources.base.BasicResourceItemBase;
 import com.android.resources.base.BasicValueResourceItemBase;
@@ -31,6 +32,8 @@ import com.android.resources.base.NamespaceResolver;
 import com.android.resources.base.RepositoryConfiguration;
 import com.android.resources.base.RepositoryLoader;
 import com.android.resources.base.ResourceSerializationUtil;
+import com.android.utils.Base128InputStream;
+import com.android.utils.Base128OutputStream;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,10 +45,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.TestOnly;
-
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -59,9 +58,9 @@ import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import static com.android.SdkConstants.DOT_9PNG;
-import static com.android.SdkConstants.FD_RES_RAW;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 /**
  * Repository of resources of the Android framework. Most client code should use
