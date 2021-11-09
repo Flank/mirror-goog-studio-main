@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -55,7 +56,7 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
     class CreationAction(
         private val projectOptions: ProjectOptions,
         globalScope: GlobalScope,
-        private val projectInfo: ProjectInfo
+        private val project: Project
     ) : GlobalTaskCreationAction<ExtractProguardFiles>(globalScope) {
 
         override val name = "extractProguardFiles"
@@ -80,7 +81,7 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
                 .setInitialProvider(provider, ExtractProguardFiles::proguardFilesDir)
                 .atLocation(
                     ProguardFiles
-                        .getDefaultProguardFileDir(projectInfo.getProject().layout.buildDirectory)
+                        .getDefaultProguardFileDir(project.layout.buildDirectory)
                         .absolutePath)
                 .on(InternalArtifactType.DEFAULT_PROGUARD_FILES)
         }

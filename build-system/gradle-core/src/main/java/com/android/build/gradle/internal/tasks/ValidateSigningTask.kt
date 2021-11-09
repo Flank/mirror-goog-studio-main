@@ -192,7 +192,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
                 "No signing config configured for variant " + creationConfig.name
             )
             task.signingConfigData.set(
-                creationConfig.services.variantPropertiesApiServices.provider {
+                creationConfig.services.provider {
                     SigningConfigData.fromSigningConfig(signingConfig)
                 }
             )

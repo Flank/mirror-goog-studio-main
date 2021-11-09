@@ -207,7 +207,7 @@ abstract class MergeJavaResourceTask
                 "base.jar"
             } else {
                 TaskManager.getFeatureFileName(
-                    creationConfig.services.projectInfo.getProject().path,
+                    creationConfig.services.projectInfo.path,
                     SdkConstants.DOT_JAR
                 )
             }

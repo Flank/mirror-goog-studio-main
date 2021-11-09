@@ -338,7 +338,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         ) {
             super.configure(task)
             val variantSources = creationConfig.variantSources
-            val project = creationConfig.services.projectInfo.getProject()
             task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
             task.targetSdkVersion
                 .setDisallowChanges(
@@ -346,7 +345,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     else targetSdkVersion.getApiString()
                 )
             task.maxSdkVersion.setDisallowChanges(maxSdkVersion)
-            task.mainSplit.set(project.provider { creationConfig.outputs.getMainSplit() })
+            task.mainSplit.set(creationConfig.services.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
             task.isNamespaced =
                 creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced
@@ -355,7 +354,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 task.manifestPlaceholders.setDisallowChanges(it)
             }
             task.mainManifest
-                .set(project.provider(variantSources::mainManifestIfExists))
+                .set(creationConfig.services.provider(variantSources::mainManifestIfExists))
             task.mainManifest.disallowChanges()
             task.manifestOverlays.set(
                 task.project.provider(variantSources::manifestOverlays)

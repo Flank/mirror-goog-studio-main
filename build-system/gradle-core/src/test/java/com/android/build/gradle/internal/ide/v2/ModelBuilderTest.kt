@@ -237,6 +237,7 @@ class ModelBuilderTest {
         ).execute()
 
         return ModelBuilder(
+            project,
             GlobalScope(
                 project,
                 "",

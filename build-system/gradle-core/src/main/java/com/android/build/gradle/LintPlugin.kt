@@ -122,9 +122,7 @@ abstract class LintPlugin : Plugin<Project> {
     ) {
         registerBuildServices(project)
         val artifacts = ArtifactsImpl(project, "global")
-        val taskCreationServices: TaskCreationServices = TaskCreationServicesImpl(
-            VariantPropertiesApiServicesImpl(projectServices), projectServices
-        )
+        val taskCreationServices: TaskCreationServices = TaskCreationServicesImpl(projectServices)
         // Create the 'lint' task before afterEvaluate to avoid breaking existing build scripts that
         // expect it to be present during evaluation
         val lintTask = project.tasks.register("lint", AndroidLintTextOutputTask::class.java)

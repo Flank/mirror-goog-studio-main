@@ -89,9 +89,7 @@ open class ApplicationVariantImpl @Inject constructor(
     init {
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                    .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
-                    )
+                .addInitialProvider(internalServices.toRegularFileProvider(it))
         }
     }
 

@@ -122,10 +122,10 @@ abstract class PrefabPackageConfigurationTask : NonIncrementalTask() {
 
         override fun configure(task: PrefabPackageConfigurationTask) {
             super.configure(task)
-            val project = creationConfig.services.projectInfo.getProject()
+            val projectInfo = creationConfig.services.projectInfo
             task.description = "Creates a configuration for Prefab package"
-            task.packageName = project.name
-            task.packageVersion = versionOrError(project.version.toString())
+            task.packageName = projectInfo.name
+            task.packageVersion = versionOrError(projectInfo.version)
             task.modules = modules
 
             task.configurationModel = config

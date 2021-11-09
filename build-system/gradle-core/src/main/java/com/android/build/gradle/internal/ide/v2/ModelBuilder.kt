@@ -125,6 +125,7 @@ class ModelBuilder<
                 BuildTypeT,
                 DefaultConfigT,
                 ProductFlavorT>>(
+    private val project: Project,
     private val globalScope: GlobalScope,
     private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
@@ -631,7 +632,7 @@ class ModelBuilder<
 
         val testInfo: TestInfo? = when(component) {
             is TestVariantImpl, is AndroidTestImpl -> {
-                val runtimeApks: Collection<File> = component.services.projectInfo.getProject()
+                val runtimeApks: Collection<File> = project
                     .configurations
                     .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION)?.files
                     ?: listOf()
@@ -765,7 +766,7 @@ class ModelBuilder<
 
         val inputs = ArtifactCollectionsInputsImpl(
             variantDependencies = component.variantDependencies,
-            projectPath = component.services.projectInfo.getProject().path,
+            projectPath = project.path,
             variantName = component.name,
             runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
             buildMapping = buildMapping
@@ -944,7 +945,7 @@ class ModelBuilder<
                 // probably there was an error...
                 DependencyFailureHandler()
                     .addErrors(
-                        "${component.services.projectInfo.getProject().path}@${component.name}/testTarget",
+                        "${project.path}@${component.name}/testTarget",
                         apkArtifacts.failures
                     )
                     .registerIssues(syncIssueReporter)

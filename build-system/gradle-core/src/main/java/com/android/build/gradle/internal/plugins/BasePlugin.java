@@ -228,6 +228,7 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
@@ -555,6 +556,7 @@ public abstract class BasePlugin<
 
         registry.register(
                 new com.android.build.gradle.internal.ide.v2.ModelBuilder(
+                        project,
                         globalScope,
                         projectServices.getProjectOptions(),
                         variantModel,
@@ -566,11 +568,10 @@ public abstract class BasePlugin<
 
         NativeModelBuilder nativeModelBuilderV2 =
                 new NativeModelBuilder(
+                        project,
                         projectServices.getIssueReporter(),
                         projectServices.getProjectOptions(),
-                        globalScope,
-                        variantModel,
-                        projectServices.getProjectInfo());
+                        variantModel);
         registry.register(nativeModelBuilderV2);
     }
 
@@ -614,6 +615,7 @@ public abstract class BasePlugin<
                 null,
                 () ->
                         TaskManager.createTasksBeforeEvaluate(
+                                project,
                                 projectServices.getProjectOptions(),
                                 globalScope,
                                 variantFactory.getVariantType(),
@@ -738,6 +740,7 @@ public abstract class BasePlugin<
 
         TaskManager<VariantBuilderT, VariantT> taskManager =
                 createTaskManager(
+                        project,
                         variants,
                         variantManager.getTestComponents(),
                         variantManager.getTestFixturesComponents(),

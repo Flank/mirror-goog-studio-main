@@ -215,6 +215,7 @@ public class DynamicFeaturePlugin
     @NonNull
     @Override
     protected DynamicFeatureTaskManager createTaskManager(
+            @NonNull Project project,
             @NonNull
                     List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
                             variants,
@@ -226,6 +227,7 @@ public class DynamicFeaturePlugin
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         return new DynamicFeatureTaskManager(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

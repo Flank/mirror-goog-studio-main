@@ -100,9 +100,7 @@ open class AndroidTestImpl @Inject constructor(
     init {
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                    .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
-                    )
+                .addInitialProvider(internalServices.toRegularFileProvider(it))
         }
     }
 
@@ -203,11 +201,10 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantPropertiesApiServices.projectInfo.getProject().objects
-            .listProperty(RegularFile::class.java).also {
-                variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
-                it.finalizeValueOnRead()
-            }
+        variantPropertiesApiServices.listPropertyOf(
+            RegularFile::class.java) {
+            variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+        }
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key =

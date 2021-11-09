@@ -106,7 +106,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
         override fun configure(
             task: AssetPackPreBundleTask
         ) {
-            task.configureVariantProperties(variantName = "", task.project)
+            task.configureVariantProperties(variantName = "", task.project.gradle.sharedServices)
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_ASSET_PACK, task.manifestFiles)
             task.assetsFiles.from(assetFileCollection)

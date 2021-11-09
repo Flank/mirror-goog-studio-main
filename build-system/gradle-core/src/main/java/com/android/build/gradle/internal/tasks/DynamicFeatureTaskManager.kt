@@ -31,17 +31,20 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarat
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.sync.DynamicFeatureVariantModelTask
+import org.gradle.api.Project
 
 internal class DynamicFeatureTaskManager(
-        variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
-        testComponents: List<TestComponentImpl>,
-        testFixturesComponents: List<TestFixturesImpl>,
-        hasFlavors: Boolean,
-        projectOptions: ProjectOptions,
-        globalScope: GlobalScope,
-        extension: BaseExtension,
-        projectInfo: ProjectInfo
+    project: Project,
+    variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
+    testComponents: List<TestComponentImpl>,
+    testFixturesComponents: List<TestFixturesImpl>,
+    hasFlavors: Boolean,
+    projectOptions: ProjectOptions,
+    globalScope: GlobalScope,
+    extension: BaseExtension,
+    projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
+    project,
     variants,
     testComponents,
     testFixturesComponents,

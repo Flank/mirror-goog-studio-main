@@ -202,6 +202,7 @@ public class TestPlugin
     @NonNull
     @Override
     protected TestApplicationTaskManager createTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
@@ -211,6 +212,7 @@ public class TestPlugin
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         return new TestApplicationTaskManager(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

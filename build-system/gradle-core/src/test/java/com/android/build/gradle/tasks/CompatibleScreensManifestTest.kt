@@ -98,9 +98,7 @@ class CompatibleScreensManifestTest {
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
         val services = createTaskCreationServices(
-            createProjectServices(
-                projectInfo = ProjectInfo(project)
-            )
+            createProjectServices(project)
         )
 
         MockitoAnnotations.initMocks(this)

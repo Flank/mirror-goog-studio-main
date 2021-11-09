@@ -369,7 +369,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                             // select CLASSES_JAR by default. We do that by adding the
                             // LibraryElements.CLASSES attribute to the query.
                             val classesLibraryElements =
-                                creationConfig.services.variantPropertiesApiServices.named(
+                                creationConfig.services.named(
                                     LibraryElements::class.java,
                                     LibraryElements.CLASSES
                                 )

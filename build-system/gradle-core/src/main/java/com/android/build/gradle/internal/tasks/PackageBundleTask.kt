@@ -464,7 +464,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         override fun configure(
             task: PackageBundleTask
         ) {
-            task.configureVariantProperties(variantName = "", task.project)
+            task.configureVariantProperties(variantName = "", projectServices.buildServiceRegistry)
             task.bundleType.set(Config.BundleConfig.BundleType.ASSET_ONLY)
             task.featureZips = projectServices.objectFactory.fileCollection()
             artifacts.setTaskInputToFinalProduct(

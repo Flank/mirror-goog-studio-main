@@ -80,7 +80,7 @@ class ParseIntegrityConfigTaskTest {
             getBuildServiceName(AnalyticsService::class.java), AnalyticsService::class.java) {}
 
         val projectServices = createProjectServices(
-            projectInfo = ProjectInfo(project),
+            project = project,
             projectOptions = ProjectOptions(
                 ImmutableMap.of(),
                 FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)

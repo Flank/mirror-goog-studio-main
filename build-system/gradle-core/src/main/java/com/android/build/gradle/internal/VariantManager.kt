@@ -1112,8 +1112,11 @@ class VariantManager<
         signingOverride = createSigningOverride()
         variantFilter = VariantFilter(ReadOnlyObjectProvider())
         variantApiServices = VariantApiServicesImpl(projectServices)
-        variantPropertiesApiServices = VariantPropertiesApiServicesImpl(projectServices)
-        taskCreationServices =
-                TaskCreationServicesImpl(variantPropertiesApiServices, projectServices)
+        variantPropertiesApiServices = VariantPropertiesApiServicesImpl(
+            projectServices,
+            // detects whether we are running the plugin under unit test mode
+            forUnitTesting = project.hasProperty("_agp_internal_test_mode_")
+        )
+        taskCreationServices = TaskCreationServicesImpl(projectServices)
     }
 }

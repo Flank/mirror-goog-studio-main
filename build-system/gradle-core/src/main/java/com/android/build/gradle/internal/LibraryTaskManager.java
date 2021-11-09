@@ -88,6 +88,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.tasks.TaskProvider;
@@ -98,6 +99,7 @@ import org.jetbrains.annotations.NotNull;
 public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> {
 
     public LibraryTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
@@ -107,6 +109,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         super(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

@@ -131,7 +131,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task: PackagedDependenciesWriterTask
         ) {
             super.configure(task)
-            task.projectPathAndVariant.setDisallowChanges("${creationConfig.services.projectInfo.getProject().path}::${task.variantName}")
+            task.projectPathAndVariant.setDisallowChanges("${creationConfig.services.projectInfo.path}::${task.variantName}")
             task.runtimeAarOrJarDeps =
                 creationConfig.variantDependencies
                     .runtimeClasspath

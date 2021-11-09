@@ -94,7 +94,7 @@ class ArtifactCollectionsInputsImpl constructor(
         buildMapping: ImmutableMap<String, String>
     ) : this(
         componentImpl.variantDependencies,
-        componentImpl.services.projectInfo.getProject().path,
+        componentImpl.services.projectInfo.path,
         componentImpl.name,
         runtimeType,
         buildMapping
@@ -323,7 +323,7 @@ fun getAllArtifacts(
         collections,
         dependencyFailureHandler,
         buildMapping,
-        componentImpl.services.projectInfo.getProject().path,
+        componentImpl.services.projectInfo.path,
         componentImpl.name,
     )
 }

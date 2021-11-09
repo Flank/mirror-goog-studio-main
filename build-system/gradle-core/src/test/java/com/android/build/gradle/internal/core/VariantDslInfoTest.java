@@ -28,12 +28,10 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.fixtures.ProjectFactory;
 import com.android.build.gradle.internal.manifest.LazyManifestParser;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -50,6 +48,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
+import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -338,15 +337,16 @@ public class VariantDslInfoTest {
                                     FakeProviderFactory.getFactory(), gradleProperties));
         }
 
+        Project project = ProjectFactory.getProject();
         ProjectServices projectServices =
                 FakeServices.createProjectServices(
+                        project,
                         new FakeSyncIssueReporter(),
                         new FakeDeprecationReporter(),
-                        FakeObjectFactory.getFactory(),
+                        project.getObjects(),
                         new FakeLogger(),
-                        FakeProviderFactory.getFactory(),
+                        project.getProviders(),
                         projectOptions,
-                        new ProjectInfo(ProjectFactory.getProject()),
                         it -> new File(it.toString()));
         dslServices = FakeServices.createDslServices(projectServices);
         variantPropertiesApiServices =

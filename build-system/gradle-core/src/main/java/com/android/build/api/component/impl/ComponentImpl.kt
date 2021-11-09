@@ -409,7 +409,7 @@ abstract class ComponentImpl(
             mainCollection,
             combinedCollection,
             extraArtifact,
-            internalServices.projectInfo.getProject().path
+            internalServices.projectInfo.path
         )
 
         return onTestedConfig { testedVariant ->
@@ -437,7 +437,7 @@ abstract class ComponentImpl(
                 extraCollection,
                 combinedCollectionForTest,
                 testedAllClasses,
-                internalServices.projectInfo.getProject().path,
+                internalServices.projectInfo.path,
                 null
             )
         } ?: extraCollection

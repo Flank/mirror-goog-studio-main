@@ -170,8 +170,8 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.namespace
             buildDirectoryPath =
-                    creationConfig.services.projectInfo.getProject().buildDir.toRelativeString(
-                            creationConfig.services.projectInfo.getProject().projectDir)
+                    creationConfig.services.projectInfo.buildDirectory.get().asFile.toRelativeString(
+                            creationConfig.services.projectInfo.projectDirectory.asFile)
         }
 
         fun computeProperties(projectDir: File): TestConfigProperties {

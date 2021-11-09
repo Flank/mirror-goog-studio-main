@@ -177,13 +177,13 @@ abstract class AidlCompile : NonIncrementalTask() {
         ) {
             super.configure(task)
             val globalScope = creationConfig.globalScope
-            val project = creationConfig.services.projectInfo.getProject()
+            val services = creationConfig.services
 
             val variantSources = creationConfig.variantSources
 
             task
                 .sourceDirs
-                .set(project.provider { variantSources.aidlSourceList })
+                .set(services.provider { variantSources.aidlSourceList })
             task.sourceDirs.disallowChanges()
 
             // This is because aidl may be in the same folder as Java and we want to restrict to
@@ -191,8 +191,8 @@ abstract class AidlCompile : NonIncrementalTask() {
             task
                 .sourceFiles
                 .set(
-                    project.provider {
-                        project.layout.files(task.sourceDirs).asFileTree.matching(PATTERN_SET)
+                    services.provider {
+                        services.fileCollection(task.sourceDirs).asFileTree.matching(PATTERN_SET)
                     })
             task.sourceFiles.disallowChanges()
 

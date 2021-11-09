@@ -94,7 +94,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         }
 
         override fun configure(task: ProcessAssetPackManifestTask) {
-            task.configureVariantProperties(variantName = "", task.project)
+            task.configureVariantProperties(variantName = "", task.project.gradle.sharedServices)
             task.applicationId.setDisallowChanges(applicationId)
             task.assetPackManifests = assetPackManifestFileCollection
         }

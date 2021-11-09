@@ -21,11 +21,21 @@ import com.android.build.gradle.BaseExtension
 import com.android.builder.core.BuilderConstants
 import com.google.common.base.Preconditions
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.BasePluginConvention
+import org.gradle.api.provider.Provider
+import org.gradle.api.resources.TextResource
+import org.gradle.api.services.BuildServiceRegistry
 import java.io.File
 
-class ProjectInfo(project: Project) {
-    private val project: Project = project
+/**
+ * A class that provides data about the Gradle project object without exposing the Project itself
+ *
+ * FIXME remove getProject() and old File-based APIs.
+ */
+class ProjectInfo(private val project: Project) {
 
     fun getProjectBaseName(): String {
         val convention = Preconditions.checkNotNull(
@@ -33,10 +43,51 @@ class ProjectInfo(project: Project) {
         return convention!!.archivesBaseName
     }
 
+    val path: String
+        get() = project.path
+
+    val name: String
+        get() = project.name
+
+    val group: String
+        get() = project.group.toString()
+
+    val version: String
+        get() = project.version.toString()
+
+    val projectDirectory: Directory
+        get() = project.layout.projectDirectory
+
+    val buildDirectory: DirectoryProperty
+        get() = project.layout.buildDirectory
+
+    val rootDir: File
+        get() = project.rootDir
+
+    val intermediatesDirectory: Provider<Directory>
+        get() = project.layout.buildDirectory.dir(SdkConstants.FD_INTERMEDIATES)
+
+    fun intermediatesDirectory(path: String): Provider<Directory> =
+        project.layout.buildDirectory.dir(SdkConstants.FD_INTERMEDIATES).map {
+            it.dir(path)
+        }
+
+    fun intermediatesFile(path: String): Provider<RegularFile> =
+        project.layout.buildDirectory.dir(SdkConstants.FD_INTERMEDIATES).map {
+            it.file(path)
+        }
+
+    @Deprecated("Do not use: b/202449978")
     fun getProject(): Project {
         return project
     }
 
+    @Deprecated("DO NOT USE - Only use the new Gradle Property objects")
+    fun createTestResources(value: String): TextResource = project.resources.text.fromString(value)
+
+    fun hasPlugin(plugin: String): Boolean = project.plugins.hasPlugin(plugin)
+
+    @Deprecated("Use buildDirectory instead")
     fun getBuildDir(): File {
         return project.buildDir
     }
@@ -53,6 +104,7 @@ class ProjectInfo(project: Project) {
         return File(getBuildDir(), "reports/tests")
     }
 
+    @Deprecated("Use the version that returns a provider")
     fun getIntermediatesDir(): File {
         return File(getBuildDir(), SdkConstants.FD_INTERMEDIATES)
     }
@@ -73,6 +125,7 @@ class ProjectInfo(project: Project) {
         return File(getJacocoAgentOutputDirectory(), "jacocoagent.jar")
     }
 
+    @Deprecated("Do Not use. Use value coming from the Variant API object instead.")
     fun getExtension(): BaseExtension {
         return project.extensions.getByName("android") as BaseExtension
     }

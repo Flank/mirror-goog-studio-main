@@ -214,6 +214,7 @@ public class LibraryPlugin
     @NonNull
     @Override
     protected LibraryTaskManager createTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
@@ -223,6 +224,7 @@ public class LibraryPlugin
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         return new LibraryTaskManager(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

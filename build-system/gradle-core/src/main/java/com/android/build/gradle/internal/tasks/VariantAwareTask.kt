@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
+import org.gradle.api.services.BuildServiceRegistry
 import org.gradle.api.tasks.Internal
 
 /**
@@ -37,8 +38,8 @@ interface VariantAwareTask {
 
 fun VariantAwareTask.configureVariantProperties(
     variantName: String,
-    project: Project
+    serviceRegistry: BuildServiceRegistry
 ) {
     this.variantName = variantName
-    this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+    this.analyticsService.setDisallowChanges(getBuildService(serviceRegistry))
 }

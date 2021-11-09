@@ -21,6 +21,7 @@ import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.HasConfigurableValue
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -128,6 +129,21 @@ class VariantPropertiesApiServicesImpl(
     ): ListProperty<T> {
         return projectServices.objectFactory.listProperty(type).also {
             it.set(value)
+            it.finalizeValueOnRead()
+            if (disallowUnsafeRead && !forUnitTesting) {
+                it.disallowUnsafeRead()
+            }
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> listPropertyOf(
+        type: Class<T>,
+        disallowUnsafeRead: Boolean,
+        fillAction: (ListProperty<T>) -> Unit,
+    ): ListProperty<T> {
+        return projectServices.objectFactory.listProperty(type).also {
+            fillAction(it)
             it.finalizeValueOnRead()
             if (disallowUnsafeRead && !forUnitTesting) {
                 it.disallowUnsafeRead()
@@ -280,6 +296,10 @@ class VariantPropertiesApiServicesImpl(
 
     override fun <T> provider(callable: Callable<T>): Provider<T> {
         return projectServices.providerFactory.provider(callable)
+    }
+
+    override fun toRegularFileProvider(file: File): Provider<RegularFile> {
+        return projectServices.projectLayout.file(projectServices.providerFactory.provider { file })
     }
 
     override fun <T : Named> named(type: Class<T>, name: String): T =

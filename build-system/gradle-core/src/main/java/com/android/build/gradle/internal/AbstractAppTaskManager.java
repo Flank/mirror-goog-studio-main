@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
@@ -72,6 +73,7 @@ public abstract class AbstractAppTaskManager<
         extends TaskManager<VariantBuilderT, VariantT> {
 
     protected AbstractAppTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
@@ -81,6 +83,7 @@ public abstract class AbstractAppTaskManager<
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         super(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

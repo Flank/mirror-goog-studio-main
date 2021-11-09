@@ -212,6 +212,7 @@ public class AppPlugin
     @NonNull
     @Override
     protected ApplicationTaskManager createTaskManager(
+            @NonNull Project project,
             @NonNull
                     List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
@@ -223,6 +224,7 @@ public class AppPlugin
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         return new ApplicationTaskManager(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

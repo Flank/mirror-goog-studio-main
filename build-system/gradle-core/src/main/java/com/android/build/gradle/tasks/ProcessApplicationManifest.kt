@@ -335,10 +335,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         ) {
             super.configure(task)
             val variantSources = creationConfig.variantSources
-            val globalScope =
-                creationConfig.globalScope
             val variantType = creationConfig.variantType
-            val project = creationConfig.services.projectInfo.getProject()
             // This includes the dependent libraries.
             task.manifests = creationConfig
                 .variantDependencies
@@ -368,8 +365,11 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         else creationConfig.targetSdkVersion.getApiString()
                 )
             task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
-            task.optionalFeatures.set(project.provider { getOptionalFeatures(creationConfig) })
-            task.optionalFeatures.disallowChanges()
+            task.optionalFeatures.setDisallowChanges(creationConfig.services.provider {
+                getOptionalFeatures(
+                    creationConfig
+                )
+            })
             task.jniLibsUseLegacyPackaging.setDisallowChanges(
                 creationConfig.packaging.jniLibs.useLegacyPackaging
             )
@@ -399,7 +399,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     )
             }
             if (!creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
-                task.navigationJsons = project.files(
+                task.navigationJsons = creationConfig.services.fileCollection(
                     creationConfig.artifacts.get(NAVIGATION_JSON),
                     creationConfig
                         .variantDependencies
@@ -410,17 +410,13 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         )
                 )
             }
-            task.packageOverride.set(creationConfig.applicationId)
-            task.packageOverride.disallowChanges()
+            task.packageOverride.setDisallowChanges(creationConfig.applicationId)
             task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()
-            task.mainManifest
-                .set(project.provider(variantSources::mainManifestFilePath))
-            task.mainManifest.disallowChanges()
-            task.manifestOverlays.set(
+            task.mainManifest.setDisallowChanges(creationConfig.services.provider(variantSources::mainManifestFilePath))
+            task.manifestOverlays.setDisallowChanges(
                 task.project.provider(variantSources::manifestOverlays)
             )
-            task.manifestOverlays.disallowChanges()
             task.isFeatureSplitVariantType = creationConfig.variantType.isDynamicFeature
             task.buildTypeName = creationConfig.buildType
             task.projectBuildFile.set(task.project.buildFile)

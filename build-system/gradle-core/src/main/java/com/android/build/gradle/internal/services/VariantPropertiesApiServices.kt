@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.services
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -35,8 +36,7 @@ import java.util.concurrent.Callable
  * This is meant to be used only by the variant properties api objects. Other stages of the plugin
  * will use different services objects.
  */
-interface VariantPropertiesApiServices:
-    BaseServices {
+interface VariantPropertiesApiServices : BaseServices {
 
     /**
      * Creates a new property.
@@ -151,6 +151,23 @@ interface VariantPropertiesApiServices:
         type: Class<T>,
         value: Collection<T>,
         disallowUnsafeRead: Boolean = true
+    ): ListProperty<T>
+
+    /**
+     * Creates a new [ListProperty].
+     *
+     * This should be used for properties used in the new API.
+     *
+     * During configuration the property will be marked as [Property.disallowUnsafeRead] if
+     * [disallowUnsafeRead] is set to true. If false, the property value access will be allowed.
+     *
+     * The [ListProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
+    fun <T> listPropertyOf(
+        type: Class<T>,
+        disallowUnsafeRead: Boolean = true,
+        fillAction: (ListProperty<T>) -> Unit,
     ): ListProperty<T>
 
     /**
@@ -269,6 +286,7 @@ interface VariantPropertiesApiServices:
      * unsafe reads (which will also finalize the value on read).
      */
     fun <T> setProviderOf(type: Class<T>, value: Provider<out Iterable<T>?>): Provider<Set<T>?>
+
     /**
      * Creates a memoized [Provider] of [Set] around the provided [Iterable] of values.
      *
@@ -278,6 +296,8 @@ interface VariantPropertiesApiServices:
     fun <T> setProviderOf(type: Class<T>, value: Iterable<T>?): Provider<Set<T>?>
 
     fun <T> provider(callable: Callable<T>): Provider<T>
+
+    fun toRegularFileProvider(file: File): Provider<RegularFile>
 
     fun <T : Named> named(type: Class<T>, name: String): T
 

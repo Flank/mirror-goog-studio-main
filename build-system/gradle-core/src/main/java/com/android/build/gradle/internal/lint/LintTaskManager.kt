@@ -13,12 +13,17 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
+import org.gradle.api.Project
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /** Factory for the LintModel based lint tasks */
-class LintTaskManager constructor(private val globalScope: GlobalScope, private val taskFactory: TaskFactory, private val projectInfo: ProjectInfo) {
+class LintTaskManager constructor(
+    private val globalScope: GlobalScope,
+    private val taskFactory: TaskFactory,
+    private val project: Project
+) {
 
     fun createBeforeEvaluateLintTasks() {
         // LintFix task
@@ -143,7 +148,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
 
         val lintTaskPath = getTaskPath("lint")
 
-        projectInfo.getProject().gradle.taskGraph.whenReady {
+        project.gradle.taskGraph.whenReady {
             variantLintTaskToLintVitalTask.forEach { (taskPath, taskToDisable) ->
                 if (it.hasTask(taskPath)) {
                     taskToDisable.configure { it.enabled = false }
@@ -206,7 +211,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
     }
 
     private fun getTaskPath(taskName: String): String {
-        return if (projectInfo.getProject().rootProject === projectInfo.getProject()) ":$taskName" else projectInfo.getProject().path + ':' + taskName
+        return if (project.rootProject === project) ":$taskName" else project.path + ':' + taskName
     }
 
     companion object {

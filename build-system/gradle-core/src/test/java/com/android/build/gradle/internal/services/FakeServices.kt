@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.TestUtils
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.Project
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -43,13 +44,13 @@ import java.io.File
 
 @JvmOverloads
 fun createProjectServices(
+    project: Project = ProjectFactory.project,
     issueReporter: SyncIssueReporter = FakeSyncIssueReporter(),
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
-    objectFactory: ObjectFactory = FakeObjectFactory.factory,
+    objectFactory: ObjectFactory = project.objects,
     logger: Logger = FakeLogger(),
-    providerFactory: ProviderFactory = FakeProviderFactory.factory,
-    projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of(), FakeProviderFactory(FakeProviderFactory.factory, ImmutableMap.of())),
-    projectInfo: ProjectInfo = ProjectInfo(ProjectFactory.project),
+    providerFactory: ProviderFactory = project.providers,
+    projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of(), FakeProviderFactory(providerFactory, ImmutableMap.of())),
     fileResolver: (Any) -> File = { File(it.toString()) }
 ): ProjectServices =
     ProjectServices(
@@ -58,13 +59,13 @@ fun createProjectServices(
         objectFactory,
         logger,
         providerFactory,
-        projectInfo.getProject().layout,
+        project.layout,
         projectOptions,
-        projectInfo.getProject().gradle.sharedServices,
+        project.gradle.sharedServices,
         lintFromMaven = LintFromMaven(objectFactory.fileCollection(), "invalid lint"),
         aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
         maxWorkerCount = 1,
-        projectInfo,
+        ProjectInfo(project),
         fileResolver = fileResolver
     )
 
@@ -92,4 +93,4 @@ fun createVariantPropertiesApiServices(
 @JvmOverloads
 fun createTaskCreationServices(
     projectServices: ProjectServices = createProjectServices()
-): TaskCreationServices = TaskCreationServicesImpl(createVariantPropertiesApiServices(projectServices), projectServices)
+): TaskCreationServices = TaskCreationServicesImpl(projectServices)

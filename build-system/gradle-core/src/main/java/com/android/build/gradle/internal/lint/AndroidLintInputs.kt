@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -235,9 +236,8 @@ abstract class ProjectInputs {
 
     internal fun initialize(variant: VariantWithTests, isForAnalysis: Boolean) {
         val creationConfig = variant.main
-        val project = creationConfig.services.projectInfo.getProject()
         val extension = creationConfig.globalScope.extension
-        initializeFromProject(project, isForAnalysis)
+        initializeFromProject(creationConfig.services.projectInfo.getProject(), isForAnalysis)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
 
         lintOptions.initialize(extension.lintOptions)
@@ -1280,7 +1280,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         artifactCollectionsInputs.setDisallowChanges(
             ArtifactCollectionsInputsImpl(
                 variantDependencies = componentImpl.variantDependencies,
-                projectPath = componentImpl.services.projectInfo.getProject().path,
+                projectPath = componentImpl.services.projectInfo.path,
                 variantName = componentImpl.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
@@ -1390,7 +1390,7 @@ abstract class JavaArtifactInput : ArtifactInput() {
         artifactCollectionsInputs.setDisallowChanges(
             ArtifactCollectionsInputsImpl(
                 variantDependencies = unitTestImpl.variantDependencies,
-                projectPath = unitTestImpl.services.projectInfo.getProject().path,
+                projectPath = unitTestImpl.services.projectInfo.path,
                 variantName = unitTestImpl.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),

@@ -80,9 +80,9 @@ abstract class LintModelMetadataTask : NonIncrementalTask() {
         override fun configure(task: LintModelMetadataTask) {
             super.configure(task)
 
-            val project = creationConfig.services.projectInfo.getProject()
-            task.mavenGroupId.setDisallowChanges(project.group.toString())
-            task.mavenArtifactId.setDisallowChanges(project.name)
+            val projectInfo = creationConfig.services.projectInfo
+            task.mavenGroupId.setDisallowChanges(projectInfo.group)
+            task.mavenArtifactId.setDisallowChanges(projectInfo.name)
         }
     }
 

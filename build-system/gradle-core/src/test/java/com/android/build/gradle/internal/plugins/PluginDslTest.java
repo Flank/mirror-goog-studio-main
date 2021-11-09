@@ -83,6 +83,8 @@ public class PluginDslTest {
                 TestProjects.builder(projectDirectory.newFolder("project").toPath())
                         .withPlugin(TestProjects.Plugin.APP)
                         .withProperty(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true)
+                        // turns this on to disable unsafe read checks in properties.
+                        .withProperty("_agp_internal_test_mode_", "true")
                         .build();
         android = project.getExtensions().getByType(BaseAppModuleExtension.class);
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);

@@ -82,7 +82,7 @@ abstract class ListingFileRedirectTask: NonIncrementalTask() {
         }
 
         override fun configure(task: ListingFileRedirectTask) {
-            task.configureVariantProperties(variantName = "", task.project)
+            task.configureVariantProperties(variantName = "", creationConfig.services.buildServiceRegistry)
             task.listingFile.setDisallowChanges(
                 creationConfig.artifacts.get(inputArtifactType)
             )

@@ -71,7 +71,7 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
             "${prefix}AndroidDebugTest${suffix}"
         }
         `when`(creationConfig.name).thenReturn("AndroidDebugTest")
-        `when`(creationConfig.services.projectInfo.getProject().gradle.sharedServices
+        `when`(creationConfig.services.buildServiceRegistry
                .registrations.getByName(any()))
             .thenReturn(
                 mock(BuildServiceRegistration::class.java, RETURNS_DEEP_STUBS))

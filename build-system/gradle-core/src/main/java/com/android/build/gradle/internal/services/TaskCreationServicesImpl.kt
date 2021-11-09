@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.lint.LintFromMaven
+import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
@@ -24,15 +25,9 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
-class TaskCreationServicesImpl(
-    override val variantPropertiesApiServices: VariantPropertiesApiServices,
-    projectServices: ProjectServices) :
-    BaseServicesImpl(projectServices), TaskCreationServices {
+class TaskCreationServicesImpl(projectServices: ProjectServices) : BaseServicesImpl(projectServices), TaskCreationServices {
 
     override fun file(file: Any): File = projectServices.fileResolver(file)
-
-    override fun regularFile(file: Provider<File>): Provider<RegularFile> =
-            projectServices.projectLayout.file(file)
 
     override fun fileCollection(): ConfigurableFileCollection =
         projectServices.objectFactory.fileCollection()
@@ -47,6 +42,9 @@ class TaskCreationServicesImpl(
     override fun <T> provider(callable: () -> T): Provider<T> {
         return projectServices.providerFactory.provider(callable)
     }
+
+    override fun <T : Named> named(type: Class<T>, name: String): T =
+        projectServices.objectFactory.named(type, name)
 
     override val lintFromMaven: LintFromMaven get() = projectServices.lintFromMaven
 }

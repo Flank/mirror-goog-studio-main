@@ -26,8 +26,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KClass
 
 /**
  * Services for the DSL objects.

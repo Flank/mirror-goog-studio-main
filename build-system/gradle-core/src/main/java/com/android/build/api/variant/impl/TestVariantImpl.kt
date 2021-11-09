@@ -92,9 +92,7 @@ open class TestVariantImpl @Inject constructor(
     init {
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                    .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
-                    )
+                .addInitialProvider(internalServices.toRegularFileProvider(it))
         }
     }
     private val delegate by lazy { TestVariantCreationConfigImpl(
@@ -157,11 +155,9 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        internalServices.projectInfo.getProject().objects
-            .listProperty(RegularFile::class.java).also {
-                variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
-                it.finalizeValueOnRead()
-            }
+        internalServices.listPropertyOf(RegularFile::class.java) {
+            variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+        }
     }
 
     // ---------------------------------------------------------------------------------------------

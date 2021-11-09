@@ -272,22 +272,21 @@ import java.util.stream.Collectors
  * @param extension the extension
  */
 abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
-        private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-        private val testComponents: List<TestComponentImpl>,
-        private val testFixturesComponents: List<TestFixturesImpl>,
-        private val hasFlavors: Boolean,
-        private val projectOptions: ProjectOptions,
-        @JvmField protected val globalScope: GlobalScope,
-        @JvmField protected val extension: BaseExtension,
-        private val projectInfo: ProjectInfo) {
-
-    @JvmField
-    protected val project = projectInfo.getProject()
+    @JvmField protected val project: Project,
+    private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
+    private val testComponents: List<TestComponentImpl>,
+    private val testFixturesComponents: List<TestFixturesImpl>,
+    private val hasFlavors: Boolean,
+    private val projectOptions: ProjectOptions,
+    @JvmField protected val globalScope: GlobalScope,
+    @JvmField protected val extension: BaseExtension,
+    private val projectInfo: ProjectInfo
+) {
     protected val logger: Logger = Logging.getLogger(this.javaClass)
 
     @JvmField
     protected val taskFactory: TaskFactory = TaskFactoryImpl(project.tasks)
-    protected val lintTaskManager: LintTaskManager = LintTaskManager(globalScope, taskFactory, projectInfo)
+    protected val lintTaskManager: LintTaskManager = LintTaskManager(globalScope, taskFactory, project)
     @JvmField
     protected val variantPropertiesList: List<VariantT> =
             variants.map(ComponentInfo<VariantBuilderT, VariantT>::variant)
@@ -1024,7 +1023,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskProviderCallback: TaskProviderCallback<MergeResources>?
     ): TaskProvider<MergeResources> {
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
-                creationConfig.services.projectInfo.getIntermediatesDir()
+                projectInfo.getIntermediatesDir()
                         .toString() + "/merged-not-compiled-resources/"
                         + creationConfig.dirName) else null
         val mergeResourcesTask: TaskProvider<MergeResources> = taskFactory.register(
@@ -1103,8 +1102,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     private fun createApkProcessResTask(
             creationConfig: ComponentCreationConfig,
             packageOutputType: Single<Directory>?) {
-        val projectInfo = creationConfig.services.projectInfo
-
         // Check AAR metadata files
         taskFactory.register(CheckAarMetadataTask.CreationAction(creationConfig))
 
@@ -1638,8 +1635,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             project, JacocoTask.getJacocoVersion(unitTestCreationConfig))
 
         if (unitTestCreationConfig.variantDslInfo.isUnitTestCoverageEnabled) {
-           unitTestCreationConfig.services.projectInfo.getProject().pluginManager
-               .apply(JacocoPlugin::class.java)
+           project.pluginManager.apply(JacocoPlugin::class.java)
         }
         val runTestsTask =
                 taskFactory.register(AndroidUnitTest.CreationAction(unitTestCreationConfig))
@@ -1649,9 +1645,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         if (unitTestCreationConfig.isTestCoverageEnabled
             || unitTestCreationConfig.variantDslInfo.isUnitTestCoverageEnabled) {
-            unitTestCreationConfig.services.projectInfo.getProject().plugins.withType(
-                JacocoPlugin::class.java
-            ) {
+            project.plugins.withType(JacocoPlugin::class.java) {
                 // Jacoco plugin is applied and test coverage enabled, ∴ generate coverage report.
                 taskFactory.register(
                     JacocoReportTask.CreateActionUnitTest(unitTestCreationConfig, ant)
@@ -3113,8 +3107,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun configureKaptTaskInScopeForDataBinding(
             creationConfig: ComponentCreationConfig, kaptTask: Task) {
-        val dataBindingArtifactDir = creationConfig.services.projectInfo.getProject().objects.directoryProperty()
-        val exportClassListFile = creationConfig.services.projectInfo.getProject().objects.fileProperty()
+        val dataBindingArtifactDir = project.objects.directoryProperty()
+        val exportClassListFile = project.objects.fileProperty()
         val kaptTaskProvider = taskFactory.named(kaptTask.name)
 
         // Register data binding artifacts as outputs
@@ -3288,12 +3282,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
          */
         @JvmStatic
         fun createTasksBeforeEvaluate(
+                project: Project,
                 projectOptions: ProjectOptions,
                 globalScope: GlobalScope,
                 variantType: VariantType,
                 sourceSetContainer: Iterable<AndroidSourceSet?>,
                 projectInfo: ProjectInfo) {
-            val project = projectInfo.getProject()
             val taskFactory = TaskFactoryImpl(project.tasks)
             taskFactory.register(
                     UNINSTALL_ALL
@@ -3319,7 +3313,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             // Make sure MAIN_PREBUILD runs first:
             taskFactory.register(MAIN_PREBUILD)
-            taskFactory.register(ExtractProguardFiles.CreationAction(projectOptions, globalScope, projectInfo))
+            taskFactory.register(ExtractProguardFiles.CreationAction(projectOptions, globalScope, project))
                 .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
             taskFactory.register(SourceSetsTask.CreationAction(sourceSetContainer))
             taskFactory.register(
@@ -3333,7 +3327,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             // features are analyzed and their lint issues are reported and/or fixed when running
             // lint or lintFix from the base app.
             if (!variantType.isForTesting && !variantType.isDynamicFeature) {
-                LintTaskManager(globalScope, taskFactory, projectInfo).createBeforeEvaluateLintTasks()
+                LintTaskManager(globalScope, taskFactory, project).createBeforeEvaluateLintTasks()
             }
 
             // create a single configuration to point to a project or a local file that contains

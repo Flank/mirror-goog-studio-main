@@ -81,7 +81,7 @@ open class ConsumableCreationConfigImpl(
                         .targetCompatibility
                         .isJava8Compatible) {
             VariantScope.Java8LangSupport.UNUSED
-        } else if (config.services.projectInfo.getProject().plugins.hasPlugin("me.tatarka.retrolambda")) {
+        } else if (config.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
             VariantScope.Java8LangSupport.RETROLAMBDA
         } else if (config.minifiedEnabled) {
             VariantScope.Java8LangSupport.R8

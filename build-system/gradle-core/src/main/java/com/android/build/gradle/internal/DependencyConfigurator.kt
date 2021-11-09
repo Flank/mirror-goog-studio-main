@@ -623,13 +623,13 @@ class DependencyConfigurator(
 
         for (component in allComponents) {
             registerAsmTransformForComponent(
-                projectServices.projectInfo.getProject().name,
+                projectServices.projectInfo.name,
                 dependencies,
                 component
             )
 
             registerRecalculateStackFramesTransformForComponent(
-                projectServices.projectInfo.getProject().name,
+                projectServices.projectInfo.name,
                 dependencies,
                 component
             )
@@ -641,10 +641,10 @@ class DependencyConfigurator(
                     allComponents
                 )) {
                     artifactConfiguration.registerTransform(
-                        projectServices.projectInfo.getProject().name,
+                        projectServices.projectInfo.name,
                         dependencies,
                         bootClasspath,
-                        getDesugarLibConfig(projectServices.projectInfo.getProject()),
+                        getDesugarLibConfig(project),
                         SyncOptions.getErrorFormatMode(projectOptions),
                     )
                 }

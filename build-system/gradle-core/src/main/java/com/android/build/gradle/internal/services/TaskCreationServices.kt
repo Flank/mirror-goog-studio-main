@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.lint.LintFromMaven
+import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -33,13 +34,13 @@ import java.io.File
  * This is accessed via [com.android.build.gradle.internal.component.ComponentCreationConfig]
  */
 interface TaskCreationServices: BaseServices {
-    fun regularFile(file: Provider<File>): Provider<RegularFile>
     fun file(file: Any): File
-
     fun fileCollection(): ConfigurableFileCollection
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun initializeAapt2Input(aapt2Input: Aapt2Input)
     fun <T> provider(callable: () -> T): Provider<T>
-    val variantPropertiesApiServices: VariantPropertiesApiServices
+
+    fun <T : Named> named(type: Class<T>, name: String): T
+
     val lintFromMaven: LintFromMaven
 }

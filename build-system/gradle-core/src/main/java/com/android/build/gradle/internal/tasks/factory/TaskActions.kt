@@ -89,10 +89,12 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: ComponentCreati
             task.dependsOn(taskContainer.preBuildTask)
         }
 
-        val project = creationConfig.services.projectInfo.getProject()
-        task.configureVariantProperties(creationConfig.name, project)
+        task.configureVariantProperties(
+            creationConfig.name,
+            creationConfig.services.buildServiceRegistry
+        )
         if (task is BaseTask) {
-            task.projectPath.setDisallowChanges(project.path)
+            task.projectPath.setDisallowChanges(creationConfig.services.projectInfo.path)
         }
     }
 }

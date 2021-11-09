@@ -56,6 +56,7 @@ import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ListProperty
@@ -235,6 +236,13 @@ open class BasicModuleModelMock {
 
     fun mockModule(appName : String) : File {
         val appFolder = join(projectRootDir, appName)
+
+        val appFolderDirectory = mock(
+            Directory::class.java,
+            throwUnmocked
+        )
+        doReturn(appFolder).`when`(appFolderDirectory).asFile
+
         val buildDir = File(appFolder, "build")
         val intermediates = File(buildDir, "intermediates")
         val extension: BaseExtension = mock(
@@ -260,6 +268,8 @@ open class BasicModuleModelMock {
         doReturn(join(buildDir, "build.gradle")).`when`(project).buildFile
         doReturn(projectRootDir).`when`(project).rootDir
         doReturn(extension).`when`(global).extension
+
+        doReturn(appFolderDirectory).`when`(projectInfo).projectDirectory
 
         doReturn(extension).`when`(global).extension
         doReturn(externalNativeBuild).`when`(extension).externalNativeBuild

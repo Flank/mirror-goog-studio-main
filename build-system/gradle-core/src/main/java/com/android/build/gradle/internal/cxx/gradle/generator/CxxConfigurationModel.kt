@@ -193,7 +193,7 @@ fun tryCreateConfigurationParameters(
 
     val cxxFolder = findCxxFolder(
         buildSystem,
-        project.projectDir,
+        projectInfo.projectDirectory.asFile,
         buildStagingFolder,
         project.buildDir
     )

@@ -40,6 +40,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import org.gradle.api.Action
+import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
@@ -48,15 +49,17 @@ import java.io.File
 import java.util.stream.Collectors
 
 class ApplicationTaskManager(
-        variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
-        testComponents: List<TestComponentImpl>,
-        testFixturesComponents: List<TestFixturesImpl>,
-        hasFlavors: Boolean,
-        projectOptions: ProjectOptions,
-        globalScope: GlobalScope,
-        extension: BaseExtension,
-        projectInfo: ProjectInfo
+    project: Project,
+    variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
+    testComponents: List<TestComponentImpl>,
+    testFixturesComponents: List<TestFixturesImpl>,
+    hasFlavors: Boolean,
+    projectOptions: ProjectOptions,
+    globalScope: GlobalScope,
+    extension: BaseExtension,
+    projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
+    project,
     variants,
     testComponents,
     testFixturesComponents,

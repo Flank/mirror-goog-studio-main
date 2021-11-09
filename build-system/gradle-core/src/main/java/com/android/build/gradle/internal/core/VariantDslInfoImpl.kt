@@ -978,14 +978,14 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
             result.addAll(_postProcessingOptions.getDefaultProguardFiles())
         }
 
-        val projectDir = services.projectInfo.getProject().layout.projectDirectory
+        val projectDir = services.projectInfo.projectDirectory
         result.forEach { file ->
             into.add(projectDir.file(file.absolutePath))
         }
     }
 
     override fun gatherProguardFiles(type: ProguardFileType, into: ListProperty<RegularFile>) {
-        val projectDir = services.projectInfo.getProject().layout.projectDirectory
+        val projectDir = services.projectInfo.projectDirectory
         mergedProguardFiles(type).forEach {
             into.add(projectDir.file(it.absolutePath))
         }

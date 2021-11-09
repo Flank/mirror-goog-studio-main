@@ -426,10 +426,10 @@ abstract class JacocoTask : NewIncrementalTask() {
                 .inputJars
                 .from(
                     classesFromLegacyTransforms.getRegularFiles(
-                        creationConfig.services.projectInfo.getProject().layout.projectDirectory)
+                        creationConfig.services.projectInfo.projectDirectory)
                 )
             task.classesDir.from(classesFromLegacyTransforms.getDirectories(
-                creationConfig.services.projectInfo.getProject().layout.projectDirectory
+                creationConfig.services.projectInfo.projectDirectory
             ))
         }
     }

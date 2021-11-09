@@ -400,7 +400,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 mixedScopeClasses = creationConfig.services.fileCollection(
                     creationConfig.artifacts.get(
                         InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES),
-                    creationConfig.services.projectInfo.getProject().files(
+                    creationConfig.services.fileCollection(
                         creationConfig.artifacts.get(
                             InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS
                         )

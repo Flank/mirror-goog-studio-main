@@ -45,6 +45,7 @@ import com.android.build.gradle.tasks.sync.TestModuleVariantModelTask;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
 import java.util.List;
+import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
@@ -59,6 +60,7 @@ public class TestApplicationTaskManager
         extends AbstractAppTaskManager<TestVariantBuilderImpl, TestVariantImpl> {
 
     public TestApplicationTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
@@ -68,6 +70,7 @@ public class TestApplicationTaskManager
             @NonNull BaseExtension extension,
             @NonNull ProjectInfo projectInfo) {
         super(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,

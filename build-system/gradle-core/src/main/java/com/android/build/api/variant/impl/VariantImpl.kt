@@ -155,13 +155,10 @@ abstract class VariantImpl(
     override fun <T> getExtension(type: Class<T>): T? =
         type.cast(externalExtensions?.get(type))
 
-    override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantPropertiesApiServices.projectInfo.getProject().objects
-            .listProperty(RegularFile::class.java).also {
-                variantDslInfo.getProguardFiles(it)
-                it.finalizeValueOnRead()
-            }
-    }
+    override val proguardFiles: ListProperty<RegularFile> =
+        variantPropertiesApiServices.listPropertyOf(RegularFile::class.java) {
+            variantDslInfo.getProguardFiles(it)
+        }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
