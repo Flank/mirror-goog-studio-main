@@ -1,0 +1,10 @@
+<dependencies>
+  <compile
+      roots="${projectDir}@@:javaLib,${projectDir}@@:lib::release">
+    <dependency
+        name="${projectDir}@@:javaLib"
+        simpleName=":"/>
+    <dependency
+        name="${projectDir}@@:lib::release"/>
+  </compile>
+</dependencies>

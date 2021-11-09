@@ -1,0 +1,9 @@
+<dependencies>
+  <compile
+      roots="com.example.javaLib:javaLib:1.0@jar,com.example.lib:lib:1.0@aar">
+    <dependency
+        name="com.example.javaLib:javaLib:1.0@jar"/>
+    <dependency
+        name="com.example.lib:lib:1.0@aar"/>
+  </compile>
+</dependencies>
