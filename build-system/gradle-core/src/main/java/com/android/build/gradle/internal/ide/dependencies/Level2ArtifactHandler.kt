@@ -88,6 +88,7 @@ class Level2ArtifactHandler(
         projectPath: String,
         buildId: String,
         variantName: String?,
+        isTestFixtures: Boolean,
         addressSupplier: () -> String
     ): Library = ModuleLibraryImpl(
         addressSupplier(),

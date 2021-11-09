@@ -134,6 +134,7 @@ class Level1ArtifactHandler(
         projectPath: String,
         buildId: String,
         variantName: String?,
+        isTestFixtures: Boolean,
         addressSupplier: () -> String
     ) {
         _projects.add(DependenciesImpl.ProjectIdentifierImpl(buildId, projectPath))

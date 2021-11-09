@@ -60,8 +60,8 @@ internal class CheckDependenciesLintModelArtifactHandler(
     private val projectDependencyLintModels =
         projectCompileLintModels.asProjectKeyedMap(buildMapping).keys +
                 projectRuntimeLintModels.asProjectKeyedMap(buildMapping).keys
-    private val compileProjectJars = compileProjectJars.asProjectKeyedMap(buildMapping)
-    private val runtimeProjectJars = runtimeProjectJars.asProjectKeyedMap(buildMapping)
+    private val compileProjectJars = compileProjectJars.asProjectSourceSetKeyedMap(buildMapping)
+    private val runtimeProjectJars = runtimeProjectJars.asProjectSourceSetKeyedMap(buildMapping)
 
     override fun handleAndroidLibrary(
         aarFile: File,
@@ -129,10 +129,12 @@ internal class CheckDependenciesLintModelArtifactHandler(
         projectPath: String,
         buildId: String,
         variantName: String?,
+        isTestFixtures: Boolean,
         addressSupplier: () -> String
     ): LintModelLibrary {
-        val key = ProjectKey(buildId, projectPath, variantName)
-        val hasLintModel = (key.buildId == thisProject.buildId && key.projectPath == thisProject.projectPath) || projectDependencyLintModels.contains(key)
+        val sourceSetKey = ProjectSourceSetKey(buildId, projectPath, variantName, isTestFixtures)
+        val mainKey = ProjectKey(buildId, projectPath, variantName)
+        val hasLintModel = (mainKey.buildId == thisProject.buildId && mainKey.projectPath == thisProject.projectPath) || projectDependencyLintModels.contains(mainKey)
         if (hasLintModel) {
             return DefaultLintModelModuleLibrary(
                 artifactAddress = addressSupplier(),
@@ -146,13 +148,13 @@ internal class CheckDependenciesLintModelArtifactHandler(
             if(warnIfProjectTreatedAsExternalDependency) {
                 Logging.getLogger(CheckDependenciesLintModelArtifactHandler::class.java)
                     .warn(
-                        "Warning: Lint will treat ${key.projectPath} as an external dependency and not analyze it.\n" +
-                                " * Recommended Action: Apply the 'com.android.lint' plugin to java library project ${key.projectPath}. to enable " +
+                        "Warning: Lint will treat ${mainKey.projectPath} as an external dependency and not analyze it.\n" +
+                                " * Recommended Action: Apply the 'com.android.lint' plugin to java library project ${mainKey.projectPath}. to enable " +
                                 "lint to analyze those sources.\n"
                     )
             }
             val artifactAddress = addressSupplier()
-            val jar = compileProjectJars[key] ?: runtimeProjectJars[key] ?: errorJarNotFound(key)
+            val jar = compileProjectJars[sourceSetKey] ?: runtimeProjectJars[sourceSetKey] ?: errorJarNotFound(sourceSetKey)
             return DefaultLintModelJavaLibrary(
                 artifactAddress = artifactAddress,
                 jarFiles = listOf(jar),
@@ -162,7 +164,7 @@ internal class CheckDependenciesLintModelArtifactHandler(
         }
     }
 
-    private fun errorJarNotFound(key: ProjectKey) : Nothing {
+    private fun errorJarNotFound(key: ProjectSourceSetKey) : Nothing {
         error("Internal errorr: Could not find jar for project $key\n" +
                 "Project jars reachable from the compile classpath:" +
                 compileProjectJars.keys.joinToString("\n - ", prefix="\n - ") +
