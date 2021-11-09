@@ -153,14 +153,12 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
+            boolean jacocoArtifactTransform = unitTestCreationConfig.getServices()
+                    .getProjectOptions().get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION);
 
             unitTestCreationConfig.onTestedConfig(
                     testedConfig -> {
                         if (unitTestCreationConfig.isTestCoverageEnabled()) {
-                            // Library project runtime classes are instrumented by Jacoco offline
-                            // instrumentation in artifact transforms, therefore offline
-                            // instrumented classes are excluded from being re-instrumented by the
-                            // Jacoco agent.
                             task.getProject()
                                     .getPlugins()
                                     .withType(
@@ -170,7 +168,18 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                         task.getExtensions()
                                                                 .findByType(
                                                                         JacocoTaskExtension.class);
-                                                if (testedConfig.getVariantType().isAar()) {
+                                                // The previous method of Jacoco offline
+                                                // instrumenting library classes i.e. by a task
+                                                // replacing source classes with instrumented
+                                                // classes. This meant that library classes needed
+                                                // to be excluded from the input classes to the
+                                                // JacocoPlugin, as the code was already
+                                                // instrumented. This case will be supported until
+                                                // legacy transforms are removed as they are not
+                                                // supported in the current artifact transform
+                                                // based instrumentation.
+                                                if (testedConfig.getVariantType().isAar()
+                                                        && !jacocoArtifactTransform) {
                                                     jacocoTaskExtension.setExcludes(
                                                             Collections.singletonList("*"));
                                                 }
