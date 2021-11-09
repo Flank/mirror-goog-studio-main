@@ -246,15 +246,9 @@ public class ByteCodeInterpreter {
 
     @NonNull
     private static Value getStackTop(@NonNull Frame<Value> frame) throws BrokenCode {
-        return getStackTop(frame, 0);
-    }
-
-    @NonNull
-    private static Value getStackTop(@NonNull Frame<Value> frame, int i) throws BrokenCode {
-        Value v = frame.getStack(frame.getStackSize() - 1 - i);
+        Value v = frame.getStack(frame.getStackSize() - 1);
         if (v == null) {
-            String msg = String.format("Couldn't get value with index = %d from top of stack", i);
-            Exception e = new IllegalArgumentException(msg);
+            Exception e = new IllegalArgumentException("Couldn't get top stack value");
             throw new BrokenCode(e);
         }
         return v;
