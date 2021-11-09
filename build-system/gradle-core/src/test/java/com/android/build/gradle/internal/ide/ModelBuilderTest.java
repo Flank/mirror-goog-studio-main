@@ -23,12 +23,12 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.variant.ComponentIdentity;
 import com.android.build.api.variant.DependenciesInfo;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
@@ -45,6 +46,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.ProjectInfo;
@@ -132,6 +134,12 @@ public class ModelBuilderTest {
                         extension::getTestBuildType,
                         () -> variantList,
                         () -> testComponentList,
+                        () ->
+                                new BuildFeatureValuesImpl(
+                                        dslServices.newInstance(ApplicationBuildFeaturesImpl.class),
+                                        dslServices.getProjectOptions(),
+                                        null,
+                                        null),
                         syncIssueReporter);
 
         modelBuilder =

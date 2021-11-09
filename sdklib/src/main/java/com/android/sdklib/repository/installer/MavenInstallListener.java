@@ -18,19 +18,19 @@ package com.android.sdklib.repository.installer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
 import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -56,19 +56,13 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
 
     public static final String MAVEN_METADATA_FILE_NAME = "maven-metadata.xml";
 
-    private final AndroidSdkHandler mSdkHandler;
-
-    public MavenInstallListener(@NonNull AndroidSdkHandler sdkHandler) {
-        mSdkHandler = sdkHandler;
-    }
-
     @Override
     public void statusChanged(@NonNull PackageOperation installer,
             @NonNull ProgressIndicator progress)
             throws PackageOperation.StatusChangeListenerException {
         if (installer.getInstallStatus() == PackageOperation.InstallStatus.COMPLETE) {
-            File dir = mSdkHandler.getFileOp().toFile(installer.getLocation(progress));
-            if (!updateMetadata(dir.getParentFile(), progress)) {
+            Path dir = installer.getLocation(progress);
+            if (!updateMetadata(dir.getParent(), progress)) {
                 throw new PackageOperation.StatusChangeListenerException(
                         "Failed to update maven metadata for " +
                                 installer.getPackage().getDisplayName());
@@ -76,53 +70,56 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
         }
     }
 
-    private boolean updateMetadata(File root, ProgressIndicator progress) {
-        FileOp fileOp = mSdkHandler.getFileOp();
+    private boolean updateMetadata(Path root, ProgressIndicator progress) {
         MavenMetadata metadata = null;
-        for (File version : fileOp.listFiles(root)) {
-            if (fileOp.isDirectory(version)) {
-                metadata = createOrUpdateMetadata(version, metadata, progress, fileOp);
+        for (Path version : FileOpUtils.listFiles(root)) {
+            if (CancellableFileIo.isDirectory(version)) {
+                metadata = createOrUpdateMetadata(version, metadata, progress);
             }
         }
-        File metadataFile = new File(root, MAVEN_METADATA_FILE_NAME);
+        Path metadataFile = root.resolve(MAVEN_METADATA_FILE_NAME);
         if (metadata != null) {
-            progress.logVerbose("Writing Maven metadata to " + metadataFile.getAbsolutePath());
-            return writeMetadata(metadata, metadataFile, progress, fileOp);
+            progress.logVerbose("Writing Maven metadata to " + metadataFile.toAbsolutePath());
+            return writeMetadata(metadata, metadataFile, progress);
         }
         // We didn't find anything. Delete the metadata file as well.
-        progress.logVerbose("Deleting Maven metadata " + metadataFile.getAbsolutePath());
-        return deleteMetadataFiles(metadataFile, progress, fileOp);
+        progress.logVerbose("Deleting Maven metadata " + metadataFile.toAbsolutePath());
+        return deleteMetadataFiles(metadataFile, progress);
     }
 
     private static boolean deleteMetadataFiles(
-            @NonNull File metadataFile,
-            @NonNull ProgressIndicator progress,
-            @NonNull FileOp fop) {
-        if (!FileOpUtils.deleteIfExists(metadataFile, fop)) {
-            progress.logError("Failed to delete " + metadataFile.getAbsolutePath());
+            @NonNull Path metadataFile, @NonNull ProgressIndicator progress) {
+        try {
+            Files.deleteIfExists(metadataFile);
+        } catch (IOException unused) {
+            progress.logError("Failed to delete " + metadataFile.toAbsolutePath());
             return false;
         }
 
-        File md5File = getMetadataHashFile(metadataFile, "MD5");
-        if (!FileOpUtils.deleteIfExists(md5File, fop)) {
-            progress.logError("Failed to delete " + md5File.getAbsolutePath());
+        Path md5File = getMetadataHashFile(metadataFile, "MD5");
+        try {
+            Files.deleteIfExists(md5File);
+        } catch (IOException unused) {
+            progress.logError("Failed to delete " + md5File.toAbsolutePath());
             return false;
         }
 
-        File sha1File = getMetadataHashFile(metadataFile, "SHA1");
-        if (!FileOpUtils.deleteIfExists(sha1File, fop)) {
-            progress.logError("Failed to delete " + sha1File.getAbsolutePath());
+        Path sha1File = getMetadataHashFile(metadataFile, "SHA1");
+        try {
+            Files.deleteIfExists(sha1File);
+        } catch (IOException unused) {
+            progress.logError("Failed to delete " + sha1File.toAbsolutePath());
             return false;
         }
 
         return true;
     }
 
-    /**
-     * Writes out a {@link MavenMetadata} to the specified location.
-     */
-    private static boolean writeMetadata(@NonNull MavenMetadata metadata, @NonNull File file,
-            @NonNull ProgressIndicator progress, @NonNull FileOp fop) {
+    /** Writes out a {@link MavenMetadata} to the specified location. */
+    private static boolean writeMetadata(
+            @NonNull MavenMetadata metadata,
+            @NonNull Path file,
+            @NonNull ProgressIndicator progress) {
         Revision max = null;
         for (String s : metadata.versioning.versions.version) {
             Revision rev = Revision.parseRevision(s);
@@ -159,45 +156,39 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
             progress.logWarning("Failed to write maven metadata: ", e);
             return false;
         }
-        OutputStream metadataOutFile = null;
-        try {
-            metadataOutFile = fop.newFileOutputStream(file);
+        try (OutputStream metadataOutFile = Files.newOutputStream(file)) {
             metadataOutFile.write(metadataOutBytes.toByteArray());
         } catch (IOException e) {
             progress.logWarning("Failed to write metadata file.", e);
             return false;
-        } finally {
-            if (metadataOutFile != null) {
-                try {
-                    metadataOutFile.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
         }
+        // ignore
 
-        if (!writeHashFile(file, "MD5", progress, metadataOutBytes, fop)) {
+        if (!writeHashFile(file, "MD5", progress, metadataOutBytes)) {
             return false;
         }
-        if (!writeHashFile(file, "SHA1", progress, metadataOutBytes, fop)) {
+        if (!writeHashFile(file, "SHA1", progress, metadataOutBytes)) {
             return false;
         }
         return true;
     }
 
     /**
-     * Adds the artifact version at the given {@code versionPath} to the given
-     * {@link MavenMetadata} (creating a new one if necessary).
+     * Adds the artifact version at the given {@code versionPath} to the given {@link MavenMetadata}
+     * (creating a new one if necessary).
      */
     @Nullable
-    private static MavenMetadata createOrUpdateMetadata(@NonNull File versionPath,
-            @Nullable MavenMetadata metadata, @NonNull ProgressIndicator progress,
-            @NonNull FileOp fop) {
-        File pomFile = new File(versionPath,
-                String.format("%1$s-%2$s.pom", versionPath.getParentFile().getName(),
-                        versionPath.getName()));
-        if (fop.exists(pomFile)) {
-            PackageInfo info = unmarshal(pomFile, PackageInfo.class, progress, fop);
+    private static MavenMetadata createOrUpdateMetadata(
+            @NonNull Path versionPath,
+            @Nullable MavenMetadata metadata,
+            @NonNull ProgressIndicator progress) {
+        Path pomFile =
+                versionPath.resolve(
+                        String.format(
+                                "%1$s-%2$s.pom",
+                                versionPath.getParent().getFileName(), versionPath.getFileName()));
+        if (CancellableFileIo.exists(pomFile)) {
+            PackageInfo info = unmarshal(pomFile, PackageInfo.class, progress);
             if (info != null) {
                 if (metadata == null) {
                     metadata = new MavenMetadata();
@@ -213,12 +204,10 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
         return metadata;
     }
 
-    /**
-     * Attempts to unmarshal an object of the given type from the specified file.
-     */
+    /** Attempts to unmarshal an object of the given type from the specified file. */
     @VisibleForTesting
-    static <T> T unmarshal(@NonNull File f, @NonNull Class<T> clazz,
-            @NonNull ProgressIndicator progress, @NonNull FileOp fop) {
+    static <T> T unmarshal(
+            @NonNull Path f, @NonNull Class<T> clazz, @NonNull ProgressIndicator progress) {
         JAXBContext context;
         try {
             context = JAXBContext.newInstance(clazz);
@@ -239,7 +228,7 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
         }
         InputStream metadataInputStream;
         try {
-            metadataInputStream = fop.newFileInputStream(f);
+            metadataInputStream = CancellableFileIo.newInputStream(f);
         } catch (IOException e) {
             return null;
         }
@@ -252,13 +241,13 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
         return result;
     }
 
-    /**
-     * Writes a file containing a hash of the given file using the specified algorithm.
-     */
-    private static boolean writeHashFile(@NonNull File file, @NonNull String algorithm,
-            @NonNull ProgressIndicator progress, @NonNull ByteArrayOutputStream metadataOutBytes,
-            @NonNull FileOp fop) {
-        File hashFile = getMetadataHashFile(file, algorithm);
+    /** Writes a file containing a hash of the given file using the specified algorithm. */
+    private static boolean writeHashFile(
+            @NonNull Path file,
+            @NonNull String algorithm,
+            @NonNull ProgressIndicator progress,
+            @NonNull ByteArrayOutputStream metadataOutBytes) {
+        Path hashFile = getMetadataHashFile(file, algorithm);
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance(algorithm);
@@ -269,7 +258,7 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
         }
         OutputStream hashOutputStream;
         try {
-            hashOutputStream = fop.newFileOutputStream(hashFile);
+            hashOutputStream = Files.newOutputStream(hashFile);
         } catch (IOException e) {
             progress.logWarning("Failed to open " + algorithm + " file");
             return false;
@@ -292,9 +281,8 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
     }
 
     @NonNull
-    private static File getMetadataHashFile(@NonNull File file, @NonNull String algorithm) {
-        return new File(file.getParent(),
-                MAVEN_METADATA_FILE_NAME + "." + algorithm.toLowerCase());
+    private static Path getMetadataHashFile(@NonNull Path file, @NonNull String algorithm) {
+        return file.getParent().resolve(MAVEN_METADATA_FILE_NAME + "." + algorithm.toLowerCase());
     }
 
     /**

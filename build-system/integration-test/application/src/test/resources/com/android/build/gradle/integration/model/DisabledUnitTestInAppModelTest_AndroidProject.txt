@@ -1,0 +1,4 @@
+- AndroidProject:
+   - variants:
+      - debug:
+         - unitTestArtifact{REMOVED} = (null)

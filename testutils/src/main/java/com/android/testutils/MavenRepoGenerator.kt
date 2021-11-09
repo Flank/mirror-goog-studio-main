@@ -247,7 +247,7 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
         {
           "group": "${mavenCoordinate.groupId}",
           "name": "${mavenCoordinate.artifactId}-test-fixtures",
-          "version": "${mavenCoordinate.version}"
+          "version": "unspecified"
         }
       ]
     },
@@ -283,7 +283,7 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
         {
           "group": "${mavenCoordinate.groupId}",
           "name": "${mavenCoordinate.artifactId}-test-fixtures",
-          "version": "${mavenCoordinate.version}"
+          "version": "unspecified"
         }
       ]
     }

@@ -1945,6 +1945,7 @@ open class GradleDetector : Detector(), GradleScanner {
             val artifact =
                 when {
                     property.startsWith("androidTest") -> variant.androidTestArtifact
+                    property.startsWith("testFixtures") -> variant.testFixturesArtifact
                     property.startsWith("test") -> variant.testArtifact
                     else -> variant.mainArtifact
                 } ?: return null

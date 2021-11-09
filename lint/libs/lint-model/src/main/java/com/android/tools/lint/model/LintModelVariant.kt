@@ -28,6 +28,7 @@ interface LintModelVariant {
     val mainArtifact: LintModelAndroidArtifact
     val testArtifact: LintModelJavaArtifact?
     val androidTestArtifact: LintModelAndroidArtifact?
+    val testFixturesArtifact: LintModelAndroidArtifact?
     val mergedManifest: File?
     val manifestMergeReport: File?
 
@@ -43,6 +44,7 @@ interface LintModelVariant {
 
     val sourceProviders: List<LintModelSourceProvider>
     val testSourceProviders: List<LintModelSourceProvider>
+    val testFixturesSourceProviders: List<LintModelSourceProvider>
 
     val debuggable: Boolean
     val shrinkable: Boolean
@@ -73,6 +75,7 @@ class DefaultLintModelVariant(
     override val mainArtifact: LintModelAndroidArtifact,
     override val testArtifact: LintModelJavaArtifact?,
     override val androidTestArtifact: LintModelAndroidArtifact?,
+    override val testFixturesArtifact: LintModelAndroidArtifact?,
     override val mergedManifest: File?,
     override val manifestMergeReport: File?,
     override val `package`: String?,
@@ -100,6 +103,7 @@ class DefaultLintModelVariant(
 
     override val sourceProviders: List<LintModelSourceProvider>,
     override val testSourceProviders: List<LintModelSourceProvider>,
+    override val testFixturesSourceProviders: List<LintModelSourceProvider>,
 
     override val debuggable: Boolean,
     override val shrinkable: Boolean,

@@ -22,16 +22,12 @@
             - mlModelsDirectories:
                * {PROJECT}/src/testDebug/ml{!}{ADDED}
       < debug
-      > release:
+      - release:
          - sourceProvider:
             - mlModelsDirectories:
                * {PROJECT}/src/release/ml{!}{ADDED}
-         - androidTestSourceProvider:
-            - mlModelsDirectories:
-               * {PROJECT}/src/androidTestRelease/ml{!}{ADDED}
          - unitTestSourceProvider:
             - mlModelsDirectories:
                * {PROJECT}/src/testRelease/ml{!}{ADDED}
-      < release
    < buildTypes
 < BasicAndroidProject

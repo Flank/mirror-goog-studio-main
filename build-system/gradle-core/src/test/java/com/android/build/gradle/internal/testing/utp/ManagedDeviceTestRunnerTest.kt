@@ -128,8 +128,10 @@ class ManagedDeviceTestRunnerTest {
             useOrchestrator = false,
             numShards,
             Level.WARNING,
-            mockUtpConfigFactory) { runnerConfigs, _, _, _, _ ->
+            mockUtpConfigFactory) { runnerConfigs, _, _, resultsDir, _ ->
             capturedRunnerConfigs = runnerConfigs
+            TestSuiteResult.getDefaultInstance().writeTo(
+                File(resultsDir, TEST_RESULT_PB_FILE_NAME).outputStream())
             runnerConfigs.map { UtpTestRunResult(result, TestSuiteResult.getDefaultInstance()) }
         }
 
@@ -159,6 +161,7 @@ class ManagedDeviceTestRunnerTest {
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isTrue()
+        assertThat(File(outputDirectory, TEST_RESULT_PB_FILE_NAME)).exists()
     }
 
     @Test

@@ -827,6 +827,7 @@ private class LintModelVariantWriter(
         writeBuildFeatures(variant.buildFeatures, indent + 1)
         writeSourceProviders(variant.sourceProviders, "sourceProviders", indent + 1)
         writeSourceProviders(variant.testSourceProviders, "testSourceProviders", indent + 1)
+        writeSourceProviders(variant.testFixturesSourceProviders, "testFixturesSourceProviders", indent + 1)
 
         writeResValues(variant.resValues, indent + 1)
         writeManifestPlaceholders(variant.manifestPlaceholders, indent + 1)
@@ -834,6 +835,9 @@ private class LintModelVariantWriter(
         writeArtifact(variant.mainArtifact, "mainArtifact", indent + 1, writeDependencies)
         variant.androidTestArtifact?.let { artifact ->
             writeArtifact(artifact, "androidTestArtifact", indent + 1, writeDependencies)
+        }
+        variant.testFixturesArtifact?.let { artifact ->
+            writeArtifact(artifact, "testFixturesArtifact", indent + 1, writeDependencies)
         }
         variant.testArtifact?.let { artifact ->
             writeArtifact(artifact, "testArtifact", indent + 1, writeDependencies)
@@ -1638,6 +1642,7 @@ private class LintModelVariantReader(
             var mainArtifact: LintModelAndroidArtifact? = null
             var testArtifact: LintModelJavaArtifact? = null
             var androidTestArtifact: LintModelAndroidArtifact? = null
+            var testFixturesArtifact: LintModelAndroidArtifact? = null
             val mergedManifest: File? = getOptionalFile("mergedManifest")
             val manifestMergeReport: File? = getOptionalFile("manifestMergeReport")
             val packageName = getOptionalAttribute("package")
@@ -1653,6 +1658,7 @@ private class LintModelVariantReader(
             var manifestPlaceholders: Map<String, String> = emptyMap()
             var sourceProviders: List<LintModelSourceProvider> = emptyList()
             var testSourceProviders: List<LintModelSourceProvider> = emptyList()
+            var testFixturesSourceProviders: List<LintModelSourceProvider> = emptyList()
             var buildFeatures: LintModelBuildFeatures? = null
 
             expectTag("variant")
@@ -1672,9 +1678,15 @@ private class LintModelVariantReader(
                         "testArtifact" ->
                             testArtifact =
                                 readJavaArtifact(parser.name, readDependencies)
+                        "testFixturesArtifact" ->
+                            testFixturesArtifact =
+                                readAndroidArtifact(parser.name, readDependencies)
                         "sourceProviders" -> sourceProviders = readSourceProviders(parser.name)
                         "testSourceProviders" ->
                             testSourceProviders =
+                                readSourceProviders(parser.name)
+                        "testFixturesSourceProviders" ->
+                            testFixturesSourceProviders =
                                 readSourceProviders(parser.name)
                         "buildFeatures" -> buildFeatures = readBuildFeatures()
                         else -> unexpectedTag()
@@ -1696,6 +1708,7 @@ private class LintModelVariantReader(
                 mainArtifact = mainArtifact!!,
                 androidTestArtifact = androidTestArtifact,
                 testArtifact = testArtifact,
+                testFixturesArtifact = testFixturesArtifact,
                 mergedManifest = mergedManifest,
                 manifestMergeReport = manifestMergeReport,
                 `package` = packageName,
@@ -1708,6 +1721,7 @@ private class LintModelVariantReader(
                 manifestPlaceholders = manifestPlaceholders,
                 sourceProviders = sourceProviders,
                 testSourceProviders = testSourceProviders,
+                testFixturesSourceProviders = testFixturesSourceProviders,
                 debuggable = debuggable,
                 shrinkable = shrinkable,
                 buildFeatures = buildFeatures!!,

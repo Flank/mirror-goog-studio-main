@@ -110,7 +110,8 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
     if (variants.isEmpty()) return
     IssueReporterLoggingEnvironment(
         issueReporter,
-        variants.first().variant.services.projectInfo.getProject().rootDir).use {
+        variants.first().variant.services.projectInfo.getProject().rootDir,
+        null).use {
         val configurationParameters = variants
                 .mapNotNull { tryCreateConfigurationParameters(
                     projectOptions,

@@ -149,7 +149,8 @@ build:dynamic --strategy=JavaSourceJar=dynamic
 build:dynamic --strategy=Turbine=dynamic
 build:dynamic --strategy=JavacTurbine=dynamic
 # Studio build actions, see b/171900265 for details
-build:dynamic --strategy=zipper=dynamic
+# Run zipper action locally to workaround b/198297058
+build:dynamic --strategy=zipper=local
 build:dynamic --strategy=zipmerger=dynamic
 build:dynamic --strategy=chkplugin=dynamic
 build:dynamic --strategy=stamper=dynamic

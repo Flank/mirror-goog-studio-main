@@ -181,30 +181,7 @@
                * {PROJECT}/src/release/shaders{!}
             - mlModelsDirectories = (null)
          < sourceProvider
-         > androidTestSourceProvider:
-            - name                = "androidTestRelease"
-            - manifestFile        = {PROJECT}/src/androidTestRelease/AndroidManifest.xml{!}
-            - javaDirectories:
-               * {PROJECT}/src/androidTestRelease/java{!}
-            - kotlinDirectories:
-               * {PROJECT}/src/androidTestRelease/java{!}
-               * {PROJECT}/src/androidTestRelease/kotlin{!}
-            - resourcesDirectories:
-               * {PROJECT}/src/androidTestRelease/resources{!}
-            - aidlDirectories:
-               * {PROJECT}/src/androidTestRelease/aidl{!}
-            - renderscriptDirectories:
-               * {PROJECT}/src/androidTestRelease/rs{!}
-            - resDirectories:
-               * {PROJECT}/src/androidTestRelease/res{!}
-            - assetsDirectories:
-               * {PROJECT}/src/androidTestRelease/assets{!}
-            - jniLibsDirectories:
-               * {PROJECT}/src/androidTestRelease/jniLibs{!}
-            - shadersDirectories:
-               * {PROJECT}/src/androidTestRelease/shaders{!}
-            - mlModelsDirectories = (null)
-         < androidTestSourceProvider
+         - androidTestSourceProvider  = (null)
          > unitTestSourceProvider:
             - name                = "testRelease"
             - manifestFile        = {PROJECT}/src/testRelease/AndroidManifest.xml{!}

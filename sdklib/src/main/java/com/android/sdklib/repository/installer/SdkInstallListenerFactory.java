@@ -23,7 +23,6 @@ import com.android.repository.api.RepoPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**
@@ -43,7 +42,7 @@ public class SdkInstallListenerFactory implements InstallerFactory.StatusChangeL
     public List<PackageOperation.StatusChangeListener> createListeners(@NonNull RepoPackage p) {
         List<PackageOperation.StatusChangeListener> result = Lists.newArrayList();
         if (p.getTypeDetails() instanceof DetailsTypes.MavenType) {
-            result.add(new MavenInstallListener(mSdkHandler));
+            result.add(new MavenInstallListener());
         }
         if (p.getTypeDetails() instanceof DetailsTypes.SourceDetailsType) {
             result.add(new SourceInstallListener(mSdkHandler));

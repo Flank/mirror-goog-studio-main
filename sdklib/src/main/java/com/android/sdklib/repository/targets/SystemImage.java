@@ -162,6 +162,7 @@ public class SystemImage implements ISystemImage {
     }
 
     @NonNull
+    @Override
     public RepoPackage getPackage() {
         return mPackage;
     }
@@ -180,7 +181,7 @@ public class SystemImage implements ISystemImage {
         // a recent API version and is NOT Wear-for-China.
         if (WEAR_TAG.equals(getTag())
                 && mAndroidVersion.getApiLevel() >= AndroidVersion.MIN_RECOMMENDED_WEAR_API
-                && !getLocation().toAbsolutePath().toString().contains(WEAR_CN_DIRECTORY)) {
+                && !getPackage().getPath().contains(WEAR_CN_DIRECTORY)) {
             return true;
         }
         return false;

@@ -28,6 +28,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
     override var version: String? = null
 
     private var android: AndroidProjectBuilderImpl? = null
+    private var androidComponents: AndroidComponentsBuilderImpl? = null
     private val files = mutableMapOf<String, SourceFile>()
     private val buildFileActions = mutableListOf<() -> String>()
 
@@ -52,6 +53,18 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
         }
 
         android?.let { action(it) }
+    }
+
+    override fun androidComponents(action: AndroidComponentsBuilder.() -> Unit) {
+        if (!plugins.containsAndroid()) {
+            error("Cannot configure androidComponents for project '$path', so Android plugin applied")
+        }
+
+        if (androidComponents == null) {
+            androidComponents = AndroidComponentsBuilderImpl()
+        }
+
+        androidComponents?.let { action(it) }
     }
 
     override fun addFile(relativePath: String, content: String) {
@@ -112,6 +125,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
         }
 
         android?.writeBuildFile(sb)
+        androidComponents?.writeBuildFile(sb)
 
         dependencies.writeBuildFile(sb, projectDir)
 

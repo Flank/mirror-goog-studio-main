@@ -59,7 +59,6 @@ class MinifyCacheabilityTest {
             ":createMinifiedCompatibleScreenManifests",
             ":extractDeepLinksMinified",
             ":generateMinifiedBuildConfig",
-            ":generateMinifiedJacocoPropertiesFile",
             ":generateMinifiedResValues",
             ":jacocoMinified",
             ":javaPreCompileMinified",
@@ -72,8 +71,6 @@ class MinifyCacheabilityTest {
             ":processMinifiedManifest",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified",
-            ":writeMinifiedAppMetadata",
-            ":writeMinifiedSigningConfigVersions"
 
         ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
@@ -85,10 +82,13 @@ class MinifyCacheabilityTest {
         DID_WORK to setOf(
             ":createMinifiedApkListingFileRedirect",
             ":extractProguardFiles",
+            ":generateMinifiedJacocoPropertiesFile", /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedResources",
             ":packageMinified",
-            ":processMinifiedResources"
+            ":processMinifiedResources",
+            ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
+            ":writeMinifiedSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
         ).plus(
                 if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                     setOf(":mapMinifiedSourceSetPaths")

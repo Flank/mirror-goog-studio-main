@@ -91,10 +91,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:processDebugManifest",
                     ":app:processDebugManifestForPackage",
                     ":app:processDebugResources", /* Bug 141301405 */
-                    ":app:signingConfigWriterDebug",
                     ":app:validateSigningDebug",
-                    ":app:writeDebugAppMetadata",
-                    ":app:writeDebugSigningConfigVersions",
 
                     ":feature1:checkDebugAarMetadata",
                     ":feature1:checkDebugDuplicateClasses",
@@ -115,7 +112,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeExtDexDebug",
                     ":feature1:mergeLibDexDebug",
                     ":feature1:mergeProjectDexDebug",
-                    ":feature1:processApplicationManifestDebugForBundle",
                     ":feature1:processDebugMainManifest",
                     ":feature1:processDebugManifest",
                     ":feature1:processDebugManifestForPackage",
@@ -141,7 +137,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeExtDexDebug",
                     ":feature2:mergeLibDexDebug",
                     ":feature2:mergeProjectDexDebug",
-                    ":feature2:processApplicationManifestDebugForBundle",
                     ":feature2:processDebugMainManifest",
                     ":feature2:processDebugManifest",
                     ":feature2:processDebugManifestForPackage",
@@ -179,7 +174,10 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
+                    ":app:signingConfigWriterDebug", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigWriterTask]*/
                     ":app:writeDebugModuleMetadata",
+                    ":app:writeDebugAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
+                    ":app:writeDebugSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
 
                     ":feature1:createDebugApkListingFileRedirect",
                     ":feature1:extractProguardFiles", // intentionally not cacheable
@@ -188,6 +186,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeDebugResources",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
+                    ":feature1:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
 
                     ":feature2:createDebugApkListingFileRedirect",
                     ":feature2:extractProguardFiles", // intentionally not cacheable
@@ -196,6 +195,8 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeDebugResources",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:packageDebug",
+                    ":feature2:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
+
                 ).plus(
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                             setOf(":app:mapDebugSourceSetPaths",

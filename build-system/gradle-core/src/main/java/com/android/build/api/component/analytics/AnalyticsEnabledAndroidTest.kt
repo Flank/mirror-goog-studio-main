@@ -41,7 +41,7 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
     objectFactory: ObjectFactory
 ) : AnalyticsEnabledTestComponent(
     delegate, stats, objectFactory
-), com.android.build.api.component.AndroidTest {
+), AndroidTest {
     override val applicationId: Property<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

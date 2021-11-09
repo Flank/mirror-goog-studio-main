@@ -21,7 +21,6 @@ import com.android.tools.lint.checks.AnnotationDetector.Companion.ATTR_TO
 import com.android.tools.lint.checks.AnnotationDetector.Companion.ATTR_TO_INCLUSIVE
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationBooleanValue
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationDoubleValue
-import com.google.common.annotations.VisibleForTesting
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULiteralExpression
@@ -34,6 +33,14 @@ class FloatRangeConstraint private constructor(
     val fromInclusive: Boolean,
     val toInclusive: Boolean
 ) : RangeConstraint() {
+
+    constructor(range: IntRangeConstraint) : this(
+        if (range.from == Long.MIN_VALUE) NEGATIVE_INFINITY else range.from.toDouble(),
+        if (range.to == Long.MAX_VALUE) POSITIVE_INFINITY else range.to.toDouble(),
+        true,
+        true
+    )
+
     fun isValid(value: Double): Boolean {
         return (fromInclusive && value >= from || !fromInclusive && value > from) &&
             (toInclusive && value <= to || !toInclusive && value < to)
@@ -44,8 +51,9 @@ class FloatRangeConstraint private constructor(
     }
 
     @JvmOverloads
-    fun describe(argument: UExpression? = null, actualValue: Double? = null): String {
+    fun describe(argument: UExpression? = null, actualValue: Double? = null, prefix: String = "Value must be "): String {
         val sb = StringBuilder(20)
+        sb.append(prefix)
         val valueString = if (argument is ULiteralExpression) {
             // Use source text instead to avoid rounding errors involved in conversion, e.g
             //    Error: Value must be > 2.5 (was 2.490000009536743) [Range]
@@ -65,7 +73,6 @@ class FloatRangeConstraint private constructor(
             if (from != NEGATIVE_INFINITY) {
                 if (to != POSITIVE_INFINITY) {
                     if (fromInclusive && value < from || !fromInclusive && value <= from) {
-                        sb.append("Value must be ")
                         if (fromInclusive) {
                             sb.append('\u2265') // >= sign
                         } else {
@@ -75,7 +82,6 @@ class FloatRangeConstraint private constructor(
                         sb.append(from.toString())
                     } else {
                         assert(toInclusive && value > to || !toInclusive && value >= to)
-                        sb.append("Value must be ")
                         if (toInclusive) {
                             sb.append('\u2264') // <= sign
                         } else {
@@ -85,7 +91,6 @@ class FloatRangeConstraint private constructor(
                         sb.append(to.toString())
                     }
                 } else {
-                    sb.append("Value must be ")
                     if (fromInclusive) {
                         sb.append('\u2265') // >= sign
                     } else {
@@ -95,7 +100,6 @@ class FloatRangeConstraint private constructor(
                     sb.append(from.toString())
                 }
             } else if (to != POSITIVE_INFINITY) {
-                sb.append("Value must be ")
                 if (toInclusive) {
                     sb.append('\u2264') // <= sign
                 } else {
@@ -109,24 +113,30 @@ class FloatRangeConstraint private constructor(
         }
         if (from != NEGATIVE_INFINITY) {
             if (to != POSITIVE_INFINITY) {
-                sb.append("Value must be ")
-                if (fromInclusive) {
-                    sb.append('\u2265') // >= sign
+                if (from == to && fromInclusive && toInclusive) {
+                    sb.append(from.toString())
                 } else {
-                    sb.append('>')
+                    if (fromInclusive) {
+                        sb.append('\u2265') // >= sign
+                    } else {
+                        sb.append('>')
+                    }
+                    sb.append(' ')
+                    sb.append(from.toString())
+                    sb.append(" and ")
+                    if (toInclusive) {
+                        sb.append('\u2264') // <= sign
+                    } else {
+                        sb.append('<')
+                    }
+                    sb.append(' ')
+                    sb.append(to.toString())
                 }
-                sb.append(' ')
-                sb.append(from.toString())
-                sb.append(" and ")
-                if (toInclusive) {
-                    sb.append('\u2264') // <= sign
-                } else {
-                    sb.append('<')
+
+                if (from > to || from == to && fromInclusive && !toInclusive) {
+                    sb.append(" (not possible)")
                 }
-                sb.append(' ')
-                sb.append(to.toString())
             } else {
-                sb.append("Value must be ")
                 if (fromInclusive) {
                     sb.append('\u2265') // >= sign
                 } else {
@@ -136,7 +146,6 @@ class FloatRangeConstraint private constructor(
                 sb.append(from.toString())
             }
         } else if (to != POSITIVE_INFINITY) {
-            sb.append("Value must be ")
             if (toInclusive) {
                 sb.append('\u2264') // <= sign
             } else {
@@ -149,6 +158,92 @@ class FloatRangeConstraint private constructor(
             sb.append(" (is ").append(valueString).append(')')
         }
         return sb.toString()
+    }
+
+    override fun describeDelta(actual: RangeConstraint, actualLabel: String, allowedLabel: String): String {
+        if (actual !is FloatRangeConstraint) {
+            return if (actual is IntRangeConstraint) {
+                describeDelta(FloatRangeConstraint(actual), actualLabel, allowedLabel)
+            } else {
+                describe()
+            }
+        }
+
+        val sb = StringBuilder()
+        if (allowedLabel.isNotEmpty()) {
+            sb.append(describe(null, null, "$allowedLabel must be "))
+        } else {
+            sb.append(describe(null))
+        }
+        sb.append(" but ")
+        if (actualLabel.isNotEmpty()) {
+            sb.append(actualLabel).append(' ')
+        }
+
+        // No overlap? If so just display both ranges
+        if (this.to <= actual.from && actual.to != POSITIVE_INFINITY || this.from >= actual.to && actual.from != NEGATIVE_INFINITY) {
+            sb.append("can be " + actual.describe(null, null, ""))
+            return sb.toString()
+        }
+
+        if (actual.from < this.from || actual.from == this.from && !fromInclusive && actual.fromInclusive) {
+            if (actual.from == NEGATIVE_INFINITY) {
+                sb.append("can be < ${this.from}")
+            } else {
+                // works even for range, e.g. "x must be >= 0, but can be -5" can represent -4, -3, etc instead of
+                // "x must be >= 0, but can be -5..0" isn't a lot more readable
+                sb.append("can be ${actual.from}")
+            }
+        } else if (actual.to > this.to || actual.to == to && !toInclusive && actual.toInclusive) {
+            if (actual.to == POSITIVE_INFINITY) {
+                sb.append("can be > ${this.to}")
+            } else {
+                sb.append("can be ${actual.to}")
+            }
+        } else {
+            error("There's no delta")
+        }
+
+        return sb.toString()
+    }
+
+    /** Intersect two ranges */
+    override infix fun and(other: RangeConstraint?): FloatRangeConstraint {
+        other ?: return this
+
+        val range: FloatRangeConstraint = when (other) {
+            is FloatRangeConstraint -> other
+            is IntRangeConstraint -> FloatRangeConstraint(other)
+            else -> error(other.javaClass.name)
+        }
+
+        val start: Double
+        val startInclusive: Boolean
+        val end: Double
+        val endInclusive: Boolean
+
+        if (from == range.from) {
+            start = from
+            startInclusive = fromInclusive && range.fromInclusive
+        } else if (from > range.from) {
+            start = from
+            startInclusive = fromInclusive
+        } else {
+            start = range.from
+            startInclusive = range.fromInclusive
+        }
+
+        if (to == range.to) {
+            end = to
+            endInclusive = toInclusive && range.toInclusive
+        } else if (to < range.to) {
+            end = to
+            endInclusive = toInclusive
+        } else {
+            end = range.to
+            endInclusive = range.toInclusive
+        }
+        return FloatRangeConstraint(start, end, startInclusive, endInclusive)
     }
 
     override fun contains(other: RangeConstraint): Boolean? {
@@ -180,31 +275,31 @@ class FloatRangeConstraint private constructor(
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun range(from: Double, to: Double): FloatRangeConstraint {
             return FloatRangeConstraint(from, to, true, true)
         }
 
         @JvmStatic
-        @VisibleForTesting
+        fun range(from: Double, fromInclusive: Boolean, to: Double, toInclusive: Boolean): FloatRangeConstraint {
+            return FloatRangeConstraint(from, to, fromInclusive, toInclusive)
+        }
+
+        @JvmStatic
         fun atLeast(from: Double): FloatRangeConstraint {
             return FloatRangeConstraint(from, POSITIVE_INFINITY, true, true)
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun atMost(to: Double): FloatRangeConstraint {
             return FloatRangeConstraint(NEGATIVE_INFINITY, to, true, true)
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun greaterThan(from: Double): FloatRangeConstraint {
             return FloatRangeConstraint(from, POSITIVE_INFINITY, false, true)
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun lessThan(to: Double): FloatRangeConstraint {
             return FloatRangeConstraint(NEGATIVE_INFINITY, to, true, false)
         }

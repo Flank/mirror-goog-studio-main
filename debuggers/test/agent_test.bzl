@@ -9,12 +9,12 @@ def agent_test(name, srcs, app_dex):
             include = ["tests/com/android/tools/debuggers/infra/*.java"],
         ),
         data = [
-            app_dex,
+            app_dex + ".apk",
             "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent.so",
         ],
         jvm_flags = [
             # Location of the initial test app.
-            "-Dapp.dex.location=$(location %s)" % app_dex,
+            "-Dapp.dex.location=$(location %s.apk)" % app_dex,
 
             # JVMTI Agent for the host.
             "-Dswap.agent.location=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent.so)",

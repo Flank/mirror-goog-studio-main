@@ -22,16 +22,12 @@
             - shadersDirectories:
                * {PROJECT}/src/testDebug/shaders{!}{REMOVED}
       < debug
-      > release:
+      - release:
          - sourceProvider:
             - shadersDirectories:
                * {PROJECT}/src/release/shaders{!}{REMOVED}
-         - androidTestSourceProvider:
-            - shadersDirectories:
-               * {PROJECT}/src/androidTestRelease/shaders{!}{REMOVED}
          - unitTestSourceProvider:
             - shadersDirectories:
                * {PROJECT}/src/testRelease/shaders{!}{REMOVED}
-      < release
    < buildTypes
 < BasicAndroidProject

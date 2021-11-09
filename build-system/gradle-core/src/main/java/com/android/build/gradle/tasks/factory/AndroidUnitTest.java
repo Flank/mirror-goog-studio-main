@@ -141,7 +141,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void handleProvider(@NotNull TaskProvider<AndroidUnitTest> taskProvider) {
             super.handleProvider(taskProvider);
-            if (unitTestCreationConfig.getVariantDslInfo().isTestCoverageEnabled()) {
+            if (unitTestCreationConfig.isTestCoverageEnabled()) {
                 unitTestCreationConfig
                         .getArtifacts()
                         .setInitialProvider(taskProvider,
@@ -157,10 +157,11 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             unitTestCreationConfig.onTestedConfig(
                     testedConfig -> {
-                        if (testedConfig.getVariantDslInfo().isTestCoverageEnabled()) {
-                            // Library project runtime classes are instrumented offline and
-                            // published like such, so we need to exclude all classes from being
-                            // re-instrumented by the Jacoco jvm agent.
+                        if (unitTestCreationConfig.isTestCoverageEnabled()) {
+                            // Library project runtime classes are instrumented by Jacoco offline
+                            // instrumentation in artifact transforms, therefore offline
+                            // instrumented classes are excluded from being re-instrumented by the
+                            // Jacoco agent.
                             task.getProject()
                                     .getPlugins()
                                     .withType(

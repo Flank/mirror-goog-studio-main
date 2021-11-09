@@ -1,2 +1,2 @@
-BASE_VERSION = "30.2.0-alpha04"
-BUILD_VERSION = "7.2.0-alpha04"
+BASE_VERSION = "30.2.0-dev"
+BUILD_VERSION = "7.2.0-dev"

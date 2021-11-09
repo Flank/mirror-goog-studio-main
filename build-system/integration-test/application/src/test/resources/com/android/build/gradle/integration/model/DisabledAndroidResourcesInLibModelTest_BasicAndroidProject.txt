@@ -40,11 +40,6 @@
                * {PROJECT}/src/release/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/release/res{!}{REMOVED}
-         - androidTestSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/androidTestRelease/rs{!}{REMOVED}
-            - resDirectories:
-               * {PROJECT}/src/androidTestRelease/res{!}{REMOVED}
          - unitTestSourceProvider:
             - renderscriptDirectories:
                * {PROJECT}/src/testRelease/rs{!}{REMOVED}

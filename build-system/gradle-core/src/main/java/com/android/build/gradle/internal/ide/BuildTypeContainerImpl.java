@@ -17,10 +17,11 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SourceProvider;
@@ -36,8 +37,7 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
 
     @NonNull
     private final BuildType buildType;
-    @NonNull
-    private final SourceProvider sourceProvider;
+    @Nullable private final SourceProvider sourceProvider;
     @NonNull
     private final Collection<SourceProviderContainer> extraSourceProviders;
 
@@ -45,34 +45,55 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
      * Create a BuildTypeContainer from a BuildTypeData
      *
      * @param buildTypeData the build type data
+     * @param includeProdSourceSet whether to include that source set in the model
+     * @param includeAndroidTest whether to include that source set in the model
+     * @param includeUnitTest whether to include that source set in the model
      * @param sourceProviderContainers collection of extra source providers
      * @return a non-null BuildTypeContainer
      */
     @NonNull
     static BuildTypeContainer create(
             @NonNull BuildTypeData<com.android.build.gradle.internal.dsl.BuildType> buildTypeData,
+            boolean includeProdSourceSet,
+            boolean includeAndroidTest,
+            boolean includeUnitTest,
             @NonNull Collection<SourceProviderContainer> sourceProviderContainers) {
 
         List<SourceProviderContainer> clonedContainers =
                 SourceProviderContainerImpl.cloneCollection(sourceProviderContainers);
 
-        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-            DefaultAndroidSourceSet testSourceSet = buildTypeData.getTestSourceSet(variantType);
-            if (testSourceSet != null) {
-                clonedContainers.add(SourceProviderContainerImpl.create(
-                        variantType.getArtifactName(),
-                        testSourceSet));
+        if (includeAndroidTest) {
+            DefaultAndroidSourceSet sourceSet =
+                    buildTypeData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST);
+            if (sourceSet != null) {
+                clonedContainers.add(
+                        SourceProviderContainerImpl.create(
+                                VariantTypeImpl.ANDROID_TEST.getArtifactName(), sourceSet));
             }
         }
+
+        if (includeUnitTest) {
+            DefaultAndroidSourceSet sourceSet =
+                    buildTypeData.getTestSourceSet(VariantTypeImpl.UNIT_TEST);
+            if (sourceSet != null) {
+                clonedContainers.add(
+                        SourceProviderContainerImpl.create(
+                                VariantTypeImpl.UNIT_TEST.getArtifactName(), sourceSet));
+            }
+        }
+
+        SourceProviderImpl prodSourceSet = null;
+        if (includeProdSourceSet) {
+            prodSourceSet = new SourceProviderImpl(buildTypeData.getSourceSet());
+        }
+
         return new BuildTypeContainerImpl(
-                new BuildTypeImpl(buildTypeData.getBuildType()),
-                new SourceProviderImpl(buildTypeData.getSourceSet()),
-                clonedContainers);
+                new BuildTypeImpl(buildTypeData.getBuildType()), prodSourceSet, clonedContainers);
     }
 
     private BuildTypeContainerImpl(
             @NonNull BuildTypeImpl buildType,
-            @NonNull SourceProviderImpl sourceProvider,
+            @Nullable SourceProviderImpl sourceProvider,
             @NonNull Collection<SourceProviderContainer> extraSourceProviders) {
         this.buildType = buildType;
         this.sourceProvider = sourceProvider;
@@ -86,7 +107,7 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public SourceProvider getSourceProvider() {
         return sourceProvider;
     }

@@ -1,0 +1,115 @@
+> AndroidProject:
+   - namespace             = "pkg.name"
+   - androidTestNamespace  = "pkg.name.test"
+   - testFixturesNamespace = (null)
+   - resourcePrefix        = (null)
+   - dynamicFeatures       = []
+   > variants:
+      > proDebug:
+         - name                   = "proDebug"
+         - displayName            = "proDebug"
+         - isInstantAppCompatible = false
+         - desugaredMethods       = []
+         > mainArtifact:
+            - compileTaskName               = "compileProDebugSources"
+            - assembleTaskName              = "assembleProDebug"
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/proDebug/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proDebug/R.jar{!}
+            - ideSetupTaskNames             = ["generateProDebugSources"]
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/proDebug/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/proDebug/out{!}
+               * {PROJECT}/build/generated/renderscript_source_output_dir/proDebug/out{!}
+               * {PROJECT}/build/generated/source/buildConfig/pro/debug{!}
+            - minSdkVersion:
+               - apiLevel = 14
+               - codename = (null)
+            - targetSdkVersionOverride      = (null)
+            - maxSdkVersion                 = (null)
+            - isSigned                      = true
+            - signingConfigName             = "debug"
+            - sourceGenTaskName             = "generateProDebugSources"
+            - resGenTaskName                = "generateProDebugResources"
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/pro/debug{!}
+               * {PROJECT}/build/generated/res/rs/pro/debug{!}
+            - abiFilters                    = []
+            - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/proDebug/redirect.txt{!}
+            - testInfo                      = (null)
+            - bundleInfo:
+               - bundleTaskName                     = "bundleProDebug"
+               - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_redirect_file/proDebug/redirect.txt{!}
+               - apkFromBundleTaskName              = "extractApksForProDebug"
+               - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_redirect_file/proDebug/redirect.txt{!}
+            - codeShrinker                  = (null)
+         < mainArtifact
+         > androidTestArtifact:
+            - compileTaskName               = "compileProDebugAndroidTestSources"
+            - assembleTaskName              = "assembleProDebugAndroidTest"
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/proDebugAndroidTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proDebugAndroidTest/R.jar{!}
+            - ideSetupTaskNames             = ["generateProDebugAndroidTestSources"]
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/proDebugAndroidTest/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/proDebugAndroidTest/out{!}
+               * {PROJECT}/build/generated/renderscript_source_output_dir/proDebugAndroidTest/out{!}
+               * {PROJECT}/build/generated/source/buildConfig/androidTest/pro/debug{!}
+            - minSdkVersion:
+               - apiLevel = 14
+               - codename = (null)
+            - targetSdkVersionOverride      = (null)
+            - maxSdkVersion                 = (null)
+            - isSigned                      = true
+            - signingConfigName             = "debug"
+            - sourceGenTaskName             = "generateProDebugAndroidTestSources"
+            - resGenTaskName                = "generateProDebugAndroidTestResources"
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/androidTest/pro/debug{!}
+               * {PROJECT}/build/generated/res/rs/androidTest/pro/debug{!}
+            - abiFilters                    = []
+            - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/proDebugAndroidTest/redirect.txt{!}
+            - testInfo:
+               - animationsDisabled       = false
+               - execution                = HOST
+               - additionalRuntimeApks    = []
+               - instrumentedTestTaskName = "connectedProDebugAndroidTest"
+            - bundleInfo                    = (null)
+            - codeShrinker                  = (null)
+         < androidTestArtifact
+         > unitTestArtifact:
+            - compileTaskName       = "compileProDebugUnitTestSources"
+            - assembleTaskName      = "assembleProDebugUnitTest"
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/proDebugUnitTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proDebug/R.jar{!}
+            - ideSetupTaskNames     = ["createMockableJar"]
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/ap_generated_sources/proDebugUnitTest/out{!}
+            - mockablePlatformJar   = {GRADLE_CACHE}/{CHECKSUM}/transformed/android.jar{F}
+            - runtimeResourceFolder = {PROJECT}/build/intermediates/java_res/proDebugUnitTest/out{!}
+         < unitTestArtifact
+         - testFixturesArtifact   = (null)
+         - testedTargetVariant    = (null)
+      < proDebug
+   < variants
+   - javaCompileOptions:
+      - encoding                       = "UTF-8"
+      - sourceCompatibility            = "1.8"
+      - targetCompatibility            = "1.8"
+      - isCoreLibraryDesugaringEnabled = false
+   - viewBindingOptions:
+      - isEnabled = false
+   - flags:
+      * "APPLICATION_R_CLASS_CONSTANT_IDS -> true"
+      * "JETPACK_COMPOSE -> false"
+      * "ML_MODEL_BINDING -> false"
+      * "TEST_R_CLASS_CONSTANT_IDS -> true"
+      * "TRANSITIVE_R_CLASS -> true"
+      * "UNIFIED_TEST_PLATFORM -> true"
+   - lintChecksJars        = []
+< AndroidProject

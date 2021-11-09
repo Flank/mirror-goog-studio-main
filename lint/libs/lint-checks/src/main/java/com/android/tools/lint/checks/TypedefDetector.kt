@@ -263,7 +263,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (rangeAnnotation != null && value !is PsiField) {
             // Allow @IntRange on this number, but only if it's a literal, not if it's some
             // other (unrelated) constant
-            if (RangeDetector.getIntRangeError(context, rangeAnnotation.annotation, argument) == null) {
+            if (RangeDetector.getIntRangeError(context, rangeAnnotation.annotation, argument, usageInfo) == null) {
                 return
             }
         }
@@ -550,7 +550,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val rangeAnnotation = usageInfo.findSameScope { RangeDetector.isIntRange(it.qualifiedName) }
         if (rangeAnnotation != null) {
             // Allow @IntRange on this number
-            val rangeError = RangeDetector.getIntRangeError(context, rangeAnnotation.annotation, node)
+            val rangeError = RangeDetector.getIntRangeError(context, rangeAnnotation.annotation, node, usageInfo)
             if (rangeError != null && rangeError.isNotEmpty()) {
                 message += " or " + Character.toLowerCase(rangeError[0]) + rangeError.substring(1)
             }

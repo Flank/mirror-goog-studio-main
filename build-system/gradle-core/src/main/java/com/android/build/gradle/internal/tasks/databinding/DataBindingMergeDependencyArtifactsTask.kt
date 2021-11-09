@@ -27,20 +27,25 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.SetProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Merges BR and Adapter artifacts from dependencies and serves it back to the annotation processor.
  * <b>
  * To account for V1 dependencies, we still copy their layout-info files from the compile classpath.
+
+ * Caching disabled by default for this task because the task does very little work.
+ * Some Input files are copied to the OutputDirectory and no computation is required.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     /**
      * Classes available at Runtime. We extract BR files from there so that even if there is no

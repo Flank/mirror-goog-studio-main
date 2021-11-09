@@ -94,18 +94,22 @@ public class BuildToolInfo {
         /** OS Path to the target's version of the aidl tool. */
         AIDL("1.0.0"),
         /** OS Path to the llvm-rs-cc binary for Renderscript. */
-        LLVM_RS_CC("1.0.0"),
+        // removal is not guaranteed to be 32.x but it's coming and we can stop checking in 32.x
+        LLVM_RS_CC("1.0.0", "32.0.0"),
         /** OS Path to the Renderscript include folder. */
-        ANDROID_RS("1.0.0"),
+        // removal is not guaranteed to be 32.x but it's coming and we can stop checking in 32.x
+        ANDROID_RS("1.0.0", "32.0.0"),
         /** OS Path to the Renderscript(clang) include folder. */
-        ANDROID_RS_CLANG("1.0.0"),
+        // removal is not guaranteed to be 32.x but it's coming and we can stop checking in 32.x
+        ANDROID_RS_CLANG("1.0.0", "32.0.0"),
 
         DEXDUMP("1.0.0"),
 
         // --- NEW IN 18.1.0 ---
 
         /** OS Path to the bcc_compat tool. */
-        BCC_COMPAT("18.1.0"),
+        // removal is not guaranteed to be 32.x but it's coming and we can stop checking in 32.x
+        BCC_COMPAT("18.1.0", "32.0.0"),
         /** OS Path to the ARM linker. */
         LD_ARM("18.1.0", "30.0.0 rc4"),
         /** OS Path to the X86 linker. */
@@ -137,7 +141,8 @@ public class BuildToolInfo {
         AAPT2("24.0.0 rc2"),
 
         /** OS Path to the LLD linker. */
-        LLD("29.0.3"),
+        // removal is not guaranteed to be 32.x but it's coming and we can stop checking in 32.x
+        LLD("29.0.3", "32.0.0"),
 
         /** OS Path to aapt2 that supports daemon mode. */
         // TODO(imorlowska): figure out which build tools will include the daemon mode.

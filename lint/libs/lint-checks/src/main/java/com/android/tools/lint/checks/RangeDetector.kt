@@ -20,6 +20,7 @@ import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.SdkConstants.LONG_DEF_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Implementation
@@ -28,17 +29,23 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.findSelector
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UResolvable
+import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.toUElement
+import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isNewArrayWithDimensions
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
@@ -77,10 +84,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             FLOAT_RANGE_ANNOTATION.oldName(), FLOAT_RANGE_ANNOTATION.newName() -> {
-                checkFloatRange(context, annotation, element)
+                checkFloatRange(context, annotation, element, usageInfo)
             }
             SIZE_ANNOTATION.oldName(), SIZE_ANNOTATION.newName() -> {
-                checkSize(context, annotation, element)
+                checkSize(context, annotation, element, usageInfo)
             }
 
             INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName(),
@@ -108,7 +115,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         }
 
-        val message = getIntRangeError(context, annotation, argument)
+        val message = getIntRangeError(context, annotation, argument, usageInfo)
         if (message != null) {
             if (usageInfo.anySameScope { TypedefDetector.isTypeDef(it.qualifiedName) }) {
                 // Don't flag int range errors if there is an int def annotation there too;
@@ -124,18 +131,19 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkFloatRange(
         context: JavaContext,
         annotation: UAnnotation,
-        argument: UElement
+        argument: UElement,
+        usageInfo: AnnotationUsageInfo
     ) {
         if (argument is UIfExpression) {
             argument.thenExpression?.let { thenExpression ->
-                checkFloatRange(context, annotation, thenExpression)
+                checkFloatRange(context, annotation, thenExpression, usageInfo)
             }
             argument.elseExpression?.let { elseExpression ->
-                checkFloatRange(context, annotation, elseExpression)
+                checkFloatRange(context, annotation, elseExpression, usageInfo)
             }
             return
         } else if (argument is UParenthesizedExpression) {
-            checkFloatRange(context, annotation, argument.expression)
+            checkFloatRange(context, annotation, argument.expression, usageInfo)
             return
         }
 
@@ -209,12 +217,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val referenceConstraint = getRangeConstraint(context, argument)
                 if (referenceConstraint != null) {
                     val here = RangeConstraint.create(annotation)
-                    if (here != null) {
-                        val contains = here.contains(referenceConstraint)
-                        if (contains != null && !contains) {
-                            val message = here.toString()
-                            report(context, RANGE, argument, context.getLocation(argument), message)
-                        }
+                    val error = getNonOverlapMessage(here, referenceConstraint, argument, usageInfo)
+                    if (error != null) {
+                        report(context, RANGE, argument, context.getLocation(argument), error)
                     }
                 }
             }
@@ -234,7 +239,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkSize(
         context: JavaContext,
         annotation: UAnnotation,
-        argument: UElement
+        argument: UElement,
+        usageInfo: AnnotationUsageInfo
     ) {
         val actual: Long
         var isString = false
@@ -246,14 +252,14 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             actual = (argument as UCallExpression).valueArgumentCount.toLong()
         } else if (argument is UIfExpression) {
             argument.thenExpression?.let { thenExpression ->
-                checkSize(context, annotation, thenExpression)
+                checkSize(context, annotation, thenExpression, usageInfo)
             }
             argument.elseExpression?.let { elseExpression ->
-                checkSize(context, annotation, elseExpression)
+                checkSize(context, annotation, elseExpression, usageInfo)
             }
             return
         } else if (argument is UParenthesizedExpression) {
-            checkSize(context, annotation, argument.expression)
+            checkSize(context, annotation, argument.expression, usageInfo)
             return
         } else {
             val `object` = ConstantEvaluator.evaluate(context, argument)
@@ -269,15 +275,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         val constraint = getRangeConstraint(context, argument)
                         if (constraint != null) {
                             val here = RangeConstraint.create(annotation)
-                            if (here != null) {
-                                val contains = here.contains(constraint)
-                                if (contains != null && !contains) {
-                                    val message = here.toString()
-                                    report(
-                                        context, RANGE, argument, context.getLocation(argument),
-                                        message
-                                    )
-                                }
+                            val error = getNonOverlapMessage(here, constraint, argument, usageInfo)
+                            if (error != null) {
+                                report(context, RANGE, argument, context.getLocation(argument), error)
                             }
                         }
                     }
@@ -295,10 +295,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 "size"
             }
 
-            val message = constraint.describe(
-                argument as? UExpression,
-                unit, actual
-            )
+            val message = constraint.describe(argument as? UExpression, unit, actual)
             report(context, RANGE, argument, context.getLocation(argument), message)
         }
     }
@@ -325,13 +322,14 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         fun getIntRangeError(
             context: JavaContext,
             annotation: UAnnotation,
-            argument: UElement
+            argument: UElement,
+            usageInfo: AnnotationUsageInfo
         ): String? {
             if (argument.isNewArrayWithInitializer()) {
                 val newExpression = argument as UCallExpression
                 for (topExpression in newExpression.valueArguments) {
                     val expression = topExpression.skipParenthesizedExprDown() ?: continue
-                    val error = getIntRangeError(context, annotation, expression)
+                    val error = getIntRangeError(context, annotation, expression, usageInfo)
                     if (error != null) {
                         return error
                     }
@@ -367,11 +365,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     val referenceConstraint = getRangeConstraint(context, argument)
                     if (referenceConstraint != null) {
                         val here = RangeConstraint.create(annotation)
-                        if (here != null) {
-                            val contains = here.contains(referenceConstraint)
-                            if (contains != null && !contains) {
-                                return here.toString()
-                            }
+                        val error = getNonOverlapMessage(here, referenceConstraint, argument, usageInfo)
+                        if (error != null) {
+                            return error
                         }
                     }
                 }
@@ -393,19 +389,125 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // TODO: What about parameters or local variables here?
             // UAST-wise we could look for UDeclaration but it turns out
             // UDeclaration also extends PsiModifierListOwner!
-            return if (resolved is PsiModifierListOwner) {
-                (resolved.toUElement() as? UAnnotated)?.let {
-                    RangeConstraint.create(
-                        it,
-                        context.evaluator
-                    )
-                } ?: RangeConstraint.create(
-                    resolved,
-                    context.evaluator
-                )
+            val constraint = (resolved.toUElement() as? UAnnotated)?.let {
+                RangeConstraint.create(it, context.evaluator)
+            } ?: if (resolved is PsiModifierListOwner) RangeConstraint.create(resolved, context.evaluator) else null
+
+            if (resolvable is USimpleNameReferenceExpression) {
+                val surroundingIf = resolvable.getParentOfType<UIfExpression>(true)
+                val condition = surroundingIf?.condition?.skipParenthesizedExprDown()
+                val newConstraint = getRangeConstraints(resolvable, condition, constraint) ?: return constraint
+                return if (constraint != null) {
+                    constraint and newConstraint
+                } else {
+                    newConstraint
+                }
             } else {
-                null
+                return constraint
             }
+        }
+
+        private fun getRangeConstraints(
+            resolvable: USimpleNameReferenceExpression,
+            condition: UExpression?,
+            previousConstraint: RangeConstraint?
+        ): RangeConstraint? {
+            if (condition !is UBinaryExpression) return null
+            val operator = condition.operator
+            if (operator == UastBinaryOperator.LOGICAL_AND) {
+                val left = getRangeConstraints(resolvable, condition.leftOperand.skipParenthesizedExprDown(), previousConstraint)
+                val right = getRangeConstraints(resolvable, condition.rightOperand.skipParenthesizedExprDown(), previousConstraint)
+                return when {
+                    left == null && right == null -> null
+                    left != null && right != null -> right and left
+                    else -> left ?: right
+                }
+            } else if (operator == UastBinaryOperator.LOGICAL_OR) {
+                return null
+            }
+            val lhs = condition.leftOperand
+
+            //noinspection LintImplPsiEquals
+            if (lhs.tryResolve() != resolvable.resolve()) {
+                return null
+            }
+            val value = condition.rightOperand.evaluate() as? Number ?: return null
+
+            if (value is Float || value is Double) {
+                val number = value.toDouble()
+                if (number == Double.POSITIVE_INFINITY || number == Double.NEGATIVE_INFINITY) {
+                    return null
+                }
+                return when (operator) {
+                    UastBinaryOperator.GREATER -> FloatRangeConstraint.greaterThan(number)
+                    UastBinaryOperator.GREATER_OR_EQUALS -> FloatRangeConstraint.atLeast(number)
+                    UastBinaryOperator.LESS -> FloatRangeConstraint.lessThan(number)
+                    UastBinaryOperator.LESS_OR_EQUALS -> FloatRangeConstraint.atMost(number)
+                    UastBinaryOperator.EQUALS, UastBinaryOperator.IDENTITY_EQUALS -> FloatRangeConstraint.range(number, number)
+                    // We can't handle NOT_EQUALS / IDENTITY_NOT_EQUALS since we only support single segment continuous ranges for now
+                    else -> return null
+                }
+            } else {
+                val number = value.toLong()
+                if (number == Long.MIN_VALUE || number == Long.MAX_VALUE) {
+                    return null
+                }
+                return when (operator) {
+                    UastBinaryOperator.GREATER -> IntRangeConstraint.atLeast(number + 1)
+                    UastBinaryOperator.GREATER_OR_EQUALS -> IntRangeConstraint.atLeast(number)
+                    UastBinaryOperator.LESS -> IntRangeConstraint.atMost(number - 1)
+                    UastBinaryOperator.LESS_OR_EQUALS -> IntRangeConstraint.atMost(number)
+                    UastBinaryOperator.EQUALS, UastBinaryOperator.IDENTITY_EQUALS -> IntRangeConstraint.range(number, number)
+                    UastBinaryOperator.NOT_EQUALS, UastBinaryOperator.IDENTITY_NOT_EQUALS -> {
+                        // Currently ranges aren't allowed to be disjoint so we special-case this to just adjust contiguous
+                        // ranges.
+                        if (previousConstraint is IntRangeConstraint) {
+                            if (previousConstraint.from == number) {
+                                IntRangeConstraint.range(previousConstraint.from + 1, previousConstraint.to)
+                            } else if (previousConstraint.to == number) {
+                                IntRangeConstraint.range(previousConstraint.from, previousConstraint.to - 1)
+                            } else {
+                                null
+                            }
+                        } else {
+                            null
+                        }
+                    }
+                    else -> return null
+                }
+            }
+        }
+
+        private fun getNonOverlapMessage(
+            allowed: RangeConstraint?,
+            actual: RangeConstraint,
+            argument: UElement,
+            usageInfo: AnnotationUsageInfo
+        ): String? {
+            allowed ?: return null
+            val contains = allowed.contains(actual) ?: return null
+            if (!contains) {
+                // Describe the parts
+                var actualLabel = ""
+                var allowedLabel = ""
+
+                val argumentSource = when (val selector = argument.findSelector()) {
+                    is UCallExpression -> selector.methodName ?: ""
+                    is USimpleNameReferenceExpression -> selector.identifier
+                    else -> argument.sourcePsi?.text?.takeIf { it.length < 40 } ?: ""
+                }
+
+                if (argumentSource.isNotBlank()) {
+                    actualLabel = "`$argumentSource`"
+                } else if (usageInfo.type == AnnotationUsageType.METHOD_CALL_PARAMETER) {
+                    allowedLabel = "the parameter "
+                    actualLabel = "the argument "
+                }
+
+                return allowed.describeDelta(actual, actualLabel, allowedLabel)
+            }
+
+            return null
         }
 
         /** Makes sure values are within the allowed range. */

@@ -55,15 +55,19 @@ void AndroidFrameTimelineRequestHandler::PopulateFrameTimeline(
   }
 
   // Actual timeline.
+  // Use experimental_slice_layout to calculate layout depth.
   auto actual_timeline = tp_->ExecuteQuery(
-      "SELECT ts, dur, display_frame_token, surface_frame_token, layer_name, "
-      "       present_type, jank_type, on_time_finish, gpu_composition "
-      "FROM (SELECT t.*, process_track.name as track_name "
-      "      FROM process_track LEFT JOIN actual_frame_timeline_slice t "
-      "      ON process_track.id = t.track_id) s "
-      "JOIN process USING(upid) "
-      "WHERE s.track_name = 'Actual Timeline' AND process.pid = " +
-      std::to_string(params.process_id()) + " ORDER BY ts");
+      "SELECT s.ts, s.dur, s.display_frame_token, s.surface_frame_token, "
+      "       s.layer_name, s.present_type, s.jank_type, s.on_time_finish, "
+      "       s.gpu_composition, s.id, esl.layout_depth  "
+      "FROM actual_frame_timeline_slice s "
+      "JOIN experimental_slice_layout esl USING(id) "
+      "WHERE esl.filter_track_ids = ( "
+      "  SELECT group_concat(distinct t.id) "
+      "  FROM process_track t "
+      "  JOIN process p USING(upid) "
+      "  WHERE t.name = 'Actual Timeline' AND p.pid = " +
+      std::to_string(params.process_id()) + ") ORDER BY s.ts");
   while (actual_timeline.Next()) {
     auto actual_slice = result->add_actual_slice();
     actual_slice->set_timestamp_nanoseconds(actual_timeline.Get(0).long_value);
@@ -78,5 +82,6 @@ void AndroidFrameTimelineRequestHandler::PopulateFrameTimeline(
     actual_slice->set_jank_type(actual_timeline.Get(6).string_value);
     actual_slice->set_on_time_finish(actual_timeline.Get(7).long_value);
     actual_slice->set_gpu_composition(actual_timeline.Get(8).long_value);
+    actual_slice->set_layout_depth(actual_timeline.Get(10).long_value);
   }
 }

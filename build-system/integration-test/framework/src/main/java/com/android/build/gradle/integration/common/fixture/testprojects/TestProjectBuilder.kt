@@ -124,6 +124,13 @@ interface SubProjectBuilder {
     fun android(action: AndroidProjectBuilder.() -> Unit)
 
     /**
+     * Configures the androidcomponents section of the project.
+     *
+     * This will fails if no android plugins were added.
+     */
+    fun androidComponents(action: AndroidComponentsBuilder.() -> Unit)
+
+    /**
      * Configures dependencies of the project
      */
     fun dependencies(action: DependenciesBuilder.() -> Unit)
@@ -152,6 +159,12 @@ interface AndroidProjectBuilder {
     fun addFile(relativePath: String, content: String)
 
     fun androidResources(action: AndroidResources.() -> Unit)
+}
+
+interface AndroidComponentsBuilder {
+    fun disableVariant(variantName: String)
+    fun disableAndroidTest(variantName: String)
+    fun disableUnitTest(variantName: String)
 }
 
 interface Config {

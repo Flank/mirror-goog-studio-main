@@ -114,7 +114,8 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
     default: {  // Perfd Process
       entry.simpleperf_pid = forkpid;
       profiled_[app_name] = entry;
-      Log::D(Log::Tag::PROFILER, "Registered app %s profiled by %d",
+      Log::D(Log::Tag::PROFILER,
+             "Registered app %s profiled by simpleperf (pid=%d)",
              app_name.c_str(), entry.simpleperf_pid);
     }
   }

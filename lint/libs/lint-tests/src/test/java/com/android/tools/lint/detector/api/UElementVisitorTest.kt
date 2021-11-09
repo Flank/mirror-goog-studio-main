@@ -18,35 +18,46 @@ package com.android.tools.lint.detector.api
 import com.android.tools.lint.checks.AbstractCheckTest
 import org.jetbrains.uast.UClass
 
-// Regression test for b/204342275: UElementVisitor visits subclasses twice in some cases.
 class UElementVisitorTest : AbstractCheckTest() {
 
     @Suppress("LintDocExample")
     fun testSubclassVisitedOnlyOnce() {
+        // Regression test for b/204342275: UElementVisitor visits subclasses twice in some cases.
         lint().files(
             java(
                 """
                 package test.pkg;
 
                 class Test {
-                    interface A {}
-                    class B implements A {}
-                    class C extends B implements A {}
+                    interface I1 {}
+                    class C1 implements I1 {}
+                    class C2 extends C1 implements I1 {}
+
+                    interface I2 {}
+                    class C3 implements I1, I2 {}
+
+                    class C4 {}
                 }
                 """
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/Test.java:4: Warning: Class A extends interface A [_TestIssueId]
-                interface A {}
-                          ~
-            src/test/pkg/Test.java:5: Warning: Class B extends interface A [_TestIssueId]
-                class B implements A {}
-                      ~
-            src/test/pkg/Test.java:6: Warning: Class C extends interface A [_TestIssueId]
-                class C extends B implements A {}
-                      ~
-            0 errors, 3 warnings
+            src/test/pkg/Test.java:4: Warning: Visited I1 [_TestIssueId]
+                interface I1 {}
+                          ~~
+            src/test/pkg/Test.java:5: Warning: Visited C1 [_TestIssueId]
+                class C1 implements I1 {}
+                      ~~
+            src/test/pkg/Test.java:6: Warning: Visited C2 [_TestIssueId]
+                class C2 extends C1 implements I1 {}
+                      ~~
+            src/test/pkg/Test.java:8: Warning: Visited I2 [_TestIssueId]
+                interface I2 {}
+                          ~~
+            src/test/pkg/Test.java:9: Warning: Visited C3 [_TestIssueId]
+                class C3 implements I1, I2 {}
+                      ~~
+            0 errors, 5 warnings
             """
         )
     }
@@ -56,12 +67,12 @@ class UElementVisitorTest : AbstractCheckTest() {
     override fun getIssues(): List<Issue> = listOf(TEST_ISSUE)
 
     class TestDetector : Detector(), SourceCodeScanner {
-        override fun applicableSuperClasses(): List<String> = listOf("test.pkg.Test.A")
+        override fun applicableSuperClasses(): List<String> = listOf("test.pkg.Test.I1", "test.pkg.Test.I2")
 
         override fun visitClass(context: JavaContext, declaration: UClass) {
             context.report(
                 TEST_ISSUE, declaration, context.getNameLocation(declaration),
-                "Class `${declaration.name}` extends interface `A`"
+                "Visited `${declaration.name}`"
             )
         }
     }

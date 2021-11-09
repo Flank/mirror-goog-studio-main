@@ -65,7 +65,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     ?: throw RuntimeException("Null extracted folder for artifact: $artifact")
 
                 handleAndroidLibrary(
-                    artifact.artifactFile,
+                    artifact.artifactFile!!,
                     extractedFolder,
                     localJarCache.get(extractedFolder) ?: listOf(),
                     isProvided,
@@ -75,7 +75,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                 )
             } else {
                 handleJavaLibrary(
-                    artifact.artifactFile,
+                    artifact.artifactFile!!,
                     isProvided,
                     coordinatesSupplier,
                     modelAddressSupplier
@@ -95,7 +95,8 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     id.projectPath,
                     buildId,
                     artifact.variantName,
-                    artifact.artifactFile,
+                    artifact.isTestFixturesArtifact,
+                    artifact.artifactFile!!,
                     lintJar,
                     isProvided,
                     coordinatesSupplier,
@@ -127,6 +128,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
         projectPath: String,
         buildId: String,
         variantName: String?,
+        isDependencyOnTestFixtures: Boolean,
         aarFile: File,
         lintJar: File?,
         isProvided: Boolean,

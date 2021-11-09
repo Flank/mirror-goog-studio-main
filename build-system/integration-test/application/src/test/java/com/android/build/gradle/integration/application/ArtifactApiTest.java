@@ -26,7 +26,9 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.AfterClass;
@@ -100,10 +102,16 @@ public class ArtifactApiTest {
                             .map(SourceProviderContainer::getArtifactName)
                             .collect(Collectors.toSet());
 
+            List<String> expectedExtraSourceSets = new ArrayList<>();
+            expectedExtraSourceSets.add(CUSTOM_ARTIFACT_NAME);
+            expectedExtraSourceSets.add(ARTIFACT_UNIT_TEST);
+            if (buildTypeName.equals(testedBuildType)) {
+                expectedExtraSourceSets.add(ARTIFACT_ANDROID_TEST);
+            }
+
             assertThat(extraSourceProviderNames)
                     .named(name)
-                    .containsExactly(
-                            CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST);
+                    .containsExactlyElementsIn(expectedExtraSourceSets);
 
             SourceProviderContainer extraSourceProvideContainer =
                     SourceSetContainerUtils.getExtraSourceProviderContainer(

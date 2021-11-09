@@ -24,16 +24,21 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.OptionalBooleanOption
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task that writes the [SigningConfigVersions] information to a file.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input values are written to a minimal JSON file and no computation is required.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class SigningConfigVersionsWriterTask : NonIncrementalTask() {
 
     @get:OutputFile

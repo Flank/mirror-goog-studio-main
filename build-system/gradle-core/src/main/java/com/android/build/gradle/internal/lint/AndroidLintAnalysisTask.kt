@@ -209,7 +209,12 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
      * CreationAction for the lintVitalAnalyzeVariant task. Does not use the variant with tests
      */
     class LintVitalCreationAction(variant: ConsumableCreationConfig) :
-        VariantCreationAction(VariantWithTests(variant, androidTest = null, unitTest = null))
+        VariantCreationAction(VariantWithTests(
+            variant,
+            androidTest = null,
+            unitTest = null,
+            testFixtures = null
+        ))
     {
         override val name = creationConfig.computeTaskName("lintVitalAnalyze")
         override val fatalOnly = true

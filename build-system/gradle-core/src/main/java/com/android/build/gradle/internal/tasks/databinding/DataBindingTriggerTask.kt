@@ -25,18 +25,25 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task to create an empty class annotated with a data binding annotation (it could be any data
  * binding annotation), so that the Java compiler still invokes data binding in the case that data
  * binding is used (e.g., in layout files) but the source code does not use data binding
  * annotations.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The taskAction does no complex processing -- it just writes a file to disk with some
+ * statically determinate content.
+
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
     @get:Input

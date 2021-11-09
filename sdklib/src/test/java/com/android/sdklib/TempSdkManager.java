@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
+import com.android.repository.io.FileOp;
 import com.android.repository.testframework.MockFileOp;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
@@ -61,8 +62,10 @@ import java.util.List;
 import org.junit.rules.ExternalResource;
 
 /**
- * {@link org.junit.rules.TestRule} that allocates a temporary SDK, a temporary AVD base folder
+ * A {@link org.junit.rules.TestRule} that allocates a temporary SDK, a temporary AVD base folder
  * with an SdkManager and an AvdManager that points to them.
+ *
+ * <p>TODO: combine this and com.android.tools.idea.FakeSdkRule
  */
 public class TempSdkManager extends ExternalResource {
 
@@ -90,6 +93,10 @@ public class TempSdkManager extends ExternalResource {
 
     public AndroidSdkHandler getSdkHandler() {
         return mSdkHandler;
+    }
+
+    public FileOp getFileOp() {
+        return mFileOp;
     }
 
     /**

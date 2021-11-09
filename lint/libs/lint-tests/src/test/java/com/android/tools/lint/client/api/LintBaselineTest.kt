@@ -293,6 +293,18 @@ class LintBaselineTest {
     }
 
     @Test
+    fun tolerateRangeMessageChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                RangeDetector.RANGE,
+                "Value must be ≥ 0 but can be -1",
+                "Value must be ≥ 0"
+            )
+        )
+    }
+
+    @Test
     fun tolerateRestrictToChanges() {
         val baseline = LintBaseline(null, File(""))
         assertTrue(

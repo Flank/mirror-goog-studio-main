@@ -555,7 +555,6 @@ public abstract class BasePlugin<
 
         registry.register(
                 new com.android.build.gradle.internal.ide.v2.ModelBuilder(
-                        project,
                         globalScope,
                         projectServices.getProjectOptions(),
                         variantModel,
@@ -584,8 +583,8 @@ public abstract class BasePlugin<
                         variantManager.getMainComponents().stream()
                                 .map(ComponentInfo::getVariant)
                                 .collect(Collectors.toList()),
-                () ->
-                        variantManager.getTestComponents(),
+                () -> variantManager.getTestComponents(),
+                () -> variantManager.getBuildFeatureValues(),
                 dslServices.getIssueReporter());
     }
 

@@ -25,6 +25,7 @@ import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Component
@@ -136,7 +137,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         )
     }
 
-    override var androidTest: com.android.build.api.component.AndroidTest? = null
+    override var androidTest: AndroidTest? = null
 
     override var testFixtures: TestFixtures? = null
 

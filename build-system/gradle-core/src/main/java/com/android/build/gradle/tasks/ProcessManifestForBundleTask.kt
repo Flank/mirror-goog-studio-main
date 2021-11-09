@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
@@ -35,6 +34,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -47,8 +47,13 @@ import java.io.File
  * The merged manifest already has the annotated activities so we just need to copy the main
  * split unchanged. We cannot use republish because there can be many merged manifests, but there
  * is only one bundle tool manifest.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * An Input file is copied to the Output location without any changes.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
 
     @get:OutputFile

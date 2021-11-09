@@ -18,15 +18,26 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.AnnotationDetector.Companion.ATTR_FROM
 import com.android.tools.lint.checks.AnnotationDetector.Companion.ATTR_TO
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationLongValue
-import com.google.common.annotations.VisibleForTesting
 import org.jetbrains.uast.UAnnotation
 import kotlin.Long.Companion.MAX_VALUE
 import kotlin.Long.Companion.MIN_VALUE
+import kotlin.math.max
+import kotlin.math.min
 
 class IntRangeConstraint private constructor(
     val from: Long,
     val to: Long
 ) : RangeConstraint() {
+
+    constructor(range: FloatRangeConstraint) : this(
+        if (range.from == Double.NEGATIVE_INFINITY) MIN_VALUE
+        else if (!range.fromInclusive) range.from.toLong() + 1
+        else range.from.toLong(),
+        if (range.to == Double.POSITIVE_INFINITY) MAX_VALUE
+        else if (!range.toInclusive) range.to.toLong() - 1
+        else range.to.toLong()
+    )
+
     fun isValid(value: Long): Boolean {
         return value in from..to
     }
@@ -36,39 +47,105 @@ class IntRangeConstraint private constructor(
     }
 
     fun describe(actualValue: Long?): String {
+        return describe(actualValue, "Value must be ")
+    }
+
+    fun describe(actualValue: Long?, prefix: String): String {
         val sb = StringBuilder(20)
+        sb.append(prefix)
 
         // If we have an actual value, don't describe the full range, only describe
         // the parts that are outside the range
         if (actualValue != null && !isValid(actualValue)) {
             val value: Long = actualValue
             if (value < from) {
-                sb.append("Value must be \u2265 ")
+                sb.append("\u2265 ") // >= sign
                 sb.append(from.toString())
             } else {
                 assert(value > to)
-                sb.append("Value must be \u2264 ")
+                sb.append("\u2264 ") // <= sign
                 sb.append(to.toString())
             }
             sb.append(" (was ").append(value).append(')')
             return sb.toString()
         }
         if (to == MAX_VALUE) {
-            sb.append("Value must be \u2265 ")
+            sb.append("\u2265 ") // >= sign
             sb.append(from.toString())
         } else if (from == MIN_VALUE) {
-            sb.append("Value must be \u2264 ")
+            sb.append("\u2264 ") // <= sign
             sb.append(to.toString())
-        } else {
-            sb.append("Value must be \u2265 ")
+        } else if (from == to) {
             sb.append(from.toString())
-            sb.append(" and \u2264 ")
+        } else {
+            sb.append("\u2265 ") // >= sign
+            sb.append(from.toString())
+            sb.append(" and \u2264 ") // <= sign
             sb.append(to.toString())
+
+            if (from > to) {
+                sb.append(" (not possible)")
+            }
         }
         if (actualValue != null) {
             sb.append(" (is ").append(actualValue).append(')')
         }
         return sb.toString()
+    }
+
+    override fun describeDelta(actual: RangeConstraint, actualLabel: String, allowedLabel: String): String {
+        if (actual !is IntRangeConstraint) {
+            return if (actual is FloatRangeConstraint) {
+                describeDelta(IntRangeConstraint(actual), actualLabel, allowedLabel)
+            } else {
+                describe()
+            }
+        }
+
+        val sb = StringBuilder()
+        if (allowedLabel.isNotEmpty()) {
+            sb.append(describe(null, "$allowedLabel must be "))
+        } else {
+            sb.append(describe(null))
+        }
+        sb.append(" but ")
+        if (actualLabel.isNotEmpty()) {
+            sb.append(actualLabel).append(' ')
+        }
+
+        if (actual.from < this.from) {
+            if (actual.from == MIN_VALUE) {
+                sb.append("can be < ${this.from}")
+            } else {
+                // works even for range, e.g. "x must be >= 0, but can be -5" can represent -4, -3, etc instead of
+                // "x must be >= 0, but can be -5..0" isn't a lot more readable
+                sb.append("can be ${actual.from}")
+            }
+        } else if (actual.to > this.to) {
+            if (actual.to == MAX_VALUE) {
+                sb.append("can be > ${this.to}")
+            } else {
+                sb.append("can be ${actual.to}")
+            }
+        } else {
+            error("There's no delta")
+        }
+
+        return sb.toString()
+    }
+
+    override fun and(other: RangeConstraint?): RangeConstraint {
+        other ?: return this
+
+        val range: IntRangeConstraint = when (other) {
+            is IntRangeConstraint -> other
+            is FloatRangeConstraint -> IntRangeConstraint(other)
+            else -> error(other.javaClass.name)
+        }
+
+        val start = max(from, range.from)
+        val end = min(to, range.to)
+        return IntRangeConstraint(start, end)
     }
 
     override fun toString(): String {
@@ -104,19 +181,16 @@ class IntRangeConstraint private constructor(
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun atLeast(value: Long): IntRangeConstraint {
             return IntRangeConstraint(value, MAX_VALUE)
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun atMost(value: Long): IntRangeConstraint {
             return IntRangeConstraint(MIN_VALUE, value)
         }
 
         @JvmStatic
-        @VisibleForTesting
         fun range(from: Long, to: Long): IntRangeConstraint {
             return IntRangeConstraint(from, to)
         }

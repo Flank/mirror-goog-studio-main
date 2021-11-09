@@ -18,15 +18,13 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.DependenciesInfo
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
-import com.android.build.api.variant.impl.DependenciesInfoImpl
 import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl

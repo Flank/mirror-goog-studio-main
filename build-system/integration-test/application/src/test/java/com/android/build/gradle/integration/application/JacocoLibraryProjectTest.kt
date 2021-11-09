@@ -58,13 +58,6 @@ class JacocoLibraryProjectTest {
     }
 
     @Test
-    fun testUnitTests() {
-        project.executor().run("testDebugUnitTest")
-        val coverageData = project.buildDir.walk().filter { it.extension=="exec" }.toList()
-        assertThat(coverageData).isEmpty()
-    }
-
-    @Test
     fun testUnitTestsWithJacocoPlugin() {
         val buildFile = project.buildFile.readText()
         project.buildFile.writeText("""

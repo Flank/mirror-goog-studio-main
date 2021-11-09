@@ -39,11 +39,8 @@ import org.w3c.dom.Element
 class MotionLayoutDetector : ResourceXmlDetector() {
 
     private var referencesRecorded = false
-    private val resourceModel: ResourceUsageModel by lazy(LazyThreadSafetyMode.NONE) { ResourceUsageModel() }
-
-    @Suppress("RemoveExplicitTypeArguments") // Compiler was unable to infer the type of the expr
-    private val references: MutableMap<Resource, Location>
-        by lazy<MutableMap<Resource, Location>>(LazyThreadSafetyMode.NONE) { mutableMapOf() }
+    private var resourceModel: ResourceUsageModel? = null
+    private var references: MutableMap<Resource, Location>? = null
 
     override fun appliesTo(folderType: ResourceFolderType) =
         folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.XML
@@ -56,8 +53,8 @@ class MotionLayoutDetector : ResourceXmlDetector() {
             return
         }
         val isIncremental = isIncrementalMode(context)
-        references.forEach { (reference, location) ->
-            val resource = resourceModel.getResource(reference.type, reference.name)
+        references?.forEach { (reference, location) ->
+            val resource = resourceModel?.getResource(reference.type, reference.name)
             if (!isIncremental && (resource == null || !resource.isDeclared)) {
                 // Can only read all MotionScene files when analyzing the entire project.
                 context.report(
@@ -82,7 +79,8 @@ class MotionLayoutDetector : ResourceXmlDetector() {
         val resourceFolderType = context.resourceFolderType ?: return
         val resourceType = ResourceType.fromFolderName(resourceFolderType.getName()) ?: return
         val name = context.file.nameWithoutExtension
-        resourceModel.addDeclaredResource(resourceType, name, null, true)
+        val model = resourceModel ?: ResourceUsageModel().also { resourceModel = it }
+        model.addDeclaredResource(resourceType, name, null, true)
     }
 
     private fun visitMotionLayout(context: XmlContext, element: Element) {
@@ -97,8 +95,10 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                 fix().name("Create $sceneUrl and set attribute").data(KEY_URL, sceneUrl)
             )
         } else {
-            val resource = resourceModel.getResourceFromUrl(description.value)
+            val model = resourceModel ?: ResourceUsageModel().also { resourceModel = it }
+            val resource = model.getResourceFromUrl(description.value)
             if (resource != null && resource.type == ResourceType.XML) {
+                val references = references ?: mutableMapOf<Resource, Location>().also { references = it }
                 references[resource] = context.getValueLocation(description)
                 referencesRecorded = true
             } else {

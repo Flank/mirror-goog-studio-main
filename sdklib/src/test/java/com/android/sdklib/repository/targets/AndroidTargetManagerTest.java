@@ -755,7 +755,7 @@ public class AndroidTargetManagerTest extends TestCase {
         List<LocalPackage> locals = ImmutableList.of(bogus1, bogus2, real1, real2);
         RepositoryPackages packages = new RepositoryPackages(locals, ImmutableList.of());
         RepoManager mgr = new FakeRepoManager(packages);
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop, mgr);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
                 handler.getAndroidTargetManager(progress);

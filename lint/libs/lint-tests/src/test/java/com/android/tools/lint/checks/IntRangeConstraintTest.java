@@ -84,4 +84,56 @@ public class IntRangeConstraintTest {
         assertThat(FloatRangeConstraint.range(1, 5).contains(range(1, 5))).isTrue();
         assertThat(FloatRangeConstraint.range(1, 5).contains(range(0, 5))).isFalse();
     }
+
+    @Test
+    public void testDescribeDelta() {
+        assertThat(range(1, 5).describeDelta(range(2, 6), "`var`", "Argument"))
+                .isEqualTo("Argument must be ≥ 1 and ≤ 5 but `var` can be 6");
+        assertThat(range(1, 5).describeDelta(range(2, 10), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be 10");
+        assertThat(range(1, 5).describeDelta(range(0, 5), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be 0");
+        assertThat(range(1, 5).describeDelta(range(5, 10), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be 10");
+        assertThat(range(1, 5).describeDelta(range(-4, 1), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be -4");
+        assertThat(range(1, 5).describeDelta(range(-4, 7), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be -4");
+        assertThat(range(1, 5).describeDelta(atLeast(1), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be > 5");
+        assertThat(range(1, 5).describeDelta(atLeast(-5), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be -5");
+        assertThat(range(1, 5).describeDelta(atMost(5), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be < 1");
+        assertThat(range(1, 5).describeDelta(atMost(1), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be < 1");
+        assertThat(range(1, 5).describeDelta(atLeast(5), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be > 5");
+        assertThat(range(1, 5).describeDelta(FloatRangeConstraint.range(2, 6), "", ""))
+                .isEqualTo("Value must be ≥ 1 and ≤ 5 but can be 6");
+    }
+
+    @Test
+    public void testConversionRounding() {
+        assertThat(new IntRangeConstraint(FloatRangeConstraint.range(1, true, 5, true)).describe())
+                .isEqualTo("Value must be ≥ 1 and ≤ 5");
+        assertThat(new IntRangeConstraint(FloatRangeConstraint.range(1, false, 5, true)).describe())
+                .isEqualTo("Value must be ≥ 2 and ≤ 5");
+        assertThat(new IntRangeConstraint(FloatRangeConstraint.range(1, true, 5, false)).describe())
+                .isEqualTo("Value must be ≥ 1 and ≤ 4");
+        assertThat(
+                        new IntRangeConstraint(FloatRangeConstraint.range(1, false, 5, false))
+                                .describe())
+                .isEqualTo("Value must be ≥ 2 and ≤ 4");
+    }
+
+    @Test
+    public void testIntersection() {
+        assertThat(atLeast(2).and(atLeast(3)).toString()).isEqualTo("Value must be ≥ 3");
+        assertThat(range(1, 5).and(atLeast(3)).toString()).isEqualTo("Value must be ≥ 3 and ≤ 5");
+        assertThat(range(1, 5).and(range(4, 10)).toString()).isEqualTo("Value must be ≥ 4 and ≤ 5");
+        assertThat(atLeast(2).and(atMost(2)).toString()).isEqualTo("Value must be 2");
+        assertThat(atLeast(2).and(atMost(-1)).toString())
+                .isEqualTo("Value must be ≥ 2 and ≤ -1 (not possible)");
+    }
 }

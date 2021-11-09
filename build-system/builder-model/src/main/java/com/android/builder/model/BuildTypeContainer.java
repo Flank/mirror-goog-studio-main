@@ -17,6 +17,7 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.util.Collection;
 
 /**
@@ -37,7 +38,7 @@ public interface BuildTypeContainer {
      *
      * @return the build type source provider.
      */
-    @NonNull
+    @Nullable
     SourceProvider getSourceProvider();
 
     /**

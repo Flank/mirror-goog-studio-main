@@ -130,4 +130,37 @@ public class SizeConstraintTest {
         assertThat(rangeWithMultiple(40, 100, 5).contains(range(40, 60))).isFalse();
         assertThat(range(20, 100).contains(rangeWithMultiple(20, 40, 2))).isTrue();
     }
+
+    @Test
+    public void testDescribeDelta() {
+        assertThat(range(1, 5).describeDelta(range(2, 6), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be 6");
+        assertThat(range(1, 5).describeDelta(range(2, 10), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be 10");
+        assertThat(range(1, 5).describeDelta(range(0, 5), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be 0");
+        assertThat(range(1, 5).describeDelta(range(5, 10), "`var`", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but `var` can be 10");
+        assertThat(range(1, 5).describeDelta(range(-4, 1), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be -4");
+        assertThat(range(1, 5).describeDelta(range(-4, 7), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be -4");
+        assertThat(range(1, 5).describeDelta(atLeast(1), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be greater than 5");
+        assertThat(range(1, 5).describeDelta(atLeast(-5), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be -5");
+        assertThat(range(1, 5).describeDelta(atMost(5), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be less than 1");
+        assertThat(range(1, 5).describeDelta(atMost(1), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be less than 1");
+        assertThat(range(1, 5).describeDelta(atLeast(5), "", ""))
+                .isEqualTo("Size must be at least 1 and at most 5, but can be greater than 5");
+        assertThat(multiple(10).describeDelta(multiple(1), "`var`", ""))
+                .isEqualTo("Size must be a multiple of 10, but `var` is not a multiple of 10");
+        assertThat(multiple(10).describeDelta(multiple(5), "", ""))
+                .isEqualTo("Size must be a multiple of 10, but can be a multiple of 5");
+        assertThat(rangeWithMultiple(1, 5, 12).describeDelta(range(1, 4), "", ""))
+                .isEqualTo(
+                        "Size must be at least 1 and at most 5 and a multiple of 12, but is not a multiple of 12");
+    }
 }

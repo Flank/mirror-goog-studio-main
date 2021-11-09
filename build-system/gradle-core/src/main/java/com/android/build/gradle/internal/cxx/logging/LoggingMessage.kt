@@ -18,12 +18,15 @@ package com.android.build.gradle.internal.cxx.logging
 
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.BUG
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.UNRECOGNIZED
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
 import com.android.build.gradle.internal.cxx.string.StringDecoder
 import com.android.build.gradle.internal.cxx.string.StringEncoder
 import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxBugDiagnosticCode
 
 /**
  * Helper function to create [LoggingMessage].
@@ -80,7 +83,10 @@ fun decodeLoggingMessage(
 fun LoggingMessage.text() : String {
     val codeHeader = when(diagnosticCode) {
         0 -> "C/C++: "
-        else -> "[CXX$diagnosticCode] "
+        else -> when(level) {
+            BUG -> "[bug $diagnosticCode] "
+            else -> "[CXX$diagnosticCode] "
+        }
     }
     return when {
         (file.isBlank() && tag.isBlank()) -> "$codeHeader$message"
@@ -89,6 +95,9 @@ fun LoggingMessage.text() : String {
         else -> "$codeHeader$file $tag : $message"
     }
 }
+
+fun bugRecordOf(message: String, diagnosticCode: CxxBugDiagnosticCode) =
+    createLoggingMessage(BUG, message, diagnosticCode = diagnosticCode.bugNumber)
 
 fun errorRecordOf(message: String, diagnosticCode: CxxDiagnosticCode?) =
     createLoggingMessage(ERROR, message, diagnosticCode = diagnosticCode?.errorCode?:0)

@@ -28,5 +28,4 @@ package com.android.build.api.component
     ),
     level = DeprecationLevel.WARNING
 )
-interface UnitTest : TestComponent,
-    com.android.build.api.variant.UnitTest
+interface UnitTest : com.android.build.api.variant.UnitTest

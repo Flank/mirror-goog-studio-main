@@ -44,11 +44,19 @@ interface RecipeExecutor {
   /** Records that this file should be opened in Studio. */
   fun open(file: File)
 
-  /** Adds "apply plugin: '`plugin`'" statement to the module build.gradle file. */
+  /**
+   * Adds "plugins { id '`plugin`' }" statement to the module build.gradle[.kts] file and
+   * if settings.gradle[.kts] has a `pluginManagement` block, it also adds
+   * "plugins { id '`plugin`' version '`revision`'}" statement to the project top level
+   * build.gradle[.kts] file.
+   **/
   fun applyPlugin(plugin: String, revision: String?, minRev: String? = null)
 
-  /** Records a classpath dependency. */
-  fun addClasspathDependency(mavenCoordinate: String, minRev: String? = null)
+  /**
+   * Records a classpath dependency. If settings.gradle[.kts] has a `pluginManagement` block
+   * this call is ignored, unless `forceAdding` is `true`
+   **/
+  fun addClasspathDependency(mavenCoordinate: String, minRev: String? = null, forceAdding: Boolean = false)
 
   /**
    * Determines if a module/project already have a dependency.

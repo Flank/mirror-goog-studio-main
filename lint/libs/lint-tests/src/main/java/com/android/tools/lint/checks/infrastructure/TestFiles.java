@@ -466,7 +466,7 @@ public class TestFiles {
             File file = new File(path);
             String name = file.getName();
             if (name.startsWith("lint-")
-                    || name.startsWith("kotlin-compiler-")
+                    || name.startsWith("kotlin-compiler")
                     || name.startsWith("uast-")
                     || name.startsWith("intellij-core")
                     || name.endsWith("uast.jar") // bazel

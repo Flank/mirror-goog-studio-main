@@ -36,7 +36,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -46,6 +45,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
@@ -60,8 +60,13 @@ import javax.inject.Inject
  * tests.
  *
  * See DSL documentation at [TestOptions.UnitTestOptions.isIncludeAndroidResources].
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input values are written to a minimal Properties file and no computation is required.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 

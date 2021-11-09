@@ -46,7 +46,10 @@ class MotionLayoutIdDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
-    /** User has  a view without id inside motion layout thus triggers lint. */
+    /**
+     * User has a view without id inside motion layout thus triggers
+     * lint.
+     */
     fun testDocumentationExample() {
         lint().files(
             xml("res/xml/motion_scene.xml", "<MotionScene/>"),
@@ -70,15 +73,26 @@ class MotionLayoutIdDetectorTest : AbstractCheckTest() {
                 </android.support.constraint.motion.MotionLayout>
                 """
             ).indented()
-        ).run().expect("""
-            res/layout/motion_test.xml:9: Error: Views inside MotionLayout requires an id [MotionLayoutMissingId]
+        ).run().expect(
+            """
+            res/layout/motion_test.xml:9: Error: Views inside MotionLayout require an android:id attribute [MotionLayoutMissingId]
                 <View
                  ~~~~
             1 errors, 0 warnings
-        """.trimIndent())
+            """
+        ).expectFixDiffs(
+            """
+            Fix for res/layout/motion_test.xml line 9: Set id:
+            @@ -10 +10
+            +         android:id="@+id/[TODO]|"
+            """
+        )
     }
 
-    /** User has  a view without id inside motion layout thus triggers lint. */
+    /**
+     * User has a view without id inside motion layout thus triggers
+     * lint.
+     */
     fun testViewInheritorMissingId() {
         lint().files(
             xml("res/xml/motion_scene.xml", "<MotionScene/>"),
@@ -86,42 +100,50 @@ class MotionLayoutIdDetectorTest : AbstractCheckTest() {
                 "res/layout/motion_test.xml",
                 """
                 <android.support.constraint.motion.MotionLayout
-                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:a="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
-                    android:id="@+id/motionLayout"
+                    a:id="@+id/motionLayout"
                     app:layoutDescription="@xml/motion_scene"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    a:layout_width="match_parent"
+                    a:layout_height="match_parent">
 
                     <View
-                        android:id="@+id/id1"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@color/black"
-                        android:text="Button" />
+                        a:id="@+id/id1"
+                        a:layout_width="64dp"
+                        a:layout_height="64dp"
+                        a:background="@color/black"
+                        a:text="Button" />
 
                     <View
-                        android:id="@+id/id2"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@color/black"
-                        android:text="Button" />
+                        a:id="@+id/id2"
+                        a:layout_width="64dp"
+                        a:layout_height="64dp"
+                        a:background="@color/black"
+                        a:text="Button" />
 
                     <TextView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@color/black"
-                        android:text="Button" />
+                        a:layout_width="64dp"
+                        a:layout_height="64dp"
+                        a:background="@color/black"
+                        a:text="Button" />
 
                 </android.support.constraint.motion.MotionLayout>
                 """
             ).indented()
-        ).run().expect("""
-            res/layout/motion_test.xml:23: Error: Views inside MotionLayout requires an id [MotionLayoutMissingId]
+        ).run().expect(
+            """
+            res/layout/motion_test.xml:23: Error: Views inside MotionLayout require an a:id attribute [MotionLayoutMissingId]
                 <TextView
                  ~~~~~~~~
             1 errors, 0 warnings
-        """.trimIndent())
+            """
+        ).expectFixDiffs(
+            """
+            Fix for res/layout/motion_test.xml line 23: Set id:
+            @@ -24 +24
+            +         a:id="@+id/[TODO]|"
+            """
+        )
     }
 
     /** Lint does not check element that's not a view. */

@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -33,12 +32,18 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task that writes the SigningConfig information to a file, excluding the information about which
  * signature versions are enabled, which is handled by [SigningConfigVersionsWriterTask].
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input values are written to a minimal JSON file and no computation is required.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:OutputFile

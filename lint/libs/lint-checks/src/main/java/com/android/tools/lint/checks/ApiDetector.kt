@@ -834,7 +834,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             desc: String? = null,
             desugaring: Desugaring? = null
         ) {
-            val apiLevel = getApiLevelString(requires)
+            val apiLevel = getApiLevelString(requires, context)
             val typeString = type.usLocaleCapitalize()
             val formatString = "$typeString requires API level $apiLevel (current min is %1\$s): `$sig`"
             report(issue, node, location, formatString, fix, owner, name, desc, requires, minSdk, desugaring)
@@ -1999,7 +1999,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         // TODO: Look for RequiresApi on the class
                         val location = context.getLocation(typeReference)
                         val fqcn = resolved.qualifiedName
-                        val apiLevel = getApiLevelString(api)
+                        val apiLevel = getApiLevelString(api, context)
                         val apiMessage =
                             "${"Exception".usLocaleCapitalize()} requires API level $apiLevel (current min is %1\$d): `${fqcn ?: ""}`"
                         val message = "$apiMessage, and having a surrounding/preceding version " +
@@ -2197,10 +2197,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
     }
 
-    private fun getApiLevelString(requires: Int): String {
+    private fun getApiLevelString(requires: Int, context: JavaContext): String {
         // For preview releases, don't show the API level as a number; show it using
         // a version code
-        return if (requires <= SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
+        return if (requires <= SdkVersionInfo.HIGHEST_KNOWN_STABLE_API ||
+            requires <= context.project.buildSdk && context.project.buildTarget?.version?.isPreview == false
+        ) {
             requires.toString()
         } else {
             SdkVersionInfo.getCodeName(requires) ?: requires.toString()

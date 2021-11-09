@@ -16,7 +16,7 @@
 
 package com.example.buildsrc.plugin
 
-import com.android.build.api.extension.AndroidComponentsExtension
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.gradle.internal.utils.setDisallowChanges

@@ -194,19 +194,6 @@ public class MockFileOpTest {
     }
 
     @Test
-    public void testReadOnlyFile() throws Exception {
-        File f1 = createFile("/root", "writable.txt");
-        File f2 = createFile("/root", "readonly.txt");
-        m.mkdirs(f1.getParentFile());
-        m.createNewFile(f1);
-        m.createNewFile(f2);
-        m.setReadOnly(f2);
-
-        assertTrue(m.canWrite(f1));
-        assertFalse(m.canWrite(f2));
-    }
-
-    @Test
     public void testToString() throws Exception {
         m.recordExistingFile("/root/blah", "foo");
         assertEquals("foo", m.readText(new File("/root/blah")));

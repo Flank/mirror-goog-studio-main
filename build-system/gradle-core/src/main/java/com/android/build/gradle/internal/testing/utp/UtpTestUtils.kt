@@ -148,11 +148,6 @@ fun runUtpTestSuiteAndWait(
                 val testPassed = if (resultsProto != null) {
                     val testResultPbFile = File(config.utpOutputDir, TEST_RESULT_PB_FILE_NAME)
                     resultsProto.writeTo(testResultPbFile.outputStream())
-                    logger.quiet(
-                        "\nTest results saved as ${testResultPbFile.toURI()}. " +
-                                "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                                "From File from the menu bar and importing test-result.pb."
-                    )
                     if (resultsProto.hasPlatformError()) {
                         logger.error(
                             null, getPlatformErrorMessage(resultsProto.platformError.errorDetail))

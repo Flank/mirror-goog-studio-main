@@ -1,0 +1,12 @@
+> BasicAndroidProject:
+   - projectType    = APPLICATION
+   - path           = ":"
+   - buildName      = ":"
+   - buildFolder    = {PROJECT}/build{!}
+   - bootClasspath:
+      * {ANDROID_SDK}/platforms/android-30/android.jar{F}
+   - defaultConfig  = (null)
+   - buildTypes     = []
+   - productFlavors = []
+   - variants       = []
+< BasicAndroidProject

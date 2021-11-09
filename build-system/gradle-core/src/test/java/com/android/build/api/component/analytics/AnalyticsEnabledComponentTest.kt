@@ -16,11 +16,11 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.Component
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -29,13 +29,11 @@ import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
 import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.jetbrains.kotlin.gradle.utils.`is`
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.times
-import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness

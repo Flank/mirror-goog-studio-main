@@ -116,9 +116,7 @@ class AppBundleLocaleChangesDetector : Detector(), SourceCodeScanner, GradleScan
         }
     }
 
-    /**
-     * Checks whether [ISSUE] is suppressed at the given location.
-     */
+    /** Checks whether [ISSUE] is suppressed at the given location. */
     private fun isLocationSuppressed(context: JavaContext, expression: UExpression): Boolean {
         if (context.isSuppressedWithComment(expression, ISSUE)) {
             return true

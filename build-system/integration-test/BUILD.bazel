@@ -144,3 +144,13 @@ maven_repository(
     ],
     visibility = ["__subpackages__"],
 )
+
+maven_repository(
+    name = "relocated_coroutines_test_repo",
+    artifacts = [
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.5.2",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core_1.5.2",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-jvm_1.5.2",
+    ],
+    visibility = [":__subpackages__"],
+)

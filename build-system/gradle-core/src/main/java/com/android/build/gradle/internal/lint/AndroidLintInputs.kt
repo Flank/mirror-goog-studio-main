@@ -637,6 +637,10 @@ abstract class VariantInputs {
     @get:Optional
     abstract val androidTestArtifact: Property<AndroidArtifactInput>
 
+    @get:Nested
+    @get:Optional
+    abstract val testFixturesArtifact: Property<AndroidArtifactInput>
+
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
@@ -689,6 +693,10 @@ abstract class VariantInputs {
 
     @get:Nested
     abstract val testSourceProviders: ListProperty<SourceProviderInput>
+
+    @get:Nested
+    @get:Optional
+    abstract val testFixturesSourceProviders: ListProperty<SourceProviderInput>
 
     @get:Input
     abstract val debuggable: Property<Boolean>
@@ -762,6 +770,18 @@ abstract class VariantInputs {
                         includeGeneratedSourceFolders = false
                     )
         })
+
+        testFixturesArtifact.setDisallowChanges(
+            variantWithTests.testFixtures?.let { testFixtures ->
+                creationConfig.services.newInstance(AndroidArtifactInput::class.java)
+                    .initialize(
+                        testFixtures,
+                        checkDependencies = false,
+                        addBaseModuleLintModel,
+                        warnIfProjectTreatedAsExternalDependency
+                    )
+            }
+        )
         mergedManifest.setDisallowChanges(
             creationConfig.artifacts.get(SingleArtifact.MERGED_MANIFEST)
         )
@@ -822,6 +842,17 @@ abstract class VariantInputs {
                 }
             )
         }
+        variantWithTests.testFixtures?.let { testFixturesCreationConfig ->
+            testFixturesSourceProviders.setDisallowChanges(
+                testFixturesCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                    creationConfig.services
+                        .newInstance(SourceProviderInput::class.java)
+                        .initialize(
+                            sourceProvider,
+                            isForAnalysis
+                        )
+                })
+        }
         testSourceProviders.setDisallowChanges(testSourceProviderList.toList())
         debuggable.setDisallowChanges(
             if (creationConfig is ApkCreationConfig) {
@@ -856,6 +887,7 @@ abstract class VariantInputs {
             includeClassesOutputDirectories = false
         ))
         androidTestArtifact.disallowChanges()
+        testFixturesArtifact.disallowChanges()
         namespace.setDisallowChanges("")
         minSdkVersion.initializeEmpty()
         targetSdkVersion.initializeEmpty()
@@ -889,6 +921,7 @@ abstract class VariantInputs {
                 )
             )
         }
+        testFixturesSourceProviders.disallowChanges()
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -910,6 +943,7 @@ abstract class VariantInputs {
             mainArtifact = mainArtifact.toLintModel(dependencyCaches),
             testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches),
             androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches),
+            testFixturesArtifact = testFixturesArtifact.orNull?.toLintModel(dependencyCaches),
             mergedManifest = mergedManifest.orNull?.asFile,
             manifestMergeReport = manifestMergeReport.orNull?.asFile,
             `package` = namespace.get(),
@@ -929,6 +963,9 @@ abstract class VariantInputs {
             consumerProguardFiles = consumerProguardFiles.orNull ?: listOf(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() },
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
+            testFixturesSourceProviders = testFixturesSourceProviders.getOrElse(emptyList()).map {
+                it.toLintModel()
+            },
             debuggable = debuggable.get(),
             shrinkable = mainArtifact.shrinkable.get(),
             buildFeatures = buildFeatures.toLintModel(),

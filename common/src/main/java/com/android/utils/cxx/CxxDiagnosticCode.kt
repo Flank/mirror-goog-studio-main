@@ -64,3 +64,12 @@ enum class CxxDiagnosticCode(val errorCode: Int) {
 
     val warningCode: Int get() = errorCode + 4000
 }
+
+/**
+ * These are messages issued when a specific bug manifests.
+ * The error code should be the bug number and bugNumber should not coincide with any values in
+ * [CxxDiagnosticCode].
+ */
+enum class CxxBugDiagnosticCode(val bugNumber: Int)  {
+    CMAKE_SERVER_HANDSHAKE_FAILED(194020297);
+}

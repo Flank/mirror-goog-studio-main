@@ -15,10 +15,13 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants
+import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.CLASS_VIEW
+import com.android.SdkConstants.MOTION_LAYOUT
+import com.android.SdkConstants.TAG_INCLUDE
 import com.android.SdkConstants.VIEW
+import com.android.SdkConstants.VIEW_MERGE
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.SdkInfo
 import com.android.tools.lint.detector.api.Category
@@ -33,11 +36,12 @@ import com.android.utils.iterator
 import org.w3c.dom.Element
 
 /**
- * Detector to ensure all Views declared within a MotionLayout tag have an assigned ID.
+ * Detector to ensure all Views declared within a MotionLayout tag have
+ * an assigned ID.
  */
 class MotionLayoutIdDetector : LayoutDetector() {
 
-    override fun getApplicableElements() = listOf(SdkConstants.MOTION_LAYOUT.oldName(), SdkConstants.MOTION_LAYOUT.newName())
+    override fun getApplicableElements() = listOf(MOTION_LAYOUT.oldName(), MOTION_LAYOUT.newName())
 
     override fun visitElement(context: XmlContext, element: Element) {
         val evaluator = context.client.getUastParser(context.project).evaluator
@@ -46,9 +50,9 @@ class MotionLayoutIdDetector : LayoutDetector() {
         for (child in element) {
             val elementTagName = child.tagName
             // TODO: Check if layout referenced by <include> has an ID
-            if (SdkConstants.TAG_INCLUDE == elementTagName ||
+            if (TAG_INCLUDE == elementTagName ||
                 // TODO: Check if the views referenced by <merge> have ID
-                SdkConstants.VIEW_MERGE == elementTagName ||
+                VIEW_MERGE == elementTagName ||
                 // Ignore non-view tags
                 isLayoutMarkerTag(elementTagName) ||
                 // Skip if the tag is not an actual View instance
@@ -57,24 +61,25 @@ class MotionLayoutIdDetector : LayoutDetector() {
                 continue
             }
 
-            if (!child.hasAttributeNS(SdkConstants.ANDROID_URI, ATTR_ID)) {
+            if (!child.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
+                val prefix = context.document.lookupPrefix(ANDROID_URI) ?: "android"
                 context.report(
                     MISSING_ID,
                     child,
                     context.getNameLocation(child),
-                    "Views inside `MotionLayout` requires an $ATTR_ID"
+                    "Views inside `MotionLayout` require an `$prefix:id` attribute",
+                    fix().set().todo(ANDROID_URI, ATTR_ID, "@+id/").build()
                 )
             }
         }
     }
 
     companion object {
-
         @JvmField
         val MISSING_ID = Issue.create(
             id = "MotionLayoutMissingId",
-            briefDescription = "Views inside `MotionLayout` require an $ATTR_ID",
-            explanation = "Views inside `MotionLayout` require an $ATTR_ID.",
+            briefDescription = "Views inside `MotionLayout` require an `android:id`",
+            explanation = "Views inside `MotionLayout` require an `android:id`.",
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,
@@ -85,7 +90,8 @@ class MotionLayoutIdDetector : LayoutDetector() {
 }
 
 /**
- * Returns whether the [tagName] represents an actual android View object.
+ * Returns whether the [tagName] represents an actual android View
+ * object.
  */
 private fun isView(tagName: String, evaluator: JavaEvaluator, sdkInfo: SdkInfo): Boolean {
     if (tagName == VIEW || sdkInfo.getParentViewName(tagName) != null) {

@@ -1599,8 +1599,6 @@ class ViewLayoutInspectorTest {
         assertThat(found).isTrue()
     }
 
-        // TODO: Add test for filtering system views and properties
-
     private fun createViewInspector(block: (ViewLayoutInspector) -> Unit) {
         // We could just create the view inspector directly, but using the factory mimics what
         // actually happens in production.

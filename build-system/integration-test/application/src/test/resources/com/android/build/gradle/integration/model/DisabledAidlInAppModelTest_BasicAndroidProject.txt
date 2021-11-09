@@ -22,16 +22,12 @@
             - aidlDirectories:
                * {PROJECT}/src/testDebug/aidl{!}{REMOVED}
       < debug
-      > release:
+      - release:
          - sourceProvider:
             - aidlDirectories:
                * {PROJECT}/src/release/aidl{!}{REMOVED}
-         - androidTestSourceProvider:
-            - aidlDirectories:
-               * {PROJECT}/src/androidTestRelease/aidl{!}{REMOVED}
          - unitTestSourceProvider:
             - aidlDirectories:
                * {PROJECT}/src/testRelease/aidl{!}{REMOVED}
-      < release
    < buildTypes
 < BasicAndroidProject

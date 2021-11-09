@@ -58,9 +58,7 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "dexBuilder", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "extractDeepLinks", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "generate", "BuildConfig", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "generate", "JacocoPropertiesFile", listOf("Debug")),
             TaskInfo(FROM_CACHE, "generate", "ResValues", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "generate", "Config", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "jacoco", "", listOf("Debug")),
             TaskInfo(FROM_CACHE, "javaPreCompile", "",
                     listOf("Debug", "DebugUnitTest", "Release", "ReleaseUnitTest")),
@@ -79,8 +77,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "process", "ManifestForPackage", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "test", "", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "validateSigning", "", listOf("Debug")),
-            TaskInfo(FROM_CACHE, "write", "AppMetadata", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "write", "SigningConfigVersions", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "compile", "ArtProfile", listOf("Release")),
 
             /*
@@ -92,6 +88,10 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
             TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
+            TaskInfo(DID_WORK, "generate", "JacocoPropertiesFile", listOf("Debug")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.tasks.GenerateTestConfig] */
+            TaskInfo(DID_WORK, "generate", "Config", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Intentionally not cacheable. */
             TaskInfo(DID_WORK, "lintVitalReport", "", listOf("Release")),
@@ -103,6 +103,10 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "package", "", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "merge", "ArtProfile", listOf("Release")),
             TaskInfo(DID_WORK, "sdk", "DependencyData", listOf("Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
+            TaskInfo(DID_WORK, "write", "AppMetadata", listOf("Debug", "Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
+            TaskInfo(DID_WORK, "write", "SigningConfigVersions", listOf("Debug", "Release")),
 
             TaskInfo(UP_TO_DATE, "clean", ""),
             TaskInfo(UP_TO_DATE,"generate", "Assets", listOf("Debug", "Release")),

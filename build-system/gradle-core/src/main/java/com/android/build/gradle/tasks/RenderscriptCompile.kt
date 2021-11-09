@@ -37,6 +37,11 @@ import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
+import com.android.sdklib.BuildToolInfo.PathId.ANDROID_RS
+import com.android.sdklib.BuildToolInfo.PathId.ANDROID_RS_CLANG
+import com.android.sdklib.BuildToolInfo.PathId.BCC_COMPAT
+import com.android.sdklib.BuildToolInfo.PathId.LLD
+import com.android.sdklib.BuildToolInfo.PathId.LLVM_RS_CC
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions.checkNotNull
 import com.google.common.collect.Lists
@@ -100,10 +105,10 @@ abstract class RenderscriptCompile : NdkTask() {
     fun getBuildToolsVersion(): String =
         buildToolsRevision.get().toString()
 
-    @get: Input
+    @get:Input
     abstract val compileSdkVersion: Property<String>
 
-    @get: Internal
+    @get:Internal
     abstract val buildToolsRevision: Property<Revision>
 
     @get:Internal
@@ -170,6 +175,11 @@ abstract class RenderscriptCompile : NdkTask() {
             compileSdkVersion = compileSdkVersion,
             buildToolsRevision = buildToolsRevision
         ).buildToolInfoProvider.get()
+
+        if (!buildToolsInfo.containsRenderscript()) {
+            throw IllegalStateException("Build tools Revision '${buildToolsInfo.revision}' does not support Renderscript. Select an earlier version of Build Tools if you need Renderscript.")
+        }
+
         compileAllRenderscriptFiles(
             sourceDirectories,
             importFolders,
@@ -186,6 +196,23 @@ abstract class RenderscriptCompile : NdkTask() {
             LoggedProcessOutputHandler(LoggerWrapper(logger)),
             buildToolsInfo
         )
+    }
+
+    /**
+     * Does a check on whether the given BuildToolInfo has renderscript binaries and folders.
+     * This is not as efficient as checking the removal dates on the PathId enums but because
+     * we can't predict the future (ie exactly when things will be removed), this works well
+     * enough and is more lenient.
+     */
+    private fun BuildToolInfo.containsRenderscript(): Boolean {
+        for (pathId in listOf(LLVM_RS_CC, ANDROID_RS, ANDROID_RS_CLANG, BCC_COMPAT, LLD)) {
+            val tool = getPath(pathId)
+            if (tool == null || !File(tool).exists()) {
+                return false
+            }
+        }
+
+        return true
     }
 
     /**
@@ -231,11 +258,6 @@ abstract class RenderscriptCompile : NdkTask() {
         checkNotNull(importFolders, "importFolders cannot be null.")
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.")
         checkNotNull(resOutputDir, "resOutputDir cannot be null.")
-
-        val renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC)
-        if (renderscript == null || !File(renderscript).isFile) {
-            throw IllegalStateException("llvm-rs-cc is missing")
-        }
 
         val processor = RenderScriptProcessor(
             sourceFolders,

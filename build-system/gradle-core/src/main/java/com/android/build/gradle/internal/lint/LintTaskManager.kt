@@ -1,6 +1,7 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
@@ -161,7 +162,10 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             testComponentPropertiesList: List<TestComponentImpl>): LinkedHashMap<String, VariantWithTests> {
         val variantsWithTests = LinkedHashMap<String, VariantWithTests>()
         for (variant in variantPropertiesList) {
-            variantsWithTests[variant.name] = VariantWithTests(variant)
+            variantsWithTests[variant.name] = VariantWithTests(
+                variant,
+                testFixtures = variant.testFixturesComponent as TestFixturesImpl?
+            )
         }
         for (testComponent in testComponentPropertiesList) {
             val key = testComponent.testedConfig.name
@@ -172,14 +176,24 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                         "Component ${current.main} appears to have two conflicting android test components ${current.androidTest} and $testComponent"
                     }
                     variantsWithTests[key] =
-                        VariantWithTests(current.main, testComponent, current.unitTest)
+                        VariantWithTests(
+                            current.main,
+                            testComponent,
+                            current.unitTest,
+                            current.testFixtures
+                        )
                 }
                 is UnitTestCreationConfig -> {
                     check(current.unitTest == null) {
                         "Component ${current.main} appears to have two conflicting unit test components ${current.unitTest} and $testComponent"
                     }
                     variantsWithTests[key] =
-                        VariantWithTests(current.main, current.androidTest, testComponent)
+                        VariantWithTests(
+                            current.main,
+                            current.androidTest,
+                            testComponent,
+                            current.testFixtures
+                        )
                 }
                 else -> throw IllegalStateException("Unexpected test component type")
             }

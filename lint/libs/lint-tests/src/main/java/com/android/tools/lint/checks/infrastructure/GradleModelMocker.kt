@@ -106,7 +106,8 @@ class GradleModelMocker @JvmOverloads constructor(
         name = "defaultConfig",
         mainSourceProvider = createSourceProvider(projectDir, "main"),
         unitTestSourceProvider = createSourceProvider(projectDir, "test", isUnitTest = true),
-        instrumentationTestSourceProvider = createSourceProvider(projectDir, "androidTest", isInstrumentationTest = true)
+        instrumentationTestSourceProvider = createSourceProvider(projectDir, "androidTest", isInstrumentationTest = true),
+        testFixturesSourceProvider = createSourceProvider(projectDir, "testFixtures"),
     )
     private var flavorDimensions: List<String> = emptyList()
     private var buildTypes: List<TestBuildType> = emptyList()
@@ -126,6 +127,7 @@ class GradleModelMocker @JvmOverloads constructor(
     private val main = DepConf()
     private val test = DepConf()
     private val androidTest = DepConf()
+    private val testFixtures = DepConf()
 
     private val severityOverrides = HashMap<String, LintModelSeverity>()
     private val flags = LintCliFlags()
@@ -324,6 +326,7 @@ class GradleModelMocker @JvmOverloads constructor(
 
         val dependencies = createDependencies(main)
         val androidTestDependencies = createDependencies(androidTest)
+        val testFixturesDependencies = createDependencies(testFixtures)
         val testDependencies = createDependencies(test)
 
         val variantCoordinates = generateVariants()
@@ -351,6 +354,10 @@ class GradleModelMocker @JvmOverloads constructor(
                 listOfNotNull(defaultConfig.instrumentationTestSourceProvider, defaultConfig.unitTestSourceProvider) +
                     productFlavorsInConfigOrder.flatMap { listOfNotNull(it.instrumentationTestSourceProvider, it.unitTestSourceProvider) } +
                     listOfNotNull(buildType.instrumentationTestSourceProvider, buildType.unitTestSourceProvider)
+
+            val testFixturesSourceProviders =
+                listOfNotNull(defaultConfig.testFixturesSourceProvider, buildType.testFixturesSourceProvider) +
+                    productFlavorsInConfigOrder.mapNotNull { it.testFixturesSourceProvider }
             val generated = File(projectDir, "generated")
             val mergedFlavorsAndBuildType = merge(defaultConfig, productFlavors, buildType)
             variants.add(
@@ -381,6 +388,16 @@ class GradleModelMocker @JvmOverloads constructor(
                         generatedResourceFolders = emptyList(),
                         classOutputs = listOf(File(projectDir, "instrumentation-classes")),
                     ),
+                    testFixturesArtifact = TestLintModelAndroidArtifact(
+                        applicationId = mergedFlavorsAndBuildType.applicationId.orEmpty(),
+                        dependencies = testFixturesDependencies,
+                        generatedSourceFolders = emptyList(),
+                        generatedResourceFolders = emptyList(),
+                        classOutputs = listOf(
+                            File(projectDir, "build/intermediates/javac/${variantName}TestFixtures/classes"),
+                            File(projectDir, "build/tmp/kotlin-classes/${variantName}TestFixtures")
+                        ),
+                    ),
                     mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
                     manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
                     `package` = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
@@ -393,6 +410,7 @@ class GradleModelMocker @JvmOverloads constructor(
                     consumerProguardFiles = emptySet(), // not supported by the mocker.
                     sourceProviders = sourceProviders,
                     testSourceProviders = testSourceProviders,
+                    testFixturesSourceProviders = testFixturesSourceProviders,
                     debuggable = buildType.isDebuggable,
                     shrinkable = buildType.isMinifyEnabled,
                     buildFeatures = buildFeatures,
@@ -483,6 +501,7 @@ class GradleModelMocker @JvmOverloads constructor(
             mainSourceProvider = null,
             unitTestSourceProvider = null,
             instrumentationTestSourceProvider = null,
+            testFixturesSourceProvider = null,
         )
     }
 
@@ -1371,7 +1390,8 @@ class GradleModelMocker @JvmOverloads constructor(
                         isDebuggable = isDebuggable,
                         mainSourceProvider = createSourceProvider(projectDir, name, isDebugOnly = isDebuggable),
                         unitTestSourceProvider = null,
-                        instrumentationTestSourceProvider = null
+                        instrumentationTestSourceProvider = null,
+                        testFixturesSourceProvider = null
                     )
                 )
             } else {
@@ -1456,7 +1476,11 @@ class GradleModelMocker @JvmOverloads constructor(
                         projectDir,
                         "androidTest".appendCapitalized(name),
                         isInstrumentationTest = true
-                    )
+                    ),
+                    testFixturesSourceProvider = createSourceProvider(
+                        projectDir,
+                        "testFixtures".appendCapitalized(name)
+                    ),
                 )
             )
         }
@@ -2214,6 +2238,7 @@ private data class TestLintModelVariant(
     override val useSupportLibraryVectorDrawables: Boolean,
     override val mainArtifact: LintModelAndroidArtifact,
     override val testArtifact: LintModelJavaArtifact?,
+    override val testFixturesArtifact: LintModelAndroidArtifact?,
     override val androidTestArtifact: LintModelAndroidArtifact?,
     override val mergedManifest: File?,
     override val manifestMergeReport: File?,
@@ -2227,6 +2252,7 @@ private data class TestLintModelVariant(
     override val consumerProguardFiles: Collection<File>,
     override val sourceProviders: List<LintModelSourceProvider>,
     override val testSourceProviders: List<LintModelSourceProvider>,
+    override val testFixturesSourceProviders: List<LintModelSourceProvider>,
     override val debuggable: Boolean,
     override val shrinkable: Boolean,
     override val buildFeatures: LintModelBuildFeatures,
@@ -2299,6 +2325,7 @@ private data class TestProductFlavor(
     val mainSourceProvider: TestLintModelSourceProvider?,
     val unitTestSourceProvider: TestLintModelSourceProvider?,
     val instrumentationTestSourceProvider: TestLintModelSourceProvider?,
+    val testFixturesSourceProvider: TestLintModelSourceProvider?,
 )
 
 private data class TestBuildType(
@@ -2310,6 +2337,7 @@ private data class TestBuildType(
     val mainSourceProvider: TestLintModelSourceProvider,
     val unitTestSourceProvider: TestLintModelSourceProvider?,
     val instrumentationTestSourceProvider: TestLintModelSourceProvider?,
+    val testFixturesSourceProvider: TestLintModelSourceProvider?,
 )
 
 private data class TestLintModelResourceField(

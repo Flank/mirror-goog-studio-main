@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.TextFormat
 
 class RangeDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = RangeDetector()
@@ -1049,5 +1050,88 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun testRangeMessages() {
+        // See https://issuetracker.google.com/202193843
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.annotation.SuppressLint;
+
+                import androidx.annotation.FloatRange;
+                import androidx.annotation.IntRange;
+                import androidx.annotation.Size;
+
+                public class CursorTest {
+                    void Issue(Cursor csr, String columnName) {
+                        csr.getString(csr.getColumnIndex(columnName)); // ERROR 1
+                        csr.getInt(csr.getColumnIndex(columnName)); // ERROR 2
+
+                        // TODO: Would be nice in the future to not require an explicit
+                        // annotation here.
+                        @IntRange(from = -1) int ix = csr.getColumnIndex(columnName);
+                        csr.getString(ix); // ERROR 3
+                        csr.getInt(ix); // ERROR 4
+
+                        csr.getString(csr.getColumnIndexOrThrow(columnName)); // OK 1
+                        csr.getInt(csr.getColumnIndexOrThrow(columnName)); // OK 2
+
+                        if (ix != -1) { csr.getString(ix); } // OK 3
+                        if (ix >= 0) { csr.getString(ix); } // OK 4
+                        if (toString().length() > 0 && ix >= 0) { csr.getString(ix); } // OK 5
+
+                        checkRange(ix); // ERROR 5
+                        if (ix >= 3.0) {
+                            checkRange(ix); // ERROR 6
+                        }
+                        if (ix >= 3.0 && ix <= 8.0) {
+                            checkRange(ix); // OK 6
+                        }
+                    }
+
+                    @SuppressLint("Range")
+                    void NoIssue(Cursor csr, String columnName) {
+                        csr.getString(csr.getColumnIndex(columnName)); // OK 7
+                        csr.getInt(csr.getColumnIndex(columnName)); // OK 8
+                    }
+
+                    public void checkRange(@FloatRange(from = 2.0, to = 10.0) double x) { }
+
+                    public static class Cursor {
+                        @IntRange(from = -1) public int getColumnIndex(String var1) { return 0; }
+                        @IntRange(from = 0) int getColumnIndexOrThrow(String var1) throws IllegalArgumentException { return 0; }
+                        public String getString(@IntRange(from = 0) int var1) { return ""; }
+                        public int getInt(@IntRange(from = 0) int var1) { return 0; }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).textFormat(TextFormat.RAW).run().expect(
+            """
+            src/test/pkg/CursorTest.java:11: Error: Value must be ≥ 0 but `getColumnIndex` can be -1 [Range]
+                    csr.getString(csr.getColumnIndex(columnName)); // ERROR 1
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/CursorTest.java:12: Error: Value must be ≥ 0 but `getColumnIndex` can be -1 [Range]
+                    csr.getInt(csr.getColumnIndex(columnName)); // ERROR 2
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/CursorTest.java:17: Error: Value must be ≥ 0 but `ix` can be -1 [Range]
+                    csr.getString(ix); // ERROR 3
+                                  ~~
+            src/test/pkg/CursorTest.java:18: Error: Value must be ≥ 0 but `ix` can be -1 [Range]
+                    csr.getInt(ix); // ERROR 4
+                               ~~
+            src/test/pkg/CursorTest.java:27: Error: Value must be ≥ 2.0 and ≤ 10.0 but `ix` can be -1.0 [Range]
+                    checkRange(ix); // ERROR 5
+                               ~~
+            src/test/pkg/CursorTest.java:29: Error: Value must be ≥ 2.0 and ≤ 10.0 but `ix` can be > 10.0 [Range]
+                        checkRange(ix); // ERROR 6
+                                   ~~
+            6 errors, 0 warnings
+            """
+        )
     }
 }

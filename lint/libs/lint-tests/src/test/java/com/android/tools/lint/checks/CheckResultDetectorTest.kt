@@ -1693,4 +1693,54 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testCoroutines() {
+        // Regression test for
+        // 204595183: CheckResult lint false positives on Kotlin functions that
+        //            return Unit in a package with @CheckReturnValue
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("RedundantSuspendModifier", "RedundantUnitReturnType", "UNUSED_PARAMETER", "unused")
+                package test.pkg
+                import javax.annotation.CheckReturnValue
+
+                @CheckReturnValue
+                class TechFileCoroutineClient {
+                    @CheckResult
+                    suspend fun createNew(path: String) {
+                    }
+
+                    suspend fun method2(ch: Char): Int {
+                        return 5
+                    }
+                    suspend fun method3(ch: Char, s: String): Unit {
+                    }
+                    suspend fun method4(): Nothing {
+                        TODO()
+                    }
+                }
+
+                fun readPresentFile(client: TechFileCoroutineClient) = run {
+                    client.createNew("/file") // OK 1
+                    client.method2('x') // ERROR 1
+                    val x = client.method2('x') // OK 2
+                    client.method3('x', "") // OK 3
+                    if (x > 100) {
+                        client.method4() // OK 4
+                    }
+                    assert(true)
+                }
+                """
+            ).indented(),
+            javaxCheckReturnValueSource
+        ).run().expect(
+            """
+            src/test/pkg/TechFileCoroutineClient.kt:23: Warning: The result of method2 is not used [CheckResult]
+                client.method2('x') // ERROR 1
+                ~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
 }

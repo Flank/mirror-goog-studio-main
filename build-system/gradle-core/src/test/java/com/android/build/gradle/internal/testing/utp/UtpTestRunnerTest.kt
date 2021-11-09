@@ -23,9 +23,12 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.testutils.MockitoKt.any
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
 import java.io.File
 import java.util.logging.Level
@@ -74,6 +77,7 @@ class UtpTestRunnerTest {
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private lateinit var mockUtpTestResultListenerServerMetadata: UtpTestResultListenerServerMetadata
 
+    private lateinit var resultsDirectory: File
     private lateinit var capturedRunnerConfigs: List<UtpRunnerConfig>
 
     @Before
@@ -109,7 +113,7 @@ class UtpTestRunnerTest {
                 .thenReturn(ServerConfig.getDefaultInstance())
     }
 
-    private fun runUtp(result: Boolean): Boolean {
+    private fun runUtp(result: UtpTestRunResult): Boolean {
         val runner = UtpTestRunner(
             null,
             mockProcessExecutor,
@@ -127,6 +131,7 @@ class UtpTestRunnerTest {
             listOf(result)
         }
 
+        resultsDirectory = temporaryFolderRule.newFolder("results")
         return runner.runTests(
             "projectName",
             "variantName",
@@ -135,7 +140,7 @@ class UtpTestRunnerTest {
             listOf(mockDevice),
             0,
             setOf(),
-            temporaryFolderRule.newFolder("results"),
+            resultsDirectory,
             false,
             null,
             mockCoverageDir,
@@ -144,7 +149,8 @@ class UtpTestRunnerTest {
 
     @Test
     fun runUtpAndPassed() {
-        val result = runUtp(result = true)
+        val result = runUtp(UtpTestRunResult(testPassed = true,
+                                             TestSuiteResult.getDefaultInstance()))
 
         assertThat(capturedRunnerConfigs).hasSize(1)
         assertThat(capturedRunnerConfigs[0].runnerConfig(
@@ -153,11 +159,12 @@ class UtpTestRunnerTest {
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isTrue()
+        assertThat(File(resultsDirectory, TEST_RESULT_PB_FILE_NAME)).exists()
     }
 
     @Test
     fun runUtpAndFailed() {
-        val result = runUtp(result = false)
+        val result = runUtp(UtpTestRunResult(testPassed = false, null))
 
         assertThat(capturedRunnerConfigs).hasSize(1)
         assertThat(capturedRunnerConfigs[0].runnerConfig(

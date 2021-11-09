@@ -16,8 +16,8 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.ApkPackaging

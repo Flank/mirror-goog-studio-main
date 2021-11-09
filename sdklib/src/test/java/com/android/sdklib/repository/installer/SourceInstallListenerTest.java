@@ -89,7 +89,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         // Assert that before installation, source path is not set thus deprecated value is returned
-        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, fop, mgr);
+        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, mgr);
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
@@ -126,7 +126,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         // Assert that before un-installation, source path is set to correct value
-        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, fop, mgr);
+        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, mgr);
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
@@ -155,7 +155,8 @@ public class SourceInstallListenerTest extends TestCase {
     private static LocalPackage getLocalPlatformPackage(MockFileOp fop) {
         fop.recordExistingFile("/sdk/platforms/android-23/build.prop", "");
         FakePackage.FakeLocalPackage local =
-                new FakePackage.FakeLocalPackage("platforms;android-23", fop);
+                new FakePackage.FakeLocalPackage(
+                        "platforms;android-23", fop.toPath("/sdk/platforms/android-23"));
 
         DetailsTypes.PlatformDetailsType platformDetails =
                 AndroidSdkHandler.getRepositoryModule().createLatestFactory()
@@ -169,7 +170,8 @@ public class SourceInstallListenerTest extends TestCase {
     private static LocalPackage getLocalSourcePackage(MockFileOp fop) {
         fop.recordExistingFile("/sdk/sources/android-23/build.prop", "");
         FakePackage.FakeLocalPackage local =
-                new FakePackage.FakeLocalPackage("sources;android-23", fop);
+                new FakePackage.FakeLocalPackage(
+                        "sources;android-23", fop.toPath("/sdk/sources/android-23"));
 
         DetailsTypes.SourceDetailsType sourceDetails =
                 AndroidSdkHandler.getRepositoryModule().createLatestFactory()

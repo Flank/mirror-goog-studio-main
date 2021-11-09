@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
@@ -29,5 +30,6 @@ import com.android.build.gradle.internal.component.UnitTestCreationConfig
 class VariantWithTests(
     val main: ConsumableCreationConfig,
     val androidTest: AndroidTestCreationConfig? = null,
-    val unitTest: UnitTestCreationConfig? = null
+    val unitTest: UnitTestCreationConfig? = null,
+    val testFixtures: TestFixturesImpl? = null
 )

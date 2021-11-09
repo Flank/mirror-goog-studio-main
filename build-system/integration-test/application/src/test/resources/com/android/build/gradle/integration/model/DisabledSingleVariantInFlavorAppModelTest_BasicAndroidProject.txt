@@ -1,0 +1,6 @@
+- BasicAndroidProject:
+   - productFlavors:
+      - one:
+         - androidTestSourceProvider{REMOVED} = (null)
+   - variants:
+      - oneDebug{REMOVED} = (null)

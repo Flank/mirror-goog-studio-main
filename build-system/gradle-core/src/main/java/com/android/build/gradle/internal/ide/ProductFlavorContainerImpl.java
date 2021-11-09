@@ -17,11 +17,12 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.VariantDimensionData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
@@ -39,8 +40,7 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
 
     @NonNull
     private final ProductFlavor productFlavor;
-    @NonNull
-    private final SourceProvider sourceProvider;
+    @Nullable private final SourceProvider sourceProvider;
     @NonNull
     private final Collection<SourceProviderContainer> extraSourceProviders;
 
@@ -49,6 +49,9 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
      *
      * @param variantDimensionData the data containing the source set
      * @param productFlavor the product flavor object
+     * @param includeProdSourceSet whether to include that source set in the model
+     * @param includeAndroidTest whether to include that source set in the model
+     * @param includeUnitTest whether to include that source set in the model
      * @param sourceProviderContainers collection of extra source providers
      * @return a non-null ProductFlavorContainer
      */
@@ -56,29 +59,46 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
     static ProductFlavorContainer createProductFlavorContainer(
             @NonNull VariantDimensionData variantDimensionData,
             @NonNull BaseFlavor productFlavor,
+            boolean includeProdSourceSet,
+            boolean includeAndroidTest,
+            boolean includeUnitTest,
             @NonNull Collection<SourceProviderContainer> sourceProviderContainers) {
 
         List<SourceProviderContainer> clonedContainers =
                 SourceProviderContainerImpl.cloneCollection(sourceProviderContainers);
 
-        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-            DefaultAndroidSourceSet sourceSet = variantDimensionData.getTestSourceSet(variantType);
+        if (includeAndroidTest) {
+            DefaultAndroidSourceSet sourceSet =
+                    variantDimensionData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST);
             if (sourceSet != null) {
-                clonedContainers.add(SourceProviderContainerImpl.create(
-                        variantType.getArtifactName(),
-                        sourceSet));
+                clonedContainers.add(
+                        SourceProviderContainerImpl.create(
+                                VariantTypeImpl.ANDROID_TEST.getArtifactName(), sourceSet));
             }
         }
 
+        if (includeUnitTest) {
+            DefaultAndroidSourceSet sourceSet =
+                    variantDimensionData.getTestSourceSet(VariantTypeImpl.UNIT_TEST);
+            if (sourceSet != null) {
+                clonedContainers.add(
+                        SourceProviderContainerImpl.create(
+                                VariantTypeImpl.UNIT_TEST.getArtifactName(), sourceSet));
+            }
+        }
+
+        SourceProviderImpl prodSourceSet = null;
+        if (includeProdSourceSet) {
+            prodSourceSet = new SourceProviderImpl(variantDimensionData.getSourceSet());
+        }
+
         return new ProductFlavorContainerImpl(
-                new ProductFlavorImpl(productFlavor, null),
-                new SourceProviderImpl(variantDimensionData.getSourceSet()),
-                clonedContainers);
+                new ProductFlavorImpl(productFlavor, null), prodSourceSet, clonedContainers);
     }
 
     private ProductFlavorContainerImpl(
             @NonNull ProductFlavorImpl productFlavor,
-            @NonNull SourceProviderImpl sourceProvider,
+            @Nullable SourceProviderImpl sourceProvider,
             @NonNull Collection<SourceProviderContainer> extraSourceProviders) {
 
         this.productFlavor = productFlavor;
@@ -92,7 +112,7 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
         return productFlavor;
     }
 
-    @NonNull
+    @Nullable
     @Override
     public SourceProvider getSourceProvider() {
         return sourceProvider;

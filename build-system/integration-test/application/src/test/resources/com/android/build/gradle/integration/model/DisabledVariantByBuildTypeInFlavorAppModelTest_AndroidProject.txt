@@ -1,0 +1,5 @@
+- AndroidProject:
+   - androidTestNamespace = (null)
+   - variants:
+      - oneDebug{REMOVED} = (null)
+      - twoDebug{REMOVED} = (null)

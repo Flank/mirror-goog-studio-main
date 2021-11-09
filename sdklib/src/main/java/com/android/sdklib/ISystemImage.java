@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
+import com.android.repository.api.RepoPackage;
 import com.android.sdklib.devices.Abi;
 import com.android.sdklib.repository.IdDisplay;
 import java.nio.file.Path;
@@ -59,7 +60,7 @@ public interface ISystemImage extends Comparable<ISystemImage> {
         IN_SYSTEM_IMAGE,
     }
 
-    /** A Wear-for-China image must reside in a directory that includes this string in its path. */
+    /** A Wear-for-China images must reside a package with this string in its path. */
     String WEAR_CN_DIRECTORY = "android-wear-cn";
 
     /** Returns the actual location of an installed system image. */
@@ -113,4 +114,8 @@ public interface ISystemImage extends Comparable<ISystemImage> {
      * Returns true if this system image supports Google Play Store.
      */
     boolean hasPlayStore();
+
+    /** The sdk package containing this system image. */
+    @NonNull
+    RepoPackage getPackage();
 }

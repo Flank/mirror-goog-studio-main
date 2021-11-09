@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.IssueReporter
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -35,7 +36,9 @@ class VariantModelImpl(
     private val testBuilderTypeProvider: () -> String?,
     private val variantProvider: () -> List<VariantImpl>,
     private val testComponentProvider: () -> List<TestComponentImpl>,
-    private val issueHandler: IssueReporter) : VariantModel {
+    private val buildFeaturesProvider: () -> BuildFeatureValues,
+    private val issueHandler: IssueReporter,
+) : VariantModel {
 
     override val variants: List<VariantImpl>
         get() = variantProvider()
@@ -45,6 +48,9 @@ class VariantModelImpl(
 
     override val defaultVariant: String?
         get() = computeDefaultVariant()
+
+    override val buildFeatures: BuildFeatureValues
+        get() = buildFeaturesProvider()
 
     /**
      * Calculates the default variant to put in the model.
