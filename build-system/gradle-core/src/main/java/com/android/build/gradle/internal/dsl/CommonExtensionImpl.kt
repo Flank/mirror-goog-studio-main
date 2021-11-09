@@ -193,18 +193,36 @@ abstract class CommonExtensionImpl<
     override var compileSdkPreview: String?
         get() = _compileSdkPreview
         set(value) {
-            val preview = value?.removePrefix("android-")
-            _compileSdkPreview = preview?.let {
-                if (it.matches(Regex("[A-Z]+"))) {
-                    it
-                } else {
-                    dslServices.issueReporter.reportError(IssueReporter.Type.GENERIC, RuntimeException("Invalid Preview value '$preview'."))
-                    // has to set the value to something in case of sync
-                    "INVALID"
+            if (value == null) {
+                if (_compileSdkPreview != null) {
+                    // if current compile sdk value is preview, then null it out.
+                    _compileSdkPreview = null
+                    _compileSdkVersion = null
                 }
+                return
             }
 
-            _compileSdkVersion = "android-$preview"
+            _compileSdkPreview = if (value.matches(Regex("^[A-Z][0-9A-Za-z]*$"))) {
+                value
+            } else {
+                if (value.toIntOrNull() != null) {
+                    dslServices.issueReporter.reportError(
+                        IssueReporter.Type.GENERIC,
+                        RuntimeException("Invalid integer value for compileSdkPreview ($value). Use compileSdk instead")
+                    )
+                } else {
+                    val expected = if (value.startsWith("android-")) value.substring(8) else "S"
+                    dslServices.issueReporter.reportError(
+                        IssueReporter.Type.GENERIC,
+                        RuntimeException("Invalid value for compileSdkPreview (\"$value\"). Value must be a platform preview name (e.g. \"$expected\")")
+                    )
+                }
+
+                // has to set the value to something in case of sync
+                "INVALID"
+            }
+
+            _compileSdkVersion = "android-$value"
             _compileSdk = null
             _compileSdkExtension = null
             _compileSdkAddon = null
