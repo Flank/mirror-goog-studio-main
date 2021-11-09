@@ -213,10 +213,18 @@ abstract class CommonExtensionImpl<
                 _compileSdkPreview = previewValue
                 _compileSdkVersion = "android-$previewValue"
             } else {
-                dslServices.issueReporter.reportError(
-                    IssueReporter.Type.GENERIC,
-                    RuntimeException("Invalid Preview value '$value'. Format is just the platform code name (e.g. 'S')")
-                )
+                if (value.toIntOrNull() != null) {
+                    dslServices.issueReporter.reportError(
+                        IssueReporter.Type.GENERIC,
+                        RuntimeException("Invalid integer value for compileSdkPreview ($value). Use compileSdk instead")
+                    )
+                } else {
+                    val expected = if (value.startsWith("android-")) value.substring(8) else "S"
+                    dslServices.issueReporter.reportError(
+                        IssueReporter.Type.GENERIC,
+                        RuntimeException("Invalid value for compileSdkPreview (\"$value\"). Value must be a platform preview name (e.g. \"$expected\")")
+                    )
+                }
             }
         }
 

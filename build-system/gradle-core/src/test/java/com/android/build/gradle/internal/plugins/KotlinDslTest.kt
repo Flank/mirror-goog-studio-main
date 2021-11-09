@@ -84,7 +84,13 @@ class KotlinDslTest {
         assertThat(android.compileSdkPreview).isNull()
 
         assertThat(attempt { android.compileSdkPreview = "29" })
-            .isEqualTo("Invalid Preview value '29'. Format is just the platform code name (e.g. 'S')")
+            .isEqualTo("Invalid integer value for compileSdkPreview (29). Use compileSdk instead")
+
+        assertThat(attempt { android.compileSdkPreview = "android-R" })
+            .isEqualTo("Invalid value for compileSdkPreview (\"android-R\"). Value must be a platform preview name (e.g. \"R\")")
+
+        assertThat(attempt { android.compileSdkPreview = "foo" })
+            .isEqualTo("Invalid value for compileSdkPreview (\"foo\"). Value must be a platform preview name (e.g. \"S\")")
 
         android.compileSdkPreview = "S"
         assertThat(android.compileSdkPreview).isEqualTo("S")
