@@ -62,14 +62,6 @@ public final class LiveEditStubs {
         context.removeClass(className);
     }
 
-    // className should be the fully qualified class name: com.example.MyClass
-    // methodName should just be the method name: myMethod
-    // methodSignature should be the JNI-style method signature: (Ljava.lang.String;II)V
-    public static void addToCache(
-            String className, String methodName, String methodSignature, byte[] data) {
-        context.addClass(className, data);
-    }
-
     public static void addProxiedClass(byte[] bytecode) {
         // TODO: This should be done on the host and needs to include the constructor descriptor.
         ClassReader reader = new ClassReader(bytecode);

@@ -38,7 +38,7 @@ public class TestException {
         int stubInvocationLineNumber = -1;
 
         try {
-            LiveEditStubs.addToCache(className, methodName, methodSignature, byteCode);
+            LiveEditStubs.addToCache(key, byteCode);
             stubInvocationLineNumber = getNextLineNumber();
             stubbedMethod(clazz, parameters);
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class TestException {
         int stubInvocationLineNumber = -1;
 
         try {
-            LiveEditStubs.addToCache(className, methodName, methodSignature, byteCode);
+            LiveEditStubs.addToCache(key, byteCode);
             Object[] parameters = {key, null};
             stubInvocationLineNumber = getNextLineNumber();
             stubbedMethod(clazz, parameters);
@@ -120,7 +120,7 @@ public class TestException {
         byte[] byteCode = buildClass(clazz);
 
         try {
-            LiveEditStubs.addToCache(className, methodName, methodSignature, byteCode);
+            LiveEditStubs.addToCache(key, byteCode);
             Object[] parameters = {key, null};
             StackTraceElement[] actual = {(StackTraceElement) stubbedMethod(clazz, parameters)};
             StackTraceElement[] expected = new StackTraceElement[1];
