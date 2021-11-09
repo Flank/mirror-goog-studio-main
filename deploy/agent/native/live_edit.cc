@@ -27,7 +27,9 @@
 #include "tools/base/deploy/common/log.h"
 
 // TODO: We need some global state that holds all these information
+namespace {
 std::unordered_set<std::string> primed_classes;
+}
 
 namespace deploy {
 
