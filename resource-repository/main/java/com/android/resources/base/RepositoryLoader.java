@@ -506,10 +506,12 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
                 BasicValueResourceItemBase item = createResourceItem(resourceType, resourceName, sourceFile);
                 addValueResourceItem(item);
               } else {
-                  // Do nothing with the sub tags when the tag of a valid resource type doesn't have
-                  // a name.
-                  forSubTags(null, () -> {});
+                // Skip the subtags when the tag of a valid resource type doesn't have a name.
+                skipSubTags();
               }
+            }
+            else {
+              skipSubTags();
             }
           }
         }
@@ -1046,11 +1048,12 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
             return type;
           }
 
-          throw new XmlSyntaxException("Invalid type attribute \"" + typeAttr + "\"", myParser, getDisplayName(file));
+          LOG.warn("Unrecognized type attribute \"" + typeAttr + "\" at " + getDisplayName(file) + " line " + myParser.getLineNumber());
         }
       }
-
-      throw new XmlSyntaxException("Invalid tag name \"" + tagName + "\"", myParser, getDisplayName(file));
+      else {
+        LOG.warn("Unrecognized tag name \"" + tagName + "\" at " + getDisplayName(file) + " line " + myParser.getLineNumber());
+      }
     }
 
     return type;
@@ -1069,6 +1072,18 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
       if (event == XmlPullParser.START_TAG && (tagName == null || tagName.equals(myParser.getName()) && myParser.getPrefix() == null)) {
         subtagVisitor.visitTag();
       }
+    } while (event != XmlPullParser.END_DOCUMENT && (event != XmlPullParser.END_TAG || myParser.getDepth() > elementDepth));
+  }
+
+  /**
+   * Skips all subtags of the current tag. When the method returns, the parser is positioned at the end tag
+   * of the current element.
+   */
+  private void skipSubTags() throws IOException, XmlPullParserException {
+    int elementDepth = myParser.getDepth();
+    int event;
+    do {
+      event = myParser.nextToken();
     } while (event != XmlPullParser.END_DOCUMENT && (event != XmlPullParser.END_TAG || myParser.getDepth() > elementDepth));
   }
 
