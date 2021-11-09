@@ -52,4 +52,12 @@ public class AdbCommandRejectedException extends Exception {
     public boolean wasErrorDuringDeviceSelection() {
         return mErrorDuringDeviceSelection;
     }
+
+    /**
+     * @deprecated This method should only be used by ddmlib to adblib migration code.
+     */
+    @Deprecated
+    public static AdbCommandRejectedException create(String message) {
+        return new AdbCommandRejectedException(message);
+    }
 }
