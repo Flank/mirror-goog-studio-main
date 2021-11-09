@@ -16,9 +16,6 @@
 package com.android.resources.base;
 
 import com.android.io.CancellableFileIo;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +23,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An output stream that uses the unsigned little endian base 128 (<a xref="https://en.wikipedia.org/wiki/LEB128">LEB128</a>)
@@ -181,7 +180,7 @@ public final class Base128InputStream extends BufferedInputStream {
    * @throws IOException if an I/O error occurs
    * @throws StreamFormatException if an invalid data format is detected
    */
-  public final boolean readBoolean() throws IOException, StreamFormatException {
+  public boolean readBoolean() throws IOException, StreamFormatException {
     int c = readInt();
     if ((c & ~0x1) != 0) {
       throw StreamFormatException.invalidFormat();
@@ -210,7 +209,7 @@ public final class Base128InputStream extends BufferedInputStream {
    * @return true if the stream content matches, false otherwise.
    * @throws IOException in case of a premature end of stream or an I/O error
    */
-  public boolean validateContents(@NotNull byte[] expected) throws IOException {
+  public boolean validateContents(byte @NotNull [] expected) throws IOException {
     boolean result = true;
     for (byte b : expected) {
       if (b != readByte()) {

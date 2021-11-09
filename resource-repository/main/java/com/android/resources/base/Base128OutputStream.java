@@ -15,21 +15,20 @@
  */
 package com.android.resources.base;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An output stream that uses the unsigned little endian base 128 (<a xref="https://en.wikipedia.org/wiki/LEB128">LEB128</a>)
  * variable-length encoding for integer values.
  * @see Base128InputStream
  */
-public class Base128OutputStream extends BufferedOutputStream {
+public final class Base128OutputStream extends BufferedOutputStream {
   public Base128OutputStream(@NotNull OutputStream stream) {
     super(stream);
   }
@@ -53,7 +52,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    * @param value the value to write
    * @throws IOException if an I/O error occurs.
    */
-  public final void writeInt(int value) throws IOException {
+  public void writeInt(int value) throws IOException {
     do {
       int b = value & 0x7F;
       value >>>= 7;
@@ -83,7 +82,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    * @param value the value to write
    * @throws IOException if an I/O error occurs.
    */
-  public final void writeLong(long value) throws IOException {
+  public void writeLong(long value) throws IOException {
     do {
       int b = (int) value & 0x7F;
       value >>>= 7;
@@ -101,7 +100,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    * @param str the string to write or null
    * @throws IOException if an I/O error occurs.
    */
-  public final void writeString(@Nullable String str) throws IOException {
+  public void writeString(@Nullable String str) throws IOException {
     if (str == null) {
       writeInt(0);
     }
@@ -125,7 +124,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    * @param value the value to write
    * @throws IOException if an I/O error occurs.
    */
-  public final void writeChar(char value) throws IOException {
+  public void writeChar(char value) throws IOException {
     writeInt(value & 0xFFFF);
   }
 
@@ -135,7 +134,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    * @param value the value to write
    * @throws IOException if an I/O error occurs.
    */
-  public final void writeByte(byte value) throws IOException {
+  public void writeByte(byte value) throws IOException {
     super.write(value);
   }
 
@@ -145,7 +144,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    * @param value the value to write
    * @throws IOException if an I/O error occurs.
    */
-  public final void writeBoolean(boolean value) throws IOException {
+  public void writeBoolean(boolean value) throws IOException {
     writeInt(value ? 1 : 0);
   }
 
@@ -155,7 +154,7 @@ public class Base128OutputStream extends BufferedOutputStream {
    */
   @Deprecated
   @Override
-  public final void write(int b) {
+  public void write(int b) {
     throw new UnsupportedOperationException(
         "This method is disabled to prevent unintended accidental use. Please use writeByte or writeInt instead.");
   }
