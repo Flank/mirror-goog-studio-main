@@ -48,16 +48,11 @@ public class ByteCodeInterpreter {
     private final OpcodeInterpreter interpreter;
     private final Frame<Value> frame;
     private final List<TryCatchBlockNode>[] handlers;
-    private final InterpretationEventHandler handler;
 
     private ByteCodeInterpreter(
-            @NonNull MethodNode m,
-            @NonNull Frame<Value> initialState,
-            @NonNull Eval eval,
-            @NonNull InterpretationEventHandler handler) {
+            @NonNull MethodNode m, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
         this.eval = eval;
         this.m = m;
-        this.handler = handler;
 
         AbstractInsnNode firstInsn = m.instructions.getFirst();
         if (firstInsn == null) {
@@ -80,11 +75,8 @@ public class ByteCodeInterpreter {
 
     @NonNull
     public static InterpreterResult interpreterLoop(
-            @NonNull MethodNode m,
-            @NonNull Frame<Value> initialState,
-            @NonNull Eval eval,
-            @NonNull InterpretationEventHandler handler) {
-        ByteCodeInterpreter bci = new ByteCodeInterpreter(m, initialState, eval, handler);
+            @NonNull MethodNode m, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
+        ByteCodeInterpreter bci = new ByteCodeInterpreter(m, initialState, eval);
         return bci.doInterpret();
     }
 
@@ -98,10 +90,7 @@ public class ByteCodeInterpreter {
                     case AbstractInsnNode.FRAME:
                     case AbstractInsnNode.LINE:
                         // Do nothing, go to next instruction
-                        InterpreterResult handled = retire();
-                        if (handled != null) {
-                            return handled;
-                        }
+                        goTo(currentInsn.getNext());
                         continue loop;
                     default:
                 }
@@ -128,11 +117,6 @@ public class ByteCodeInterpreter {
                         return new ValueReturned(Value.VOID_VALUE);
                     case ATHROW:
                         ObjectValue exceptionValue = (ObjectValue) getStackTop(frame);
-                        InterpreterResult handled =
-                                handler.exceptionThrown(frame, currentInsn, exceptionValue);
-                        if (handled != null) {
-                            return handled;
-                        }
                         if (exceptionCaught(exceptionValue)) {
                             continue loop;
                         }
@@ -153,11 +137,6 @@ public class ByteCodeInterpreter {
                     Throwable exception = e.getCause();
                     ObjectValue exceptionValue =
                             new ObjectValue(exception, Type.getType(Exception.class));
-                    InterpreterResult handled =
-                            handler.exceptionThrown(frame, currentInsn, exceptionValue);
-                    if (handled != null) {
-                        return handled;
-                    }
                     if (exceptionFromEvalCaught(exception, exceptionValue)) {
                         continue loop;
                     }
@@ -170,21 +149,12 @@ public class ByteCodeInterpreter {
                     }
                     return new ExceptionThrown(exceptionValue, exceptionType);
                 } catch (ThrownFromEvaluatedCodeException e) {
-                    InterpreterResult handled =
-                            handler.exceptionThrown(frame, currentInsn, e.exception);
-                    if (handled != null) {
-                        return handled;
-                    }
                     if (exceptionCaught(e.getException())) {
                         continue loop;
                     }
                     return new ExceptionThrown(e.getException(), ExceptionKind.FROM_EVALUATED_CODE);
                 }
-
-                InterpreterResult handled = retire();
-                if (handled != null) {
-                    return handled;
-                }
+                goTo(currentInsn.getNext());
             }
         } catch (ResultException e) {
             return e.result;
@@ -233,17 +203,6 @@ public class ByteCodeInterpreter {
         return new ValueReturned(value);
     }
 
-    // Retire an instruction. Return null to stop processing instructions.
-    @Nullable
-    private InterpreterResult retire() {
-        InterpreterResult handled = handler.instructionProcessed(currentInsn);
-        if (handled != null) {
-            return handled;
-        }
-        goTo(currentInsn.getNext());
-        return null;
-    }
-
     @NonNull
     private static Value getStackTop(@NonNull Frame<Value> frame) throws BrokenCode {
         Value v = frame.getStack(frame.getStackSize() - 1);
@@ -284,11 +243,6 @@ public class ByteCodeInterpreter {
             if (exceptionTypeInternalName != null) {
                 Type exceptionType = Type.getObjectType(exceptionTypeInternalName);
                 if (instanceOf.apply(exceptionType)) {
-                    InterpreterResult handled =
-                            handler.exceptionCaught(frame, currentInsn, exceptionValue);
-                    if (handled != null) {
-                        throw new ResultException(handled);
-                    }
                     frame.clearStack();
                     frame.push(exceptionValue);
                     goTo(catcher.handler);

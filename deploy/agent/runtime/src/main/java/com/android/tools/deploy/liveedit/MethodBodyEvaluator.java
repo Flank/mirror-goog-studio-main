@@ -21,7 +21,6 @@ import com.android.deploy.asm.tree.MethodNode;
 import com.android.deploy.asm.tree.analysis.Frame;
 import com.android.tools.deploy.interpreter.ByteCodeInterpreter;
 import com.android.tools.deploy.interpreter.Eval;
-import com.android.tools.deploy.interpreter.InterpretationEventHandler;
 import com.android.tools.deploy.interpreter.InterpreterResult;
 import com.android.tools.deploy.interpreter.ObjectValue;
 import com.android.tools.deploy.interpreter.Value;
@@ -79,9 +78,7 @@ public class MethodBodyEvaluator {
             evaluator = new LoggingEval(evaluator);
         }
 
-        InterpreterResult result =
-                ByteCodeInterpreter.interpreterLoop(
-                        target, init, evaluator, InterpretationEventHandler.NONE);
+        InterpreterResult result = ByteCodeInterpreter.interpreterLoop(target, init, evaluator);
         if (result instanceof ValueReturned) {
             Value value = ((ValueReturned) result).getResult();
             return value.obj();
