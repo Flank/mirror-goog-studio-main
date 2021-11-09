@@ -88,6 +88,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 AutofillDetector.ISSUE,
                 BadHostnameVerifierDetector.ISSUE,
                 BatteryDetector.ISSUE,
+                BidirectionalTextDetector.BIDI_SPOOFING,
                 BottomAppBarDetector.ISSUE,
                 ButtonDetector.BACK_BUTTON,
                 ButtonDetector.CASE,

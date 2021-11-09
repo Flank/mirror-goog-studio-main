@@ -307,7 +307,7 @@ abstract class R8Task @Inject constructor(
                         && !variantType.isAar)
 
             setBootClasspathForCodeShrinker(task)
-            task.minSdkVersion.set(creationConfig.minSdkVersion.apiLevel)
+            task.minSdkVersion.set(creationConfig.minSdkVersionForDexing.apiLevel)
             task.debuggable
                 .setDisallowChanges(creationConfig.debuggable)
             task.disableTreeShaking.set(disableTreeShaking)

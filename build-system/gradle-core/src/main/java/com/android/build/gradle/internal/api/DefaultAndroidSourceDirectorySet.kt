@@ -94,59 +94,71 @@ class DefaultAndroidSourceDirectorySet(
 
     override fun toString()= "${super.toString()}, type=${type}, source=$source"
 
+    @Deprecated("To be removed in 8.0")
     override fun getIncludes(): Set<String> {
         return filter.includes
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun getExcludes(): Set<String> {
         return filter.excludes
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun setIncludes(includes: Iterable<String>): PatternFilterable {
         filter.setIncludes(includes)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun setExcludes(excludes: Iterable<String>): PatternFilterable {
         filter.setExcludes(excludes)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun include(vararg includes: String): PatternFilterable {
         filter.include(*includes)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun include(includes: Iterable<String>): PatternFilterable {
         filter.include(includes)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun include(includeSpec: Spec<FileTreeElement>): PatternFilterable {
         filter.include(includeSpec)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun include(includeSpec: Closure<*>): PatternFilterable {
         filter.include(includeSpec)
         return this
     }
 
-    override fun     exclude(excludes: Iterable<String>): PatternFilterable {
+    @Deprecated("To be removed in 8.0")
+    override fun exclude(excludes: Iterable<String>): PatternFilterable {
         filter.exclude(excludes)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun exclude(vararg excludes: String): PatternFilterable {
         filter.exclude(*excludes)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun exclude(excludeSpec: Spec<FileTreeElement>): PatternFilterable {
         filter.exclude(excludeSpec)
         return this
     }
 
+    @Deprecated("To be removed in 8.0")
     override fun exclude(excludeSpec: Closure<*>): PatternFilterable {
         filter.exclude(excludeSpec)
         return this

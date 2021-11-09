@@ -31,6 +31,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.kotlin.psi.KtImportDirective;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UImportStatement;
 
@@ -97,6 +98,15 @@ public class WrongImportDetector extends Detector implements SourceCodeScanner {
             if (resolved instanceof PsiClass) {
                 String qualifiedName = ((PsiClass) resolved).getQualifiedName();
                 if ("android.R".equals(qualifiedName)) {
+
+                    PsiElement psi = statement.getSourcePsi();
+                    if (psi instanceof KtImportDirective) {
+                        // Importing android.R as an alias is totally fine
+                        if (((KtImportDirective) psi).getAlias() != null) {
+                            return;
+                        }
+                    }
+
                     Location location = context.getLocation(statement);
                     context.report(
                             ISSUE,

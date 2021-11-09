@@ -122,7 +122,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.libConfiguration.set(getDesugarLibConfig(creationConfig.services.projectInfo.getProject()))
             task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.services.projectInfo.getProject()))
             task.androidJarInput.initialize(creationConfig)
-            task.minSdkVersion.set(creationConfig.minSdkVersion.getFeatureLevel())
+            task.minSdkVersion.set(creationConfig.minSdkVersionForDexing.getFeatureLevel())
 
             if (creationConfig.needsShrinkDesugarLibrary) {
                 setDesugarLibKeepRules(
