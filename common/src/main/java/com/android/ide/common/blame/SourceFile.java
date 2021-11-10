@@ -92,7 +92,7 @@ public final class SourceFile implements Serializable {
             return mSourcePath;
         }
         if (mFilePath != null) {
-            return Paths.get(mFilePath).toAbsolutePath().toString();
+            return mFilePath;
         }
         return null;
     }

@@ -153,6 +153,11 @@ fun getIdentifiedSourceSetMap(
             appId to sourceSet.absolutePath
         }
 }
+
+/**
+ * Verifies if a string is relative resource sourceset filepath. This is for cases where it is
+ * not possible to determine if relative resource filepaths are enabled by default.
+ */
 fun isRelativeSourceSetResource(filepath: String) : Boolean {
     return filepath.contains(separator)
 }

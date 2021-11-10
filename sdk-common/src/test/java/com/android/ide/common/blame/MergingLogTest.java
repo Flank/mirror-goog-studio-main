@@ -185,7 +185,7 @@ public class MergingLogTest {
 
         // now reload the minimal log and assert that memory model is correct.
         Map<SourceFile, Map<SourcePosition, SourceFilePosition>> values =
-                MergingLogPersistUtil.loadFromMultiFileVersion2(tempDir, "values");
+                MergingLogPersistUtil.loadFromMultiFileVersion2(tempDir, "values", false);
 
         assertThat(values).hasSize(1);
         Map<SourcePosition, SourceFilePosition> loadedMap = values.get(new SourceFile(outputFile));
