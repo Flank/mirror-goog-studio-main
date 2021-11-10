@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -171,7 +172,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
+                SingleArtifact.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
             task.featureDeps = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,

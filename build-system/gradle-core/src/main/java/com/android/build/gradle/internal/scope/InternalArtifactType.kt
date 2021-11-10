@@ -465,8 +465,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // Project metadata
     object METADATA_FEATURE_DECLARATION: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object METADATA_FEATURE_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // The metadata for the library dependencies: InternalArtifactType<RegularFile>(FILE), Replaceable direct and indirect: InternalArtifactType<RegularFile>(FILE), Replaceable published for each module.
-    object METADATA_LIBRARY_DEPENDENCIES_REPORT: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // The library dependencies report: InternalArtifactType<RegularFile>(FILE), Replaceable direct and indirect: InternalArtifactType<RegularFile>(FILE), Replaceable published for the entire app to
     // package in the bundle.
