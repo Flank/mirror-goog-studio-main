@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -283,7 +284,7 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PerModuleReportDependenciesTask::dependencyReport
-            ).withName("dependencies.pb").on(InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT)
+            ).withName("dependencies.pb").on(SingleArtifact.METADATA_LIBRARY_DEPENDENCIES_REPORT)
         }
 
         override fun configure(

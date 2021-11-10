@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.SingleArtifact
 import java.nio.charset.StandardCharsets.UTF_8
 
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -140,7 +141,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
     ) {
       super.configure(task)
       creationConfig.artifacts.setTaskInputToFinalProduct(
-          InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
+          SingleArtifact.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
     }
   }
 }
