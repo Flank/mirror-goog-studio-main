@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.concurrent.GuardedBy;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -468,6 +469,10 @@ public class DeviceParser {
 
     private static final int MAX_FILE_LENGTH = 640 * 1024;  // ought to be enough for anybody
 
+    /**
+     * Note that SAX parser factory is not guaranteed to be thread-safe.
+     */
+    @GuardedBy("sParserFactory")
     private static final SAXParserFactory sParserFactory;
 
     static {
@@ -528,10 +533,12 @@ public class DeviceParser {
 
     @NonNull
     private static SAXParser getParser(int version) throws ParserConfigurationException, SAXException {
-        Schema schema = DeviceSchema.getSchema(version);
-        if (schema != null) {
-            sParserFactory.setSchema(schema);
+        synchronized (sParserFactory) {
+            Schema schema = DeviceSchema.getSchema(version);
+            if (schema != null) {
+                sParserFactory.setSchema(schema);
+            }
+            return XmlUtils.createSaxParser(sParserFactory);
         }
-        return XmlUtils.createSaxParser(sParserFactory);
     }
 }
