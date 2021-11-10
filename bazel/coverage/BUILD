@@ -246,7 +246,6 @@ coverage_report(
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib:intellij.android.layoutlib.tests_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
@@ -272,7 +271,6 @@ coverage_report(
         "tools/base/dynamic-layout-inspector/agent/appinspection/src/main",
     ],
     tests = [
-        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/base/dynamic-layout-inspector/agent/appinspection:agent_tests.test",
     ],
 )
@@ -820,7 +818,6 @@ coverage_report(
         "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
         "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
-        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib:intellij.android.layoutlib.tests_tests",
         "//tools/adt/idea/logcat:intellij.android.logcat_tests",
