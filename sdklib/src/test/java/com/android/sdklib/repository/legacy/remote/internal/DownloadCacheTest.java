@@ -21,10 +21,10 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeSettingsController;
-import com.android.repository.testframework.MockFileOp;
+import com.android.sdklib.repository.legacy.FileOp;
+import com.android.sdklib.repository.legacy.MockFileOp;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import java.io.BufferedReader;

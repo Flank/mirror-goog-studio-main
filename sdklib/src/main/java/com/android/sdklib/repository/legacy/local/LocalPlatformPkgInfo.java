@@ -20,16 +20,14 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.repository.api.RepoManager;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.legacy.FileOp;
 import com.android.sdklib.repository.legacy.descriptors.IPkgDesc;
 import com.android.sdklib.repository.legacy.descriptors.PkgDesc;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

@@ -17,8 +17,8 @@
 package com.android.sdklib.repository.legacy.io;
 
 import com.android.io.CancellableFileIo;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
+import com.android.sdklib.repository.legacy.FileOp;
 import java.io.File;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
