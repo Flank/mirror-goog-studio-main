@@ -45,6 +45,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 import java.lang.RuntimeException
 
 /**
@@ -88,12 +89,8 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         maybeWarnAboutDeprecatedGlobalRuleJars()
-        if (outputStream.get() != OutputStream.NONE) {
+        if (outputStream.get() != OutputStream.ABBREVIATED) {
             textReportInputFile.get().asFile.let { textReportFile ->
-                if (!textReportFile.isFile) {
-                    logger.debug("Missing lint intermediate text report.")
-                    return@let
-                }
                 val text = textReportFile.readText()
                 if (text.startsWith("No issues found")
                     || text.contains("0 errors, 0 warnings")) {
@@ -112,12 +109,39 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             }
             val returnValue = returnValueFile.readText().toInt()
             if (returnValue in HANDLED_ERRORS) {
+                if (outputStream.get() == OutputStream.ABBREVIATED) {
+                    logger.lifecycle(abbreviateLintTextFile(textReportInputFile.get().asFile))
+                }
                 if (returnValue == ERRNO_ERRORS && !abortOnError.get()) {
                     return
                 }
                 maybeThrowException(returnValue, android.get(), fatalOnly.get())
             }
         }
+    }
+
+    private fun abbreviateLintTextFile(file: File) : String {
+        val lines = file.readLines()
+        if (lines.count() < 25) return lines.joinToString("\n")
+        // Append the first issue and the footer text
+        return StringBuilder().apply {
+            append("Lint found ")
+            append(lines.last { it.isNotEmpty() })
+            append(". First failure:\n\n")
+            // This is dependent on the format of the text output, but should be good enough for now
+            val firstError = lines.indexOfFirst { !it.startsWith(" ") && it.contains("Error: ") }
+            var line = maxOf(0, firstError) // Default to the first line if 'Error:' not found
+            while(true) {
+                append(lines[line]).append("\n")
+                line += 1
+                if (!lines[line].startsWith(" ") && lines[line].isNotEmpty()) {
+                    break
+                }
+
+            }
+            append("\nThe full lint text report is located at:\n  ")
+            append(file.absolutePath)
+        }.toString()
     }
 
     private fun maybeWarnAboutDeprecatedGlobalRuleJars() {
@@ -203,7 +227,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             // If text report is requested, but no path specified, use stdout, hence the ?: true
             lintOptions.textReport && textOutput?.isLintStdout() ?: true ->
                 outputStream.setDisallowChanges(OutputStream.STDOUT)
-            else -> outputStream.setDisallowChanges(OutputStream.NONE)
+            else -> outputStream.setDisallowChanges(OutputStream.ABBREVIATED)
         }
         val locationsBuildService =
             getBuildService<AndroidLocationsBuildService>(project.gradle.sharedServices)
@@ -234,7 +258,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     enum class OutputStream {
         STDOUT,
         STDERR,
-        NONE
+        ABBREVIATED,
     }
 
     companion object {

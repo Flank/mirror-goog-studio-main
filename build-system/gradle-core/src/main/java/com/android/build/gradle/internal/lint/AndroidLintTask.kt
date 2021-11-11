@@ -825,7 +825,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     }
 
     private fun configureOutputSettings(lintOptions: LintOptions) {
-        this.textReportEnabled.setDisallowChanges(lintOptions.textReport)
+        // Always output the text report for the text output task
+        this.textReportEnabled.setDisallowChanges(true)
         this.htmlReportEnabled.setDisallowChanges(lintOptions.htmlReport)
         this.xmlReportEnabled.setDisallowChanges(lintOptions.xmlReport)
         this.sarifReportEnabled.setDisallowChanges(lintOptions.sarifReport)
