@@ -19,7 +19,7 @@ apply plugin: 'com.android.tools.publish'
 
 dependencies {
     implementation libs.com.android.tools.build.apksig
-    implementation project(':base:zipflinger')
+    implementation libs.com.android.zipflinger
     implementation libs.com.android.tools.annotations
 
     testImplementation 'junit:junit:4.12'

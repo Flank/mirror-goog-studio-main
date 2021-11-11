@@ -480,8 +480,8 @@ class ModelBuilder<
             productFlavors = productFlavors,
 
             signingConfigs = extension.signingConfigs.map { it.convert() },
-            aaptOptions = extension.aaptOptions.convert(),
-            lintOptions = extension.lintOptions.convert(),
+            aaptOptions = extension.androidResources.convert(),
+            lintOptions = extension.lint.convert(),
 
             dependenciesInfo = dependenciesInfo,
             )

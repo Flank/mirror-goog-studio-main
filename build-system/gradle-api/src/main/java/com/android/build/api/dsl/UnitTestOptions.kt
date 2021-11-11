@@ -28,7 +28,7 @@ interface UnitTestOptions {
      *
      * See [Test Your App](https://developer.android.com/studio/test/index.html) for details.
      *
-     * @since 1.1.0
+     * since 1.1.0
      */
     var isReturnDefaultValues: Boolean
 
@@ -68,7 +68,7 @@ interface UnitTestOptions {
      * (relative to the current project directory, not the root project directory); otherwise,
      * they will be absolute paths. Prior to version 3.5.0, the paths are all absolute paths.
      *
-     * @since 3.0.0
+     * since 3.0.0
      */
     var isIncludeAndroidResources: Boolean
 
@@ -91,7 +91,7 @@ interface UnitTestOptions {
      * }
      * ```
      *
-     * @since 1.2.0
+     * since 1.2.0
      */
     fun all(configAction: (Test) -> Unit)
 }

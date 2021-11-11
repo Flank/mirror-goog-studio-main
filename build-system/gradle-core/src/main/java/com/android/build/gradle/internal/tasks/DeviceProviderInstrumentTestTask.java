@@ -795,7 +795,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     Logging.getLogger(DeviceProviderInstrumentTestTask.class).isInfoEnabled();
             task.getTestRunnerFactory()
                     .getUtpLoggingLevel()
-                    .set(infoLoggingEnabled ? Level.INFO : Level.WARNING);
+                    .set(infoLoggingEnabled ? Level.INFO : Level.OFF);
 
             task.getTestRunnerFactory()
                     .getUninstallIncompatibleApks()

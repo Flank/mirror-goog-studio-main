@@ -16,8 +16,7 @@
 package com.android.repository.util;
 
 import com.android.repository.io.FileUtilKt;
-import com.android.repository.testframework.MockFileOp;
-import java.io.File;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.nio.file.Path;
 import junit.framework.TestCase;
 
@@ -25,22 +24,21 @@ import junit.framework.TestCase;
  * Tests for {@link FileUtilKt}.
  */
 public class FileUtilTest extends TestCase {
-    private MockFileOp mFileOp = new MockFileOp();
 
     public void testRecursiveSize() throws Exception {
         final String[][] theFiles = {
-          {"/aDirectory/file1.txt",                       "The contents of file1"},
-          {"/aDirectory/file_number_two.txt",             "The contents of file number two"},
-          {"/aDirectory/aSubDirectory/file_three.txt",    "A file in the first sub-directory"},
-          {"/aDirectory/aSubDirectory/subsub/file_4.txt", "A file in a sub-sub-directory"}
+            {"file1.txt", "The contents of file1"},
+            {"file_number_two.txt", "The contents of file number two"},
+            {"aSubDirectory/file_three.txt", "A file in the first sub-directory"},
+            {"aSubDirectory/subsub/file_4.txt", "A file in a sub-sub-directory"}
         };
 
         int expectedSize = 0;
+        Path rootPath = InMemoryFileSystems.createInMemoryFileSystemAndFolder("aDirectory");
         for (final String[] fileInfo : theFiles) {
-            mFileOp.recordExistingFile(fileInfo[0], fileInfo[1]);
+            InMemoryFileSystems.recordExistingFile(rootPath.resolve(fileInfo[0]), fileInfo[1]);
             expectedSize += fileInfo[1].length();
         }
-        Path rootPath = mFileOp.toPath(new File("/aDirectory"));
         assertEquals(expectedSize, FileUtilKt.recursiveSize(rootPath));
     }
 }

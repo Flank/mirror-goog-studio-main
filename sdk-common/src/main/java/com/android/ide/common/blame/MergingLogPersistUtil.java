@@ -20,6 +20,7 @@ import static com.android.SdkConstants.DOT_JSON;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.blame.MergingLogPersistUtil.SourcePositionsSerializer.Kind;
+import com.android.ide.common.resources.RelativeResourceUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -400,7 +401,14 @@ public class MergingLogPersistUtil {
                 while (reader.peek() != JsonToken.END_OBJECT) {
                     name = reader.nextName();
                     if (name.equals(KEY_OUTPUT_FILE)) {
-                        toFile = new SourceFile(new File(reader.nextString()));
+                        String pathname = reader.nextString();
+                        toFile = new SourceFile(new File(pathname));
+                        // When relative resources are used, the key of the merging log will
+                        // follow the relative resource set identification format, this sets
+                        // the key to the relative path.
+                        if (RelativeResourceUtils.isRelativeSourceSetResource(pathname)) {
+                            toFile.setOverrideSourcePath(pathname);
+                        }
                     } else if (name.equals(KEY_MAP)) {
                         reader.beginArray();
                         while (reader.peek() != JsonToken.END_ARRAY) {

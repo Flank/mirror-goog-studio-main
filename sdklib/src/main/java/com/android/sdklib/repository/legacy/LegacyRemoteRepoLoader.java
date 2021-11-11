@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
 import com.android.repository.api.Checksum;
-import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.FallbackRemoteRepoLoader;
@@ -37,7 +36,6 @@ import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.LayoutlibVersion;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -156,14 +154,9 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                                         false));
                     }
                 }
-                ProgressIndicator progress = new ConsoleProgressIndicator();
                 mDetails =
                         LegacyRepoUtils.createTypeDetails(
-                                mWrapped.getPkgDesc(),
-                                layoutlibApi,
-                                libs,
-                                null,
-                                FileOpUtils.create());
+                                mWrapped.getPkgDesc(), layoutlibApi, libs, null);
             }
             return mDetails;
         }

@@ -18,13 +18,14 @@ package com.android.resources.base;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
+import com.android.utils.Base128InputStream;
+import com.android.utils.Base128OutputStream;
 import com.android.utils.HashCodes;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Resource item representing a value resource, e.g. a string or a color.

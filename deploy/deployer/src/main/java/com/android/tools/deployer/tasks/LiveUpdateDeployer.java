@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The purpose of this class is to provide a facet to updating Live Literals on the device.
@@ -60,11 +61,17 @@ public class LiveUpdateDeployer {
         final String className;
         final String methodName;
         final byte[] classData;
+        final Map<String, byte[]> supportClasses;
 
-        public UpdateLiveEditsParam(String className, String methodName, byte[] classData) {
+        public UpdateLiveEditsParam(
+                String className,
+                String methodName,
+                byte[] classData,
+                Map<String, byte[]> supportClasses) {
             this.className = className;
             this.methodName = methodName;
             this.classData = classData;
+            this.supportClasses = supportClasses;
         }
     }
 
@@ -135,10 +142,17 @@ public class LiveUpdateDeployer {
         requestBuilder.setArch(arch);
         requestBuilder.setPackageName(packageName);
 
-        requestBuilder.setClassName(param.className);
-        requestBuilder.setMethodSignature(param.methodName);
-        requestBuilder.setClassData(ByteString.copyFrom(param.classData));
+        requestBuilder.setTargetClass(
+                Deploy.LiveEditClass.newBuilder()
+                        .setClassName(param.className)
+                        .setClassData(ByteString.copyFrom(param.classData))
+                        .setMethodSignature(param.methodName));
 
+        for (String name : param.supportClasses.keySet()) {
+            ByteString data = ByteString.copyFrom(param.supportClasses.get(name));
+            requestBuilder.addSupportClasses(
+                    Deploy.LiveEditClass.newBuilder().setClassName(name).setClassData(data));
+        }
         Deploy.LiveEditRequest request = requestBuilder.build();
 
         List<UpdateLiveEditError> errors = new LinkedList<>();

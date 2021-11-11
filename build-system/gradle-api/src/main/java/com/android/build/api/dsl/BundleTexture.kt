@@ -35,7 +35,7 @@ interface BundleTexture {
      * and a pre-Lollipop device does not support this format, then the app will be
      * considered as not compatible and won't be installable.
      *
-     * @since 4.1.0
+     * since 4.1.0
      */
     @get:Incubating
     @set:Incubating

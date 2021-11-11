@@ -21,16 +21,12 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.profile.GradleAnalyticsEnvironment;
-import com.android.builder.model.OptionalCompilationStep;
+import com.android.build.gradle.internal.profile.GradleSystemEnvironment;
 import com.android.tools.analytics.AnalyticsSettings;
+import com.android.utils.Environment;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 
@@ -66,6 +62,7 @@ public final class ProjectOptions {
                 LoggerWrapper.getLogger(ProjectOptions.class),
                 null,
                 new GradleAnalyticsEnvironment(providerFactory));
+        Environment.initialize(new GradleSystemEnvironment(providerFactory));
     }
 
     @NonNull

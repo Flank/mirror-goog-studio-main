@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.repository.impl.meta.CommonFactory;
-import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -34,11 +34,10 @@ public class LicenseTest {
 
     @Test
     public void testAccept() {
-        MockFileOp fop = new MockFileOp();
         CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         License l = factory.createLicenseType("my license", "lic1");
         License l2 = factory.createLicenseType("my license 2", "lic2");
-        Path root = fop.toPath("/sdk");
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         assertFalse(l.checkAccepted(root));
         assertFalse(l2.checkAccepted(root));
         l.setAccepted(root);
@@ -48,11 +47,10 @@ public class LicenseTest {
 
     @Test
     public void testMultiSameIdAccept() {
-        MockFileOp fop = new MockFileOp();
         CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         License l = factory.createLicenseType("my license", "lic1");
         License l2 = factory.createLicenseType("my license 2", "lic1");
-        Path root = fop.toPath("/sdk");
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         assertFalse(l.checkAccepted(root));
         assertFalse(l2.checkAccepted(root));
         l.setAccepted(root);
@@ -66,12 +64,11 @@ public class LicenseTest {
     /** Since we tell users the files control the license acceptance, make sure they work. */
     @Test
     public void testLicenseFile() throws Exception {
-        MockFileOp fop = new MockFileOp();
         CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         License lic1 = factory.createLicenseType("my license", "lic1");
         License lic1a = factory.createLicenseType("my license rev 2", "lic1");
         License lic2 = factory.createLicenseType("my license 2", "lic2");
-        Path root = fop.toPath("/sdk").toAbsolutePath();
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         lic1.setAccepted(root);
         lic1a.setAccepted(root);
         lic2.setAccepted(root);
@@ -85,10 +82,11 @@ public class LicenseTest {
         assertFalse(lic1a.checkAccepted(root));
         assertTrue(lic2.checkAccepted(root));
 
-        fop = new MockFileOp();
-        root = fop.toPath(root.toString());
+        root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         assertFalse(lic1.checkAccepted(root));
-        fop.recordExistingFile(lic1File.toString(), lic1FileContent);
+        lic1File = root.getRoot().resolve(lic1File.toString());
+        Files.createDirectories(lic1File.getParent());
+        Files.write(lic1File, lic1FileContent);
         assertTrue(lic1.checkAccepted(root));
         assertTrue(lic1a.checkAccepted(root));
     }

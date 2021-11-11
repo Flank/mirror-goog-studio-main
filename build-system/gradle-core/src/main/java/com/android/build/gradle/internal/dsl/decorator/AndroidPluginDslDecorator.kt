@@ -38,6 +38,7 @@ import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.Split
 import com.android.build.api.dsl.Splits
+import com.android.build.api.dsl.StoreArchive
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
@@ -48,6 +49,7 @@ import com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency
 import com.android.build.gradle.internal.dsl.BundleOptionsDensity
 import com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier
 import com.android.build.gradle.internal.dsl.BundleOptionsLanguage
+import com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive
 import com.android.build.gradle.internal.dsl.BundleOptionsTexture
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.DexPackagingOptionsImpl
@@ -81,6 +83,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(BundleLanguage::class.java, BundleOptionsLanguage::class.java),
     SupportedPropertyType.Block(BundleTexture::class.java, BundleOptionsTexture::class.java),
     SupportedPropertyType.Block(BundleCodeTransparency::class.java, BundleOptionsCodeTransparency::class.java),
+    SupportedPropertyType.Block(StoreArchive::class.java, BundleOptionsStoreArchive::class.java),
     SupportedPropertyType.Block(CompileOptions::class.java, com.android.build.gradle.internal.CompileOptions::class.java),
     SupportedPropertyType.Block(DensitySplit::class.java, DensitySplitOptions::class.java),
     SupportedPropertyType.Block(DexPackagingOptions::class.java, DexPackagingOptionsImpl::class.java),

@@ -22,8 +22,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
-import com.android.repository.io.FileOp;
-import com.android.repository.testframework.MockFileOp;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
@@ -51,6 +49,7 @@ import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.local.LocalPlatformPkgInfo;
 import com.android.sdklib.repository.legacy.local.LocalSysImgPkgInfo;
 import com.android.testutils.MockLog;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +76,6 @@ public class TempSdkManager extends ExternalResource {
 
     private MockLog mLog;
 
-    private final MockFileOp mFileOp = new MockFileOp();
     private AndroidSdkHandler mSdkHandler;
 
     public TempSdkManager(String testName) {
@@ -93,10 +91,6 @@ public class TempSdkManager extends ExternalResource {
 
     public AndroidSdkHandler getSdkHandler() {
         return mSdkHandler;
-    }
-
-    public FileOp getFileOp() {
-        return mFileOp;
     }
 
     /**
@@ -117,7 +111,7 @@ public class TempSdkManager extends ExternalResource {
      * will be reparsed.
      */
     private void createSdkAvdManagers() {
-        mSdkHandler = new AndroidSdkHandler(mFakeSdk, mFakeAndroidFolder, mFileOp);
+        mSdkHandler = new AndroidSdkHandler(mFakeSdk, mFakeAndroidFolder);
     }
 
     /**
@@ -126,7 +120,7 @@ public class TempSdkManager extends ExternalResource {
      * impossible.
      */
     private void makeFakeSdk() throws IOException {
-        mFakeSdk = mFileOp.toPath("/sdk");
+        mFakeSdk = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
 
         Path addonsDir = mFakeSdk.resolve(SdkConstants.FD_ADDONS);
         Files.createDirectories(addonsDir);
@@ -144,7 +138,7 @@ public class TempSdkManager extends ExternalResource {
     }
 
     private void makeFakeAndroidFolder() throws IOException {
-        mFakeAndroidFolder = mFileOp.toPath("/android-home");
+        mFakeAndroidFolder = mFakeSdk.getRoot().resolve("android-home");
         Files.createDirectories(mFakeAndroidFolder);
     }
 

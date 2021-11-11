@@ -37,3 +37,26 @@ class GradleAnalyticsEnvironment(providerFactory: ProviderFactory) : Environment
         return systemProperties[name]
     }
 }
+
+// TODO(b/205741140): Aggregate with GradleAnalyticsEnvironment
+/**
+ * Gradle-specific implementation of the [com.android.utils.Environment] for computer
+ * architecture utils.
+ */
+class GradleSystemEnvironment(providerFactory: ProviderFactory) : com.android.utils.Environment() {
+
+    private val systemProperties = SystemProperty.values().associate {
+        it to providerFactory.systemProperty(it.key).forUseAtConfigurationTime().orNull
+    }
+    private val envVariables = EnvironmentVariable.values().associate {
+        it to providerFactory.environmentVariable(it.key).forUseAtConfigurationTime().orNull
+    }
+
+    override fun getVariable(name: EnvironmentVariable): String? {
+        return envVariables[name]
+    }
+
+    override fun getSystemProperty(name: SystemProperty): String? {
+        return systemProperties[name]
+    }
+}

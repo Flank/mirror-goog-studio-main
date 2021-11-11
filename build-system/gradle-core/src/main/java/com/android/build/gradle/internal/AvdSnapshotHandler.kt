@@ -82,6 +82,8 @@ class AvdSnapshotHandler(
                 "@$avdName",
                 "-no-window",
                 "-no-boot-anim",
+                "-gpu",
+                "auto-no-window",
                 "-check-snapshot-loadable",
                 snapshotName
             )
@@ -145,7 +147,9 @@ class AvdSnapshotHandler(
                 "-no-boot-anim",
                 "-no-audio",
                 "-id",
-                deviceId
+                deviceId,
+                "-gpu",
+                "auto-no-window",
             )
         )
         processBuilder.environment()["ANDROID_AVD_HOME"] = avdLocation.absolutePath

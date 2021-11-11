@@ -119,6 +119,12 @@ public class AarSourceResourceRepositoryTest {
   }
 
   @Test
+  public void testGetAllDeclaredIds_unrecognizedTag() {
+    AarSourceResourceRepository repository = AarTestUtils.getTestAarRepositoryFromExplodedAar("unrecognizedTag");
+    assertThat(repository.getResources(ResourceNamespace.RES_AUTO, ResourceType.COLOR).keySet()).containsExactly("black", "white");
+  }
+
+  @Test
   public void testMultipleValues_wholeResourceDirectory_exploded() {
     AarSourceResourceRepository repository = AarTestUtils.getTestAarRepositoryFromExplodedAar();
     checkRepositoryContents(repository);

@@ -16,6 +16,7 @@
 
 package com.android.ide.common.blame;
 
+import com.android.ide.common.resources.RelativeResourceUtils;
 import com.google.common.base.Strings;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
@@ -87,7 +88,7 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
                     } else {
                         sf = new SourceFile(file);
                     }
-                    if (filePath.contains(":")) {
+                    if (RelativeResourceUtils.isRelativeSourceSetResource(filePath)) {
                         sf.setOverrideSourcePath(filePath);
                     }
                     return sf;
@@ -104,7 +105,7 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
                     return SourceFile.UNKNOWN;
                 }
                 SourceFile sf = new SourceFile(new File(fileName));
-                if (fileName.contains(":")) {
+                if (RelativeResourceUtils.isRelativeSourceSetResource(fileName)) {
                     sf.setOverrideSourcePath(fileName);
                 }
                 return sf;

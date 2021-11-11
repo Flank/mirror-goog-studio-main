@@ -46,6 +46,21 @@ abstract class RangeConstraint {
     /** Intersect two ranges */
     abstract infix fun and(other: RangeConstraint?): RangeConstraint
 
+    /**
+     * Remove the given [other] constraint from this constraint, if
+     * possible.
+     */
+    open fun remove(other: RangeConstraint): RangeConstraint? = null
+
+    /** If true, this range was inferred and may not be complete */
+    var inferred: Boolean = false
+
+    /**
+     * Whether this range has infinite size (e.g. missing either upper
+     * or lower bound.
+     */
+    open val infinite: Boolean = false
+
     companion object {
         fun create(annotation: UAnnotation): RangeConstraint? {
             val qualifiedName = annotation.qualifiedName ?: return null

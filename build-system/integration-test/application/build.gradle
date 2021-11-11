@@ -14,12 +14,12 @@ dependencies {
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')
     testImplementation project(':base:build-system:gradle-core')
-    testImplementation project(':base:sdk-common')
+    testImplementation libs.com.android.tools.sdkCommon
     testImplementation libs.com.android.tools.sdklib
     testImplementation externalTestFixtures.repository
     testImplementation project(':base:testing-infrastructure:device-pool:device-provider')
     testImplementation project(':base:testutils')
-    testImplementation project(':base:zipflinger')
+    testImplementation libs.com.android.zipflinger
     testCompileOnly(project(':base:profile'))
     testImplementation libs.com.android.tools.layoutlib.layoutlibApi
     testImplementation project(':base:profgen')

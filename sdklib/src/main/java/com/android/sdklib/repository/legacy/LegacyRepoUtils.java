@@ -26,7 +26,6 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.impl.meta.GenericFactory;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.SdkVersionInfo;
@@ -82,8 +81,7 @@ public class LegacyRepoUtils {
             @NonNull IPkgDesc desc,
             int layoutLibVersion,
             @NonNull Collection<OptionalLibrary> addonLibraries,
-            @Nullable Path packageDir,
-            @NonNull FileOp fop) {
+            @Nullable Path packageDir) {
 
         SdkCommonFactory sdkFactory = AndroidSdkHandler.getCommonModule().createLatestFactory();
         RepoFactory repoFactory = AndroidSdkHandler.getRepositoryModule().createLatestFactory();
@@ -161,7 +159,7 @@ public class LegacyRepoUtils {
                         jarPath =
                                 packageDir
                                         .resolve(SdkConstants.FD_ADDON_LIBS)
-                                        .relativize(fop.toPath(jarPath))
+                                        .relativize(packageDir.getRoot().resolve(jarPath))
                                         .toString();
                     }
                     if (!jarPath.isEmpty()) {

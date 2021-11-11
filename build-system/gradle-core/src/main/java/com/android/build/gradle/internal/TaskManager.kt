@@ -124,6 +124,7 @@ import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ListingFileRedirectTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
+import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
@@ -1911,6 +1912,31 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     managedDeviceTests.dependsOn(managedDeviceTestTask)
                 }
                 deviceToProvider[managedDevice.name] = managedDeviceTestTask
+            }
+
+            // Register a task to aggregate test suite result protos.
+            val testResultAggregationTask = taskFactory.register(
+                ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
+                    androidTestProperties,
+                    managedDevices,
+                    testData
+                )
+            )
+            for (managedDevice in managedDevices) {
+                taskFactory.configure(
+                    managedDeviceAllVariantsTaskName(managedDevice)
+                ) { managedDeviceCheck ->
+                    managedDeviceCheck.dependsOn(testResultAggregationTask)
+                }
+            }
+            deviceToProvider.values.forEach { managedDeviceTestTask ->
+                testResultAggregationTask.configure {
+                    it.mustRunAfter(managedDeviceTestTask)
+                }
+                // Run test result aggregation task even after test failures.
+                managedDeviceTestTask.configure {
+                    it.finalizedBy(testResultAggregationTask)
+                }
             }
 
             // Register a test coverage report generation task to every managedDeviceCheck

@@ -1,7 +1,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'org.jetbrains.dokka'
 
 configurations {
     additionalDokkaClasspath
@@ -34,8 +33,6 @@ dependencies {
     testImplementation libs.com.android.tools.annotations
     testImplementation libs.mockito_core
     testImplementation libs.equalsverifier
-
-    additionalDokkaClasspath gradleApi()
 }
 
 compileKotlin {
@@ -61,55 +58,8 @@ version = rootProject.ext.buildVersion
 project.ext.pomName = 'Android Gradle API'
 project.ext.pomDesc = 'APIs to customize Android Gradle Builds'
 
-/** Dokka task with fixed input annotations. */
-abstract class FixedDokka extends org.jetbrains.dokka.gradle.DokkaTask {
-    @Classpath
-    abstract ConfigurableFileCollection getAdditionalDokkaClasspath()
+import com.android.tools.internal.dackka.DackkaTask
 
-    @Internal
-    String outputDirectory
-
-    @Internal
-    boolean reportNotDocumented = false
-}
-
-def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
-    outputDirectory = new File(project.buildDir, "dokka").absolutePath
-    outputFormat = 'dac'
-    jdkVersion = 8
-
-    includeNonPublic = false
-    skipDeprecated = false
-    skipEmptyPackages = false
-    noJdkLink = true
-
-    dacRoot = "/reference/tools/gradle-api/" + version.substring(0, version.lastIndexOf("."))
-    additionalDokkaClasspath.from(configurations.additionalDokkaClasspath)
-    doFirst {
-        new File(outputDirectory).deleteDir()
-        classpath = additionalDokkaClasspath.files
-    }
-
-    // Root URL of the generated documentation to link with. The trailing slash is required!
-    externalDocumentationLink {
-        url = new URL("https://docs.gradle.org/current/javadoc/")
-    }
-    externalDocumentationLink {
-        url = new URL("http://docs.oracle.com/javase/8/docs/api/")
-    }
-
-    doLast {
-        // Remove Package Index and packages and package-summary.html
-        def toc = new File(outputDirectory, '_toc.yaml')
-        def text = toc.readLines()
-        text.removeIf {
-             it == '- title: Package Index' ||
-             it == '  path: ' + dacRoot + '/packages.html' ||
-             it.endsWith('/package-summary.html')
-        }
-        toc.text = text.join('\n') + '\n'
-    }
-}
 
 abstract class WriteVersionFile extends DefaultTask {
     @Input
@@ -138,10 +88,21 @@ def writeVersionFileProvider = tasks.register("writeDocsVersionFile", WriteVersi
     it.getOutputDirectory().set(project.layout.buildDirectory.dir("dokkaVersion"))
 }
 
-task dokkaZip(type: Zip) {
-    dependsOn(fixedDokkaProvider)
-    from fixedDokkaProvider.map { it.outputDirectory }
+String devsitePrefix = "tools/gradle-api/" +  version.substring(0, version.lastIndexOf("."))
+
+def dackkaTask = tasks.register("dackkaDocs", DackkaTask) {
+    devsiteTenant.set(devsitePrefix)
+    destinationDirectory.set(project.layout.buildDirectory.dir("dackka"))
+    dackkaClasspath.from(rootProject.file("../prebuilts/tools/common/dackka/dackka-0.0.12.jar"))
+    dependenciesClasspath.from(configurations.compileClasspath)
+    sourcesDir.set(sourceSets.main.java.sourceDirectories.singleFile)
+    packageListsDirectory.set(rootProject.file("../prebuilts/tools/common/dackka/package-lists"))
+
+}
+
+task dackkaZip(type: Zip) {
+    from(dackkaTask.map { it.destinationDirectory })
     from writeVersionFileProvider.map { it.outputDirectory }
-    destinationDirectory = layout.projectDirectory.dir("$rootDir/../out/dist")
+    destinationDirectory.set(rootProject.ext.androidHostDist)
     archiveFileName = "documentation.zip"
 }

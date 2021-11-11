@@ -34,6 +34,7 @@ public final class Picture {
         return mBytes;
     }
 
+    @SuppressWarnings("unused") // Invoked via reflection
     public void writeToStream(OutputStream os) {
         try {
             os.write(mBytes);

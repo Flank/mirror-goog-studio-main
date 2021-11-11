@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-e29ed05ba0c8e74e8c35769a868c2e637bb42989575280760bfec45e32ec966b
+76830973be16216fb78bbed086c287d2609a38017897d069ac4fe99bde5536b9
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -669,35 +669,37 @@ com.android.builder.model.v2.ide.LibraryType extends java.lang.Enum
 com.android.builder.model.v2.ide.LibraryType.valueOf: com.android.builder.model.v2.ide.LibraryType (java.lang.String)
 com.android.builder.model.v2.ide.LibraryType.values: com.android.builder.model.v2.ide.LibraryType[] ()
 com.android.builder.model.v2.ide.LintOptions implements com.android.builder.model.v2.AndroidModel
-com.android.builder.model.v2.ide.LintOptions$Companion
-com.android.builder.model.v2.ide.LintOptions.getBaselineFile: java.io.File ()
-com.android.builder.model.v2.ide.LintOptions.getCheck: java.util.Set<java.lang.String> ()
+com.android.builder.model.v2.ide.LintOptions.getAbortOnError: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getAbsolutePaths: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getBaseline: java.io.File ()
+com.android.builder.model.v2.ide.LintOptions.getCheckAllWarnings: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getCheckDependencies: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getCheckGeneratedSources: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getCheckOnly: java.util.Set<java.lang.String> ()
+com.android.builder.model.v2.ide.LintOptions.getCheckReleaseBuilds: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getCheckTestSources: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getDisable: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.ide.LintOptions.getEnable: java.util.Set<java.lang.String> ()
+com.android.builder.model.v2.ide.LintOptions.getError: java.util.Set<java.lang.String> ()
+com.android.builder.model.v2.ide.LintOptions.getExplainIssues: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getFatal: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.ide.LintOptions.getHtmlOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getHtmlReport: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getIgnoreTestSources: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getIgnoreWarnings: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getInformational: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.ide.LintOptions.getLintConfig: java.io.File ()
+com.android.builder.model.v2.ide.LintOptions.getNoLines: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getQuiet: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getSarifOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getSarifReport: boolean ()
-com.android.builder.model.v2.ide.LintOptions.getSeverityOverrides: java.util.Map<java.lang.String, java.lang.Integer> ()
+com.android.builder.model.v2.ide.LintOptions.getShowAll: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getTextOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getTextReport: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getWarning: java.util.Set<java.lang.String> ()
+com.android.builder.model.v2.ide.LintOptions.getWarningsAsErrors: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getXmlOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getXmlReport: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isAbortOnError: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isAbsolutePaths: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isCheckAllWarnings: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isCheckDependencies: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isCheckGeneratedSources: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isCheckReleaseBuilds: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isCheckTestSources: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isExplainIssues: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isIgnoreTestSources: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isIgnoreWarnings: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isNoLines: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isQuiet: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isShowAll: boolean ()
-com.android.builder.model.v2.ide.LintOptions.isWarningsAsErrors: boolean ()
 com.android.builder.model.v2.ide.ProjectInfo implements com.android.builder.model.v2.ide.ComponentInfo
 com.android.builder.model.v2.ide.ProjectInfo.getBuildId: java.lang.String ()
 com.android.builder.model.v2.ide.ProjectInfo.getProjectPath: java.lang.String ()

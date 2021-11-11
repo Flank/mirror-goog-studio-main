@@ -117,7 +117,7 @@ gradlePlugin {
 dependencies {
     api project(':base:builder')
     api project(':base:builder-model')
-    implementation project(':base:sdk-common')
+    implementation libs.com.android.tools.sdkCommon
     implementation libs.com.android.tools.sdklib
     implementation libs.com.android.tools.repository
     implementation libs.com.android.tools.ddms.ddmlib

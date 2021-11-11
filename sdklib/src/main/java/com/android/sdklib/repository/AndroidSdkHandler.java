@@ -15,8 +15,6 @@
  */
 package com.android.sdklib.repository;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,8 +35,6 @@ import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SchemaModule;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.sources.LocalSourceProvider;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.legacy.LegacyLocalRepoLoader;
@@ -172,12 +168,6 @@ public final class AndroidSdkHandler {
      */
     private BuildToolInfo mLatestBuildTool = null;
 
-    /**
-     * {@link FileOp} to use for local file operations. For normal operation should be
-     * {@link FileOpUtils#create()}.
-     */
-    private final FileOp mFop;
-
     /** Singleton instance of this class. */
     private static final Map<Path, AndroidSdkHandler> sInstances = Maps.newConcurrentMap();
 
@@ -221,8 +211,7 @@ public final class AndroidSdkHandler {
                         } catch (Throwable e) {
                             androidFolder = null;
                         }
-                        return new AndroidSdkHandler(
-                                localPath, androidFolder, FileOpUtils.create(localPath));
+                        return new AndroidSdkHandler(localPath, androidFolder);
                     });
         }
     }
@@ -241,28 +230,26 @@ public final class AndroidSdkHandler {
 
     /**
      * Don't use this, use {@link #getInstance(AndroidLocationsProvider, Path)}, unless you're in a
-     * unit test and need to specify a custom {@link FileOp} and/or {@code androidFolder}.
+     * unit test and need to specify a custom {@code androidFolder}.
      */
     @VisibleForTesting
-    public AndroidSdkHandler(
-            @Nullable Path localPath, @Nullable Path androidFolder, @NonNull FileOp fop) {
+    public AndroidSdkHandler(@Nullable Path localPath, @Nullable Path androidFolder) {
         mLocation = localPath;
         mAndroidFolder = androidFolder;
-        mFop = checkNotNull(fop);
     }
 
     /**
      * Don't use this either, unless you're in a unit test and need to specify a custom {@link
      * RepoManager}.
      *
-     * @see #AndroidSdkHandler(Path, Path, FileOp)
+     * @see #AndroidSdkHandler(Path, Path)
      */
     @VisibleForTesting
     public AndroidSdkHandler(
             @Nullable Path localPath,
             @Nullable Path androidFolder,
             @NonNull RepoManager repoManager) {
-        this(localPath, androidFolder, FileOpUtils.create(localPath));
+        this(localPath, androidFolder);
         mRepoManager = repoManager;
     }
 
@@ -280,9 +267,10 @@ public final class AndroidSdkHandler {
                 mAndroidTargetManager = null;
                 mLatestBuildTool = null;
 
-                result = getRepoConfig(progress)
-                        .createRepoManager(progress, mLocation, getUserSourceProvider(progress),
-                                mFop);
+                result =
+                        getRepoConfig(progress)
+                                .createRepoManager(
+                                        progress, mLocation, getUserSourceProvider(progress));
                 // Invalidate system images, targets, the latest build tool, and the legacy local
                 // package manager when local packages change
                 result.addLocalChangeListener(packages -> {
@@ -365,8 +353,10 @@ public final class AndroidSdkHandler {
         Function<P, T> keyGen = p -> mapper.apply(p.getPath().substring(
                 p.getPath().lastIndexOf(RepoPackage.PATH_SEPARATOR) + 1));
         return packages.stream()
-                .filter(p -> (filter == null || filter.test(p.getVersion()))
-                              && (allowPreview || !p.getVersion().isPreview()))
+                .filter(
+                        p ->
+                                (filter == null || filter.test(p.getVersion()))
+                                        && (allowPreview || !p.getVersion().isPreview()))
                 .max((p1, p2) -> comparator.compare(keyGen.apply(p1), keyGen.apply(p2)))
                 .orElse(null);
     }
@@ -388,8 +378,8 @@ public final class AndroidSdkHandler {
     public LocalPackage getLatestLocalPackageForPrefix(
             @NonNull String prefix, @Nullable Predicate<Revision> filter, boolean allowPreview,
             @NonNull ProgressIndicator progress) {
-        return getLatestLocalPackageForPrefix(prefix, filter, allowPreview,
-                Revision::safeParseRevision, progress);
+        return getLatestLocalPackageForPrefix(
+                prefix, filter, allowPreview, Revision::safeParseRevision, progress);
     }
 
     /**
@@ -401,8 +391,8 @@ public final class AndroidSdkHandler {
             @NonNull String prefix, @Nullable Predicate<Revision> filter, boolean allowPreview,
             @NonNull Function<String, ? extends Comparable> mapper,
             @NonNull ProgressIndicator progress) {
-        return getLatestLocalPackageForPrefix(prefix, filter, allowPreview, mapper,
-                Comparator.naturalOrder(), progress);
+        return getLatestLocalPackageForPrefix(
+                prefix, filter, allowPreview, mapper, Comparator.naturalOrder(), progress);
     }
 
     /**
@@ -428,8 +418,8 @@ public final class AndroidSdkHandler {
     public RemotePackage getLatestRemotePackageForPrefix(@NonNull String prefix,
             @Nullable Predicate<Revision> filter, boolean allowPreview,
             @NonNull ProgressIndicator progress) {
-        return getLatestRemotePackageForPrefix(prefix, filter, allowPreview,
-                Revision::safeParseRevision, progress);
+        return getLatestRemotePackageForPrefix(
+                prefix, filter, allowPreview, Revision::safeParseRevision, progress);
     }
 
     /**
@@ -442,8 +432,8 @@ public final class AndroidSdkHandler {
             @Nullable Predicate<Revision> filter, boolean allowPreview,
             @NonNull Function<String, ? extends Comparable> mapper,
             @NonNull ProgressIndicator progress) {
-        return getLatestRemotePackageForPrefix(prefix, filter, allowPreview,
-                mapper, Comparator.naturalOrder(), progress);
+        return getLatestRemotePackageForPrefix(
+                prefix, filter, allowPreview, mapper, Comparator.naturalOrder(), progress);
     }
 
     /**
@@ -510,7 +500,8 @@ public final class AndroidSdkHandler {
      */
     @NonNull
     public static List<SchemaModule<?>> getAllModules() {
-        return ImmutableList.of(AndroidSdkHandler.getRepositoryModule(),
+        return ImmutableList.of(
+                AndroidSdkHandler.getRepositoryModule(),
                 AndroidSdkHandler.getAddonModule(),
                 AndroidSdkHandler.getSysImgModule(),
                 RepoManager.getCommonModule(),
@@ -625,8 +616,11 @@ public final class AndroidSdkHandler {
                             REPO_URL_PATTERN,
                             getBaseUrl(progress),
                             REPOSITORY_MODULE.getNamespaceVersionMap().size());
-            mRepositorySourceProvider = new ConstantSourceProvider(url, "Android Repository",
-                    ImmutableSet.of(REPOSITORY_MODULE, RepoManager.getGenericModule()));
+            mRepositorySourceProvider =
+                    new ConstantSourceProvider(
+                            url,
+                            "Android Repository",
+                            ImmutableSet.of(REPOSITORY_MODULE, RepoManager.getGenericModule()));
 
             int prevRev = REPOSITORY_MODULE.getNamespaceVersionMap().size() - 1;
             if (prevRev > 0) {
@@ -682,7 +676,7 @@ public final class AndroidSdkHandler {
         /**
          * Add a {@link RepositorySourceProvider} to this config. It will be added to any {@link
          * RepoManager} created by {@link #createRepoManager(ProgressIndicator, Path,
-         * LocalSourceProvider, FileOp)}
+         * LocalSourceProvider)}
          */
         public void addCustomSourceProvider(@NonNull RepositorySourceProvider provider) {
             mCustomSourceProviders.add(provider);
@@ -693,8 +687,7 @@ public final class AndroidSdkHandler {
         public RepoManager createRepoManager(
                 @NonNull ProgressIndicator progress,
                 @Nullable Path localLocation,
-                @Nullable LocalSourceProvider userProvider,
-                @NonNull FileOp fop) {
+                @Nullable LocalSourceProvider userProvider) {
             RepoManager result = RepoManager.create();
 
             // Create the schema modules etc. if they haven't been already.
@@ -711,8 +704,8 @@ public final class AndroidSdkHandler {
             String customSourceUrl = System.getProperty(CUSTOM_SOURCE_PROPERTY);
             if (customSourceUrl != null && !customSourceUrl.isEmpty()) {
                 result.registerSourceProvider(
-                        new ConstantSourceProvider(customSourceUrl, "Custom Provider",
-                                result.getSchemaModules()));
+                        new ConstantSourceProvider(
+                                customSourceUrl, "Custom Provider", result.getSchemaModules()));
             }
             result.registerSourceProvider(mAddonsListSourceProvider);
             if (userProvider != null) {
@@ -728,8 +721,7 @@ public final class AndroidSdkHandler {
             if (localLocation != null) {
                 // If we have a local sdk path set, set up the old-style loader so we can parse
                 // any legacy packages.
-                result.setFallbackLocalRepoLoader(
-                        new LegacyLocalRepoLoader(fop.toFile(localLocation), fop));
+                result.setFallbackLocalRepoLoader(new LegacyLocalRepoLoader(localLocation));
 
                 // If a location is set we'll always want at least the local packages loaded, so
                 // load them now.

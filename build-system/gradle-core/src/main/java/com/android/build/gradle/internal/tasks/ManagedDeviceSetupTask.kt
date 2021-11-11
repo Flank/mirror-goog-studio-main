@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
+import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -152,7 +153,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             name,
             managedDevice.systemImageSource,
             managedDevice.apiLevel,
-            managedDevice.abi,
+            computeAbiFromArchitecture(managedDevice),
             managedDevice.device,
             globalScope)
 
@@ -175,7 +176,6 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 )
             )
         }
-
     }
 
     companion object {

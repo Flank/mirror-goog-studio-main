@@ -20,6 +20,8 @@ import com.android.build.api.dsl.DeviceGroup
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.prefs.AndroidLocationsProvider
+import com.android.utils.CpuArchitecture
+import com.android.utils.osArchitecture
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
@@ -43,7 +45,7 @@ fun computeAvdName(device: ManagedVirtualDevice): String =
     computeAvdName(
         device.apiLevel,
         device.systemImageSource,
-        device.abi,
+        computeAbiFromArchitecture(device),
         device.device)
 
 fun computeAvdName(
@@ -63,3 +65,23 @@ fun managedDeviceGroupAllVariantsTaskName(deviceGroup: DeviceGroup): String =
 fun managedDeviceGroupSingleVariantTaskName(
     creationConfig: VariantCreationConfig, deviceGroup: DeviceGroup): String =
     creationConfig.computeTaskName("${deviceGroup.name}Group")
+
+fun computeAbiFromArchitecture(device: ManagedVirtualDevice): String =
+    computeAbiFromArchitecture(
+        device.require64Bit,
+        device.apiLevel,
+        device.systemImageSource
+    )
+
+fun computeAbiFromArchitecture(require64Bit: Boolean, apiLevel: Int, vendor: String): String {
+    val cpuArchitecture = osArchitecture
+    return when {
+        cpuArchitecture == CpuArchitecture.ARM
+            || cpuArchitecture == CpuArchitecture.X86_ON_ARM-> "arm64-v8a"
+        require64Bit -> "x86_64"
+        // system-images;android-30;default;x86 does not exist, but the google images do.
+        vendor == "aosp" && apiLevel <= 29 -> "x86"
+        vendor == "google" && apiLevel <= 30 -> "x86"
+        else -> "x86_64"
+    }
+}

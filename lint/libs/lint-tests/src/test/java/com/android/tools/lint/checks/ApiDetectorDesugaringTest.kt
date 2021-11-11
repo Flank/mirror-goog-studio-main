@@ -120,25 +120,20 @@ class ApiDetectorDesugaringTest : AbstractCheckTest() {
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class DesugarTest {
                     public void testRequireNull(Object foo) {
-                        Objects.requireNonNull(foo); // Desugared, should not generate warning
-                        Objects.requireNonNull(foo, "message"); // Should generate API warning
+                        Objects.requireNonNull(foo); // OK 1
+                        Objects.requireNonNull(foo, "message"); // OK 2
                     }
 
                     public void addThrowable(Throwable t1, Throwable t2) {
-                        t1.addSuppressed(t2); // Desugared, should not generate warning
+                        t1.addSuppressed(t2); // OK 3
+                        // Regression test for b/177353340
+                        Throwable[] suppressed = t1.getSuppressed();// OK 4
                     }
                 }
                 """
             ).indented(),
             gradleVersion24_language18
-        ).run().expect(
-            """
-            src/main/java/test/pkg/DesugarTest.java:9: Error: Call requires API level 19 (current min is 1): java.util.Objects#requireNonNull [NewApi]
-                    Objects.requireNonNull(foo, "message"); // Should generate API warning
-                            ~~~~~~~~~~~~~~
-            1 errors, 0 warnings
-            """
-        )
+        ).run().expectClean()
     }
 
     fun testDefaultMethodsDesugar() {

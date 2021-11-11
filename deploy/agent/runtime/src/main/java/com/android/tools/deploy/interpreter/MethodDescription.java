@@ -62,6 +62,16 @@ public class MethodDescription {
         return isStatic;
     }
 
+    public boolean isConstructor() {
+        return name.equals("<init>");
+    }
+
+    // Checks if the method is a Kotlin-generated accessor method for handling a private lambda
+    // capture. This is likely not the most precise test, but it suffices for now.
+    public boolean isSynthAccessor() {
+        return name.startsWith("access$");
+    }
+
     public String toString() {
         String d = String.format("%s.%s%s", ownerInternalName, name, desc);
         return d;

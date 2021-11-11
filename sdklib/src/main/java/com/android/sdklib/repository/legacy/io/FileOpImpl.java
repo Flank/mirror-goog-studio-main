@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.repository.io.impl;
+package com.android.sdklib.repository.legacy.io;
 
-import com.android.annotations.NonNull;
 import com.android.io.CancellableFileIo;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
@@ -39,32 +38,12 @@ public class FileOpImpl extends FileOp {
     private final FileSystem fileSystem;
 
     public FileOpImpl() {
-        this(FileSystems.getDefault());
-    }
-
-    public FileOpImpl(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
+        this.fileSystem = FileSystems.getDefault();
     }
 
     @Override
     public FileSystem getFileSystem() {
         return fileSystem;
-    }
-
-    @Override
-    public File ensureRealFile(@NonNull File in) {
-        return in;
-    }
-
-    @Override
-    public void deleteOnExit(File file) {
-        file.deleteOnExit();
-    }
-
-    @NonNull
-    @Override
-    public File toFile(@NonNull Path path) {
-        return path.toFile();
     }
 
     @Override

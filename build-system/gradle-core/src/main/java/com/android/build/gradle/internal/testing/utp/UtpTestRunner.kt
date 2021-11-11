@@ -120,6 +120,12 @@ class UtpTestRunner @JvmOverloads constructor(
             logger
         )
 
+        testSuiteResults.forEach { result ->
+            if (result.resultsProto?.hasPlatformError() == true) {
+                logger.error(null, getPlatformErrorMessage(result.resultsProto))
+            }
+        }
+
         val resultProtos = testSuiteResults
             .map(UtpTestRunResult::resultsProto)
             .filterNotNull()

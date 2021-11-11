@@ -20,19 +20,20 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.StyleableResourceValue;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
-import com.android.resources.base.Base128InputStream.StreamFormatException;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
+import com.android.utils.Base128InputStream;
+import com.android.utils.Base128InputStream.StreamFormatException;
+import com.android.utils.Base128OutputStream;
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Resource item representing a styleable resource.

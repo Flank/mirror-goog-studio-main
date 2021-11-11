@@ -303,6 +303,11 @@ grpc::Status Daemon::Execute(const proto::Command& command_data,
   auto search = commands_.find(command_data.type());
   if (search != commands_.end()) {
     std::unique_ptr<Command> command((search->second)(command_data));
+    Log::V(Log::Tag::TRANSPORT,
+           "Daemon handling command (id:%d type:%s) for pid:%d.",
+           command_data.command_id(),
+           proto::Command::CommandType_Name(command_data.type()).c_str(),
+           command_data.pid());
     status = command->ExecuteOn(this);
   }
   post();

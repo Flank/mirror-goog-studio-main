@@ -95,7 +95,8 @@ public abstract class Transform {
     /**
      * Whether this transform should be applied to a given variant.
      *
-     * @since 3.4
+     * <p>since 3.4
+     *
      * @return true if the transform should be applied to a given variant, false otherwise.
      * @param variant information about the current variant.
      */

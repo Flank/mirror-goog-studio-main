@@ -17,19 +17,20 @@ package com.android.resources.base;
 
 import com.android.ide.common.rendering.api.PluralsResourceValue;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.resources.base.Base128InputStream.StreamFormatException;
 import com.android.resources.Arity;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
+import com.android.utils.Base128InputStream;
+import com.android.utils.Base128InputStream.StreamFormatException;
+import com.android.utils.Base128OutputStream;
 import com.intellij.util.ArrayUtil;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Resource item representing a plurals resource.

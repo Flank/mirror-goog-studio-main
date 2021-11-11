@@ -174,4 +174,19 @@ class RelativeResourcesUtilsTest {
         val sourceSetPathsMapFile = File(sourceSetPathsMapDir, "file-path.txt")
         readFromSourceSetPathsFile(sourceSetPathsMapFile)
     }
+
+    @Test
+    fun `test can identify relative resource`() {
+        // Standard relative path string
+        assertThat(
+            isRelativeSourceSetResource(
+                "com.foobar.myproject.app-mergeDebugResources-1:/layout/activity_map_tv.xml"
+            )
+        ).isTrue()
+        // Absolute path string
+        assertThat(
+            isRelativeSourceSetResource(
+                "/usr/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml")
+        ).isFalse()
+    }
 }

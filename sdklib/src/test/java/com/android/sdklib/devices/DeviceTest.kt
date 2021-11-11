@@ -18,23 +18,22 @@ package com.android.sdklib.devices
 
 import com.android.repository.impl.meta.RepositoryPackages
 import com.android.repository.testframework.FakeRepoManager
-import com.android.repository.testframework.MockFileOp
 import com.android.resources.ScreenOrientation
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.testutils.NoErrorsOrWarningsLogger
+import com.android.testutils.file.createInMemoryFileSystemAndFolder
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.awt.Dimension
 
 class DeviceTest {
 
-  private val AVD_LOCATION = "/avd"
-  private val SDK_LOCATION = "/sdk"
+  private val AVD_LOCATION = createInMemoryFileSystemAndFolder("avd")
+  private val SDK_LOCATION = createInMemoryFileSystemAndFolder("sdk")
 
-  private val fileOp = MockFileOp()
   val repoPackages = RepositoryPackages()
-  val repoMgr = FakeRepoManager(fileOp.toPath(SDK_LOCATION), repoPackages)
-  val sdkHandler = AndroidSdkHandler(fileOp.toPath(SDK_LOCATION), fileOp.toPath(AVD_LOCATION), repoMgr)
+  val repoMgr = FakeRepoManager(SDK_LOCATION, repoPackages)
+  val sdkHandler = AndroidSdkHandler(SDK_LOCATION, AVD_LOCATION, repoMgr)
   val devMgr = DeviceManager.createInstance(sdkHandler, NoErrorsOrWarningsLogger())
 
   val qvgaPhone = devMgr.getDevice("2.7in QVGA", "Generic")

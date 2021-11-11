@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.lint
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.getBuildId
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
+import com.android.build.gradle.internal.ide.dependencies.hasProjectTestFixturesCapability
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
@@ -47,3 +48,46 @@ internal fun asProjectKey(buildMapping: BuildMapping, artifact: ResolvedArtifact
 internal fun ArtifactCollection.asProjectKeyedMap(buildMapping: BuildMapping): Map<ProjectKey, File> {
     return artifacts.asSequence().map { artifact -> asProjectKey(buildMapping, artifact) to artifact.file}.toMap()
 }
+
+/**
+ * This is used to differentiate between main and testFixtures artifacts in
+ * [ExternalLintModelArtifactHandler] where the artifacts are cached based on the project key
+ * and so the project key needs to be different in that case.
+ * TODO: Remove when the non checkDependencies code path is removed.
+ */
+internal data class ProjectSourceSetKey(
+    val buildId: String,
+    val projectPath: String,
+    val variantName: String?,
+    val isTestFixtures: Boolean = false
+) {
+
+    override fun toString(): String {
+        return StringBuilder().apply {
+            append(buildId)
+            append(" ")
+            append(projectPath)
+            if (isTestFixtures) {
+                append(" (testFixtures)")
+            }
+            if (variantName != null) {
+                append(" (").append(variantName).append(")")
+            }
+        }.toString()
+    }
+}
+
+internal fun asProjectSourceSetKey(buildMapping: BuildMapping, artifact: ResolvedArtifactResult): ProjectSourceSetKey {
+    val id = artifact.id.componentIdentifier as ProjectComponentIdentifier
+    return ProjectSourceSetKey(
+        id.getBuildId(buildMapping)!!,
+        id.projectPath,
+        artifact.getVariantName(),
+        artifact.hasProjectTestFixturesCapability()
+    )
+}
+
+internal fun ArtifactCollection.asProjectSourceSetKeyedMap(buildMapping: BuildMapping): Map<ProjectSourceSetKey, File> {
+    return artifacts.asSequence().map { artifact -> asProjectSourceSetKey(buildMapping, artifact) to artifact.file}.toMap()
+}
+

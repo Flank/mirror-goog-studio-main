@@ -151,7 +151,7 @@ interface CommonExtension<
      * for your app. You can then combine build types with product flavors to
      * [create build variants](https://developer.android.com/studio/build/build-variants.html).
      *
-     * @see [BuildType
+     * @see BuildType
      */
     val buildTypes: NamedDomainObjectContainer<out BuildTypeT>
 
@@ -437,7 +437,7 @@ interface CommonExtension<
      *
      * @see ExternalNativeBuild
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
 
     val externalNativeBuild: ExternalNativeBuild
@@ -457,7 +457,7 @@ interface CommonExtension<
      *
      * @see ExternalNativeBuild
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     fun externalNativeBuild(action: ExternalNativeBuild.()->Unit)
 

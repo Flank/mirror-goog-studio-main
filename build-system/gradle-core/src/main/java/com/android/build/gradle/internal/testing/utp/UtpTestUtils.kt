@@ -42,6 +42,9 @@ import org.gradle.workers.WorkerExecutor
 
 const val TEST_RESULT_PB_FILE_NAME = "test-result.pb"
 
+private const val UNKNOWN_PLATFORM_ERROR_MESSAGE =
+    "Unknown platform error occurred when running the UTP test suite. Please check logs for details."
+
 /**
  * Encapsulates necessary information to run tests using Unified Test Platform.
  *
@@ -64,6 +67,14 @@ data class UtpRunnerConfig(
     val shardConfig: ShardConfig? = null,
     val utpLoggingLevel: Level = Level.WARNING,
 )
+
+fun UtpRunnerConfig.shardName(): String {
+    return if (shardConfig == null) {
+        deviceName
+    } else {
+        "${deviceName}_${shardConfig.index}"
+    }
+}
 
 /**
  * Encapsulates result of a UTP test run.
@@ -113,11 +124,7 @@ fun runUtpTestSuiteAndWait(
             val ddmlibTestResultAdapter = DdmlibTestResultAdapter(
                 config.deviceName,
                 CustomTestRunListener(
-                    if (config.shardConfig == null) {
-                        config.deviceName
-                    } else {
-                        "${config.deviceName}_${config.shardConfig.index}"
-                    },
+                    config.shardName(),
                     projectPath,
                     variantName,
                     logger).apply {
@@ -148,10 +155,6 @@ fun runUtpTestSuiteAndWait(
                 val testPassed = if (resultsProto != null) {
                     val testResultPbFile = File(config.utpOutputDir, TEST_RESULT_PB_FILE_NAME)
                     resultsProto.writeTo(testResultPbFile.outputStream())
-                    if (resultsProto.hasPlatformError()) {
-                        logger.error(
-                            null, getPlatformErrorMessage(resultsProto.platformError.errorDetail))
-                    }
                     val testFailed = resultsProto.hasPlatformError() ||
                             resultsProto.testResultList.any { testCaseResult ->
                                 testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
@@ -274,6 +277,32 @@ fun shouldEnableUtp(
 }
 
 /**
+ * Returns true if the root cause of the Platform error is the EmulatorTimeoutException.
+ */
+fun hasEmulatorTimeoutException(resultsProto: TestSuiteResultProto.TestSuiteResult?): Boolean {
+    resultsProto ?: return false
+    return hasEmulatorTimeoutException(resultsProto.platformError.errorDetail)
+}
+
+private fun hasEmulatorTimeoutException(error: ErrorDetailProto.ErrorDetail): Boolean {
+    return when {
+        getExceptionFromStackTrace(error.summary.stackTrace)
+            .contains("EmulatorTimeoutException") -> true
+        error.hasCause() -> hasEmulatorTimeoutException(error.cause)
+        else -> false
+    }
+}
+
+/**
+ * Finds the root cause of the Platform Error if it came form the Managed Device
+ * Android Provider.
+ */
+fun getPlatformErrorMessage(resultsProto: TestSuiteResultProto.TestSuiteResult?): String {
+    resultsProto ?: return UNKNOWN_PLATFORM_ERROR_MESSAGE
+    return getPlatformErrorMessage(resultsProto.platformError.errorDetail)
+}
+
+/**
  * Finds the root cause of the Platform Error if it came form the Managed Device
  * Android Provider.
  *
@@ -291,9 +320,7 @@ private fun getPlatformErrorMessage(error : ErrorDetailProto.ErrorDetail) : Stri
             """.trimIndent()
         error.hasCause() ->
             getPlatformErrorMessage(error.cause)
-        else -> """
-            Unknown platform error occurred when running the UTP test suite. Please check logs for details.
-        """.trimIndent()
+        else -> UNKNOWN_PLATFORM_ERROR_MESSAGE
     }
 
 /**
@@ -306,5 +333,11 @@ private fun getPlatformErrorMessage(error : ErrorDetailProto.ErrorDetail) : Stri
  * @param stackTrace the stackTrace of the exception in either serialized or toString() format
  * @return A simple string, that the only exception that is contained is the top-level exception.
  */
-private fun getExceptionFromStackTrace(stackTrace: String): String =
-    stackTrace.substring(0..min(stackTrace.indexOf(':'), stackTrace.indexOf('\n')))
+private fun getExceptionFromStackTrace(stackTrace: String): String {
+    val endIndex = stackTrace.indexOf(':')
+    return if (endIndex >= 0) {
+        stackTrace.substring(0, endIndex)
+    } else {
+        stackTrace.lineSequence().firstOrNull() ?: ""
+    }
+}

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.BidirectionalTextDetector.Companion.LRI
 import com.android.tools.lint.checks.BidirectionalTextDetector.Companion.PDF
 import com.android.tools.lint.checks.BidirectionalTextDetector.Companion.PDI
+import com.android.tools.lint.checks.BidirectionalTextDetector.Companion.RLE
 import com.android.tools.lint.checks.BidirectionalTextDetector.Companion.RLO
 import com.android.tools.lint.detector.api.Detector
 
@@ -79,6 +80,38 @@ class BidirectionalTextDetectorTest : AbstractCheckTest() {
                 3 errors, 0 warnings
                 """
             )
+    }
+
+    fun testSuppress() {
+        // Make sure warnings in comments can be suppressed
+        lint().files(
+            java(
+                """
+                @SuppressWarnings("BidiSpoofing")
+                /** javadoc */
+                public enum LanguageInfo {
+                  ARABIC(LanguageCode.ARABIC, "\u202B\u0627\u0644\u0639\u0631\u0628\u064A\u0629") // ${RLE}العربية
+                }
+                """
+            ).indented(),
+            java(
+                """
+                public enum LanguageInfo2 {
+                  @SuppressWarnings("BidiSpoofing")
+                  ARABIC(LanguageCode.ARABIC, "\u202B\u0627\u0644\u0639\u0631\u0628\u064A\u0629") // ${RLE}العربية
+                }
+                """
+            ).indented(),
+            java(
+                """
+                public enum LanguageInfo3 {
+                  ARABIC(LanguageCode.ARABIC,
+                    //noinspection BidiSpoofing
+                    "\u202B\u0627\u0644\u0639\u0631\u0628\u064A\u0629") // ${RLE}العربية
+                }
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
     fun testAllowUnicodes() {

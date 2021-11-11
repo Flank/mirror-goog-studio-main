@@ -49,8 +49,7 @@ import org.mockito.quality.Strictness
  * Unit tests for [ManagedDeviceTestRunner].
  */
 class ManagedDeviceTestRunnerTest {
-    @get:Rule var mockitoJUnitRule: MockitoRule =
-            MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
+    @get:Rule var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
     @get:Rule var temporaryFolderRule = TemporaryFolder()
 
     @Mock lateinit var mockWorkerExecutor: WorkerExecutor
@@ -76,6 +75,7 @@ class ManagedDeviceTestRunnerTest {
     private lateinit var outputDirectory: File
 
     private lateinit var capturedRunnerConfigs: List<UtpRunnerConfig>
+    private var utpInvocationCount: Int = 0
 
     @Before
     fun setupMocks() {
@@ -119,7 +119,11 @@ class ManagedDeviceTestRunnerTest {
         `when`(mockManagedDevice.forShard(eq(1))).thenReturn(mockManagedDeviceShard1)
     }
 
-    private fun runUtp(result: Boolean, numShards: Int? = null): Boolean {
+    private fun runUtp(
+        result: Boolean,
+        numShards: Int? = null,
+        hasEmulatorTimeoutException: List<Boolean> = List(numShards ?: 1) { false },
+    ): Boolean {
         val runner = ManagedDeviceTestRunner(
             mockWorkerExecutor,
             mockUtpDependencies,
@@ -129,10 +133,15 @@ class ManagedDeviceTestRunnerTest {
             numShards,
             Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, resultsDir, _ ->
+            utpInvocationCount++
             capturedRunnerConfigs = runnerConfigs
-            TestSuiteResult.getDefaultInstance().writeTo(
-                File(resultsDir, TEST_RESULT_PB_FILE_NAME).outputStream())
-            runnerConfigs.map { UtpTestRunResult(result, TestSuiteResult.getDefaultInstance()) }
+            TestSuiteResult.getDefaultInstance()
+                .writeTo(File(resultsDir, TEST_RESULT_PB_FILE_NAME).outputStream())
+            runnerConfigs.map {
+                UtpTestRunResult(
+                    result,
+                    createTestSuiteResult(hasEmulatorTimeoutException[it.shardConfig?.index ?: 0]))
+            }
         }
 
         outputDirectory = temporaryFolderRule.newFolder("results")
@@ -149,11 +158,30 @@ class ManagedDeviceTestRunnerTest {
             mockLogger)
     }
 
+    private fun createTestSuiteResult(
+        hasEmulatorTimeoutException: Boolean = false
+    ): TestSuiteResult {
+        return TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
+            if (hasEmulatorTimeoutException) {
+                platformErrorBuilder.apply {
+                    errorDetailBuilder.apply {
+                        causeBuilder.apply {
+                            summaryBuilder.apply {
+                                stackTrace = "EmulatorTimeoutException"
+                            }
+                        }
+                    }
+                }
+            }
+        }.build()
+    }
+
     @Test
     fun runUtpAndPassed() {
         setupFullManagedDevice()
         val result = runUtp(result = true)
 
+        assertThat(utpInvocationCount).isEqualTo(1)
         assertThat(capturedRunnerConfigs).hasSize(1)
         assertThat(capturedRunnerConfigs[0].runnerConfig(
             mockUtpTestResultListenerServerMetadata,
@@ -169,6 +197,7 @@ class ManagedDeviceTestRunnerTest {
         setupFullManagedDevice()
         val result = runUtp(result = false)
 
+        assertThat(utpInvocationCount).isEqualTo(1)
         assertThat(capturedRunnerConfigs).hasSize(1)
         assertThat(capturedRunnerConfigs[0].runnerConfig(
             mockUtpTestResultListenerServerMetadata,
@@ -195,6 +224,19 @@ class ManagedDeviceTestRunnerTest {
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
         assertThat(capturedRunnerConfigs[1].shardConfig).isEqualTo(ShardConfig(2, 1))
 
+        assertThat(result).isTrue()
+        assertThat(File(outputDirectory, TEST_RESULT_PB_FILE_NAME)).exists()
+    }
+
+    @Test
+    fun rerunUtpWhenEmulatorTimeoutExceptionOccurs() {
+        setupManagedDeviceForShards()
+        val result = runUtp(
+            result = true,
+            numShards = 2,
+            hasEmulatorTimeoutException = listOf(true, false))
+
+        assertThat(utpInvocationCount).isEqualTo(2)
         assertThat(result).isTrue()
         assertThat(File(outputDirectory, TEST_RESULT_PB_FILE_NAME)).exists()
     }

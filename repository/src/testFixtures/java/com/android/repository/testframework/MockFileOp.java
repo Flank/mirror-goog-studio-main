@@ -18,14 +18,10 @@ package com.android.repository.testframework;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.impl.FileOpImpl;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.base.Charsets;
-import com.google.common.io.ByteStreams;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +29,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.List;
 
 /**
- * Mock version of {@link FileOpImpl} that wraps some common {@link File} operations on files and
+ * Mock version of {@link FileOp} that wraps some common {@link File} operations on files and
  * folders.
  *
  * <p>This version does not perform any file operation. Instead it records a textual representation
@@ -43,8 +39,8 @@ import java.util.List;
  * rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3". When processing {@link File},
  * you can convert them using {@link #getPlatformSpecificPath(File)}.
  *
- * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystems} and
- *     {@code com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystems} and {@code
+ *     com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
 @Deprecated
 public class MockFileOp extends FileOp {
@@ -66,16 +62,6 @@ public class MockFileOp extends FileOp {
     /** Resets the internal state, as if the object had been newly created. */
     public void reset() {
         mFileSystem = InMemoryFileSystems.createInMemoryFileSystem();
-    }
-
-    @Override
-    public void deleteOnExit(File file) {
-        // nothing
-    }
-
-    @Override
-    public boolean canWrite(@NonNull File file) {
-        return InMemoryFileSystems.canWrite(toPath(file));
     }
 
     @NonNull
@@ -175,14 +161,6 @@ public class MockFileOp extends FileOp {
     }
 
     /**
-     * Records a new absolute folder path.
-     * Parent folders are automatically created.
-     */
-    public void recordExistingFolder(File folder) {
-        recordExistingFolder(folder.getAbsolutePath());
-    }
-
-    /**
      * Records a new absolute folder path. Parent folders are automatically created.
      *
      * @param absFolderPath The file path, e.g. "/dir/file" (any platform) or "c:\dir\file"
@@ -225,19 +203,6 @@ public class MockFileOp extends FileOp {
         return InMemoryFileSystems.getExistingFolders(mFileSystem);
     }
 
-    @Override
-    public File ensureRealFile(@NonNull File in) throws IOException {
-        if (!exists(in)) {
-            return in;
-        }
-        File result = File.createTempFile("MockFileOp", null);
-        result.deleteOnExit();
-        try (OutputStream os = new FileOutputStream(result)) {
-            ByteStreams.copy(newFileInputStream(in), os);
-        }
-        return result;
-    }
-
     public byte[] getContent(File file) {
         try {
             return Files.readAllBytes(toPath(file));
@@ -251,11 +216,5 @@ public class MockFileOp extends FileOp {
     @Override
     public Path toPath(@NonNull String path) {
         return getFileSystem().getPath(getPlatformSpecificPath(path));
-    }
-
-    @NonNull
-    @Override
-    public File toFile(@NonNull Path path) {
-        return new File(path.toString());
     }
 }

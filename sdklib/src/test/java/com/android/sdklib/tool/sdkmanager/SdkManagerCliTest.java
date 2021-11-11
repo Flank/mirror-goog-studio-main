@@ -81,7 +81,7 @@ public class SdkManagerCliTest {
 
     @Before
     public void setUp() throws Exception {
-        mDownloader = new FakeDownloader(mFileOp);
+        mDownloader = new FakeDownloader(mFileOp.toPath("tmp"));
 
         RemoteRepoLoader loader = createRemoteRepo();
 
@@ -1091,7 +1091,7 @@ public class SdkManagerCliTest {
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--version"),
                         mFileOp.getFileSystem());
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(mSdkLocation, null, mFileOp);
+        AndroidSdkHandler handler = new AndroidSdkHandler(mSdkLocation, null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli sdkmanager =
                 new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, handler);

@@ -18,12 +18,11 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
-import com.android.build.api.dsl.LintOptions
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
-import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.model.TestOptions
 import com.android.builder.model.v2.dsl.ClassField
 import com.android.builder.model.v2.ide.AaptOptions.Namespacing.DISABLED
@@ -204,10 +203,14 @@ internal fun AndroidResources.convert() = AaptOptionsImpl(
     namespacing = if (namespaced) REQUIRED else DISABLED
 )
 
-internal fun LintOptions.convert() = LintOptionsImpl(
+internal fun Lint.convert() = LintOptionsImpl(
     disable = disable.toSet(),
     enable = enable.toSet(),
-    check = checkOnly.toSet(),
+    informational = informational.toSet(),
+    warning = warning.toSet(),
+    error = error.toSet(),
+    fatal = fatal.toSet(),
+    checkOnly = checkOnly.toSet(),
     lintConfig = lintConfig,
     textReport = textReport,
     textOutput = textOutput,
@@ -217,22 +220,21 @@ internal fun LintOptions.convert() = LintOptionsImpl(
     xmlOutput = xmlOutput,
     sarifReport = sarifReport,
     sarifOutput = sarifOutput,
-    isAbortOnError = isAbortOnError,
-    isAbsolutePaths = isAbsolutePaths,
-    isNoLines = isNoLines,
-    isQuiet = isQuiet,
-    isCheckAllWarnings = isCheckAllWarnings,
-    isIgnoreWarnings = isIgnoreWarnings,
-    isWarningsAsErrors = isWarningsAsErrors,
-    isShowAll = isShowAll,
-    isExplainIssues = isExplainIssues,
-    isCheckReleaseBuilds = isCheckReleaseBuilds,
-    isCheckTestSources = isCheckTestSources,
-    isIgnoreTestSources = isIgnoreTestSources,
-    isCheckGeneratedSources = isCheckGeneratedSources,
-    isCheckDependencies = isCheckDependencies,
-    baselineFile = baselineFile,
-    severityOverrides = null
+    abortOnError = abortOnError,
+    absolutePaths = absolutePaths,
+    noLines = noLines,
+    quiet = quiet,
+    checkAllWarnings = checkAllWarnings,
+    ignoreWarnings = ignoreWarnings,
+    warningsAsErrors = warningsAsErrors,
+    showAll = showAll,
+    explainIssues = explainIssues,
+    checkReleaseBuilds = checkReleaseBuilds,
+    checkTestSources = checkTestSources,
+    ignoreTestSources = ignoreTestSources,
+    checkGeneratedSources = checkGeneratedSources,
+    checkDependencies = checkDependencies,
+    baseline = baseline,
 )
 
 internal fun CompileOptions.convert(): JavaCompileOptions {

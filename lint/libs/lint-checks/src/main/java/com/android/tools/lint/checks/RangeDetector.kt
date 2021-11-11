@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.findSelector
+import com.android.tools.lint.detector.api.isBelow
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
@@ -395,16 +396,26 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             if (resolvable is USimpleNameReferenceExpression) {
                 val surroundingIf = resolvable.getParentOfType<UIfExpression>(true)
-                val condition = surroundingIf?.condition?.skipParenthesizedExprDown()
-                val newConstraint = getRangeConstraints(resolvable, condition, constraint) ?: return constraint
-                return if (constraint != null) {
-                    constraint and newConstraint
-                } else {
-                    newConstraint
+                if (surroundingIf != null) {
+                    val condition = surroundingIf.condition.skipParenthesizedExprDown()
+                    val newConstraint = getRangeConstraints(resolvable, condition, constraint) ?: return constraint
+                    newConstraint.inferred = true
+                    val elseExpression = surroundingIf.elseExpression
+                    if (elseExpression != null && resolvable.isBelow(elseExpression)) {
+                        if (constraint != null) {
+                            return constraint.remove(newConstraint)
+                        }
+                        return null
+                    }
+                    return if (constraint != null) {
+                        constraint and newConstraint
+                    } else {
+                        newConstraint
+                    }
                 }
-            } else {
-                return constraint
             }
+
+            return constraint
         }
 
         private fun getRangeConstraints(
@@ -453,9 +464,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return null
                 }
                 return when (operator) {
-                    UastBinaryOperator.GREATER -> IntRangeConstraint.atLeast(number + 1)
+                    UastBinaryOperator.GREATER -> IntRangeConstraint.atLeast(number)
                     UastBinaryOperator.GREATER_OR_EQUALS -> IntRangeConstraint.atLeast(number)
-                    UastBinaryOperator.LESS -> IntRangeConstraint.atMost(number - 1)
+                    UastBinaryOperator.LESS -> IntRangeConstraint.atMost(number)
                     UastBinaryOperator.LESS_OR_EQUALS -> IntRangeConstraint.atMost(number)
                     UastBinaryOperator.EQUALS, UastBinaryOperator.IDENTITY_EQUALS -> IntRangeConstraint.range(number, number)
                     UastBinaryOperator.NOT_EQUALS, UastBinaryOperator.IDENTITY_NOT_EQUALS -> {
@@ -487,6 +498,16 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             allowed ?: return null
             val contains = allowed.contains(actual) ?: return null
             if (!contains) {
+                if (actual.infinite && actual.inferred) {
+                    // If it's an inferred range (for example, it's
+                    // surrounded by an "if (x > 10)"), and it's open
+                    // ended, we may not have the full picture; it could
+                    // have been constrained previously. In this case we
+                    // don't have enough confidence to assert that the
+                    // range is not fully constrained.
+                    return null
+                }
+
                 // Describe the parts
                 var actualLabel = ""
                 var allowedLabel = ""

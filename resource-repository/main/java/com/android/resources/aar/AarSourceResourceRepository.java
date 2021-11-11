@@ -15,6 +15,11 @@
  */
 package com.android.resources.aar;
 
+import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.SdkConstants.FN_RESOURCE_TEXT;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.AndroidManifestPackageNameUtils;
 import com.android.ide.common.resources.ResourceItem;
@@ -25,8 +30,6 @@ import com.android.ide.common.symbols.SymbolTable;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
-import com.android.resources.base.Base128InputStream;
-import com.android.resources.base.Base128OutputStream;
 import com.android.resources.base.BasicFileResourceItem;
 import com.android.resources.base.BasicResourceItem;
 import com.android.resources.base.NamespaceResolver;
@@ -35,16 +38,14 @@ import com.android.resources.base.RepositoryLoader;
 import com.android.resources.base.ResourceSerializationUtil;
 import com.android.resources.base.ResourceSourceFile;
 import com.android.resources.base.ResourceSourceFileImpl;
+import com.android.utils.Base128InputStream;
+import com.android.utils.Base128OutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.NullableLazyValue;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.TestOnly;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -59,11 +60,9 @@ import java.util.concurrent.Executor;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
-
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.FN_PUBLIC_TXT;
-import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 /**
  * A resource repository representing unpacked contents of a non-namespaced AAR.

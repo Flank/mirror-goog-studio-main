@@ -33,7 +33,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:kxml2",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/adt/idea/.idea/libraries:mockito[test]",
-        "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api[module]",
         "//tools/adt/idea/.idea/libraries:easymock[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/adt/idea/.idea/libraries:jimfs[test]",
@@ -67,14 +66,14 @@ maven_library(
         "//tools/base/sdk-common:model.sync",
     ],
     coordinates = "com.android.tools:sdk-common:" + BASE_VERSION,
+    description = "sdk-common library used by other Android tools libraries.",
+    module_name = "sdk-common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdk-common",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
@@ -140,22 +139,9 @@ kotlin_test(
     ],
 )
 
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-        "src/main/proto/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
-)
-
 java_proto_library(
     name = "model.sync",
     srcs = glob(["src/main/proto/*.proto"]),
-    visibility = ["//visibility:public"],
+    resource_strip_prefix = "tools/base/sdk-common/src/main/proto",
+    resources = glob(["src/main/proto/*.proto"]),
 )

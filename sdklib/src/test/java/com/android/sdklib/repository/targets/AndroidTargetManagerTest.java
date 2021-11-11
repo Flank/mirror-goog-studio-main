@@ -56,7 +56,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordSysImg13(fop);
         recordGoogleApisSysImg23(fop);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
@@ -82,7 +82,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordBuildTool23(fop);
         recordGoogleApisSysImg23(fop);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -103,7 +103,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordBuildTool23(fop);
         recordGoogleApisSysImg23(fop);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -121,7 +121,7 @@ public class AndroidTargetManagerTest extends TestCase {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         IAndroidTarget target = mgr.getTargets(progress).iterator().next();
@@ -712,7 +712,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordBuildTool23(fop);
         recordBuildTool24Preview1(fop);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         assertEquals("23.0.2", handler.getLatestBuildTool(progress, false).getRevision().toString());
@@ -729,7 +729,7 @@ public class AndroidTargetManagerTest extends TestCase {
         // This test like testBuildTools but also adds in a final version of 24
         recordBuildTool24(fop);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         assertEquals("24.0.0", handler.getLatestBuildTool(progress, false).getRevision().toString());

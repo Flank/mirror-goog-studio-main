@@ -540,6 +540,71 @@ src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFI
         ).run().expectClean()
     }
 
+    fun testMergedRanges() {
+        // Regression test for 205016549 and 205017694
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.content.res.ColorStateList
+                import android.content.res.TypedArray
+                import android.widget.ImageView
+
+                fun rangeTest(context: Context, enabled: Boolean, icon: ImageView, typedArray: TypedArray) {
+                    val colorList = typedArray.getColorStateList(0)!!
+                    val iconColor =
+                        if (enabled) {
+                            colorList.getColorForState(intArrayOf(android.R.attr.state_enabled), 0)
+                        } else {
+                            colorList.getColorForState(intArrayOf(-android.R.attr.state_enabled), 0)
+                        }
+                    val alpha = ((iconColor and 0xff000000.toInt()) shr 24).toFloat() / 255.0f
+                    icon.imageTintList = ColorStateList.valueOf(iconColor)
+                    if (!enabled && alpha > 0) {
+                        icon.alpha = alpha
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.IntRange;
+
+                public class CursorTest {
+                    void Issue(Cursor cursor, String columnName,
+                               @IntRange(from = -1) int _cursorIndexOfResourceOnDeviceId) {
+                        long _tmpResourceOnDeviceId;
+                        if (_cursorIndexOfResourceOnDeviceId == -1) {
+                            _tmpResourceOnDeviceId = 0;
+                        } else {
+                            _tmpResourceOnDeviceId = cursor.getLong(_cursorIndexOfResourceOnDeviceId); // OK 1
+                        }
+                        if (_cursorIndexOfResourceOnDeviceId != -1) {
+                            _tmpResourceOnDeviceId = cursor.getLong(_cursorIndexOfResourceOnDeviceId); // OK 2
+                        } else {
+                            _tmpResourceOnDeviceId = 0;
+                        }
+                        if (_cursorIndexOfResourceOnDeviceId < 0) {
+                            _tmpResourceOnDeviceId = 0;
+                        } else {
+                            _tmpResourceOnDeviceId = cursor.getLong(_cursorIndexOfResourceOnDeviceId); // OK 3
+                        }
+                    }
+
+                    public static class Cursor {
+                        public long getLong(@IntRange(from = 0) int var1) { return 0; }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     fun testOverlappingRanges() {
 
         lint().files(

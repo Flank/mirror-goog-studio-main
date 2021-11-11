@@ -433,8 +433,11 @@ void Agent::RunCommandHandlerThread() {
   while (running_.load() && reader->Read(&command)) {
     auto search = command_handlers_.find(command.type());
     if (search != command_handlers_.end()) {
-      Log::V(Log::Tag::TRANSPORT, "Handling agent command %d for pid: %d.",
-             command.type(), command.pid());
+      Log::V(Log::Tag::TRANSPORT,
+             "Agent handling command (id:%d type:%s) for pid:%d.",
+             command.command_id(),
+             proto::Command::CommandType_Name(command.type()).c_str(),
+             command.pid());
       (search->second)(&command);
     }
   }

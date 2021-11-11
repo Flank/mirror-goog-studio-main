@@ -20,10 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.CancellableFileIo;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.impl.FileOpImpl;
 import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -41,100 +39,9 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-/**
- * Some convenience methods for working with {@link File}s/{@link FileOp}s.
- */
+/** Some convenience methods for working with {@link Path}s. TODO: merge with InMemoryFileSystems */
 public final class FileOpUtils {
     private static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
-
-    /**
-     * The standard way to create a {@link FileOp} that interacts with the real filesystem.
-     *
-     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
-     *     InMemoryFileSystems} directly.
-     */
-    @NonNull
-    public static FileOp create() {
-        return new FileOpImpl();
-    }
-
-    /**
-     * Create a {@link FileOp} that supports the provided {@code path}. This should be used where
-     * code using only {@link Path}s directly has to interact with code that still uses {@link
-     * FileOp}.
-     *
-     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
-     *     InMemoryFileSystems} directly.
-     */
-    @NonNull
-    public static FileOp create(@Nullable Path path) {
-        if (path != null) {
-            try {
-                FileSystem desiredFs = path.getFileSystem();
-                if (desiredFs != FileSystems.getDefault()) {
-                    Class<?> mockFileOp =
-                            FileOp.class
-                                    .getClassLoader()
-                                    .loadClass("com.android.repository.testframework.MockFileOp");
-                    return (FileOp)
-                            mockFileOp.getConstructor(FileSystem.class).newInstance(desiredFs);
-                }
-            } catch (Exception ignore) {
-                // We'll just return the default
-            }
-        }
-        return new FileOpImpl();
-    }
-
-    /**
-     * Copies a file or directory tree to the given location. {@code dest} should not exist: with
-     * the file system currently looking like
-     *
-     * <pre>{@code
-     * /
-     *   dir1/
-     *     a.txt
-     *   dir2/
-     *
-     * }</pre>
-     *
-     * Running {@code recursiveCopy(new File("/dir1"), new File("/dir2"), fOp)} will result in an
-     * exception, while {@code recursiveCopy(new File("/dir1"), new File("/dir2/foo")} will result
-     * in
-     *
-     * <pre>{@code
-     * /
-     *   dir1/
-     *     a.txt
-     *   dir2/
-     *     foo/
-     *       a.txt
-     *
-     * }</pre>
-     *
-     * This is equivalent to the behavior of {@code cp -r} when the target does not exist.
-     *
-     * @param src File to copy
-     * @param dest Destination.
-     * @param fop The FileOp to use for file operations.
-     * @throws IOException If the destination already exists, or if there is a problem copying the
-     *     files or creating directories.
-     * @deprecated Use {@link #recursiveCopy(Path, Path, boolean, Predicate, ProgressIndicator)}.
-     */
-    public static void recursiveCopy(
-            @NonNull File src,
-            @NonNull File dest,
-            @NonNull FileOp fop,
-            @NonNull ProgressIndicator progress)
-            throws IOException {
-        recursiveCopy(src, dest, false, fop, progress);
-    }
-
-    @VisibleForTesting
-    static void recursiveCopy(@NonNull File src, @NonNull File dest, boolean merge,
-            @NonNull FileOp fop, @NonNull ProgressIndicator progress) throws IOException {
-        recursiveCopy(fop.toPath(src), fop.toPath(dest), merge, null, progress);
-    }
 
     /**
      * Copies a file or directory tree to the given location.
@@ -207,8 +114,8 @@ public final class FileOpUtils {
      * during the copy, the original files are moved back into place.
      *
      * @param src File to move
-     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(File, File, FileOp,
-     *     ProgressIndicator)}}.
+     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(Path, Path, boolean,
+     *     Predicate, ProgressIndicator)}}.
      * @param progress Currently only used for error logging.
      * @throws IOException If some problem occurs during copies or directory creation.
      */
@@ -316,14 +223,7 @@ public final class FileOpUtils {
     /**
      * Creates a new subdirectory of the system temp directory. The directory will be named {@code
      * <base> + NN}, where NN makes the directory distinct from any existing directories.
-     *
-     * @deprecated Use {@link #getNewTempDir(String, FileSystem)}.
      */
-    @Nullable
-    public static Path getNewTempDir(@NonNull String base, @NonNull FileOp fileOp) {
-        return getNewTempDir(base, fileOp.getFileSystem());
-    }
-
     @Nullable
     public static Path getNewTempDir(@NonNull String base, @NonNull FileSystem fileSystem) {
         for (int i = 1; i < 100; i++) {
@@ -354,18 +254,6 @@ public final class FileOpUtils {
             base = new File(base, segment);
         }
         return base;
-    }
-
-    /**
-     * Appends the given {@code segments} to the {@code base} file.
-     *
-     * @param base     A base file path, non-empty and non-null.
-     * @param segments Individual folder or filename segments to append to the base path.
-     * @return A new file representing the concatenation of the base path with all the segments.
-     */
-    @NonNull
-    public static File append(@NonNull String base, @NonNull String... segments) {
-        return append(new File(base), segments);
     }
 
     /**
@@ -442,17 +330,6 @@ public final class FileOpUtils {
         return result.toString();
     }
 
-    /**
-     * Deletes the given file if it exists. Does nothing and returns successfully if the file didn't
-     * exist to begin with.
-     *
-     * @return true if the file no longer exists, false if we failed to delete it
-     * @deprecated Use {@link Files#deleteIfExists(Path)}.
-     */
-    public static boolean deleteIfExists(File file, FileOp fop) {
-        return !fop.exists(file) || fop.delete(file);
-    }
-
     private FileOpUtils() {
     }
 
@@ -502,18 +379,6 @@ public final class FileOpUtils {
             return false;
         }
         return !sawException[0];
-    }
-
-    /**
-     * Temporary functionality to help with File-to-Path migration. Should only be called when a
-     * FileOp is not available and with a Path that is backed by the default FileSystem (notably not
-     * in the context of any tests that use MockFileOp or jimfs).
-     *
-     * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
-     */
-    @NonNull
-    public static File toFileUnsafe(@NonNull Path path) {
-        return path.toFile();
     }
 
     public static void setExecutablePermission(@NonNull Path path) throws IOException {

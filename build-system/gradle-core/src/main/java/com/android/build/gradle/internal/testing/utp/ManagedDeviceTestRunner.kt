@@ -112,7 +112,7 @@ class ManagedDeviceTestRunner(
             ))
         }
 
-        val results = runUtpTestSuiteAndWaitFunc(
+        val results = runUtpWithRetryForEmulatorTimeoutException(
             runnerConfigs,
             projectPath,
             variantName,
@@ -128,24 +128,78 @@ class ManagedDeviceTestRunner(
             // test, a result pb file is generated in a subdirectory per shard. If it's a
             // non-sharded test, a result pb is generated in the outputDirectory so we
             // don't need to create a merged result here.
-            val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
             if (numShards != null) {
                 val resultsMerger = UtpTestSuiteResultMerger()
                 resultProtos.forEach(resultsMerger::merge)
+
+                val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
                 resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
             }
-
-            logger.quiet(
-                "\nTest results saved as ${mergedTestResultPbFile.toURI()}. " +
-                        "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                        "From File from the menu bar and importing test-result.pb."
-            )
         }
 
         return results.all(UtpTestRunResult::testPassed)
     }
 
+    private fun runUtpWithRetryForEmulatorTimeoutException(
+        runnerConfigs: List<UtpRunnerConfig>,
+        projectPath: String,
+        variantName: String,
+        outputDirectory: File,
+        logger: ILogger
+    ): List<UtpTestRunResult> {
+        val results: MutableList<UtpTestRunResult> = mutableListOf()
+
+        // A pairs of remaining utp runner config and its previous utp test run result.
+        var remainingConfigs: List<Pair<UtpRunnerConfig, UtpTestRunResult?>> = runnerConfigs.map {
+            it to null
+        }
+        for (i in 0..MAX_RETRY_FOR_EMULATOR_TIMEOUT_UTP_ERROR) {
+            val runResults = runUtpTestSuiteAndWaitFunc(
+                remainingConfigs.map { it.first },
+                projectPath,
+                variantName,
+                outputDirectory,
+                logger
+            )
+
+            val nextConfigs: MutableList<Pair<UtpRunnerConfig, UtpTestRunResult?>> = mutableListOf()
+            for ((runResult, runConfig) in runResults.zip(remainingConfigs)) {
+                if (hasEmulatorTimeoutException(runResult.resultsProto)) {
+                    // Rerun UTP if it failed due to the emulator timeout exception.
+                    nextConfigs.add(runConfig.first to runResult)
+                } else {
+                    results.add(runResult)
+                }
+            }
+
+            val noProgress = remainingConfigs.size == nextConfigs.size
+            remainingConfigs = nextConfigs
+
+            // If all UTP runs failed due to emulator timeout exception, we don't retry
+            // and simply gave up because it will likely fail again.
+            if (remainingConfigs.isEmpty() || noProgress) {
+                break
+            }
+        }
+
+        remainingConfigs.forEach { (runConfig, runResult) ->
+            if (runResult != null) {
+                results.add(runResult)
+            }
+
+            logger.error(
+                null,
+                "Could not finish tests for device: ${runConfig.shardName()}.\n" +
+                "Last Error: ${getPlatformErrorMessage(runResult?.resultsProto)}\n"
+            )
+        }
+
+        return results
+    }
+
     companion object {
+        private const val MAX_RETRY_FOR_EMULATOR_TIMEOUT_UTP_ERROR = 1
+
         /**
          * Returns the tested apk for the given managed device and test data.
          */

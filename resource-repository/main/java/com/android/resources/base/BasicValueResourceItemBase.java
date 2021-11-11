@@ -19,14 +19,15 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
+import com.android.utils.Base128InputStream;
+import com.android.utils.Base128OutputStream;
 import com.android.utils.HashCodes;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /** Base class for value resource items. */
 public abstract class BasicValueResourceItemBase extends BasicResourceItemBase {

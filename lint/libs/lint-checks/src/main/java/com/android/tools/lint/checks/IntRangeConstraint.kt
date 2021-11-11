@@ -42,6 +42,9 @@ class IntRangeConstraint private constructor(
         return value in from..to
     }
 
+    override val infinite: Boolean
+        get() = from == MIN_VALUE || to == MAX_VALUE
+
     fun describe(): String {
         return describe(null)
     }
@@ -146,6 +149,21 @@ class IntRangeConstraint private constructor(
         val start = max(from, range.from)
         val end = min(to, range.to)
         return IntRangeConstraint(start, end)
+    }
+
+    override fun remove(other: RangeConstraint): RangeConstraint? {
+        if (other is IntRangeConstraint) {
+            if (from <= other.to) {
+                if (other.to != MAX_VALUE && to > other.to + 1) {
+                    return IntRangeConstraint(other.to + 1, to)
+                } else if (other.from != MAX_VALUE && from < other.from - 1) {
+                    return IntRangeConstraint(from, other.from - 1)
+                }
+            }
+        } else if (other is FloatRangeConstraint) {
+            return FloatRangeConstraint(this).remove(other)
+        }
+        return super.remove(other)
     }
 
     override fun toString(): String {

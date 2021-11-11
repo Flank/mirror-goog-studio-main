@@ -19,11 +19,13 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.DependenciesImpl
+import com.android.build.gradle.internal.testFixtures.isLibraryTestFixturesCapability
 import com.android.build.gradle.internal.testFixtures.isProjectTestFixturesCapability
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Dependencies
 import com.google.common.collect.Lists
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 
@@ -60,6 +62,20 @@ fun ResolvedArtifactResult.hasProjectTestFixturesCapability(): Boolean {
     return variant.capabilities.any {
         it.isProjectTestFixturesCapability(
             (id.componentIdentifier as ProjectComponentIdentifier).projectName
+        )
+    }
+}
+
+/**
+ * Checks if the resolved artifact is coming from an external library with testFixtures capability.
+ */
+fun ResolvedArtifactResult.hasLibraryTestFixturesCapability(): Boolean {
+    if (id.componentIdentifier !is ModuleComponentIdentifier) {
+        return false
+    }
+    return variant.capabilities.any {
+        it.isLibraryTestFixturesCapability(
+            libraryName = (id.componentIdentifier as ModuleComponentIdentifier).module
         )
     }
 }

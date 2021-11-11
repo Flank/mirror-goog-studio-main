@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.resources.base;
+package com.android.utils;
 
 import com.android.io.CancellableFileIo;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +23,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An output stream that uses the unsigned little endian base 128 (<a xref="https://en.wikipedia.org/wiki/LEB128">LEB128</a>)
@@ -181,7 +180,7 @@ public final class Base128InputStream extends BufferedInputStream {
    * @throws IOException if an I/O error occurs
    * @throws StreamFormatException if an invalid data format is detected
    */
-  public final boolean readBoolean() throws IOException, StreamFormatException {
+  public boolean readBoolean() throws IOException, StreamFormatException {
     int c = readInt();
     if ((c & ~0x1) != 0) {
       throw StreamFormatException.invalidFormat();

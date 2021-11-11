@@ -73,7 +73,6 @@ interface VariantDimension {
      * to return the full path of the files.
      *
      * @return a non-null collection of files.
-     * @see .getTestProguardFiles
      */
     @get:Incubating
     val proguardFiles: MutableList<File>

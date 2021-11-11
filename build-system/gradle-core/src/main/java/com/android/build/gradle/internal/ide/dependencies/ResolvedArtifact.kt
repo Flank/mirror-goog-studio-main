@@ -68,7 +68,8 @@ data class ResolvedArtifact internal constructor(
                 mainArtifactResult.variant,
                 mainArtifactResult.getVariantName(),
                 mainArtifactResult.file,
-                mainArtifactResult.hasProjectTestFixturesCapability(),
+                mainArtifactResult.hasProjectTestFixturesCapability() ||
+                        mainArtifactResult.hasLibraryTestFixturesCapability(),
                 extractedFolder,
                 publishedLintJar,
                 dependencyType,
@@ -168,11 +169,17 @@ data class ResolvedArtifact internal constructor(
                 .append(componentIdentifier.projectPath)
                 .also { sb ->
                     this.variantName?.let{ sb.append("::").append(it) }
+                    if (this.isTestFixturesArtifact) {
+                        sb.append("::").append("testFixtures")
+                    }
                 }
                 .toString().intern()
         }
         is ModuleComponentIdentifier, is OpaqueComponentArtifactIdentifier -> {
-            mavenCoordinatesCache.getMavenCoordinates(this).toString().intern()
+            (mavenCoordinatesCache.getMavenCoordinates(this).toString() +
+                    if (this.isTestFixturesArtifact) {
+                        "::testFixtures"
+                    } else "").intern()
         }
         else -> {
             throw RuntimeException(
