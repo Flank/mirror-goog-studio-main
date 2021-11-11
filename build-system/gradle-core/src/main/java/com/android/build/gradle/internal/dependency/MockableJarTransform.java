@@ -27,8 +27,9 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /** Transform that converts an Android JAR file into a Mockable Android JAR file. */
 @CacheableTransform
@@ -40,7 +41,7 @@ public abstract class MockableJarTransform
         Property<Boolean> getReturnDefaultValues();
     }
 
-    @Classpath
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     @InputArtifact
     public abstract Provider<FileSystemLocation> getInputArtifact();
 

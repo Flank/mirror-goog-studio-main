@@ -26,7 +26,8 @@ import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -39,7 +40,7 @@ import java.util.zip.ZipFile
 @CacheableTransform
 abstract class ExtractJniTransform : TransformAction<GenericTransformParameters> {
 
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputArtifact
     abstract val inputJar: Provider<FileSystemLocation>
 
