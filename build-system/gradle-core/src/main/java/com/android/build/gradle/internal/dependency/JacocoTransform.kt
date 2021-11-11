@@ -45,12 +45,10 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.UncheckedIOException
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
-import kotlin.io.path.notExists
 
 @CacheableTransform
 abstract class JacocoTransform : TransformAction<JacocoTransform.Params> {
