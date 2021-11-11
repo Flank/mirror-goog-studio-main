@@ -242,7 +242,7 @@ public class PluralsDetector extends ResourceXmlDetector {
                 if (haveFormattingParameter((Element) child)) {
                     return true;
                 }
-            } else if (nodeType == Node.TEXT_NODE) {
+            } else if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
                 String text = child.getNodeValue();
                 if (containsExpandTemplate(text)) {
                     return true;

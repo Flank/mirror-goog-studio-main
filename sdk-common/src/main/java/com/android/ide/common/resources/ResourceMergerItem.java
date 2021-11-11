@@ -31,6 +31,8 @@ import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.TAG_ENUM;
 import static com.android.SdkConstants.TAG_FLAG;
 import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.utils.XmlUtils.CDATA_PREFIX;
+import static com.android.utils.XmlUtils.CDATA_SUFFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -881,9 +883,9 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                     sb.append(child.getNodeValue());
                     break;
                 case Node.CDATA_SECTION_NODE:
-                    sb.append("<![CDATA[");
+                    sb.append(CDATA_PREFIX);
                     sb.append(child.getNodeValue());
-                    sb.append("]]>");
+                    sb.append(CDATA_SUFFIX);
                     break;
             }
         }

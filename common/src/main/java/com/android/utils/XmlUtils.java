@@ -82,10 +82,12 @@ import org.xml.sax.XMLReader;
  * methods in {@link DomExtensions}
  */
 public class XmlUtils {
-    public static final String XML_COMMENT_BEGIN = "<!--"; //$NON-NLS-1$
-    public static final String XML_COMMENT_END = "-->";    //$NON-NLS-1$
+    public static final String XML_COMMENT_BEGIN = "<!--";
+    public static final String XML_COMMENT_END = "-->";
     public static final String XML_PROLOG =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";  //$NON-NLS-1$
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+    public static final String CDATA_PREFIX = "<![CDATA[";
+    public static final String CDATA_SUFFIX = "]]>";
 
     public static final String SAX_PARSER_FACTORY =
             "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl";
@@ -93,7 +95,7 @@ public class XmlUtils {
     /**
      * Separator for xml namespace and localname
      */
-    public static final char NS_SEPARATOR = ':';                  //$NON-NLS-1$
+    public static final char NS_SEPARATOR = ':';
 
     private static final String SOURCE_FILE_USER_DATA_KEY = "sourcefile";
 
@@ -709,9 +711,9 @@ public class XmlUtils {
                 break;
             }
             case Node.CDATA_SECTION_NODE: {
-                sb.append("<![CDATA["); //$NON-NLS-1$
+                sb.append(CDATA_PREFIX);
                 sb.append(node.getNodeValue());
-                sb.append("]]>");       //$NON-NLS-1$
+                sb.append(CDATA_SUFFIX);
                 break;
             }
             case Node.ELEMENT_NODE:

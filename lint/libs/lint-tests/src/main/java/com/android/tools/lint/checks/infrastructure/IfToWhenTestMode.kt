@@ -33,7 +33,7 @@ import org.jetbrains.uast.getParentOfType
  * statements into switches if the comparisons are eligible (e.g.
  * constant expressions).
  */
-class IfToWhenTestMode : SourceTransformationTestMode(
+class IfToWhenTestMode : UastSourceTransformationTestMode(
     description = "Converting if/else to when/switch",
     "TestMode.IF_TO_WHEN",
     "if_to_when"

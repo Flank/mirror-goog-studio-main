@@ -1111,7 +1111,7 @@ class LintDriver(
         } else {
             val files = dir.listFiles()
             if (files != null) {
-                for (file in files) {
+                for (file in files.sorted()) {
                     if (file.isDirectory) {
                         addProjects(file, fileToProject, rootDir)
                     }
@@ -3793,7 +3793,7 @@ class LintDriver(
         private fun gatherJavaFiles(dir: File, result: MutableList<File>) {
             val files = dir.listFiles()
             if (files != null) {
-                for (file in files) {
+                for (file in files.sorted()) {
                     if (file.isFile) {
                         val path = file.path
                         if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {

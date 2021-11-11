@@ -23,6 +23,8 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STRING;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.XMLNS;
+import static com.android.utils.XmlUtils.CDATA_PREFIX;
+import static com.android.utils.XmlUtils.CDATA_SUFFIX;
 import static com.android.utils.XmlUtils.XML_COMMENT_BEGIN;
 import static com.android.utils.XmlUtils.XML_COMMENT_END;
 import static com.android.utils.XmlUtils.XML_PROLOG;
@@ -391,9 +393,9 @@ public class XmlPrettyPrinter {
         if (separateLine && !endsWithLineSeparator()) {
             mOut.append(mLineSeparator);
         }
-        mOut.append("<![CDATA["); //$NON-NLS-1$
+        mOut.append(CDATA_PREFIX);
         mOut.append(nodeValue);
-        mOut.append("]]>");       //$NON-NLS-1$
+        mOut.append(CDATA_SUFFIX);
         if (separateLine) {
             mOut.append(mLineSeparator);
         }

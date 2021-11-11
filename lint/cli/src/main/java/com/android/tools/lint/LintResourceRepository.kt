@@ -655,7 +655,7 @@ open class LintResourceRepository constructor(
             val folderType = ResourceFolderType.getFolderType(folderName) ?: return
             val config = FolderConfiguration.getConfigForFolder(folderName) ?: return
             config.normalizeByAddingImpliedVersionQualifier()
-            val files = folder.listFiles() ?: return
+            val files = folder.listFiles()?.sorted() ?: return
             if (folderType == ResourceFolderType.VALUES) {
                 for (file in files) {
                     processValues(client, namespace, map, config, libraryName, file)

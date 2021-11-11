@@ -1706,7 +1706,7 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"cancel\"> Cancel </string>\n"
                             + "    <string name=\"resume\"> OK </string>\n"
                             + "    <string name=\"giveup\"> Cancel </string>\n"
-                            + "    <string name=\"resume2\"> Ok </string>\n"
+                            + "    <string name=\"resume2\"><![CDATA[ Ok ]]></string>\n"
                             + "    <string name=\"giveup2\">\"CANCEL\"</string>\n"
                             + "    <string name=\"send\"> Send </string>\n"
                             + "    <string name=\"abort\">Abort</string>\n"

@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.StringFormatDetector.isLocaleSpecific;
 
 import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 import java.util.HashSet;
 import java.util.Set;
@@ -157,6 +158,33 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                 + "0 errors, 1 warnings\n");
     }
 
+    public void testCharacterData() {
+        lint().files(
+                        xml(
+                                "res/values/formatstrings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"hello\"><![CDATA[Hello %1$s, %2$s?]]></string>"
+                                        + "</resources>\n"),
+                        xml(
+                                "res/values-es/formatstrings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"hello\"><![CDATA[%3$d: %1$s, %2$s?]]></string>\n"
+                                        + "</resources>\n"))
+                .issues(StringFormatDetector.ARG_COUNT)
+                .run()
+                .expect(
+                        ""
+                                + "res/values-es/formatstrings.xml:2: Warning: Inconsistent number of arguments in formatting string hello; found both 3 here and 2 in values/formatstrings.xml [StringFormatCount]\n"
+                                + "    <string name=\"hello\"><![CDATA[%3＄d: %1＄s, %2＄s?]]></string>\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "    res/values/formatstrings.xml:2: Conflicting number of arguments (2) here\n"
+                                + "    <string name=\"hello\"><![CDATA[Hello %1＄s, %2＄s?]]></string></resources>\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
+    }
+
     public void testAll() {
         String expected =
                 ""
@@ -224,7 +252,10 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                         + "    <string name=\"missing\">Hello %3＄s World</string>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "9 errors, 2 warnings";
-        lint().files(mFormatstrings, mFormatstrings2, mStringFormatActivity).run().expect(expected);
+        lint().files(mFormatstrings, mFormatstrings2, mStringFormatActivity)
+                .skipTestModes(TestMode.CDATA)
+                .run()
+                .expect(expected);
     }
 
     public void testArgCount() {

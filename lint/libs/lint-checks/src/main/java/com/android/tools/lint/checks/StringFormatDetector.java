@@ -71,7 +71,6 @@ import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
@@ -87,6 +86,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -232,7 +232,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
     private Map<String, List<Pair<Handle, String>>> mFormatStrings;
 
     /** Map of strings that do not contain any formatting. */
-    private final Map<String, Handle> mNotFormatStrings = new HashMap<>();
+    private final Map<String, Handle> mNotFormatStrings = new LinkedHashMap<>();
 
     /**
      * Set of strings that have an unknown format such as date formatting; we should not flag these
@@ -259,7 +259,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         if (childNodes.getLength() > 0) {
             if (childNodes.getLength() == 1) {
                 Node child = childNodes.item(0);
-                if (child.getNodeType() == Node.TEXT_NODE) {
+                short type = child.getNodeType();
+                if (type == Node.TEXT_NODE || type == Node.CDATA_SECTION_NODE) {
                     checkTextNode(context, element, stripQuotes(child.getNodeValue()));
                 }
             } else {
@@ -402,7 +403,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
             if (found) {
                 // Record it for analysis when seen in Java code
                 if (mFormatStrings == null) {
-                    mFormatStrings = new HashMap<>();
+                    mFormatStrings = new LinkedHashMap<>();
                 }
 
                 List<Pair<Handle, String>> list = mFormatStrings.get(name);
@@ -1339,7 +1340,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                         if (list == null) {
                             list = Lists.newArrayList();
                             if (mFormatStrings == null) {
-                                mFormatStrings = Maps.newHashMap();
+                                mFormatStrings = new LinkedHashMap<>();
                             }
                             mFormatStrings.put(name, list);
                         }

@@ -39,33 +39,29 @@ import org.w3c.dom.Node
 /**
  * Check which looks for likely typos in Strings.
  *
- *
  * TODO:
+ * * Add check of Java String literals too!
+ * * Add support for **additional** languages. The typo detector is now
+ *   multilingual and looks for typos-*locale*.txt files to use.
+ *   However, we need to seed it with additional typo databases.
+ *   I did some searching and came up with some alternatives.
+ *   Here's the strategy I used: Used Google Translate to translate
+ *   "Wikipedia Common Misspellings", and then I went to google.no,
+ *   google.fr etc searching with that translation, and came
+ *   up with what looks like wikipedia language local lists of
+ *   typos. This is how I found the Norwegian one for example:
+ *   http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform
  *
- *
- *  * Add check of Java String literals too!
- *  * Add support for **additional** languages. The typo detector is now multilingual and
- * looks for typos-*locale*.txt files to use. However, we need to seed it with additional typo
- * databases. I did some searching and came up with some alternatives. Here's the strategy I
- * used: Used Google Translate to translate "Wikipedia Common Misspellings", and then I went
- * to google.no, google.fr etc searching with that translation, and came up with what looks
- * like wikipedia language local lists of typos. This is how I found the Norwegian one for
- * example: <br></br>
- * http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform <br></br>
- * Here are some additional possibilities not yet processed:
- *
- *  * French:
- * http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
- * (couldn't find a machine-readable version there?)
- *  * Swedish: http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
- * (couldn't find a machine-readable version there?)
- *  * German
- * http://de.wikipedia.org/wiki/Wikipedia:Liste_von_Tippfehlern/F%C3%BCr_Maschinen
- *
- *  * Consider also digesting files like
- * http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos See
- * http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual.
- *
+ *   Here are some additional possibilities not yet processed:
+ * * French:
+ *   http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
+ *   (couldn't find a machine-readable version there?)
+ * * Swedish:
+ *   http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
+ *   (couldn't find a machine-readable version there?)
+ * * Consider also digesting files like
+ *   http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos
+ *   http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual
  */
 class TypoDetector : ResourceXmlDetector() {
     private var lookup: TypoLookup? = null
@@ -79,7 +75,8 @@ class TypoDetector : ResourceXmlDetector() {
     }
 
     /**
-     * Look up the locale and region from the given parent folder name and store it in [language] and [region]
+     * Look up the locale and region from the given parent folder name
+     * and store it in [language] and [region]
      */
     private fun initLocale(context: XmlContext) {
         val locale = getLocale(context)
@@ -110,7 +107,8 @@ class TypoDetector : ResourceXmlDetector() {
     }
 
     private fun visit(context: XmlContext, parent: Element, node: Node) {
-        if (node.nodeType == Node.TEXT_NODE) {
+        val nodeType = node.nodeType
+        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
             // TODO: Figure out how to deal with entities
             check(context, parent, node, node.nodeValue)
         } else {
@@ -349,7 +347,10 @@ class TypoDetector : ResourceXmlDetector() {
         }
     }
 
-    /** Report the typo found at the given offset and suggest the given replacements  */
+    /**
+     * Report the typo found at the given offset and suggest the given
+     * replacements
+     */
     private fun reportTypo(
         context: XmlContext,
         node: Node,

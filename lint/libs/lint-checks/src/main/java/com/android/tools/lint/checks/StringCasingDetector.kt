@@ -89,7 +89,8 @@ class StringCasingDetector : ResourceXmlDetector() {
         if (childNodes.length > 0) {
             if (childNodes.length == 1) {
                 val child = childNodes.item(0)
-                if (child.nodeType == Node.TEXT_NODE) {
+                val nodeType = child.nodeType
+                if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
                     checkTextNode(
                         context,
                         element,

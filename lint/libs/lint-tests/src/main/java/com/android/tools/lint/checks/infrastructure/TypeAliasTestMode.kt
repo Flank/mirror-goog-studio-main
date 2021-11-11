@@ -37,7 +37,7 @@ import org.jetbrains.uast.USimpleNameReferenceExpression
  *
  * (See also the [ImportAliasTestMode].)
  */
-class TypeAliasTestMode : SourceTransformationTestMode(
+class TypeAliasTestMode : UastSourceTransformationTestMode(
     description = "Type aliases",
     "TestMode.TYPE_ALIAS",
     "type-alias"

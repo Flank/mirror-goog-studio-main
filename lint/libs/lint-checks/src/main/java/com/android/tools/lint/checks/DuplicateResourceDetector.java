@@ -186,7 +186,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
         int childCount = children.getLength();
         for (int i = 0; i < childCount; i++) {
             Node child = children.item(i);
-            if (child.getNodeType() == Node.TEXT_NODE) {
+            short nodeType = child.getNodeType();
+            if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
                 String text = child.getNodeValue();
 
                 checkXmlEscapes(context, child, element, text);

@@ -144,7 +144,11 @@ open class XmlContext(
      * @return a new location
      */
     fun getLocation(textNode: Node, begin: Int, end: Int): Location {
-        assert(textNode.nodeType == Node.TEXT_NODE || textNode.nodeType == Node.COMMENT_NODE)
+        assert(
+            textNode.nodeType == Node.TEXT_NODE ||
+                textNode.nodeType == Node.COMMENT_NODE ||
+                textNode.nodeType == Node.CDATA_SECTION_NODE
+        )
         return parser.getLocation(this, textNode, begin, end)
     }
 

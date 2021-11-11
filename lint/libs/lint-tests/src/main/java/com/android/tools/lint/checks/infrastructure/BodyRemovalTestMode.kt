@@ -38,7 +38,7 @@ import org.jetbrains.uast.textRange
  * possible (and also inserts { } into if statements or removes them if
  * they're already there).
  */
-class BodyRemovalTestMode : SourceTransformationTestMode(
+class BodyRemovalTestMode : UastSourceTransformationTestMode(
     description = "Body Removal",
     "TestMode.BODY_REMOVAL",
     "body-removal"

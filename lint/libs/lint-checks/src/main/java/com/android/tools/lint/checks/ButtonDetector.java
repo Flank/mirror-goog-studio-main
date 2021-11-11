@@ -243,7 +243,8 @@ public class ButtonDetector extends ResourceXmlDetector {
             NodeList childNodes = element.getChildNodes();
             for (int i = 0, n = childNodes.getLength(); i < n; i++) {
                 Node child = childNodes.item(i);
-                if (child.getNodeType() == Node.TEXT_NODE) {
+                short type = child.getNodeType();
+                if (type == Node.TEXT_NODE || type == Node.CDATA_SECTION_NODE) {
                     String text = child.getNodeValue();
                     for (int j = 0, len = text.length(); j < len; j++) {
                         char c = text.charAt(j);
@@ -436,7 +437,8 @@ public class ButtonDetector extends ResourceXmlDetector {
             NodeList childNodes = item.getChildNodes();
             for (int i = 0, n = childNodes.getLength(); i < n; i++) {
                 Node child = childNodes.item(i);
-                if (child.getNodeType() == Node.TEXT_NODE) {
+                short type = child.getNodeType();
+                if (type == Node.TEXT_NODE || type == Node.CDATA_SECTION_NODE) {
                     String text = stripLabel(child.getNodeValue());
                     if (!text.isEmpty()) {
                         mKeyToLabel.put(itemName, text);

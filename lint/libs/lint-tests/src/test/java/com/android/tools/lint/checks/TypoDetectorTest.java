@@ -245,6 +245,26 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testCharacterData() {
+        // Test <![CDATA[]]> handling
+        lint().files(
+                        xml(
+                                "res/values-nb/typos.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "    <string name=\"s5\"><![CDATA[ Altid ]]></string>\n"
+                                        + "</resources>\n"
+                                        + "\n"))
+                .run()
+                .expect(
+                        ""
+                                + "res/values-nb/typos.xml:3: Warning: \"Altid\" is a common misspelling; did you mean \"Alltid\" ? [Typos]\n"
+                                + "    <string name=\"s5\"><![CDATA[ Altid ]]></string>\n"
+                                + "                                ^\n"
+                                + "0 errors, 1 warnings");
+    }
+
     public void testGerman() {
         // Test globbing and multiple word matching
         String expected =

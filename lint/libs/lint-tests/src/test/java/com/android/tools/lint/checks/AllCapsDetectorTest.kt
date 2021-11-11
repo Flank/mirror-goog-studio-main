@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class AllCapsDetectorTest : AbstractCheckTest() {
@@ -65,6 +66,7 @@ class AllCapsDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .skipTestModes(TestMode.CDATA)
             .run().expect(
                 """
                 res/layout/constraint.xml:12: Warning: Using textAllCaps with a string (has_markup) that contains markup; the markup will be dropped by the caps conversion [AllCaps]

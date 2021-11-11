@@ -8,7 +8,6 @@ import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
 import com.android.SdkConstants.TAG_INTENT_FILTER
 import com.android.SdkConstants.TAG_NAV_GRAPH
-import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.SdkConstants.TAG_SERVICE
 import com.android.SdkConstants.VALUE_FALSE

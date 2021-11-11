@@ -361,6 +361,9 @@ open class TestMode(
         val IF_TO_WHEN: TestMode = IfToWhenTestMode()
 
         @JvmField
+        val CDATA: TestMode = CharacterDataTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
             PARENTHESIZED,
             FULLY_QUALIFIED,
@@ -381,6 +384,7 @@ open class TestMode(
             PARTIAL,
             BYTECODE_ONLY,
             SOURCE_ONLY,
+            CDATA,
             SOURCE_TRANSFORMATION_GROUP
         )
     }
