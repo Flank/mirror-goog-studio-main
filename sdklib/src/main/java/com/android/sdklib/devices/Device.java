@@ -93,6 +93,9 @@ public final class Device {
     @NonNull
     private Map<String, String> mBootProps;
 
+    /** If the device should be hidden during AVD creation */
+    private boolean mIsDeprecated;
+
     /**
      * Returns the name of the {@link Device}. This is intended to be displayed by the user and
      * can vary over time. For a stable internal name of the device, use {@link #getId} instead.
@@ -304,6 +307,18 @@ public final class Device {
      */
     public int getChinSize() {
         return getDefaultHardware().getScreen().getChin();
+    }
+
+    public void setIsDeprecated(boolean isDeprecated) {
+        this.mIsDeprecated = isDeprecated;
+    }
+
+    /**
+     * Returns true if this device should be hidden during AVD creation.
+     * @return true if this device should be hidden during AVD creation.
+     */
+    public boolean getIsDeprecated() {
+        return mIsDeprecated;
     }
 
     public static class Builder {
