@@ -654,6 +654,20 @@ coverage_report(
     ],
 )
 
+# Coverage report for Gradle Managed Virtual Device.
+coverage_report(
+    name = "gradle-managed-virtual-device",
+    srcpath_include = [
+        "tools/base/utp/android-device-provider-gradle/src/main/java",
+    ] + glob([
+        "tools/base/build-system/gradle-core/src/main/java/**/ManagedDevice*",
+    ]),
+    tests = [
+        "//tools/base/build-system/gradle-core:tests.test",
+        "//tools/base/utp/android-device-provider-gradle:tests.test",
+    ],
+)
+
 # Coverage report for Embedded Emulator.
 coverage_report(
     name = "emulator",
@@ -742,6 +756,7 @@ combine_report_definitions(
         "dynamic-layout-inspector",
         "emulator",
         "fullscreen-heapdump-ui",
+        "gradle-managed-virtual-device",
         "layouteditor",
         "memory-recording-ui",
         "ml-model-binding",
