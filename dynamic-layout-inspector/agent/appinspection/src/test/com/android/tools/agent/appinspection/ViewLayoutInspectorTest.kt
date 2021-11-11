@@ -53,6 +53,7 @@ import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldState
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
@@ -136,9 +137,9 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun foldEventsSent() = createViewInspector { viewInspector ->
-        viewInspector.foldObserver = object: FoldObserver {
-            override val foldState: LayoutInspectorViewProtocol.FoldEvent.FoldState =
-                LayoutInspectorViewProtocol.FoldEvent.FoldState.HALF_OPEN
+        val myObserver = object : FoldObserver {
+            override var foldState: FoldState? =
+                FoldState.HALF_OPEN
             override val orientation: LayoutInspectorViewProtocol.FoldEvent.FoldOrientation =
                 LayoutInspectorViewProtocol.FoldEvent.FoldOrientation.HORIZONTAL
 
@@ -146,6 +147,8 @@ class ViewLayoutInspectorTest {
             override fun stopObservingFoldState(rootView: View) {}
             override fun shutdown() {}
         }
+        viewInspector.foldObserver = myObserver
+
         val eventQueue = ArrayBlockingQueue<ByteArray>(15)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
@@ -203,6 +206,26 @@ class ViewLayoutInspectorTest {
             assertThat(event.foldEvent.angle).isEqualTo(100)
         }
 
+        // Set the state to null. We should get one empty event and then no more.
+        myObserver.foldState = null
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(0f) })
+
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.foldState).isEqualTo(FoldState.UNKNOWN_FOLD_STATE)
+        }
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(1f) })
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(2f) })
+
+        // Set the state back to something, and we should start getting events again.
+        myObserver.foldState = FoldState.HALF_OPEN
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(30f) })
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.angle).isEqualTo(30)
+        }
+
+        // Turn off live updates. We should stop getting events.
         val stopFetchCommand = Command.newBuilder().apply {
             stopFetchCommand = StopFetchCommand.getDefaultInstance()
         }.build()

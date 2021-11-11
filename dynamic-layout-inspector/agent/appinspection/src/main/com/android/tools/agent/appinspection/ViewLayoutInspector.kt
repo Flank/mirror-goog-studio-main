@@ -108,6 +108,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     // library. We want to send exactly one event during setup, so track whether that's happened.
     private var sentInitialFoldEvent = false
 
+    // If we've sent fold information and then the fold state later becomes null, we need to
+    // send an event to studio saying we've gone into non-folding mode (e.g. the device is
+    // closed).
+    private var isFoldActive = false
+
     init {
         try {
             // Since FoldObserverImpl has to be built without jarjar so as to interact with the
@@ -121,7 +126,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             // couldn't instantiate, probably because library isn't found.
         }
     }
-
 
     private var checkpoint: ProgressCheckpoint = ProgressCheckpoint.NOT_STARTED
         set(value) {
@@ -341,10 +345,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun sendFoldStateEvent() {
-        if ((!state.fetchContinuously && sentInitialFoldEvent) || foldObserver?.foldState == null) {
+        if ((!state.fetchContinuously && sentInitialFoldEvent) ||
+            (!isFoldActive && foldObserver?.foldState == null)) {
             return
         }
         sentInitialFoldEvent = true
+        isFoldActive = foldObserver?.foldState != null
         sendFoldStateEventNow()
     }
 
