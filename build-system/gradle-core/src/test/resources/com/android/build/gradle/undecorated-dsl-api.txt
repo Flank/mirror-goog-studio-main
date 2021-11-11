@@ -823,6 +823,7 @@ com.android.build.gradle.internal.dsl.TestOptions.getManagedDevices: com.android
 com.android.build.gradle.internal.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getResultsDir: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()
+com.android.build.gradle.internal.dsl.TestOptions.managedDevices: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ManagedDevices, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions.setAnimationsDisabled: void (boolean)
 com.android.build.gradle.internal.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setReportDir: void (java.lang.String)

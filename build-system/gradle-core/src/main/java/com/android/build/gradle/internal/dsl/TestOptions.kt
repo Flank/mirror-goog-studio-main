@@ -53,6 +53,16 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
     override val managedDevices: ManagedDevices =
         dslServices.newInstance(ManagedDevices::class.java, dslServices)
 
+    // (Implementing interface for kotlin)
+    override fun managedDevices(action: com.android.build.api.dsl.ManagedDevices.() -> Unit) {
+        action.invoke(managedDevices)
+    }
+
+    // Runtime only for groovy decorator to generate the closure based block
+    fun managedDevices(action: Action<com.android.build.api.dsl.ManagedDevices>) {
+        action.execute(managedDevices)
+    }
+
     override var execution: String
         get() = Verify.verifyNotNull(
             executionConverter.reverse().convert(_execution),

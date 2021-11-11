@@ -721,6 +721,7 @@ com.android.build.api.dsl.TestOptions.getManagedDevices: com.android.build.api.d
 com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getResultsDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()
+com.android.build.api.dsl.TestOptions.managedDevices: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ManagedDevices, kotlin.Unit>)
 com.android.build.api.dsl.TestOptions.setAnimationsDisabled: void (boolean)
 com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
