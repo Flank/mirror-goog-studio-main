@@ -165,6 +165,7 @@ import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass
 import com.android.build.gradle.internal.test.AbstractTestDataImpl
 import com.android.build.gradle.internal.test.BundleTestDataImpl
 import com.android.build.gradle.internal.test.TestDataImpl
+import com.android.build.gradle.internal.testing.utp.TEST_RESULT_PB_FILE_NAME
 import com.android.build.gradle.internal.testing.utp.shouldEnableUtp
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
@@ -232,6 +233,10 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Sets
+import java.io.File
+import java.util.concurrent.Callable
+import java.util.function.Consumer
+import java.util.stream.Collectors
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -257,10 +262,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.testing.jacoco.plugins.JacocoPlugin
-import java.io.File
-import java.util.concurrent.Callable
-import java.util.function.Consumer
-import java.util.stream.Collectors
 
 /**
  * Manages tasks creation
@@ -1886,6 +1887,24 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             ) { allDevices: Task ->
                 allDevices.dependsOn(allDevicesVariantTask)
             }
+
+            val resultsRootDir = if (extension.testOptions.resultsDir.isNullOrEmpty()) {
+                androidTestProperties.paths.outputDir(BuilderConstants.FD_ANDROID_RESULTS)
+                    .get().asFile
+            } else {
+                File(requireNotNull(extension.testOptions.resultsDir))
+            }
+            val reportRootDir = if (extension.testOptions.resultsDir.isNullOrEmpty()) {
+                androidTestProperties.paths.reportsDir(BuilderConstants.FD_ANDROID_TESTS)
+                    .get().asFile
+            } else {
+                File(requireNotNull(extension.testOptions.reportDir))
+            }
+            val flavor: String? = testData.flavorName.orNull
+            val flavorDir = if (flavor.isNullOrEmpty()) "" else "${BuilderConstants.FD_FLAVORS}/$flavor"
+            val resultsDir = File(resultsRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
+            val reportDir = File(reportRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
+
             val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
             for (managedDevice in managedDevices) {
                 val managedDeviceTestTask = taskFactory.register(
@@ -1893,7 +1912,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         androidTestProperties,
                         globalScope.avdComponents,
                         managedDevice,
-                        testData
+                        testData,
+                        File(resultsDir, managedDevice.name),
+                        File(reportDir, managedDevice.name),
                     )
                 )
                 managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
@@ -1910,8 +1931,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val testResultAggregationTask = taskFactory.register(
                 ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
                     androidTestProperties,
-                    managedDevices,
-                    testData
+                    managedDevices.map { File(File(resultsDir, it.name), TEST_RESULT_PB_FILE_NAME) },
+                    File(resultsDir, TEST_RESULT_PB_FILE_NAME)
                 )
             )
             for (managedDevice in managedDevices) {

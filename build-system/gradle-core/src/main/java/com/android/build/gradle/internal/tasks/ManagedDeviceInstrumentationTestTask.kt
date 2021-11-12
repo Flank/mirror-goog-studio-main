@@ -48,9 +48,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.BuilderConstants.FD_FLAVORS
-import com.android.builder.core.BuilderConstants.FD_REPORTS
-import com.android.builder.core.BuilderConstants.MANAGED_DEVICE
 import com.android.builder.model.TestOptions
 import com.android.repository.Revision
 import com.android.utils.FileUtils
@@ -307,10 +304,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
     private fun testsFound() = !testData.get().testDirectories.asFileTree.isEmpty
 
     class CreationAction(
-            creationConfig: VariantCreationConfig,
-            private val avdComponents: Provider<AvdComponentsBuildService>,
-            private val device: ManagedVirtualDevice,
-            private val testData: AbstractTestDataImpl
+        creationConfig: VariantCreationConfig,
+        private val avdComponents: Provider<AvdComponentsBuildService>,
+        private val device: ManagedVirtualDevice,
+        private val testData: AbstractTestDataImpl,
+        private val testResultOutputDir: File,
+        private val testReportOutputDir: File,
     ): VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
 
@@ -427,20 +426,8 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.getAdditionalTestOutputEnabled()
                 .set(projectOptions[BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT])
 
-            val flavor: String? = testData.flavorName.get()
-            val flavorFolder = if (flavor.isNullOrEmpty()) "" else "$FD_FLAVORS/$flavor"
-            val deviceFolder = "$MANAGED_DEVICE/${device.name}"
-            val subFolder = "/$deviceFolder/$flavorFolder"
-
-            val resultsLocation =
-                extension.testOptions.resultsDir
-                    ?: "${task.project.buildDir}/${SdkConstants.FD_OUTPUTS}/${BuilderConstants.FD_ANDROID_RESULTS}"
-            task.resultsDir.set(File(resultsLocation + subFolder))
-
-            val reportsLocation =
-                extension.testOptions.reportDir
-                    ?: "${task.project.buildDir}/$FD_REPORTS/${BuilderConstants.FD_ANDROID_TESTS}"
-            task.getReportsDir().set(File(reportsLocation + subFolder))
+            task.resultsDir.set(testResultOutputDir)
+            task.getReportsDir().set(testReportOutputDir)
 
             task.project.configurations
                 .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION)?.let {

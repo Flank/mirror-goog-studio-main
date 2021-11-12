@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
-import com.android.build.gradle.internal.test.AbstractTestDataImpl
+import com.android.build.gradle.internal.testing.utp.TEST_RESULT_PB_FILE_NAME
 import com.android.testutils.MockitoKt
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
@@ -58,10 +57,6 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
 
     @Mock(answer = RETURNS_DEEP_STUBS)
     private lateinit var creationConfig: VariantCreationConfig
-    @Mock(answer = RETURNS_DEEP_STUBS)
-    private lateinit var device: ManagedVirtualDevice
-    @Mock(answer = RETURNS_DEEP_STUBS)
-    private lateinit var testData: AbstractTestDataImpl
 
     @Before
     fun setUpMocks() {
@@ -75,15 +70,16 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
                .registrations.getByName(any()))
             .thenReturn(
                 mock(BuildServiceRegistration::class.java, RETURNS_DEEP_STUBS))
-        `when`(device.name).thenReturn("Pixel3")
     }
 
     @Test
     fun creationTask() {
+        val rootResultsDir = temporaryFolderRule.newFolder("rootResultsDir")
+        val pixel3Dir = File(rootResultsDir, "Pixel3").apply { mkdirs() }
         val action = ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
             creationConfig,
-            listOf(device),
-            testData
+            listOf(File(pixel3Dir, TEST_RESULT_PB_FILE_NAME)),
+            File(rootResultsDir, TEST_RESULT_PB_FILE_NAME)
         )
 
         assertThat(action.name)
@@ -94,10 +90,12 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
 
     @Test
     fun configureTaskByCreationTask() {
+        val rootResultsDir = temporaryFolderRule.newFolder("rootResultsDir")
+        val pixel3Dir = File(rootResultsDir, "Pixel3").apply { mkdirs() }
         val action = ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
             creationConfig,
-            listOf(device),
-            testData
+            listOf(File(pixel3Dir, TEST_RESULT_PB_FILE_NAME)),
+            File(rootResultsDir, TEST_RESULT_PB_FILE_NAME)
         )
         val task = mock(
             ManagedDeviceInstrumentationTestResultAggregationTask::class.java,
@@ -107,51 +105,7 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
 
         action.configure(task)
 
-        verify(task.inputTestResultProtos).from(eq(File(
-            "buildDir/outputs/androidTest-results/managedDevice/Pixel3/test-result.pb"
-        )))
-    }
-
-    @Test
-    fun configureTaskByCreationTaskWithFlavor() {
-        val action = ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
-            creationConfig,
-            listOf(device),
-            testData
-        )
-        val task = mock(
-            ManagedDeviceInstrumentationTestResultAggregationTask::class.java,
-            RETURNS_DEEP_STUBS)
-
-        `when`(task.project.buildDir).thenReturn(File("buildDir"))
-        `when`(testData.flavorName.get()).thenReturn("myFlavorName")
-
-        action.configure(task)
-
-        verify(task.inputTestResultProtos).from(eq(File(
-            "buildDir/outputs/androidTest-results/managedDevice/Pixel3/flavors/myFlavorName/test-result.pb"
-        )))
-    }
-
-    @Test
-    fun configureTaskByCreationTaskWithUserSpecifiedOutputDirectory() {
-        val action = ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
-            creationConfig,
-            listOf(device),
-            testData
-        )
-        val task = mock(
-            ManagedDeviceInstrumentationTestResultAggregationTask::class.java,
-            RETURNS_DEEP_STUBS)
-
-        `when`(creationConfig.globalScope.extension.testOptions.resultsDir)
-            .thenReturn("customResultsDir")
-
-        action.configure(task)
-
-        verify(task.inputTestResultProtos).from(eq(File(
-            "customResultsDir/managedDevice/Pixel3/test-result.pb"
-        )))
+        verify(task.inputTestResultProtos).from(eq(listOf(File(pixel3Dir, "test-result.pb"))))
     }
 
     @Test
