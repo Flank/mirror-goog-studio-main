@@ -350,6 +350,7 @@ class DynamicAppTest {
             val mainDexList = Files.readAllLines(it.getEntry(MAIN_DEX_LIST_PATH))
             val expectedMainDexList =
                 multiDexSupportLibClasses.map { it.substring(1, it.length - 1) + ".class" }
+                .minus("android/support/multidex/MultiDex\$V4.class")
             assertThat(mainDexList).containsExactlyElementsIn(expectedMainDexList)
         }
     }
