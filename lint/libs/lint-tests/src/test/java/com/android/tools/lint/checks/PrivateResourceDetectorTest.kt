@@ -374,6 +374,52 @@ class PrivateResourceDetectorTest {
         )
     }
 
+    @Test
+    fun test117235985() {
+        // Regression test for 117235985: false positive when a resource is private in one library but implicitly public in another.
+        lint().files(
+            xml(
+                "src/main/res/values/styles.xml",
+                """
+                <resources>
+                    <style name="Test" parent="android:Widget">
+                        <item name="cardElevation">@dimen/cardview_default_elevation</item>
+                    </style>
+                </resources>
+                """
+            ),
+            gradle(
+                """
+                apply plugin: 'com.android.application'
+                dependencies {
+                    implementation 'com.google.android.material:material:1.4.0'
+                    implementation 'androidx.cardview:cardview:1.0.0'
+                }
+                """
+            ).indented().withMockerConfigurator(
+                createLibraryMocker(
+                    createLibrary(
+                        artifact = "com.google.android.material:material:1.4.0",
+                        all = listOf(
+                            "@dimen/cardview_default_elevation",
+                            "@style/some_other_thing",
+                        ),
+                        public = listOf(
+                            "@style/some_other_thing",
+                        )
+                    ),
+                    createLibrary(
+                        artifact = "androidx.cardview:cardview:1.0.0",
+                        all = listOf(
+                            "@dimen/cardview_default_elevation",
+                        ),
+                        public = emptyList(), // No public.txt file at all, so all resources are implicitly public.
+                    )
+                )
+            )
+        ).run().expectClean()
+    }
+
     private fun createAllSymbolsFile(artifact: String, vararg resources: String): File {
         val file = File(temporaryFolder.root, artifact.replace(':', '_') + "/" + FN_RESOURCE_TEXT)
         var id = 0x7f040000
