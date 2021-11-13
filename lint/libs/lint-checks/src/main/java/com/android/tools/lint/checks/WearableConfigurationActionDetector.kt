@@ -47,7 +47,27 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
         const val WATCH_FACE_EDITOR_ACTION = "androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR"
 
         @JvmField
-        val ISSUE = Issue.create(
+        val ACTION_DUPLICATE = Issue.create(
+            id = "WearableActionDuplicate",
+            briefDescription = "Duplicate watch face configuration activities found",
+            explanation = """
+                If and only if a watch face service defines `wearableConfigurationAction` metadata, with the value `WATCH_FACE_EDITOR`, \
+                there should be an activity in the same package, which has an intent filter for `WATCH_FACE_EDITOR` \
+                (with com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION if minSdkVersion is less than 30).
+            """,
+            moreInfo = "https://developer.android.com/training/wearables/watch-faces/configuration",
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.WARNING,
+            implementation = Implementation(
+                WearableConfigurationActionDetector::class.java,
+                Scope.MANIFEST_SCOPE
+            ),
+            androidSpecific = true
+        )
+
+        @JvmField
+        val CONFIGURATION_ACTION = Issue.create(
             id = "WearableConfigurationAction",
             briefDescription = "Wear configuration action metadata must match an activity",
             explanation = """
@@ -67,6 +87,7 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
         )
     }
 
+    private var duplicateAction: Element? = null
     private var foundAction: Element? = null
     private var foundCategory: Element? = null
     private var foundMetaData: Element? = null
@@ -83,6 +104,7 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
     }
 
     private fun beforeScanningManifest() {
+        duplicateAction = null
         foundAction = null
         foundCategory = null
         foundMetaData = null
@@ -90,13 +112,24 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
 
     private fun afterScanningManifest(context: Context) {
         // convert vars into vals for nullability checks
+        val duplicateAction = duplicateAction
+        val foundAction = foundAction
         val foundMetaData = foundMetaData
         val foundCategory = foundCategory
-        val foundAction = foundAction
+        if (duplicateAction != null) {
+            context.report(
+                Incident(
+                    ACTION_DUPLICATE,
+                    duplicateAction,
+                    context.getLocation(duplicateAction),
+                    "Duplicate watch face configuration activities found",
+                )
+            )
+        }
         if (foundMetaData != null && foundAction == null) {
             context.report(
                 Incident(
-                    ISSUE,
+                    CONFIGURATION_ACTION,
                     foundMetaData,
                     context.getLocation(foundMetaData.getAttributeNodeNS(ANDROID_URI, "name")),
                     "Watch face configuration activity is missing",
@@ -105,7 +138,7 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
         } else if (foundMetaData != null && foundAction != null && foundCategory == null) {
             context.report(
                 Incident(
-                    ISSUE,
+                    CONFIGURATION_ACTION,
                     foundAction,
                     context.getLocation(foundAction),
                     "Watch face configuration tag is required",
@@ -115,7 +148,7 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
         } else if (foundAction != null && foundMetaData == null) {
             context.report(
                 Incident(
-                    ISSUE,
+                    CONFIGURATION_ACTION,
                     foundAction,
                     context.getLocation(foundAction.getAttributeNodeNS(ANDROID_URI, "name")),
                     "`wearableConfigurationAction` metadata is missing",
@@ -160,7 +193,9 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
             }
         }
         // save a category only if a corresponding action is found
-        if (tmpAction != null) {
+        if (tmpAction != null && foundAction != null) {
+            duplicateAction = tmpAction
+        } else if (tmpAction != null && foundAction == null) {
             foundAction = tmpAction
             foundCategory = tmpCategory
         }
