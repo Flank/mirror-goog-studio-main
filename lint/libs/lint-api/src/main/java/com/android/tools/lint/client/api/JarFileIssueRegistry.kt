@@ -115,7 +115,8 @@ private constructor(
             client: LintClient,
             jarFiles: Collection<File>,
             currentProject: Project? = null,
-            driver: LintDriver? = null
+            driver: LintDriver? = null,
+            skipVerification: Boolean = false
         ): List<JarFileIssueRegistry> {
             val registryMap = try {
                 findRegistries(client, jarFiles)
@@ -135,7 +136,7 @@ private constructor(
 
             for ((registryClass, jarFile) in registryMap) {
                 try {
-                    val registry = get(client, registryClass, jarFile, currentProject, driver) ?: continue
+                    val registry = get(client, registryClass, jarFile, currentProject, driver, skipVerification) ?: continue
                     registries.add(registry)
                 } catch (e: Throwable) {
                     if (logJarProblems()) {
@@ -156,7 +157,8 @@ private constructor(
             registryClassName: String,
             jarFile: File,
             currentProject: Project?,
-            driver: LintDriver?
+            driver: LintDriver?,
+            skipVerification: Boolean
         ): JarFileIssueRegistry? {
             if (cache == null) {
                 cache = HashMap()
@@ -173,7 +175,7 @@ private constructor(
             // Ensure that the scope-to-detector map doesn't return stale results
             reset()
 
-            val userRegistry = loadIssueRegistry(client, jarFile, registryClassName, currentProject, driver)
+            val userRegistry = loadIssueRegistry(client, jarFile, registryClassName, currentProject, driver, skipVerification)
             return if (userRegistry != null) {
                 val vendor = getVendor(client, userRegistry, jarFile)
                 val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry, vendor)
@@ -238,7 +240,8 @@ private constructor(
             jarFile: File,
             className: String,
             currentProject: Project?,
-            driver: LintDriver?
+            driver: LintDriver?,
+            skipVerification: Boolean
         ): IssueRegistry? {
             // Make a class loader for this jar
             val url = SdkUtils.fileToUrl(jarFile)
@@ -268,6 +271,10 @@ private constructor(
                         )
                     }
                     return null
+                }
+
+                if (skipVerification) {
+                    return registry
                 }
 
                 try {

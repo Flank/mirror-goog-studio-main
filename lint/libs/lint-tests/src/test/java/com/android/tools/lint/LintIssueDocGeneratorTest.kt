@@ -161,13 +161,25 @@ class LintIssueDocGeneratorTest {
 
     @Test
     fun testMarkdown() {
-        val outputFolder = temporaryFolder.root
+        val outputFolder = temporaryFolder.newFolder("out")
+        val sourceFolder = temporaryFolder.newFolder("src")
+
+        val packageFolder = File(sourceFolder, "lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks")
+        packageFolder.mkdirs()
+        File(packageFolder, "SdCardDetector.kt").writeText("// Copyright 1985, 2019, 2016-2018\n")
+        // In reality this detector is in Kotlin but here testing that we correctly compute URLs based on actual
+        // discovered implementation type
+        File(packageFolder, "BatteryDetector.java").writeText("\n/** (C) 2019-2020 */\n")
+
         LintIssueDocGenerator.run(
             arrayOf(
                 "--md",
                 "--no-index",
                 "--issues",
                 "SdCardPath,BatteryLife",
+                "--source-url",
+                "https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev:lint/",
+                sourceFolder.path,
                 "--output",
                 outputFolder.path
             )
@@ -180,17 +192,19 @@ class LintIssueDocGeneratorTest {
             """
             # Battery Life Issues
 
-            Id       | `BatteryLife`
-            ---------|--------------------------------------------------------------
-            Summary  | Battery Life Issues
-            Severity | Warning
-            Category | Correctness
-            Platform | Android
-            Vendor   | Android Open Source Project
-            Feedback | https://issuetracker.google.com/issues/new?component=192708
-            Affects  | Kotlin and Java files and manifest files
-            Editing  | This check runs on the fly in the IDE editor
-            See      | https://developer.android.com/topic/performance/background-optimization
+            Id             | `BatteryLife`
+            ---------------|--------------------------------------------------------
+            Summary        | Battery Life Issues
+            Severity       | Warning
+            Category       | Correctness
+            Platform       | Android
+            Vendor         | Android Open Source Project
+            Feedback       | https://issuetracker.google.com/issues/new?component=192708
+            Affects        | Kotlin and Java files and manifest files
+            Editing        | This check runs on the fly in the IDE editor
+            See            | https://developer.android.com/topic/performance/background-optimization
+            Implementation | [Source Code](https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev:lint/lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks/BatteryDetector.java)
+            Copyright Year | 2020
 
             This issue flags code that either
             * negatively affects battery life, or
@@ -288,25 +302,38 @@ class LintIssueDocGeneratorTest {
 
     @Test
     fun testMarkdownIndex() {
-        val outputFolder = temporaryFolder.root
+        val outputFolder = temporaryFolder.newFolder("out")
+        val sourceFolder = temporaryFolder.newFolder("src")
+
+        val packageFolder = File(sourceFolder, "lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks")
+        packageFolder.mkdirs()
+        File(packageFolder, "InteroperabilityDetector.kt").writeText("// Copyright 1985, 2019, 2016-2018\n")
+        File(packageFolder, "MissingClassDetector.java").writeText("\n/** (C) 2019-2020 */\n")
+
         LintIssueDocGenerator.run(
             arrayOf(
                 "--md",
                 "--issues",
                 "SdCardPath,MissingClass,ViewTag,LambdaLast",
+                "--source-url",
+                "https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev:lint/",
+                sourceFolder.path,
                 "--output",
                 outputFolder.path
             )
         )
         val files = outputFolder.listFiles()!!.sorted()
         val names = files.joinToString { it.name }
-        assertEquals("LambdaLast.md, MissingClass.md, SdCardPath.md, ViewTag.md, categories.md, index.md, severity.md, vendors.md", names)
+        assertEquals(
+            "LambdaLast.md, MissingClass.md, SdCardPath.md, ViewTag.md, categories.md, index.md, severity.md, vendors.md, year.md",
+            names
+        )
         val alphabetical = files[5].readText()
         assertEquals(
             """
             # Lint Issue Index
 
-            Order: Alphabetical | [By category](categories.md) | [By vendor](vendors.md) | [By severity](severity.md)
+            Order: Alphabetical | [By category](categories.md) | [By vendor](vendors.md) | [By severity](severity.md) | [By year](year.md)
 
               - [LambdaLast: Lambda Parameters Last](LambdaLast.md)
               - [MissingClass: Missing registered class](MissingClass.md)
@@ -323,7 +350,7 @@ class LintIssueDocGeneratorTest {
             """
             # Lint Issue Index
 
-            Order: [Alphabetical](index.md) | By category | [By vendor](vendors.md) | [By severity](severity.md)
+            Order: [Alphabetical](index.md) | By category | [By vendor](vendors.md) | [By severity](severity.md) | [By year](year.md)
 
             * Correctness (2)
 
@@ -345,7 +372,7 @@ class LintIssueDocGeneratorTest {
             """
             # Lint Issue Index
 
-            Order: [Alphabetical](index.md) | [By category](categories.md) | [By vendor](vendors.md) | By severity
+            Order: [Alphabetical](index.md) | [By category](categories.md) | [By vendor](vendors.md) | By severity | [By year](year.md)
 
 
             * Error (1)
@@ -372,7 +399,7 @@ class LintIssueDocGeneratorTest {
             """
             # Lint Issue Index
 
-            Order: [Alphabetical](index.md) | [By category](categories.md) | By vendor | [By severity](severity.md)
+            Order: [Alphabetical](index.md) | [By category](categories.md) | By vendor | [By severity](severity.md) | [By year](year.md)
 
             * Built In (3)
 
@@ -385,6 +412,31 @@ class LintIssueDocGeneratorTest {
               - [ViewTag](ViewTag.md)
             """.trimIndent(),
             vendors
+        )
+        val years = files[8].readText()
+        assertEquals(
+            """
+            # Lint Issue Index
+
+            Order: [Alphabetical](index.md) | [By category](categories.md) | [By vendor](vendors.md) | [By severity](severity.md) | By year
+
+            * 2020 (1)
+
+              - [MissingClass: Missing registered class](MissingClass.md)
+
+            * 2019 (1)
+
+              - [LambdaLast: Lambda Parameters Last](LambdaLast.md)
+
+            * Unknown (1)
+
+              - [SdCardPath: Hardcoded reference to `/sdcard`](SdCardPath.md)
+
+            * Withdrawn or Obsolete Issues (1)
+
+              - [ViewTag](ViewTag.md)
+            """.trimIndent(),
+            years
         )
     }
 
@@ -596,7 +648,7 @@ class LintIssueDocGeneratorTest {
         val testSourceFile = File(testSources, "com/android/tools/lint/checks/SdCardDetectorTest.java")
         sourceFile.parentFile?.mkdirs()
         testSourceFile.parentFile?.mkdirs()
-        sourceFile.createNewFile()
+        sourceFile.writeText("// Copyright 2020\n")
         // TODO: Test Kotlin test as well
         testSourceFile.writeText(
             """
@@ -685,6 +737,7 @@ class LintIssueDocGeneratorTest {
             See            | https://developer.android.com/training/data-storage#filesExternal
             Implementation | [Source Code](http://example.com/lint-source-code/src/com/android/tools/lint/checks/SdCardDetector.kt)
             Tests          | [Source Code](http://example.com/lint-source-code/tests/com/android/tools/lint/checks/SdCardDetectorTest.java)
+            Copyright Year | 2020
 
             Your code should not reference the `/sdcard` path directly; instead use
             `Environment.getExternalStorageDirectory().getPath()`.

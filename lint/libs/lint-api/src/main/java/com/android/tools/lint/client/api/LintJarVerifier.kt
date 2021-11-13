@@ -51,7 +51,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
      * we want to check for validity?
      */
     private fun isRelevantApi(internal: String): Boolean {
-        // Libraries unlikely to change: org.w3c.do, org.objectweb.asm, org.xmlpull, etc.
+        // Libraries unlikely to change: org.w3c.dom, org.objectweb.asm, org.xmlpull, etc.
         if (internal.startsWith("com/android/") &&
             // Reserved for various Android-internal checks such as CallingIdentityTokenDetector in AOSP
             !internal.startsWith("com/android/internal/") &&
