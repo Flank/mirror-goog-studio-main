@@ -110,10 +110,7 @@ open class ApplicationVariantImpl @Inject constructor(
     }
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(
-            taskCreationServices.projectInfo.getExtension().aaptOptions,
-            internalServices
-        )
+        initializeAaptOptionsFromDsl(variantDslInfo.androidResources, internalServices)
     }
 
     override val signingConfig: SigningConfigImpl? by lazy {
@@ -129,7 +126,7 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            globalScope.extension.packagingOptions,
+            variantDslInfo.packaging,
             internalServices,
             minSdkVersion.apiLevel
         )

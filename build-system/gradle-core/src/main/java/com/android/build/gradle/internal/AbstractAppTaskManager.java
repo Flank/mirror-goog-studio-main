@@ -286,12 +286,7 @@ public abstract class AbstractAppTaskManager<
 
         ProjectOptions projectOptions = variant.getServices().getProjectOptions();
         boolean nonTransitiveR = projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
-        boolean namespaced =
-                variant.getServices()
-                        .getProjectInfo()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getNamespaced();
+        boolean namespaced = variant.getNamespacedAndroidResources();
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)

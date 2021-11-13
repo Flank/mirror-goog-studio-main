@@ -49,7 +49,7 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
 
     override var enableAndroidTest: Boolean = true
 
-    override var enableTestFixtures: Boolean = variantDslInfo.enableTestFixtures
+    override var enableTestFixtures: Boolean = variantDslInfo.testFixtures.enable
 
     // only instantiate this if this is needed. This allows non-built variant to not do too much work.
     override val dependenciesInfo: DependenciesInfoBuilder by lazy {

@@ -332,7 +332,7 @@ abstract class R8Task @Inject constructor(
                 )
 
                 if (creationConfig.dexingType.needsMainDexList
-                    && !creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced
+                    && !creationConfig.namespacedAndroidResources
                 ) {
                     task.mainDexRulesFiles.from(
                         artifacts.get(

@@ -123,9 +123,4 @@ class ProjectInfo(private val project: Project) {
     fun getJacocoAgent(): File {
         return File(getJacocoAgentOutputDirectory(), "jacocoagent.jar")
     }
-
-    @Deprecated("Do Not use. Use value coming from the Variant API object instead.")
-    fun getExtension(): BaseExtension {
-        return project.extensions.getByName("android") as BaseExtension
-    }
 }

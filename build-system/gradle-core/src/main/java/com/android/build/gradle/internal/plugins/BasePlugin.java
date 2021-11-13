@@ -758,6 +758,9 @@ public abstract class BasePlugin<
                         projectServices.getProjectOptions(),
                         globalScope,
                         variantInputModel,
+                        ((CommonExtension<?, ?, ?, ?>) extension)
+                                .getAndroidResources()
+                                .getNamespaced(),
                         projectServices)
                 .configureDependencySubstitutions()
                 .configureDependencyChecks()

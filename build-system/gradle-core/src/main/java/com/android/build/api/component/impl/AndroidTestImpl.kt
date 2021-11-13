@@ -141,14 +141,14 @@ open class AndroidTestImpl @Inject constructor(
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
-                taskCreationServices.projectInfo.getExtension().aaptOptions,
+                variantDslInfo.androidResources,
                 variantPropertiesApiServices
         )
     }
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            globalScope.extension.packagingOptions,
+            variantDslInfo.packaging,
             variantPropertiesApiServices,
             minSdkVersion.apiLevel
         )

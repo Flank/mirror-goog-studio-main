@@ -118,10 +118,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(
-            taskCreationServices.projectInfo.getExtension().aaptOptions,
-            internalServices
-        )
+        initializeAaptOptionsFromDsl(variantDslInfo.androidResources, internalServices)
     }
 
     override val minifiedEnabled: Boolean
@@ -129,7 +126,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            globalScope.extension.packagingOptions,
+            variantDslInfo.packaging,
             internalServices,
             minSdkVersion.apiLevel
         )

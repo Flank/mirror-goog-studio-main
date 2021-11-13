@@ -22,7 +22,7 @@ import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
 class ApkPackagingImpl(
-    dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+    dslPackagingOptions: com.android.build.api.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     minSdk: Int
 ) : PackagingImpl(dslPackagingOptions, variantPropertiesApiServices), ApkPackaging {

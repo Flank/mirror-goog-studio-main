@@ -82,7 +82,7 @@ class AppModelBuilder(
             val artifacts = component.artifacts
 
             // TODO(b/111168382): Remove the namespaced check check once bundle pipeline works with namespaces.
-            if (component.variantType.isBaseModule && !component.services.projectInfo.getExtension().aaptOptions.namespaced) {
+            if (component.variantType.isBaseModule && !component.namespacedAndroidResources) {
                 val bundleFile = artifacts.get(SingleArtifact.BUNDLE)
                 val apkFolder = artifacts.get(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(

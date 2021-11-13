@@ -295,7 +295,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     private val allPropertiesList: List<ComponentCreationConfig> =
             variantPropertiesList + nestedComponents
 
-
     /**
      * This is the main entry point into the task manager
      *
@@ -1113,7 +1112,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 projectInfo.getProjectBaseName())
         val projectOptions = creationConfig.services.projectOptions
         val nonTransitiveR = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-        val namespaced: Boolean = projectInfo.getExtension().aaptOptions.namespaced
+        val namespaced: Boolean = creationConfig.namespacedAndroidResources
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] || nonTransitiveR)
@@ -1146,8 +1145,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         && creationConfig
                         .dexingType
                         .needsMainDexList)
-        if (creationConfig.services.projectInfo.getExtension()
-                        .aaptOptions.namespaced) {
+        if (creationConfig.namespacedAndroidResources) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
             NamespacedResourcesTaskManager(taskFactory, creationConfig)
                     .createNamespacedResourceTasks(

@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.dsl.TestFixtures
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.VariantManager
@@ -66,7 +67,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val extension: CommonExtensionT,
     private val hasDynamicFeatures: Boolean,
     private val experimentalProperties: Map<String, Any>,
-    private val enableTestFixtures: Boolean,
     private val testFixtureMainVariantName: String?
 ) {
 
@@ -90,7 +90,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             extension: CommonExtensionT,
             hasDynamicFeatures: Boolean,
             experimentalProperties: Map<String, Any> = mapOf(),
-            enableTestFixtures: Boolean = false,
             testFixtureMainVariantName: String? = null
         ): VariantDslInfoBuilder<CommonExtensionT> {
             return VariantDslInfoBuilder(
@@ -108,8 +107,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 extension,
                 hasDynamicFeatures,
                 experimentalProperties,
-                enableTestFixtures,
-                testFixtureMainVariantName
+                testFixtureMainVariantName,
             )
         }
 
@@ -355,8 +353,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             nativeBuildSystem,
             publishingInfo,
             experimentalProperties,
-            enableTestFixtures,
-            inconsistentTestAppId
+            inconsistentTestAppId,
+            extension
         )
     }
 

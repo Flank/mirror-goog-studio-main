@@ -16,8 +16,11 @@
 package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.dsl.TestFixtures
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
@@ -326,7 +329,11 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
 
     val publishInfo: VariantPublishingInfo?
 
-    val enableTestFixtures: Boolean
+    val testFixtures: TestFixtures
+
+    val androidResources: AndroidResources
+
+    val packaging: PackagingOptions
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //  APIs below should only be used at CreationConfig/Variant instantiation time       //

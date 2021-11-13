@@ -288,8 +288,6 @@ class VariantManager<
                 dslExtension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures(),
                 dslExtension.experimentalProperties,
-                enableTestFixtures = dslExtension is TestedExtension &&
-                        (dslExtension as TestedExtension).testFixtures.enable,
         )
 
         // We must first add the flavors to the variant config, in order to get the proper

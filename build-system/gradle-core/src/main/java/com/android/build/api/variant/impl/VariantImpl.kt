@@ -126,7 +126,7 @@ abstract class VariantImpl(
     }
 
     override val packaging: Packaging by lazy {
-        PackagingImpl(globalScope.extension.packagingOptions, internalServices)
+        PackagingImpl(variantDslInfo.packaging, internalServices)
     }
 
 

@@ -464,11 +464,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     private void createMergeResourcesTasks(@NonNull VariantImpl variant) {
         ImmutableSet<MergeResources.Flag> flags;
-        if (variant.getServices()
-                .getProjectInfo()
-                .getExtension()
-                .getAaptOptions()
-                .getNamespaced()) {
+        if (variant.getNamespacedAndroidResources()) {
             flags =
                     Sets.immutableEnumSet(
                             MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,

@@ -45,7 +45,7 @@ open class LibraryVariantBuilderImpl @Inject constructor(
 
     override var enableAndroidTest: Boolean = true
 
-    override var enableTestFixtures: Boolean = variantDslInfo.enableTestFixtures
+    override var enableTestFixtures: Boolean = variantDslInfo.testFixtures.enable
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,

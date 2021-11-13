@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
@@ -92,7 +93,7 @@ public class VariantScopeImpl implements VariantScope {
 
     // Variant specific Data
     @NonNull private final ComponentIdentity componentIdentity;
-    @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final VariantDslInfo<?> variantDslInfo;
     @NonNull private final VariantPathHelper pathHelper;
     @NonNull private final ArtifactsImpl artifacts;
     @NonNull private final VariantDependencies variantDependencies;
@@ -218,11 +219,8 @@ public class VariantScopeImpl implements VariantScope {
         }
         // Otherwise, if set globally, respect that.
         Boolean globalOverride =
-                baseServices
-                        .getProjectInfo()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getCruncherEnabledOverride();
+                ((AaptOptions) variantDslInfo.getAndroidResources()).getCruncherEnabledOverride();
+
         if (globalOverride != null) {
             return globalOverride;
         }

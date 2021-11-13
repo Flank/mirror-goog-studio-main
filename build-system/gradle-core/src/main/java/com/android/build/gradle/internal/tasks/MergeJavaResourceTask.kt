@@ -314,7 +314,7 @@ fun getProjectJavaRes(
     )
     javaRes.from(creationConfig.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
-    if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
+    if (creationConfig.namespacedAndroidResources) {
         javaRes.from(creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }
     if (creationConfig.packageJacocoRuntime) {

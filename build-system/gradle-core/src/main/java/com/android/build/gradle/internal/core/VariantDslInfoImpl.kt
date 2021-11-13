@@ -15,13 +15,16 @@
  */
 package com.android.build.gradle.internal.core
 
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryVariantDimension
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.dsl.TestFixtures
 import com.android.build.api.dsl.VariantDimension
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
@@ -29,6 +32,7 @@ import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.ProguardFiles
+import com.android.build.gradle.TestedExtension
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
@@ -105,14 +109,14 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     /** the namespace coming for the DSL for this variant. */
     private val dslNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
-    private val publishingInfo: VariantPublishingInfo?,
+    override val publishInfo: VariantPublishingInfo?,
     override val experimentalProperties: Map<String, Any>,
-    override val enableTestFixtures: Boolean,
     /**
      *  Whether there are inconsistent applicationId in the test.
      *  This trigger a mode where the namespaceForR just returns the same as namespace.
      */
     private val inconsistentTestAppId: Boolean,
+    private val extension: CommonExtension<*,*,*,*>
 ): VariantDslInfo<CommonExtensionT>, DimensionCombination {
 
     private val dslNamespaceProvider: Provider<String>? = dslNamespace?.let { services.provider { dslNamespace } }
@@ -1186,8 +1190,20 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     override val isJniDebuggable: Boolean
         get() = buildTypeObj.isJniDebuggable
 
-    override val publishInfo: VariantPublishingInfo?
-        get() = publishingInfo
+    override val testFixtures: TestFixtures
+        get() {
+            if (extension is TestedExtension) {
+                return extension.testFixtures
+            }
+
+            throw RuntimeException("call to VariantDslInfo.testFixtures on wrong extension type: ${extension.javaClass.name}")
+        }
+
+    override val androidResources: AndroidResources
+        get() = extension.androidResources
+
+    override val packaging: PackagingOptions
+        get() = extension.packagingOptions
 
     companion object {
 

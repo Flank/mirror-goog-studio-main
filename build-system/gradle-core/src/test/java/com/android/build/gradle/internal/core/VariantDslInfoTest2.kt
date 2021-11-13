@@ -843,10 +843,10 @@ class VariantDslInfoTest2 :
                     buildDirectory = buildDirectory,
                     dslNamespace = parentData.dslNamespace,
                     nativeBuildSystem = null,
-                    publishingInfo = null,
+                    publishInfo = null,
                     experimentalProperties = mapOf(),
-                    enableTestFixtures = false,
-                    inconsistentTestAppId = false
+                    inconsistentTestAppId = false,
+                    extension = Mockito.mock(CommonExtension::class.java)
                 )
             } else { null }
 
@@ -864,10 +864,10 @@ class VariantDslInfoTest2 :
             buildDirectory = buildDirectory,
             dslNamespace = given.dslNamespace,
             nativeBuildSystem = null,
-            publishingInfo = null,
             experimentalProperties = mapOf(),
-            enableTestFixtures = false,
+            publishInfo = null,
             inconsistentTestAppId = inconsistentTestAppId,
+            extension = Mockito.mock(CommonExtension::class.java)
         )
 
         return instantiateResult().also {

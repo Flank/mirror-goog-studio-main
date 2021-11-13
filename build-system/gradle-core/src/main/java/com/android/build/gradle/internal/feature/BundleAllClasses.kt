@@ -141,7 +141,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 creationConfig.variantData.allPreJavacGeneratedBytecode,
                 creationConfig.variantData.allPostJavacGeneratedBytecode
             )
-            if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
+            if (creationConfig.namespacedAndroidResources) {
                 task.inputJars.from(
                     creationConfig.artifacts.get(
                         InternalArtifactType.COMPILE_R_CLASS_JAR

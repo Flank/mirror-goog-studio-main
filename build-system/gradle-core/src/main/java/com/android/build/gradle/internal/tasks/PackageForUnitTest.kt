@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -144,8 +145,8 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         throw RuntimeException(sb.toString())
     }
 
-    class CreationAction(creationConfig: ComponentCreationConfig) :
-        VariantTaskCreationAction<PackageForUnitTest, ComponentCreationConfig>(
+    class CreationAction(creationConfig: UnitTestCreationConfig) :
+        VariantTaskCreationAction<PackageForUnitTest, UnitTestCreationConfig>(
             creationConfig
         ) {
 
@@ -171,9 +172,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
             task.mergedAssetsDirectory.setDisallowChanges(artifacts.get(
                 InternalArtifactType.MERGED_ASSETS_FOR_UNIT_TEST))
-            task.noCompress.setDisallowChanges(
-                creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress
-            )
+            task.noCompress.setDisallowChanges(creationConfig.dslAndroidResources.noCompress)
         }
     }
 }

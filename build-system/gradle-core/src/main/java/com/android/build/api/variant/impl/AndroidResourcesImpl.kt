@@ -27,21 +27,21 @@ class AndroidResourcesImpl(
 ) : AndroidResources
 
 internal fun initializeAaptOptionsFromDsl(
-    dslAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions,
+    dslAndroidResources: com.android.build.api.dsl.AndroidResources,
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : AndroidResources {
     return AndroidResourcesImpl(
         ignoreAssetsPatterns = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
-            dslAaptOptions.ignoreAssetsPattern?.split(':') ?: listOf()
+            dslAndroidResources.ignoreAssetsPattern?.split(':') ?: listOf()
         ),
         aaptAdditionalParameters = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
-            dslAaptOptions.additionalParameters
+            dslAndroidResources.additionalParameters
         ),
         noCompress = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
-            dslAaptOptions.noCompress
+            dslAndroidResources.noCompress
         )
     )
 }

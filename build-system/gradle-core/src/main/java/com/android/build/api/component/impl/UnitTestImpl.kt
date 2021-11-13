@@ -23,6 +23,7 @@ import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.component.UnitTest
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
@@ -87,15 +88,19 @@ open class UnitTestImpl @Inject constructor(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.minSdkVersion
 
     override val targetSdkVersion: AndroidVersion
         get() = testedVariant.targetSdkVersion
 
-    // ---------------------------------------------------------------------------------------------
-    // INTERNAL API
-    // ---------------------------------------------------------------------------------------------
+    override val dslAndroidResources: AndroidResources
+        get() = variantDslInfo.androidResources
+
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 

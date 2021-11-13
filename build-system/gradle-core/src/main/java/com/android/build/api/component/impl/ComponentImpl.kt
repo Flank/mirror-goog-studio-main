@@ -97,7 +97,7 @@ import java.util.concurrent.Callable
 abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
-    override val variantDslInfo: VariantDslInfo<*>,
+    final override val variantDslInfo: VariantDslInfo<*>,
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
@@ -181,6 +181,9 @@ abstract class ComponentImpl(
 
     override val description: String
         get() = variantData.description
+
+    override val namespacedAndroidResources: Boolean
+        get() = variantDslInfo.androidResources.namespaced
 
     // Resource shrinker expects MergeResources task to have all the resources merged and with
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
@@ -625,7 +628,7 @@ abstract class ComponentImpl(
      * Returns the path(s) to compiled R classes (R.jar).
      */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
-        return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
+        return if (namespacedAndroidResources) {
             internalServices.fileCollection().also { fileCollection ->
                 val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
                 val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
@@ -687,7 +690,7 @@ abstract class ComponentImpl(
      * This can be null for unit tests without resource support.
      */
     fun getCompiledRClassArtifact(): Provider<RegularFile>? {
-        return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
+        return if (namespacedAndroidResources) {
             artifacts.get(COMPILE_R_CLASS_JAR)
         } else {
             val variantType = variantDslInfo.variantType

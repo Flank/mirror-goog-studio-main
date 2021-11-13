@@ -97,6 +97,7 @@ class DependencyConfigurator(
     private val projectOptions: ProjectOptions,
     private val globalScope: GlobalScope,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
+    private val namespacedAndroidResources: Boolean,
     private val projectServices: ProjectServices
 ) {
     fun configureDependencySubstitutions(): DependencyConfigurator {
@@ -150,8 +151,8 @@ class DependencyConfigurator(
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         val autoNamespaceDependencies =
-            projectServices.projectInfo.getExtension().aaptOptions.namespaced &&
-                    projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
+            namespacedAndroidResources && projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
+
         val jetifiedAarOutputType = if (autoNamespaceDependencies) {
             AndroidArtifacts.ArtifactType.MAYBE_NON_NAMESPACED_PROCESSED_AAR
         } else {

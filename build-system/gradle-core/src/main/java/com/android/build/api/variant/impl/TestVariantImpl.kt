@@ -109,10 +109,7 @@ open class TestVariantImpl @Inject constructor(
         internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(
-            taskCreationServices.projectInfo.getExtension().aaptOptions,
-            internalServices
-        )
+        initializeAaptOptionsFromDsl(variantDslInfo.androidResources, internalServices)
     }
 
     // TODO: We should keep this (for the manifest) but just fix the test runner to get the
@@ -144,7 +141,7 @@ open class TestVariantImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            globalScope.extension.packagingOptions,
+            variantDslInfo.packaging,
             internalServices,
             minSdkVersion.apiLevel
         )

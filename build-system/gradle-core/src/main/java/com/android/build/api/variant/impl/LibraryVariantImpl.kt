@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.SdkComponents
@@ -132,6 +133,9 @@ open class  LibraryVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
+
+    override val dslAndroidResources: AndroidResources
+        get() = variantDslInfo.androidResources
 
     private val delegate by lazy { ConsumableCreationConfigImpl(
         this,

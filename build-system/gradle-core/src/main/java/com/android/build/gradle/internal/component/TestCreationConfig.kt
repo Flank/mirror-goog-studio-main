@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.variant.AndroidVersion
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 

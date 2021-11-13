@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
@@ -291,12 +290,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             // 4. The separately compile R class, if applicable.
             if (creationConfig.getBuildFeatures().getAndroidResources()
-                    && !creationConfig
-                            .getServices()
-                            .getProjectInfo()
-                            .getExtension()
-                            .getAaptOptions()
-                            .getNamespaced()) {
+                    && !creationConfig.getNamespacedAndroidResources()) {
                 collection.from(creationConfig.getVariantScope().getRJarForUnitTests());
             }
 

@@ -347,8 +347,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.maxSdkVersion.setDisallowChanges(maxSdkVersion)
             task.mainSplit.set(creationConfig.services.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
-            task.isNamespaced =
-                creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced
+            task.isNamespaced = creationConfig.namespacedAndroidResources
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
             manifestPlaceholders?.let {
                 task.manifestPlaceholders.setDisallowChanges(it)
