@@ -50,7 +50,7 @@ import org.gradle.api.provider.Property
 open class ApplicationVariantImpl @Inject constructor(
         override val variantBuilder: ApplicationVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo<ApplicationExtension>,
+        variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

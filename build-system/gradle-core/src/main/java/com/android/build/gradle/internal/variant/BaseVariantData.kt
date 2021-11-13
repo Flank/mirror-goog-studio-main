@@ -46,7 +46,7 @@ import java.util.HashSet
 abstract class BaseVariantData(
     // Variant specific Data
     protected val componentIdentity: ComponentIdentity,
-    protected val variantDslInfo: VariantDslInfo<*>,
+    protected val variantDslInfo: VariantDslInfo,
     val variantDependencies: VariantDependencies,
     protected val variantSources: VariantSources,
     protected val paths: VariantPathHelper,

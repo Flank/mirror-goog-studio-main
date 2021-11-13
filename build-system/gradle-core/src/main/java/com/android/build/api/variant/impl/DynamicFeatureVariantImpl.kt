@@ -62,7 +62,7 @@ import javax.inject.Inject
 open class DynamicFeatureVariantImpl @Inject constructor(
         override val variantBuilder: DynamicFeatureVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo<DynamicFeatureExtension>,
+        variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

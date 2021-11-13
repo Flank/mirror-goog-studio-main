@@ -17,13 +17,13 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.component.UnitTest
-import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
@@ -53,7 +53,7 @@ import javax.inject.Inject
 open class UnitTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

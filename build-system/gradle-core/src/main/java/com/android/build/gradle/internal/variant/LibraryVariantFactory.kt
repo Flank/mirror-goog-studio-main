@@ -49,7 +49,7 @@ class LibraryVariantFactory(
 
     override fun createVariantBuilder(
             componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo<*>,
+            variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): LibraryVariantBuilderImpl {
         return projectServices
                 .objectFactory
@@ -64,7 +64,7 @@ class LibraryVariantFactory(
             variantBuilder: LibraryVariantBuilderImpl,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo<*>,
+            variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,
@@ -142,7 +142,7 @@ class LibraryVariantFactory(
 
     override fun createVariantData(
             componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo<*>,
+            variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,

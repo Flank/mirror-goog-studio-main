@@ -39,13 +39,13 @@ import com.android.annotations.Nullable;
 import com.android.build.api.attributes.AgpVersionAttr;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
+import com.android.build.api.dsl.ProductFlavor;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.attributes.VariantAttr;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.AbstractPublishing;
 import com.android.build.gradle.internal.dsl.ModulePropertyKeys;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.ComponentPublishingInfo;
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec;
@@ -96,7 +96,7 @@ public class VariantDependenciesBuilder {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull IssueReporter errorReporter,
-            @NonNull VariantDslInfo<?> variantDslInfo) {
+            @NonNull VariantDslInfo variantDslInfo) {
         return new VariantDependenciesBuilder(
                 project, projectOptions, errorReporter, variantDslInfo);
     }

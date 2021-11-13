@@ -41,7 +41,7 @@ import javax.inject.Inject
 abstract class TestComponentImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

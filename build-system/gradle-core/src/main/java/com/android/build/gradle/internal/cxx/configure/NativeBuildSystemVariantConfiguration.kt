@@ -35,7 +35,7 @@ data class NativeBuildSystemVariantConfig(
 fun createNativeBuildSystemVariantConfig(
     buildSystem: NativeBuildSystem,
     variant: Variant,
-    variantDslInfo: VariantDslInfo<*>) : NativeBuildSystemVariantConfig {
+    variantDslInfo: VariantDslInfo) : NativeBuildSystemVariantConfig {
 
     /**
      * The set of abiFilters from the externalNativeBuild part of the DSL. For example,

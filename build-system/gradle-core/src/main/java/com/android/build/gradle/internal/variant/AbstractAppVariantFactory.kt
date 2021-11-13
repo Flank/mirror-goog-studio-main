@@ -52,7 +52,7 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, V
 
     override fun createVariantData(
             componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo<*>,
+            variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,

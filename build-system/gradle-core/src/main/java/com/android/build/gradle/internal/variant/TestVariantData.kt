@@ -33,7 +33,7 @@ import com.android.utils.appendCapitalized
  */
 class TestVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

@@ -58,7 +58,7 @@ import javax.inject.Inject
 open class  LibraryVariantImpl @Inject constructor(
         override val variantBuilder: LibraryVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo<LibraryExtension>,
+        variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

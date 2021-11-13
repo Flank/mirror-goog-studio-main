@@ -24,5 +24,5 @@ class AndroidTestCreationConfigImpl(
     override val config: AndroidTestCreationConfig,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    variantDslInfo: VariantDslInfo<*>
+    variantDslInfo: VariantDslInfo
 ) : ApkCreationConfigImpl(config, projectOptions, globalScope, variantDslInfo)

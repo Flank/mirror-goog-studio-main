@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 /** Data about a variant that produces a APK.  */
 abstract class ApkVariantData protected constructor(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

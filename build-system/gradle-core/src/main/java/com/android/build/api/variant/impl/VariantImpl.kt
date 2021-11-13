@@ -59,7 +59,7 @@ import java.io.Serializable
 abstract class VariantImpl(
     open val variantBuilder: VariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

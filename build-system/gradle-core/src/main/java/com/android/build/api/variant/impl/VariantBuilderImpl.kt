@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 abstract class VariantBuilderImpl (
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) :

@@ -83,9 +83,9 @@ import java.util.concurrent.Callable
  * Use [VariantDslInfoBuilder] to instantiate.
  *
  */
-open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> internal constructor(
+open class VariantDslInfoImpl internal constructor(
     override val componentIdentity: ComponentIdentity,
-    override val variantType: VariantType,
+    final override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     /**
      * Public because this is needed by the old Variant API. Nothing else should touch this.
@@ -100,14 +100,12 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
      * not present in the DSL for this (test/test-fixture) variant, or when it's always
      * derived from the parent (e.g. test fixture namespace).
      */
-    private val productionVariant: VariantDslInfoImpl<*>? = null,
+    private val productionVariant: VariantDslInfoImpl? = null,
     val dataProvider: ManifestDataProvider,
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
     private val services: VariantPropertiesApiServices,
     private val buildDirectory: DirectoryProperty,
-    /** the namespace coming for the DSL for this variant. */
-    private val dslNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
     override val publishInfo: VariantPublishingInfo?,
     override val experimentalProperties: Map<String, Any>,
@@ -117,9 +115,11 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
      */
     private val inconsistentTestAppId: Boolean,
     private val extension: CommonExtension<*,*,*,*>
-): VariantDslInfo<CommonExtensionT>, DimensionCombination {
+): VariantDslInfo, DimensionCombination {
 
-    private val dslNamespaceProvider: Provider<String>? = dslNamespace?.let { services.provider { dslNamespace } }
+    private val dslNamespaceProvider: Provider<String>? = extension.getDslNamespace(variantType)?.let {
+        services.provider { it }
+    }
 
     override val buildType: String?
         get() = componentIdentity.buildType
@@ -146,7 +146,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
      *
      * @see VariantType.isTestComponent
      */
-    override val testedVariant: VariantDslInfo<*>?
+    override val testedVariant: VariantDslInfo?
         get() = if (variantType.isTestComponent) { productionVariant } else null
 
     private val mergedNdkConfig = MergedNdkConfig()
@@ -627,7 +627,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
      */
     override val instrumentationRunnerArguments: Map<String, String>
         get() {
-            val variantDslInfo: VariantDslInfoImpl<*> =
+            val variantDslInfo: VariantDslInfoImpl =
                 if (variantType.isTestComponent) {
                     productionVariant!!
                 } else {
@@ -1217,6 +1217,16 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
             return if (pos == -1) {
                 fullOption
             } else fullOption.substring(0, pos)
+        }
+
+        private fun CommonExtension<*, *, *, *>.getDslNamespace(variantType: VariantType): String? {
+            return if (variantType.isTestComponent) {
+                (this as com.android.build.api.dsl.TestedExtension).testNamespace
+            } else if (variantType.isTestFixturesComponent) {
+                null
+            } else {
+                namespace
+            }
         }
     }
 }

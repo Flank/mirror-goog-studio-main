@@ -60,7 +60,7 @@ import javax.inject.Inject
 open class TestVariantImpl @Inject constructor(
         override val variantBuilder: TestVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo<TestExtension>,
+        variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

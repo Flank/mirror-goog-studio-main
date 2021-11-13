@@ -90,7 +90,7 @@ public class TestVariantFactory
             @NonNull TestVariantBuilderImpl variantBuilder,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -173,7 +173,7 @@ public class TestVariantFactory
     public UnitTestImpl createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -193,7 +193,7 @@ public class TestVariantFactory
     public AndroidTestImpl createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,

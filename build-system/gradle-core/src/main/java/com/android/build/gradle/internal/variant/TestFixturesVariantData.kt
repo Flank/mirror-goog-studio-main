@@ -29,7 +29,7 @@ import com.android.utils.capitalizeAndAppend
 
 class TestFixturesVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

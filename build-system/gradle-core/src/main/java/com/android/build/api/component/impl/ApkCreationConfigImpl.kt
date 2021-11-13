@@ -30,7 +30,7 @@ open class ApkCreationConfigImpl(
     override val config: ApkCreationConfig,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    dslInfo: VariantDslInfo<*>
+    dslInfo: VariantDslInfo
 ): ConsumableCreationConfigImpl(config, projectOptions, globalScope, dslInfo) {
 
     val isDebuggable = variantDslInfo.isDebuggable

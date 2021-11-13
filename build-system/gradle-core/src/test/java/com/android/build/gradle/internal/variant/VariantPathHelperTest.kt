@@ -48,7 +48,7 @@ internal class VariantPathHelperTest {
     }
 
     @Mock
-    lateinit var variantDslInfo: VariantDslInfo<*>
+    lateinit var variantDslInfo: VariantDslInfo
 
     @Mock
     lateinit var dslServices: DslServices

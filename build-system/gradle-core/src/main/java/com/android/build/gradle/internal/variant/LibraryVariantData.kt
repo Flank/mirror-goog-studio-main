@@ -33,7 +33,7 @@ import java.io.File
 /** Data about a variant that produce a Library bundle (.aar)  */
 class LibraryVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

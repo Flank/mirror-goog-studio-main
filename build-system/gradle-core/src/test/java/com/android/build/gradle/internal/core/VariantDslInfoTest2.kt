@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.TestExtension
+import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.BuildType
@@ -605,7 +608,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromManifest"
             }
 
-            dslNamespace = "com.example.fromDsl"
+            namespace = "com.example.fromDsl"
         }
 
         expect {
@@ -621,11 +624,9 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-                dslNamespace = "com.example.namespace"
-            }
 
-            dslNamespace = "com.example.testNamespace"
+            namespace = "com.example.namespace"
+            testNamespace = "com.example.testNamespace"
         }
 
         expect {
@@ -642,9 +643,8 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-                dslNamespace = "com.example.namespace"
-            }
+
+            namespace = "com.example.namespace"
         }
 
         expect {
@@ -661,8 +661,6 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-            }
         }
 
         expect {
@@ -680,8 +678,6 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-            }
 
             defaultConfig {
                 applicationId = "com.applicationId"
@@ -703,9 +699,8 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-                dslNamespace = "com.example.namespace"
-            }
+
+            namespace = "com.example.namespace"
 
             defaultConfig {
                 applicationId = "com.applicationId"
@@ -727,8 +722,6 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-            }
 
             productFlavors {
                 create("flavor1") {
@@ -755,8 +748,6 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-            }
 
             productFlavors {
                 create("flavor1") {
@@ -782,8 +773,6 @@ class VariantDslInfoTest2 :
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
-            parentVariant {
-            }
 
             productFlavors {
                 create("flavor1") {
@@ -814,9 +803,27 @@ class VariantDslInfoTest2 :
     override fun instantiateGiven() = GivenData(dslServices)
     override fun instantiateResult() = ResultData()
 
+    interface TestedFullExtension: CommonExtension<
+            BuildFeatures,
+            com.android.build.api.dsl.BuildType,
+            com.android.build.api.dsl.DefaultConfig,
+            com.android.build.api.dsl.ProductFlavor
+            >, TestedExtension
+
     override fun defaultWhen(given: GivenData): ResultData? {
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
+
+        val extension =  if (given.variantType.isTestComponent) {
+            Mockito.mock(TestedFullExtension::class.java).also {
+                Mockito.`when`(it.namespace).thenReturn(given.namespace)
+                Mockito.`when`(it.testNamespace).thenReturn(given.testNamespace)
+            }
+        } else {
+            Mockito.mock(CommonExtension::class.java).also {
+                Mockito.`when`(it.namespace).thenReturn(given.namespace)
+            }
+        }
 
         // this does not quite test what VariantManager does because this only checks
         // for the product flavors of that one variant, while VariantManager looks
@@ -826,12 +833,10 @@ class VariantDslInfoTest2 :
         )
 
         val parentVariant =
-            if (given.variantType.isNestedComponent && given.parentVariantGivenData != null) {
-                val parentData = given.parentVariantGivenData!!
-
-                VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
+            if (given.variantType.isNestedComponent) {
+                VariantDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    variantType = parentData.variantType,
+                    variantType = given.testedVariantType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
@@ -841,16 +846,15 @@ class VariantDslInfoTest2 :
                     dslServices = dslServices,
                     services = services,
                     buildDirectory = buildDirectory,
-                    dslNamespace = parentData.dslNamespace,
                     nativeBuildSystem = null,
                     publishInfo = null,
                     experimentalProperties = mapOf(),
                     inconsistentTestAppId = false,
-                    extension = Mockito.mock(CommonExtension::class.java)
+                    extension = extension
                 )
             } else { null }
 
-        val variantDslInfo = VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
+        val variantDslInfo = VariantDslInfoImpl(
             componentIdentity = componentIdentity,
             variantType = given.variantType,
             defaultConfig = given.defaultConfig,
@@ -862,12 +866,11 @@ class VariantDslInfoTest2 :
             dslServices = dslServices,
             services = services,
             buildDirectory = buildDirectory,
-            dslNamespace = given.dslNamespace,
             nativeBuildSystem = null,
             experimentalProperties = mapOf(),
             publishInfo = null,
             inconsistentTestAppId = inconsistentTestAppId,
-            extension = Mockito.mock(CommonExtension::class.java)
+            extension = extension
         )
 
         return instantiateResult().also {
@@ -909,21 +912,15 @@ class VariantDslInfoTest2 :
     }
 
     /** optional conversion action from variantDslInfo to result Builder. */
-    private var convertAction: (ResultData.(variantInfo: VariantDslInfo<*>) -> Unit)? = null
+    private var convertAction: (ResultData.(variantInfo: VariantDslInfo) -> Unit)? = null
 
     /**
      * registers a custom conversion from variantDslInfo to ResultBuilder.
      * This avoid having to use when {} which requires implementing all that defaultWhen()
      * does.
      */
-    private fun convertToResult(action: ResultData.(variantInfo: VariantDslInfo<*>) -> Unit) {
+    private fun convertToResult(action: ResultData.(variantInfo: VariantDslInfo) -> Unit) {
         convertAction = action
-    }
-
-    class ParentVariantGivenData {
-        /** Variant type for the test */
-        var variantType = VariantTypeImpl.BASE_APK
-        var dslNamespace: String? = null
     }
 
     class GivenData(private val dslServices: DslServices) {
@@ -937,10 +934,13 @@ class VariantDslInfoTest2 :
 
         /** Variant type for the test */
         var variantType = VariantTypeImpl.BASE_APK
+        /** Variant type for the tested component */
+        var testedVariantType = VariantTypeImpl.BASE_APK
 
         var dexingType = DexingType.NATIVE_MULTIDEX
 
-        var dslNamespace: String? = null
+        var namespace: String? = null
+        var testNamespace: String? = null
 
         /** default Config values */
         val defaultConfig: DefaultConfig = dslServices.newDecoratedInstance(DefaultConfig::class.java, BuilderConstants.MAIN, dslServices)
@@ -967,15 +967,6 @@ class VariantDslInfoTest2 :
          */
         fun productFlavors(action: Container<ProductFlavor>.() -> Unit) {
             action(productFlavors)
-        }
-
-        var parentVariantGivenData: ParentVariantGivenData? = null
-        fun parentVariant(action: ParentVariantGivenData.() -> Unit) {
-            val data =
-                    parentVariantGivenData
-                            ?: ParentVariantGivenData().also { parentVariantGivenData = it }
-
-            action(data)
         }
     }
 

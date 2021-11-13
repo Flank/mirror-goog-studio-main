@@ -51,7 +51,7 @@ internal class DynamicFeatureVariantFactory(
 
     override fun createVariantBuilder(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo<*>,
+        variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
     ): DynamicFeatureVariantBuilderImpl {
         return projectServices
@@ -68,7 +68,7 @@ internal class DynamicFeatureVariantFactory(
             variantBuilder: DynamicFeatureVariantBuilderImpl,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo<*>,
+            variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,

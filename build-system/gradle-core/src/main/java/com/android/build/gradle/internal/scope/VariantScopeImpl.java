@@ -93,7 +93,7 @@ public class VariantScopeImpl implements VariantScope {
 
     // Variant specific Data
     @NonNull private final ComponentIdentity componentIdentity;
-    @NonNull private final VariantDslInfo<?> variantDslInfo;
+    @NonNull private final VariantDslInfo variantDslInfo;
     @NonNull private final VariantPathHelper pathHelper;
     @NonNull private final ArtifactsImpl artifacts;
     @NonNull private final VariantDependencies variantDependencies;
@@ -113,7 +113,7 @@ public class VariantScopeImpl implements VariantScope {
 
     public VariantScopeImpl(
             @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,

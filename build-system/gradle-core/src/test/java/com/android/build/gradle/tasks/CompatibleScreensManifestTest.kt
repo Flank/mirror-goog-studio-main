@@ -69,7 +69,7 @@ class CompatibleScreensManifestTest {
 
     @Mock internal lateinit var scope: VariantScope
     @Mock internal lateinit var globalScope: GlobalScope
-    @Mock private lateinit var variantDslInfo: VariantDslInfo<*>
+    @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
     @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer

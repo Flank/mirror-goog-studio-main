@@ -52,7 +52,7 @@ open class ConsumableCreationConfigImpl(
         open val config: ConsumableCreationConfig,
         val projectOptions: ProjectOptions,
         val globalScope: GlobalScope,
-        val variantDslInfo: VariantDslInfo<*>) {
+        val variantDslInfo: VariantDslInfo) {
 
     val dexingType: DexingType
         get() = variantDslInfo.dexingType ?: if (config.isMultiDexEnabled) {

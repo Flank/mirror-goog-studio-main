@@ -106,7 +106,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     val buildFeatures: BuildFeatureValues
     val variantScope: VariantScope
-    val variantDslInfo: VariantDslInfo<*>
+    val variantDslInfo: VariantDslInfo
     val variantSources: VariantSources
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl

@@ -82,7 +82,7 @@ public abstract class BaseVariantFactory<
     public TestFixturesImpl createTestFixtures(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -131,7 +131,7 @@ public abstract class BaseVariantFactory<
     public UnitTestImpl createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -175,7 +175,7 @@ public abstract class BaseVariantFactory<
     public AndroidTestImpl createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,

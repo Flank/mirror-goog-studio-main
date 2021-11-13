@@ -68,7 +68,7 @@ class ApplicationVariantFactory(
 
     override fun createVariantBuilder(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo<*>,
+        variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
     ): ApplicationVariantBuilderImpl {
         val extension = globalScope.extension as BaseAppModuleExtension
@@ -88,7 +88,7 @@ class ApplicationVariantFactory(
             variantBuilder: ApplicationVariantBuilderImpl,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo<*>,
+            variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,
@@ -273,7 +273,7 @@ class ApplicationVariantFactory(
     }
 
     private fun checkSplitsConflicts(
-        variantDslInfo: VariantDslInfo<*>,
+        variantDslInfo: VariantDslInfo,
         variantData: ApplicationVariantData,
         abiFilters: Set<String?>
     ) { // if we don't have any ABI splits, nothing is conflicting.
@@ -302,7 +302,7 @@ class ApplicationVariantFactory(
     }
 
     private fun restrictEnabledOutputs(
-        variantDslInfo: VariantDslInfo<*>, variantOutputs: VariantOutputList
+        variantDslInfo: VariantDslInfo, variantOutputs: VariantOutputList
     ) {
         val supportedAbis: Set<String> = variantDslInfo.supportedAbis
         val projectOptions = projectServices.projectOptions

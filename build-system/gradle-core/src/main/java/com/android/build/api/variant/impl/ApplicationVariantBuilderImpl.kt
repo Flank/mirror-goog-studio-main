@@ -28,7 +28,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class ApplicationVariantBuilderImpl @Inject constructor(
-    variantDslInfo: VariantDslInfo<ApplicationExtension>,
+    variantDslInfo: VariantDslInfo,
     dslDependencyInfo: com.android.build.api.dsl.DependenciesInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices

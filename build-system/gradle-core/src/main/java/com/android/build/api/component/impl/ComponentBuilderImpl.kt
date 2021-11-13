@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 
 abstract class ComponentBuilderImpl(
-    protected val variantDslInfo: VariantDslInfo<*>,
+    protected val variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     protected val variantApiServices: VariantApiServices
 ) : ComponentBuilder, ComponentIdentity by variantConfiguration {

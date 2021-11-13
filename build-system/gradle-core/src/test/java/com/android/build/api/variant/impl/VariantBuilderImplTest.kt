@@ -38,7 +38,7 @@ internal class VariantBuilderImplTest {
     val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
     @Mock
-    lateinit var variantDslInfo: VariantDslInfo<*>
+    lateinit var variantDslInfo: VariantDslInfo
     @Mock
     lateinit var componentIdentity: ComponentIdentity
     @Mock

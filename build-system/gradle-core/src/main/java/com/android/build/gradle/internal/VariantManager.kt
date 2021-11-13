@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.AndroidTest
@@ -187,7 +186,7 @@ class VariantManager<
         get() = dslExtension as BaseExtension
 
     private fun getFlavorSelection(
-            variantDslInfo: VariantDslInfo<*>): Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> {
+            variantDslInfo: VariantDslInfo): Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> {
         val factory = project.objects
         return variantDslInfo.missingDimensionStrategies.entries.stream()
                 .collect(
@@ -481,7 +480,7 @@ class VariantManager<
             testFixtureMainVariantName = mainComponentInfo.variant.name
         )
 
-        variantDslInfoBuilder.productionVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
+        variantDslInfoBuilder.productionVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
 
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 
@@ -664,7 +663,7 @@ class VariantManager<
                 extension = dslExtension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures())
         variantDslInfoBuilder.productionVariant =
-                testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
+                testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
         variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
 
         val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList

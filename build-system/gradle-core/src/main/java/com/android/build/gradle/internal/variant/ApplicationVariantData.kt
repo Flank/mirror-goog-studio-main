@@ -35,7 +35,7 @@ import com.android.utils.capitalizeAndAppend
  */
 class ApplicationVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

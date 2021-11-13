@@ -74,7 +74,7 @@ public class VariantDslInfoTest {
         SigningConfig override = signingConfig("override");
         override.storePassword("override");
 
-        VariantDslInfo<?> variant = getVariant(override);
+        VariantDslInfo variant = getVariant(override);
 
         assertThat(variant.getSigningConfig()).isEqualTo(override);
     }
@@ -91,7 +91,7 @@ public class VariantDslInfoTest {
         SigningConfig override = signingConfig("override");
         override.storePassword("override");
 
-        VariantDslInfo<?> variant = getVariant(override);
+        VariantDslInfo variant = getVariant(override);
 
         assertThat(variant.getSigningConfig()).isEqualTo(override);
     }
@@ -103,7 +103,7 @@ public class VariantDslInfoTest {
         AndroidVersion minSdkVersion = new MutableAndroidVersion(5);
         defaultConfig.setMinSdkVersion(minSdkVersion.getApiLevel());
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion()).isEqualTo(minSdkVersion);
     }
@@ -118,7 +118,7 @@ public class VariantDslInfoTest {
         assertThat(defaultConfig.getMinSdk()).isEqualTo(5);
         assertThat(defaultConfig.getMinSdkPreview()).isNull();
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion())
                 .isEqualTo(
@@ -136,7 +136,7 @@ public class VariantDslInfoTest {
         assertThat(defaultConfig.getMinSdk()).isEqualTo(25);
         assertThat(defaultConfig.getMinSdkPreview()).isEqualTo("O");
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion())
                 .isEqualTo(
@@ -148,7 +148,7 @@ public class VariantDslInfoTest {
     public void testGetMinSdkVersionDefault() {
         initNoDeviceApiInjection();
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
         assertThat(variant.getMinSdkVersion()).isEqualTo(new MutableAndroidVersion(1));
     }
 
@@ -162,7 +162,7 @@ public class VariantDslInfoTest {
         assertThat(defaultConfig.getTargetSdk()).isEqualTo(5);
         assertThat(defaultConfig.getTargetSdkPreview()).isNull();
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
     }
@@ -177,7 +177,7 @@ public class VariantDslInfoTest {
         assertThat(defaultConfig.getTargetSdk()).isEqualTo(25);
         assertThat(defaultConfig.getTargetSdkPreview()).isEqualTo("O");
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
     }
@@ -189,7 +189,7 @@ public class VariantDslInfoTest {
         MutableAndroidVersion targetSdkVersion = new MutableAndroidVersion(9);
         defaultConfig.setTargetSdkVersion(targetSdkVersion.getApiLevel());
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
     }
@@ -198,7 +198,7 @@ public class VariantDslInfoTest {
     public void testGetTargetSdkVersionDefault() {
         initNoDeviceApiInjection();
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isNull();
     }
@@ -212,7 +212,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(false);
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(18);
@@ -227,7 +227,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(false);
         buildType.setDebuggable(true);
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(18);
@@ -242,7 +242,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(true);
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(18);
@@ -257,7 +257,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(true);
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(22);
@@ -270,19 +270,19 @@ public class VariantDslInfoTest {
         defaultConfig.applicationId("com.example.mapp");
         buildType.applicationIdSuffix("");
 
-        VariantDslInfo<?> variant = getVariant();
+        VariantDslInfo variant = getVariant();
         assertThat(variant.getApplicationId().get()).isEqualTo("com.example.mapp");
     }
 
-    private VariantDslInfo<?> getVariant() {
+    private VariantDslInfo getVariant() {
         return createVariant(null /*signingOverride*/);
     }
 
-    private VariantDslInfo<?> getVariant(SigningConfig signingOverride) {
+    private VariantDslInfo getVariant(SigningConfig signingOverride) {
         return createVariant(signingOverride /*signingOverride*/);
     }
 
-    private VariantDslInfo<?> createVariant(SigningConfig signingOverride) {
+    private VariantDslInfo createVariant(SigningConfig signingOverride) {
 
         List<Pair<String, String>> flavors = ImmutableList.of(new Pair<>("dimension1", "flavor"));
         VariantDslInfoBuilder<?> builder =
