@@ -76,9 +76,9 @@ com.android:signflinger
   pomName=com.android.signflinger
   description=Library used to sign APKs
   dependencies:
+    com.android.tools:annotations (runtime)
     com.android.tools.build:apksig (runtime)
     com.android:zipflinger (runtime)
-    com.android.tools:annotations (runtime)
 
 com.android:zipflinger
   pomName=com.android.zipflinger

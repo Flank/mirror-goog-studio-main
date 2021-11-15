@@ -7,7 +7,9 @@ maven_library(
         "src/**/*.java",
     ]),
     coordinates = "com.android:signflinger:" + BUILD_VERSION,
+    description = "Library used to sign APKs",
     visibility = [
+        "//tools/base:__pkg__",
         "//tools/base/build-system:__subpackages__",
         "//tools/base/signflinger/tools:__subpackages__",
     ],
@@ -183,10 +185,4 @@ java_test(
         "//tools/base/zipflinger",
         "@maven//:junit.junit",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["src/**/*.java"]) + ["build.gradle"],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )
