@@ -91,10 +91,9 @@ open class  LibraryVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val applicationId: Provider<String> =
-        internalServices.providerOf(
+        internalServices.newProviderBackingDeprecatedApi(
             type = String::class.java,
-            value = variantDslInfo.namespace,
-            disallowUnsafeRead = !services.projectOptions.get(BooleanOption.ENABLE_LEGACY_API)
+            value = variantDslInfo.namespace
         )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(

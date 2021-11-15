@@ -139,13 +139,12 @@ class VariantPropertiesApiServicesImpl(
 
     override fun <T> listPropertyOf(
         type: Class<T>,
-        disallowUnsafeRead: Boolean,
         fillAction: (ListProperty<T>) -> Unit,
     ): ListProperty<T> {
         return projectServices.objectFactory.listProperty(type).also {
             fillAction(it)
             it.finalizeValueOnRead()
-            if (disallowUnsafeRead && !forUnitTesting) {
+            if (!forUnitTesting) {
                 it.disallowUnsafeRead()
             }
             delayedLock(it)
@@ -232,6 +231,19 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String): Provider<T> {
+        return initializeProperty(type, id).also {
+            it.set(value)
+            it.disallowChanges()
+            if (!compatibilityMode) {
+                it.finalizeValueOnRead()
+                if (!forUnitTesting) {
+                    it.disallowUnsafeRead()
+                }
+            }
+        }
+    }
+
     override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String
     ): Property<T?> {
         return initializeNullableProperty(type, id).also {
@@ -255,6 +267,7 @@ class VariantPropertiesApiServicesImpl(
         return initializeProperty(type, id).also {
             it.set(value)
             it.disallowChanges()
+            it.finalizeValueOnRead()
             if (disallowUnsafeRead && !forUnitTesting) {
                 it.disallowUnsafeRead()
             }
