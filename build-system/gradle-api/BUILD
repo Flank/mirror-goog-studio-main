@@ -38,35 +38,6 @@ maven_library(
     ],
 )
 
-kotlin_test(
-    name = "tests",
-    size = "medium",
-    srcs = glob([
-        "src/test/java/**/*.kt",
-        "src/test/java/**/*.java",
-    ]),
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
-    resources = glob(["src/test/resources/**"]),
-    test_class = "com.android.testutils.JarTestSuite",
-    runtime_deps = [
-        "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
-    ],
-    deps = [
-        ":gradle-api",
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/testutils:tools.testutils",
-        "@maven//:com.google.guava.guava",
-        "@maven//:com.google.truth.truth",
-        "@maven//:junit.junit",
-        "@maven//:nl.jqno.equalsverifier.equalsverifier",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
-        "@maven//:org.jetbrains.kotlin.kotlin-test",
-        "@maven//:org.ow2.asm.asm",
-    ],
-)
-
 filegroup(
     name = "agp_gradle_build_files",
     srcs = glob([
