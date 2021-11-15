@@ -25,5 +25,8 @@ interface ComponentBuilder: ComponentIdentity {
     /**
      * Set to `true` if the variant is active and should be configured, false otherwise.
      */
+    var enable: Boolean
+
+    @Deprecated("Will be removed in 8.0")
     var enabled: Boolean
 }

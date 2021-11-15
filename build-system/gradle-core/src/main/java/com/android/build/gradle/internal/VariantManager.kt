@@ -323,7 +323,7 @@ class VariantManager<
 
         // execute the Variant API
         variantApiOperationsRegistrar.variantBuilderOperations.executeOperations(userVisibleVariantBuilder)
-        if (!variantBuilder.enabled) {
+        if (!variantBuilder.enable) {
             return null
         }
 

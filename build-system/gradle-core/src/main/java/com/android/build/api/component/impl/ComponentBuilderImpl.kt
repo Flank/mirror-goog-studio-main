@@ -27,5 +27,12 @@ abstract class ComponentBuilderImpl(
     protected val variantApiServices: VariantApiServices
 ) : ComponentBuilder, ComponentIdentity by variantConfiguration {
 
-    override var enabled: Boolean = true
+    @Suppress("OverridingDeprecatedMember")
+    override var enabled: Boolean
+        get() = enable
+        set(value) {
+            enable = value
+        }
+
+    override var enable: Boolean = true
 }

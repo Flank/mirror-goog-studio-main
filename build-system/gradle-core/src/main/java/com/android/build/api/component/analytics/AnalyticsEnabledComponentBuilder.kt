@@ -28,11 +28,19 @@ abstract class AnalyticsEnabledComponentBuilder(
     protected val stats: GradleBuildVariant.Builder
 ) : ComponentBuilder {
 
+    @Suppress("OverridingDeprecatedMember")
     override var enabled: Boolean
-        get() = delegate.enabled
+        get() = delegate.enable
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
-            delegate.enabled = value
+            delegate.enable = value
+        }
+
+    override var enable: Boolean
+        get() = delegate.enable
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
+            delegate.enable = value
         }
 
     override val name: String
