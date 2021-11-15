@@ -37,7 +37,7 @@ data class VdOverrideInfo(var width: Double, var height: Double, var tint: Color
 
     /** Checks if the tint needs to be overridden. */
     fun needsOverrideTint(): Boolean {
-        return tintRgb() != 0
+        return tint != null
     }
 
     /** Returns the RGB value of the tint. */
