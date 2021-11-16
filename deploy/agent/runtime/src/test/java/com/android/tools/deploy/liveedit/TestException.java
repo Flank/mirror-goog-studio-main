@@ -30,17 +30,17 @@ public class TestException {
     public void testExceptionFromAppAfterInterpreter() throws Exception {
         String className = "InvokeException";
         String methodName = "throwFromAppAfterInterpreter";
-        String methodSignature = "()V";
-        String key = LiveEditStubs.keyFrom(className, methodName, methodSignature);
+        String methodDesc = "()V";
         Class clazz = InvokeException.class;
-        Object[] parameters = {key, null};
         byte[] byteCode = buildClass(clazz);
         int stubInvocationLineNumber = -1;
 
         try {
-            LiveEditStubs.addToCache(key, byteCode);
+            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
+            Object[] parameters = {null, null};
             stubInvocationLineNumber = getNextLineNumber();
-            stubbedMethod(clazz, parameters);
+            stubbedMethod(className, methodName, methodDesc, parameters);
         } catch (Exception e) {
             Assert.assertEquals(
                     "Expected exception", e.getClass(), ArrayIndexOutOfBoundsException.class);
@@ -67,7 +67,7 @@ public class TestException {
                             stubInvocationLineNumber);
             assertStackTraceMatch("Unexpected stack trace", expected, actual);
         } finally {
-            LiveEditStubs.deleteFromCache(className, methodName, methodSignature);
+            LiveEditStubs.deleteClass(className);
         }
     }
 
@@ -75,17 +75,17 @@ public class TestException {
     public void testExceptionFromInterpreter() throws Exception {
         String className = "InvokeException";
         String methodName = "throwFromInterpreter";
-        String methodSignature = "()V";
-        String key = LiveEditStubs.keyFrom(className, methodName, methodSignature);
+        String methodDesc = "()V";
         Class clazz = InvokeException.class;
         byte[] byteCode = buildClass(clazz);
         int stubInvocationLineNumber = -1;
 
         try {
-            LiveEditStubs.addToCache(key, byteCode);
-            Object[] parameters = {key, null};
+            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
+            Object[] parameters = {null, null};
             stubInvocationLineNumber = getNextLineNumber();
-            stubbedMethod(clazz, parameters);
+            stubbedMethod(className, methodName, methodDesc, parameters);
         } catch (Exception e) {
             Assert.assertEquals(
                     "Expected exception", e.getClass(), ArrayIndexOutOfBoundsException.class);
@@ -106,7 +106,7 @@ public class TestException {
             assertStackTraceMatch("Unexpected stack trace", expected, actual);
 
         } finally {
-            LiveEditStubs.deleteFromCache(className, methodName, methodSignature);
+            LiveEditStubs.deleteClass(className);
         }
     }
 
@@ -114,15 +114,17 @@ public class TestException {
     public void testExceptionThrowAndCaughtInsideMethod() throws Exception {
         String className = "InvokeException";
         String methodName = "tryAndCatch";
-        String methodSignature = "()Ljava/lang/StackTraceElement;";
-        String key = LiveEditStubs.keyFrom(className, methodName, methodSignature);
+        String methodDesc = "()Ljava/lang/StackTraceElement;";
         Class clazz = InvokeException.class;
         byte[] byteCode = buildClass(clazz);
 
         try {
-            LiveEditStubs.addToCache(key, byteCode);
-            Object[] parameters = {key, null};
-            StackTraceElement[] actual = {(StackTraceElement) stubbedMethod(clazz, parameters)};
+            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
+            Object[] parameters = {null, null};
+            StackTraceElement[] actual = {
+                (StackTraceElement) stubbedMethod(className, methodName, methodDesc, parameters)
+            };
             StackTraceElement[] expected = new StackTraceElement[1];
             expected[0] =
                     new StackTraceElement(
@@ -132,12 +134,13 @@ public class TestException {
                             InvokeException.tryAndCatchLineNumber);
             assertStackTraceMatch("inner interpreted method exception", expected, actual);
         } finally {
-            LiveEditStubs.deleteFromCache(className, methodName, methodSignature);
+            LiveEditStubs.deleteClass(className);
         }
     }
 
-    public Object stubbedMethod(Class clazz, Object[] parameters) {
-        return LiveEditStubs.stubL(clazz, parameters);
+    public Object stubbedMethod(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        return LiveEditStubs.stubL(internalClassName, methodName, methodDesc, parameters);
     }
 
     @org.junit.Test

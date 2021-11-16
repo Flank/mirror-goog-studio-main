@@ -36,15 +36,17 @@ public class MethodBodyEvaluator {
 
     // TODO: We should always use the app's classloader. This method is here for
     // our unit tests. We should consider removing this after we refactor the tests.
-    public MethodBodyEvaluator(byte[] classData, String targetMethod) {
+    public MethodBodyEvaluator(byte[] classData, String methodName, String methodDesc) {
         this(
                 new LiveEditContext(MethodBodyEvaluator.class.getClassLoader()),
                 classData,
-                targetMethod);
+                methodName,
+                methodDesc);
     }
 
-    public MethodBodyEvaluator(LiveEditContext context, byte[] classData, String targetMethod) {
-        MethodNodeFinder finder = new MethodNodeFinder(classData, targetMethod);
+    public MethodBodyEvaluator(
+            LiveEditContext context, byte[] classData, String methodName, String methodDesc) {
+        MethodNodeFinder finder = new MethodNodeFinder(classData, methodName, methodDesc);
         this.context = context;
         this.method =
                 new InterpretedMethod(
@@ -53,7 +55,7 @@ public class MethodBodyEvaluator {
                         finder.getName(),
                         finder.getOwnerInternalName());
         if (method.getTarget() == null) {
-            String msg = String.format("Cannot find target '%s' in:\n", targetMethod);
+            String msg = String.format("Cannot find target '%s' in:\n", methodName + methodDesc);
             for (String method : finder.getVisited()) {
                 msg += "  -> " + method + "\n";
             }

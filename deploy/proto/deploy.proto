@@ -653,7 +653,8 @@ message LiveEditClass {
   bytes class_data = 2;
 
   // Not set for support classes.
-  string method_signature = 3;
+  string method_name = 3;
+  string method_desc = 4;
 }
 
 message LiveEditResponse {

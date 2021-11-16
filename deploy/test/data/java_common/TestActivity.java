@@ -205,4 +205,14 @@ public class TestActivity extends Activity {
     public void getVirtualsResult() {
         System.out.println("getVirtualsResult = " + Virtuals.getResult());
     }
+
+    public void invokeStubbedMethods() {
+        StubTarget target = new StubTarget();
+        target.nonStaticVoidMethod();
+        target.nonStaticObjectMethod();
+        target.nonStaticIntMethod();
+        StubTarget.staticVoidMethod();
+        StubTarget.staticObjectMethod();
+        StubTarget.staticIntMethod();
+    }
 }

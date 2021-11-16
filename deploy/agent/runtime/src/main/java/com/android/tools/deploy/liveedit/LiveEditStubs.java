@@ -19,8 +19,6 @@ package com.android.tools.deploy.liveedit;
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
 import com.android.annotations.VisibleForTesting;
-import com.android.deploy.asm.ClassReader;
-import java.util.HashSet;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class LiveEditStubs {
@@ -33,10 +31,6 @@ public final class LiveEditStubs {
     // Context object that holds all of LiveEdit's global state. Initialized by the first LiveEdit.
     private static LiveEditContext context = null;
 
-    // Set of method keys used to determine if a given method should redirect to the interpreter.
-    // TODO: This should live in LiveEditClass.
-    private static final HashSet<String> interpretedMethods = new HashSet<>();
-
     // TODO: Figure out if we need to support multiple class loaders.
     public static void init(ClassLoader loader) {
         if (context == null) {
@@ -45,29 +39,23 @@ public final class LiveEditStubs {
         }
     }
 
+    public static void addClass(String internalName, byte[] bytecode, boolean isProxyClass) {
+        LiveEditClass clazz = context.getClass(internalName);
+        if (clazz == null) {
+            context.addClass(internalName, bytecode, isProxyClass);
+        } else {
+            clazz.updateBytecode(bytecode);
+        }
+    }
+
+    public static void addLiveEditedMethod(
+            String internalClassName, String methodName, String methodDesc) {
+        context.getClass(internalClassName).addLiveEditedMethod(methodName, methodDesc);
+    }
+
     @VisibleForTesting
-    public static String keyFrom(String className, String methodName, String methodSignature) {
-        return className + "->" + methodName + methodSignature;
-    }
-
-    public static void addToCache(String key, byte[] bytecode) {
-        String className = key.substring(0, key.indexOf("->"));
-        context.addClass(className, bytecode);
-        interpretedMethods.add(key);
-    }
-
-    @VisibleForTesting
-    public static void deleteFromCache(
-            String className, String methodName, String methodSignature) {
-        context.removeClass(className);
-    }
-
-    public static void addProxiedClass(byte[] bytecode) {
-        // TODO: This should be done on the host and needs to include the constructor descriptor.
-        ClassReader reader = new ClassReader(bytecode);
-        String className = reader.getClassName();
-        String[] interfaces = reader.getInterfaces();
-        context.addProxyClass(className, bytecode, interfaces);
+    public static void deleteClass(String internalName) {
+        context.removeClass(internalName);
     }
 
     // Everything in the following section is called from the dex prologue created by StubTransform.
@@ -77,21 +65,16 @@ public final class LiveEditStubs {
     // callback.
     // The format can be found in tools/slicer/instrumentation.cc in the MethodLabel method.
     // TODO: We need to centralize which LiveEdit component "owns" this key format.
-    public static boolean shouldInterpretMethod(String key) {
-        String internalKey = key.replace('.', '/');
-        LiveEditClass clazz = context.getClass(internalKey.substring(0, internalKey.indexOf("->")));
+    public static boolean shouldInterpretMethod(
+            String internalClassName, String methodName, String methodDesc) {
+        LiveEditClass clazz = context.getClass(internalClassName);
         return INTERPRET_ALL
                 || (clazz != null && clazz.isProxyClass())
-                || interpretedMethods.contains(internalKey);
+                || (clazz != null && clazz.hasLiveEditedMethod(methodName, methodDesc));
     }
 
-    public static Object doStub(Class<?> clazz, Object[] parameters) {
-        // First parameter is the class + method name + signature
-        String methodKey = parameters[0].toString().replace('.', '/');
-        int idx = methodKey.indexOf("->");
-        String methodClassName = methodKey.substring(0, idx);
-        String methodName = methodKey.substring(idx + 2);
-
+    public static Object doStub(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
         // Second parameter is the this pointer, or null if static
         Object thisObject = parameters[1];
 
@@ -101,55 +84,66 @@ public final class LiveEditStubs {
             System.arraycopy(parameters, 2, arguments, 0, arguments.length);
         }
 
-        return context.getClass(methodClassName).invokeMethod(methodName, thisObject, arguments);
+        return context.getClass(internalClassName)
+                .invokeMethod(methodName, methodDesc, thisObject, arguments);
     }
 
-    public static Object stubL(Class<?> clazz, Object[] parameters) {
-        return doStub(clazz, parameters);
+    public static Object stubL(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        return doStub(internalClassName, methodName, methodDesc, parameters);
     }
 
-    public static byte stubB(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static byte stubB(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (byte) value : 0;
     }
 
-    public static short stubS(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static short stubS(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (short) value : 0;
     }
 
-    public static int stubI(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static int stubI(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (int) value : 0;
     }
 
-    public static long stubJ(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static long stubJ(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (long) value : 0;
     }
 
-    public static float stubF(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static float stubF(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (float) value : 0;
     }
 
-    public static double stubD(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static double stubD(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (double) value : 0;
     }
 
-    public static boolean stubZ(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static boolean stubZ(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (boolean) value : false;
     }
 
-    public static char stubC(Class<?> clazz, Object[] parameters) {
-        Object value = doStub(clazz, parameters);
+    public static char stubC(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        Object value = doStub(internalClassName, methodName, methodDesc, parameters);
         return value != null ? (char) value : 0;
     }
 
-    public static void stubV(Class<?> clazz, Object[] parameters) {
-        doStub(clazz, parameters);
+    public static void stubV(
+            String internalClassName, String methodName, String methodDesc, Object[] parameters) {
+        doStub(internalClassName, methodName, methodDesc, parameters);
     }
 
     private static class AndroidLogger implements Log.Logger {

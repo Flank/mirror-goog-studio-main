@@ -17,10 +17,52 @@
 
 #include "tools/base/deploy/agent/native/transform/stub_transform.h"
 
+#include <algorithm>
+
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
+namespace {
+
+const char* kFakeHook = "APPLYCHANGES";
+const char* kFakeHookClass = "LApply/Changes;";
+
+const char* kStubPrefix = "stub";
+const char* kStubClass = "Lcom/android/tools/deploy/liveedit/LiveEditStubs;";
+
+lir::Bytecode* GetInstr(lir::CodeIr* code_ir, dex::Opcode opcode,
+                        std::vector<lir::Operand*> operands) {
+  auto instr = code_ir->Alloc<lir::Bytecode>();
+  instr->opcode = opcode;
+  instr->operands = operands;
+  return instr;
+}
+
+lir::String* GetString(ir::Builder* builder, lir::CodeIr* code_ir,
+                       const std::string& string) {
+  auto ir_string = builder->GetAsciiString(string.c_str());
+  return code_ir->Alloc<lir::String>(ir_string, ir_string->orig_index);
+}
+
+lir::Method* GetMethod(ir::Builder* builder, lir::CodeIr* code_ir,
+                       const std::string& parent_type,
+                       const std::string& method_name,
+                       const std::string& return_type,
+                       const std::vector<std::string> param_types) {
+  auto ir_parent_type = builder->GetType(parent_type.c_str());
+  auto ir_return_type = builder->GetType(return_type.c_str());
+  std::vector<ir::Type*> ir_types;
+  for (auto type : param_types) {
+    ir_types.push_back(builder->GetType(type.c_str()));
+  }
+  auto ir_param_types = builder->GetTypeList(ir_types);
+  auto method_decl = builder->GetMethodDecl(
+      builder->GetAsciiString(method_name.c_str()),
+      builder->GetProto(ir_return_type, ir_param_types), ir_parent_type);
+  return code_ir->Alloc<lir::Method>(method_decl, method_decl->orig_index);
+}
+}  // namespace
 
 void StubTransform::Apply(std::shared_ptr<ir::DexFile> dex_ir) const {
   for (auto& method : dex_ir->encoded_methods) {
@@ -36,73 +78,22 @@ void StubTransform::Apply(std::shared_ptr<ir::DexFile> dex_ir) const {
     // before the method body excutes, and handles packing the method
     // parameters into an array.
     const ir::MethodId entry_hook(kFakeHookClass, kFakeHook);
+
+    // Ensure we always have 4 non-param registers to work with.
+    auto non_param_regs = method->code->registers - method->code->ins_count;
+    if (non_param_regs < 4) {
+      mi.AddTransformation<slicer::AllocateScratchRegs>(4 - non_param_regs);
+    }
+
     mi.AddTransformation<slicer::EntryHook>(
         entry_hook, slicer::EntryHook::Tweak::ArrayParams);
 
     // Replace the fake hook with an interpreter stub, using the return value
     // of the stub as the return value of the original method.
-    mi.AddTransformation<HookToStub>(
-        kFakeHook, "Lcom/android/tools/deploy/liveedit/LiveEditStubs;", "stub");
+    mi.AddTransformation<HookToStub>();
 
     mi.InstrumentMethod(method.get());
   }
-}
-
-std::string GetKey(ir::EncodedMethod* ir_method) {
-  return ir_method->decl->parent->Decl() + "->" +
-         ir_method->decl->name->c_str() +
-         ir_method->decl->prototype->Signature();
-}
-
-void HookToStub::BuildCacheCheck(lir::CodeIr* code_ir,
-                                 lir::Bytecode* first_instr,
-                                 lir::Bytecode* last_instr) {
-  ir::Builder builder(code_ir->dex_ir);
-
-  auto original_label = code_ir->Alloc<lir::Label>(0);
-  auto original_method = code_ir->Alloc<lir::CodeLocation>(original_label);
-  code_ir->instructions.InsertAfter(last_instr, original_label);
-
-  // Array packing always creates 3 scratch registers, so we can safely use
-  // register 0 for this.
-  auto reg = code_ir->Alloc<lir::VReg>(0);
-  auto key = builder.GetAsciiString(GetKey(code_ir->ir_method).c_str());
-
-  auto const_key = code_ir->Alloc<lir::Bytecode>();
-  const_key->opcode = dex::OP_CONST_STRING;
-  const_key->operands.push_back(reg);
-  const_key->operands.push_back(
-      code_ir->Alloc<lir::String>(key, key->orig_index));
-  code_ir->instructions.InsertBefore(first_instr, const_key);
-
-  auto return_type = builder.GetType("Z");
-  auto param_types =
-      builder.GetTypeList({builder.GetType("Ljava/lang/String;")});
-  auto method_decl = builder.GetMethodDecl(
-      builder.GetAsciiString("shouldInterpretMethod"),
-      builder.GetProto(return_type, param_types), builder.GetType(stub_class_));
-  auto method =
-      code_ir->Alloc<lir::Method>(method_decl, method_decl->orig_index);
-
-  auto args = code_ir->Alloc<lir::VRegList>();
-  args->registers.push_back(reg->reg);
-
-  auto get_flag = code_ir->Alloc<lir::Bytecode>();
-  get_flag->opcode = dex::OP_INVOKE_STATIC;
-  get_flag->operands.push_back(args);
-  get_flag->operands.push_back(method);
-  code_ir->instructions.InsertBefore(first_instr, get_flag);
-
-  auto mov_flag = code_ir->Alloc<lir::Bytecode>();
-  mov_flag->opcode = dex::OP_MOVE_RESULT;
-  mov_flag->operands.push_back(reg);
-  code_ir->instructions.InsertBefore(first_instr, mov_flag);
-
-  auto check = code_ir->Alloc<lir::Bytecode>();
-  check->opcode = dex::OP_IF_EQZ;
-  check->operands.push_back(reg);
-  check->operands.push_back(original_method);
-  code_ir->instructions.InsertBefore(first_instr, check);
 }
 
 bool Print::Apply(lir::CodeIr* code_ir) {
@@ -142,9 +133,8 @@ bool HookToStub::Apply(lir::CodeIr* code_ir) {
     auto invoke_static = visitor.out;
     auto method = invoke_static->CastOperand<lir::Method>(1);
 
-    if (strcmp(method->ir_method->name->c_str(), hook_name_) == 0) {
-      BuildCacheCheck(code_ir, first_instr, invoke_static);
-      BuildStub(code_ir, invoke_static);
+    if (strcmp(method->ir_method->name->c_str(), kFakeHook) == 0) {
+      BuildStub(code_ir, first_instr, invoke_static);
       return true;
     }
   }
@@ -152,53 +142,110 @@ bool HookToStub::Apply(lir::CodeIr* code_ir) {
   return false;
 }
 
-void HookToStub::BuildStub(lir::CodeIr* code_ir, lir::Bytecode* invoke_static) {
+void HookToStub::BuildStub(lir::CodeIr* code_ir, lir::Bytecode* first_instr,
+                           lir::Bytecode* invoke_static) {
   ir::Builder builder(code_ir->dex_ir);
 
-  const auto declared_return_type =
+  auto original_label = code_ir->Alloc<lir::Label>(0);
+  auto original_method = code_ir->Alloc<lir::CodeLocation>(original_label);
+  code_ir->instructions.InsertAfter(invoke_static, original_label);
+
+  // We have ensured that we always have 4 available non-param registers.
+  std::vector<lir::VReg*> regs = {code_ir->Alloc<lir::VReg>(0),
+                                  code_ir->Alloc<lir::VReg>(1),
+                                  code_ir->Alloc<lir::VReg>(2),
+                                  code_ir->Alloc<lir::VReg>(3)};
+
+  std::string internal_class_name = code_ir->ir_method->decl->parent->Decl();
+  std::string method_name = code_ir->ir_method->decl->name->c_str();
+  std::string method_desc = code_ir->ir_method->decl->prototype->Signature();
+
+  std::replace(internal_class_name.begin(), internal_class_name.end(), '.',
+               '/');
+
+  auto class_name_str = GetString(&builder, code_ir, internal_class_name);
+  auto method_name_str = GetString(&builder, code_ir, method_name);
+  auto method_desc_str = GetString(&builder, code_ir, method_desc);
+
+  auto const_class_name =
+      GetInstr(code_ir, dex::OP_CONST_STRING, {regs[0], class_name_str});
+  code_ir->instructions.InsertBefore(first_instr, const_class_name);
+
+  auto const_method_name =
+      GetInstr(code_ir, dex::OP_CONST_STRING, {regs[1], method_name_str});
+  code_ir->instructions.InsertBefore(first_instr, const_method_name);
+
+  auto const_method_desc =
+      GetInstr(code_ir, dex::OP_CONST_STRING, {regs[2], method_desc_str});
+  code_ir->instructions.InsertBefore(first_instr, const_method_desc);
+
+  auto method =
+      GetMethod(&builder, code_ir, kStubClass, "shouldInterpretMethod", "Z",
+                {"Ljava/lang/String;", "Ljava/lang/String;", "Ljava/lang/String;"});
+
+  auto args = code_ir->Alloc<lir::VRegList>();
+  args->registers.push_back(0);
+  args->registers.push_back(1);
+  args->registers.push_back(2);
+
+  auto get_flag = GetInstr(code_ir, dex::OP_INVOKE_STATIC, {args, method});
+  code_ir->instructions.InsertBefore(first_instr, get_flag);
+
+  auto mov_flag = GetInstr(code_ir, dex::OP_MOVE_RESULT, {regs[0]});
+  code_ir->instructions.InsertBefore(first_instr, mov_flag);
+
+  auto check = GetInstr(code_ir, dex::OP_IF_EQZ, {regs[0], original_method});
+  code_ir->instructions.InsertBefore(first_instr, check);
+
+  // Now add the stub method trampoline.
+
+  const auto original_return_type =
       code_ir->ir_method->decl->prototype->return_type;
 
   // The stub has the same return type as the instrumented method, with one
   // exception: all methods that return reference types are stubbed with an
   // interpeter call that returns an Object.
-  auto return_type = declared_return_type;
-  if (return_type->GetCategory() == ir::Type::Category::Reference) {
-    return_type = builder.GetType("Ljava/lang/Object;");
+  std::string new_return_type_desc = original_return_type->descriptor->c_str();
+  if (original_return_type->GetCategory() == ir::Type::Category::Reference) {
+    new_return_type_desc = "Ljava/lang/Object;";
   }
 
-  // The interpreter stub accepts the method name and the original method's
-  // parameters packaged into an Object array.
-  auto param_types =
-      builder.GetTypeList({builder.GetType("Ljava/lang/Class;"),
-                           builder.GetType("[Ljava/lang/Object;")});
+  std::string stub_method_name = kStubPrefix;
+  stub_method_name += new_return_type_desc[0];
 
-  std::string stub_method_name = stub_prefix_;
-  stub_method_name += return_type->descriptor->c_str()[0];
+  // The interpreter stub accepts the parent class name, the named method
+  // descriptor, and the parameters of the original method packaged into an
+  // Object array.
+  auto stub_method = GetMethod(
+      &builder, code_ir, kStubClass, stub_method_name, new_return_type_desc,
+      {"Ljava/lang/String;", "Ljava/lang/String;", "Ljava/lang/String;", "[Ljava/lang/Object;"});
 
-  auto stub_method_decl = builder.GetMethodDecl(
-      builder.GetAsciiString(stub_method_name.c_str()),
-      builder.GetProto(return_type, param_types), builder.GetType(stub_class_));
+  // Move the parameter array to the correct position in the argument list.
+  auto move_array = GetInstr(code_ir, dex::OP_MOVE_OBJECT, {regs[3], regs[1]});
+  code_ir->instructions.InsertBefore(invoke_static, move_array);
 
-  auto stub_method = code_ir->Alloc<lir::Method>(stub_method_decl,
-                                                 stub_method_decl->orig_index);
+  const_class_name =
+      GetInstr(code_ir, dex::OP_CONST_STRING, {regs[0], class_name_str});
+  code_ir->instructions.InsertBefore(invoke_static, const_class_name);
 
-  auto class_type = code_ir->ir_method->decl->parent;
-  auto const_class = code_ir->Alloc<lir::Bytecode>();
-  const_class->opcode = dex::OP_CONST_CLASS;
-  const_class->operands.push_back(code_ir->Alloc<lir::VReg>(0));
-  const_class->operands.push_back(
-      code_ir->Alloc<lir::Type>(class_type, class_type->orig_index));
+  const_method_name =
+      GetInstr(code_ir, dex::OP_CONST_STRING, {regs[1], method_name_str});
+  code_ir->instructions.InsertBefore(invoke_static, const_method_name);
 
-  code_ir->instructions.InsertBefore(invoke_static, const_class);
+  const_method_desc =
+      GetInstr(code_ir, dex::OP_CONST_STRING, {regs[2], method_desc_str});
+  code_ir->instructions.InsertBefore(invoke_static, const_method_desc);
 
   // Modify the fake entry hook invoke to call the correct interpreter stub.
-  invoke_static->operands[0] = code_ir->Alloc<lir::VRegRange>(0, 2);
+  auto reg_range = code_ir->Alloc<lir::VRegRange>(0, 4);
+
+  invoke_static->operands[0] = reg_range;
   invoke_static->operands[1] = stub_method;
 
   dex::Opcode move_op;
   dex::Opcode ret_op;
   lir::Operand* ret_reg;
-  switch (return_type->GetCategory()) {
+  switch (original_return_type->GetCategory()) {
     case ir::Type::Category::Scalar:
       ret_reg = code_ir->Alloc<lir::VReg>(0);
       move_op = dex::OP_MOVE_RESULT;
@@ -217,28 +264,21 @@ void HookToStub::BuildStub(lir::CodeIr* code_ir, lir::Bytecode* invoke_static) {
     case ir::Type::Category::Void:
       // Void methods can skip the rest of the IR manipulation, as they don't
       // return anything.
-      auto return_void = code_ir->Alloc<lir::Bytecode>();
-      return_void->opcode = dex::OP_RETURN_VOID;
+      auto return_void = GetInstr(code_ir, dex::OP_RETURN_VOID, {});
       code_ir->instructions.InsertAfter(invoke_static, return_void);
       return;
   }
 
-  auto move_result = code_ir->Alloc<lir::Bytecode>();
-  move_result->opcode = move_op;
-  move_result->operands.push_back(ret_reg);
+  auto move_result = GetInstr(code_ir, move_op, {ret_reg});
+  auto ret_result = GetInstr(code_ir, ret_op, {ret_reg});
 
-  auto ret_result = code_ir->Alloc<lir::Bytecode>();
-  ret_result->opcode = ret_op;
-  ret_result->operands.push_back(ret_reg);
-
-  if (return_type->GetCategory() == ir::Type::Category::Reference) {
+  if (original_return_type->GetCategory() == ir::Type::Category::Reference) {
     // Reference types need to be cast from Object to their original type;
     // otherwise, verification will fail.
-    auto cast_result = code_ir->Alloc<lir::Bytecode>();
-    cast_result->opcode = dex::OP_CHECK_CAST;
-    cast_result->operands.push_back(ret_reg);
-    cast_result->operands.push_back(code_ir->Alloc<lir::Type>(
-        declared_return_type, declared_return_type->orig_index));
+    auto cast_type = code_ir->Alloc<lir::Type>(
+        original_return_type, original_return_type->orig_index);
+    auto cast_result =
+        GetInstr(code_ir, dex::OP_CHECK_CAST, {ret_reg, cast_type});
 
     code_ir->instructions.InsertAfter(invoke_static, move_result);
     code_ir->instructions.InsertAfter(move_result, cast_result);

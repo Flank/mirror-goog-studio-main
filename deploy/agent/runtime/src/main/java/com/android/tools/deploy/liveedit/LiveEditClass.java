@@ -18,53 +18,63 @@ package com.android.tools.deploy.liveedit;
 
 import static java.lang.reflect.Proxy.newProxyInstance;
 
+import com.android.deploy.asm.ClassReader;
 import java.util.HashMap;
+import java.util.HashSet;
 
 class LiveEditClass {
     // The context this class is defined in.
     private final LiveEditContext context;
 
     private final String className;
-    private final byte[] bytecode;
-
     private final boolean isProxyClass;
-    private final String[] proxyInterfaces;
+
+    private byte[] bytecode;
+    private String[] proxyInterfaces;
 
     // Whether or not <clinit> has been interpreted and run for this class.
     private boolean isInitialized;
     private final HashMap<String, Object> staticFields;
 
-    public LiveEditClass(LiveEditContext context, String className, byte[] bytecode) {
-        this(context, className, bytecode, false, null);
-    }
+    // Named method descriptors of methods that have been live edited.
+    private final HashSet<String> liveEditedMethods;
 
     public LiveEditClass(
-            LiveEditContext context, String className, byte[] bytecode, String[] proxyInterfaces) {
-        this(context, className, bytecode, true, proxyInterfaces);
-    }
-
-    private LiveEditClass(
-            LiveEditContext context,
-            String className,
-            byte bytecode[],
-            boolean isProxyClass,
-            String[] proxyInterfaces) {
+            LiveEditContext context, String className, byte[] bytecode, boolean isProxyClass) {
         this.context = context;
         this.className = className;
-        this.bytecode = bytecode;
         this.isProxyClass = isProxyClass;
-        this.proxyInterfaces = proxyInterfaces;
-        this.isInitialized = false;
         this.staticFields = new HashMap<>();
+        this.liveEditedMethods = new HashSet<>();
+        updateBytecode(bytecode);
+    }
+
+    public void updateBytecode(byte[] newBytecode) {
+        bytecode = newBytecode;
+        if (isProxyClass) {
+            ClassReader reader = new ClassReader(bytecode);
+            proxyInterfaces = reader.getInterfaces();
+            isInitialized = false;
+            staticFields.clear();
+        }
+    }
+
+    public void addLiveEditedMethod(String methodName, String methodDesc) {
+        liveEditedMethods.add(methodName + methodDesc);
+    }
+
+    public boolean hasLiveEditedMethod(String methodName, String methodDesc) {
+        return liveEditedMethods.contains(methodName + methodDesc);
     }
 
     public boolean isProxyClass() {
         return isProxyClass;
     }
 
-    public Object invokeMethod(String methodDescriptor, Object thisObject, Object[] arguments) {
+    public Object invokeMethod(
+            String methodName, String methodDesc, Object thisObject, Object[] arguments) {
         MethodBodyEvaluator evaluator =
-                new MethodBodyEvaluator(context, bytecode, methodDescriptor);
+                new MethodBodyEvaluator(context, bytecode, methodName, methodDesc);
         return evaluator.eval(thisObject, className, arguments);
     }
 
@@ -109,7 +119,7 @@ class LiveEditClass {
         }
         if (!isInitialized) {
             isInitialized = true; // Must set this first to prevent infinite loops.
-            invokeMethod("<clinit>()V", null, new Object[0]);
+            invokeMethod("<clinit>", "()V", null, new Object[0]);
         }
     }
 }

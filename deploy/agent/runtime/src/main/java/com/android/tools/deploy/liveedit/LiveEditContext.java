@@ -47,16 +47,14 @@ public class LiveEditContext {
         return classes.get(name);
     }
 
-    public void addClass(String name, byte[] bytecode) {
-        classes.put(name, new LiveEditClass(this, name, bytecode));
+    public LiveEditClass addClass(String internalName, byte[] bytecode, boolean isProxyClass) {
+        LiveEditClass clazz = new LiveEditClass(this, internalName, bytecode, isProxyClass);
+        classes.put(internalName, clazz);
+        return clazz;
     }
 
     @VisibleForTesting
     public void removeClass(String name) {
         classes.remove(name);
-    }
-
-    public void addProxyClass(String name, byte[] bytecode, String[] interfaces) {
-        classes.put(name, new LiveEditClass(this, name, bytecode, interfaces));
     }
 }

@@ -39,9 +39,8 @@ final class ProxyClassHandler implements InvocationHandler {
         return fields.get(name);
     }
 
-    Object invokeMethod(Object instance, String name, String signature, Object[] args) {
-        String descriptor = name + signature;
-        return context.getClass(className).invokeMethod(descriptor, instance, args);
+    Object invokeMethod(Object instance, String name, String desc, Object[] args) {
+        return context.getClass(className).invokeMethod(name, desc, instance, args);
     }
 
     /**

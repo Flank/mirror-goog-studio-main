@@ -32,7 +32,8 @@ public class TestMonitor {
         synchronized (lock) {
             Runnable runnable =
                     () -> {
-                        MethodBodyEvaluator body = new MethodBodyEvaluator(byteCode, "invoke()V");
+                        MethodBodyEvaluator body =
+                                new MethodBodyEvaluator(byteCode, "invoke", "()V");
                         String type = classToType(InvokeMonitor.class);
                         Object result = body.eval(monitor, type, new Object[] {});
                     };

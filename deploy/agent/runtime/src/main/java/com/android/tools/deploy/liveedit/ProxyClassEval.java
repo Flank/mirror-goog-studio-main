@@ -155,7 +155,7 @@ class ProxyClassEval extends AndroidEval {
             }
 
             LiveEditClass clazz = context.getClass(className);
-            Object result = clazz.invokeMethod(methodName + methodDesc, null, argValues);
+            Object result = clazz.invokeMethod(methodName, methodDesc, null, argValues);
             return makeValue(result, Type.getReturnType(methodDesc));
         }
         return super.invokeStaticMethod(method, args);

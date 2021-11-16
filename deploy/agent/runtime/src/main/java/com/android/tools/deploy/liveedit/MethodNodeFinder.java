@@ -28,14 +28,15 @@ import java.util.List;
 class MethodNodeFinder extends ClassVisitor {
     private MethodNode target = null;
     private String filename = null;
-    private final String targetName;
-    private String name;
+    private final String methodName;
+    private final String methodDesc;
     private String ownerInternalName;
     private final List<String> visited = new ArrayList<>();
 
-    MethodNodeFinder(byte[] classData, String name) {
+    MethodNodeFinder(byte[] classData, String methodName, String methodDesc) {
         super(Opcodes.ASM6);
-        targetName = name;
+        this.methodName = methodName;
+        this.methodDesc = methodDesc;
         ClassReader reader = new ClassReader(classData);
         reader.accept(this, 0);
     }
@@ -54,13 +55,11 @@ class MethodNodeFinder extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(
             int access, String name, String desc, String signature, String[] exceptions) {
-        String prospect = name + desc;
-        visited.add(prospect);
+        visited.add(name + desc);
 
-        if (!targetName.equals(prospect)) {
+        if (!methodName.equals(name) || !methodDesc.equals(desc)) {
             return null;
         }
-        this.name = name;
         target = new TryCatchBlockSorter(null, access, name, desc, signature, exceptions);
         return target;
     }
@@ -71,7 +70,7 @@ class MethodNodeFinder extends ClassVisitor {
     }
 
     public String getName() {
-        return name;
+        return methodName;
     }
 
     public MethodNode getTarget() {

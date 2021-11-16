@@ -32,10 +32,6 @@ class StubTransform : public Transform {
   StubTransform(const std::string& class_name) : Transform(class_name) {}
 
   void Apply(std::shared_ptr<ir::DexFile> dex_ir) const override;
-
- private:
-  const char* kFakeHook = "APPLYCHANGES";
-  const char* kFakeHookClass = "LApply/Changes;";
 };
 
 class Print : public slicer::Transformation {
@@ -45,21 +41,11 @@ class Print : public slicer::Transformation {
 
 class HookToStub : public slicer::Transformation {
  public:
-  explicit HookToStub(const char* hook_name, const char* stub_class,
-                      const char* stub_prefix)
-      : hook_name_(hook_name),
-        stub_class_(stub_class),
-        stub_prefix_(stub_prefix) {}
   virtual bool Apply(lir::CodeIr* code_ir) override;
 
  private:
-  const char* hook_name_;
-  const char* stub_class_;
-  const char* stub_prefix_;
-
-  void BuildCacheCheck(lir::CodeIr* code_ir, lir::Bytecode* first_instr,
-                       lir::Bytecode* last_instr);
-  void BuildStub(lir::CodeIr* code_ir, lir::Bytecode* invoke_static);
+  void BuildStub(lir::CodeIr* code_ir, lir::Bytecode* first_instr,
+                 lir::Bytecode* invoke_static);
 };
 
 }  // namespace deploy

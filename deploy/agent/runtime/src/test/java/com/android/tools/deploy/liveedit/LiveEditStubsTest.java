@@ -19,7 +19,7 @@ import java.lang.reflect.Method;
 import org.junit.Assert;
 
 public class LiveEditStubsTest {
-    private static final String ADD_NAME = "addToCache";
+    private static final String ADD_NAME = "addClass";
 
     @org.junit.Test
     public void testExpectedMethods() {
@@ -34,12 +34,13 @@ public class LiveEditStubsTest {
             }
         }
 
-        Assert.assertNotNull("Unable to find " + ADD_NAME + "method", addClassMethod);
-        Assert.assertEquals("Too many " + ADD_NAME + "method", 1, addClassMethodCount);
+        Assert.assertNotNull("Unable to find " + ADD_NAME + " method", addClassMethod);
+        Assert.assertEquals("Too many " + ADD_NAME + " method", 1, addClassMethodCount);
 
         Class[] parameters = addClassMethod.getParameterTypes();
-        Assert.assertEquals("Bad " + ADD_NAME + "parameter", 2, parameters.length);
+        Assert.assertEquals("Bad " + ADD_NAME + "parameter", 3, parameters.length);
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[0], String.class);
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[1], byte[].class);
+        Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[2], boolean.class);
     }
 }
