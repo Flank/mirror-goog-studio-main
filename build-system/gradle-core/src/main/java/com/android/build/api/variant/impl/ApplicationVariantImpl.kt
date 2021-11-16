@@ -198,14 +198,12 @@ open class ApplicationVariantImpl @Inject constructor(
         internalServices.newNullablePropertyBackingDeprecatedApi(
             String::class.java,
             variantDslInfo.versionName,
-            "$name::versionName"
         )
 
     override fun createVersionCodeProperty() : Property<Int?> =
         internalServices.newNullablePropertyBackingDeprecatedApi(
             Int::class.java,
             variantDslInfo.versionCode,
-            "$name::versionCode"
         )
 
     override val renderscriptTargetApi: Int

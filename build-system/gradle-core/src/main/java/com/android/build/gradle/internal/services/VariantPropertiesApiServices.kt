@@ -51,7 +51,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
-    fun <T> propertyOf(type: Class<T>, value: T, id: String = ""): Property<T>
+    fun <T> propertyOf(type: Class<T>, value: T): Property<T>
 
     /**
      * Creates a new property.
@@ -65,7 +65,49 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
-    fun <T> propertyOf(type: Class<T>, value: Provider<T>, id: String = ""): Property<T>
+    fun <T> propertyOf(type: Class<T>, value: Provider<T>): Property<T>
+
+    /**
+     * Creates a new property.
+     *
+     * This should be used for properties used in the new API. If the property is backing an
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     *
+     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
+     * unsafe reads (which will also finalize the value on read).
+     *
+     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
+    fun <T> propertyOf(type: Class<T>, value: () -> T): Property<T>
+
+    /**
+     * Creates a new property.
+     *
+     * This should be used for properties used in the new API. If the property is backing an
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     *
+     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
+     * unsafe reads (which will also finalize the value on read).
+     *
+     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
+    fun <T> propertyOf(type: Class<T>, value: Callable<T>): Property<T>
+
+    /**
+     * Creates a new nullable property.
+     *
+     * This should be used for properties used in the new API. If the property is backing an
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     *
+     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
+     * unsafe reads (which will also finalize the value on read).
+     *
+     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
+    fun <T> nullablePropertyOf(type: Class<T>, value: T?): Property<T?>
 
     /**
      * Creates a new nullable property.
@@ -80,62 +122,6 @@ interface VariantPropertiesApiServices : BaseServices {
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
     fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>): Property<T?>
-
-    /**
-     * Creates a new property.
-     *
-     * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
-     *
-     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
-     * unsafe reads (which will also finalize the value on read).
-     *
-     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
-     * with [Property.disallowChanges] after the variant API(s) have run.
-     */
-    fun <T> propertyOf(type: Class<T>, value: () -> T, id: String = ""): Property<T>
-
-    /**
-     * Creates a new property.
-     *
-     * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
-     *
-     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
-     * unsafe reads (which will also finalize the value on read).
-     *
-     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
-     * with [Property.disallowChanges] after the variant API(s) have run.
-     */
-    fun <T> propertyOf(type: Class<T>, value: Callable<T>, id: String = ""): Property<T>
-
-    /**
-     * Creates a new nullable property.
-     *
-     * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
-     *
-     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
-     * unsafe reads (which will also finalize the value on read).
-     *
-     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
-     * with [Property.disallowChanges] after the variant API(s) have run.
-     */
-    fun <T> nullablePropertyOf(type: Class<T>, value: T?, id: String = ""): Property<T?>
-
-    /**
-     * Creates a new nullable property.
-     *
-     * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
-     *
-     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
-     * unsafe reads (which will also finalize the value on read).
-     *
-     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
-     * with [Property.disallowChanges] after the variant API(s) have run.
-     */
-    fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>, id: String = ""): Property<T?>
 
     /**
      * Creates a new [ListProperty].
@@ -231,7 +217,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be locked with [Property.disallowChanges] after the variant API(s) have
      * run.
      */
-    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: T, id: String = ""): Property<T>
+    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: T): Property<T>
 
     /**
      * Creates a new property that is backing an old API returning T.
@@ -245,7 +231,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be locked with [Property.disallowChanges] after the variant API(s) have
      * run.
      */
-    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>, id: String = ""): Property<T>
+    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>): Property<T>
 
     /**
      * Creates a new property that is backing an old API returning T.
@@ -259,7 +245,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be locked with [Property.disallowChanges] after the variant API(s) have
      * run.
      */
-    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String = ""): Property<T>
+    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>): Property<T>
 
     /**
      * Creates a new property that is backing an old API returning T.
@@ -273,7 +259,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be locked with [Property.disallowChanges] after the variant API(s) have
      * run.
      */
-    fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String = ""): Property<T?>
+    fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>): Property<T?>
 
     /**
      * Creates a new provider that is backing an old API returning T.
@@ -287,7 +273,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * The property will be locked with [Property.disallowChanges] after the variant API(s) have
      * run.
      */
-    fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String = ""): Provider<T>
+    fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>): Provider<T>
 
     /**
      * Creates a new [ListProperty] of [T] that is backing an old API returning T.
@@ -300,7 +286,7 @@ interface VariantPropertiesApiServices : BaseServices {
      *
      * The property will be locked with [Property.disallowChanges] unless [disallowChanges] is true
      */
-    fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>, disallowChanges: Boolean = true, id: String = ""): ListProperty<T>
+    fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>): ListProperty<T>
 
     /**
      * Creates a memoized Provider around the given provider
@@ -324,7 +310,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).
      */
-    fun <T> nullableProviderOf(type: Class<T>, value: Provider<T?>, id: String = ""): Provider<T?>
+    fun <T> nullableProviderOf(type: Class<T>, value: Provider<T?>): Provider<T?>
 
     /**
      * Creates a memoized [Provider] of [Set] around the given provider of [Iterable]

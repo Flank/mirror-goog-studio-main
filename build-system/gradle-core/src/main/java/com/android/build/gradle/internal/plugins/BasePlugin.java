@@ -30,7 +30,6 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.VariantBuilder;
-import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -804,8 +803,6 @@ public abstract class BasePlugin<
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             variant.getVariant().getArtifacts().ensureAllOperationsAreSatisfied();
         }
-        // notify our properties that configuration is over for us.
-        GradleProperty.Companion.endOfEvaluation();
     }
 
     private String findHighestSdkInstalled() {

@@ -173,10 +173,6 @@ enum class BooleanOption(
     /** Whether lint should be run in process; the default is true. */
     RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", true, FeatureStage.Experimental),
 
-    // Options related to new Variant API
-    USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
-
-
     ENABLE_TEST_FIXTURES("android.experimental.enableTestFixtures", false, FeatureStage.Experimental),
 
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),

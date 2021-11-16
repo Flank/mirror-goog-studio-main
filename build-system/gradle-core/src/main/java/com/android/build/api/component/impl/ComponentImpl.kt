@@ -329,7 +329,7 @@ abstract class ComponentImpl(
         return VariantOutputImpl(
             createVersionCodeProperty(),
             createVersionNameProperty(),
-            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
+            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
             variantOutputConfiguration,
             variantOutputConfiguration.baseName(variantDslInfo),
             variantOutputConfiguration.fullName(variantDslInfo),
@@ -340,7 +340,7 @@ abstract class ComponentImpl(
                         internalServices.projectInfo.getProjectBaseName(),
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
-                "$name::archivesBaseName")
+            )
         ).also {
             variantOutputs.add(it)
         }

@@ -248,7 +248,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         internalServices.nullablePropertyOf(
             String::class.java,
             baseModuleMetadata.map { it.versionName },
-            "$name::versionName"
         ).also {
             it.disallowChanges()
             it.finalizeValueOnRead()
@@ -263,7 +262,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         internalServices.nullablePropertyOf(
             Int::class.java,
             baseModuleMetadata.map { it.versionCode?.toInt() },
-            id = "$name::versionCode"
         ).also {
             it.disallowChanges()
             it.finalizeValueOnRead()

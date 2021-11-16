@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
@@ -46,8 +45,8 @@ class VariantPropertiesApiServicesImpl(
     // direct value.
     private val compatibilityMode = projectServices.projectOptions[BooleanOption.ENABLE_LEGACY_API]
 
-    override fun <T> propertyOf(type: Class<T>, value: T, id: String): Property<T> {
-        return initializeProperty(type, id).also {
+    override fun <T> propertyOf(type: Class<T>, value: T): Property<T> {
+        return initializeProperty(type).also {
             it.set(value)
             it.finalizeValueOnRead()
             if (!forUnitTesting) {
@@ -57,8 +56,41 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> propertyOf(type: Class<T>, value: Provider<T>, id: String): Property<T> {
-        return initializeProperty(type, id).also {
+    override fun <T> propertyOf(type: Class<T>, value: Provider<T>): Property<T> {
+        return initializeProperty(type).also {
+            it.set(value)
+            it.finalizeValueOnRead()
+            if (!forUnitTesting) {
+                it.disallowUnsafeRead()
+            }
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> propertyOf(type: Class<T>, value: () -> T): Property<T> {
+        return initializeProperty(type).also {
+            it.set(projectServices.providerFactory.provider(value))
+            it.finalizeValueOnRead()
+            if (!forUnitTesting) {
+                it.disallowUnsafeRead()
+            }
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> propertyOf(type: Class<T>, value: Callable<T>): Property<T> {
+        return initializeProperty(type).also {
+            it.set(projectServices.providerFactory.provider(value))
+            it.finalizeValueOnRead()
+            if (!forUnitTesting) {
+                it.disallowUnsafeRead()
+            }
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> nullablePropertyOf(type: Class<T>, value: T?): Property<T?> {
+        return initializeNullableProperty(type).also {
             it.set(value)
             it.finalizeValueOnRead()
             if (!forUnitTesting) {
@@ -69,51 +101,7 @@ class VariantPropertiesApiServicesImpl(
     }
 
     override fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>): Property<T?> {
-        return initializeNullableProperty(type, "").also {
-            it.set(value)
-            it.finalizeValueOnRead()
-            if (!forUnitTesting) {
-                it.disallowUnsafeRead()
-            }
-            delayedLock(it)
-        }
-    }
-
-    override fun <T> propertyOf(type: Class<T>, value: () -> T, id: String): Property<T> {
-        return initializeProperty(type, id).also {
-            it.set(projectServices.providerFactory.provider(value))
-            it.finalizeValueOnRead()
-            if (!forUnitTesting) {
-                it.disallowUnsafeRead()
-            }
-            delayedLock(it)
-        }
-    }
-
-    override fun <T> propertyOf(type: Class<T>, value: Callable<T>, id: String): Property<T> {
-        return initializeProperty(type, id).also {
-            it.set(projectServices.providerFactory.provider(value))
-            it.finalizeValueOnRead()
-            if (!forUnitTesting) {
-                it.disallowUnsafeRead()
-            }
-            delayedLock(it)
-        }
-    }
-
-    override fun <T> nullablePropertyOf(type: Class<T>, value: T?, id: String): Property<T?> {
-        return initializeNullableProperty(type, id).also {
-            it.set(value)
-            it.finalizeValueOnRead()
-            if (!forUnitTesting) {
-                it.disallowUnsafeRead()
-            }
-            delayedLock(it)
-        }
-    }
-
-    override fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>, id: String): Property<T?> {
-        return initializeNullableProperty(type, id).also {
+        return initializeNullableProperty(type).also {
             it.set(value)
             it.finalizeValueOnRead()
             if (!forUnitTesting) {
@@ -193,8 +181,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: T, id: String): Property<T> {
-        return initializeProperty(type, id).also {
+    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: T): Property<T> {
+        return initializeProperty(type).also {
             it.set(value)
             if (!compatibilityMode) {
                 it.finalizeValueOnRead()
@@ -206,8 +194,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>, id: String): Property<T> {
-        return initializeProperty(type, id).also {
+    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>): Property<T> {
+        return initializeProperty(type).also {
             it.set(projectServices.providerFactory.provider(value))
             if (!compatibilityMode) {
                 it.finalizeValueOnRead()
@@ -219,8 +207,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String): Property<T> {
-        return initializeProperty(type, id).also {
+    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>): Property<T> {
+        return initializeProperty(type).also {
             it.set(value)
             if (!compatibilityMode) {
                 it.finalizeValueOnRead()
@@ -232,8 +220,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String): Provider<T> {
-        return initializeProperty(type, id).also {
+    override fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>): Provider<T> {
+        return initializeProperty(type).also {
             it.set(value)
             it.disallowChanges()
             if (!compatibilityMode) {
@@ -245,24 +233,24 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>, disallowChanges: Boolean, id: String): ListProperty<T> {
-        return initializeListProperty(type, id).also {
+    override fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>): ListProperty<T> {
+        return initializeListProperty(type).also {
             it.addAll(values)
-            if (disallowChanges) {
-                it.disallowChanges()
-            }
             if (!compatibilityMode) {
                 it.finalizeValueOnRead()
                 if (!forUnitTesting) {
                     it.disallowUnsafeRead()
                 }
             }
+
+            // FIXME this should be locked later, however this is not possible right now
+            // because this is used internally during task creation (after locking post-variant API)
+//            delayedLock(it)
         }
     }
 
-    override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String
-    ): Property<T?> {
-        return initializeNullableProperty(type, id).also {
+    override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>): Property<T?> {
+        return initializeNullableProperty(type).also {
             it.set(value)
             if (!compatibilityMode) {
                 it.finalizeValueOnRead()
@@ -280,7 +268,7 @@ class VariantPropertiesApiServicesImpl(
         id: String,
         disallowUnsafeRead: Boolean,
     ): Provider<T> {
-        return initializeProperty(type, id).also {
+        return initializeProperty(type).also {
             it.set(value)
             it.disallowChanges()
             it.finalizeValueOnRead()
@@ -290,8 +278,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> nullableProviderOf(type: Class<T>, value: Provider<T?>, id: String): Provider<T?> {
-        return initializeProperty(type, id).also {
+    override fun <T> nullableProviderOf(type: Class<T>, value: Provider<T?>): Provider<T?> {
+        return initializeProperty(type).also {
             it.set(value)
             it.disallowChanges()
             it.finalizeValueOnRead()
@@ -380,30 +368,12 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    private fun <T> initializeProperty(type: Class<T>, id: String): Property<T> {
+    private fun <T> initializeProperty(type: Class<T>): Property<T> =
+        projectServices.objectFactory.property(type)
 
-        return if (projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
-            GradleProperty.safeReadingBeforeExecution(
-                id,
-                projectServices.objectFactory.property(type)
-            )
-        } else {
-            projectServices.objectFactory.property(type)
-        }
-    }
-
-    private fun <T> initializeNullableProperty(type: Class<T>, id: String): Property<T?> {
-
-        return if (projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
-            GradleProperty.safeReadingBeforeExecution(
-                id,
-                projectServices.objectFactory.property(type)
-            )
-        } else {
-            projectServices.objectFactory.property(type)
-        }
-    }
-
-    private fun <T> initializeListProperty(type: Class<T>, id: String): ListProperty<T> =
+    private fun <T> initializeListProperty(type: Class<T>): ListProperty<T> =
         projectServices.objectFactory.listProperty(type)
+
+    private fun <T> initializeNullableProperty(type: Class<T>): Property<T?> =
+        projectServices.objectFactory.property(type)
 }

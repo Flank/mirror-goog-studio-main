@@ -419,8 +419,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     override val applicationId: Property<String> =
         services.newPropertyBackingDeprecatedApi(
             String::class.java,
-            initApplicationId(),
-            "applicationId"
+            initApplicationId()
         )
 
 

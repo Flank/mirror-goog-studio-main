@@ -50,14 +50,12 @@ class SourceDirectoriesImpl(
     private val variantSources = variantServices.newListPropertyBackingDeprecatedApi(
         type = DirectoryEntry::class.java,
         values = listOf(),
-        disallowChanges = false,
     )
 
     // this will contain all the directories
     private val directories: ListProperty<Directory> = variantServices.newListPropertyBackingDeprecatedApi(
         type = Directory::class.java,
         values = listOf(),
-        disallowChanges = false,
     )
 
     /**
