@@ -1662,6 +1662,7 @@ public final class SdkConstants {
     public static final String ATTR_DIAL = "dial";
     public static final String ATTR_HAND_HOUR = "hand_hour";
     public static final String ATTR_HAND_MINUTE = "hand_minute";
+    public static final String ATTR_HAND_SECOND = "hand_second";
 
     // CalendarView
     public static final String ATTR_SELECTED_DATE_VERTICAL_BAR = "selectedDateVerticalBar";
