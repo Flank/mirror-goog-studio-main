@@ -114,6 +114,14 @@ build:resultstore --noremote_accept_cached
 build:_rcache --config=_remote_base
 build:_rcache --config=release
 build:_rcache --noremote_upload_local_results
+# remote_local_fallback allows bazel to continue if there are
+# network connectivity failures (e.g., offline)
+build:_rcache --remote_local_fallback
+# NOWAIT_FOR_UPLOAD_COMPLETE speeds up bazel slightly by returning when the
+# build is complete, not when BES upload finishes.
+# This improves offline use cases as well, otherwise bazel does not complete
+# until the BES upload times out (10 seconds).
+build:_rcache --bes_upload_mode=NOWAIT_FOR_UPLOAD_COMPLETE
 
 ## Enables the remote cache, and uploading results to ResultStore.
 ## This config should be commonly used to avoid building outputs that
