@@ -116,15 +116,7 @@ class CheckJetifierTaskTest {
         addSupportLibDependencies()
 
         runCheckJetifier()
-
-        val result = CheckJetifierResult.load(resultFile)
-        assertThat(result.getDisplayString()).isEqualTo(
-            """
-            example:A:1.0 (Project ':app', configuration 'debugAndroidTestCompileClasspath' -> example:A:1.0 -> example:B:1.0 -> com.android.support:support-annotations:28.0.0)
-            com.android.support:collections:28.0.0 (Project ':app', configuration 'debugAndroidTestCompileClasspath' -> com.android.support:collections:28.0.0)
-            example:B:1.0 (Project ':lib', configuration 'debugAndroidTestCompileClasspath' -> example:B:1.0 -> com.android.support:support-annotations:28.0.0)
-            """.trimIndent()
-        )
+        checkSupportLibDetected()
     }
 
     @Test
@@ -133,5 +125,45 @@ class CheckJetifierTaskTest {
 
         val result = CheckJetifierResult.load(resultFile)
         assertThat(result.getDisplayString()).isEqualTo("")
+    }
+
+    @Test
+    fun testConfigurationsThatExtendAreResolvedFirst() {
+        addMavenRepo()
+        addSupportLibDependencies()
+
+        project.getSubproject("app").buildFile.appendText(
+            """
+
+            configurations {
+                aaa {
+                    canBeResolved(true)
+                }
+            }
+            afterEvaluate {
+                Configuration c = configurations.getByName("aaa")
+                if (c.name >= "debugRuntimeClasspath" || c.name >= "debugAndroidTestRuntimeClasspath") {
+                    throw new RuntimeException(
+                        "This name should be less than AGP's, it s important for this test."
+                    )
+                }
+                c.extendsFrom(configurations.getByName("debugRuntimeClasspath"))
+                c.extendsFrom(configurations.getByName("debugAndroidTestRuntimeClasspath"))
+            }
+        """.trimIndent()
+        )
+        runCheckJetifier()
+        checkSupportLibDetected()
+    }
+
+    private fun checkSupportLibDetected() {
+        val result = CheckJetifierResult.load(resultFile)
+        assertThat(result.getDisplayString()).isEqualTo(
+            """
+            example:A:1.0 (Project ':app', configuration 'debugAndroidTestCompileClasspath' -> example:A:1.0 -> example:B:1.0 -> com.android.support:support-annotations:28.0.0)
+            com.android.support:collections:28.0.0 (Project ':app', configuration 'debugAndroidTestCompileClasspath' -> com.android.support:collections:28.0.0)
+            example:B:1.0 (Project ':lib', configuration 'debugAndroidTestCompileClasspath' -> example:B:1.0 -> com.android.support:support-annotations:28.0.0)
+            """.trimIndent()
+        )
     }
 }

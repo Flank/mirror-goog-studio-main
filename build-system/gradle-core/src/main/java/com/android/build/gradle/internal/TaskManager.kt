@@ -2830,7 +2830,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val checkJetifierBuildService =
             CheckJetifierBuildService.RegistrationAction(project, projectOptions).execute()
         taskFactory.register(
-            CheckJetifierTask.CreationAction(globalScope, projectOptions, checkJetifierBuildService)
+            CheckJetifierTask.CreationAction(
+                globalScope,
+                projectOptions,
+                checkJetifierBuildService,
+                variants,
+                testComponents,
+                testFixturesComponents
+            )
         )
     }
 
