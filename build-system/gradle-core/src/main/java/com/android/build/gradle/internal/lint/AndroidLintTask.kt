@@ -18,7 +18,6 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.Version
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
-import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -147,17 +145,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Internal
     abstract val lintFixBuildService: Property<LintFixBuildService>
 
-    @get:Internal
-    abstract val lintClassLoaderBuildService: Property<LintClassLoaderBuildService>
-
     @get:Input
     abstract val checkDependencies: Property<Boolean>
 
     @get:Input
     abstract val checkOnly: ListProperty<String>
-
-    @get:Internal
-    abstract val lintCacheDirectory: DirectoryProperty
 
     @get:Classpath
     abstract val lintRuleJars: ConfigurableFileCollection
@@ -208,7 +200,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     abstract val returnValueOutputFile: RegularFileProperty
 
     override fun doTaskAction() {
-        lintClassLoaderBuildService.get().shouldDispose = true
+        lintTool.lintClassLoaderBuildService.get().shouldDispose = true
         if (systemPropertyInputs.lintAutofix.orNull == VALUE_TRUE) {
             logger.warn(
                 "Running lint with -Dlint.autofix=true is not supported by the Android Gradle "
@@ -344,7 +336,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         if (printStackTrace.get()) {
             arguments += "--stacktrace"
         }
-        arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
+        arguments += lintTool.initializeLintCacheDir()
         if (systemPropertyInputs.lintBaselinesContinue.orNull == VALUE_TRUE) {
             arguments += "--continue-after-baseline-created"
         }
@@ -519,9 +511,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 task.lintFixBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
             }
             task.lintFixBuildService.disallowChanges()
-            task.lintClassLoaderBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
             task.checkDependencies.setDisallowChanges(checkDependencies)
             task.checkOnly.set(creationConfig.services.provider {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
@@ -714,9 +703,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.androidSdkHome.setDisallowChanges(sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }.map { it.asFile.absolutePath })
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
-        this.lintCacheDirectory.setDisallowChanges(
-            project.layout.buildDirectory.dir("${SdkConstants.FD_INTERMEDIATES}/lint-cache")
-        )
 
         val locationBuildService = getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)
 
@@ -768,9 +754,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             this.lintFixBuildService.set(getBuildService(taskCreationServices.buildServiceRegistry))
         }
         this.lintFixBuildService.disallowChanges()
-        this.lintClassLoaderBuildService.setDisallowChanges(
-            getBuildService(taskCreationServices.buildServiceRegistry)
-        )
         this.checkDependencies.setDisallowChanges(false)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(taskCreationServices)

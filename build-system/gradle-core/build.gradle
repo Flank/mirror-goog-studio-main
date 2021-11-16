@@ -175,6 +175,7 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation libs.truth
+    testImplementation libs.truth_java8_extension
     testImplementation libs.kotlin_test
     testImplementation libs.mockito_core
     testImplementation libs.guava
