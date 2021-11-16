@@ -47,6 +47,7 @@ fun androidManifestXml(
         <service
             android:name="${packageName}.${serviceClass}"
             $labelBlock
+            android:exported="true"
             android:permission="android.permission.BIND_WALLPAPER" >
             <!--
             By default, Watchfaces on rectangular devices will be run in a emulation mode where they
