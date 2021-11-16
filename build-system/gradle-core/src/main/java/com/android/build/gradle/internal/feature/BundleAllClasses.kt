@@ -28,11 +28,11 @@ import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.zip.Deflater
 
@@ -43,8 +43,13 @@ import java.util.zip.Deflater
  * It is used for e.g.:
  * - dependent features to compile against these classes without bundling them.
  * - unit tests to compile and run them against these classes.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The task moves files from Inputs, unchanged, into a Jar file.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class BundleAllClasses : NonIncrementalTask() {
 
     @get:OutputFile

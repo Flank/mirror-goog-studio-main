@@ -66,7 +66,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:preDebugBuild"
                 ),
                 FROM_CACHE to setOf(
-                    ":app:bundleDebugClasses",
                     ":app:checkDebugAarMetadata",
                     ":app:checkDebugDuplicateClasses",
                     ":app:checkDebugLibraries",
@@ -161,6 +160,7 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:bundleDebugClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
                     ":app:createDebugApkListingFileRedirect",
                     ":app:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":app:copyDebugAndroidLintReports", // intentionally not cacheable
