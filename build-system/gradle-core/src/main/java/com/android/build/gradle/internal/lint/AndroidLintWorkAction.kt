@@ -24,6 +24,7 @@ import com.google.common.io.Files
 import com.google.common.reflect.TypeToken
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
@@ -42,7 +43,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val mainClass: Property<String>
         abstract val arguments: ListProperty<String>
         abstract val classpath: ConfigurableFileCollection
-        abstract val version: Property<String>
+        abstract val versionKey: Property<String>
         abstract val android: Property<Boolean>
         abstract val fatalOnly: Property<Boolean>
         abstract val runInProcess: Property<Boolean>
@@ -74,7 +75,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
     }
 
     private fun runLint(arguments: List<String>): Int {
-        val classLoader = getClassloader(parameters.version.get(), parameters.classpath)
+        val classLoader = getClassloader(parameters.versionKey.get(), parameters.classpath)
         val currentContextClassLoader = Thread.currentThread().contextClassLoader
         try {
             Thread.currentThread().contextClassLoader = null
@@ -126,13 +127,6 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             object: TypeToken<MutableMap<String, SoftReference<URLClassLoader>>>() {}
         ) { HashMap() }
 
-        /**
-         * Cache of jar hashes during a build, to avoid rehashing the jars repeatedly
-         *
-         * This is cleared at the end of each build
-         */
-        @GuardedBy("this")
-        private val jarsToHashCode : MutableMap<List<URI>, HashCode> = mutableMapOf()
 
         /**
          * Classloaders used during this build that will have disposeApplicationEnvironment called
@@ -146,13 +140,8 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         private val logger get() = Logging.getLogger(AndroidLintWorkAction::class.java)
 
         @Synchronized
-        private fun getClassloader(version: String, classpath: FileCollection): ClassLoader {
-            // When using development versions also hash the jar contents to avoid reusing
-            // the classloader when the jars might change
-            val key = when {
-                version.endsWith("-dev") || version.endsWith("SNAPSHOT") -> "${version}_${hashJars(classpath)}"
-                else -> version
-            }
+        private fun getClassloader(key: String, classpath: FileCollection): ClassLoader {
+
             val uris = classpath.files.map { it.toURI() }
             return cachedClassloader.executeCallableSynchronously {
                 val map = cachedClassloader.get()
@@ -187,16 +176,6 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             )
         }
 
-        //** Hash the contents of the given file collection */
-        private fun hashJars(classpath: FileCollection): HashCode {
-            val uris = classpath.files.map { it.toURI() }
-            val hashCode = jarsToHashCode.getOrPut(uris) {
-                Hashing.combineOrdered(classpath.files.map {
-                    Files.asByteSource(it).hash(Hashing.murmur3_128())
-                })
-            }
-            return hashCode
-        }
 
         private fun createClassLoader(key: String, classpath: List<URI>): URLClassLoader {
             logger.info("Android Lint: Creating lint class loader {}", key)
@@ -211,7 +190,6 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
 
         @Synchronized
         fun dispose() {
-            jarsToHashCode.clear()
 
             if (toDispose.isNotEmpty()) {
                 logger.info(

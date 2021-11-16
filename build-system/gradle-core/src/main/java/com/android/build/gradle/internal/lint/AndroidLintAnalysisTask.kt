@@ -25,14 +25,12 @@ import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
-import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -88,9 +86,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     @get:Input
     abstract val checkOnly: ListProperty<String>
 
-    @get:Internal
-    abstract val lintCacheDirectory: DirectoryProperty
-
     @get:Classpath
     abstract val lintRuleJars: ConfigurableFileCollection
 
@@ -103,9 +98,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     @get:Input
     abstract val printStackTrace: Property<Boolean>
 
-    @get:Internal
-    abstract val lintClassLoaderBuildService: Property<LintClassLoaderBuildService>
-
     @get:Nested
     abstract val systemPropertyInputs: SystemPropertyInputs
 
@@ -113,7 +105,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     abstract val environmentVariableInputs: EnvironmentVariableInputs
 
     override fun doTaskAction() {
-        lintClassLoaderBuildService.get().shouldDispose = true
+        lintTool.lintClassLoaderBuildService.get().shouldDispose = true
         writeLintModelFile()
         lintTool.submit(
             mainClass = "com.android.tools.lint.Main",
@@ -167,7 +159,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         if (printStackTrace.get()) {
             arguments += "--stacktrace"
         }
-        arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
+        arguments += lintTool.initializeLintCacheDir()
 
         // Pass information to lint using the --client-id, --client-name, and --client-version flags
         // so that lint can apply gradle-specific and version-specific behaviors.
@@ -280,9 +272,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 isForAnalysis = true
             )
             task.lintTool.initialize(creationConfig.services)
-            task.lintClassLoaderBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
         }
     }
 
@@ -300,9 +289,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         )
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
-        this.lintCacheDirectory.setDisallowChanges(
-            project.layout.buildDirectory.dir("${AndroidProject.FD_INTERMEDIATES}/lint-cache")
-        )
 
         val locationBuildService =
                 getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)
@@ -367,9 +353,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             .setDisallowChanges(
                 project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
             )
-        this.lintClassLoaderBuildService.setDisallowChanges(
-            getBuildService(project.gradle.sharedServices)
-        )
     }
 
     companion object {
