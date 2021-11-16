@@ -5,6 +5,7 @@
         name="${projectDir}@@:javaLib"
         simpleName=":"/>
     <dependency
-        name="${projectDir}@@:lib::release"/>
+        name="${projectDir}@@:lib::release"
+        simpleName="artifacts::lib"/>
   </compile>
 </dependencies>

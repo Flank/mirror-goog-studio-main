@@ -17,6 +17,7 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelJavaLibrary
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelVariant
@@ -56,7 +57,8 @@ dependencies {
         val libraries = variant.mainArtifact.dependencies.compileDependencies.roots
         Truth.assertThat(libraries).hasSize(1)
         val library = libraries.first()
-        Truth.assertThat(library.artifactAddress).isEqualTo("my.group.id:mylib:25.0.0-SNAPSHOT")
+        Truth.assertThat((library.findLibrary() as LintModelExternalLibrary).resolvedCoordinates.toString())
+            .isEqualTo("my.group.id:mylib:25.0.0-SNAPSHOT")
     }
 
     @Test
@@ -78,12 +80,14 @@ dependencies {
         val testLibraries = variant.testArtifact!!.dependencies.compileDependencies.roots
         Truth.assertThat(testLibraries).hasSize(1)
         val testLibrary = testLibraries.first()
-        Truth.assertThat(testLibrary.artifactAddress).isEqualTo("my.group.id:mylib1:1.2.3-rc4")
+        Truth.assertThat((testLibrary.findLibrary() as LintModelExternalLibrary).resolvedCoordinates.toString())
+            .isEqualTo("my.group.id:mylib1:1.2.3-rc4")
 
         val androidTestLibraries = variant.androidTestArtifact!!.dependencies.compileDependencies.roots
         Truth.assertThat(androidTestLibraries).hasSize(1)
         val library = androidTestLibraries.first()
-        Truth.assertThat(library.artifactAddress).isEqualTo("my.group.id:mylib2:4.5.6-SNAPSHOT")
+        Truth.assertThat((library.findLibrary() as LintModelExternalLibrary).resolvedCoordinates.toString())
+            .isEqualTo("my.group.id:mylib2:4.5.6-SNAPSHOT")
     }
 
     @Test
@@ -104,7 +108,7 @@ dependencies {
         val javaLibraries = variant.mainArtifact.dependencies.compileDependencies
             .getAllLibraries()
             .filterIsInstance<LintModelJavaLibrary>()
-            .map { it.artifactAddress }
+            .map { it.resolvedCoordinates.toString() }
         Truth.assertThat(javaLibraries)
             .containsAllOf(
                 "org.jetbrains.kotlin:kotlin-stdlib-jdk7:\$kotlin_version",
@@ -135,7 +139,7 @@ dependencies {
         val libraries = variant.mainArtifact.dependencies.compileDependencies
             .getAllLibraries()
             .filterIsInstance<LintModelJavaLibrary>()
-            .map { it.artifactAddress }
+            .map { it.resolvedCoordinates.toString() }
         Truth.assertThat(libraries).hasSize(4)
         Truth.assertThat(libraries)
             .containsExactly(
@@ -270,8 +274,8 @@ dependencies {
 
         Truth.assertThat(module.type).isEqualTo(LintModelModuleType.LIBRARY)
 
-        val libraries = variant.mainArtifact.dependencies.compileDependencies.roots.map { it.artifactAddress }.toSet() -
-            variant.mainArtifact.dependencies.packageDependencies.roots.map { it.artifactAddress }.toSet()
+        val libraries = variant.mainArtifact.dependencies.compileDependencies.roots.map { it.identifier }.toSet() -
+            variant.mainArtifact.dependencies.packageDependencies.roots.map { it.identifier }.toSet()
 
         Truth.assertThat(libraries)
             .containsExactly("com.google.android.wearable:wearable:2.0.0-alpha4")
@@ -297,7 +301,7 @@ dependencies {
         val libraries = variant.mainArtifact.dependencies.compileDependencies
             .getAllLibraries()
             .filterIsInstance<LintModelJavaLibrary>()
-            .map { it.artifactAddress }
+            .map { it.resolvedCoordinates.toString() }
 
         Truth.assertThat(libraries)
             .containsExactly(
@@ -734,11 +738,11 @@ dependencies {
         val javaLibraries =
             variant.mainArtifact.dependencies.compileDependencies
                 .getAllLibraries().filterIsInstance<LintModelJavaLibrary>()
-                .map { it.artifactAddress }
+                .map { it.resolvedCoordinates.toString() }
         val androidLibraries =
             variant.mainArtifact.dependencies.compileDependencies
                 .getAllLibraries().filterIsInstance<LintModelAndroidLibrary>()
-                .map { it.artifactAddress }
+                .map { it.resolvedCoordinates.toString() }
 
         Truth.assertThat(javaLibraries).containsExactly(
             "com.android.support:support-annotations:25.0.1",

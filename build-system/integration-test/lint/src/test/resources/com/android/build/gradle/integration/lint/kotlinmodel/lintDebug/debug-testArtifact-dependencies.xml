@@ -8,71 +8,104 @@
         name="${projectDir}@@:library::debug"
         simpleName="lintKotlin:library"/>
     <dependency
-        name="com.android.support:appcompat-v7:28.0.0@aar"/>
+        name="com.android.support:appcompat-v7:28.0.0@aar"
+        simpleName="com.android.support:appcompat-v7"/>
     <dependency
-        name="com.android.support:support-fragment:28.0.0@aar"/>
+        name="com.android.support:support-fragment:28.0.0@aar"
+        simpleName="com.android.support:support-fragment"/>
     <dependency
-        name="com.android.support:animated-vector-drawable:28.0.0@aar"/>
+        name="com.android.support:animated-vector-drawable:28.0.0@aar"
+        simpleName="com.android.support:animated-vector-drawable"/>
     <dependency
-        name="com.android.support:support-core-ui:28.0.0@aar"/>
+        name="com.android.support:support-core-ui:28.0.0@aar"
+        simpleName="com.android.support:support-core-ui"/>
     <dependency
-        name="com.android.support:support-core-utils:28.0.0@aar"/>
+        name="com.android.support:support-core-utils:28.0.0@aar"
+        simpleName="com.android.support:support-core-utils"/>
     <dependency
-        name="com.android.support:support-vector-drawable:28.0.0@aar"/>
+        name="com.android.support:support-vector-drawable:28.0.0@aar"
+        simpleName="com.android.support:support-vector-drawable"/>
     <dependency
-        name="com.android.support:loader:28.0.0@aar"/>
+        name="com.android.support:loader:28.0.0@aar"
+        simpleName="com.android.support:loader"/>
     <dependency
-        name="com.android.support:viewpager:28.0.0@aar"/>
+        name="com.android.support:viewpager:28.0.0@aar"
+        simpleName="com.android.support:viewpager"/>
     <dependency
-        name="com.android.support:coordinatorlayout:28.0.0@aar"/>
+        name="com.android.support:coordinatorlayout:28.0.0@aar"
+        simpleName="com.android.support:coordinatorlayout"/>
     <dependency
-        name="com.android.support:drawerlayout:28.0.0@aar"/>
+        name="com.android.support:drawerlayout:28.0.0@aar"
+        simpleName="com.android.support:drawerlayout"/>
     <dependency
-        name="com.android.support:slidingpanelayout:28.0.0@aar"/>
+        name="com.android.support:slidingpanelayout:28.0.0@aar"
+        simpleName="com.android.support:slidingpanelayout"/>
     <dependency
-        name="com.android.support:customview:28.0.0@aar"/>
+        name="com.android.support:customview:28.0.0@aar"
+        simpleName="com.android.support:customview"/>
     <dependency
-        name="com.android.support:swiperefreshlayout:28.0.0@aar"/>
+        name="com.android.support:swiperefreshlayout:28.0.0@aar"
+        simpleName="com.android.support:swiperefreshlayout"/>
     <dependency
-        name="com.android.support:asynclayoutinflater:28.0.0@aar"/>
+        name="com.android.support:asynclayoutinflater:28.0.0@aar"
+        simpleName="com.android.support:asynclayoutinflater"/>
     <dependency
-        name="com.android.support:support-compat:28.0.0@aar"/>
+        name="com.android.support:support-compat:28.0.0@aar"
+        simpleName="com.android.support:support-compat"/>
     <dependency
-        name="com.android.support:versionedparcelable:28.0.0@aar"/>
+        name="com.android.support:versionedparcelable:28.0.0@aar"
+        simpleName="com.android.support:versionedparcelable"/>
     <dependency
-        name="com.android.support:collections:28.0.0@jar"/>
+        name="com.android.support:collections:28.0.0@jar"
+        simpleName="com.android.support:collections"/>
     <dependency
-        name="com.android.support:cursoradapter:28.0.0@aar"/>
+        name="com.android.support:cursoradapter:28.0.0@aar"
+        simpleName="com.android.support:cursoradapter"/>
     <dependency
-        name="android.arch.lifecycle:runtime:1.1.1@aar"/>
+        name="android.arch.lifecycle:runtime:1.1.1@aar"
+        simpleName="android.arch.lifecycle:runtime"/>
     <dependency
-        name="com.android.support:documentfile:28.0.0@aar"/>
+        name="com.android.support:documentfile:28.0.0@aar"
+        simpleName="com.android.support:documentfile"/>
     <dependency
-        name="com.android.support:localbroadcastmanager:28.0.0@aar"/>
+        name="com.android.support:localbroadcastmanager:28.0.0@aar"
+        simpleName="com.android.support:localbroadcastmanager"/>
     <dependency
-        name="com.android.support:print:28.0.0@aar"/>
+        name="com.android.support:print:28.0.0@aar"
+        simpleName="com.android.support:print"/>
     <dependency
-        name="android.arch.lifecycle:viewmodel:1.1.1@aar"/>
+        name="android.arch.lifecycle:viewmodel:1.1.1@aar"
+        simpleName="android.arch.lifecycle:viewmodel"/>
     <dependency
-        name="android.arch.lifecycle:livedata:1.1.1@aar"/>
+        name="android.arch.lifecycle:livedata:1.1.1@aar"
+        simpleName="android.arch.lifecycle:livedata"/>
     <dependency
-        name="android.arch.lifecycle:livedata-core:1.1.1@aar"/>
+        name="android.arch.lifecycle:livedata-core:1.1.1@aar"
+        simpleName="android.arch.lifecycle:livedata-core"/>
     <dependency
-        name="android.arch.lifecycle:common:1.1.1@jar"/>
+        name="android.arch.lifecycle:common:1.1.1@jar"
+        simpleName="android.arch.lifecycle:common"/>
     <dependency
-        name="android.arch.core:runtime:1.1.1@aar"/>
+        name="android.arch.core:runtime:1.1.1@aar"
+        simpleName="android.arch.core:runtime"/>
     <dependency
-        name="android.arch.core:common:1.1.1@jar"/>
+        name="android.arch.core:common:1.1.1@jar"
+        simpleName="android.arch.core:common"/>
     <dependency
-        name="com.android.support:interpolator:28.0.0@aar"/>
+        name="com.android.support:interpolator:28.0.0@aar"
+        simpleName="com.android.support:interpolator"/>
     <dependency
-        name="com.android.support:support-annotations:28.0.0@jar"/>
+        name="com.android.support:support-annotations:28.0.0@jar"
+        simpleName="com.android.support:support-annotations"/>
     <dependency
-        name="org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}@jar"/>
+        name="org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}@jar"
+        simpleName="org.jetbrains.kotlin:kotlin-stdlib"/>
     <dependency
-        name="org.jetbrains:annotations:13.0@jar"/>
+        name="org.jetbrains:annotations:13.0@jar"
+        simpleName="org.jetbrains:annotations"/>
     <dependency
-        name="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}@jar"/>
+        name="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}@jar"
+        simpleName="org.jetbrains.kotlin:kotlin-stdlib-common"/>
   </compile>
   <package
       roots="${projectDir}@@:library::debug,org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}@jar,com.android.support:appcompat-v7:28.0.0@aar,org.jetbrains:annotations:13.0@jar,org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}@jar,com.android.support:support-fragment:28.0.0@aar,com.android.support:animated-vector-drawable:28.0.0@aar,com.android.support:support-core-ui:28.0.0@aar,com.android.support:support-core-utils:28.0.0@aar,com.android.support:support-vector-drawable:28.0.0@aar,com.android.support:loader:28.0.0@aar,com.android.support:viewpager:28.0.0@aar,com.android.support:coordinatorlayout:28.0.0@aar,com.android.support:drawerlayout:28.0.0@aar,com.android.support:slidingpanelayout:28.0.0@aar,com.android.support:customview:28.0.0@aar,com.android.support:swiperefreshlayout:28.0.0@aar,com.android.support:asynclayoutinflater:28.0.0@aar,com.android.support:support-compat:28.0.0@aar,com.android.support:versionedparcelable:28.0.0@aar,com.android.support:collections:28.0.0@jar,com.android.support:cursoradapter:28.0.0@aar,android.arch.lifecycle:runtime:1.1.1@aar,com.android.support:documentfile:28.0.0@aar,com.android.support:localbroadcastmanager:28.0.0@aar,com.android.support:print:28.0.0@aar,android.arch.lifecycle:viewmodel:1.1.1@aar,android.arch.lifecycle:livedata:1.1.1@aar,android.arch.lifecycle:livedata-core:1.1.1@aar,android.arch.lifecycle:common:1.1.1@jar,android.arch.core:runtime:1.1.1@aar,android.arch.core:common:1.1.1@jar,com.android.support:interpolator:28.0.0@aar,com.android.support:support-annotations:28.0.0@jar">
@@ -80,70 +113,103 @@
         name="${projectDir}@@:library::debug"
         simpleName="lintKotlin:library"/>
     <dependency
-        name="org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}@jar"/>
+        name="org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}@jar"
+        simpleName="org.jetbrains.kotlin:kotlin-stdlib"/>
     <dependency
-        name="com.android.support:appcompat-v7:28.0.0@aar"/>
+        name="com.android.support:appcompat-v7:28.0.0@aar"
+        simpleName="com.android.support:appcompat-v7"/>
     <dependency
-        name="org.jetbrains:annotations:13.0@jar"/>
+        name="org.jetbrains:annotations:13.0@jar"
+        simpleName="org.jetbrains:annotations"/>
     <dependency
-        name="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}@jar"/>
+        name="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}@jar"
+        simpleName="org.jetbrains.kotlin:kotlin-stdlib-common"/>
     <dependency
-        name="com.android.support:support-fragment:28.0.0@aar"/>
+        name="com.android.support:support-fragment:28.0.0@aar"
+        simpleName="com.android.support:support-fragment"/>
     <dependency
-        name="com.android.support:animated-vector-drawable:28.0.0@aar"/>
+        name="com.android.support:animated-vector-drawable:28.0.0@aar"
+        simpleName="com.android.support:animated-vector-drawable"/>
     <dependency
-        name="com.android.support:support-core-ui:28.0.0@aar"/>
+        name="com.android.support:support-core-ui:28.0.0@aar"
+        simpleName="com.android.support:support-core-ui"/>
     <dependency
-        name="com.android.support:support-core-utils:28.0.0@aar"/>
+        name="com.android.support:support-core-utils:28.0.0@aar"
+        simpleName="com.android.support:support-core-utils"/>
     <dependency
-        name="com.android.support:support-vector-drawable:28.0.0@aar"/>
+        name="com.android.support:support-vector-drawable:28.0.0@aar"
+        simpleName="com.android.support:support-vector-drawable"/>
     <dependency
-        name="com.android.support:loader:28.0.0@aar"/>
+        name="com.android.support:loader:28.0.0@aar"
+        simpleName="com.android.support:loader"/>
     <dependency
-        name="com.android.support:viewpager:28.0.0@aar"/>
+        name="com.android.support:viewpager:28.0.0@aar"
+        simpleName="com.android.support:viewpager"/>
     <dependency
-        name="com.android.support:coordinatorlayout:28.0.0@aar"/>
+        name="com.android.support:coordinatorlayout:28.0.0@aar"
+        simpleName="com.android.support:coordinatorlayout"/>
     <dependency
-        name="com.android.support:drawerlayout:28.0.0@aar"/>
+        name="com.android.support:drawerlayout:28.0.0@aar"
+        simpleName="com.android.support:drawerlayout"/>
     <dependency
-        name="com.android.support:slidingpanelayout:28.0.0@aar"/>
+        name="com.android.support:slidingpanelayout:28.0.0@aar"
+        simpleName="com.android.support:slidingpanelayout"/>
     <dependency
-        name="com.android.support:customview:28.0.0@aar"/>
+        name="com.android.support:customview:28.0.0@aar"
+        simpleName="com.android.support:customview"/>
     <dependency
-        name="com.android.support:swiperefreshlayout:28.0.0@aar"/>
+        name="com.android.support:swiperefreshlayout:28.0.0@aar"
+        simpleName="com.android.support:swiperefreshlayout"/>
     <dependency
-        name="com.android.support:asynclayoutinflater:28.0.0@aar"/>
+        name="com.android.support:asynclayoutinflater:28.0.0@aar"
+        simpleName="com.android.support:asynclayoutinflater"/>
     <dependency
-        name="com.android.support:support-compat:28.0.0@aar"/>
+        name="com.android.support:support-compat:28.0.0@aar"
+        simpleName="com.android.support:support-compat"/>
     <dependency
-        name="com.android.support:versionedparcelable:28.0.0@aar"/>
+        name="com.android.support:versionedparcelable:28.0.0@aar"
+        simpleName="com.android.support:versionedparcelable"/>
     <dependency
-        name="com.android.support:collections:28.0.0@jar"/>
+        name="com.android.support:collections:28.0.0@jar"
+        simpleName="com.android.support:collections"/>
     <dependency
-        name="com.android.support:cursoradapter:28.0.0@aar"/>
+        name="com.android.support:cursoradapter:28.0.0@aar"
+        simpleName="com.android.support:cursoradapter"/>
     <dependency
-        name="android.arch.lifecycle:runtime:1.1.1@aar"/>
+        name="android.arch.lifecycle:runtime:1.1.1@aar"
+        simpleName="android.arch.lifecycle:runtime"/>
     <dependency
-        name="com.android.support:documentfile:28.0.0@aar"/>
+        name="com.android.support:documentfile:28.0.0@aar"
+        simpleName="com.android.support:documentfile"/>
     <dependency
-        name="com.android.support:localbroadcastmanager:28.0.0@aar"/>
+        name="com.android.support:localbroadcastmanager:28.0.0@aar"
+        simpleName="com.android.support:localbroadcastmanager"/>
     <dependency
-        name="com.android.support:print:28.0.0@aar"/>
+        name="com.android.support:print:28.0.0@aar"
+        simpleName="com.android.support:print"/>
     <dependency
-        name="android.arch.lifecycle:viewmodel:1.1.1@aar"/>
+        name="android.arch.lifecycle:viewmodel:1.1.1@aar"
+        simpleName="android.arch.lifecycle:viewmodel"/>
     <dependency
-        name="android.arch.lifecycle:livedata:1.1.1@aar"/>
+        name="android.arch.lifecycle:livedata:1.1.1@aar"
+        simpleName="android.arch.lifecycle:livedata"/>
     <dependency
-        name="android.arch.lifecycle:livedata-core:1.1.1@aar"/>
+        name="android.arch.lifecycle:livedata-core:1.1.1@aar"
+        simpleName="android.arch.lifecycle:livedata-core"/>
     <dependency
-        name="android.arch.lifecycle:common:1.1.1@jar"/>
+        name="android.arch.lifecycle:common:1.1.1@jar"
+        simpleName="android.arch.lifecycle:common"/>
     <dependency
-        name="android.arch.core:runtime:1.1.1@aar"/>
+        name="android.arch.core:runtime:1.1.1@aar"
+        simpleName="android.arch.core:runtime"/>
     <dependency
-        name="android.arch.core:common:1.1.1@jar"/>
+        name="android.arch.core:common:1.1.1@jar"
+        simpleName="android.arch.core:common"/>
     <dependency
-        name="com.android.support:interpolator:28.0.0@aar"/>
+        name="com.android.support:interpolator:28.0.0@aar"
+        simpleName="com.android.support:interpolator"/>
     <dependency
-        name="com.android.support:support-annotations:28.0.0@jar"/>
+        name="com.android.support:support-annotations:28.0.0@jar"
+        simpleName="com.android.support:support-annotations"/>
   </package>
 </dependencies>

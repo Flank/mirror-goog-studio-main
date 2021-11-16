@@ -32,6 +32,7 @@ import com.android.tools.lint.model.LintModelBuildFeatures
 import com.android.tools.lint.model.LintModelDependencies
 import com.android.tools.lint.model.LintModelDependency
 import com.android.tools.lint.model.LintModelDependencyGraph
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelJavaArtifact
 import com.android.tools.lint.model.LintModelJavaLibrary
 import com.android.tools.lint.model.LintModelLibrary
@@ -508,9 +509,17 @@ class GradleModelMocker @JvmOverloads constructor(
     private fun createDependencies(dep: DepConf? = null): TestLintModelDependencies {
 
         fun <T : LintModelLibrary> Collection<T>.resolveConflicts(): Collection<T> {
-            return groupBy { getMavenName(it.artifactAddress).let { it.groupId to it.artifactId } }
+            return groupBy { when(it) {
+                is LintModelExternalLibrary -> it.resolvedCoordinates.groupId to it.resolvedCoordinates.artifactId
+                is LintModelModuleLibrary -> "artifacts" to it.projectPath
+                else -> throw RuntimeException("Not supported library type")
+            } }
                 .mapValues { (_, libs) ->
-                    libs.maxByOrNull { GradleVersion.tryParse(getMavenName(it.artifactAddress).version) ?: GradleVersion(0, 0) }
+                    libs.maxByOrNull {
+                        when (it) {
+                            is LintModelExternalLibrary -> GradleVersion.tryParse(it.resolvedCoordinates.version) ?: GradleVersion(0, 0)
+                            else -> GradleVersion(0, 0)
+                        } }
                 }
                 .values
                 .mapNotNull { it }
@@ -520,8 +529,8 @@ class GradleModelMocker @JvmOverloads constructor(
             listOfNotNull(
                 dep?.androidLibraries?.resolveConflicts()?.map {
                     DefaultLintModelDependency(
-                        artifactName = getMavenName(it.artifactAddress).let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" },
-                        artifactAddress = it.artifactAddress,
+                        identifier = it.identifier,
+                        artifactName = it.resolvedCoordinates.let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" },
                         requestedCoordinates = null,
                         dependencies = emptyList(),
                         this
@@ -529,8 +538,8 @@ class GradleModelMocker @JvmOverloads constructor(
                 },
                 dep?.javaLibraries?.resolveConflicts()?.map {
                     DefaultLintModelDependency(
-                        artifactName = getMavenName(it.artifactAddress).let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" },
-                        artifactAddress = it.artifactAddress,
+                        identifier = it.identifier,
+                        artifactName = it.resolvedCoordinates.let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" },
                         requestedCoordinates = null,
                         dependencies = emptyList(),
                         this
@@ -538,8 +547,8 @@ class GradleModelMocker @JvmOverloads constructor(
                 },
                 dep?.moduleLibraries?.map {
                     DefaultLintModelDependency(
+                        identifier = it.identifier,
                         artifactName = "artifacts:${it.projectPath}",
-                        artifactAddress = it.artifactAddress,
                         requestedCoordinates = null,
                         dependencies = emptyList(),
                         this
@@ -1594,7 +1603,7 @@ class GradleModelMocker @JvmOverloads constructor(
         }
         return deduplicateLibrary(
             TestLintModelAndroidLibrary(
-                artifactAddress = coordinateString.substringBefore("@"),
+                identifier = coordinateString.substringBefore("@"),
                 lintJar = dir.resolve(File(libraryLintJars.getOrDefault(coordinateString, "lint.jar"))),
                 jarFiles = listOf(jar),
                 resolvedCoordinates = getMavenName(coordinateString),
@@ -1648,7 +1657,7 @@ class GradleModelMocker @JvmOverloads constructor(
         return deduplicateLibrary(
             TestLintModelJavaLibrary(
                 provided = isProvided,
-                artifactAddress = coordinateString.substringBefore("@"),
+                identifier = coordinateString.substringBefore("@"),
                 lintJar = null,
                 jarFiles = listOf(jar),
                 resolvedCoordinates = getMavenName(coordinateString)
@@ -1660,7 +1669,7 @@ class GradleModelMocker @JvmOverloads constructor(
         return deduplicateLibrary(
             TestLintModelModuleLibrary(
                 provided = false,
-                artifactAddress = "artifacts:$name",
+                identifier = "artifacts:$name",
                 lintJar = null,
                 projectPath = name
             )
@@ -1693,7 +1702,7 @@ class GradleModelMocker @JvmOverloads constructor(
 
     private fun registerInLibraryTable(it: LintModelLibrary) {
         // Prefer the first instance as if it is different it may have come from locally pre-configured libraries.
-        libraryTable.getOrPut(it.artifactAddress) { it }
+        libraryTable.getOrPut(it.identifier) { it }
     }
 
     private fun getCoordinate(
@@ -2052,8 +2061,8 @@ class GradleModelMocker @JvmOverloads constructor(
         return androidLibraryInstances.values + javaLibraryInstances.values + moduleLibraryInstances.values
     }
 
-    override fun getLibrary(artifactAddress: String): LintModelLibrary? {
-        return libraryTable[artifactAddress]
+    override fun getLibrary(identifier: String): LintModelLibrary? {
+        return libraryTable[identifier]
     }
 }
 
@@ -2366,7 +2375,7 @@ private data class TestLintModelSourceProvider(
 
 private data class TestLintModelAndroidLibrary(
     override val provided: Boolean,
-    override val artifactAddress: String,
+    override val identifier: String,
     override val lintJar: File?,
     override val jarFiles: List<File>,
     override val resolvedCoordinates: LintModelMavenName,
@@ -2382,7 +2391,7 @@ private data class TestLintModelAndroidLibrary(
 
 private data class TestLintModelJavaLibrary(
     override val provided: Boolean,
-    override val artifactAddress: String,
+    override val identifier: String,
     override val lintJar: File?,
     override val jarFiles: List<File>,
     override val resolvedCoordinates: LintModelMavenName
@@ -2390,7 +2399,7 @@ private data class TestLintModelJavaLibrary(
 
 private data class TestLintModelModuleLibrary(
     override val provided: Boolean,
-    override val artifactAddress: String,
+    override val identifier: String,
     override val lintJar: File?,
     override val projectPath: String
 ) : LintModelModuleLibrary

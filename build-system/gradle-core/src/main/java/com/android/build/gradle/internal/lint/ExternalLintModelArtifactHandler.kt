@@ -64,7 +64,7 @@ class ExternalLintModelArtifactHandler private constructor(
         isProvided: Boolean,
         variantName: String?,
         coordinatesSupplier: () -> MavenCoordinates,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary =
         DefaultLintModelAndroidLibrary(
             jarFiles = listOf(
@@ -74,7 +74,7 @@ class ExternalLintModelArtifactHandler private constructor(
                     SdkConstants.FN_CLASSES_JAR
                 )
             ) + localJavaLibraries,
-            artifactAddress = addressSupplier(),
+            identifier = identitySupplier(),
             manifest = File(folder, SdkConstants.FN_ANDROID_MANIFEST_XML),
             folder = folder,
             resFolder = File(folder, SdkConstants.FD_RES),
@@ -97,7 +97,7 @@ class ExternalLintModelArtifactHandler private constructor(
         lintJar: File?,
         isProvided: Boolean,
         coordinatesSupplier: () -> MavenCoordinates,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary {
         val sourceSetKey = ProjectSourceSetKey(
             buildId = buildId,
@@ -131,7 +131,7 @@ class ExternalLintModelArtifactHandler private constructor(
                     SdkConstants.FN_CLASSES_JAR
                 )
             ) + (localJarCache[folder] ?: listOf()),
-            artifactAddress = addressSupplier(),
+            identifier = identitySupplier(),
             manifest = File(folder, SdkConstants.FN_ANDROID_MANIFEST_XML),
             folder = folder,
             resFolder = File(folder, SdkConstants.FD_RES),
@@ -150,10 +150,10 @@ class ExternalLintModelArtifactHandler private constructor(
         jarFile: File,
         isProvided: Boolean,
         coordinatesSupplier: () -> MavenCoordinates,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary =
         DefaultLintModelJavaLibrary(
-            artifactAddress = addressSupplier(),
+            identifier = identitySupplier(),
             jarFiles = listOf(jarFile),
             resolvedCoordinates = coordinatesSupplier().toMavenName(),
             provided = isProvided
@@ -164,14 +164,13 @@ class ExternalLintModelArtifactHandler private constructor(
         buildId: String,
         variantName: String?,
         isTestFixtures: Boolean,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary {
-        val artifactAddress = addressSupplier()
         val sourceSetKey = ProjectSourceSetKey(buildId, projectPath, variantName, isTestFixtures)
         val mainKey = ProjectKey(buildId, projectPath, variantName)
         if (mainKey in baseModuleModelFileMap) {
             return DefaultLintModelModuleLibrary(
-                artifactAddress = addressSupplier(),
+                identifier = identitySupplier(),
                 projectPath = projectPath,
                 lintJar = null,
                 provided = false
@@ -191,7 +190,7 @@ class ExternalLintModelArtifactHandler private constructor(
                 )
             } ?: LintModelMavenName.NONE
         return DefaultLintModelJavaLibrary(
-            artifactAddress = artifactAddress,
+            identifier = identitySupplier(),
             jarFiles = listOf(jar),
             resolvedCoordinates = resolvedCoordinates,
             provided = false

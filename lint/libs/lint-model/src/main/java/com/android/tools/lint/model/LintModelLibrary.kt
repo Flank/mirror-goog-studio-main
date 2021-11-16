@@ -28,18 +28,15 @@ interface LintModelLibrary : Comparable<LintModelLibrary> {
     val provided: Boolean
 
     /**
-     * Returns the artifact address in a unique way.
-     *
-     * This is either a module path for sub-modules (with optional
-     * variant name), or a maven coordinate for external dependencies.
+     * A unique identifier for the library or module.
      */
-    val artifactAddress: String
+    val identifier: String
 
     // FIXME this should not be here, this should show up via the module that contributes this rather than via all its consumer
     val lintJar: File?
 
     override fun compareTo(other: LintModelLibrary): Int {
-        return artifactAddress.compareTo(other.artifactAddress)
+        return identifier.compareTo(other.identifier)
     }
 }
 
@@ -84,16 +81,16 @@ interface LintModelJavaLibrary : LintModelExternalLibrary
 abstract class DefaultLintModelLibrary : LintModelLibrary {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        return artifactAddress == (other as? LintModelLibrary)?.artifactAddress
+        return identifier == (other as? LintModelLibrary)?.identifier
     }
 
     override fun hashCode(): Int {
-        return artifactAddress.hashCode()
+        return identifier.hashCode()
     }
 }
 
 class DefaultLintModelModuleLibrary(
-    override val artifactAddress: String,
+    override val identifier: String,
     override val projectPath: String,
     override val lintJar: File?,
     override val provided: Boolean
@@ -102,8 +99,8 @@ class DefaultLintModelModuleLibrary(
 }
 
 class DefaultLintModelAndroidLibrary(
+    override val identifier: String,
     override val jarFiles: List<File>,
-    override val artifactAddress: String,
     override val manifest: File,
     override val folder: File,
     override val resFolder: File,
@@ -120,7 +117,7 @@ class DefaultLintModelAndroidLibrary(
 }
 
 class DefaultLintModelJavaLibrary(
-    override val artifactAddress: String,
+    override val identifier: String,
     override val jarFiles: List<File>,
     override val resolvedCoordinates: LintModelMavenName,
     override val provided: Boolean

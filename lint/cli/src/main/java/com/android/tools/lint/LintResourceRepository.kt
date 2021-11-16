@@ -251,7 +251,7 @@ open class LintResourceRepository constructor(
         namespace: ResourceNamespace
     ) : LintResourceRepository(
         null, EnumMap(ResourceType::class.java), namespace,
-        library.artifactAddress
+        library.resolvedCoordinates.toString()
     ) {
         // Just passing in an empty mutable map to the super which we'll populate
         // lazily in getResourcesInternal
@@ -277,7 +277,7 @@ open class LintResourceRepository constructor(
                         folderType != null && folderTypes.contains(folderType)
                     } ?: emptyArray()
 
-                    val libraryName = library.artifactAddress
+                    val libraryName = library.resolvedCoordinates.toString()
                     for (folder in folders.sorted()) { // sorted: offer stable order in resource lists
                         // TODO: For @id, cheat and just look at the R.txt file! We don't need
                         // to parse through ALL The resources for this
@@ -314,7 +314,7 @@ open class LintResourceRepository constructor(
         // binary resources. Just make sure it's cached.
 
         override fun toString(): String {
-            return "Resources for ${library.artifactAddress}"
+            return "Resources for ${library.resolvedCoordinates}"
         }
     }
 
@@ -518,7 +518,7 @@ open class LintResourceRepository constructor(
             return File(
                 client.getCacheDir("library-resources-v1", true),
                 // avoid ":" in filenames for Windows
-                library.artifactAddress.replace(':', '_')
+                library.identifier.replace(':', '_')
             )
         }
 

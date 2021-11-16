@@ -80,7 +80,7 @@ internal class CheckDependenciesLintModelArtifactHandler(
                     SdkConstants.FN_CLASSES_JAR
                 )
             ) + localJavaLibraries,
-            artifactAddress = addressSupplier(),
+            identifier = addressSupplier(),
             manifest = File(folder, SdkConstants.FN_ANDROID_MANIFEST_XML),
             folder = folder,
             resFolder = File(folder, SdkConstants.FD_RES),
@@ -103,10 +103,10 @@ internal class CheckDependenciesLintModelArtifactHandler(
         lintJar: File?,
         isProvided: Boolean,
         coordinatesSupplier: () -> MavenCoordinates,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary =
         DefaultLintModelModuleLibrary(
-            artifactAddress = addressSupplier(),
+            identifier = identitySupplier(),
             projectPath = projectPath,
             lintJar = lintJar,
             provided = isProvided
@@ -116,10 +116,10 @@ internal class CheckDependenciesLintModelArtifactHandler(
         jarFile: File,
         isProvided: Boolean,
         coordinatesSupplier: () -> MavenCoordinates,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary =
         DefaultLintModelJavaLibrary(
-            artifactAddress = addressSupplier(),
+            identifier = identitySupplier(),
             jarFiles = listOf(jarFile),
             resolvedCoordinates = coordinatesSupplier().toMavenName(),
             provided = isProvided
@@ -130,14 +130,14 @@ internal class CheckDependenciesLintModelArtifactHandler(
         buildId: String,
         variantName: String?,
         isTestFixtures: Boolean,
-        addressSupplier: () -> String
+        identitySupplier: () -> String
     ): LintModelLibrary {
         val sourceSetKey = ProjectSourceSetKey(buildId, projectPath, variantName, isTestFixtures)
         val mainKey = ProjectKey(buildId, projectPath, variantName)
         val hasLintModel = (mainKey.buildId == thisProject.buildId && mainKey.projectPath == thisProject.projectPath) || projectDependencyLintModels.contains(mainKey)
         if (hasLintModel) {
             return DefaultLintModelModuleLibrary(
-                artifactAddress = addressSupplier(),
+                identifier = identitySupplier(),
                 projectPath = projectPath,
                 lintJar = null,
                 provided = false
@@ -153,10 +153,9 @@ internal class CheckDependenciesLintModelArtifactHandler(
                                 "lint to analyze those sources.\n"
                     )
             }
-            val artifactAddress = addressSupplier()
             val jar = compileProjectJars[sourceSetKey] ?: runtimeProjectJars[sourceSetKey] ?: errorJarNotFound(sourceSetKey)
             return DefaultLintModelJavaLibrary(
-                artifactAddress = artifactAddress,
+                identifier = identitySupplier(),
                 jarFiles = listOf(jar),
                 resolvedCoordinates = LintModelMavenName.NONE,
                 provided = false
