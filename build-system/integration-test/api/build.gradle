@@ -27,7 +27,7 @@ dependencies {
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')
     testImplementation libs.com.android.tools.sdkCommon
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
 
     testImplementation libs.kotlin_stdlib
 

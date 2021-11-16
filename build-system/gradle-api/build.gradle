@@ -27,7 +27,7 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation libs.kotlin_test
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation gradleApi()
     testImplementation project(':base:builder-model')
     testImplementation libs.com.android.tools.annotations

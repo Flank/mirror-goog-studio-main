@@ -18,7 +18,7 @@ dependencies {
     testImplementation libs.com.android.tools.sdklib
     testImplementation externalTestFixtures.repository
     testImplementation project(':base:testing-infrastructure:device-pool:device-provider')
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation libs.com.android.zipflinger
     testCompileOnly(project(':base:profile'))
     testImplementation libs.com.android.tools.layoutlib.layoutlibApi

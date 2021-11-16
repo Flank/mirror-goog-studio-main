@@ -40,7 +40,7 @@ dependencies {
     implementation libs.unified_test_platform_device_provider
     compileOnly libs.unified_test_platform_launcher
 
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation libs.unified_test_platform_launcher
     testImplementation libs.mockito_core
     testImplementation libs.junit

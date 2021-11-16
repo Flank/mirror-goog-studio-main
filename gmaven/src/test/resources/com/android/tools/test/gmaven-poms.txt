@@ -234,19 +234,19 @@ com.android.tools:sdklib
 
 com.android.tools:testutils
   pomName=com.android.tools.testutils
-  description=API used by lint testing infrastructure
+  description=Internal test utilities for Android Studio and other tools developed alongside Studio
   dependencies:
-    com.google.truth:truth (compile)
     com.google.truth.extensions:truth-java8-extension (compile)
+    com.google.truth:truth (compile)
     com.android.tools:common (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
-    org.jetbrains.kotlin:kotlin-test (runtime)
+    com.google.jimfs:jimfs (runtime)
     junit:junit (runtime)
     org.easymock:easymock (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
+    org.jetbrains.kotlin:kotlin-test (runtime)
     org.mockito:mockito-core (runtime)
-    com.google.jimfs:jimfs (runtime)
-    org.smali:dexlib2 (runtime)
     org.ow2.asm:asm (runtime)
+    org.smali:dexlib2 (runtime)
 
 com.android.tools.analytics-library:crash
   pomName=Android Tools Analytics Crash Library

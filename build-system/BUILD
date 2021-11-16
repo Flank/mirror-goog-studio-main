@@ -268,7 +268,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/profile:agp_gradle_build_files",
     "//tools/base/mlkit-common:agp_gradle_build_files",
     "//tools/base/profgen/profgen:agp_gradle_build_files",
-    "//tools/base/testutils:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-ddmlib-proto:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
@@ -309,7 +308,9 @@ gradle_build(
 #  org.jetbrains.kotlin:kotlin-test-junit:1.5.3
 maven_repository(
     name = "android_gradle_plugin_gradle_api_test_repository",
+    # keep sorted
     artifacts = [
+        "//tools/base/testutils:tools.testutils",
         "@maven//:org.jetbrains.kotlin.kotlin-test-junit_1.5.31",
     ],
 )
@@ -326,7 +327,6 @@ gradle_test(
         "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
         "//tools/base/build-system/gradle-api:agp_gradle_build_files",
         "//tools/base/build-system/gradle-api:agp_gradle_test_files",
-        "//tools/base/testutils:agp_gradle_build_files",
         "//tools/buildSrc:agp_gradle_build_files",
         "//tools/buildSrc/base:agp_gradle_build_files",
     ],

@@ -5,7 +5,7 @@ dependencies {
     implementation libs.tensorflow_lite_metadata
     implementation libs.com.android.tools.common
 
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation libs.junit
     testImplementation libs.apache_commons_io
     testImplementation libs.mockito_core

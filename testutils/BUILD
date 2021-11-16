@@ -58,7 +58,9 @@ maven_library(
         # For TestUtils.getKotlinVersionForTests.
         "//tools/buildSrc/base:dependencies.properties",
     ],
+    description = "Internal test utilities for Android Studio and other tools developed alongside Studio",
     lint_baseline = "lint_baseline.xml",
+    module_name = "testutils",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
@@ -101,17 +103,4 @@ kotlin_test(
         "@maven//:org.jetbrains.kotlin.kotlin-test",
         "@maven//:org.smali.dexlib2",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

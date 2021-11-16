@@ -25,7 +25,7 @@ dependencies {
     api libs.com.android.tools.ddms.ddmlib
     implementation libs.com.android.tools.sdklib
     implementation project(':base:testing-infrastructure:device-pool:device-provider')
-    implementation project(':base:testutils')
+    implementation libs.com.android.tools.testutils
     implementation libs.com.android.tools.annotations
     implementation externalTestFixtures.repository
 

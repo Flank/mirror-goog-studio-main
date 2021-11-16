@@ -8,7 +8,7 @@ dependencies {
     implementation libs.kotlin_stdlib
     testImplementation 'junit:junit:4.12'
     testImplementation libs.guava
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
 }
 
 group = 'com.android.tools.build'

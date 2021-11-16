@@ -42,7 +42,7 @@ dependencies {
     testImplementation libs.truth
     testImplementation libs.equalsverifier
     testImplementation libs.jimfs
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation externalTestFixtures.repository
 }
 
