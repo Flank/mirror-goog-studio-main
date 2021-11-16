@@ -44,7 +44,7 @@ class AdbInstallerChannel implements AutoCloseable {
     // written in batches that cannot exceed that TCP buffer size. This timeout affects
     // how long to wait for a socket to be available before EACH write operations.
     // Is is set so that it can only fails if the other party stops processing data.
-    private static final long PER_WRITE_TIME_OUT = TimeUnit.SECONDS.toMillis(1);
+    private static final long PER_WRITE_TIME_OUT = TimeUnit.SECONDS.toMillis(5);
 
     AdbInstallerChannel(SocketChannel c) throws IOException {
         channel = c;
