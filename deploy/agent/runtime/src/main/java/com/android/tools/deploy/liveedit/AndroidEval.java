@@ -276,18 +276,13 @@ class AndroidEval implements Eval {
         String name = methodDesc.getName();
         String description = methodDesc.getDesc();
         Type[] parameterType = Type.getArgumentTypes(description);
-        Class<?>[] parameterClass = new Class[parameterType.length];
         try {
-            for (int i = 0; i < parameterClass.length; i++) {
-                parameterClass[i] = typeToClass(parameterType[i]);
-            }
-
             Object[] argValues = new Object[args.size()];
             for (int i = 0; i < argValues.length; i++) {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
-            Method method = methodLookup(owner, name, parameterClass);
+            Method method = methodLookup(owner, name, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
                 throw new IllegalStateException("Cannot find " + name + " in " + owner);
@@ -312,18 +307,13 @@ class AndroidEval implements Eval {
         String methodName = description.getName();
         String signature = description.getDesc();
         Type[] parameterType = Type.getArgumentTypes(signature);
-        Class<?>[] parameterClass = new Class[parameterType.length];
         try {
-            for (int i = 0; i < parameterClass.length; i++) {
-                parameterClass[i] = typeToClass(parameterType[i]);
-            }
-
             Object[] argValues = new Object[args.size()];
             for (int i = 0; i < argValues.length; i++) {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
-            Method method = methodLookup(owner, methodName, parameterClass);
+            Method method = methodLookup(owner, methodName, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
                 throw new IllegalStateException(
@@ -505,9 +495,15 @@ class AndroidEval implements Eval {
         }
     }
 
-    private Method methodLookup(String className, String methodName, Class[] parameterClass)
+    protected Method methodLookup(String className, String methodName, Type[] parameterType)
             throws ClassNotFoundException {
         Method method = null;
+
+        Class<?>[] parameterClass = new Class[parameterType.length];
+        for (int i = 0; i < parameterClass.length; i++) {
+            parameterClass[i] = typeToClass(parameterType[i]);
+        }
+
         Class curClass = forName(className.replace('/', '.'));
         while (curClass != null) {
             try {

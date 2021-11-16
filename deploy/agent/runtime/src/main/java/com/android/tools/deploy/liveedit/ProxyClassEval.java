@@ -21,6 +21,7 @@ import com.android.tools.deploy.interpreter.FieldDescription;
 import com.android.tools.deploy.interpreter.MethodDescription;
 import com.android.tools.deploy.interpreter.ObjectValue;
 import com.android.tools.deploy.interpreter.Value;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
@@ -142,22 +143,37 @@ class ProxyClassEval extends AndroidEval {
     @NonNull
     @Override
     public Value invokeStaticMethod(MethodDescription method, @NonNull List<? extends Value> args) {
-        final String className = method.getOwnerInternalName().replace("/", ".");
+        final String internalName = method.getOwnerInternalName();
         final String methodName = method.getName();
         final String methodDesc = method.getDesc();
 
-        if (method.isSynthAccessor()) {
-            Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
-
-            Object[] argValues = new Object[args.size()];
-            for (int i = 0; i < argValues.length; i++) {
-                argValues[i] = args.get(i).obj();
-            }
-
-            LiveEditClass clazz = context.getClass(className);
-            Object result = clazz.invokeMethod(methodName, methodDesc, null, argValues);
-            return makeValue(result, Type.getReturnType(methodDesc));
+        LiveEditClass clazz = context.getClass(internalName);
+        if (clazz == null) {
+            return super.invokeStaticMethod(method, args);
         }
+
+        Type[] parameterType = Type.getArgumentTypes(methodDesc);
+        try {
+            // If the method is a synthetic static added by Compose compiler, we must interpret it.
+            // To detect these methods, we check if a given static method exists in the original,
+            // and that it wasn't added by the user via a LiveEdit operation.
+            Method originalMethod = methodLookup(internalName, methodName, parameterType);
+            boolean isLiveEdited = clazz.hasLiveEditedMethod(methodName, methodDesc);
+            if (originalMethod == null && !isLiveEdited) {
+                Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
+
+                Object[] argValues = new Object[args.size()];
+                for (int i = 0; i < argValues.length; i++) {
+                    argValues[i] = args.get(i).obj();
+                }
+
+                Object result = clazz.invokeMethod(methodName, methodDesc, null, argValues);
+                return makeValue(result, Type.getReturnType(methodDesc));
+            }
+        } catch (ClassNotFoundException cnfe) {
+            // Ignore; let AndroidEval handle it.
+        }
+
         return super.invokeStaticMethod(method, args);
     }
 
