@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer.model.component;
 
+
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
@@ -25,11 +26,18 @@ import java.util.Locale;
 
 public class Complication extends AppComponent {
 
-    private static final String DEBUG_COMMAND = "am set-debug-app -w";
+    public static class ShellCommand {
 
-    // More context go/wear-surface-debug
-    private static final String ADD_COMPLICATION_TO_WATCH_FACE =
-            "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-complication --ecn component '%s' --ecn watchface '%s' --ei slot %d --ei type %d";
+        public static String REMOVE_ALL_INSTANCES_FROM_CURRENT_WF =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation unset-complication --ecn component ";
+        // + component name
+
+        // More context go/wear-surface-debug
+        static final String ADD_COMPLICATION_TO_WATCH_FACE =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-complication --ecn component '%s' --ecn watchface '%s' --ei slot %d --ei type %d";
+    }
+
+    private static final String DEBUG_COMMAND = "am set-debug-app -w";
 
     @NonNull private final ILogger logger;
 
@@ -67,7 +75,7 @@ public class Complication extends AppComponent {
     private String getAddComplicationCommand(ComplicationParams param) {
         return String.format(
                 Locale.US,
-                ADD_COMPLICATION_TO_WATCH_FACE,
+                ShellCommand.ADD_COMPLICATION_TO_WATCH_FACE,
                 getFQEscapedName(),
                 AppComponent.getFQEscapedName(param.watchFaceAppId, param.watchFaceName),
                 param.slot,
