@@ -1188,12 +1188,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getAaptOptionsNoCompress()
-                    .set(
-                            creationConfig
-                                    .getGlobalScope()
-                                    .getExtension()
-                                    .getAaptOptions()
-                                    .getNoCompress());
+                    .set(creationConfig.getAndroidResources().getNoCompress());
             packageAndroidArtifact.getAaptOptionsNoCompress().disallowChanges();
 
             packageAndroidArtifact

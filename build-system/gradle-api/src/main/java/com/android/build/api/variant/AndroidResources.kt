@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant
 
+import org.gradle.api.Incubating
 import org.gradle.api.provider.ListProperty
 
 /**
@@ -39,4 +40,14 @@ interface AndroidResources {
      * This property will be initialized using the corresponding DSL value.
      */
     val aaptAdditionalParameters: ListProperty<String>
+
+    /**
+     * Extensions of files that will not be stored compressed in the APK. Adding an empty
+     * extension, i.e., setting `noCompress ''` will trivially disable compression
+     * for all files.
+     *
+     * Equivalent of the -0 flag. See `aapt --help`
+     */
+    @get:Incubating
+    val noCompress: ListProperty<String>
 }

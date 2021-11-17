@@ -551,7 +551,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis)
 
-            task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress)
+            task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.androidResources.noCompress)
 
             task.bundleOptions =
                 ((creationConfig.globalScope.extension as BaseAppModuleExtension).bundle).convert()

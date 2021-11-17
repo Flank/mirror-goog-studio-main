@@ -776,6 +776,7 @@ com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.b
 com.android.build.api.variant.AarMetadata.getMinAgpVersion: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
+com.android.build.api.variant.AndroidResources.getNoCompress: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.AnnotationProcessor
 com.android.build.api.variant.AnnotationProcessor.getArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.variant.AnnotationProcessor.getArguments: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()

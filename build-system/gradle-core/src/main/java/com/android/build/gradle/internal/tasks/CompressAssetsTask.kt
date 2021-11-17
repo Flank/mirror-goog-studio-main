@@ -125,7 +125,7 @@ abstract class CompressAssetsTask: NewIncrementalTask() {
             super.configure(task)
 
             task.inputDirs.from(creationConfig.artifacts.getAll(MultipleArtifact.ASSETS))
-            task.noCompress.setDisallowChanges(creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress)
+            task.noCompress.setDisallowChanges(creationConfig.androidResources.noCompress)
             task.compressionLevel.setDisallowChanges(
                 if (creationConfig.debuggable) {
                     BEST_SPEED
