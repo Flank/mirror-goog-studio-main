@@ -119,8 +119,7 @@ abstract class ComponentImpl(
     override val namespace: Provider<String> =
         internalServices.providerOf(
             type = String::class.java,
-            value = variantDslInfo.namespace,
-            disallowUnsafeRead = false, // allow unsafe read for KAGP : b/193706116
+            value = variantDslInfo.namespace
         )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
