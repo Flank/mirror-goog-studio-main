@@ -36,9 +36,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.nio.file.Path
 import kotlin.math.min
 
-private const val MAX_SYSTEM_IMAGE_RETRIES = 4;
-private const val BASE_RETRY_DELAY_SECONDS = 2L;
-private const val MAX_RETRY_DELAY_SECONDS = 10L;
+private const val MAX_SYSTEM_IMAGE_RETRIES = 4
+private const val BASE_RETRY_DELAY_SECONDS = 2L
+private const val MAX_RETRY_DELAY_SECONDS = 10L
 
 private val avdLocks: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
 
@@ -88,28 +88,38 @@ class AvdManager(
                 return info.configFile
             }
 
-            if (!imageProvider.isPresent) {
-                throw RuntimeException("Failed to find system image for hash: $imageHash")
-            }
+            val newInfo = createAvd(imageProvider, imageHash, deviceName, hardwareProfile)
+            return newInfo?.configFile ?: error("AVD could not be created.")
+        }
+    }
 
-            val imageLocation = sdkHandler.toCompatiblePath(imageProvider.get().asFile)
-            val systemImage = retrieveSystemImage(sdkHandler, imageLocation)
-            systemImage?: error("System image does not exist at $imageLocation")
+    internal fun createAvd(
+            imageProvider: Provider<Directory>,
+            imageHash: String, deviceName: String,
+            hardwareProfile: String
+    ): AvdInfo? {
+        if (!imageProvider.isPresent) {
+            throw RuntimeException("Failed to find system image for hash: $imageHash")
+        }
 
-            val device = deviceManager.getDevices(DeviceManager.ALL_DEVICES).find {
-                it.displayName == hardwareProfile
-            } ?: error("Failed to find hardware profile for name: $hardwareProfile")
+        val imageLocation = sdkHandler.toCompatiblePath(imageProvider.get().asFile)
+        val systemImage = retrieveSystemImage(sdkHandler, imageLocation)
+        systemImage ?: error("System image does not exist at $imageLocation")
 
-            val hardwareConfig = defaultHardwareConfig()
-            hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
-            EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
+        val device = deviceManager.getDevices(DeviceManager.ALL_DEVICES).find {
+            it.displayName == hardwareProfile
+        } ?: error("Failed to find hardware profile for name: $hardwareProfile")
 
-            val deviceFolder =
-                    AvdInfo.getDefaultAvdFolder(avdManager,
-                            deviceName,
-                            false)
+        val hardwareConfig = defaultHardwareConfig()
+        hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
+        EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
 
-            val newInfo = avdManager.createAvd(
+        val deviceFolder =
+                AvdInfo.getDefaultAvdFolder(avdManager,
+                        deviceName,
+                        false)
+
+        return avdManager.createAvd(
                 deviceFolder,
                 deviceName,
                 systemImage,
@@ -122,9 +132,7 @@ class AvdManager(
                 false,
                 false,
                 logger
-            )
-            return newInfo?.configFile ?: error("AVD could not be created.")
-        }
+        )
     }
 
     fun loadSnapshotIfNeeded(deviceName: String) {

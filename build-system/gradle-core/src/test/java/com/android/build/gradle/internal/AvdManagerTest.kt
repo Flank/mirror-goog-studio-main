@@ -97,7 +97,7 @@ class AvdManagerTest {
     fun addSingleDevice() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -112,17 +112,17 @@ class AvdManagerTest {
     fun addMultipleDevices() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device2",
             "Pixel 3")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device3",
@@ -139,12 +139,12 @@ class AvdManagerTest {
     fun addSameDeviceDoesNotDuplicate() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -159,12 +159,12 @@ class AvdManagerTest {
     fun testDeleteDevices() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device2",
@@ -197,7 +197,7 @@ class AvdManagerTest {
             // first return false to force generation, then return true to assert success.
             .thenReturn(false, true)
 
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -230,7 +230,7 @@ class AvdManagerTest {
                 anyString()))
             .thenReturn(true)
 
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
