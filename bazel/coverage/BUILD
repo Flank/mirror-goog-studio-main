@@ -535,6 +535,41 @@ coverage_report(
 )
 
 coverage_report(
+    name = "systrace-jank-ui",
+    srcpath_include = [
+        "tools/adt/idea/adt-ui-model/src/main/java/com/android/tools/adtui/model/trackgroup/TrackGroupModel.kt",
+        "tools/adt/idea/adt-ui-model/src/main/java/com/android/tools/adtui/model/MultiSelectionModel.kt",
+        "tools/adt/idea/adt-ui/src/main/java/com/android/tools/adtui/TabbedToolbar.java",
+        "tools/adt/idea/adt-ui/src/main/java/com/android/tools/adtui/HorizontalScrollView.kt",
+        "tools/adt/idea/adt-ui/src/main/java/com/android/tools/adtui/chart/statechart/StateChart.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/systemtrace/DeadlineTextModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/CpuThreadComparator.java",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/perfetto/traceprocessor/TraceProcessorModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/analysis/AndroidFrameTimelineAnalysisModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/systemtrace/AndroidFrameTimelineModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/systemtrace/AndroidFrameTimelineTooltip.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/analysis/JankAnalysisModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/CpuCaptureStage.java",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/analysis/TableModelUtils.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/DeadlineTextRenderer.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/FrameTimelineSelectionOverlayPanel.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/analysis/TableUtils.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/CpuCaptureStageView.java",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/VsyncPanel.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/analysis/AndroidFrameTimelineTab.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/AndroidFrameTimelineTooltipView.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/analysis/JankSummaryDetailsView.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/JankyFrameTrackRenderer.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
+        "//tools/adt/idea/adt-ui-model:intellij.android.adt.ui.model_tests",
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+    ],
+)
+
+coverage_report(
     name = "templates",
     srcpath_include = [
         "tools/adt/idea/android/src/com/android-npw/tools/idea/npw/module/recipes",
@@ -777,6 +812,7 @@ combine_report_definitions(
         "simpleperf-collapse-ui",
         "spliteditor",
         "suggested-import",
+        "systrace-jank-ui",
         "systracev2",
         "templates",
         "upgrade-assistant",
