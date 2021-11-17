@@ -375,15 +375,37 @@ public final class DetailsTypes {
     /** Gets the path/unique id for the platform of the given {@link AndroidVersion}. */
     @NonNull
     public static String getPlatformPath(@NonNull AndroidVersion version) {
-        return SdkConstants.FD_PLATFORMS + RepoPackage.PATH_SEPARATOR + "android-" +
-                version.getApiString();
+        if (version.isBaseExtension()) {
+            return SdkConstants.FD_PLATFORMS
+                    + RepoPackage.PATH_SEPARATOR
+                    + "android-"
+                    + version.getApiString();
+        } else {
+            return SdkConstants.FD_PLATFORMS
+                    + RepoPackage.PATH_SEPARATOR
+                    + "android-"
+                    + version.getApiString()
+                    + "-ext"
+                    + version.getExtensionLevel();
+        }
     }
 
     /** Gets the path/unique id for the sources of the given {@link AndroidVersion}. */
     @NonNull
     public static String getSourcesPath(@NonNull AndroidVersion version) {
-        return SdkConstants.FD_PKG_SOURCES + RepoPackage.PATH_SEPARATOR + "android-" +
-                version.getApiString();
+        if (version.isBaseExtension()) {
+            return SdkConstants.FD_PKG_SOURCES
+                    + RepoPackage.PATH_SEPARATOR
+                    + "android-"
+                    + version.getApiString();
+        } else {
+            return SdkConstants.FD_PKG_SOURCES
+                    + RepoPackage.PATH_SEPARATOR
+                    + "android-"
+                    + version.getApiString()
+                    + "-ext"
+                    + version.getExtensionLevel();
+        }
     }
 
     /**
@@ -401,15 +423,20 @@ public final class DetailsTypes {
      * Gets the default path/unique id for the given addon
      */
     public static String getAddonPath(IdDisplay vendor, AndroidVersion version, IdDisplay name) {
-        return new StringBuilder().append(SdkConstants.FD_ADDONS)
-                .append(RepoPackage.PATH_SEPARATOR)
-                .append("addon-")
-                .append(name.getId())
-                .append("-")
-                .append(vendor.getId())
-                .append("-")
-                .append(version.getApiString())
-                .toString();
+        StringBuilder pathBuilder =
+                new StringBuilder()
+                        .append(SdkConstants.FD_ADDONS)
+                        .append(RepoPackage.PATH_SEPARATOR)
+                        .append("addon-")
+                        .append(name.getId())
+                        .append("-")
+                        .append(vendor.getId())
+                        .append("-")
+                        .append(version.getApiString());
+        if (!version.isBaseExtension()) {
+            pathBuilder.append("-ext").append(version.getExtensionLevel());
+        }
+        return pathBuilder.toString();
     }
 
     /**
@@ -417,11 +444,16 @@ public final class DetailsTypes {
      */
     public static String getSysImgPath(IdDisplay vendor, AndroidVersion version, IdDisplay name,
             String abi) {
-        return new StringBuilder()
-                .append(SdkConstants.FD_SYSTEM_IMAGES)
-                .append(RepoPackage.PATH_SEPARATOR)
-                .append("android-")
-                .append(version.getApiString())
+        StringBuilder pathBuilder =
+                new StringBuilder()
+                        .append(SdkConstants.FD_SYSTEM_IMAGES)
+                        .append(RepoPackage.PATH_SEPARATOR)
+                        .append("android-")
+                        .append(version.getApiString());
+        if (!version.isBaseExtension()) {
+            pathBuilder.append("-ext").append(version.getExtensionLevel());
+        }
+        return pathBuilder
                 .append(RepoPackage.PATH_SEPARATOR)
                 .append(name.getId())
                 .append(RepoPackage.PATH_SEPARATOR)
