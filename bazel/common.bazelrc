@@ -2,6 +2,12 @@
 # This file is imported by the os-specific rc files.
 # Those are included by the bazel wrapper scripts (bazel and bazel.cmd)
 
+# Platform specific config automatically applies --config=(linux|macos|windows)
+common --enable_platform_specific_config
+common:linux --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/linux/ndk/20.1.5948944
+common:macos --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/darwin/ndk/20.1.5948944
+common:windows --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/windows/ndk/20.1.5948944
+
 # Remote Build Execution requires a strong hash function, such as SHA256.
 startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
 
