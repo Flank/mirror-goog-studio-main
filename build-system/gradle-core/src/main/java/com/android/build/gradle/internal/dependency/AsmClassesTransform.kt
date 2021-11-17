@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -38,6 +39,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -61,7 +63,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
         fun registerAsmTransformForComponent(
             projectName: String,
             dependencyHandler: DependencyHandler,
-            creationConfig: ComponentCreationConfig
+            creationConfig: ComponentImpl
         ) {
             if (creationConfig.dependenciesClassesAreInstrumented) {
                 dependencyHandler.registerTransform(AsmClassesTransform::class.java) { spec ->
@@ -70,6 +72,9 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                         parameters.asmApiVersion.set(creationConfig.asmApiVersion)
                         parameters.framesComputationMode.set(
                             creationConfig.asmFramesComputationMode
+                        )
+                        parameters.excludes.set(
+                            creationConfig.instrumentation.excludes
                         )
                         parameters.visitorsList.set(
                             creationConfig.registeredDependenciesClassesVisitors
@@ -129,6 +134,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
             parameters.asmApiVersion.get(),
             classesHierarchyResolver,
             parameters.framesComputationMode.get(),
+            parameters.excludes.get(),
             parameters.profilingTransforms.get()
         ).use {
             it.instrumentClassesFromJarToJar(
@@ -144,6 +150,9 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
         @get:Input
         val framesComputationMode: Property<FramesComputationMode>
+
+        @get:Input
+        val excludes: SetProperty<String>
 
         @get:Nested
         val visitorsList: ListProperty<AsmClassVisitorFactory<*>>

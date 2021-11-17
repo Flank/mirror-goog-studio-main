@@ -40,11 +40,16 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ARETURN
 import org.objectweb.asm.Opcodes.ASM7
 import org.objectweb.asm.Type
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.net.URL
 import java.net.URLClassLoader
+import java.util.zip.Deflater
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import kotlin.reflect.jvm.jvmName
 
 @RunWith(Parameterized::class)
@@ -130,7 +135,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             listOf(),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COPY_FRAMES
+            FramesComputationMode.COPY_FRAMES,
+            emptySet()
         ).instrument(inputDir, outputDir)
 
         // Then the classes should be copied to the destination
@@ -154,7 +160,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             listOf(visitorFactory),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COPY_FRAMES
+            FramesComputationMode.COPY_FRAMES,
+            emptySet()
         ).instrument(inputDir, outputDir)
 
         val outputClasses = getOutputClassesByteArrayMap()
@@ -233,7 +240,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             ),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COPY_FRAMES
+            FramesComputationMode.COPY_FRAMES,
+            emptySet()
         ).instrument(inputDir, outputDir)
 
         val instrumentedClassesLoader = if (testMode == TestMode.DIR) {
@@ -312,13 +320,164 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         )
     }
 
+    @Test
+    fun metaInfDirShouldBeIgnored() {
+        if (testMode != TestMode.JAR) {
+            return
+        }
+
+        val jarFile = inputDir.listFiles()!!.first()
+        val newJarFile = File(inputDir, "classesWithMetaInf.jar")
+
+        ZipOutputStream(BufferedOutputStream(FileOutputStream(newJarFile))).use { outputJar ->
+            outputJar.setLevel(Deflater.NO_COMPRESSION)
+            ZipFile(jarFile).use { inputJar ->
+                val entries = inputJar.entries()
+                while (entries.hasMoreElements()) {
+                    val oldEntry = entries.nextElement()
+                    val byteArray = ByteStreams.toByteArray(inputJar.getInputStream(oldEntry))
+                    val entry = ZipEntry(oldEntry.name)
+                    outputJar.putNextEntry(entry)
+                    outputJar.write(byteArray)
+                    outputJar.closeEntry()
+                }
+            }
+
+            val metaInfClassEntry = ZipEntry("META-INF/Test.class")
+            outputJar.putNextEntry(metaInfClassEntry)
+            outputJar.write("ASM should fail trying to load this corrupted class".toByteArray())
+            outputJar.closeEntry()
+        }
+
+        jarFile.delete()
+
+        abstract class Factory: AsmClassVisitorFactory<InstrumentationParameters.None> {
+
+            override fun createClassVisitor(
+                classContext: ClassContext,
+                nextClassVisitor: ClassVisitor
+            ): ClassVisitor =
+                object: ClassVisitor(instrumentationContext.apiVersion.get(), nextClassVisitor) {}
+
+            override fun isInstrumentable(classData: ClassData): Boolean = true
+        }
+
+        AsmInstrumentationManager(
+            listOf(
+                getConfiguredVisitorFactory(Factory::class.java)
+            ),
+            apiVersion,
+            classesHierarchyResolver,
+            FramesComputationMode.COPY_FRAMES,
+            emptySet()
+        ).instrument(inputDir, outputDir)
+    }
+
+    @Test
+    fun testExcludes() {
+        // Given two visitors:
+        // The first one annotates methods named "f1" or "f2" in classes implementing the interface
+        // I with "FirstVisitorAnnotation"
+        // The second one annotates methods named "f3" or "f4" in classes implementing the interface
+        // J with "SecondVisitorAnnotation"
+
+        // When the instrumentation manager is invoked with the following excludes patterns
+        // ["**/*ImplementsI", "com/android/build/gradle/internal/instrumentation/ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces"]
+
+        AsmInstrumentationManager(
+            listOf(
+                getConfiguredVisitorFactory(FirstVisitorAnnotationAddingFactory::class.java),
+                getConfiguredVisitorFactory(SecondVisitorAnnotationAddingFactory::class.java)
+            ),
+            apiVersion,
+            classesHierarchyResolver,
+            FramesComputationMode.COPY_FRAMES,
+            setOf(
+                "**/*ImplementsI",
+                "com/android/build/gradle/internal/instrumentation/ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces"
+            )
+        ).instrument(inputDir, outputDir)
+
+        val instrumentedClassesLoader = if (testMode == TestMode.DIR) {
+            InstrumentedClassesLoader(
+                arrayOf(outputDir.toURI().toURL()),
+                this::class.java.classLoader
+            )
+        } else {
+            InstrumentedClassesLoader(
+                arrayOf(outputDir.listFiles()!!.first().toURI().toURL()),
+                this::class.java.classLoader
+            )
+        }
+
+        // Then classes I and ClassWithNoInterfacesOrSuperclasses should be the same
+
+        val outputClasses = getOutputClassesByteArrayMap()
+        assertThat(outputClasses).hasSize(classes.size)
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = I::class.java.name,
+            expectedAnnotatedMethods = emptyList()
+        )
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = ClassWithNoInterfacesOrSuperclasses::class.java.name,
+            expectedAnnotatedMethods = emptyList()
+        )
+
+        // InterfaceExtendsI.f2 should be annotated with FirstVisitorAnnotation
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = InterfaceExtendsI::class.java.name,
+            expectedAnnotatedMethods = listOf("f2" to listOf(FirstVisitorAnnotation::class.java.name))
+        )
+
+        // ClassImplementsI.f1 should be annotated with FirstVisitorAnnotation but is filtered out
+        // ClassImplementsI.f2 should be annotated with FirstVisitorAnnotation but is filtered out
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = ClassImplementsI::class.java.name,
+            expectedAnnotatedMethods = emptyList()
+        )
+
+        // ClassExtendsOneClassAndImplementsTwoInterfaces.f2 should be annotated with FirstVisitorAnnotation
+        // ClassExtendsOneClassAndImplementsTwoInterfaces.f3 should be annotated with SecondVisitorAnnotation
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = ClassExtendsOneClassAndImplementsTwoInterfaces::class.java.name,
+            expectedAnnotatedMethods = listOf(
+                "f2" to listOf(FirstVisitorAnnotation::class.java.name),
+                "f3" to listOf(SecondVisitorAnnotation::class.java.name)
+            )
+        )
+
+        // The above annotated methods should be inherited
+        // ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces.f4 should be annotated with
+        // SecondVisitorAnnotation but is filtered out
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java.name,
+            expectedAnnotatedMethods = listOf(
+                "f2" to listOf(FirstVisitorAnnotation::class.java.name),
+                "f3" to listOf(SecondVisitorAnnotation::class.java.name)
+            )
+        )
+    }
+
     private fun invalidateInputClassesMaxs(): File {
         val newInputDir = temporaryFolder.newFolder()
         AsmInstrumentationManager(
             listOf(getConfiguredVisitorFactory(MaxsInvalidatingVisitorFactory::class.java)),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COPY_FRAMES
+            FramesComputationMode.COPY_FRAMES,
+            emptySet()
         ).instrument(inputDir, newInputDir)
         return newInputDir
     }
@@ -343,7 +502,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             listOf(getConfiguredVisitorFactory(MethodInjectingVisitorFactory::class.java)),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COPY_FRAMES
+            FramesComputationMode.COPY_FRAMES,
+            emptySet()
         ).instrument(newInputDir, outputDir)
 
         // Then all existing and injected methods should have invalid maxs
@@ -366,7 +526,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             listOf(getConfiguredVisitorFactory(MethodInjectingVisitorFactory::class.java)),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS,
+            emptySet()
         ).instrument(newInputDir, outputDir)
 
         // Then only the existing methods (<init>, f1, f2) should have invalid maxs
@@ -389,7 +550,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             listOf(getConfiguredVisitorFactory(MethodInjectingVisitorFactory::class.java)),
             apiVersion,
             classesHierarchyResolver,
-            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES,
+            emptySet()
         ).instrument(newInputDir, outputDir)
 
         // Then all methods should have their maxs fixed
@@ -435,10 +597,10 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         assertThat(annotatedMethods).containsExactlyElementsIn(expectedAnnotatedMethods)
     }
 
-    private fun getConfiguredVisitorFactory(
-        visitorFactoryClass: Class<out AsmClassVisitorFactory<Params>>,
-        paramsConfig: (Params) -> Unit = {}
-    ): AsmClassVisitorFactory<Params> {
+    private fun<T : InstrumentationParameters> getConfiguredVisitorFactory(
+        visitorFactoryClass: Class<out AsmClassVisitorFactory<T>>,
+        paramsConfig: (T) -> Unit = {}
+    ): AsmClassVisitorFactory<T> {
         return AsmClassVisitorFactoryEntry(
             visitorFactoryClass,
             paramsConfig

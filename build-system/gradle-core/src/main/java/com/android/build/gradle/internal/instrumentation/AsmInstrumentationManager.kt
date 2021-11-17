@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.instrumentation
 import com.android.SdkConstants.DOT_CLASS
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.gradle.internal.matcher.GlobPathMatcherFactory
+import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import org.objectweb.asm.ClassReader
@@ -37,6 +39,7 @@ import java.net.URLClassLoader
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.Deflater
@@ -54,17 +57,22 @@ import java.util.zip.ZipOutputStream
  *                                 to load the actual classes.
  * @param framesComputationMode the frame computation mode that will be applied to the bytecode of
  *                              the instrumented classes.
+ * @param excludes the set of patterns to exclude from instrumentation
  * @param profilingTransforms list of paths to the profiler jars injected by the IDE to transform
  *                            classes.
  */
 class AsmInstrumentationManager(
-        private val visitors: List<AsmClassVisitorFactory<*>>,
-        private val apiVersion: Int,
-        private val classesHierarchyResolver: ClassesHierarchyResolver,
-        private val framesComputationMode: FramesComputationMode,
-        profilingTransforms: List<String> = emptyList()
+    private val visitors: List<AsmClassVisitorFactory<*>>,
+    private val apiVersion: Int,
+    private val classesHierarchyResolver: ClassesHierarchyResolver,
+    private val framesComputationMode: FramesComputationMode,
+    excludes: Set<String>,
+    profilingTransforms: List<String> = emptyList()
 ): Closeable {
     private val profilingTransformsClassLoaders = mutableListOf<URLClassLoader>()
+    private val excludesMatchers = excludes.map {
+        GlobPathMatcherFactory.create(FileUtils.toSystemIndependentPath(it))
+    }
 
     private val profilingTransforms = profilingTransforms.map {
         val jarFile = File(it)
@@ -103,6 +111,15 @@ class AsmInstrumentationManager(
         profilingTransformsClassLoaders.forEach(URLClassLoader::close)
     }
 
+    private fun includeFileInInstrumentation(relativePath: String): Boolean {
+        val pathWithoutExtension by lazy {
+            Paths.get(FileUtils.toSystemIndependentPath(relativePath).removeSuffix(DOT_CLASS))
+        }
+        return CLASS_MATCHER.test(relativePath) && excludesMatchers.none {
+            it.matches(pathWithoutExtension)
+        }
+    }
+
     fun instrumentClassesFromDirectoryToDirectory(inputDir: File, outputDir: File) {
         val inputPath = inputDir.toPath()
         Files.walkFileTree(inputPath, object : SimpleFileVisitor<Path>() {
@@ -113,7 +130,7 @@ class AsmInstrumentationManager(
                 val outputFile = outputDir.resolve(relativePath.toString())
                 outputFile.parentFile.mkdirs()
 
-                if (fileName.endsWith(DOT_CLASS)) {
+                if (includeFileInInstrumentation(relativePath.toString())) {
                     instrumentClassToDir(
                         packageName = relativePath.toString()
                             .removeSuffix(File.separatorChar + fileName)
@@ -145,11 +162,11 @@ class AsmInstrumentationManager(
         }
     }
 
-    fun instrumentModifiedFile(inputFile: File, outputFile: File, packageName: String) {
+    fun instrumentModifiedFile(inputFile: File, outputFile: File, relativePath: String) {
         outputFile.parentFile.mkdirs()
-        if (inputFile.name.endsWith(DOT_CLASS)) {
+        if (includeFileInInstrumentation(relativePath)) {
             instrumentClassToDir(
-                packageName = packageName,
+                packageName = relativePath.removeSuffix("/${inputFile.name}").replace('/', '.'),
                 className = inputFile.name.removeSuffix(DOT_CLASS),
                 classFile = inputFile,
                 outputFile = outputFile
@@ -261,7 +278,7 @@ class AsmInstrumentationManager(
         classInputStream: () -> InputStream
     ) {
         val entryName = entry.name
-        if (!entryName.endsWith(DOT_CLASS)) {
+        if (!includeFileInInstrumentation(entryName)) {
             classInputStream.invoke().use {
                 saveEntryToJar(
                     entryName,

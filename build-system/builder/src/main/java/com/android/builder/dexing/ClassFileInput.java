@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 public interface ClassFileInput extends Closeable {
 
     /** Accepts Unix-style or Windows-style absolute or relative path. */
-    Predicate<String> CLASS_MATCHER =
+    public Predicate<String> CLASS_MATCHER =
             s -> {
                 String lowerCase = toSystemIndependentPath(s.toLowerCase(Locale.US));
                 if (!lowerCase.endsWith(SdkConstants.DOT_CLASS)) {

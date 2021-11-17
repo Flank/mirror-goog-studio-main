@@ -626,7 +626,7 @@ class DependencyConfigurator(
             registerAsmTransformForComponent(
                 projectServices.projectInfo.name,
                 dependencies,
-                component
+                component as ComponentImpl
             )
 
             registerRecalculateStackFramesTransformForComponent(

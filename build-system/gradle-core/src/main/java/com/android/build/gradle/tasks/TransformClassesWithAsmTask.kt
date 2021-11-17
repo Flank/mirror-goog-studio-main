@@ -20,10 +20,10 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JSON
 import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
 import com.android.build.gradle.internal.instrumentation.ClassesHierarchyResolver
 import com.android.build.gradle.internal.instrumentation.loadClassData
@@ -50,6 +50,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
@@ -80,6 +81,9 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
     @get:Input
     abstract val framesComputationMode: Property<FramesComputationMode>
+
+    @get:Input
+    abstract val excludes: SetProperty<String>
 
     @get:Nested
     abstract val visitorsList: ListProperty<AsmClassVisitorFactory<*>>
@@ -144,6 +148,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         params.visitorsList.set(visitorsList)
         params.asmApiVersion.set(asmApiVersion)
         params.framesComputationMode.set(framesComputationMode)
+        params.excludes.set(excludes)
         params.shouldPackageProfilerDependencies.set(
             shouldPackageProfilerDependencies.getOrElse(false)
         )
@@ -224,6 +229,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         abstract val visitorsList: ListProperty<AsmClassVisitorFactory<*>>
         abstract val asmApiVersion: Property<Int>
         abstract val framesComputationMode: Property<FramesComputationMode>
+        abstract val excludes: SetProperty<String>
         abstract val shouldPackageProfilerDependencies: Property<Boolean>
         abstract val profilingTransforms: ListProperty<String>
         abstract val projectSources: ConfigurableFileCollection
@@ -327,6 +333,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                 apiVersion = parameters.asmApiVersion.get(),
                 classesHierarchyResolver = classesHierarchyResolver,
                 framesComputationMode = parameters.framesComputationMode.get(),
+                excludes = parameters.excludes.get(),
                 profilingTransforms = parameters.profilingTransforms.getOrElse(emptyList())
             )
         }
@@ -366,8 +373,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                     instrumentationManager.instrumentModifiedFile(
                         inputFile = it.file,
                         outputFile = outputFile,
-                        packageName = it.normalizedPath.removeSuffix("/${it.file.name}")
-                            .replace('/', '.')
+                        relativePath = it.normalizedPath
                     )
                 }
 
@@ -447,9 +453,10 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: ComponentCreationConfig, val isTestCoverageEnabled: Boolean
-    ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentCreationConfig>(
-            creationConfig
+        component: ComponentImpl,
+        val isTestCoverageEnabled: Boolean
+    ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentImpl>(
+        component
     ) {
 
         override val name: String = computeTaskName("transform", "ClassesWithAsm")
@@ -478,6 +485,8 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             task.framesComputationMode.setDisallowChanges(creationConfig.asmFramesComputationMode)
 
             task.asmApiVersion.setDisallowChanges(creationConfig.asmApiVersion)
+
+            task.excludes.setDisallowChanges(creationConfig.instrumentation.excludes)
 
             task.inputClassesDir.from(
                 creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS)

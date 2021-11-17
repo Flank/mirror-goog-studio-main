@@ -1545,7 +1545,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         //        TaskFactoryUtils.dependsOn(javacTask,
         // testedVariantScope.getTaskContainer().getJavacTask());
         maybeCreateTransformClassesWithAsmTask(
-            unitTestCreationConfig,
+            unitTestCreationConfig as ComponentImpl,
             isTestCoverageEnabled = false
         )
 
@@ -2014,7 +2014,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 createJacocoTask(creationConfig)
             }
         }
-        maybeCreateTransformClassesWithAsmTask(creationConfig, isTestCoverageEnabled)
+        maybeCreateTransformClassesWithAsmTask(
+            creationConfig as ComponentImpl,
+            isTestCoverageEnabled
+        )
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -3208,7 +3211,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun maybeCreateTransformClassesWithAsmTask(
-        creationConfig: ComponentCreationConfig,
+        creationConfig: ComponentImpl,
         isTestCoverageEnabled: Boolean
     ) {
         if (creationConfig.projectClassesAreInstrumented) {

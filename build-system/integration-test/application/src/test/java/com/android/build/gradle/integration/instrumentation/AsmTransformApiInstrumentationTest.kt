@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.feat
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.libClasses
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.libClassesDescriptorPrefix
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.projectClasses
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -85,6 +86,53 @@ class AsmTransformApiInstrumentationTest {
         // check task is up-to-date
         val result = project.executor().run(":app:assembleDebug")
         assertThat(result.upToDateTasks).contains(":app:transformDebugClassesWithAsm")
+    }
+
+    @Test
+    fun classesInExcludesAreNotInstrumented() {
+        configureExtensionForAnnotationAddingVisitor(project)
+        configureExtensionForInterfaceAddingVisitor(project)
+
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+                androidComponents {
+                    onVariants(selector().all(), {
+                        instrumentation.excludes.add("**/*ImplementsI")
+                        instrumentation.excludes.add("com/example/myapplication/ClassExtendsOneClassAndImplementsTwoInterfaces")
+                        instrumentation.excludes.add("com/example/lib/**")
+                    })
+                }
+            """.trimIndent()
+        )
+
+        project.executor().run(":app:assembleDebug")
+
+
+        val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+
+        // app classes
+        checkClassesAreInstrumented(
+            apk = apk,
+            classesDescriptorPackagePrefix = appClassesDescriptorPrefix,
+            expectedClasses = projectClasses,
+            expectedAnnotatedMethods = mapOf(
+                "ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces" to
+                        listOf("f4")
+            ),
+            expectedInstrumentedClasses = listOf(
+                "ClassWithNoInterfacesOrSuperclasses"
+            )
+        )
+
+        // lib classes
+        checkClassesAreInstrumented(
+            apk = apk,
+            classesDescriptorPackagePrefix = libClassesDescriptorPrefix,
+            expectedClasses = libClasses,
+            expectedAnnotatedMethods = emptyMap(),
+            expectedInstrumentedClasses = emptyList()
+        )
     }
 
     @Test
