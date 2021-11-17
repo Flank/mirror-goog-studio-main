@@ -138,7 +138,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         val USE_LATEST_NIGHTLY_GRADLE_VERSION = System.getenv("USE_GRADLE_NIGHTLY")?.toBoolean() ?: false
         @JvmField
         val GRADLE_TEST_VERSION: String
-        private val ANDROID_GRADLE_PLUGIN_VERSION: String?
+        val ANDROID_GRADLE_PLUGIN_VERSION: String?
         const val DEVICE_TEST_TASK = "deviceCheck"
 
         internal const val MAX_TEST_NAME_DIR_WINDOWS = 50
