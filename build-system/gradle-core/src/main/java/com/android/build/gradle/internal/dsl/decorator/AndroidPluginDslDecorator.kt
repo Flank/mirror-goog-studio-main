@@ -53,6 +53,7 @@ import com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive
 import com.android.build.gradle.internal.dsl.BundleOptionsTexture
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.DexPackagingOptionsImpl
+import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl

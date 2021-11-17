@@ -22,6 +22,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Sources
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -70,6 +71,17 @@ abstract class AnalyticsEnabledComponent(
                 objectFactory)
         }
 
+    override val instrumentation: Instrumentation
+        get() {
+            // TODO: Add analytics enum
+            return objectFactory.newInstance(
+                AnalyticsEnabledInstrumentation::class.java,
+                delegate.instrumentation,
+                stats,
+                objectFactory
+            )
+        }
+
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
         scope: InstrumentationScope,
@@ -89,7 +101,8 @@ abstract class AnalyticsEnabledComponent(
         delegate.transformClassesWith(
             classVisitorFactoryImplClass,
             scope,
-            instrumentationParamsConfig)
+            instrumentationParamsConfig
+        )
     }
 
     override fun setAsmFramesComputationMode(mode: FramesComputationMode) {

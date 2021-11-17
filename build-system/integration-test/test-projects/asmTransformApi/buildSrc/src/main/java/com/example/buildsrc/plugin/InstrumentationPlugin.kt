@@ -62,7 +62,7 @@ class InstrumentationPlugin : Plugin<Project> {
         instrumentationExtension: InstrumentationPluginExtension
     ) {
         androidComponentsExt.onVariants {
-            it.transformClassesWith(
+            it.instrumentation.transformClassesWith(
                 AnnotationAddingClassVisitorFactory::class.java,
                 if (instrumentDependencies) InstrumentationScope.ALL
                 else InstrumentationScope.PROJECT
@@ -77,7 +77,7 @@ class InstrumentationPlugin : Plugin<Project> {
                     instrumentedAnnotationDescriptor
                 )
             }
-            it.unitTest?.transformClassesWith(
+            it.unitTest?.instrumentation?.transformClassesWith(
                     AnnotationAddingClassVisitorFactory::class.java,
                     InstrumentationScope.PROJECT
             ) { params ->
@@ -99,7 +99,7 @@ class InstrumentationPlugin : Plugin<Project> {
         instrumentationExtension: InstrumentationPluginExtension
     ) {
         androidComponentsExt.onVariants(androidComponentsExt.selector().withBuildType("debug")) {
-            it.transformClassesWith(
+            it.instrumentation.transformClassesWith(
                 InterfaceAddingClassVisitorFactory::class.java,
                 if (instrumentDependencies) InstrumentationScope.ALL
                 else InstrumentationScope.PROJECT
@@ -112,7 +112,7 @@ class InstrumentationPlugin : Plugin<Project> {
                 )
                 params.interfaceInternalName.setDisallowChanges(instrumentedInterfaceInternalName)
             }
-            it.unitTest?.transformClassesWith(
+            it.unitTest?.instrumentation?.transformClassesWith(
                     InterfaceAddingClassVisitorFactory::class.java,
                     InstrumentationScope.PROJECT
             ) { params ->

@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -97,22 +98,11 @@ open class  LibraryVariantImpl @Inject constructor(
             value = variantDslInfo.namespace
         )
 
-    override fun <ParamT : InstrumentationParameters> transformClassesWith(
-        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
-        scope: InstrumentationScope,
-        instrumentationParamsConfig: (ParamT) -> Unit
-    ) {
-        if (scope == InstrumentationScope.ALL) {
-            throw RuntimeException(
-                "Can't register ${classVisitorFactoryImplClass.name} to " +
-                        "instrument library dependencies.\n" +
-                        "Instrumenting library dependencies will have no effect on library " +
-                        "consumers, move the dependencies instrumentation to be done in the " +
-                        "consuming app or test component."
-            )
-        }
-        super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
-    }
+    override val instrumentation = InstrumentationImpl(
+        services,
+        internalServices,
+        isLibraryVariant = true
+    )
 
     override var androidTest: AndroidTest? = null
 

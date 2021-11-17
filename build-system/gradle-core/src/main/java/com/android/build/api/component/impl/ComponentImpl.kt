@@ -54,7 +54,7 @@ import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraA
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
+import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -107,7 +107,7 @@ abstract class ComponentImpl(
     override val variantData: BaseVariantData,
     override val transformManager: TransformManager,
     protected val internalServices: VariantPropertiesApiServices,
-    override val services: TaskCreationServices,
+    final override val services: TaskCreationServices,
     override val sdkComponents: SdkComponents,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
@@ -128,7 +128,7 @@ abstract class ComponentImpl(
         scope: InstrumentationScope,
         instrumentationParamsConfig: (ParamT) -> Unit
     ) {
-        asmClassVisitorsRegistry.register(
+        instrumentation.transformClassesWith(
             classVisitorFactoryImplClass,
             scope,
             instrumentationParamsConfig
@@ -136,7 +136,7 @@ abstract class ComponentImpl(
     }
 
     override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
-        asmClassVisitorsRegistry.setAsmFramesComputationMode(mode)
+        instrumentation.setAsmFramesComputationMode(mode)
     }
 
     override val javaCompilation: JavaCompilation =
@@ -157,8 +157,13 @@ abstract class ComponentImpl(
         )
     }
 
+    override val instrumentation = InstrumentationImpl(
+        services,
+        internalServices,
+        isLibraryVariant = false
+    )
 
-// ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
@@ -197,17 +202,13 @@ abstract class ComponentImpl(
                 !useResourceShrinker()
 
     override val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
-        get() {
-            return asmClassVisitorsRegistry.projectClassesVisitors.map { it.visitorFactory }
-        }
+        get() = instrumentation.registeredProjectClassesVisitors
 
     override val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
-        get() {
-            return asmClassVisitorsRegistry.dependenciesClassesVisitors.map { it.visitorFactory }
-        }
+        get() = instrumentation.registeredDependenciesClassesVisitors
 
     override val asmFramesComputationMode: FramesComputationMode
-        get() = asmClassVisitorsRegistry.framesComputationMode
+        get() = instrumentation.finalAsmFramesComputationMode
 
     override val allProjectClassesPostAsmInstrumentation: FileCollection
         get() =
@@ -322,7 +323,6 @@ abstract class ComponentImpl(
     // ---------------------------------------------------------------------------------------------
 
     private val variantOutputs = mutableListOf<VariantOutputImpl>()
-    private val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
 
     // FIXME make internal
     fun addVariantOutput(
@@ -800,7 +800,7 @@ abstract class ComponentImpl(
     }
 
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
-        asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
+        instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
 
     abstract fun <T: com.android.build.api.variant.Component> createUserVisibleVariantObject(
