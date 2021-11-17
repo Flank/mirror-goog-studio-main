@@ -75,6 +75,8 @@ class PartialRTest {
     @Test
     fun checkBuilds() {
         project.executor()
+            // b/207829416
+            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
             .run(":app:assembleDebug")
 
         val stringsR = FileUtils.join(
@@ -95,7 +97,7 @@ class PartialRTest {
         assertThat(stringsR).contains("default int string default_string")
         assertThat(stringsR).contains("default int string private_string")
         assertThat(stringsR).contains("default int string public_string")
-        
+
         assertThat(publicR).contains("public int string public_string")
         assertThat(symbolsR).contains("private int string private_string")
 
@@ -134,6 +136,8 @@ class PartialRTest {
 
         // Incremental build.
         project.executor()
+            // b/207829416
+            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
             .run(":app:assembleDebug")
 
         // Partial file for the removed file should have been removed too.

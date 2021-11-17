@@ -59,7 +59,10 @@ class AutoNamespaceTest {
             assertThat(lib.resStaticLibrary).exists()
         }
 
-        project.executor().run("assembleDebug")
+        project.executor()
+             // b/207829416
+            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
+            .run("assembleDebug")
 
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         // Sanity check the final APK.
