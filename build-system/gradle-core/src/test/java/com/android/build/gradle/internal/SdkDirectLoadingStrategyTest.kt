@@ -171,6 +171,31 @@ class SdkDirectLoadingStrategyTest {
         </ns2:repository>
     """.trimIndent()
 
+    private fun getPlatformWithExtensionsXml(apiLevel: Int = 28, extensionLevel: Int = 2, isBaseExtension: String = "false") = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ns2:repository
+            xmlns:ns2="http://schemas.android.com/repository/android/common/02"
+            xmlns:ns3="http://schemas.android.com/repository/android/generic/02"
+            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/03"
+            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/03"
+            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/03">
+
+            <license id="android-sdk-license" type="text">Very valid license</license>
+            <localPackage path="platforms;android-$apiLevel${if (isBaseExtension == "false") "-ext$extensionLevel" else ""}" obsolete="false">
+                <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:platformDetailsType">
+                    <api-level>$apiLevel</api-level>
+                    <base-extension>$isBaseExtension</base-extension>
+                    <extension-level>$extensionLevel</extension-level>
+                    <codename></codename>
+                    <layoutlib api="15"/>
+                </type-details>
+                <revision><major>6</major></revision>
+                <display-name>Android SDK Platform $apiLevel ${if (isBaseExtension == "false") "Extension Level, $extensionLevel " else ""}</display-name>
+                <uses-license ref="android-sdk-license"/>
+            </localPackage>
+        </ns2:repository>
+    """.trimIndent()
+
     private val PLATFORM_28_OPTIONAL_JSON = """
         [
           {
@@ -334,6 +359,42 @@ class SdkDirectLoadingStrategyTest {
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
+    }
+
+    @Test
+    fun load_PlatformWithExtensions() {
+        // Load API level 28 with extension level 2.
+        configureSdkDirectory(
+                platformDirectory = "android-28-ext2",
+                extensionLevel = 2,
+                isBaseExtension = "false")
+
+        // Try loading the non-base SDK with API 28 and extension level 2
+        val api28ext2Loader = getDirectLoader(platformHash = "android-28-ext2")
+        assertThat(api28ext2Loader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(api28ext2Loader, platformHash = "android-28-ext2")
+    }
+
+    @Test
+    fun load_twoPlatformsWithSameAPI() {
+        // Load the 28 API base sdk
+        configureSdkDirectory()
+
+        // Load the same API level but with an extension level.
+        configureSdkDirectory(
+                platformDirectory = "android-28-ext2",
+                extensionLevel = 2,
+                isBaseExtension = "false")
+
+        // Try loading the non-base SDK with API 28 and extension level 2
+        val api28ext2Loader = getDirectLoader(platformHash = "android-28-ext2")
+        assertThat(api28ext2Loader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(api28ext2Loader, platformHash = "android-28-ext2")
+
+        // Now try loading the base extension, API 28 SDK
+        val api28Loader = getDirectLoader(platformHash = "android-28")
+        assertThat(api28Loader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(api28Loader)
     }
 
     @Test
@@ -513,6 +574,8 @@ class SdkDirectLoadingStrategyTest {
         configurePlatform: Boolean = true,
         platformDirectory: String = "android-28",
         platformApiLevel: Int = 28,
+        extensionLevel: Int? = null,
+        isBaseExtension: String = "true",
         configureBuildTools: Boolean = true,
         buildToolsDirectory: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION,
         configurePlatformTools: Boolean = true,
@@ -530,7 +593,8 @@ class SdkDirectLoadingStrategyTest {
 
             val platformPackageXml = platformRoot.resolve("package.xml")
             platformPackageXml.createNewFile()
-            platformPackageXml.writeText(getPlatformXml(platformApiLevel), Charsets.UTF_8)
+            val platformText = if (extensionLevel == null) getPlatformXml(platformApiLevel) else getPlatformWithExtensionsXml(apiLevel = platformApiLevel, extensionLevel = extensionLevel, isBaseExtension = isBaseExtension)
+            platformPackageXml.writeText(platformText, Charsets.UTF_8)
 
             val optionalDir = platformRoot.resolve("optional")
             optionalDir.mkdir()
@@ -656,12 +720,12 @@ class SdkDirectLoadingStrategyTest {
             AndroidTargetHash.getVersionFromHash(platformHash))
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
-        if (platformHash.largerThanAndroidSdk(30)) {
+        if (AndroidTargetHash.getVersionFromHash(platformHash).isGreaterOrEqualThan(30)) {
             assertThat(sdkDirectLoadingStrategy.getCoreForSystemModulesJar()).isEqualTo(
                 sdkRoot.resolve("platforms/$platformHash/$FN_CORE_FOR_SYSTEM_MODULES")
             )
         }
-        if (platformHash.largerThanAndroidSdk(26)) {
+        if (AndroidTargetHash.getVersionFromHash(platformHash).isGreaterOrEqualThan(26)) {
             assertThat(sdkDirectLoadingStrategy.getApiVersionsFile()).isEqualTo(
                 sdkRoot.resolve("platforms/$platformHash/data/api-versions.xml")
             )
@@ -695,6 +759,4 @@ class SdkDirectLoadingStrategyTest {
             "android.test.base.jar",
             "android.test.runner.jar").map { optionalDir.resolve(it) }
     }
-
-    private fun String.largerThanAndroidSdk(value: Int ) = this.split("-").last().toInt() >= value
 }
