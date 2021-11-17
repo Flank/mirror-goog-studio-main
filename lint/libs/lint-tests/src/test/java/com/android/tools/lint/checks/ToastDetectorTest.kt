@@ -24,19 +24,19 @@ class ToastDetectorTest : AbstractCheckTest() {
     fun testJava() {
         val expected =
             """
-        src/test/pkg/ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG);
                 ~~~~~~~~~~~~~~
         src/test/pkg/ToastTest.java:33: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported [ShowToast]
                 Toast toast = Toast.makeText(context, R.string.app_name, 5000);
                                                                          ~~~~
-        src/test/pkg/ToastTest.java:33: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.java:33: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 Toast toast = Toast.makeText(context, R.string.app_name, 5000);
                               ~~~~~~~~~~~~~~
-        src/test/pkg/ToastTest.java:39: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.java:39: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG);
                 ~~~~~~~~~~~~~~
-        src/test/pkg/ToastTest.java:54: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.java:54: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 Toast toast2 = Toast.makeText(context, "foo", Toast.LENGTH_LONG); // not shown
                                ~~~~~~~~~~~~~~
         0 errors, 5 warnings
@@ -128,16 +128,16 @@ class ToastDetectorTest : AbstractCheckTest() {
     fun testKotlin() {
         val expected =
             """
-        src/test/pkg/ToastTest.kt:34: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:34: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG)
                 ~~~~~~~~~~~~~~
         src/test/pkg/ToastTest.kt:35: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported [ShowToast]
                 val toast = Toast.makeText(context, R.string.app_name, 5000)
                                                                        ~~~~
-        src/test/pkg/ToastTest.kt:35: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:35: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 val toast = Toast.makeText(context, R.string.app_name, 5000)
                             ~~~~~~~~~~~~~~
-        src/test/pkg/ToastTest.kt:40: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:40: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG)
                 ~~~~~~~~~~~~~~
         0 errors, 4 warnings
@@ -247,10 +247,10 @@ class ToastDetectorTest : AbstractCheckTest() {
             *snackbarStubs
         ).run().expect(
             """
-            src/test/pkg/Test.kt:8: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/Test.kt:8: Warning: Snackbar created but not shown: did you forget to call show()? [ShowToast]
                     Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE) // ERROR
                     ~~~~~~~~~~~~~
-            src/test/pkg/Test.kt:15: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/Test.kt:15: Warning: Snackbar created but not shown: did you forget to call show()? [ShowToast]
                     val sb = Snackbar.make(parent, "Message", 500) // ERROR
                              ~~~~~~~~~~~~~
             0 errors, 2 warnings

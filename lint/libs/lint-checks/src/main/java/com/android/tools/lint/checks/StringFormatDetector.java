@@ -601,7 +601,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 String message =
                                         String.format(
                                                 "Incorrect formatting string `%1$s`; missing conversion "
-                                                        + "character in '`%2$s`' ?",
+                                                        + "character in '`%2$s`'?",
                                                 name, str);
                                 context.report(INVALID, location, message);
                                 // warned = true;

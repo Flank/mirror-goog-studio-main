@@ -129,7 +129,7 @@ class ToastDetector : Detector(), SourceCodeScanner {
                 ISSUE,
                 node,
                 context.getCallLocation(node, includeReceiver = true, includeArguments = false),
-                "$toastName created but not shown: did you forget to call `show()` ?",
+                "$toastName created but not shown: did you forget to call `show()`?",
                 fix
             )
         }

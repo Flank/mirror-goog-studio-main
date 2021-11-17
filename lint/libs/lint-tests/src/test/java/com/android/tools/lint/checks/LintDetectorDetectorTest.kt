@@ -140,6 +140,8 @@ class LintDetectorDetectorTest {
                                 "This is teh typo");
                             String message = "Welcome to Andriod";
                             context.report(ISSUE, node, context.getLocation(node), message);
+                            context.report(ISSUE, node, context.getLocation(node),
+                                "Should you use `x ?: y` instead of ```foo ? 1 : 0``` ?");
                         }
                     }
                 """
@@ -369,12 +371,15 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyJavaLintDetector.java:70: Warning: Single sentence error messages should not end with a period [LintImplTextFormat]
                             "Wrong use of LinearLayout.");
                              ~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/MyJavaLintDetector.java:74: Warning: "teh" is a common misspelling; did you mean "the" ? [LintImplTextFormat]
+                src/test/pkg/MyJavaLintDetector.java:74: Warning: "teh" is a common misspelling; did you mean "the"? [LintImplTextFormat]
                             "This is teh typo");
                                      ~~~
-                src/test/pkg/MyJavaLintDetector.java:76: Warning: "Andriod" is a common misspelling; did you mean "Android" ? [LintImplTextFormat]
+                src/test/pkg/MyJavaLintDetector.java:76: Warning: "Andriod" is a common misspelling; did you mean "Android"? [LintImplTextFormat]
                         context.report(ISSUE, node, context.getLocation(node), message);
                                                                                ~~~~~~~
+                src/test/pkg/MyJavaLintDetector.java:78: Warning: Question marks should not be separated by a space [LintImplTextFormat]
+                            "Should you use `x ?: y` instead of ```foo ? 1 : 0``` ?");
+                                                                                  ~
                 src/test/pkg/MyKotlinLintDetector.kt:47: Warning: "foo().bar().baz()" looks like a call; surround with backtics in string to display as symbol, e.g. `foo().bar().baz()` [LintImplTextFormat]
                                     |Instead you should call foo().bar().baz() here.
                                                              ~~~~~~~~~~~~~~~~~
@@ -468,7 +473,7 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
                 class MyIssueRegistry : IssueRegistry() {
                       ~~~~~~~~~~~~~~~
-                27 errors, 14 warnings
+                27 errors, 15 warnings
                 """
             )
             .expectFixDiffs(

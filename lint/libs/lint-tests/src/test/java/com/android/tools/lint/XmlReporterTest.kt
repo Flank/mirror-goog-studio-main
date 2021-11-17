@@ -254,7 +254,7 @@ class XmlReporterTest {
                 <issue
                     id="TypographyFractions"
                     severity="Warning"
-                    message="Use fraction character ¼ (&amp;#188;) instead of 1/4 ?"
+                    message="Use fraction character ¼ (&amp;#188;) instead of 1/4?"
                     category="Usability:Typography"
                     priority="5"
                     summary="Fraction string can be replaced with fraction character"
@@ -407,7 +407,7 @@ class XmlReporterTest {
                 <issue
                     id="Typos"
                     severity="Warning"
-                    message="&quot;unsed&quot; is a common misspelling; did you mean &quot;used&quot; or &quot;unused&quot; or &quot;unsaid&quot; ?"
+                    message="&quot;unsed&quot; is a common misspelling; did you mean &quot;used&quot; or &quot;unused&quot; or &quot;unsaid&quot;?"
                     category="Correctness:Messages"
                     priority="7"
                     summary="Spelling error"

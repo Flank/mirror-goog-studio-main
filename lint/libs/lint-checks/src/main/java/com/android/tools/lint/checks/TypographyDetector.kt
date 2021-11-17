@@ -44,6 +44,7 @@ import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_EMBEDDING
 import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_OVERRIDE
 
 /** Checks for various typographical issues in string definitions. */
+@Suppress("LintImplTextFormat")
 class TypographyDetector : ResourceXmlDetector() {
     private var checkDashes = false
     private var checkQuotes = false
@@ -404,8 +405,7 @@ class TypographyDetector : ResourceXmlDetector() {
          */
         private val SINGLE_QUOTE: Pattern = Pattern.compile(".*\\W*'[^']+'(\\W.*)?", Pattern.UNICODE_CHARACTER_CLASS)
 
-        private const val FRACTION_MESSAGE = "Use fraction character %1\$c (%2\$s) instead of %3\$s ?"
-        private const val FRACTION_MESSAGE_PATTERN = "Use fraction character (.+) \\((.+)\\) instead of (.+) \\?"
+        private const val FRACTION_MESSAGE = "Use fraction character %1\$c (%2\$s) instead of %3\$s?"
         private fun isAnalyticsTrackingId(element: Element): Boolean {
             val name = element.getAttribute(ATTR_NAME)
             return "ga_trackingId" == name

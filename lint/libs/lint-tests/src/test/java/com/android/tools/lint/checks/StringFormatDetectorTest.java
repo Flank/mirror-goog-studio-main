@@ -1805,7 +1805,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "res/values/strings.xml:3: Error: Incorrect formatting string invalid_format; missing conversion character in '% s' ? [StringFormatInvalid]\n"
+                                + "res/values/strings.xml:3: Error: Incorrect formatting string invalid_format; missing conversion character in '% s'? [StringFormatInvalid]\n"
                                 + "     <string name=\"invalid_format\">Invalid % s</string>\n"
                                 + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");

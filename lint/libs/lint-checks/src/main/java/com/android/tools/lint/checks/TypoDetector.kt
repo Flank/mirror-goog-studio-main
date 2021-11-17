@@ -236,7 +236,7 @@ class TypoDetector : ResourceXmlDetector() {
                 ISSUE,
                 node,
                 context.getLocation(node, begin, index),
-                "Did you mean \"$intended\" instead of \"$actual\" ?",
+                "Did you mean \"$intended\" instead of \"$actual\"?",
                 fix
             )
         }
@@ -400,7 +400,7 @@ class TypoDetector : ResourceXmlDetector() {
             }
             "\"$word\" is usually capitalized as \"$first\""
         } else {
-            "\"$word\" is a common misspelling; did you mean $sb ?"
+            "\"$word\" is a common misspelling; did you mean $sb?"
         }
         val end = begin + word.length
         context.report(ISSUE, node, context.getLocation(node, begin, end), message, fix)

@@ -67,7 +67,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesSdk() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:7: Error: Misspelled tag <use-sdk>: Did you mean <uses-sdk> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:7: Error: Misspelled tag <use-sdk>: Did you mean <uses-sdk>? [ManifestTypo]\n"
                         + "    <use-sdk android:minSdkVersion=\"14\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -111,7 +111,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesSdk2() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:7: Error: Misspelled tag <user-sdk>: Did you mean <uses-sdk> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:7: Error: Misspelled tag <user-sdk>: Did you mean <uses-sdk>? [ManifestTypo]\n"
                         + "    <user-sdk android:minSdkVersion=\"14\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -155,7 +155,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesPermission() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:9: Error: Misspelled tag <use-permission>: Did you mean <uses-permission> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:9: Error: Misspelled tag <use-permission>: Did you mean <uses-permission>? [ManifestTypo]\n"
                         + "    <use-permission android:name=\"com.example.helloworld.permission\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -199,7 +199,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesPermission2() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:9: Error: Misspelled tag <user-permission>: Did you mean <uses-permission> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:9: Error: Misspelled tag <user-permission>: Did you mean <uses-permission>? [ManifestTypo]\n"
                         + "    <user-permission android:name=\"com.example.helloworld.permission\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -243,7 +243,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesFeature() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:11: Error: Misspelled tag <use-feature>: Did you mean <uses-feature> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:11: Error: Misspelled tag <use-feature>: Did you mean <uses-feature>? [ManifestTypo]\n"
                         + "    <use-feature android:name=\"android.hardware.wifi\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -287,7 +287,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesFeature2() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:11: Error: Misspelled tag <user-feature>: Did you mean <uses-feature> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:11: Error: Misspelled tag <user-feature>: Did you mean <uses-feature>? [ManifestTypo]\n"
                         + "    <user-feature android:name=\"android.hardware.wifi\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -331,7 +331,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesLibrary() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:16: Error: Misspelled tag <use-library>: Did you mean <uses-library> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:16: Error: Misspelled tag <use-library>: Did you mean <uses-library>? [ManifestTypo]\n"
                         + "        <use-library android:name=\"com.example.helloworld\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -375,7 +375,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesLibrary2() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:16: Error: Misspelled tag <user-library>: Did you mean <uses-library> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:16: Error: Misspelled tag <user-library>: Did you mean <uses-library>? [ManifestTypo]\n"
                         + "        <user-library android:name=\"com.example.helloworld\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -419,25 +419,25 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testOtherTypos() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:2: Error: Misspelled tag <mannifest>: Did you mean <manifest> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:2: Error: Misspelled tag <mannifest>: Did you mean <manifest>? [ManifestTypo]\n"
                         + "<mannifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "^\n"
-                        + "AndroidManifest.xml:7: Error: Misspelled tag <uses-sd>: Did you mean <uses-sdk> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:7: Error: Misspelled tag <uses-sd>: Did you mean <uses-sdk>? [ManifestTypo]\n"
                         + "    <uses-sd android:minSdkVersion=\"14\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:9: Error: Misspelled tag <spplication>: Did you mean <application> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:9: Error: Misspelled tag <spplication>: Did you mean <application>? [ManifestTypo]\n"
                         + "    <spplication\n"
                         + "    ^\n"
-                        + "AndroidManifest.xml:12: Error: Misspelled tag <acctivity>: Did you mean <activity> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:12: Error: Misspelled tag <acctivity>: Did you mean <activity>? [ManifestTypo]\n"
                         + "        <acctivity\n"
                         + "        ^\n"
-                        + "AndroidManifest.xml:15: Error: Misspelled tag <inten-filter>: Did you mean <intent-filter> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:15: Error: Misspelled tag <inten-filter>: Did you mean <intent-filter>? [ManifestTypo]\n"
                         + "            <inten-filter >\n"
                         + "            ^\n"
-                        + "AndroidManifest.xml:16: Error: Misspelled tag <aktion>: Did you mean <action> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:16: Error: Misspelled tag <aktion>: Did you mean <action>? [ManifestTypo]\n"
                         + "                <aktion android:name=\"android.intent.action.MAIN\" />\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:18: Error: Misspelled tag <caaategory>: Did you mean <category> ? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:18: Error: Misspelled tag <caaategory>: Did you mean <category>? [ManifestTypo]\n"
                         + "                <caaategory android:name=\"android.intent.category.LAUNCHER\" />\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "7 errors, 0 warnings\n";

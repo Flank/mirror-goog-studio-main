@@ -288,19 +288,19 @@ class DataFlowAnalyzerTest : TestCase() {
             rClass
         ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run().expect(
             """
-            src/test/pkg/StandardTest.kt:16: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/StandardTest.kt:16: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                     val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 1
                                 ~~~~~~~~~~~~~~
-            src/test/pkg/StandardTest.kt:44: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/StandardTest.kt:44: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                     val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 2
                                 ~~~~~~~~~~~~~~
-            src/test/pkg/StandardTest.kt:55: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/StandardTest.kt:55: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                     val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 3
                                 ~~~~~~~~~~~~~~
-            src/test/pkg/StandardTest.kt:76: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/StandardTest.kt:76: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                     val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 4
                                 ~~~~~~~~~~~~~~
-            src/test/pkg/StandardTest.kt:90: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/StandardTest.kt:90: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                     val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 5
                                 ~~~~~~~~~~~~~~
             0 errors, 5 warnings
@@ -438,10 +438,10 @@ class DataFlowAnalyzerTest : TestCase() {
             rClass
         ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run().expect(
             """
-            src/test/pkg/ExtensionAndNesting.kt:36: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/ExtensionAndNesting.kt:36: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                         Toast.makeText(c, r, d) // ERROR 1
                         ~~~~~~~~~~~~~~
-            src/test/pkg/ExtensionAndNesting.kt:40: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test/pkg/ExtensionAndNesting.kt:40: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                         Toast.makeText(c, r, d) // ERROR 2
                         ~~~~~~~~~~~~~~
             0 errors, 2 warnings
@@ -518,10 +518,10 @@ class DataFlowAnalyzerTest : TestCase() {
             *snackbarStubs
         ).issues(ToastDetector.ISSUE).run().expect(
             """
-            src/test.kt:6: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+            src/test.kt:6: Warning: Snackbar created but not shown: did you forget to call show()? [ShowToast]
                 Snackbar.make(parent, msg, duration).apply { // ERROR 1
                 ~~~~~~~~~~~~~
-            src/test.kt:12: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+            src/test.kt:12: Warning: Snackbar created but not shown: did you forget to call show()? [ShowToast]
                 Snackbar.make(parent, msg, duration).apply { // ERROR 2
                 ~~~~~~~~~~~~~
             0 errors, 2 warnings
@@ -586,10 +586,10 @@ class DataFlowAnalyzerTest : TestCase() {
         ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run()
             .expect(
                 """
-                src/test/pkg/test.kt:11: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+                src/test/pkg/test.kt:11: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                     val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 1
                                 ~~~~~~~~~~~~~~
-                src/test/pkg/test.kt:40: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                src/test/pkg/test.kt:40: Warning: Snackbar created but not shown: did you forget to call show()? [ShowToast]
                     Snackbar.make(parent, msg, duration).apply { // ERROR 2
                     ~~~~~~~~~~~~~
                 0 errors, 2 warnings
@@ -616,7 +616,7 @@ class DataFlowAnalyzerTest : TestCase() {
             *snackbarStubs
         ).issues(ToastDetector.ISSUE).run().expect(
             """
-            src/test.kt:6: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+            src/test.kt:6: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
                 val toast = Toast.makeText(c, r, d) // ERROR
                             ~~~~~~~~~~~~~~
             0 errors, 1 warnings
@@ -656,7 +656,7 @@ class DataFlowAnalyzerTest : TestCase() {
             )
         ).issues(ToastDetector.ISSUE).run().expect(
             """
-            src/test.kt:5: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+            src/test.kt:5: Warning: Snackbar created but not shown: did you forget to call show()? [ShowToast]
                 Snackbar.make(parent, msg, duration).clone().toDebug().show() // ERROR
                 ~~~~~~~~~~~~~
             0 errors, 1 warnings

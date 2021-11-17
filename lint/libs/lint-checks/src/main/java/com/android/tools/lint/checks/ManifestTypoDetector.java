@@ -150,7 +150,7 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
                 }
                 String message =
                         String.format(
-                                "Misspelled tag `<%1$s>`: Did you mean `%2$s` ?",
+                                "Misspelled tag `<%1$s>`: Did you mean `%2$s`?",
                                 tag, suggestionString);
                 context.report(ISSUE, element, context.getLocation(element), message);
             }
