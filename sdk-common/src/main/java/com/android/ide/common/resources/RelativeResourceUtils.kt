@@ -94,12 +94,14 @@ fun relativeResourcePathToAbsolutePath(
  * Parses identifier and file path into a map from a file
  * in the format 'packageName.projectName-sortedOrderPosition absolutePath'.
  */
-fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
+fun readFromSourceSetPathsFile(artifactFile: File): Map<String, String> {
     if (!artifactFile.exists() || !artifactFile.isFile) {
         throw IOException("$artifactFile does not exist or is not a file.")
     }
-    return artifactFile.bufferedReader().lineSequence().associate {
-        it.substringBefore(" ") to it.substringAfter(" ")
+    return artifactFile.bufferedReader().use { bufferedReader ->
+        bufferedReader.lineSequence().associate {
+            it.substringBefore(" ") to it.substringAfter(" ")
+        }
     }
 }
 
