@@ -33,9 +33,9 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.dsl.CompileOptions;
 import com.android.build.api.variant.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
@@ -327,12 +327,9 @@ public class VariantScopeImpl implements VariantScope {
      */
     @Override
     public boolean isCoreLibraryDesugaringEnabled(ConsumableCreationConfig creationConfig) {
-        BaseExtension extension = globalScope.getExtension();
+        CompileOptions compileOptions = creationConfig.getCompileOptions();
 
-        boolean libDesugarEnabled =
-                extension.getCompileOptions().getCoreLibraryDesugaringEnabled() != null
-                        && extension.getCompileOptions().getCoreLibraryDesugaringEnabled();
-
+        boolean libDesugarEnabled = compileOptions.isCoreLibraryDesugaringEnabled();
         boolean multidexEnabled = creationConfig.isMultiDexEnabled();
 
         Java8LangSupport langSupportType = creationConfig.getJava8LangSupportType();
@@ -340,8 +337,8 @@ public class VariantScopeImpl implements VariantScope {
                 langSupportType == Java8LangSupport.D8 || langSupportType == Java8LangSupport.R8;
 
         if (libDesugarEnabled && !langDesugarEnabled) {
-            globalScope
-                    .getDslServices()
+            creationConfig
+                    .getServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -350,8 +347,8 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         if (libDesugarEnabled && !multidexEnabled) {
-            globalScope
-                    .getDslServices()
+            creationConfig
+                    .getServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,

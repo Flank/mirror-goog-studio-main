@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
 import com.android.build.api.dsl.AndroidResources
+import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestFixtures
@@ -333,6 +334,8 @@ interface VariantDslInfo {
     val androidResources: AndroidResources
 
     val packaging: PackagingOptions
+
+    val compileOptions: CompileOptions
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //  APIs below should only be used at CreationConfig/Variant instantiation time       //

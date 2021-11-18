@@ -72,7 +72,7 @@ class SourceDirectoriesImpl(
 
     override val all: Provider<List<Directory>> = directories
 
-    override fun <T : Task> add(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {12
+    override fun <T : Task> add(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {
         val mappedValue: Provider<Directory> = taskProvider.flatMap {
             wiredWith(it)
         }

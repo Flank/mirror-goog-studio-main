@@ -325,7 +325,7 @@ abstract class ProjectInputs {
         dynamicFeatures.disallowChanges()
 
         bootClasspath.fromDisallowChanges(creationConfig.sdkComponents.bootClasspath)
-        javaSourceLevel.setDisallowChanges(extension.compileOptions.sourceCompatibility)
+        javaSourceLevel.setDisallowChanges(creationConfig.compileOptions.sourceCompatibility)
         compileTarget.setDisallowChanges(extension.compileSdkVersion)
         // `neverShrinking` is about all variants, so look back to the DSL
         neverShrinking.setDisallowChanges(extension.buildTypes.none { it.isMinifyEnabled })

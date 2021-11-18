@@ -122,7 +122,7 @@ class JavaCompileCreationAction(
         task.options.compilerArgumentProviders.add(
             JavaCompileOptionsForRoom(
                 creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST),
-                creationConfig.globalScope.extension.compileOptions.targetCompatibility.isJava8Compatible
+                creationConfig.compileOptions.targetCompatibility.isJava8Compatible
             )
         )
         task.options.isIncremental = globalScope.extension.compileOptions.incremental

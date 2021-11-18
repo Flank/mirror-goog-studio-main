@@ -69,7 +69,7 @@ const val DEFAULT_INCREMENTAL_COMPILATION = true
  */
 fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, task: JavaCompile) {
     val globalScope = creationConfig.globalScope
-    val compileOptions = globalScope.extension.compileOptions
+    val compileOptions = creationConfig.compileOptions
 
     if (compileOptions.sourceCompatibility.isJava9Compatible) {
         checkSdkCompatibility(globalScope.extension.compileSdkVersion!!, creationConfig.services.issueReporter)

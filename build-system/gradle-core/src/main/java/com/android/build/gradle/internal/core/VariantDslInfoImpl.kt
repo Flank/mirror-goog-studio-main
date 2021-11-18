@@ -20,6 +20,7 @@ import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryVariantDimension
 import com.android.build.api.dsl.PackagingOptions
@@ -1203,6 +1204,9 @@ open class VariantDslInfoImpl internal constructor(
 
     override val packaging: PackagingOptions
         get() = extension.packagingOptions
+
+    override val compileOptions: CompileOptions
+        get() = extension.compileOptions
 
     companion object {
 

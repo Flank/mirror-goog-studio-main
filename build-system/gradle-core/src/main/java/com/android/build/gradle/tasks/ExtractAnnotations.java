@@ -367,12 +367,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                     task.getStrictTypedefRetention(), strictTypedefRetention);
 
             task.source(creationConfig.getSources().getJava().getAll());
-            task.setEncoding(
-                    creationConfig
-                            .getGlobalScope()
-                            .getExtension()
-                            .getCompileOptions()
-                            .getEncoding());
+            task.setEncoding(creationConfig.getCompileOptions().getEncoding());
             task.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null);
 
             task.libraries =

@@ -76,10 +76,7 @@ open class ConsumableCreationConfigImpl(
 
     open fun getJava8LangSupportType(): VariantScope.Java8LangSupport {
         // in order of precedence
-        return if (!globalScope.extension
-                        .compileOptions
-                        .targetCompatibility
-                        .isJava8Compatible) {
+        return if (!variantDslInfo.compileOptions.targetCompatibility.isJava8Compatible) {
             VariantScope.Java8LangSupport.UNUSED
         } else if (config.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
             VariantScope.Java8LangSupport.RETROLAMBDA
@@ -104,8 +101,7 @@ open class ConsumableCreationConfigImpl(
      * @param creationConfig
      */
     fun isCoreLibraryDesugaringEnabled(creationConfig: ConsumableCreationConfig): Boolean {
-        val extension: BaseExtension = globalScope.getExtension()
-        val libDesugarEnabled = extension.compileOptions.coreLibraryDesugaringEnabled ?: false
+        val libDesugarEnabled = variantDslInfo.compileOptions.isCoreLibraryDesugaringEnabled
         val multidexEnabled = creationConfig.isMultiDexEnabled
         val langSupportType: VariantScope.Java8LangSupport = getJava8LangSupportType()
         val langDesugarEnabled = langSupportType == VariantScope.Java8LangSupport.D8 || langSupportType == VariantScope.Java8LangSupport.R8

@@ -394,7 +394,7 @@ abstract class R8Task @Inject constructor(
         }
 
         private fun setBootClasspathForCodeShrinker(task: R8Task) {
-            val javaTarget = creationConfig.globalScope.extension.compileOptions.targetCompatibility
+            val javaTarget = creationConfig.compileOptions.targetCompatibility
 
             task.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
             when {
