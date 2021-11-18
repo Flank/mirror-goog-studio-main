@@ -2,12 +2,12 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
@@ -51,7 +51,8 @@ class LintTaskManager constructor(
                 listOf()
             } else {
                 testComponentPropertiesList
-            }
+            },
+            ignoreTestFixturesSources = (globalScope.extension as CommonExtension<*, *, *, *>).lint.ignoreTestFixturesSources
         )
 
         // Map of task path to the providers for tasks that that task subsumes,
@@ -163,13 +164,19 @@ class LintTaskManager constructor(
     }
 
     private fun attachTestsToVariants(
-            variantPropertiesList: List<VariantImpl>,
-            testComponentPropertiesList: List<TestComponentImpl>): LinkedHashMap<String, VariantWithTests> {
+        variantPropertiesList: List<VariantImpl>,
+        testComponentPropertiesList: List<TestComponentImpl>,
+        ignoreTestFixturesSources: Boolean
+    ): LinkedHashMap<String, VariantWithTests> {
         val variantsWithTests = LinkedHashMap<String, VariantWithTests>()
         for (variant in variantPropertiesList) {
             variantsWithTests[variant.name] = VariantWithTests(
                 variant,
-                testFixtures = variant.testFixturesComponent as TestFixturesImpl?
+                testFixtures = if (ignoreTestFixturesSources) {
+                    null
+                } else {
+                    variant.testFixturesComponent as TestFixturesImpl?
+                }
             )
         }
         for (testComponent in testComponentPropertiesList) {

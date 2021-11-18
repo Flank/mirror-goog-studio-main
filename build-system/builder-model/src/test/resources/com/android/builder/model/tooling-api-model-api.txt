@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-76830973be16216fb78bbed086c287d2609a38017897d069ac4fe99bde5536b9
+20c4f237a6a60ccd2938a045675988b615c046e6b4b4e1dd1800eff0441f6dc2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -685,6 +685,7 @@ com.android.builder.model.v2.ide.LintOptions.getExplainIssues: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getFatal: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.ide.LintOptions.getHtmlOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getHtmlReport: boolean ()
+com.android.builder.model.v2.ide.LintOptions.getIgnoreTestFixturesSources: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getIgnoreTestSources: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getIgnoreWarnings: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getInformational: java.util.Set<java.lang.String> ()

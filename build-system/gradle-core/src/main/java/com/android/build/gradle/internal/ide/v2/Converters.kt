@@ -255,6 +255,7 @@ internal fun Lint.convert() = LintOptionsImpl(
     checkReleaseBuilds = checkReleaseBuilds,
     checkTestSources = checkTestSources,
     ignoreTestSources = ignoreTestSources,
+    ignoreTestFixturesSources = ignoreTestFixturesSources,
     checkGeneratedSources = checkGeneratedSources,
     checkDependencies = checkDependencies,
     baseline = baseline,

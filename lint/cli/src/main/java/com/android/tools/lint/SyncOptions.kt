@@ -68,6 +68,7 @@ fun syncTo(project: LintModelModule, flags: LintCliFlags) {
     flags.isWarningsAsErrors = options.warningsAsErrors
     flags.isCheckTestSources = options.checkTestSources
     flags.isIgnoreTestSources = options.ignoreTestSources
+    flags.isIgnoreTestFixturesSources = options.ignoreTestFixturesSources
     flags.isCheckGeneratedSources = options.checkGeneratedSources
     flags.isCheckDependencies = options.checkDependencies
     flags.isShowEverything = options.showAll

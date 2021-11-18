@@ -40,6 +40,7 @@ data class LintOptionsImpl(
     override val warningsAsErrors: Boolean,
     override val checkTestSources: Boolean,
     override val ignoreTestSources: Boolean,
+    override val ignoreTestFixturesSources: Boolean,
     override val checkGeneratedSources: Boolean,
     override val explainIssues: Boolean,
     override val showAll: Boolean,

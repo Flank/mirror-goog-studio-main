@@ -254,6 +254,11 @@ class LintDriver(
      */
     var ignoreTestSources: Boolean = false
 
+    /**
+     * Whether we should ignore testFixtures sources.
+     */
+    var ignoreTestFixturesSources: Boolean = false
+
     /** Whether we should include generated sources in the analysis. */
     var checkGeneratedSources: Boolean = false
 

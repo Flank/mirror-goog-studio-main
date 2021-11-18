@@ -96,6 +96,11 @@ interface LintOptions: AndroidModel {
     val ignoreTestSources: Boolean
 
     /**
+     * Whether lint should ignore all testFixtures sources.
+     */
+    val ignoreTestFixturesSources: Boolean
+
+    /**
      * Returns whether lint should run checks on generated sources.
      */
     val checkGeneratedSources: Boolean

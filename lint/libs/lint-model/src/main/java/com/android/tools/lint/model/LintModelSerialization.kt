@@ -721,6 +721,9 @@ private class LintModelModuleWriter(
         if (lintOptions.ignoreTestSources) {
             printer.printAttribute("ignoreTestSources", VALUE_TRUE, indent)
         }
+        if (lintOptions.ignoreTestFixturesSources) {
+            printer.printAttribute("ignoreTestFixturesSources", VALUE_TRUE, indent)
+        }
         if (lintOptions.checkGeneratedSources) {
             printer.printAttribute("checkGeneratedSources", VALUE_TRUE, indent)
         }
@@ -1275,6 +1278,7 @@ private class LintModelModuleReader(
         val ignoreWarnings = getOptionalBoolean("ignoreWarnings", false)
         val warningsAsErrors = getOptionalBoolean("warningsAsErrors", false)
         val ignoreTestSources = getOptionalBoolean("ignoreTestSources", false)
+        val ignoreTestFixturesSources = getOptionalBoolean("ignoreTestFixturesSources", false)
         val checkGeneratedSources = getOptionalBoolean("checkGeneratedSources", false)
         val checkReleaseBuilds = getOptionalBoolean("checkReleaseBuilds", false)
         val explainIssues = getOptionalBoolean("explainIssues", false)
@@ -1318,6 +1322,7 @@ private class LintModelModuleReader(
             ignoreWarnings = ignoreWarnings,
             warningsAsErrors = warningsAsErrors,
             ignoreTestSources = ignoreTestSources,
+            ignoreTestFixturesSources = ignoreTestFixturesSources,
             checkGeneratedSources = checkGeneratedSources,
             checkReleaseBuilds = checkReleaseBuilds,
             explainIssues = explainIssues,

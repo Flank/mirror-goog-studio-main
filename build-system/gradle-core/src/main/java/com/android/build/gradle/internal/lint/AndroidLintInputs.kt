@@ -482,6 +482,7 @@ abstract class LintOptionsInput {
             warningsAsErrors=warningsAsErrors.get(),
             checkTestSources=checkTestSources.get(),
             ignoreTestSources=false, // Handled in LintTaskManager
+            ignoreTestFixturesSources=false, // Handled in LintTaskManager
             checkGeneratedSources=checkGeneratedSources.get(),
             explainIssues=explainIssues.get(),
             showAll=showAll.get(),

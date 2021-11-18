@@ -810,6 +810,7 @@ open class LintCliClient : LintClient {
         driver.isAbbreviating = !flags.isShowEverything
         driver.checkTestSources = flags.isCheckTestSources
         driver.ignoreTestSources = flags.isIgnoreTestSources
+        driver.ignoreTestFixturesSources = flags.isIgnoreTestFixturesSources
         driver.checkGeneratedSources = flags.isCheckGeneratedSources
         driver.fatalOnlyMode = flags.isFatalOnly
         driver.checkDependencies = flags.isCheckDependencies

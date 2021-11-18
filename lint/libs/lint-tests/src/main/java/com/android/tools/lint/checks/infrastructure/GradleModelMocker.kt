@@ -2214,6 +2214,7 @@ private data class TestLintModelLintOptions(
     override val warningsAsErrors: Boolean = false,
     override val checkTestSources: Boolean = false,
     override val ignoreTestSources: Boolean = false,
+    override val ignoreTestFixturesSources: Boolean = false,
     override val checkGeneratedSources: Boolean = false,
     override val explainIssues: Boolean = true,
     override val showAll: Boolean = false,
