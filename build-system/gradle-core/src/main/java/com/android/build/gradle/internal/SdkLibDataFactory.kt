@@ -30,11 +30,13 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.UnknownHostException
+import java.nio.file.Path
 
 class SdkLibDataFactory(
     private val enableDownload: Boolean,
     private val androidSdkChannel: Int?, // projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL)
-    private val logger: ILogger) {
+    private val logger: ILogger,
+    private val prefsLocation: Path) {
 
     abstract class Environment {
 
@@ -58,7 +60,7 @@ class SdkLibDataFactory(
 
     private fun getDownloader(settingsController: SettingsController): Downloader {
         return LocalFileAwareDownloader(
-            LegacyDownloader(settingsController)
+            LegacyDownloader(settingsController, prefsLocation)
         )
     }
 

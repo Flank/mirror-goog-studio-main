@@ -51,6 +51,23 @@ public class LegacyDownloader implements Downloader {
     private final SettingsController mSettingsController;
     private static final int BUF_SIZE = 8192;
 
+    /**
+     * Sets up the Legacy Downloader with a custom android prefs location.
+     *
+     * @param prefsLocation the location of the prefs folder.
+     */
+    public LegacyDownloader(@NonNull SettingsController settings, @NonNull Path prefsLocation) {
+        mFileOp = new FileOpImpl();
+        File prefsFile = FileOpUtils.toFile(prefsLocation);
+        mDownloadCache =
+                new DownloadCache(prefsFile, mFileOp, DownloadCache.Strategy.FRESH_CACHE, settings);
+        mSettingsController = settings;
+    }
+
+    /**
+     * Sets up the Legacy Downloader with a prefs location specified with the ANDROID_PREFS_ROOT
+     * environment variable.
+     */
     public LegacyDownloader(@NonNull SettingsController settings) {
         mFileOp = new FileOpImpl();
         mDownloadCache =

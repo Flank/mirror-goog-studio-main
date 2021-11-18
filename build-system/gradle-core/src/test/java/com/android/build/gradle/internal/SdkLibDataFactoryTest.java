@@ -20,9 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.MockLog;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.nio.file.FileSystem;
 import java.util.Properties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +34,7 @@ import org.junit.Test;
 /** Tests for {@link SdkLibDataFactory} */
 public class SdkLibDataFactoryTest {
 
+    private final FileSystem fileSystem = InMemoryFileSystems.createInMemoryFileSystem();
     MockLog log;
     Properties properties;
     SdkLibDataFactory factory;
@@ -49,7 +52,7 @@ public class SdkLibDataFactoryTest {
         log = new MockLog();
         properties = new Properties();
         properties.clear();
-        factory = new SdkLibDataFactory(true, null, log);
+        factory = new SdkLibDataFactory(true, null, log, fileSystem.getPath("path/to/.android"));
     }
 
     @Test

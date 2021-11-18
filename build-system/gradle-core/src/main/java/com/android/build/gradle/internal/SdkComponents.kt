@@ -111,7 +111,8 @@ abstract class SdkComponentsBuildService @Inject constructor(
                 SdkLibDataFactory(
                     !parameters.offlineMode.get() && parameters.enableSdkDownload.get(),
                     parameters.androidSdkChannel.orNull,
-                    LoggerWrapper.getLogger(SdkLibDataFactory::class.java)
+                    LoggerWrapper.getLogger(SdkLibDataFactory::class.java),
+                    parameters.androidLocationsServices.get().prefsLocation
                 ).getSdkLibData(environment)
             )
         }
