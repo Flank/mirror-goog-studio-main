@@ -39,20 +39,11 @@ interface ManagedVirtualDevice : Device {
     var systemImageSource: String
 
     /**
-     * The application binary interface for the device image.
-     *
-     * [abi] is deprecated. Use [require64Bit] instead which will allow you to select between the
-     * 32 bit and 64 bit system image if appropriate for your development environment.
-     */
-    @Deprecated("Replaced with: require64Bit")
-    var abi: String
-
-    /**
      * Whether the image must be a 64 bit image. Defaults to false.
      *
      * On x86_64 machines:
      *   When false, the managed device will use the 32 bit image if available with the given api
-     *   level and source, otherwise fallback to the 64 bit image.
+     *   level and source, otherwise the 64 bit image will be used.
      *   When true, the 64 image must be used and setup will fail if an appropriate image does not
      *   exist.
      * On arm machines:

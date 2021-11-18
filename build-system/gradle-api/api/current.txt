@@ -1357,17 +1357,14 @@ package com.android.build.api.dsl {
   }
 
   @org.gradle.api.Incubating public interface ManagedVirtualDevice extends com.android.build.api.dsl.Device {
-    method @Deprecated public String getAbi();
     method public int getApiLevel();
     method public String getDevice();
     method public boolean getRequire64Bit();
     method public String getSystemImageSource();
-    method @Deprecated public void setAbi(String abi);
     method public void setApiLevel(int apiLevel);
     method public void setDevice(String device);
     method public void setRequire64Bit(boolean require64Bit);
     method public void setSystemImageSource(String systemImageSource);
-    property @Deprecated public abstract String abi;
     property public abstract int apiLevel;
     property public abstract String device;
     property public abstract boolean require64Bit;

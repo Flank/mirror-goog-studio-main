@@ -69,7 +69,6 @@ class UtpTestTaskStatesTest {
                             device = "Pixel 2"
                             apiLevel = 29
                             systemImageSource = "aosp"
-                            abi = "x86"
                         }
                     }
                     execution = "ANDROIDX_TEST_ORCHESTRATOR"
@@ -106,7 +105,6 @@ class UtpTestTaskStatesTest {
                             device = "Pixel 2"
                             apiLevel = 29
                             systemImageSource = "aosp"
-                            abi = "x86"
                         }
                     }
                     execution = "ANDROIDX_TEST_ORCHESTRATOR"
@@ -133,13 +131,11 @@ class UtpTestTaskStatesTest {
                             device = "Pixel 2"
                             apiLevel = 29
                             systemImageSource = "aosp"
-                            abi = "x86"
                         }
                         someDeviceName (com.android.build.api.dsl.ManagedVirtualDevice) {
                             device = "Pixel 3"
                             apiLevel = 27
                             systemImageSource = "aosp"
-                            abi = "x86"
                         }
                     }
                     execution = "ANDROIDX_TEST_ORCHESTRATOR"
@@ -182,7 +178,6 @@ class UtpTestTaskStatesTest {
                             device = "Pixel 2"
                             apiLevel = 29
                             systemImageSource = "aosp"
-                            abi = "x86"
                         }
                     }
                     execution = "ANDROIDX_TEST_ORCHESTRATOR"
@@ -212,7 +207,6 @@ class UtpTestTaskStatesTest {
                             device = "Pixel 2"
                             apiLevel = 29
                             systemImageSource = "aosp"
-                            abi = "x86"
                         }
                     }
                     deviceGroups {
