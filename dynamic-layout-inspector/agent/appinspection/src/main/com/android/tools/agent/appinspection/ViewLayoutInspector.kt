@@ -82,6 +82,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -103,6 +104,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     @VisibleForTesting
     var foldObserver: FoldObserver? = null
+
+    @VisibleForTesting
+    var basicExecutorFactory = { body: (Runnable) -> Unit -> Executor { body(it) } }
 
     // During setup fold events can be triggered by both the angle sensor and the androidx.window
     // library. We want to send exactly one event during setup, so track whether that's happened.
@@ -474,78 +478,32 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         // one. Let's avoid processing these in parallel to avoid confusion.
         val sequentialExecutor = Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
         val currentRequestId = AtomicLong()
-        val captureExecutor = Executor { command ->
+        val captureExecutor = basicExecutorFactory { command ->
             val requestId = currentRequestId.incrementAndGet()
             checkpoint = ProgressCheckpoint.VIEW_INVALIDATION_CALLBACK
-            sequentialExecutor.execute {
-                if (requestId != currentRequestId.get()) {
-                    // This request is obsolete, just return
-                    command.run()
-                    os.reset()
-                    return@execute
-                }
+            val executor =
+                state.contextMap[root.uniqueDrawingId]?.executorService
+                    ?: return@basicExecutorFactory
 
-                var snapshotRequest: SnapshotRequest?
-                var context: CaptureContext
-                var screenshotSettings: ScreenshotSettings
-                synchronized(stateLock) {
-                    snapshotRequest = state.snapshotRequests[root.uniqueDrawingId]
-                    if (snapshotRequest?.state?.compareAndSet(
-                            SnapshotRequest.State.NEW, SnapshotRequest.State.PROCESSING) != true) {
-                        snapshotRequest = null
+            try {
+                executor.execute {
+                    if (requestId != currentRequestId.get()) {
+                        // This request is obsolete, just return
+                        command.run()
+                        os.reset()
+                        return@execute
                     }
-                    screenshotSettings = if (snapshotRequest != null) {
-                        ScreenshotSettings(Screenshot.Type.SKP)
-                    } else {
-                        state.screenshotSettings
-                    }
-                    // We might get some lingering captures even though we already finished
-                    // listening earlier (this would be indicated by no context). Just abort
-                    // early in that case.
-                    // Note: We copy the context instead of returning it directly, to avoid rare
-                    // but potential threading issues as other threads can modify the context, e.g.
-                    // handling the stop fetch command.
-                    context = state.contextMap[root.uniqueDrawingId]?.copy() ?: return@execute
-                    if (snapshotRequest == null && context.isLastCapture) {
-                        state.contextMap.remove(root.uniqueDrawingId)
-                    }
+                    executeCapture(command, os, root)
                 }
-
-                // Just in case, always check roots before sending a layout event, as this may send
-                // out a roots event. We always want layout events to follow up-to-date root events.
-                rootsDetector.checkRoots()
-
-                val snapshotResponse = if (snapshotRequest != null) {
-                    LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot.newBuilder()
+            } catch (exception: RejectedExecutionException) {
+                // this can happen if we stop capture and then start again immediately: "executor"
+                // above can be shutdown in between when it's retrieved and when the execution
+                // starts on the next line.
+                connection.sendEvent {
+                    errorEventBuilder.message =
+                        "ViewLayoutInspector got RejectedExecutionException during capture: " +
+                                exception.message
                 }
-                else null
-                run {
-                    // Prepare and send LayoutEvent
-                    // Triggers image fetch into `os`
-                    // We always have to do this even if we don't use the bytes it gives us,
-                    // because otherwise an internal queue backs up
-                    command.run()
-
-                    // If we have a snapshot request, we can remove it from the request map now that
-                    // it's no longer needed to indicate that SKPs need to be collected.
-                    if (snapshotRequest != null) {
-                        state.snapshotRequests.remove(root.uniqueDrawingId)
-                    }
-
-                    // This root is no longer visible. Ignore this update.
-                    if (!rootsDetector.lastRootIds.contains(root.uniqueDrawingId)) {
-                        return@run
-                    }
-
-                    sendLayoutEvent(root, context, screenshotSettings, os, snapshotResponse)
-                }
-                if (snapshotResponse != null || context.isLastCapture) {
-                    sendAllPropertiesEvent(root, snapshotResponse)
-
-                    // Send the updated fold state, in case we haven't been sending it continuously.
-                    sendFoldStateEventNow()
-                }
-                snapshotResponse?.let { snapshotRequest?.result?.complete(it.build()) }
             }
         }
 
@@ -562,6 +520,73 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
         checkpoint = ProgressCheckpoint.STARTED
         root.invalidate() // Force a re-render so we send the current screen
+    }
+
+    private fun executeCapture(command: Runnable, os: ByteArrayOutputStream, root: View) {
+        var snapshotRequest: SnapshotRequest?
+        var context: CaptureContext
+        var screenshotSettings: ScreenshotSettings
+        synchronized(stateLock) {
+            snapshotRequest = state.snapshotRequests[root.uniqueDrawingId]
+            if (snapshotRequest?.state?.compareAndSet(
+                    SnapshotRequest.State.NEW, SnapshotRequest.State.PROCESSING
+                ) != true
+            ) {
+                snapshotRequest = null
+            }
+            screenshotSettings = if (snapshotRequest != null) {
+                ScreenshotSettings(Screenshot.Type.SKP)
+            } else {
+                state.screenshotSettings
+            }
+            // We might get some lingering captures even though we already finished
+            // listening earlier (this would be indicated by no context). Just abort
+            // early in that case.
+            // Note: We copy the context instead of returning it directly, to avoid rare
+            // but potential threading issues as other threads can modify the context, e.g.
+            // handling the stop fetch command.
+            context = state.contextMap[root.uniqueDrawingId]?.copy() ?: return
+            if (snapshotRequest == null && context.isLastCapture) {
+                state.contextMap.remove(root.uniqueDrawingId)
+            }
+        }
+
+        // Just in case, always check roots before sending a layout event, as this may send
+        // out a roots event. We always want layout events to follow up-to-date root events.
+        rootsDetector.checkRoots()
+
+        val snapshotResponse = if (snapshotRequest != null) {
+            LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot.newBuilder()
+        }
+        else null
+        run {
+            // Prepare and send LayoutEvent
+            // Triggers image fetch into `os`
+            // We always have to do this even if we don't use the bytes it gives us,
+            // because otherwise an internal queue backs up
+            command.run()
+
+            // If we have a snapshot request, we can remove it from the request map now that
+            // it's no longer needed to indicate that SKPs need to be collected.
+            if (snapshotRequest != null) {
+                state.snapshotRequests.remove(root.uniqueDrawingId)
+            }
+
+            // This root is no longer visible. Ignore this update.
+            if (!rootsDetector.lastRootIds.contains(root.uniqueDrawingId)) {
+                return@run
+            }
+
+            sendLayoutEvent(root, context, screenshotSettings, os, snapshotResponse)
+        }
+        if (snapshotResponse != null || context.isLastCapture) {
+            sendAllPropertiesEvent(root, snapshotResponse)
+
+            // Send the updated fold state, in case we haven't been sending it continuously.
+            sendFoldStateEventNow()
+        }
+        snapshotResponse?.let { snapshotRequest?.result?.complete(it.build()) }
+        return
     }
 
     private fun sendAllPropertiesEvent(

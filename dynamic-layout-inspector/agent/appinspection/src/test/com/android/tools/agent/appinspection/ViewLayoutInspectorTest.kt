@@ -65,6 +65,7 @@ import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
@@ -1815,6 +1816,122 @@ class ViewLayoutInspectorTest {
         checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
         }
+    }
+
+    // This test starts two captures at the same time, after stopping capturing.
+    // The first capture have isLastCapture = true and will return a LAYOUT_EVENT. The second
+    // capture should return without an exception.
+    @Test
+    fun cancelWhileCapturing() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(10)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val mainScreen = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 400
+            height = 800
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(mainScreen))
+
+        // Set up the two capture threads.
+        var exception: Exception? = null
+        val t1 = thread(start = false) {
+            try {
+                mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
+            }
+            catch (e: Exception) {
+                exception = e
+            }
+        }
+        val t2 = thread(start = false) {
+            try {
+                mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
+            }
+            catch (e: Exception) {
+                exception = e
+            }
+        }
+
+        // Set up the synchronization between the threads, so both requests start before the
+        // executors are shut down and neither thinks it's obsolete and exits right away.
+        // t1 will run and send events, and t2 will exit because the inner executor has already been
+        // removed from the context.
+        val t2StartedExecution = CountDownLatch(1)
+        val receivedLayoutResponse = CountDownLatch(1)
+        viewInspector.basicExecutorFactory = { body: (Runnable) -> Unit ->
+            Executor {
+                if (Thread.currentThread() == t1) {
+                    t2StartedExecution.await()
+                }
+                if (Thread.currentThread() == t2) {
+                    t2StartedExecution.countDown()
+                    receivedLayoutResponse.await()
+                }
+                body(it)
+            }
+        }
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.remove()
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.remove()
+
+        val stopFetchCommand = Command.newBuilder().apply {
+            stopFetchCommand = StopFetchCommand.getDefaultInstance()
+        }.build()
+        viewInspector.onReceiveCommand(
+            stopFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.STOP_FETCH_RESPONSE)
+        }
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+        mainScreen.viewRootImpl = ViewRootImpl()
+        mainScreen.viewRootImpl.mSurface = Surface()
+        mainScreen.viewRootImpl.mSurface.bitmapBytes = byteArrayOf(1, 2, 3)
+
+        t1.start()
+        t2.start()
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+        }
+        checkNonProgressEvent(eventQueue) { event ->
+            receivedLayoutResponse.countDown()
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+        }
+
+        t1.join()
+        t2.join()
+        assertThat(exception).isNull()
     }
 
     private fun checkNonProgressEvent(
