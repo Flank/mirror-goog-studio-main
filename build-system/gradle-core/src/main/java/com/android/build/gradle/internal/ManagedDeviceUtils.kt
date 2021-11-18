@@ -79,6 +79,7 @@ fun computeAbiFromArchitecture(require64Bit: Boolean, apiLevel: Int, vendor: Str
         cpuArchitecture == CpuArchitecture.ARM
             || cpuArchitecture == CpuArchitecture.X86_ON_ARM-> "arm64-v8a"
         require64Bit -> "x86_64"
+        (vendor == "aosp-atd" || vendor == "google-atd") && apiLevel <= 30 -> "x86"
         // system-images;android-30;default;x86 does not exist, but the google images do.
         vendor == "aosp" && apiLevel <= 29 -> "x86"
         vendor == "google" && apiLevel <= 30 -> "x86"
