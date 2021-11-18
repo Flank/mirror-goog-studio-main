@@ -70,7 +70,7 @@ open class ConsumableCreationConfigImpl(
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
         return (variantDslInfo.variantType.isAar
-                || globalScope.extension.transforms.isNotEmpty()
+                || variantDslInfo.transforms.isNotEmpty()
                 || config.minifiedEnabled)
     }
 

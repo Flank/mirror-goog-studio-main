@@ -240,8 +240,7 @@ public class VariantScopeImpl implements VariantScope {
     public boolean getNeedsJavaResStreams() {
         // We need to create original java resource stream only if we're in a library module with
         // custom transforms.
-        return variantDslInfo.getVariantType().isAar()
-                && !globalScope.getExtension().getTransforms().isEmpty();
+        return variantDslInfo.getVariantType().isAar() && !variantDslInfo.getTransforms().isEmpty();
     }
 
     @NonNull

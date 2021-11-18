@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -266,7 +267,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.checkOnly.set(
                 creationConfig.services.provider {
-                    creationConfig.globalScope.extension.lintOptions.checkOnly
+                    creationConfig.lintOptions.checkOnly
                 }
             )
             task.projectInputs.initialize(variant, isForAnalysis = true)
@@ -327,7 +328,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         taskCreationServices: TaskCreationServices,
         javaPluginConvention: JavaPluginConvention,
         customLintChecksConfig: FileCollection,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         fatalOnly: Boolean = false
     ) {
         initializeGlobalInputs(project = project, isAndroid = false)

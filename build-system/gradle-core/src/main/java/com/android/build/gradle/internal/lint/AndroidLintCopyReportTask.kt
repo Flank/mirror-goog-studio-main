@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -101,11 +102,11 @@ abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DS
         override val type: Class<AndroidLintCopyReportTask> get() = AndroidLintCopyReportTask::class.java
         override fun configure(task: AndroidLintCopyReportTask) {
             super.configure(task)
-            task.registerInputs(creationConfig.artifacts, creationConfig.globalScope.extension.lintOptions)
+            task.registerInputs(creationConfig.artifacts, creationConfig.lintOptions)
         }
     }
 
-    internal fun registerInputs(artifacts: ArtifactsImpl, lintOptions: LintOptions) {
+    internal fun registerInputs(artifacts: ArtifactsImpl, lintOptions: Lint) {
         val textOutput = lintOptions.textOutput
         if (lintOptions.textReport && textOutput != null && textOutput.path != "stdout" && textOutput.path != "stderr") {
             textReportInput.set(artifacts.get(InternalArtifactType.LINT_TEXT_REPORT))
@@ -133,7 +134,7 @@ abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DS
         sarifReportOutput.disallowChanges()
     }
 
-    internal fun configureForStandalone(artifacts: ArtifactsImpl, lintOptions: LintOptions) {
+    internal fun configureForStandalone(artifacts: ArtifactsImpl, lintOptions: Lint) {
         registerInputs(artifacts, lintOptions)
         analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         variantName = ""

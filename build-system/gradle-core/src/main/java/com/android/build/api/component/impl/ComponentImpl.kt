@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.CompileOptions
+import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
@@ -147,6 +148,9 @@ abstract class ComponentImpl(
 
     override val compileOptions: CompileOptions
         get() = variantDslInfo.compileOptions
+
+    override val lintOptions: Lint
+        get() = variantDslInfo.lintOptions
 
     override val sources: SourcesImpl by lazy {
         SourcesImpl(

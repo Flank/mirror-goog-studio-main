@@ -82,7 +82,7 @@ import javax.inject.Inject
 abstract class LintPlugin : Plugin<Project> {
     private lateinit var projectServices: ProjectServices
     private lateinit var dslServices: DslServicesImpl
-    private var lintOptions: LintOptions? = null
+    private var lintOptions: Lint? = null
 
     @get:Inject
     abstract val listenerRegistry: BuildEventsListenerRegistry
@@ -307,12 +307,13 @@ abstract class LintPlugin : Plugin<Project> {
         dslServices: DslServicesImpl
     ): DslLifecycleComponentsOperationsRegistrar<Lint> {
         val lintImplClass = androidPluginDslDecorator.decorate(LintImpl::class.java)
-        val newLintExtension = project.extensions.create(Lint::class.java, "lint", lintImplClass, dslServices)
+        val lintOptions = project.extensions.create(Lint::class.java, "lint", lintImplClass, dslServices)
+        this.lintOptions = lintOptions
         val decoratedLintOptionsClass =
             androidPluginDslDecorator.decorate(LintOptions::class.java)
-        lintOptions =
-            project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices, newLintExtension)
-        val dslOperationsRegistrar= DslLifecycleComponentsOperationsRegistrar<Lint>(newLintExtension)
+        // create the old lintOptions DSL that just delegates to the new one anyway.
+        project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices, lintOptions)
+        val dslOperationsRegistrar= DslLifecycleComponentsOperationsRegistrar<Lint>(lintOptions)
         project.extensions.create(
             "lintLifecycle",
             LintLifecycleExtensionImpl::class.java,

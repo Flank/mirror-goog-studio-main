@@ -3,10 +3,10 @@ package com.android.build.gradle.internal.lint
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
-import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
@@ -61,7 +61,7 @@ class LintTaskManager constructor(
         val variantLintTaskToLintVitalTask =
             mutableMapOf<String, TaskProvider<AndroidLintTextOutputTask>>()
 
-        val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions)
+        val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions.delegate)
 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) {
@@ -226,7 +226,7 @@ class LintTaskManager constructor(
         internal fun File.isLintStdout() = this.path == File("stdout").path
         internal fun File.isLintStderr() = this.path == File("stderr").path
 
-        internal fun needsCopyReportTask(lintOptions: LintOptions) : Boolean {
+        internal fun needsCopyReportTask(lintOptions: Lint) : Boolean {
             val textOutput = lintOptions.textOutput
             return (lintOptions.textReport && textOutput != null && !textOutput.isLintStdout() && !textOutput.isLintStderr()) ||
                     (lintOptions.htmlReport && lintOptions.htmlOutput != null) ||

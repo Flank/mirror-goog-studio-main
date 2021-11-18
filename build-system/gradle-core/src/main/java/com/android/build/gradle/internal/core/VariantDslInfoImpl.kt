@@ -23,15 +23,18 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryVariantDimension
+import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestFixtures
 import com.android.build.api.dsl.VariantDimension
+import com.android.build.api.transform.Transform
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.api.variant.impl.ResValueKeyImpl
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.TestedExtension
 import com.android.build.gradle.api.JavaCompileOptions
@@ -1207,6 +1210,13 @@ open class VariantDslInfoImpl internal constructor(
 
     override val compileOptions: CompileOptions
         get() = extension.compileOptions
+
+    // when we remove the old DSL (and the old Transforms API) this should be deleted as well.
+    override val transforms: List<Transform>
+        get() = (extension as BaseExtension).transforms
+
+    override val lintOptions: Lint
+        get() = extension.lint
 
     companion object {
 

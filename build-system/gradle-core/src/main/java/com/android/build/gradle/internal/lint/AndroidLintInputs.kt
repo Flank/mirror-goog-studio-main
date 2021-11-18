@@ -22,11 +22,13 @@ import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
@@ -316,7 +318,7 @@ abstract class ProjectInputs {
         initializeFromProject(creationConfig.services.projectInfo.getProject(), isForAnalysis)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
 
-        lintOptions.initialize(extension.lintOptions)
+        lintOptions.initialize(creationConfig.lintOptions)
         resourcePrefix.setDisallowChanges(extension.resourcePrefix)
 
         if (extension is BaseAppModuleExtension) {
@@ -334,7 +336,7 @@ abstract class ProjectInputs {
     internal fun initializeForStandalone(
         project: Project,
         javaConvention: JavaPluginConvention,
-        dslLintOptions: LintOptions,
+        dslLintOptions: Lint,
         isForAnalysis: Boolean
     ) {
         initializeFromProject(project, isForAnalysis)
@@ -445,27 +447,27 @@ abstract class LintOptionsInput {
     @get:Input
     abstract val severityOverrides: MapProperty<String, LintModelSeverity>
 
-    fun initialize(lintOptions: LintOptions) {
+    fun initialize(lintOptions: Lint) {
         disable.setDisallowChanges(lintOptions.disable)
         enable.setDisallowChanges(lintOptions.enable)
         checkOnly.setDisallowChanges(lintOptions.checkOnly)
-        abortOnError.setDisallowChanges(lintOptions.isAbortOnError)
-        absolutePaths.setDisallowChanges(lintOptions.isAbsolutePaths)
-        noLines.setDisallowChanges(lintOptions.isNoLines)
-        quiet.setDisallowChanges(lintOptions.isQuiet)
-        checkAllWarnings.setDisallowChanges(lintOptions.isCheckAllWarnings)
-        ignoreWarnings.setDisallowChanges(lintOptions.isIgnoreWarnings)
-        warningsAsErrors.setDisallowChanges(lintOptions.isWarningsAsErrors)
-        checkTestSources.setDisallowChanges(lintOptions.isCheckTestSources)
-        checkGeneratedSources.setDisallowChanges(lintOptions.isCheckGeneratedSources)
-        explainIssues.setDisallowChanges(lintOptions.isExplainIssues)
-        showAll.setDisallowChanges(lintOptions.isShowAll)
-        checkDependencies.setDisallowChanges(lintOptions.isCheckDependencies)
+        abortOnError.setDisallowChanges(lintOptions.abortOnError)
+        absolutePaths.setDisallowChanges(lintOptions.absolutePaths)
+        noLines.setDisallowChanges(lintOptions.noLines)
+        quiet.setDisallowChanges(lintOptions.quiet)
+        checkAllWarnings.setDisallowChanges(lintOptions.checkAllWarnings)
+        ignoreWarnings.setDisallowChanges(lintOptions.ignoreWarnings)
+        warningsAsErrors.setDisallowChanges(lintOptions.warningsAsErrors)
+        checkTestSources.setDisallowChanges(lintOptions.checkTestSources)
+        checkGeneratedSources.setDisallowChanges(lintOptions.checkGeneratedSources)
+        explainIssues.setDisallowChanges(lintOptions.explainIssues)
+        showAll.setDisallowChanges(lintOptions.showAll)
+        checkDependencies.setDisallowChanges(lintOptions.checkDependencies)
         lintOptions.lintConfig?.let { lintConfig.set(it) }
         lintConfig.disallowChanges()
-        lintOptions.baselineFile?.let { baselineFile.set(it) }
+        lintOptions.baseline?.let { baselineFile.set(it) }
         baselineFile.disallowChanges()
-        severityOverrides.setDisallowChanges(lintOptions.severityOverridesMap)
+        severityOverrides.setDisallowChanges((lintOptions as LintImpl).severityOverridesMap)
     }
 
     fun toLintModel(): LintModelLintOptions {

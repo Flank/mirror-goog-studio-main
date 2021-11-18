@@ -36,7 +36,7 @@ import javax.inject.Inject
  */
 abstract class LintOptions
 @Inject
-constructor(private val dslServices: DslServices, private val delegate: LintImpl):
+constructor(private val dslServices: DslServices, internal val delegate: LintImpl):
     com.android.builder.model.LintOptions,
     com.android.build.api.dsl.LintOptions {
 

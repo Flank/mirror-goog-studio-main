@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_CREATED_BASELINE
@@ -190,7 +191,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             task.initializeCommonInputs(
                 creationConfig.services.projectInfo.getProject(),
                 creationConfig.artifacts,
-                creationConfig.globalScope.extension.lintOptions,
+                creationConfig.lintOptions,
                 fatalOnly
             )
         }
@@ -199,7 +200,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     internal fun initializeCommonInputs(
         project: Project,
         artifacts: ArtifactsImpl,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         fatalOnly: Boolean
     ) {
         textReportInputFile.setDisallowChanges(
@@ -219,7 +220,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             )
         )
         this.fatalOnly.setDisallowChanges(fatalOnly)
-        abortOnError.setDisallowChanges(lintOptions.isAbortOnError)
+        abortOnError.setDisallowChanges(lintOptions.abortOnError)
         val textOutput = lintOptions.textOutput
         when {
             fatalOnly || (lintOptions.textReport && textOutput?.isLintStderr() == true) ->
@@ -239,7 +240,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     internal fun configureForStandalone(
         taskCreationServices: TaskCreationServices,
         artifacts: ArtifactsImpl,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         fatalOnly: Boolean = false
     ) {
         analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))

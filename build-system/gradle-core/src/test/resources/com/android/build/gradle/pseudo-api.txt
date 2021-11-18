@@ -330,7 +330,7 @@ com.android.build.gradle.LintLifecycleExtensionImpl.finalizeDsl: void (kotlin.jv
 com.android.build.gradle.LintLifecycleExtensionImpl.finalizeDsl: void (org.gradle.api.Action<com.android.build.api.dsl.Lint>)
 com.android.build.gradle.LintPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.LintPlugin.<init>: com.android.build.gradle.LintPlugin ()
-com.android.build.gradle.LintPlugin.access$getLintOptions$p: com.android.build.gradle.internal.dsl.LintOptions (com.android.build.gradle.LintPlugin)
+com.android.build.gradle.LintPlugin.access$getLintOptions$p: com.android.build.api.dsl.Lint (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$getProjectServices$p: com.android.build.gradle.internal.services.ProjectServices (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$registerTasks: void (com.android.build.gradle.LintPlugin, org.gradle.api.Project, com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar)
 com.android.build.gradle.LintPlugin.apply: void (java.lang.Object)
@@ -1552,6 +1552,7 @@ com.android.build.gradle.internal.dsl.LintOptions.fatal: void (java.lang.String[
 com.android.build.gradle.internal.dsl.LintOptions.getBaselineFile: java.io.File ()
 com.android.build.gradle.internal.dsl.LintOptions.getCheck: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.LintOptions.getCheckOnly: java.util.Set<java.lang.String> ()
+com.android.build.gradle.internal.dsl.LintOptions.getDelegate$gradle_core: com.android.build.gradle.internal.dsl.LintImpl ()
 com.android.build.gradle.internal.dsl.LintOptions.getDisable: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.LintOptions.getEnable: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.LintOptions.getHtmlOutput: java.io.File ()

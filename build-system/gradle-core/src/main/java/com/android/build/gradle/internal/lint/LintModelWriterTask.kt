@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
@@ -86,7 +87,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     internal fun configureForStandalone(
         taskCreationServices: TaskCreationServices,
         javaConvention: JavaPluginConvention,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         partialResultsDir: File
     ) {
         this.group = JavaBasePlugin.VERIFICATION_GROUP

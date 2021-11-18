@@ -22,6 +22,7 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -372,7 +373,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val description: String get() = "Run lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() =
-                creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+                creationConfig.lintOptions.checkDependencies
                         && !variant.main.variantType.isDynamicFeature
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
@@ -385,7 +386,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         }
 
         override fun configureOutputSettings(task: AndroidLintTask) {
-            task.configureOutputSettings(creationConfig.globalScope.extension.lintOptions)
+            task.configureOutputSettings(creationConfig.lintOptions)
         }
 
         companion object {
@@ -428,7 +429,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val description: String get() = "Fix lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() =
-                creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+                creationConfig.lintOptions.checkDependencies
                         && !variant.main.variantType.isDynamicFeature
 
         override fun configureOutputSettings(task: AndroidLintTask) {
@@ -513,7 +514,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.lintFixBuildService.disallowChanges()
             task.checkDependencies.setDisallowChanges(checkDependencies)
             task.checkOnly.set(creationConfig.services.provider {
-                creationConfig.globalScope.extension.lintOptions.checkOnly
+                creationConfig.lintOptions.checkOnly
             })
             task.projectInputs.initialize(variant, isForAnalysis = false)
             task.outputs.upToDateWhen {
@@ -733,7 +734,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         taskCreationServices: TaskCreationServices,
         javaPluginConvention: JavaPluginConvention,
         customLintChecksConfig: FileCollection,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         partialResults: Provider<Directory>,
         lintModelWriterTaskOutputDir: File,
         fatalOnly: Boolean = false,
@@ -807,7 +808,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     }
 
-    private fun configureOutputSettings(lintOptions: LintOptions) {
+    private fun configureOutputSettings(lintOptions: Lint) {
         // Always output the text report for the text output task
         this.textReportEnabled.setDisallowChanges(true)
         this.htmlReportEnabled.setDisallowChanges(lintOptions.htmlReport)

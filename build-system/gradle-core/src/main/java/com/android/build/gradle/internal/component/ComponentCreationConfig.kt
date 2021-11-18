@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.dsl.CompileOptions
+import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -171,4 +172,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val javaCompilation: JavaCompilation
 
     val compileOptions: CompileOptions
+
+    val lintOptions: Lint
 }
