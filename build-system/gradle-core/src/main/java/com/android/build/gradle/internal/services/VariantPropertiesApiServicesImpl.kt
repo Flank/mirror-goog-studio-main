@@ -234,20 +234,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>): ListProperty<T> {
-        return initializeListProperty(type).also {
-            it.addAll(values)
-            if (!compatibilityMode) {
-                it.finalizeValueOnRead()
-                if (!forUnitTesting) {
-                    it.disallowUnsafeRead()
-                }
-            }
-
-            // FIXME this should be locked later, however this is not possible right now
-            // because this is used internally during task creation (after locking post-variant API)
-//            delayedLock(it)
-        }
+    override fun <T> newListPropertyForInternalUse(type: Class<T>): ListProperty<T> {
+        return initializeListProperty(type)
     }
 
     override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>): Property<T?> {

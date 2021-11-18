@@ -47,15 +47,13 @@ class SourceDirectoriesImpl(
 
     // For compatibility with the old variant API, we must allow reading the content of this list
     // before it is finalized.
-    private val variantSources = variantServices.newListPropertyBackingDeprecatedApi(
+    private val variantSources = variantServices.newListPropertyForInternalUse(
         type = DirectoryEntry::class.java,
-        values = listOf(),
     )
 
     // this will contain all the directories
-    private val directories: ListProperty<Directory> = variantServices.newListPropertyBackingDeprecatedApi(
+    private val directories = variantServices.newListPropertyForInternalUse(
         type = Directory::class.java,
-        values = listOf(),
     )
 
     /**

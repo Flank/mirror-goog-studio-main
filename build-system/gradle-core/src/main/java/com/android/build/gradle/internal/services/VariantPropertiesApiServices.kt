@@ -278,19 +278,6 @@ interface VariantPropertiesApiServices : BaseServices {
     fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>): Provider<T>
 
     /**
-     * Creates a new [ListProperty] of [T] that is backing an old API returning T.
-     *
-     * By default, this property is memoized with [Property.finalizeValueOnRead] but access
-     * to the old API getter will require disabling memoization
-     *
-     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
-     * unsafe reads (which will also finalize the value on read).
-     *
-     * The property will be locked with [Property.disallowChanges] unless [disallowChanges] is true
-     */
-    fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>): ListProperty<T>
-
-    /**
      * Creates a memoized Provider around the given provider
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
@@ -348,4 +335,15 @@ interface VariantPropertiesApiServices : BaseServices {
     fun <T> domainObjectContainer(type: Class<T>, factory: NamedDomainObjectFactory<T>): NamedDomainObjectContainer<T>
 
     fun lockProperties()
+
+    //
+    // All the following APIs should only be used for obtaining providers and properties that will
+    // never be accessible through any public APIs (deprecated or not).
+    //
+
+    /**
+     * Creates a new [ListProperty] of [T] which is not protected and will not be automatically
+     * locked.
+     */
+    fun <T> newListPropertyForInternalUse(type: Class<T>): ListProperty<T>
 }
