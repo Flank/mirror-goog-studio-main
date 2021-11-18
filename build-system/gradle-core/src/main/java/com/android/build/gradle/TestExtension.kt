@@ -6,7 +6,6 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -14,7 +13,8 @@ import com.android.build.gradle.internal.dsl.InternalTestExtension
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
 import org.gradle.api.DomainObjectSet
@@ -24,14 +24,14 @@ import org.gradle.api.internal.DefaultDomainObjectSet
 /** {@code android} extension for {@code com.android.test} projects. */
 open class TestExtension(
     dslServices: DslServices,
-    globalScope: GlobalScope,
+    bootClasspathConfig: BootClasspathConfig,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: TestExtensionImpl
 ) : BaseExtension(
     dslServices,
-    globalScope,
+    bootClasspathConfig,
     buildOutputs,
     sourceSetManager,
     extraModelInfo,

@@ -21,6 +21,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -824,6 +825,7 @@ class VariantDslInfoTest2 :
                 Mockito.`when`(it.namespace).thenReturn(given.namespace)
             }
         }
+        val oldExtension = Mockito.mock(BaseExtension::class.java)
 
         // this does not quite test what VariantManager does because this only checks
         // for the product flavors of that one variant, while VariantManager looks
@@ -850,7 +852,8 @@ class VariantDslInfoTest2 :
                     publishInfo = null,
                     experimentalProperties = mapOf(),
                     inconsistentTestAppId = false,
-                    extension = extension
+                    extension = extension,
+                    oldExtension = oldExtension
                 )
             } else { null }
 
@@ -870,7 +873,8 @@ class VariantDslInfoTest2 :
             experimentalProperties = mapOf(),
             publishInfo = null,
             inconsistentTestAppId = inconsistentTestAppId,
-            extension = extension
+            extension = extension,
+            oldExtension = oldExtension
         )
 
         return instantiateResult().also {

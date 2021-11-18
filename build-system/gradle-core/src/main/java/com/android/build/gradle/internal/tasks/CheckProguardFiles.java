@@ -109,7 +109,7 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
             task.getExtractedProguardFile()
                     .set(
                             creationConfig
-                                    .getGlobalScope()
+                                    .getGlobal()
                                     .getGlobalArtifacts()
                                     .get(InternalArtifactType.DEFAULT_PROGUARD_FILES.INSTANCE));
             task.getProguardFiles().disallowChanges();

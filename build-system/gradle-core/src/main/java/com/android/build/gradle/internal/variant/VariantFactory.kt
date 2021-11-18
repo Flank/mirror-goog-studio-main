@@ -21,8 +21,10 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.BuildFeatures
-import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.DataBinding
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
@@ -31,20 +33,19 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import org.gradle.api.Project
@@ -59,25 +60,27 @@ import org.gradle.api.Project
 interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl> {
 
     fun createVariantBuilder(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            variantApiServices: VariantApiServices): VariantBuilderT
+        globalVariantBuilderConfig: GlobalVariantBuilderConfig,
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantApiServices: VariantApiServices
+    ): VariantBuilderT
 
     fun createVariant(
-            variantBuilder: VariantBuilderT,
-            componentIdentity: ComponentIdentity,
-            buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            variantScope: VariantScope,
-            variantData: BaseVariantData,
-            transformManager: TransformManager,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices,
-            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        variantBuilder: VariantBuilderT,
+        componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalConfig: GlobalTaskCreationConfig,
     ): VariantT
 
     fun createTestFixtures(
@@ -94,53 +97,53 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         transformManager: TransformManager,
         variantPropertiesApiServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
-        androidComponentsExtension: AndroidComponentsExtension<*, *, *>
+        globalConfig: GlobalTaskCreationConfig
     ): TestFixturesImpl
 
     fun createUnitTest(
-            componentIdentity: ComponentIdentity,
-            buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            variantScope: VariantScope,
-            variantData: TestVariantData,
-            testedVariantProperties: VariantImpl,
-            transformManager: TransformManager,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices,
-            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: TestVariantData,
+        testedVariantProperties: VariantImpl,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalConfig: GlobalTaskCreationConfig,
     ): UnitTestImpl
 
     fun createAndroidTest(
-            componentIdentity: ComponentIdentity,
-            buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            variantScope: VariantScope,
-            variantData: TestVariantData,
-            testedVariantProperties: VariantImpl,
-            transformManager: TransformManager,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices,
-            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: TestVariantData,
+        testedVariantProperties: VariantImpl,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalConfig: GlobalTaskCreationConfig,
     ): AndroidTestImpl
 
     fun createVariantData(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            services: VariantPropertiesApiServices,
-            globalScope: GlobalScope,
-            taskContainer: MutableTaskContainer): BaseVariantData
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        services: VariantPropertiesApiServices,
+        taskContainer: MutableTaskContainer
+    ): BaseVariantData
 
     fun createBuildFeatureValues(
             buildFeatures: BuildFeatures, projectOptions: ProjectOptions): BuildFeatureValues
@@ -151,13 +154,12 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
 
     fun createTestBuildFeatureValues(
             buildFeatures: BuildFeatures,
-            dataBindingOptions: DataBindingOptions,
+            dataBinding: DataBinding,
             projectOptions: ProjectOptions): BuildFeatureValues
 
     val variantImplementationClass: Class<out BaseVariantImpl?>
 
     fun createVariantApi(
-            globalScope: GlobalScope,
             component: ComponentImpl,
             variantData: BaseVariantData,
             readOnlyObjectProvider: ReadOnlyObjectProvider): BaseVariantImpl?
@@ -166,15 +168,20 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     val variantType: VariantType
 
     /**
-     * Fail if the model is configured incorrectly.
+     * Callback before variant creation to allow extra work or validation
      *
+     * @param project the Project
+     * @param dslExtension the Extension
      * @param model the non-null model to validate, as implemented by the VariantManager.
-     * @throws org.gradle.api.GradleException when the model does not validate.
-     */
-    fun validateModel(
-            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>)
 
-    fun preVariantWork(project: Project?)
+     * @throws org.gradle.api.GradleException in case of failed validation
+     */
+    fun preVariantCallback(
+        project: Project,
+        dslExtension: CommonExtension<*, *, *, *>,
+        model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+    )
+
     fun createDefaultComponents(
             dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>)
 }

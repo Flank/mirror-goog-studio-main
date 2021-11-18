@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.ProguardFiles
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
-import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -54,10 +52,8 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
     }
 
     class CreationAction(
-        private val projectOptions: ProjectOptions,
-        globalScope: GlobalScope,
-        private val project: Project
-    ) : GlobalTaskCreationAction<ExtractProguardFiles>(globalScope) {
+        creationConfig: GlobalTaskCreationConfig
+    ) : GlobalTaskCreationAction<ExtractProguardFiles>(creationConfig) {
 
         override val name = "extractProguardFiles"
         override val type = ExtractProguardFiles::class.java
@@ -65,24 +61,25 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
         override fun configure(task: ExtractProguardFiles) {
             super.configure(task)
 
-            task.enableKeepRClass.set(
-                !projectOptions.get(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING)
+            task.enableKeepRClass.setDisallowChanges(
+                !creationConfig.services.projectOptions.get(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING)
             )
-            task.buildDirectory.set(task.project.layout.buildDirectory)
+            task.buildDirectory.setDisallowChanges(creationConfig.services.projectInfo.buildDirectory)
+
             task.outputs.doNotCacheIf(
                 "This task is fast-running, so the cacheability overhead could outweigh its benefit"
             ) { true }
         }
 
-        override fun handleProvider(provider: TaskProvider<ExtractProguardFiles>) {
-            super.handleProvider(provider)
+        override fun handleProvider(taskProvider: TaskProvider<ExtractProguardFiles>) {
+            super.handleProvider(taskProvider)
 
-            globalScope.globalArtifacts
-                .setInitialProvider(provider, ExtractProguardFiles::proguardFilesDir)
-                .atLocation(
+            creationConfig.globalArtifacts
+                .setInitialProvider(taskProvider, ExtractProguardFiles::proguardFilesDir)
+                .atLocation {
                     ProguardFiles
-                        .getDefaultProguardFileDir(project.layout.buildDirectory)
-                        .absolutePath)
+                        .getDefaultProguardFileDirectory(creationConfig.services.projectInfo.buildDirectory)
+                }
                 .on(InternalArtifactType.DEFAULT_PROGUARD_FILES)
         }
     }

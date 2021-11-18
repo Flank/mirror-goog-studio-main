@@ -17,16 +17,15 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Splits
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -35,12 +34,10 @@ import com.google.common.base.MoreObjects
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.logging.Logging
 import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.Collections
-import java.util.HashSet
 
 /** Base data about a variant.  */
 abstract class BaseVariantData(
@@ -52,8 +49,6 @@ abstract class BaseVariantData(
     protected val paths: VariantPathHelper,
     protected val artifacts: ArtifactsImpl,
     protected val services: VariantPropertiesApiServices,
-    // Global Data
-    @get:Deprecated("Use {@link ComponentPropertiesImpl#getGlobalScope()} ") val globalScope: GlobalScope,
     val taskContainer: MutableTaskContainer
 ) {
 
@@ -80,25 +75,6 @@ abstract class BaseVariantData(
     var applicationIdTextResource: TextResource = services.projectInfo.createTestResources("")
 
     abstract val description: String
-
-    init {
-        val splits = globalScope.extension.splits
-        val splitsEnabled = (splits.density.isEnable
-                || splits.abi.isEnable
-                || splits.language.isEnable)
-
-        // warn the user if we are forced to ignore the generatePureSplits flag.
-        if (splitsEnabled && globalScope.extension.generatePureSplits) {
-            Logging.getLogger(BaseVariantData::class.java)
-                .warn(
-                    String.format(
-                        "Variant %s requested removed pure splits support, reverted to full splits",
-                        componentIdentity.name
-                    )
-                )
-        }
-    }
-
 
     fun getGeneratedBytecode(generatorKey: Any?): FileCollection {
         return if (generatorKey == null) {
@@ -261,7 +237,7 @@ abstract class BaseVariantData(
         },
         LANGUAGE {
             override fun getConfiguredFilters(splits: Splits): Collection<String> {
-                return splits.languageFilters
+                return (splits as com.android.build.gradle.internal.dsl.Splits).languageFilters
             }
         },
         ABI {

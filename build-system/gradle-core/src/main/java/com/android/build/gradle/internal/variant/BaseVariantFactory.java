@@ -24,7 +24,7 @@ import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
-import com.android.build.api.variant.AndroidComponentsExtension;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -42,13 +42,13 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.IssueReporter;
@@ -64,15 +64,12 @@ public abstract class BaseVariantFactory<
     private static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
 
     @NonNull protected final ProjectServices projectServices;
-    @NonNull protected final GlobalScope globalScope;
 
     @Deprecated @NonNull
     private final VariantPropertiesApiServices servicesForOldVariantObjectsOnly;
 
-    public BaseVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+    public BaseVariantFactory(@NonNull ProjectServices projectServices) {
         this.projectServices = projectServices;
-        this.globalScope = globalScope;
         servicesForOldVariantObjectsOnly =
                 new VariantPropertiesApiServicesImpl(projectServices, false);
     }
@@ -93,7 +90,7 @@ public abstract class BaseVariantFactory<
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices,
-            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
+            @NonNull GlobalTaskCreationConfig globalConfig) {
         TestFixturesImpl testFixturesComponent =
                 projectServices
                         .getObjectFactory()
@@ -112,8 +109,7 @@ public abstract class BaseVariantFactory<
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
-                                androidComponentsExtension.getSdkComponents(),
-                                globalScope);
+                                globalConfig);
         // create default output
         String name =
                 testFixturesComponent.getServices().getProjectInfo().getProjectBaseName()
@@ -142,7 +138,7 @@ public abstract class BaseVariantFactory<
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices,
-            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
+            @NonNull GlobalTaskCreationConfig globalConfig) {
         UnitTestImpl unitTestProperties =
                 projectServices
                         .getObjectFactory()
@@ -161,8 +157,7 @@ public abstract class BaseVariantFactory<
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
-                                androidComponentsExtension.getSdkComponents(),
-                                globalScope);
+                                globalConfig);
 
         unitTestProperties.addVariantOutput(
                 new VariantOutputConfigurationImpl(false, ImmutableList.of()), null);
@@ -186,7 +181,7 @@ public abstract class BaseVariantFactory<
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices,
-            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
+            @NonNull GlobalTaskCreationConfig globalConfig) {
         AndroidTestImpl androidTestProperties =
                 projectServices
                         .getObjectFactory()
@@ -205,8 +200,7 @@ public abstract class BaseVariantFactory<
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
-                                androidComponentsExtension.getSdkComponents(),
-                                globalScope);
+                                globalConfig);
 
         androidTestProperties.addVariantOutput(
                 new VariantOutputConfigurationImpl(false, ImmutableList.of()), null);
@@ -217,7 +211,6 @@ public abstract class BaseVariantFactory<
     @Override
     @Nullable
     public BaseVariantImpl createVariantApi(
-            @NonNull GlobalScope globalScope,
             @NonNull ComponentImpl component,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
@@ -245,7 +238,12 @@ public abstract class BaseVariantFactory<
     }
 
     @Override
-    public void preVariantWork(Project project) {
+    public void preVariantCallback(
+            @NonNull Project project,
+            @NonNull CommonExtension<?, ?, ?, ?> dslExtension,
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
         if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
             projectServices
                     .getIssueReporter()
@@ -256,22 +254,15 @@ public abstract class BaseVariantFactory<
                                     + "instead.",
                             "android-apt");
         }
-    }
 
-    @Override
-    public void validateModel(
-            @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model) {
-        validateBuildConfig(model);
-        validateResValues(model);
+        validateBuildConfig(model, dslExtension.getBuildFeatures().getBuildConfig());
+        validateResValues(model, dslExtension.getBuildFeatures().getResValues());
     }
 
     void validateBuildConfig(
             @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model) {
-        Boolean buildConfig = globalScope.getExtension().getBuildFeatures().getBuildConfig();
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig> model,
+            @Nullable Boolean buildConfig) {
         if (buildConfig == null) {
             buildConfig =
                     projectServices
@@ -313,9 +304,8 @@ public abstract class BaseVariantFactory<
 
     void validateResValues(
             @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model) {
-        Boolean resValues = globalScope.getExtension().getBuildFeatures().getResValues();
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig> model,
+            @Nullable Boolean resValues) {
         if (resValues == null) {
             resValues =
                     projectServices.getProjectOptions().get(BooleanOption.BUILD_FEATURE_RESVALUES);

@@ -35,7 +35,6 @@ import com.android.build.api.variant.HasTestFixtures
 import com.android.build.api.variant.UnitTest
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
@@ -45,9 +44,7 @@ import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.dsl.DynamicFeatureExtension
-import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.ModelBuilder
@@ -64,7 +61,6 @@ import com.android.build.gradle.internal.lint.getLocalCustomLintChecksForModel
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY
@@ -76,19 +72,17 @@ import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
-import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.SyncIssue
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BasicArtifact
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
-import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
@@ -126,12 +120,8 @@ class ModelBuilder<
                 DefaultConfigT,
                 ProductFlavorT>>(
     private val project: Project,
-    private val globalScope: GlobalScope,
-    private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
     private val extension: ExtensionT,
-    private val syncIssueReporter: SyncIssueReporter,
-    private val projectType: ProjectType
 ) : ParameterizedToolingModelBuilder<ModelBuilderParameter> {
 
     override fun getParameterType(): Class<ModelBuilderParameter> {
@@ -229,11 +219,11 @@ class ModelBuilder<
         // FIXME: remove?
         verifyIDEIsNotOld(projectOptions)
 
-        val sdkSetupCorrectly = globalScope.versionedSdkLoader.get().sdkSetupCorrectly.get()
+        val sdkSetupCorrectly = variantModel.versionedSdkLoader.get().sdkSetupCorrectly.get()
 
         // Get the boot classpath. This will ensure the target is configured.
         val bootClasspath = if (sdkSetupCorrectly) {
-            globalScope.filteredBootClasspath.get().map { it.asFile }
+            variantModel.filteredBootClasspath.get().map { it.asFile }
         } else {
             // SDK not set up, error will be reported as a sync issue.
             emptyList()
@@ -329,7 +319,7 @@ class ModelBuilder<
             buildName = getBuildName(project),
             buildFolder = project.layout.buildDirectory.get().asFile,
 
-            projectType = projectType,
+            projectType = variantModel.projectType,
 
             mainSourceSet = defaultConfig,
             buildTypeSourceSets = buildTypes,
@@ -377,13 +367,13 @@ class ModelBuilder<
 
             javaCompileOptions = extension.compileOptions.convert(),
             resourcePrefix = extension.resourcePrefix,
-            dynamicFeatures = (extension as? BaseAppModuleExtension)?.dynamicFeatures?.toImmutableSet(),
+            dynamicFeatures = (extension as? ApplicationExtension)?.dynamicFeatures?.toImmutableSet(),
             viewBindingOptions = ViewBindingOptionsImpl(
                 variantModel.variants.any { it.buildFeatures.viewBinding }
             ),
 
             flags = getFlags(),
-            lintChecksJars = getLocalCustomLintChecksForModel(project, syncIssueReporter),
+            lintChecksJars = getLocalCustomLintChecksForModel(project, variantModel.syncIssueReporter),
         )
     }
     /**
@@ -460,14 +450,10 @@ class ModelBuilder<
                     )
                 } else null
 
-
-        val compileSdkVersion = when (extension) {
-            is BaseAppModuleExtension -> extension.compileSdkVersion
-            is LibraryExtension -> extension.compileSdkVersion
-            is com.android.build.gradle.TestExtension -> extension.compileSdkVersion
-            is DynamicFeatureExtension -> extension.compileSdkVersion
-            else -> null
-        } ?: "unknown"
+        val extensionImpl =
+            extension as? CommonExtensionImpl<*, *, *, *>
+                ?: throw RuntimeException("Wrong extension provided to v2 ModelBuilder")
+        val compileSdkVersion = extensionImpl.compileSdkVersion ?: "unknown"
 
         return AndroidDslImpl(
             buildToolsVersion = extension.buildToolsVersion,
@@ -489,10 +475,10 @@ class ModelBuilder<
     }
 
     private fun buildProjectSyncIssueModel(project: Project): ProjectSyncIssues {
-        syncIssueReporter.lockHandler()
+        variantModel.syncIssueReporter.lockHandler()
 
         val allIssues = ImmutableSet.builder<SyncIssue>()
-        allIssues.addAll(syncIssueReporter.syncIssues)
+        allIssues.addAll(variantModel.syncIssueReporter.syncIssues)
         allIssues.addAll(
             getBuildService(project.gradle.sharedServices, GlobalSyncIssueService::class.java)
                 .get()
@@ -638,13 +624,13 @@ class ModelBuilder<
                     ?: listOf()
 
                 DeviceProviderInstrumentTestTask.checkForNonApks(runtimeApks) { message ->
-                    syncIssueReporter.reportError(IssueReporter.Type.GENERIC, message)
+                    variantModel.syncIssueReporter.reportError(IssueReporter.Type.GENERIC, message)
                 }
 
-                val testOptionsDsl = globalScope.extension.testOptions
+                val testOptionsDsl = extension.testOptions
 
                 val testTaskName = taskContainer.connectedTestTask?.name ?: "".also {
-                    syncIssueReporter.reportError(
+                    variantModel.syncIssueReporter.reportError(
                         IssueReporter.Type.GENERIC,
                         "unable to find connectedCheck task name for ${component.name}"
                     )
@@ -652,7 +638,7 @@ class ModelBuilder<
 
                 TestInfoImpl(
                     animationsDisabled = testOptionsDsl.animationsDisabled,
-                    execution = testOptionsDsl.getExecutionEnum().convert(),
+                    execution = testOptionsDsl.execution.convertToExecution(),
                     additionalRuntimeApks = runtimeApks,
                     instrumentedTestTaskName = testTaskName
                 )
@@ -753,7 +739,7 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
             runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
 
-            mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull(),
+            mockablePlatformJar = variantModel.mockableJarArtifact.files.singleOrNull(),
             modelSyncFiles = listOf(),
         )
     }
@@ -780,6 +766,7 @@ class ModelBuilder<
     }
 
     private fun getFlags(): AndroidGradlePluginProjectFlagsImpl {
+        val projectOptions = variantModel.projectOptions
         val flags =
             ImmutableMap.builder<BooleanFlag, Boolean>()
 
@@ -894,7 +881,7 @@ class ModelBuilder<
                     eventReader.close()
                 }
             } catch (e: XMLStreamException) {
-                syncIssueReporter.reportError(
+                variantModel.syncIssueReporter.reportError(
                     IssueReporter.Type.GENERIC,
                     """
                         Failed to parse XML in ${manifest.path}
@@ -902,7 +889,7 @@ class ModelBuilder<
                         """.trimIndent()
                 )
             } catch (e: IOException) {
-                syncIssueReporter.reportError(
+                variantModel.syncIssueReporter.reportError(
                     IssueReporter.Type.GENERIC,
                     """
                         Failed to parse XML in ${manifest.path}
@@ -948,7 +935,7 @@ class ModelBuilder<
                         "${project.path}@${component.name}/testTarget",
                         apkArtifacts.failures
                     )
-                    .registerIssues(syncIssueReporter)
+                    .registerIssues(variantModel.syncIssueReporter)
             }
         }
         return null

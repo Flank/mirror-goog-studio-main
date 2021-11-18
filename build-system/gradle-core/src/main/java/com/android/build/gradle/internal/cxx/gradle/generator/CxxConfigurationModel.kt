@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
+import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
-import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.PROFILE_DIRECTORY
@@ -60,7 +59,6 @@ import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import org.gradle.api.file.FileCollection
 import java.io.File
-import java.lang.IllegalStateException
 import java.util.Locale
 import java.util.Objects
 
@@ -183,12 +181,12 @@ data class CxxConfigurationParameters(
 fun tryCreateConfigurationParameters(
     projectOptions: ProjectOptions,
     variant: VariantImpl) : CxxConfigurationParameters? {
-    val global = variant.globalScope
+    val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
     val project = projectInfo.getProject()
 
     val (buildSystem, makeFile, buildStagingFolder) =
-        getProjectPath(global.extension.externalNativeBuild)
+        getProjectPath(globalConfig.externalNativeBuild)
             ?: return null
 
     val cxxFolder = findCxxFolder(
@@ -206,12 +204,7 @@ fun tryCreateConfigurationParameters(
      * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
      * in Android Studio
      */
-    val ndkHandler = global.sdkComponents.get().versionedNdkHandler(
-        compileSdkVersion = global.extension.compileSdkVersion ?:
-            throw IllegalStateException("compileSdkVersion not set in android configuration"),
-        ndkVersion = global.extension.ndkVersion,
-        ndkPath = global.extension.ndkPath
-    )
+    val ndkHandler = globalConfig.versionedNdkHandler
     val ndkInstall = CachingEnvironment(cxxCacheFolder).use {
         ndkHandler.getNdkPlatform(downloadOkay = true)
     }
@@ -233,10 +226,7 @@ fun tryCreateConfigurationParameters(
     } else {
         null
     }
-    val prefabTargets = when (val extension = variant.globalScope.extension) {
-        is LibraryExtension -> extension.prefab.map { it.name }.toSet()
-        else -> emptySet()
-    }
+    val prefabTargets = globalConfig.prefabOrEmpty.map { it.name }.toSet()
 
     /**
      * Prefab settings.
@@ -294,12 +284,11 @@ fun tryCreateConfigurationParameters(
         buildFile = project.buildFile,
         isDebuggable = variant.debuggable,
         minSdkVersion = variant.minSdkVersion.toSharedAndroidVersion(),
-        compileSdkVersion = global.extension.compileSdkVersion ?:
-            throw IllegalStateException("compileSdkVersion not set in android configuration"),
-        ndkVersion = global.extension.ndkVersion,
-        ndkPath = global.extension.ndkPath,
-        cmakeVersion = global.extension.externalNativeBuild.cmake.version,
-        splitsAbiFilterSet = global.extension.splits.abiFilters,
+        compileSdkVersion = globalConfig.compileSdkHashString,
+        ndkVersion = globalConfig.ndkVersion,
+        ndkPath = globalConfig.ndkPath,
+        cmakeVersion = globalConfig.externalNativeBuild.cmake.version,
+        splitsAbiFilterSet = globalConfig.splits.abiFilters.toSet(),
         intermediatesFolder = projectInfo.getIntermediatesDir(),
         gradleModulePathName = project.path,
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),

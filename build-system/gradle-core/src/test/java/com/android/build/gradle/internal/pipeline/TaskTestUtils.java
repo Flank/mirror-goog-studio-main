@@ -31,11 +31,11 @@ import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.profile.AnalyticsService;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.TaskCreationServices;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.options.ProjectOptions;
@@ -308,7 +308,7 @@ public class TaskTestUtils {
 
     @NonNull
     private static VariantCreationConfig getCreationConfig() {
-        GlobalScope globalScope = mock(GlobalScope.class);
+        GlobalTaskCreationConfig globalConfig = mock(GlobalTaskCreationConfig.class);
         TaskCreationServices taskCreationServices = mock(TaskCreationServices.class);
         ProjectInfo projectInfo = mock(ProjectInfo.class);
         when(taskCreationServices.getProjectInfo()).thenReturn(projectInfo);
@@ -322,7 +322,7 @@ public class TaskTestUtils {
 
         VariantCreationConfig creationConfig = mock(VariantCreationConfig.class);
         when(creationConfig.getServices()).thenReturn(taskCreationServices);
-        when(creationConfig.getGlobalScope()).thenReturn(globalScope);
+        when(creationConfig.getGlobal()).thenReturn(globalConfig);
         when(creationConfig.getName()).thenReturn("theVariantName");
         when(creationConfig.getFlavorName()).thenReturn("theFlavorName");
         when(creationConfig.getBuildType()).thenReturn("debug");

@@ -19,26 +19,42 @@ package com.android.build.gradle.internal.variant
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
+import com.android.builder.model.v2.ide.ProjectType
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import java.util.ArrayList
 import java.util.Comparator
 
 class VariantModelImpl(
     override val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
-    private val testBuilderTypeProvider: () -> String?,
+    private val testBuilderTypeProvider: () -> String,
     private val variantProvider: () -> List<VariantImpl>,
     private val testComponentProvider: () -> List<TestComponentImpl>,
     private val buildFeaturesProvider: () -> BuildFeatureValues,
-    private val issueHandler: IssueReporter,
+    override val projectTypeV1: Int,
+    override val projectType: ProjectType,
+    private val globalConfig: GlobalTaskCreationConfig,
 ) : VariantModel {
+
+    override val projectOptions: ProjectOptions
+        get() = globalConfig.services.projectOptions
+
+    override val syncIssueReporter: SyncIssueReporter
+        get() = globalConfig.services.issueReporter as SyncIssueReporter
 
     override val variants: List<VariantImpl>
         get() = variantProvider()
@@ -51,6 +67,15 @@ class VariantModelImpl(
 
     override val buildFeatures: BuildFeatureValues
         get() = buildFeaturesProvider()
+
+    override val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>
+        get() = globalConfig.versionedSdkLoader
+
+    override val mockableJarArtifact: FileCollection
+        get() = globalConfig.mockableJarArtifact
+
+    override val filteredBootClasspath: Provider<List<RegularFile>>
+        get() = globalConfig.filteredBootClasspath
 
     /**
      * Calculates the default variant to put in the model.
@@ -128,7 +153,7 @@ class VariantModelImpl(
         buildTypesMarkedAsDefault.sort()
 
         if (buildTypesMarkedAsDefault.size > 1) {
-            issueHandler.reportWarning(
+            globalConfig.services.issueReporter.reportWarning(
                 IssueReporter.Type.AMBIGUOUS_BUILD_TYPE_DEFAULT,
                 "Ambiguous default build type: '"
                         + Joiner.on("', '").join(buildTypesMarkedAsDefault)
@@ -184,7 +209,7 @@ class VariantModelImpl(
 
             // Report the ambiguous default setting.
             if (userDefault.size > 1) {
-                    issueHandler.reportWarning(
+                globalConfig.services.issueReporter.reportWarning(
                                 IssueReporter.Type.AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT,
 """Ambiguous default product flavors for flavor dimension '$dimension': '${Joiner.on("', '").join(userDefault)}'.
 Please only set `isDefault = true` for one product flavor in each flavor dimension.""",

@@ -20,18 +20,14 @@ import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.options.ProjectOptions
 import com.android.sdklib.AndroidVersion.VersionCodes
 import kotlin.math.max
 
 open class ApkCreationConfigImpl(
     override val config: ApkCreationConfig,
-    projectOptions: ProjectOptions,
-    globalScope: GlobalScope,
     dslInfo: VariantDslInfo
-): ConsumableCreationConfigImpl(config, projectOptions, globalScope, dslInfo) {
+): ConsumableCreationConfigImpl(config, dslInfo) {
 
     val isDebuggable = variantDslInfo.isDebuggable
 

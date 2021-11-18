@@ -39,15 +39,17 @@ import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
 import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -98,17 +100,29 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
-    protected BaseExtension createExtension(
+    protected ExtensionData<com.android.build.api.dsl.DynamicFeatureExtension> createExtension(
             @NonNull DslServices dslServices,
-            @NonNull GlobalScope globalScope,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            VersionedSdkLoaderService versionedSdkLoaderService) {
         DynamicFeatureExtensionImpl dynamicFeatureExtension =
                 dslServices.newDecoratedInstance(
                         DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
+
+        // detects whether we are running the plugin under unit test mode
+        boolean forUnitTesting = project.hasProperty("_agp_internal_test_mode_");
+
+        BootClasspathConfigImpl bootClasspathConfig =
+                new BootClasspathConfigImpl(
+                        project,
+                        dslServices,
+                        versionedSdkLoaderService,
+                        dynamicFeatureExtension,
+                        forUnitTesting);
+
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             //noinspection unchecked,rawtypes I am so sorry.
             Class<com.android.build.api.dsl.DynamicFeatureExtension> instanceType =
@@ -123,7 +137,7 @@ public class DynamicFeaturePlugin
                                             "android",
                                             instanceType,
                                             dslServices,
-                                            globalScope,
+                                            bootClasspathConfig,
                                             buildOutputs,
                                             dslContainers.getSourceSetManager(),
                                             extraModelInfo,
@@ -133,19 +147,22 @@ public class DynamicFeaturePlugin
                             DynamicFeatureExtension.class,
                             "_internal_legacy_android_extension",
                             android);
-            return android;
+            return new ExtensionData<>(android, dynamicFeatureExtension, bootClasspathConfig);
         }
 
-        return project.getExtensions()
-                .create(
-                        "android",
-                        DynamicFeatureExtension.class,
-                        dslServices,
-                        globalScope,
-                        buildOutputs,
-                        dslContainers.getSourceSetManager(),
-                        extraModelInfo,
-                        dynamicFeatureExtension);
+        return new ExtensionData<>(
+                project.getExtensions()
+                        .create(
+                                "android",
+                                DynamicFeatureExtension.class,
+                                dslServices,
+                                bootClasspathConfig,
+                                buildOutputs,
+                                dslContainers.getSourceSetManager(),
+                                extraModelInfo,
+                                dynamicFeatureExtension),
+                dynamicFeatureExtension,
+                bootClasspathConfig);
     }
 
     /**
@@ -182,10 +199,11 @@ public class DynamicFeaturePlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                com.android.build.api.dsl.DynamicFeatureExtension,
-                                DynamicFeatureVariantBuilderImpl,
-                                DynamicFeatureVariantImpl>
-                            variantApiOperationsRegistrar) {
+                                    com.android.build.api.dsl.DynamicFeatureExtension,
+                                    DynamicFeatureVariantBuilderImpl,
+                                    DynamicFeatureVariantImpl>
+                            variantApiOperationsRegistrar,
+            @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
                         SdkComponentsImpl.class,
@@ -194,7 +212,11 @@ public class DynamicFeaturePlugin
                         project.provider(getExtension()::getBuildToolsRevision),
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath),
-                        project.provider(globalScope::getBootClasspath));
+                        // need to keep this fully wrapped in a provider so that we don't initialize
+                        // any of the lazy objects too early as they would read the
+                        // compileSdkVersion
+                        // too early.
+                        project.provider(bootClasspathConfig::getBootClasspath));
 
         // register under the new interface for kotlin, groovy will find both the old and new
         // interfaces through the implementation class.
@@ -221,29 +243,23 @@ public class DynamicFeaturePlugin
                             variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         return new DynamicFeatureTaskManager(
                 project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalTaskCreationConfig,
+                localConfig,
+                extension);
     }
 
     @NonNull
     @Override
     protected DynamicFeatureVariantFactory createVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
-        return new DynamicFeatureVariantFactory(projectServices, globalScope);
+            @NonNull ProjectServices projectServices) {
+        return new DynamicFeatureVariantFactory(projectServices);
     }
-
-
 }

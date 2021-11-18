@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.AndroidVersion;
 import com.android.build.api.variant.impl.MutableAndroidVersion;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -298,6 +299,7 @@ public class VariantDslInfoTest {
                         dslServices,
                         variantPropertiesApiServices,
                         null, /* BuildType */
+                        Mockito.mock(BaseExtension.class),
                         Mockito.mock(CommonExtension.class),
                         false,
                         Collections.emptyMap(),

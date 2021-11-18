@@ -19,9 +19,6 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.CompileOptions
-import com.android.build.api.dsl.Lint
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -32,8 +29,8 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.SourceDirectoriesImpl
 import com.android.build.api.variant.impl.SourceType
 import com.android.build.api.variant.impl.SourcesImpl
@@ -65,13 +62,13 @@ import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
@@ -110,9 +107,7 @@ abstract class ComponentImpl(
     override val transformManager: TransformManager,
     protected val internalServices: VariantPropertiesApiServices,
     final override val services: TaskCreationServices,
-    override val sdkComponents: SdkComponents,
-    @Deprecated("Do not use if you can avoid it. Check if services has what you need")
-    override val globalScope: GlobalScope
+    final override val global: GlobalTaskCreationConfig,
 ): Component, ComponentCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
@@ -145,12 +140,6 @@ abstract class ComponentImpl(
             variantDslInfo.javaCompileOptions,
             buildFeatures.dataBinding,
             internalServices)
-
-    override val compileOptions: CompileOptions
-        get() = variantDslInfo.compileOptions
-
-    override val lintOptions: Lint
-        get() = variantDslInfo.lintOptions
 
     override val sources: SourcesImpl by lazy {
         SourcesImpl(
@@ -208,9 +197,6 @@ abstract class ComponentImpl(
 
     override val description: String
         get() = variantData.description
-
-    override val namespacedAndroidResources: Boolean
-        get() = variantDslInfo.androidResources.namespaced
 
     // Resource shrinker expects MergeResources task to have all the resources merged and with
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
@@ -294,35 +280,31 @@ abstract class ComponentImpl(
         }
         val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
         if (variantType.isDynamicFeature) {
-            globalScope
-                .dslServices
+            internalServices
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC,
                         "Resource shrinking must be configured for base module.")
             return false
         }
-        if (!newResourceShrinker && globalScope.hasDynamicFeatures()) {
+        if (!newResourceShrinker && global.hasDynamicFeatures) {
             val message = String.format(
                 "Resource shrinker for multi-apk applications can be enabled via " +
                         "experimental flag: '%s'.",
                 BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER.propertyName)
-            globalScope
-                    .dslServices
+            internalServices
                     .issueReporter
                     .reportError(IssueReporter.Type.GENERIC, message)
             return false
         }
         if (variantType.isAar) {
-            globalScope
-                .dslServices
+            internalServices
                 .issueReporter
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
             return false
         }
         if (!variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
-            globalScope
-                .dslServices
+            internalServices
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC,
@@ -650,7 +632,7 @@ abstract class ComponentImpl(
      * Returns the path(s) to compiled R classes (R.jar).
      */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
-        return if (namespacedAndroidResources) {
+        return if (global.namespacedAndroidResources) {
             internalServices.fileCollection().also { fileCollection ->
                 val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
                 val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
@@ -712,7 +694,7 @@ abstract class ComponentImpl(
      * This can be null for unit tests without resource support.
      */
     fun getCompiledRClassArtifact(): Provider<RegularFile>? {
-        return if (namespacedAndroidResources) {
+        return if (global.namespacedAndroidResources) {
             artifacts.get(COMPILE_R_CLASS_JAR)
         } else {
             val variantType = variantDslInfo.variantType

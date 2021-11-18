@@ -19,9 +19,7 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
-import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
@@ -33,36 +31,35 @@ import com.android.build.gradle.internal.dsl.NdkOptions
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
+import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import com.android.build.gradle.options.StringOption
-import javax.inject.Inject
 import org.gradle.api.provider.Property
+import javax.inject.Inject
 
 open class ApplicationVariantImpl @Inject constructor(
-        override val variantBuilder: ApplicationVariantBuilderImpl,
-        buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
-        artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
-        variantData: BaseVariantData,
-        dependenciesInfoBuilder: DependenciesInfoBuilder,
-        transformManager: TransformManager,
-        internalServices: VariantPropertiesApiServices,
-        taskCreationServices: TaskCreationServices,
-        sdkComponents: SdkComponents,
-        globalScope: GlobalScope
+    override val variantBuilder: ApplicationVariantBuilderImpl,
+    buildFeatureValues: BuildFeatureValues,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: ArtifactsImpl,
+    variantScope: VariantScope,
+    variantData: BaseVariantData,
+    dependenciesInfoBuilder: DependenciesInfoBuilder,
+    transformManager: TransformManager,
+    internalServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
+    globalTaskCreationConfig: GlobalTaskCreationConfig,
 ) : VariantImpl(
     variantBuilder,
     buildFeatureValues,
@@ -76,14 +73,11 @@ open class ApplicationVariantImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    globalTaskCreationConfig
 ), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest, HasTestFixtures {
 
     val delegate by lazy { ApkCreationConfigImpl(
         this,
-        internalServices.projectOptions,
-        globalScope,
         variantDslInfo) }
 
     init {
@@ -150,9 +144,8 @@ open class ApplicationVariantImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = variantScope.isTestOnly(this)
 
-    override val needAssetPackTasks: Boolean by lazy {
-        (globalScope.extension as BaseAppModuleExtension).assetPacks.isNotEmpty()
-    }
+    override val needAssetPackTasks: Boolean
+        get() = global.assetPacks.isNotEmpty()
 
     override val shouldPackageDesugarLibDex: Boolean
         get() = delegate.isCoreLibraryDesugaringEnabled
@@ -245,8 +238,7 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
         CodeTransparencyImpl(
-            (globalScope.extension as BaseAppModuleExtension)
-                .bundle.codeTransparency.signing
+            global.bundleOptions.codeTransparency.signing
         )
     )
 }

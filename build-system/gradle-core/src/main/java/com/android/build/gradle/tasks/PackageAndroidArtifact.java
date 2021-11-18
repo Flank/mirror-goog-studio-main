@@ -51,7 +51,6 @@ import com.android.build.gradle.internal.manifest.ManifestDataKt;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider;
@@ -1161,7 +1160,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull final TaskT packageAndroidArtifact) {
             super.configure(packageAndroidArtifact);
 
-            GlobalScope globalScope = creationConfig.getGlobalScope();
             VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
             packageAndroidArtifact
@@ -1273,7 +1271,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     creationConfig.getServices().getProjectInfo().getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =
-                    globalScope.getExtension().getSplits().getAbi().isEnable()
+                    creationConfig.getGlobal().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
             if (creationConfig.getVariantType().isDynamicFeature()) {
@@ -1302,14 +1300,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
             packageAndroidArtifact.getAbiFilters().disallowChanges();
             packageAndroidArtifact.buildTargetDensity =
-                    globalScope.getExtension().getSplits().getDensity().isEnable()
+                    creationConfig.getGlobal().getSplits().getDensity().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
 
             packageAndroidArtifact.apkCreatorType =
                     creationConfig.getVariantScope().getApkCreatorType();
 
-            packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
+            packageAndroidArtifact.getCreatedBy().set(creationConfig.getGlobal().getCreatedBy());
 
             if (creationConfig.getVariantType().isBaseModule()
                     && creationConfig

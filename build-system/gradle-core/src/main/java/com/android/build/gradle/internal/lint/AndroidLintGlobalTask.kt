@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.work.DisableCachingByDefault
 
@@ -30,7 +30,9 @@ import org.gradle.work.DisableCachingByDefault
 @DisableCachingByDefault
 abstract class AndroidLintGlobalTask: BaseTask() {
 
-    class GlobalCreationAction(globalScope: GlobalScope) : BaseGlobalCreationAction(globalScope) {
+    class GlobalCreationAction(creationConfig: GlobalTaskCreationConfig) : BaseGlobalCreationAction(
+        creationConfig
+    ) {
         override val name: String get() = Companion.name
         override val description: String get() = "Runs lint on the default variant."
         companion object {
@@ -38,7 +40,9 @@ abstract class AndroidLintGlobalTask: BaseTask() {
         }
     }
 
-    class LintFixCreationAction(globalScope: GlobalScope) : BaseGlobalCreationAction(globalScope) {
+    class LintFixCreationAction(creationConfig: GlobalTaskCreationConfig) : BaseGlobalCreationAction(
+        creationConfig
+    ) {
         override val name: String get() = Companion.name
         override val description: String get() = "Runs lint on the default variant and applies any safe suggestions to the source code."
         companion object {
@@ -46,8 +50,9 @@ abstract class AndroidLintGlobalTask: BaseTask() {
         }
     }
 
+    abstract class BaseGlobalCreationAction(creationConfig: GlobalTaskCreationConfig) :
+        GlobalTaskCreationAction<AndroidLintGlobalTask>(creationConfig) {
 
-    abstract class BaseGlobalCreationAction(globalScope: GlobalScope) : GlobalTaskCreationAction<AndroidLintGlobalTask>(globalScope) {
         final override val type: Class<AndroidLintGlobalTask> get() = AndroidLintGlobalTask::class.java
         protected abstract val description: String
 

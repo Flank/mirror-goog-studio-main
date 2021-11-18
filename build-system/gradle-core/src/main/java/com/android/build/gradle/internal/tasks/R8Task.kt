@@ -332,7 +332,7 @@ abstract class R8Task @Inject constructor(
                 )
 
                 if (creationConfig.dexingType.needsMainDexList
-                    && !creationConfig.namespacedAndroidResources
+                    && !creationConfig.global.namespacedAndroidResources
                 ) {
                     task.mainDexRulesFiles.from(
                         artifacts.get(
@@ -394,15 +394,15 @@ abstract class R8Task @Inject constructor(
         }
 
         private fun setBootClasspathForCodeShrinker(task: R8Task) {
-            val javaTarget = creationConfig.compileOptions.targetCompatibility
+            val javaTarget = creationConfig.global.compileOptions.targetCompatibility
 
-            task.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
+            task.bootClasspath.from(creationConfig.global.fullBootClasspath)
             when {
                 javaTarget.isJava9Compatible ->
-                    task.bootClasspath.from(creationConfig.globalScope.versionedSdkLoader.flatMap {
+                    task.bootClasspath.from(creationConfig.global.versionedSdkLoader.flatMap {
                         it.coreForSystemModulesProvider })
                 javaTarget.isJava8Compatible ->
-                    task.bootClasspath.from(creationConfig.globalScope.versionedSdkLoader.flatMap {
+                    task.bootClasspath.from(creationConfig.global.versionedSdkLoader.flatMap {
                         it.coreLambdaStubsProvider })
             }
         }

@@ -28,8 +28,8 @@ import com.android.build.gradle.internal.dsl.InternalLibraryExtension
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
 import org.gradle.api.DomainObjectSet
@@ -46,14 +46,14 @@ import java.util.Collections
  */
 open class LibraryExtension(
     dslServices: DslServices,
-    globalScope: GlobalScope,
+    bootClasspathConfig: BootClasspathConfig,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: LibraryExtensionImpl
 ) : TestedExtension(
     dslServices,
-    globalScope,
+    bootClasspathConfig,
     buildOutputs,
     sourceSetManager,
     extraModelInfo,

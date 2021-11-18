@@ -282,3 +282,12 @@ internal fun TestOptions.Execution.convert(): TestInfo.Execution = when (this) {
     TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR -> TestInfo.Execution.ANDROID_TEST_ORCHESTRATOR
     TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR -> TestInfo.Execution.ANDROIDX_TEST_ORCHESTRATOR
 }
+
+internal fun String.convertToExecution(): TestInfo.Execution? = when (this) {
+    // The string coming from the old DSL (which is the enum converted) can be lowercase, so we
+    // need to handle both
+    "host","HOST" -> TestInfo.Execution.HOST
+    "android_test_orchestrator","ANDROID_TEST_ORCHESTRATOR" -> TestInfo.Execution.ANDROID_TEST_ORCHESTRATOR
+    "androidx_test_orchestrator","ANDROIDX_TEST_ORCHESTRATOR" -> TestInfo.Execution.ANDROIDX_TEST_ORCHESTRATOR
+    else -> null
+}

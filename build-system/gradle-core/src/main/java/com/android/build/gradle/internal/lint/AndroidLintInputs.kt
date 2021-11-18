@@ -314,23 +314,21 @@ abstract class ProjectInputs {
 
     internal fun initialize(variant: VariantWithTests, isForAnalysis: Boolean) {
         val creationConfig = variant.main
-        val extension = creationConfig.globalScope.extension
+        val globalConfig = creationConfig.global
+
         initializeFromProject(creationConfig.services.projectInfo.getProject(), isForAnalysis)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
 
-        lintOptions.initialize(creationConfig.lintOptions)
-        resourcePrefix.setDisallowChanges(extension.resourcePrefix)
+        lintOptions.initialize(globalConfig.lintOptions)
+        resourcePrefix.setDisallowChanges(globalConfig.resourcePrefix)
 
-        if (extension is BaseAppModuleExtension) {
-            dynamicFeatures.setDisallowChanges(extension.dynamicFeatures)
-        }
-        dynamicFeatures.disallowChanges()
+        dynamicFeatures.setDisallowChanges(globalConfig.dynamicFeatures)
 
-        bootClasspath.fromDisallowChanges(creationConfig.sdkComponents.bootClasspath)
-        javaSourceLevel.setDisallowChanges(creationConfig.compileOptions.sourceCompatibility)
-        compileTarget.setDisallowChanges(extension.compileSdkVersion)
+        bootClasspath.fromDisallowChanges(globalConfig.bootClasspath)
+        javaSourceLevel.setDisallowChanges(globalConfig.compileOptions.sourceCompatibility)
+        compileTarget.setDisallowChanges(globalConfig.compileSdkHashString)
         // `neverShrinking` is about all variants, so look back to the DSL
-        neverShrinking.setDisallowChanges(extension.buildTypes.none { it.isMinifyEnabled })
+        neverShrinking.setDisallowChanges(globalConfig.hasNoBuildTypeMinified)
     }
 
     internal fun initializeForStandalone(
@@ -895,10 +893,11 @@ abstract class VariantInputs {
         })
 
         proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
+
         extractedProguardFiles.setDisallowChanges(
-            creationConfig.globalScope
-                .globalArtifacts
-                .get(InternalArtifactType.DEFAULT_PROGUARD_FILES)
+            creationConfig.global.globalArtifacts.get(
+                InternalArtifactType.DEFAULT_PROGUARD_FILES
+            )
         )
         consumerProguardFiles.setDisallowChanges(creationConfig.variantScope.consumerProguardFiles)
 
@@ -1069,7 +1068,7 @@ abstract class BuildFeaturesInput {
         viewBinding.setDisallowChanges(creationConfig.buildFeatures.viewBinding)
         coreLibraryDesugaringEnabled.setDisallowChanges(creationConfig.isCoreLibraryDesugaringEnabled)
         namespacingMode.setDisallowChanges(
-            if (creationConfig.namespacedAndroidResources) {
+            if (creationConfig.global.namespacedAndroidResources) {
                 LintModelNamespacingMode.DISABLED
             } else {
                 LintModelNamespacingMode.REQUIRED

@@ -36,11 +36,16 @@ import java.io.File
  */
 class ProjectInfo(private val project: Project) {
 
-    fun getProjectBaseName(): String {
-        val convention = Preconditions.checkNotNull(
-                project.convention.findPlugin(BasePluginConvention::class.java))
-        return convention!!.archivesBaseName
+    companion object {
+        @JvmStatic
+        fun Project.getBaseName(): String {
+            val convention = Preconditions.checkNotNull(
+                this.convention.findPlugin(BasePluginConvention::class.java))
+            return convention!!.archivesBaseName
+        }
     }
+
+    fun getProjectBaseName(): String = project.getBaseName()
 
     val path: String
         get() = project.path

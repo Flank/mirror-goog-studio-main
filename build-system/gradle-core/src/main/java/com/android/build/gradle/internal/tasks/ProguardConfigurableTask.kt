@@ -294,7 +294,7 @@ abstract class ProguardConfigurableTask(
             task.referencedResources.from(referencedResources)
 
             task.extractedDefaultProguardFile.set(
-                creationConfig.globalScope.globalArtifacts.get(InternalArtifactType.DEFAULT_PROGUARD_FILES))
+                creationConfig.global.globalArtifacts.get(InternalArtifactType.DEFAULT_PROGUARD_FILES))
 
             applyProguardRules(task, creationConfig, task.testedMappingFile, testedConfig)
         }
@@ -343,7 +343,7 @@ abstract class ProguardConfigurableTask(
             // To set up a dependency on the producer task, the actual proguard files are computed
             // through variantScope
             task.configurationFiles.from(
-                creationConfig.globalScope.globalArtifacts.get(
+                creationConfig.global.globalArtifacts.get(
                     InternalArtifactType.DEFAULT_PROGUARD_FILES)
             )
 

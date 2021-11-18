@@ -31,7 +31,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Provider;
 
 /**
  * Deals with the default ProGuard files for Gradle.
@@ -92,12 +94,23 @@ public class ProguardFiles {
                 name + "-" + Version.ANDROID_GRADLE_PLUGIN_VERSION);
     }
 
+    /** @deprecated Use getDefaultProguardFileDirectory */
+    @Deprecated
     public static File getDefaultProguardFileDir(@NonNull DirectoryProperty buildDirectory) {
         return FileUtils.join(
                 buildDirectory.get().getAsFile(),
                 SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.DEFAULT_PROGUARD_FILES.INSTANCE.getFolderName(),
                 "global");
+    }
+
+    public static Provider<Directory> getDefaultProguardFileDirectory(
+            @NonNull DirectoryProperty buildDirectory) {
+        return buildDirectory.dir(
+                SdkConstants.FD_INTERMEDIATES
+                        + "/"
+                        + InternalArtifactType.DEFAULT_PROGUARD_FILES.INSTANCE.getFolderName()
+                        + "/global");
     }
 
     public static void createProguardFile(

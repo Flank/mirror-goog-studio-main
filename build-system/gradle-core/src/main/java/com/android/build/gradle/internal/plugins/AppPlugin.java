@@ -40,16 +40,18 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.v2.ide.ProjectType;
 import java.util.List;
 import javax.inject.Inject;
@@ -83,34 +85,38 @@ public class AppPlugin
     @Override
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
-            @NonNull GlobalScope globalScope,
             @NonNull VariantModel variantModel,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
                 new AppModelBuilder(
-                        globalScope,
-                        variantModel,
-                        (BaseAppModuleExtension) extension,
-                        extraModelInfo,
-                        projectServices.getProjectOptions(),
-                        projectServices.getIssueReporter(),
-                        getProjectType(),
-                        projectServices.getProjectInfo()));
+                        project, variantModel, (BaseAppModuleExtension) extension, extraModelInfo));
     }
 
     @NonNull
     @Override
-    protected BaseExtension createExtension(
+    protected ExtensionData<ApplicationExtension> createExtension(
             @NonNull DslServices dslServices,
-            @NonNull GlobalScope globalScope,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull VersionedSdkLoaderService versionedSdkLoaderService) {
         ApplicationExtensionImpl applicationExtension =
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
+
+        // detects whether we are running the plugin under unit test mode
+        boolean forUnitTesting = project.hasProperty("_agp_internal_test_mode_");
+
+        BootClasspathConfigImpl bootClasspathConfig =
+                new BootClasspathConfigImpl(
+                        project,
+                        dslServices,
+                        versionedSdkLoaderService,
+                        applicationExtension,
+                        forUnitTesting);
+
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
             Class<ApplicationExtension> instanceType = (Class) BaseAppModuleExtension.class;
@@ -122,7 +128,7 @@ public class AppPlugin
                                             "android",
                                             instanceType,
                                             dslServices,
-                                            globalScope,
+                                            bootClasspathConfig,
                                             buildOutputs,
                                             dslContainers.getSourceSetManager(),
                                             extraModelInfo,
@@ -132,19 +138,22 @@ public class AppPlugin
                             BaseAppModuleExtension.class,
                             "_internal_legacy_android_extension",
                             android);
-            return android;
+            return new ExtensionData<>(android, applicationExtension, bootClasspathConfig);
         }
 
-        return project.getExtensions()
-                .create(
-                        "android",
-                        BaseAppModuleExtension.class,
-                        dslServices,
-                        globalScope,
-                        buildOutputs,
-                        dslContainers.getSourceSetManager(),
-                        extraModelInfo,
-                        applicationExtension);
+        return new ExtensionData<>(
+                project.getExtensions()
+                        .create(
+                                "android",
+                                BaseAppModuleExtension.class,
+                                dslServices,
+                                bootClasspathConfig,
+                                buildOutputs,
+                                dslContainers.getSourceSetManager(),
+                                extraModelInfo,
+                                applicationExtension),
+                applicationExtension,
+                bootClasspathConfig);
     }
 
     /**
@@ -178,10 +187,11 @@ public class AppPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                            com.android.build.api.dsl.ApplicationExtension,
-                            ApplicationVariantBuilderImpl,
-                            ApplicationVariantImpl>
-                        variantApiOperationsRegistrar) {
+                                    ApplicationExtension,
+                                    ApplicationVariantBuilderImpl,
+                                    ApplicationVariantImpl>
+                            variantApiOperationsRegistrar,
+            @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
                         SdkComponentsImpl.class,
@@ -190,7 +200,11 @@ public class AppPlugin
                         project.provider(getExtension()::getBuildToolsRevision),
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath),
-                        project.provider(globalScope::getBootClasspath));
+                        // need to keep this fully wrapped in a provider so that we don't initialize
+                        // any of the lazy objects too early as they would read the
+                        // compileSdkVersion
+                        // too early.
+                        project.provider(bootClasspathConfig::getBootClasspath));
 
         // register under the new interface for kotlin, groovy will find both the old and new
         // interfaces through the implementation class.
@@ -218,28 +232,24 @@ public class AppPlugin
                             variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         return new ApplicationTaskManager(
                 project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalTaskCreationConfig,
+                localConfig,
+                extension);
     }
 
     @NonNull
     @Override
     protected ApplicationVariantFactory createVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
-        return new ApplicationVariantFactory(projectServices, globalScope);
+            @NonNull ProjectServices projectServices) {
+        return new ApplicationVariantFactory(projectServices);
     }
 
     @Override

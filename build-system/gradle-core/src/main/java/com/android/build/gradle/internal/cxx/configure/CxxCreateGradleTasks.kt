@@ -127,7 +127,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
             }
             val taskModel = createFoldedCxxTaskDependencyModel(abis)
 
-            val global = variants.first().variant.globalScope
+            val globalConfig = variants.first().variant.global
 
             val variantMap = variants.associate { it.variant.name to it.variant }
 
@@ -136,7 +136,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is Configure -> {
                         val variant = variantMap.getValue(task.representative.variant.variantName)
                         val configureTask = taskFactory.register(createCxxConfigureTask(
-                            global,
+                            globalConfig,
                             task.representative,
                             name))
                         // Make sure any prefab configurations are generated first
@@ -168,9 +168,9 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is Build -> {
                         val variant = variantMap.getValue(task.representative.variant.variantName)
                         val buildTask = taskFactory.register(createWorkingCxxBuildTask(
-                                global,
-                                task.representative,
-                                name))
+                            globalConfig,
+                            task.representative,
+                            name))
                         // Make sure any prefab dependencies are built first
                         buildTask.dependsOn(
                             variant.variantDependencies.getArtifactCollection(

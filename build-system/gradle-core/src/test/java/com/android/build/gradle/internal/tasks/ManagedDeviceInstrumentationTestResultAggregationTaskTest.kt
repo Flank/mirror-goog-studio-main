@@ -19,12 +19,12 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.utp.TEST_RESULT_PB_FILE_NAME
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl
 import com.android.testutils.MockitoKt
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
-import java.io.File
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.TaskOutputsInternal
@@ -43,6 +43,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnit
+import java.io.File
 
 /**
  * Unit tests for [ManagedDeviceInstrumentationTestResultAggregationTask].
@@ -57,6 +58,8 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
 
     @Mock(answer = RETURNS_DEEP_STUBS)
     private lateinit var creationConfig: VariantCreationConfig
+    @Mock(answer = RETURNS_DEEP_STUBS)
+    private lateinit var globalConfig: GlobalTaskCreationConfigImpl
 
     @Before
     fun setUpMocks() {

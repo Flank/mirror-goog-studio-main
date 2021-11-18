@@ -21,6 +21,7 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
@@ -62,6 +63,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val dslServices: DslServices,
     private val variantPropertiesApiServices: VariantPropertiesApiServices,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    private val oldExtension: BaseExtension,
     private val extension: CommonExtensionT,
     private val hasDynamicFeatures: Boolean,
     private val experimentalProperties: Map<String, Any>,
@@ -85,6 +87,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
+            oldExtension: BaseExtension,
             extension: CommonExtensionT,
             hasDynamicFeatures: Boolean,
             experimentalProperties: Map<String, Any> = mapOf(),
@@ -102,6 +105,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 dslServices,
                 variantPropertiesApiServices,
                 nativeBuildSystem,
+                oldExtension,
                 extension,
                 hasDynamicFeatures,
                 experimentalProperties,
@@ -340,6 +344,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             publishingInfo,
             experimentalProperties,
             inconsistentTestAppId,
+            oldExtension,
             extension
         )
     }

@@ -24,22 +24,18 @@ import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkL
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
-import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.repository.Revision
 import com.android.testing.utils.computeSystemImageHashFromDsl
 import com.android.testing.utils.findClosestHashes
-import com.android.utils.GrabProcessOutput
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.work.DisableCachingByDefault
-import java.lang.Exception
-import java.util.concurrent.TimeUnit
 
 private const val SYSTEM_IMAGE_PREFIX = "system-images;"
 private const val HASH_DIVIDER = ";"
@@ -142,39 +138,39 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
         private val apiLevel: Int,
         private val abi: String,
         private val hardwareProfile: String,
-        globalScope: GlobalScope
-    ) : GlobalTaskCreationAction<ManagedDeviceSetupTask>(globalScope) {
+        creationConfig: GlobalTaskCreationConfig
+    ) : GlobalTaskCreationAction<ManagedDeviceSetupTask>(creationConfig) {
 
         constructor(
             name: String,
             managedDevice: ManagedVirtualDevice,
-            globalScope: GlobalScope
+            creationConfig: GlobalTaskCreationConfig
         ): this(
             name,
             managedDevice.systemImageSource,
             managedDevice.apiLevel,
             computeAbiFromArchitecture(managedDevice),
             managedDevice.device,
-            globalScope)
+            creationConfig)
 
         override val type: Class<ManagedDeviceSetupTask>
             get() = ManagedDeviceSetupTask::class.java
 
         override fun configure(task: ManagedDeviceSetupTask) {
-            task.sdkService.setDisallowChanges(globalScope.sdkComponents)
-            task.compileSdkVersion.setDisallowChanges(globalScope.extension.compileSdkVersion)
-            task.buildToolsRevision.setDisallowChanges(globalScope.extension.buildToolsRevision)
-            task.avdService.setDisallowChanges(globalScope.avdComponents)
+            super.configure(task)
+            task.sdkService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.compileSdkVersion.setDisallowChanges(creationConfig.compileSdkHashString)
+            task.buildToolsRevision.setDisallowChanges(creationConfig.buildToolsRevision)
+            task.avdService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
 
             task.systemImageVendor.setDisallowChanges(systemImageSource)
             task.apiLevel.setDisallowChanges(apiLevel)
             task.abi.setDisallowChanges(abi)
             task.hardwareProfile.setDisallowChanges(hardwareProfile)
-            task.analyticsService.set(
-                getBuildService(
-                    task.project.gradle.sharedServices, AnalyticsService::class.java
-                )
-            )
         }
     }
 

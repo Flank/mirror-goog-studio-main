@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("UnstableApiUsage")
+
 package com.android.build.gradle.internal.services
 
 import org.gradle.api.Project

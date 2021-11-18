@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
@@ -42,10 +43,10 @@ import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.ndk.NdkR19Info
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -67,7 +68,7 @@ import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 /**
  * Set up up a mock for constructing [CxxModuleModel]. It takes a lot of plumbing so this can
@@ -126,11 +127,11 @@ open class BasicModuleModelMock {
     val home = join(tempFolder, "home")
     val projects = join(tempFolder, "projects")
     val throwUnmocked = RuntimeExceptionAnswer()
-    val global = mock(
-        GlobalScope::class.java,
+    private val globalConfig: GlobalTaskCreationConfig = mock(
+        GlobalTaskCreationConfig::class.java,
         throwUnmocked
     )
-    val projectInfo = mock(
+    val projectInfo: ProjectInfo = mock(
         ProjectInfo::class.java,
         throwUnmocked
     )
@@ -245,10 +246,6 @@ open class BasicModuleModelMock {
 
         val buildDir = File(appFolder, "build")
         val intermediates = File(buildDir, "intermediates")
-        val extension: BaseExtension = mock(
-            BaseExtension::class.java,
-            throwUnmocked
-        )
         val abiSplitOptions = mock(
             AbiSplitOptions::class.java,
             throwUnmocked
@@ -267,18 +264,15 @@ open class BasicModuleModelMock {
         doReturn(buildDir).`when`(project).buildDir
         doReturn(join(buildDir, "build.gradle")).`when`(project).buildFile
         doReturn(projectRootDir).`when`(project).rootDir
-        doReturn(extension).`when`(global).extension
 
         doReturn(appFolderDirectory).`when`(projectInfo).projectDirectory
 
-        doReturn(extension).`when`(global).extension
-        doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
-        doReturn(false).`when`(extension).generatePureSplits
-        doReturn("12.3.4").`when`(extension).compileSdkVersion
-        doReturn("29.3.4").`when`(extension).ndkVersion
-        doReturn("/path/to/nowhere").`when`(extension).ndkPath
+        doReturn(externalNativeBuild).`when`(globalConfig).externalNativeBuild
+        doReturn("12.3.4").`when`(globalConfig).compileSdkHashString
+        doReturn("29.3.4").`when`(globalConfig).ndkVersion
+        doReturn("/path/to/nowhere").`when`(globalConfig).ndkPath
 
-        doReturn(splits).`when`(extension).splits
+        doReturn(splits).`when`(globalConfig).splits
 
         val variantScope: VariantScope = mock(
             VariantScope::class.java,
@@ -290,7 +284,7 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
 
-        doReturn(global).`when`(this.variantImpl).globalScope
+        doReturn(globalConfig).`when`(this.variantImpl).global
         doReturn(variantScope).`when`(this.variantImpl).variantScope
         doReturn(baseVariantData).`when`(this.variantImpl).variantData
         doReturn(taskCreationServices).`when`(this.variantImpl).services
@@ -319,94 +313,94 @@ open class BasicModuleModelMock {
     }
 
     init {
-            val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
-            val meta = join(ndkFolder, "meta")
-            meta.mkdirs()
-            cmakeDir.mkdirs()
-            File(meta, "platforms.json").writeText(platformsJson)
-            File(meta, "abis.json").writeText(abisJson)
-            val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
-            val osType = when {
-                osName.contains("windows") -> "windows"
-                osName.contains("mac") -> "darwin"
-                else -> "linux"
-            }
-            val ndkPrebuilts = join(ndkFolder, "prebuilt")
-            val ndkPrebuiltsHostRoot = join(ndkPrebuilts, "$osType-x86_64")
-            ndkPrebuiltsHostRoot.mkdirs()
-            val stls = listOf(
-                "arm-linux-androideabi/libc++_shared.so",
-                "aarch64-linux-android/libc++_shared.so",
-                "i686-linux-android/libc++_shared.so",
-                "x86_64-linux-android/libc++_shared.so"
-            )
-            val ndkStlRoot = join(ndkFolder, "toolchains/llvm/prebuilt/$osType-x86_64/sysroot/usr/lib")
-            stls
-                .map { join(ndkStlRoot, it) }
-                .onEach { it.parentFile.mkdirs() }
-                .onEach { it.writeText("fake STL generated by BasicModuleModelMock") }
-
-            doReturn(cmake).`when`(externalNativeBuild).cmake
-            doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
-            doReturn(null).`when`(cmake).path
-            doReturn(null).`when`(ndkBuild).path
-            doReturn(null).`when`(cmake).buildStagingDirectory
-            doReturn(null).`when`(ndkBuild).buildStagingDirectory
-            doReturn(Mockito.mock(SetProperty::class.java)).`when`(variantExternalNativeBuild).abiFilters
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).arguments
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).cFlags
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).cppFlags
-            doReturn(Mockito.mock(SetProperty::class.java)).`when`(variantExternalNativeBuild).targets
-            doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
-            doReturn("debug").`when`(variantImpl).name
-            doReturn(buildFeatures).`when`(variantImpl).buildFeatures
-
-            projectRootDir.mkdirs()
-            sdkDir.mkdirs()
-
-            doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
-            doReturn(projectOptions).`when`(taskCreationServices).projectOptions
-
-            doReturn(FakeGradleProvider(FakeGradleDirectory(sdkDir))).`when`(sdkComponents).sdkDirectoryProvider
-            doReturn(false).`when`(projectOptions)
-                .get(BooleanOption.ENABLE_PROFILE_JSON)
-            doReturn(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION.defaultValue).`when`(projectOptions)
-                .get(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)
-            doReturn(true)
-                .`when`(projectOptions).get(BooleanOption.BUILD_ONLY_TARGET_ABI)
-            doReturn(false).`when`(buildFeatures).prefab
-            doReturn(true)
-                .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
-            doReturn(null)
-                .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
-            doReturn("verbose")
-                .`when`(projectOptions).get(StringOption.NATIVE_BUILD_OUTPUT_LEVEL)
-
-            doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
-            doReturn(listOf(Abi.X86, Abi.X86_64, Abi.ARMEABI_V7A, Abi.ARM64_V8A)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
-            doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
-
-            doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
-                Mockito.anyString(), Mockito.anyString(), Mockito.anyString()
-            )
-            doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
-            doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
-            doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
-            doReturn(true).`when`(variantImpl).debuggable
-
-            val ndkInfo = NdkR19Info(ndkFolder)
-            doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
-            doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
-            doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
-            doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
-                .findCmakePath(any(), any(), any(), any(), any())
-
-            doReturn(null).`when`(gradle).parent
-
-            mockModule("app1")
-
-
+        val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
+        val meta = join(ndkFolder, "meta")
+        meta.mkdirs()
+        cmakeDir.mkdirs()
+        File(meta, "platforms.json").writeText(platformsJson)
+        File(meta, "abis.json").writeText(abisJson)
+        val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
+        val osType = when {
+            osName.contains("windows") -> "windows"
+            osName.contains("mac") -> "darwin"
+            else -> "linux"
         }
+        val ndkPrebuilts = join(ndkFolder, "prebuilt")
+        val ndkPrebuiltsHostRoot = join(ndkPrebuilts, "$osType-x86_64")
+        ndkPrebuiltsHostRoot.mkdirs()
+        val stls = listOf(
+            "arm-linux-androideabi/libc++_shared.so",
+            "aarch64-linux-android/libc++_shared.so",
+            "i686-linux-android/libc++_shared.so",
+            "x86_64-linux-android/libc++_shared.so"
+        )
+        val ndkStlRoot = join(ndkFolder, "toolchains/llvm/prebuilt/$osType-x86_64/sysroot/usr/lib")
+        stls
+            .map { join(ndkStlRoot, it) }
+            .onEach { it.parentFile.mkdirs() }
+            .onEach { it.writeText("fake STL generated by BasicModuleModelMock") }
+
+        doReturn(cmake).`when`(externalNativeBuild).cmake
+        doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
+        doReturn(null).`when`(cmake).path
+        doReturn(null).`when`(ndkBuild).path
+        doReturn(null).`when`(cmake).buildStagingDirectory
+        doReturn(null).`when`(ndkBuild).buildStagingDirectory
+        doReturn(Mockito.mock(SetProperty::class.java)).`when`(variantExternalNativeBuild).abiFilters
+        doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).arguments
+        doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).cFlags
+        doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).cppFlags
+        doReturn(Mockito.mock(SetProperty::class.java)).`when`(variantExternalNativeBuild).targets
+        doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
+        doReturn("debug").`when`(variantImpl).name
+        doReturn(buildFeatures).`when`(variantImpl).buildFeatures
+
+        projectRootDir.mkdirs()
+        sdkDir.mkdirs()
+
+        doReturn(projectOptions).`when`(taskCreationServices).projectOptions
+
+        doReturn(FakeGradleProvider(FakeGradleDirectory(sdkDir))).`when`(sdkComponents).sdkDirectoryProvider
+        doReturn(false).`when`(projectOptions)
+            .get(BooleanOption.ENABLE_PROFILE_JSON)
+        doReturn(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION.defaultValue).`when`(projectOptions)
+            .get(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)
+        doReturn(true)
+            .`when`(projectOptions).get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+        doReturn(false).`when`(buildFeatures).prefab
+        doReturn(true)
+            .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
+        doReturn(null)
+            .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
+        doReturn("verbose")
+            .`when`(projectOptions).get(StringOption.NATIVE_BUILD_OUTPUT_LEVEL)
+
+        doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
+        doReturn(listOf(Abi.X86, Abi.X86_64, Abi.ARMEABI_V7A, Abi.ARM64_V8A)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
+        doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
+
+        doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
+            Mockito.anyString(), Mockito.anyString(), Mockito.anyString()
+        )
+        doReturn(ndkHandler).`when`(globalConfig).versionedNdkHandler
+        doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
+        doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
+        doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
+        doReturn(true).`when`(variantImpl).debuggable
+
+        val ndkInfo = NdkR19Info(ndkFolder)
+        doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
+        doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
+        doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
+        doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
+            .findCmakePath(any(), any(), any(), any(), any())
+
+        doReturn(null).`when`(gradle).parent
+
+        doReturn(setOf< PrefabPackagingOptions>()).`when`(globalConfig).prefabOrEmpty
+
+        mockModule("app1")
+    }
 
     class RuntimeExceptionAnswer : Answer<Any> {
         override fun answer(invocation: InvocationOnMock): Any {

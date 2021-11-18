@@ -20,7 +20,6 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.builder.core.VariantType
@@ -39,7 +38,6 @@ class LibraryVariantData(
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
     services: VariantPropertiesApiServices,
-    globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
 ) : BaseVariantData(
     componentIdentity,
@@ -49,7 +47,6 @@ class LibraryVariantData(
     paths,
     artifacts,
     services,
-    globalScope,
     taskContainer
 ), TestedVariantData {
     private val testVariants: MutableMap<VariantType, TestVariantData> = mutableMapOf()

@@ -64,15 +64,14 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.google.common.collect.Maps
@@ -83,7 +82,6 @@ import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformSpec
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributesSchema
 import org.gradle.api.attributes.Usage
 import org.gradle.api.internal.artifacts.ArtifactAttributes
@@ -94,15 +92,13 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 class DependencyConfigurator(
     private val project: Project,
     private val projectName: String,
-    private val projectOptions: ProjectOptions,
-    private val globalScope: GlobalScope,
+    private val globalConfig: GlobalTaskCreationConfig,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
-    private val namespacedAndroidResources: Boolean,
     private val projectServices: ProjectServices
 ) {
     fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
-        if (projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
+        if (globalConfig.services.projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
             replaceOldSupportLibraries(
                 project,
                 // Inline the property name for a slight memory improvement (so that the JVM doesn't
@@ -114,8 +110,8 @@ class DependencyConfigurator(
     }
 
     fun configureDependencyChecks(): DependencyConfigurator {
-        val useAndroidX = projectServices.projectOptions.get(BooleanOption.USE_ANDROID_X)
-        val enableJetifier = projectServices.projectOptions.get(BooleanOption.ENABLE_JETIFIER)
+        val useAndroidX = globalConfig.services.projectOptions.get(BooleanOption.USE_ANDROID_X)
+        val enableJetifier = globalConfig.services.projectOptions.get(BooleanOption.ENABLE_JETIFIER)
 
         when {
             !useAndroidX && !enableJetifier -> {
@@ -123,7 +119,7 @@ class DependencyConfigurator(
                     if (configuration.isCanBeResolved) {
                         configuration.incoming.afterResolve(
                                 AndroidXDependencyCheck.AndroidXDisabledJetifierDisabled(
-                                        project, configuration.name, projectServices.issueReporter
+                                        project, configuration.name, globalConfig.services.issueReporter
                                 )
                         )
                     }
@@ -134,7 +130,7 @@ class DependencyConfigurator(
                     if (configuration.isCanBeResolved) {
                         configuration.incoming.afterResolve(
                                 AndroidXDependencyCheck.AndroidXEnabledJetifierDisabled(
-                                        project, configuration.name, projectServices.issueReporter
+                                        project, configuration.name, globalConfig.services.issueReporter
                                 )
                         )
                     }
@@ -148,10 +144,12 @@ class DependencyConfigurator(
     fun configureGeneralTransforms(): DependencyConfigurator {
         val dependencies: DependencyHandler = project.dependencies
 
+        val projectOptions = globalConfig.services.projectOptions
+
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         val autoNamespaceDependencies =
-            namespacedAndroidResources && projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
+            globalConfig.namespacedAndroidResources && projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
 
         val jetifiedAarOutputType = if (autoNamespaceDependencies) {
             AndroidArtifacts.ArtifactType.MAYBE_NON_NAMESPACED_PROCESSED_AAR
@@ -468,7 +466,7 @@ class DependencyConfigurator(
         registerGlobalRecalculateStackFramesTransform(
             projectName,
             dependencies,
-            globalScope.fullBootClasspathProvider,
+            globalConfig.fullBootClasspathProvider,
             projectServices.buildServiceRegistry
         )
 
@@ -621,28 +619,29 @@ class DependencyConfigurator(
             variants.map { it.variant }.plus(nestedComponents)
 
         val dependencies = project.dependencies
+        val projectOptions = globalConfig.services.projectOptions
 
         for (component in allComponents) {
             registerAsmTransformForComponent(
-                projectServices.projectInfo.name,
+                projectName,
                 dependencies,
                 component as ComponentImpl
             )
 
             registerRecalculateStackFramesTransformForComponent(
-                projectServices.projectInfo.name,
+                projectName,
                 dependencies,
                 component
             )
         }
         if (allComponents.isNotEmpty()) {
-            val bootClasspath = project.files(allComponents.first().sdkComponents.bootClasspath)
+            val bootClasspath = project.files(globalConfig.bootClasspath)
             if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
                 for (artifactConfiguration in getDexingArtifactConfigurations(
                     allComponents
                 )) {
                     artifactConfiguration.registerTransform(
-                        projectServices.projectInfo.name,
+                        projectName,
                         dependencies,
                         bootClasspath,
                         getDesugarLibConfig(project),

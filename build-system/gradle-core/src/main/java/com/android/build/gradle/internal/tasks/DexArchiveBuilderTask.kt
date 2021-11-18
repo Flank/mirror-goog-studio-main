@@ -582,7 +582,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             val libraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled
             if (languageDesugaringNeeded || libraryDesugaring) {
                 task.dexParams.desugarBootclasspath
-                        .from(creationConfig.globalScope.filteredBootClasspath)
+                        .from(creationConfig.global.filteredBootClasspath)
             }
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))

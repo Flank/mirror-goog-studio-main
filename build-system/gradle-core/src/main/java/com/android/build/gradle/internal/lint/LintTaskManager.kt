@@ -7,8 +7,8 @@ import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.core.VariantType
@@ -20,17 +20,17 @@ import java.io.File
 
 /** Factory for the LintModel based lint tasks */
 class LintTaskManager constructor(
-    private val globalScope: GlobalScope,
+    private val globalTaskCreationConfig: GlobalTaskCreationConfig,
     private val taskFactory: TaskFactory,
     private val project: Project
 ) {
 
     fun createBeforeEvaluateLintTasks() {
         // LintFix task
-        taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction(globalScope))
+        taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction(globalTaskCreationConfig))
 
         // LintGlobalTask
-        val globalTask = taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction(globalScope))
+        val globalTask = taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction(globalTaskCreationConfig))
         taskFactory.configure(JavaBasePlugin.CHECK_TASK_NAME) { it.dependsOn(globalTask) }
 
     }
@@ -47,12 +47,12 @@ class LintTaskManager constructor(
 
         val variantsWithTests = attachTestsToVariants(
             variantPropertiesList = variantPropertiesList,
-            testComponentPropertiesList = if (globalScope.extension.lintOptions.isIgnoreTestSources) {
+            testComponentPropertiesList = if (globalTaskCreationConfig.lintOptions.ignoreTestSources) {
                 listOf()
             } else {
                 testComponentPropertiesList
             },
-            ignoreTestFixturesSources = (globalScope.extension as CommonExtension<*, *, *, *>).lint.ignoreTestFixturesSources
+            ignoreTestFixturesSources = globalTaskCreationConfig.lintOptions.ignoreTestFixturesSources
         )
 
         // Map of task path to the providers for tasks that that task subsumes,
@@ -61,7 +61,7 @@ class LintTaskManager constructor(
         val variantLintTaskToLintVitalTask =
             mutableMapOf<String, TaskProvider<AndroidLintTextOutputTask>>()
 
-        val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions.delegate)
+        val needsCopyReportTask = needsCopyReportTask(globalTaskCreationConfig.lintOptions)
 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) {
@@ -114,7 +114,7 @@ class LintTaskManager constructor(
             val mainVariant = variantWithTests.main
             if (mainVariant.variantType.isBaseModule &&
                 !mainVariant.variantDslInfo.isDebuggable &&
-                globalScope.extension.lintOptions.isCheckReleaseBuilds
+                globalTaskCreationConfig.lintOptions.checkReleaseBuilds
             ) {
                 taskFactory.register(
                     AndroidLintAnalysisTask.LintVitalCreationAction(mainVariant)

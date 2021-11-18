@@ -99,10 +99,12 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final VariantDependencies variantDependencies;
 
     @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
-    @Nullable private final VariantImpl testedVariantProperties;
 
-    // Global Data
-    @NonNull private final GlobalScope globalScope;
+    @NonNull private final String compileSdkVersion;
+
+    private final boolean hasDynamicFeatures;
+
+    @Nullable private final VariantImpl testedVariantProperties;
 
     // other
 
@@ -118,7 +120,8 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,
             @NonNull BaseServices baseServices,
-            @NonNull GlobalScope globalScope,
+            @Nullable String compileSdkVersion,
+            boolean hasDynamicFeatures,
             @Nullable VariantImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
@@ -126,9 +129,10 @@ public class VariantScopeImpl implements VariantScope {
         this.pathHelper = pathHelper;
         this.artifacts = artifacts;
         this.baseServices = baseServices;
-        this.globalScope = globalScope;
         this.variantPublishingSpec =
                 PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
+        this.compileSdkVersion = compileSdkVersion;
+        this.hasDynamicFeatures = hasDynamicFeatures;
         this.testedVariantProperties = testedVariantProperties;
 
         this.postProcessingOptions = variantDslInfo.getPostProcessingOptions();
@@ -233,7 +237,7 @@ public class VariantScopeImpl implements VariantScope {
     public boolean consumesFeatureJars() {
         return variantDslInfo.getVariantType().isBaseModule()
                 && variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
-                && globalScope.hasDynamicFeatures();
+                && hasDynamicFeatures;
     }
 
     @Override
@@ -313,9 +317,7 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     private boolean isPreviewTargetPlatform() {
-        AndroidVersion version =
-                AndroidTargetHash.getVersionFromHash(
-                        globalScope.getExtension().getCompileSdkVersion());
+        AndroidVersion version = AndroidTargetHash.getVersionFromHash(compileSdkVersion);
         return version != null && version.isPreview();
     }
 
@@ -326,7 +328,7 @@ public class VariantScopeImpl implements VariantScope {
      */
     @Override
     public boolean isCoreLibraryDesugaringEnabled(ConsumableCreationConfig creationConfig) {
-        CompileOptions compileOptions = creationConfig.getCompileOptions();
+        CompileOptions compileOptions = creationConfig.getGlobal().getCompileOptions();
 
         boolean libDesugarEnabled = compileOptions.isCoreLibraryDesugaringEnabled();
         boolean multidexEnabled = creationConfig.isMultiDexEnabled();

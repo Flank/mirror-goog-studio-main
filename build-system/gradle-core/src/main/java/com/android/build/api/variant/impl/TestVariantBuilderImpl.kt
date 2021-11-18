@@ -28,11 +28,16 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class TestVariantBuilderImpl @Inject constructor(
+    globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
+    componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantBuilderImpl(variantDslInfo, variantConfiguration, variantApiServices),
-    TestVariantBuilder {
+) : VariantBuilderImpl(
+    globalVariantBuilderConfig,
+    variantDslInfo,
+    componentIdentity,
+    variantApiServices
+), TestVariantBuilder {
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,

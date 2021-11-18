@@ -43,9 +43,12 @@ internal class VariantBuilderImplTest {
     lateinit var componentIdentity: ComponentIdentity
     @Mock
     lateinit var variantApiServices: VariantApiServices
+    @Mock
+    lateinit var globalVariantBuilderConfig: GlobalVariantBuilderConfig
 
     val builder: VariantBuilder by lazy {
         object : VariantBuilderImpl(
+            globalVariantBuilderConfig,
             variantDslInfo,
             componentIdentity,
             variantApiServices

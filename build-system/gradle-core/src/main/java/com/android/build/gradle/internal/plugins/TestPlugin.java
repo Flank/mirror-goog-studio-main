@@ -40,14 +40,16 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -86,17 +88,29 @@ public class TestPlugin
 
     @NonNull
     @Override
-    protected BaseExtension createExtension(
+    protected ExtensionData<com.android.build.api.dsl.TestExtension> createExtension(
             @NonNull DslServices dslServices,
-            @NonNull GlobalScope globalScope,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            VersionedSdkLoaderService versionedSdkLoaderService) {
         TestExtensionImpl testExtension =
                 dslServices.newDecoratedInstance(
                         TestExtensionImpl.class, dslServices, dslContainers);
+
+        // detects whether we are running the plugin under unit test mode
+        boolean forUnitTesting = project.hasProperty("_agp_internal_test_mode_");
+
+        BootClasspathConfigImpl bootClasspathConfig =
+                new BootClasspathConfigImpl(
+                        project,
+                        dslServices,
+                        versionedSdkLoaderService,
+                        testExtension,
+                        forUnitTesting);
+
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
             Class<com.android.build.api.dsl.TestExtension> instanceType =
@@ -110,26 +124,29 @@ public class TestPlugin
                                             "android",
                                             instanceType,
                                             dslServices,
-                                            globalScope,
+                                            bootClasspathConfig,
                                             buildOutputs,
                                             dslContainers.getSourceSetManager(),
                                             extraModelInfo,
                                             testExtension);
             project.getExtensions()
                     .add(TestExtension.class, "_internal_legacy_android_extension", android);
-            return android;
+            return new ExtensionData<>(android, testExtension, bootClasspathConfig);
         }
 
-        return project.getExtensions()
-                .create(
-                        "android",
-                        TestExtension.class,
-                        dslServices,
-                        globalScope,
-                        buildOutputs,
-                        dslContainers.getSourceSetManager(),
-                        extraModelInfo,
-                        testExtension);
+        return new ExtensionData<>(
+                project.getExtensions()
+                        .create(
+                                "android",
+                                TestExtension.class,
+                                dslServices,
+                                bootClasspathConfig,
+                                buildOutputs,
+                                dslContainers.getSourceSetManager(),
+                                extraModelInfo,
+                                testExtension),
+                testExtension,
+                bootClasspathConfig);
     }
 
     /**
@@ -161,11 +178,13 @@ public class TestPlugin
     @Override
     protected TestAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull VariantApiOperationsRegistrar<
-                        com.android.build.api.dsl.TestExtension,
-                        TestVariantBuilderImpl,
-                        TestVariantImpl>
-                            variantApiOperationsRegistrar) {
+            @NonNull
+                    VariantApiOperationsRegistrar<
+                                    com.android.build.api.dsl.TestExtension,
+                                    TestVariantBuilderImpl,
+                                    TestVariantImpl>
+                            variantApiOperationsRegistrar,
+            @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
                         SdkComponentsImpl.class,
@@ -174,7 +193,11 @@ public class TestPlugin
                         project.provider(getExtension()::getBuildToolsRevision),
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath),
-                        project.provider(globalScope::getBootClasspath));
+                        // need to keep this fully wrapped in a provider so that we don't initialize
+                        // any of the lazy objects too early as they would read the
+                        // compileSdkVersion
+                        // too early.
+                        project.provider(bootClasspathConfig::getBootClasspath));
 
         // register the same extension under a different name with the deprecated extension type.
         // this will allow plugins that use getByType() API to retrieve the old interface and keep
@@ -206,21 +229,17 @@ public class TestPlugin
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         return new TestApplicationTaskManager(
                 project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalTaskCreationConfig,
+                localConfig,
+                extension);
     }
 
     @Override
@@ -230,8 +249,7 @@ public class TestPlugin
 
     @NonNull
     @Override
-    protected TestVariantFactory createVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
-        return new TestVariantFactory(projectServices, globalScope);
+    protected TestVariantFactory createVariantFactory(@NonNull ProjectServices projectServices) {
+        return new TestVariantFactory(projectServices);
     }
 }

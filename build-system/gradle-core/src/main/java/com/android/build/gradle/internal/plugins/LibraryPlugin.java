@@ -19,6 +19,7 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
+import com.android.build.api.dsl.LibraryExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
@@ -29,7 +30,6 @@ import com.android.build.api.variant.LibraryVariantBuilder;
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
@@ -39,14 +39,16 @@ import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -77,23 +79,35 @@ public class LibraryPlugin
 
     @NonNull
     @Override
-    protected BaseExtension createExtension(
+    protected ExtensionData<LibraryExtension> createExtension(
             @NonNull DslServices dslServices,
-            @NonNull GlobalScope globalScope,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            VersionedSdkLoaderService versionedSdkLoaderService) {
         LibraryExtensionImpl libraryExtension =
                 dslServices.newDecoratedInstance(
                         LibraryExtensionImpl.class, dslServices, dslContainers);
+
+        // detects whether we are running the plugin under unit test mode
+        boolean forUnitTesting = project.hasProperty("_agp_internal_test_mode_");
+
+        BootClasspathConfigImpl bootClasspathConfig =
+                new BootClasspathConfigImpl(
+                        project,
+                        dslServices,
+                        versionedSdkLoaderService,
+                        libraryExtension,
+                        forUnitTesting);
+
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
-            Class<com.android.build.api.dsl.LibraryExtension> instanceType =
-                    (Class) LibraryExtension.class;
-            LibraryExtension android =
-                    (LibraryExtension)
+            Class<LibraryExtension> instanceType =
+                    (Class) com.android.build.gradle.LibraryExtension.class;
+            com.android.build.gradle.LibraryExtension android =
+                    (com.android.build.gradle.LibraryExtension)
                             (Object)
                                     project.getExtensions()
                                             .create(
@@ -103,26 +117,32 @@ public class LibraryPlugin
                                                     "android",
                                                     instanceType,
                                                     dslServices,
-                                                    globalScope,
+                                                    bootClasspathConfig,
                                                     buildOutputs,
                                                     dslContainers.getSourceSetManager(),
                                                     extraModelInfo,
                                                     libraryExtension);
             project.getExtensions()
-                    .add(LibraryExtension.class, "_internal_legacy_android_extension", android);
-            return android;
+                    .add(
+                            com.android.build.gradle.LibraryExtension.class,
+                            "_internal_legacy_android_extension",
+                            android);
+            return new ExtensionData<>(android, libraryExtension, bootClasspathConfig);
         }
 
-        return project.getExtensions()
-                .create(
-                        "android",
-                        LibraryExtension.class,
-                        dslServices,
-                        globalScope,
-                        buildOutputs,
-                        dslContainers.getSourceSetManager(),
-                        extraModelInfo,
-                        libraryExtension);
+        return new ExtensionData<>(
+                project.getExtensions()
+                        .create(
+                                "android",
+                                com.android.build.gradle.LibraryExtension.class,
+                                dslServices,
+                                bootClasspathConfig,
+                                buildOutputs,
+                                dslContainers.getSourceSetManager(),
+                                extraModelInfo,
+                                libraryExtension),
+                libraryExtension,
+                bootClasspathConfig);
     }
 
     /**
@@ -134,20 +154,16 @@ public class LibraryPlugin
     public abstract static class LibraryAndroidComponentsExtensionImplCompat
             extends LibraryAndroidComponentsExtensionImpl
             implements AndroidComponentsExtension<
-                    com.android.build.api.dsl.LibraryExtension,
-                    LibraryVariantBuilder,
-                    LibraryVariant> {
+                    LibraryExtension, LibraryVariantBuilder, LibraryVariant> {
 
         public LibraryAndroidComponentsExtensionImplCompat(
                 @NotNull DslServices dslServices,
                 @NotNull SdkComponents sdkComponents,
                 @NotNull
                         VariantApiOperationsRegistrar<
-                                        com.android.build.api.dsl.LibraryExtension,
-                                        LibraryVariantBuilder,
-                                        LibraryVariant>
+                                        LibraryExtension, LibraryVariantBuilder, LibraryVariant>
                                 variantApiOperations,
-                @NotNull LibraryExtension libraryExtension) {
+                @NotNull com.android.build.gradle.LibraryExtension libraryExtension) {
             super(dslServices, sdkComponents, variantApiOperations, libraryExtension);
         }
     }
@@ -158,10 +174,10 @@ public class LibraryPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                            LibraryExtension,
-                            LibraryVariantBuilderImpl,
-                            LibraryVariantImpl>
-                            variantApiOperationsRegistrar) {
+                                    LibraryExtension, LibraryVariantBuilderImpl, LibraryVariantImpl>
+                            variantApiOperationsRegistrar,
+            @NonNull BootClasspathConfig bootClasspathConfig) {
+
         SdkComponents sdkComponents =
                 dslServices.newInstance(
                         SdkComponentsImpl.class,
@@ -170,7 +186,11 @@ public class LibraryPlugin
                         project.provider(getExtension()::getBuildToolsRevision),
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath),
-                        project.provider(globalScope::getBootClasspath));
+                        // need to keep this fully wrapped in a provider so that we don't initialize
+                        // any of the lazy objects too early as they would read the
+                        // compileSdkVersion
+                        // too early.
+                        project.provider(bootClasspathConfig::getBootClasspath));
 
         // register under the new interface for kotlin, groovy will find both the old and new
         // interfaces through the implementation class.
@@ -196,9 +216,8 @@ public class LibraryPlugin
 
     @NonNull
     @Override
-    protected LibraryVariantFactory createVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
-        return new LibraryVariantFactory(projectServices, globalScope);
+    protected LibraryVariantFactory createVariantFactory(@NonNull ProjectServices projectServices) {
+        return new LibraryVariantFactory(projectServices);
     }
 
     @Override
@@ -218,21 +237,17 @@ public class LibraryPlugin
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         return new LibraryTaskManager(
                 project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalTaskCreationConfig,
+                localConfig,
+                extension);
     }
 
     @Override

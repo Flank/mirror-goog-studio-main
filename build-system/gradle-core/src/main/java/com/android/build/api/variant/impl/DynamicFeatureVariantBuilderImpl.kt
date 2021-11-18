@@ -28,12 +28,14 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class DynamicFeatureVariantBuilderImpl @Inject constructor(
+    globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
+    componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) : VariantBuilderImpl(
+    globalVariantBuilderConfig,
     variantDslInfo,
-    variantConfiguration,
+    componentIdentity,
     variantApiServices
 ), DynamicFeatureVariantBuilder {
 

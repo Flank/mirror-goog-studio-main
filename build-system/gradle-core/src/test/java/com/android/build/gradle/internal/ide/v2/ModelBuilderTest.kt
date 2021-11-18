@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
+import com.android.AndroidProjectTypes
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationBuildType
@@ -23,25 +24,22 @@ import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
-import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder
 import com.android.build.gradle.internal.variant.VariantModel
@@ -60,8 +58,6 @@ import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.Versions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
-import org.gradle.api.component.SoftwareComponentFactory
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -211,9 +207,6 @@ class ModelBuilderTest {
 
         AndroidLocationsBuildService.RegistrationAction(project).execute()
 
-        val avdComponents = Mockito.mock(AvdComponentsBuildService::class.java)
-        val avdComponentsProvider = FakeGradleProvider(avdComponents)
-
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
             VariantTypeImpl.BASE_APK,
@@ -236,38 +229,29 @@ class ModelBuilderTest {
             project, SyncOptions.EvaluationMode.IDE, SyncOptions.ErrorFormatMode.MACHINE_PARSABLE
         ).execute()
 
-        return ModelBuilder(
-            project,
-            GlobalScope(
-                project,
-                "",
-                dslServices,
-                sdkComponentProvider,
-                avdComponentsProvider,
-                Mockito.mock(ToolingModelBuilderRegistry::class.java),
-                NoOpMessageReceiver(),
-                Mockito.mock(SoftwareComponentFactory::class.java)
-            ),
-            dslServices.projectOptions,
-            createVariantModel(),
-            extension,
-            dslServices.issueReporter as SyncIssueReporter,
-            ProjectType.APPLICATION)
+        return ModelBuilder(project, createVariantModel(), extension)
     }
 
-    private fun createVariantModel() : VariantModel = VariantModelImpl(
-        VariantInputModelBuilder(createDslServices()).toModel(),
-        { "debug" },
-        { variantList },
-        { testComponentList },
-        {
-            BuildFeatureValuesImpl(
-                dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java),
-                dslServices.projectOptions
-            )
-        },
-        projectServices.issueReporter
-    )
+    private fun createVariantModel() : VariantModel {
+        val globalConfig = Mockito.mock(GlobalTaskCreationConfigImpl::class.java)
+        Mockito.`when`(globalConfig.services).thenReturn(dslServices)
+
+        return VariantModelImpl(
+            VariantInputModelBuilder(dslServices).toModel(),
+            { "debug" },
+            { variantList },
+            { testComponentList },
+            {
+                BuildFeatureValuesImpl(
+                    dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java),
+                    dslServices.projectOptions
+                )
+            },
+            AndroidProjectTypes.PROJECT_TYPE_APP,
+            ProjectType.APPLICATION,
+            globalConfig
+        )
+    }
 
     data class FakeModelBuilderParameter(
         override var variantName: String = "foo"

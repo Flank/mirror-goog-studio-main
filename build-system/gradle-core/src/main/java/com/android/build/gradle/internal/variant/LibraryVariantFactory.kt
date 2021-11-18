@@ -15,66 +15,80 @@
  */
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.services.VariantApiServices
-import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.builder.core.BuilderConstants
-import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.dsl.BuildFeatures
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.LibraryBuildFeatures
-import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
+import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
 import com.android.build.api.variant.impl.LibraryVariantImpl
-import java.lang.RuntimeException
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
-import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.*
-import com.android.build.gradle.internal.plugins.DslContainerProvider
-import com.android.build.gradle.internal.scope.*
-import com.android.build.gradle.internal.services.ProjectServices
 import com.google.common.collect.ImmutableList
+import org.gradle.api.Project
 
 class LibraryVariantFactory(
-        projectServices: ProjectServices, globalScope: GlobalScope) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl>(
-        projectServices,
-        globalScope) {
+    projectServices: ProjectServices,
+) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl>(
+    projectServices,
+) {
 
     override fun createVariantBuilder(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            variantApiServices: VariantApiServices): LibraryVariantBuilderImpl {
+        globalVariantBuilderConfig: GlobalVariantBuilderConfig,
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantApiServices: VariantApiServices
+    ): LibraryVariantBuilderImpl {
         return projectServices
                 .objectFactory
                 .newInstance(
                         LibraryVariantBuilderImpl::class.java,
+                        globalVariantBuilderConfig,
                         variantDslInfo,
                         componentIdentity,
                         variantApiServices)
     }
 
     override fun createVariant(
-            variantBuilder: LibraryVariantBuilderImpl,
-            componentIdentity: ComponentIdentity,
-            buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            variantScope: VariantScope,
-            variantData: BaseVariantData,
-            transformManager: TransformManager,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices,
-            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        variantBuilder: LibraryVariantBuilderImpl,
+        componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalConfig: GlobalTaskCreationConfig,
         ): LibraryVariantImpl {
         val libVariant = projectServices
                 .objectFactory
@@ -92,8 +106,8 @@ class LibraryVariantFactory(
                         transformManager,
                         variantPropertiesApiServices,
                         taskCreationServices,
-                        androidComponentsExtension.sdkComponents,
-                        globalScope)
+                        globalConfig,
+                )
 
         // create default output
         val name = "${libVariant.services.projectInfo.getProjectBaseName()}-${libVariant.baseName}.${BuilderConstants.EXT_LIB_ARCHIVE}"
@@ -131,7 +145,7 @@ class LibraryVariantFactory(
 
     override fun createTestBuildFeatureValues(
             buildFeatures: BuildFeatures,
-            dataBindingOptions: DataBindingOptions,
+            dataBinding: DataBinding,
             projectOptions: ProjectOptions): BuildFeatureValues {
         return BuildFeatureValuesImpl(
                 buildFeatures,
@@ -141,15 +155,15 @@ class LibraryVariantFactory(
     }
 
     override fun createVariantData(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            services: VariantPropertiesApiServices,
-            globalScope: GlobalScope,
-            taskContainer: MutableTaskContainer): BaseVariantData {
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        services: VariantPropertiesApiServices,
+        taskContainer: MutableTaskContainer
+    ): BaseVariantData {
         return LibraryVariantData(
                 componentIdentity,
                 variantDslInfo,
@@ -158,7 +172,6 @@ class LibraryVariantFactory(
                 paths,
                 artifacts,
                 services,
-                globalScope,
                 taskContainer)
     }
 
@@ -171,9 +184,12 @@ class LibraryVariantFactory(
         get() = VariantTypeImpl.LIBRARY
 
     /** * Prevent customization of applicationId or applicationIdSuffix.  */
-    override fun validateModel(
-            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
-        super.validateModel(model)
+    override fun preVariantCallback(
+        project: Project,
+        dslExtension: CommonExtension<*, *, *, *>,
+        model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+    ) {
+        super.preVariantCallback(project, dslExtension, model)
         val issueReporter: IssueReporter = projectServices.issueReporter
         val defaultConfig = model.defaultConfigData.defaultConfig
         if (defaultConfig.applicationId != null) {

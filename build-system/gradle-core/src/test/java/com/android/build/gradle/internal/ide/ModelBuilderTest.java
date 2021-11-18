@@ -47,23 +47,23 @@ import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
+import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -83,12 +83,10 @@ import org.mockito.MockitoAnnotations;
 /** Tests for the {@link com.android.build.gradle.internal.ide.ModelBuilder} */
 public class ModelBuilderTest {
 
-    @Mock GlobalScope globalScope;
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
     @Mock ArtifactsImpl artifacts;
-    @Mock ProjectOptions projectOptions;
-    @Mock ProjectInfo projectInfo;
+    @Mock GlobalTaskCreationConfig globalConfig;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -96,7 +94,7 @@ public class ModelBuilderTest {
     private List<TestComponentImpl> testComponentList = Lists.newArrayList();
 
     Project project;
-    ModelBuilder modelBuilder;
+    ModelBuilder<?> modelBuilder;
     File apkLocation;
     SyncIssueReporter syncIssueReporter;
 
@@ -107,16 +105,17 @@ public class ModelBuilderTest {
 
         project = ProjectFactory.getProject();
 
-        when(projectInfo.getProject()).thenReturn(project);
-
         syncIssueReporter =
                 new SyncIssueReporterImpl(
                         SyncOptions.EvaluationMode.IDE,
                         SyncOptions.ErrorFormatMode.HUMAN_READABLE,
                         new FakeLogger());
 
-        DslServices dslServices = FakeServices.createDslServices();
-        when(globalScope.getDslServices()).thenReturn(dslServices);
+        ProjectServices projectServices =
+                FakeServices.createProjectServices(project, syncIssueReporter);
+        DslServices dslServices = FakeServices.createDslServices(projectServices);
+
+        when(globalConfig.getServices()).thenReturn(dslServices);
 
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
                         project,
@@ -140,18 +139,11 @@ public class ModelBuilderTest {
                                         dslServices.getProjectOptions(),
                                         null,
                                         null),
-                        syncIssueReporter);
-
-        modelBuilder =
-                new ModelBuilder<>(
-                        globalScope,
-                        variantModel,
-                        extension,
-                        extraModelInfo,
-                        projectOptions,
-                        syncIssueReporter,
                         AndroidProjectTypes.PROJECT_TYPE_APP,
-                        projectInfo);
+                        ProjectType.APPLICATION,
+                        globalConfig);
+
+        modelBuilder = new ModelBuilder<>(project, variantModel, extension, extraModelInfo);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -210,7 +202,7 @@ public class ModelBuilderTest {
                             Mockito.mock(TransformManager.class),
                             variantPropertiesApiServices,
                             taskCreationServices,
-                            globalScope);
+                            globalConfig);
 
             testedVariant
                     .getTestComponents()
@@ -239,7 +231,7 @@ public class ModelBuilderTest {
                     Mockito.mock(TransformManager.class),
                     variantPropertiesApiServices,
                     taskCreationServices,
-                    globalScope);
+                    globalConfig);
         }
 
         return variantPropertiesApiServices.newInstance(
@@ -256,7 +248,7 @@ public class ModelBuilderTest {
                 Mockito.mock(TransformManager.class),
                 variantPropertiesApiServices,
                 taskCreationServices,
-                globalScope);
+                globalConfig);
     }
 
     private static File createApk(File variantOutputFolder, String fileName) throws IOException {

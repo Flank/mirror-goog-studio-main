@@ -55,7 +55,6 @@ class JavaCompileCreationAction(
     private val creationConfig: ComponentCreationConfig, private val usingKapt: Boolean
 ) : TaskCreationAction<JavaCompile>() {
 
-    private val globalScope = creationConfig.globalScope
     private val project = creationConfig.services.projectInfo.getProject()
 
     private val dataBindingArtifactDir = project.objects.directoryProperty()
@@ -122,10 +121,10 @@ class JavaCompileCreationAction(
         task.options.compilerArgumentProviders.add(
             JavaCompileOptionsForRoom(
                 creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST),
-                creationConfig.compileOptions.targetCompatibility.isJava8Compatible
+                creationConfig.global.compileOptions.targetCompatibility.isJava8Compatible
             )
         )
-        task.options.isIncremental = globalScope.extension.compileOptions.incremental
+        task.options.isIncremental = creationConfig.global.compileOptionsIncremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
         // Record apList as input. It impacts recordAnnotationProcessors() below.

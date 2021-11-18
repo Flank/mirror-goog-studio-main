@@ -20,7 +20,6 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.utils.appendCapitalized
@@ -40,7 +39,6 @@ class TestVariantData(
     artifacts: ArtifactsImpl,
     val testedVariantData: TestedVariantData,
     services: VariantPropertiesApiServices,
-    globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
 ) : ApkVariantData(
     componentIdentity,
@@ -50,7 +48,6 @@ class TestVariantData(
     paths,
     artifacts,
     services,
-    globalScope,
     taskContainer
 ) {
 

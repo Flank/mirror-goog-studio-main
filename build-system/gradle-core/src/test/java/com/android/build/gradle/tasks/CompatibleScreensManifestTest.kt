@@ -32,9 +32,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
@@ -68,7 +66,6 @@ class CompatibleScreensManifestTest {
     @get:Rule var temporaryFolder = TemporaryFolder()
 
     @Mock internal lateinit var scope: VariantScope
-    @Mock internal lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
     @Mock private lateinit var artifacts: ArtifactsImpl
@@ -105,7 +102,6 @@ class CompatibleScreensManifestTest {
         `when`(appVariant.name).thenReturn("fullVariantName")
         `when`(appVariant.baseName).thenReturn("baseName")
         `when`(appVariant.variantDslInfo).thenReturn(variantDslInfo)
-        `when`(appVariant.globalScope).thenReturn(globalScope)
         `when`(appVariant.artifacts).thenReturn(artifacts)
         `when`(appVariant.taskContainer).thenReturn(taskContainer)
         `when`(appVariant.variantScope).thenReturn(scope)

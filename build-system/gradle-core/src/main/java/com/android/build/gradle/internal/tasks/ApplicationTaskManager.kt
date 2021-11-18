@@ -25,19 +25,17 @@ import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.AbstractPublishing
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureNamespacesTask
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -45,29 +43,23 @@ import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
-import java.io.File
-import java.util.stream.Collectors
 
 class ApplicationTaskManager(
     project: Project,
     variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
     testComponents: List<TestComponentImpl>,
     testFixturesComponents: List<TestFixturesImpl>,
-    hasFlavors: Boolean,
-    projectOptions: ProjectOptions,
-    globalScope: GlobalScope,
+    globalConfig: GlobalTaskCreationConfig,
+    localConfig: TaskManagerConfig,
     extension: BaseExtension,
-    projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
     project,
     variants,
     testComponents,
     testFixturesComponents,
-    hasFlavors,
-    projectOptions,
-    globalScope,
+    globalConfig,
+    localConfig,
     extension,
-    projectInfo
 ) {
 
     override fun doCreateTasksForVariant(
@@ -91,7 +83,7 @@ class ApplicationTaskManager(
         taskFactory.register(AppMetadataTask.CreationAction(variant))
             .dependsOn(variant.taskContainer.preBuildTask)
 
-        if ((extension as BaseAppModuleExtension).assetPacks.isNotEmpty()) {
+        if (globalConfig.assetPacks.isNotEmpty()) {
             createAssetPackTasks(variant)
         }
 
@@ -99,7 +91,7 @@ class ApplicationTaskManager(
         taskFactory.register(CompileArtProfileTask.CreationAction(variant))
 
         if (variant.buildFeatures.dataBinding
-                && variant.globalScope.hasDynamicFeatures()) {
+                && globalConfig.hasDynamicFeatures) {
             // Create a task that will write the namespaces of all features into a file. This file's
             // path is passed into the Data Binding annotation processor which uses it to know about
             // all available features.
@@ -196,7 +188,7 @@ class ApplicationTaskManager(
             project.configurations.maybeCreate("assetPackFiles")
         val assetPackManifestConfiguration =
             project.configurations.maybeCreate("assetPackManifest")
-        val assetPacks = (extension as BaseAppModuleExtension).assetPacks
+        val assetPacks = globalConfig.assetPacks
         populateAssetPacksConfigurations(
             project,
             appVariant.services.issueReporter,
@@ -236,7 +228,7 @@ class ApplicationTaskManager(
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
         // TODO(b/111168382): Remove this
-        if (variant.namespacedAndroidResources) {
+        if (globalConfig.namespacedAndroidResources) {
             return
         }
 
@@ -300,14 +292,14 @@ class ApplicationTaskManager(
         componentName: String,
         publication: PublishedConfigType
     ) {
-        val component = globalScope.componentFactory.adhoc(componentName)
+        val component = localConfig.componentFactory.adhoc(componentName)
         val config = appVariant.variantDependencies.getElements(PublishedConfigSpec(publication, componentName, false))!!
         component.addVariantsFromConfiguration(config) { }
         project.components.add(component)
     }
 
     override fun createInstallTask(creationConfig: ApkCreationConfig) {
-        if ((extension is BaseAppModuleExtension && extension.dynamicFeatures.isEmpty()) ||
+        if (!globalConfig.hasDynamicFeatures ||
             creationConfig is AndroidTestCreationConfig
         ) {
             // no dynamic features means we can just use the standard install task
@@ -317,5 +309,4 @@ class ApplicationTaskManager(
             taskFactory.register(InstallVariantViaBundleTask.CreationAction(creationConfig))
         }
     }
-
 }

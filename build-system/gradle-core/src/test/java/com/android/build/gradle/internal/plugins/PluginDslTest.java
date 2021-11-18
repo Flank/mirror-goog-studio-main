@@ -538,7 +538,7 @@ public class PluginDslTest {
         Map<String, VariantImpl> componentMap = getComponentMap();
         Map.Entry<String, VariantImpl> vsentry = componentMap.entrySet().iterator().next();
         File mockableJarFile =
-                vsentry.getValue().getGlobalScope().getMockableJarArtifact().getSingleFile();
+                vsentry.getValue().getGlobal().getMockableJarArtifact().getSingleFile();
         assertThat(mockableJarFile).isNotNull();
 
         if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
@@ -672,8 +672,9 @@ public class PluginDslTest {
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
         plugin.createAndroidTasks();
+
         assertThat(
-                        plugin.globalScope
+                        plugin.versionedSdkLoaderService
                                 .getVersionedSdkLoader()
                                 .get()
                                 .getBuildToolsRevisionProvider()

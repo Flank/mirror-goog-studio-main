@@ -496,7 +496,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                 creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS)
             )
 
-            task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
+            task.bootClasspath.from(creationConfig.global.bootClasspath)
 
             task.runtimeClasspath.from(creationConfig.variantScope.providedOnlyClasspath)
 

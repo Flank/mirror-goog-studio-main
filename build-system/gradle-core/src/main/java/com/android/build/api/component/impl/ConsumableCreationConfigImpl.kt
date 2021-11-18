@@ -18,13 +18,10 @@ package com.android.build.api.component.impl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.impl.getFeatureLevel
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 
@@ -50,8 +47,6 @@ import com.android.builder.errors.IssueReporter
  */
 open class ConsumableCreationConfigImpl(
         open val config: ConsumableCreationConfig,
-        val projectOptions: ProjectOptions,
-        val globalScope: GlobalScope,
         val variantDslInfo: VariantDslInfo) {
 
     val dexingType: DexingType
@@ -106,16 +101,16 @@ open class ConsumableCreationConfigImpl(
         val langSupportType: VariantScope.Java8LangSupport = getJava8LangSupportType()
         val langDesugarEnabled = langSupportType == VariantScope.Java8LangSupport.D8 || langSupportType == VariantScope.Java8LangSupport.R8
         if (libDesugarEnabled && !langDesugarEnabled) {
-            globalScope
-                .getDslServices()
+            config
+                .services
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC, "In order to use core library desugaring, "
                         + "please enable java 8 language desugaring with D8 or R8.")
         }
         if (libDesugarEnabled && !multidexEnabled) {
-            globalScope
-                .getDslServices()
+            config
+                .services
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC, "In order to use core library desugaring, "

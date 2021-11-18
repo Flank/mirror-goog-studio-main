@@ -21,7 +21,6 @@ import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Component
@@ -37,11 +36,11 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.common.collect.ImmutableList
@@ -64,8 +63,7 @@ open class UnitTestImpl @Inject constructor(
     transformManager: TransformManager,
     internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
-    sdkComponents: SdkComponents,
-    globalScope: GlobalScope
+    global: GlobalTaskCreationConfig
 ) : TestComponentImpl(
     componentIdentity,
     buildFeatureValues,
@@ -80,8 +78,7 @@ open class UnitTestImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    global
 ), UnitTest, UnitTestCreationConfig {
 
     // ---------------------------------------------------------------------------------------------

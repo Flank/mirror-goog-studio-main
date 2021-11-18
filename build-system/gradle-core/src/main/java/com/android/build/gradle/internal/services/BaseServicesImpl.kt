@@ -24,6 +24,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildServiceRegistry
 
 /**

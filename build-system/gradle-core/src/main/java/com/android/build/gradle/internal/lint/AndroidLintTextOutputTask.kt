@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.lint
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_CREATED_BASELINE
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_ERRORS
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.maybeThrowException
@@ -47,7 +46,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
-import java.lang.RuntimeException
 
 /**
  * Task to print lint text output to stdout or stderr if necessary.
@@ -191,7 +189,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             task.initializeCommonInputs(
                 creationConfig.services.projectInfo.getProject(),
                 creationConfig.artifacts,
-                creationConfig.lintOptions,
+                creationConfig.global.lintOptions,
                 fatalOnly
             )
         }

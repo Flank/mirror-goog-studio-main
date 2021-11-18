@@ -25,9 +25,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -35,6 +33,7 @@ import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
@@ -202,8 +201,7 @@ class ParseIntegrityConfigTaskTest {
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantCreationConfig {
         val componentProperties = Mockito.mock(VariantCreationConfig::class.java)
         val variantType = Mockito.mock(VariantType::class.java)
-        val extension = Mockito.mock(BaseAppModuleExtension::class.java)
-        val globalScope = Mockito.mock(GlobalScope::class.java)
+        val globalConfig = Mockito.mock(GlobalTaskCreationConfig::class.java)
         val variantScope = Mockito.mock(VariantScope::class.java)
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
@@ -212,11 +210,9 @@ class ParseIntegrityConfigTaskTest {
         Mockito.`when`(componentProperties.variantType).thenReturn(variantType)
         Mockito.`when`(componentProperties.name).thenReturn("variant")
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
-        Mockito.`when`(componentProperties.globalScope).thenReturn(globalScope)
+        Mockito.`when`(componentProperties.global).thenReturn(globalConfig)
         Mockito.`when`(componentProperties.variantScope).thenReturn(variantScope)
-        Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
-        Mockito.`when`(globalScope.extension).thenReturn(extension)
-        Mockito.`when`(globalScope.dslServices).thenReturn(dslServices)
+        Mockito.`when`(globalConfig.bundleOptions).thenReturn(bundleOptions)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
         return componentProperties

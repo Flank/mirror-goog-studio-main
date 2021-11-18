@@ -113,7 +113,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         fun getCreationAction(
             creationConfig: ComponentCreationConfig
         ): TaskManager.AbstractPreBuildCreationAction<*> {
-            return if (creationConfig.variantType.isBaseModule && creationConfig.globalScope.hasDynamicFeatures()) {
+            return if (creationConfig.variantType.isBaseModule && creationConfig.global.hasDynamicFeatures) {
                 CheckCreationAction(creationConfig)
             } else EmptyCreationAction(creationConfig)
 

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.dsl.TestOptions
+import com.android.build.api.dsl.TestOptions
 import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkAction
 import com.android.build.gradle.options.BooleanOption

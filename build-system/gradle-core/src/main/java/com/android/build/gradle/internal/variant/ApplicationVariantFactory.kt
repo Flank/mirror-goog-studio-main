@@ -20,30 +20,29 @@ import com.android.build.VariantOutput
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
-import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.dsl.DataBinding
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.FilterConfigurationImpl
+import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -60,45 +59,43 @@ import java.util.function.Consumer
 
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
-    globalScope: GlobalScope
 ) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
     projectServices,
-    globalScope
 ) {
 
     override fun createVariantBuilder(
+        globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
     ): ApplicationVariantBuilderImpl {
-        val extension = globalScope.extension as BaseAppModuleExtension
 
         return projectServices
             .objectFactory
             .newInstance(
                 ApplicationVariantBuilderImpl::class.java,
+                globalVariantBuilderConfig,
                 variantDslInfo,
-                extension.dependenciesInfo,
                 componentIdentity,
                 variantApiServices
             )
     }
 
     override fun createVariant(
-            variantBuilder: ApplicationVariantBuilderImpl,
-            componentIdentity: ComponentIdentity,
-            buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            variantScope: VariantScope,
-            variantData: BaseVariantData,
-            transformManager: TransformManager,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices,
-            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        variantBuilder: ApplicationVariantBuilderImpl,
+        componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalConfig: GlobalTaskCreationConfig,
         ): ApplicationVariantImpl {
         val appVariant = projectServices
             .objectFactory
@@ -117,11 +114,10 @@ class ApplicationVariantFactory(
                 transformManager,
                 variantPropertiesApiServices,
                 taskCreationServices,
-                androidComponentsExtension.sdkComponents,
-                globalScope
+                globalConfig,
             )
 
-        computeOutputs(appVariant, (variantData as ApplicationVariantData))
+        computeOutputs(appVariant, (variantData as ApplicationVariantData), globalConfig)
 
         return appVariant
     }
@@ -151,7 +147,7 @@ class ApplicationVariantFactory(
 
     override fun createTestBuildFeatureValues(
         buildFeatures: BuildFeatures,
-        dataBindingOptions: DataBindingOptions,
+        dataBinding: DataBinding,
         projectOptions: ProjectOptions
     ): BuildFeatureValues {
         buildFeatures as? ApplicationBuildFeatures
@@ -160,7 +156,7 @@ class ApplicationVariantFactory(
         return BuildFeatureValuesImpl(
             buildFeatures,
             projectOptions,
-            dataBindingOverride = if (!dataBindingOptions.isEnabledForTests) {
+            dataBindingOverride = if (!dataBinding.isEnabledForTests) {
                 false
             } else {
                 null // means whatever is default.
@@ -174,31 +170,33 @@ class ApplicationVariantFactory(
 
     private fun computeOutputs(
         appVariant: ApplicationVariantImpl,
-        variant: ApplicationVariantData
+        variant: ApplicationVariantData,
+        globalConfig: GlobalTaskCreationConfig,
     ) {
-        val extension = globalScope.extension
-        variant.calculateFilters(extension.splits)
+        variant.calculateFilters(globalConfig.splits)
         val densities =
             variant.getFilters(VariantOutput.FilterType.DENSITY)
         val abis =
             variant.getFilters(VariantOutput.FilterType.ABI)
-        checkSplitsConflicts(appVariant.variantDslInfo, variant, abis)
+        checkSplitsConflicts(appVariant.variantDslInfo, abis, globalConfig)
         if (!densities.isEmpty()) {
-            variant.compatibleScreens = extension.splits.density
+            variant.compatibleScreens = globalConfig.splits.density
                 .compatibleScreens
         }
         val variantOutputs =
-            populateMultiApkOutputs(abis, densities)
+            populateMultiApkOutputs(abis, densities, globalConfig)
         variantOutputs.forEach { appVariant.addVariantOutput(it) }
         restrictEnabledOutputs(
                 appVariant.variantDslInfo,
-                appVariant.outputs
+                appVariant.outputs,
+                globalConfig
         )
     }
 
     private fun populateMultiApkOutputs(
         abis: Set<String>,
-        densities: Set<String>
+        densities: Set<String>,
+        globalConfig: GlobalTaskCreationConfig
     ): List<VariantOutputConfigurationImpl> {
 
         if (densities.isEmpty() && abis.isEmpty()) {
@@ -207,8 +205,7 @@ class ApplicationVariantFactory(
         }
         val variantOutputs = mutableListOf<VariantOutputConfigurationImpl>()
         val universalApkForAbi =
-            (globalScope.extension.splits.abi.isEnable
-                    && globalScope.extension.splits.abi.isUniversalApk)
+            (globalConfig.splits.abi.isEnable && globalConfig.splits.abi.isUniversalApk)
         if (universalApkForAbi) {
             variantOutputs.add(
                 VariantOutputConfigurationImpl(isUniversal = true)
@@ -274,14 +271,14 @@ class ApplicationVariantFactory(
 
     private fun checkSplitsConflicts(
         variantDslInfo: VariantDslInfo,
-        variantData: ApplicationVariantData,
-        abiFilters: Set<String?>
+        abiFilters: Set<String?>,
+        globalConfig: GlobalTaskCreationConfig,
     ) { // if we don't have any ABI splits, nothing is conflicting.
         if (abiFilters.isEmpty()) {
             return
         }
         // if universalAPK is requested, abiFilter will control what goes into the universal APK.
-        if (globalScope.extension.splits.abi.isUniversalApk) {
+        if (globalConfig.splits.abi.isUniversalApk) {
             return
         }
         // check supportedAbis in Ndk configuration versus ABI splits.
@@ -302,13 +299,15 @@ class ApplicationVariantFactory(
     }
 
     private fun restrictEnabledOutputs(
-        variantDslInfo: VariantDslInfo, variantOutputs: VariantOutputList
+        variantDslInfo: VariantDslInfo,
+        variantOutputs: VariantOutputList,
+        globalConfig: GlobalTaskCreationConfig
     ) {
         val supportedAbis: Set<String> = variantDslInfo.supportedAbis
         val projectOptions = projectServices.projectOptions
         val buildTargetAbi =
             (if (projectOptions[BooleanOption.BUILD_ONLY_TARGET_ABI]
-                || globalScope.extension.splits.abi.isEnable
+                || globalConfig.splits.abi.isEnable
             ) projectOptions[StringOption.IDE_BUILD_TARGET_ABI] else null)
                 ?: return
         val buildTargetDensity =

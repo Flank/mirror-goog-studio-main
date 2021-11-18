@@ -18,18 +18,33 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.model.v2.ide.ProjectType
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 
 /**
- * Model for the variants and their inputs.
+ * Configuration object for the model builder. This contains everything that they need, and nothing
+ * else.
  *
- * Can also compute the default variant to be used during sync.
+ * This will contain variant information, and their inputs. It can also compute the default variant
+ * to be used during sync.
+ *
+ * It will contain some global DSL elements that needs to be access to put them in the model.
+ *
+ * Finally, this contains some utility objects, like ProjectOptions
  */
 interface VariantModel {
+    val projectType: ProjectType
+    val projectTypeV1: Int
 
     val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 
@@ -47,4 +62,16 @@ interface VariantModel {
     val defaultVariant: String?
 
     val buildFeatures: BuildFeatureValues
+
+    // utility objects and methods
+
+    val syncIssueReporter: SyncIssueReporter
+
+    val projectOptions: ProjectOptions
+
+    val mockableJarArtifact: FileCollection
+
+    val filteredBootClasspath: Provider<List<RegularFile>>
+
+    val versionedSdkLoader: Provider<VersionedSdkLoader>
 }

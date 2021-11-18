@@ -82,7 +82,7 @@ import org.gradle.workers.WorkerExecutor
  * Runs instrumentation tests of a variant on a device defined in the DSL.
  */
 @DisableCachingByDefault
-abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), AndroidTestTask {
+abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), AndroidTestTask {
 
     abstract class TestRunnerFactory {
         @get: Input
@@ -305,12 +305,11 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
     class CreationAction(
         creationConfig: VariantCreationConfig,
-        private val avdComponents: Provider<AvdComponentsBuildService>,
         private val device: ManagedVirtualDevice,
         private val testData: AbstractTestDataImpl,
         private val testResultOutputDir: File,
         private val testReportOutputDir: File,
-    ): VariantTaskCreationAction<
+    ) : VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
 
         override val name = computeTaskName(device.name)
@@ -346,7 +345,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
             task.enableEmulatorDisplay.convention(false)
 
-            val extension = creationConfig.globalScope.extension
+            val globalConfig = creationConfig.global
             val projectOptions = creationConfig.services.projectOptions
 
             val testedConfig = creationConfig.testedConfig
@@ -362,17 +361,18 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.apiLevel.setDisallowChanges(device.apiLevel)
             task.abi.setDisallowChanges(computeAbiFromArchitecture(device))
 
-            task.avdComponents.setDisallowChanges(avdComponents)
-
+            task.avdComponents.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
             task.testData.setDisallowChanges(testData)
-            task.installOptions.set(extension.adbOptions.installOptions)
+            task.installOptions.set(globalConfig.installationOptions.installOptions)
             task.testRunnerFactory.compileSdkVersion.setDisallowChanges(
-                extension.compileSdkVersion
+                globalConfig.compileSdkHashString
             )
             task.testRunnerFactory.buildToolsRevision.setDisallowChanges(
-                extension.buildToolsRevision
+                globalConfig.buildToolsRevision
             )
             task.testRunnerFactory.sdkBuildService.setDisallowChanges(
                     getBuildService(
@@ -382,10 +382,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 projectOptions.get(IntegerOption.MANAGED_DEVICE_SHARD_POOL_SIZE)
             )
 
-            val executionEnum = extension.testOptions.getExecutionEnum()
+            val executionEnum = globalConfig.testOptionExecutionEnum
             task.testRunnerFactory.executionEnum.setDisallowChanges(executionEnum)
-            val useUtp = shouldEnableUtp(projectOptions,extension.testOptions,
-                                         testedConfig?.variantType)
+            val useUtp = shouldEnableUtp(
+                projectOptions, globalConfig.testOptions,
+                testedConfig?.variantType
+            )
             task.testRunnerFactory.unifiedTestPlatform.setDisallowChanges(useUtp)
 
             if (useUtp) {
@@ -413,7 +415,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 .setDisallowChanges(
                         createRetentionConfig(
                                 projectOptions,
-                                extension.testOptions.emulatorSnapshots as EmulatorSnapshots))
+                                globalConfig.testOptions.emulatorSnapshots as EmulatorSnapshots))
 
             task.dependencies =
                 creationConfig

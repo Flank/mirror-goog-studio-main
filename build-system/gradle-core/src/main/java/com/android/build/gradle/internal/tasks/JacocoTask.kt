@@ -436,7 +436,7 @@ abstract class JacocoTask : NewIncrementalTask() {
     companion object {
         /** Returns which Jacoco version to use.  */
         fun getJacocoVersion(creationConfig: ComponentCreationConfig): String {
-            return creationConfig.globalScope.extension.jacoco.jacocoVersion
+            return creationConfig.global.testCoverage.jacocoVersion
         }
 
         private val CLASS_PATTERN = Pattern.compile(".*\\.class$")

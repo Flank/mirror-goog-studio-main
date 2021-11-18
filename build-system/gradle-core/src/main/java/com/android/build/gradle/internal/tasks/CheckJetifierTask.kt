@@ -20,12 +20,11 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.attribution.CheckJetifierProjectResult
 import com.android.ide.common.attribution.DependencyPath
 import com.android.ide.common.attribution.FullDependencyPath
@@ -70,13 +69,12 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
     abstract val configurationToResolveFirst: ListProperty<String>
 
     class CreationAction(
-        globalScope: GlobalScope,
-        private val projectOptions: ProjectOptions,
+        creationConfig: GlobalTaskCreationConfig,
         private val checkJetifierBuildService: Provider<CheckJetifierBuildService>,
         variants: List<ComponentInfo<*, *>>,
         testComponents: List<TestComponentImpl>,
         testFixturesComponents: List<TestFixturesImpl>
-    ) : GlobalTaskCreationAction<CheckJetifierTask>(globalScope) {
+    ) : GlobalTaskCreationAction<CheckJetifierTask>(creationConfig) {
 
         override val name = "checkJetifier"
         override val type = CheckJetifierTask::class.java
@@ -94,7 +92,7 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
             task.description = "Checks whether Jetifier is needed for the current project"
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
-            task.jetifierEnabled.setDisallowChanges(projectOptions.get(BooleanOption.ENABLE_JETIFIER))
+            task.jetifierEnabled.setDisallowChanges(creationConfig.services.projectOptions.get(BooleanOption.ENABLE_JETIFIER))
             task.checkJetifierBuildService.setDisallowChanges(checkJetifierBuildService)
             task.configurationToResolveFirst.setDisallowChanges(configurationsToResolveFirst)
 

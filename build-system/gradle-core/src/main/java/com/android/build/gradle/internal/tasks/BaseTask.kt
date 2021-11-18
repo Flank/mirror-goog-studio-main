@@ -28,7 +28,7 @@ import javax.inject.Inject
 /**
  * Root Task class for all of AGP.
  *
- * DO NOT EXTEND THIS METHOD DIRECTLY. Instead extend:
+ * DO NOT EXTEND THIS METHOD DIRECTLY. Instead, extend:
  * - [NewIncrementalTask] -- variant aware task
  * - [NonIncrementalTask] -- variant aware task
  * - [NonIncrementalGlobalTask] -- non variant aware task

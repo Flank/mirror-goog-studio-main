@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.ProjectInfo;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.utils.FileUtils;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 
 /**
@@ -32,23 +30,21 @@ import org.gradle.work.DisableCachingByDefault;
  * <p>TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
  */
 @DisableCachingByDefault
-public abstract class LintCompile extends DefaultTask {
+public abstract class LintCompile extends NonIncrementalGlobalTask {
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
 
-    @TaskAction
-    public void compile() {
+    @Override
+    protected void doTaskAction() {
         // TODO
         FileUtils.mkdirs(getOutputDirectory().get().getAsFile());
     }
 
-    public static class CreationAction extends TaskCreationAction<LintCompile> {
+    public static class CreationAction extends GlobalTaskCreationAction<LintCompile> {
 
-        private final ProjectInfo projectInfo;
-
-        public CreationAction(@NonNull ProjectInfo projectInfo) {
-            this.projectInfo = projectInfo;
+        public CreationAction(@NonNull GlobalTaskCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull
@@ -65,7 +61,14 @@ public abstract class LintCompile extends DefaultTask {
 
         @Override
         public void configure(@NonNull LintCompile task) {
-            task.getOutputDirectory().set(projectInfo.intermediatesDirectory("lint"));
+            super.configure(task);
+
+            task.getOutputDirectory()
+                    .set(
+                            creationConfig
+                                    .getServices()
+                                    .getProjectInfo()
+                                    .intermediatesDirectory("lint"));
         }
     }
 }

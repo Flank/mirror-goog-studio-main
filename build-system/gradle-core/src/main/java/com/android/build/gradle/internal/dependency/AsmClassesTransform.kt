@@ -79,7 +79,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                         parameters.visitorsList.set(
                             creationConfig.registeredDependenciesClassesVisitors
                         )
-                        parameters.bootClasspath.set(creationConfig.globalScope.fullBootClasspathProvider)
+                        parameters.bootClasspath.set(creationConfig.global.fullBootClasspathProvider)
                         parameters.classesHierarchyBuildService.set(
                             getBuildService(creationConfig.services.buildServiceRegistry)
                         )

@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 import junit.framework.TestCase;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.internal.project.ProjectStateInternal;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.junit.Before;
@@ -518,11 +517,7 @@ public class AppPluginInternalTest {
                 compileDebugJavaWithJavac.getOptions().getBootstrapClasspath().getFiles();
         assertThat(bootclasspath.stream().map(File::getName).collect(Collectors.toSet()))
                 .containsExactly("android.jar", "core-lambda-stubs.jar");
-        assertThat(bootclasspath)
-                .containsExactlyElementsIn(
-                        plugin.globalScope.getBootClasspath().get().stream()
-                                .map(RegularFile::getAsFile)
-                                .collect(Collectors.toList()));
+        assertThat(bootclasspath).containsExactlyElementsIn(android.getBootClasspath());
     }
 
     @Test

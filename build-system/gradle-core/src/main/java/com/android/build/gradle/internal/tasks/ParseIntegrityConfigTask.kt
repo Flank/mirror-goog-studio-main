@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
@@ -125,11 +126,8 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             task: ParseIntegrityConfigTask
         ) {
             super.configure(task)
-            task.integrityConfigDir.set(getIntegrityConfigFolder(creationConfig))
+            task.integrityConfigDir.setDisallowChanges(creationConfig.global.bundleOptions.integrityConfigDir)
         }
-
-        private fun getIntegrityConfigFolder(component: VariantCreationConfig): Provider<out Directory> =
-            (component.globalScope.extension as BaseAppModuleExtension).bundle.integrityConfigDir
     }
 }
 

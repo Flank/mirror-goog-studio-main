@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.lint.LintFromMaven
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
+import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
@@ -103,7 +104,7 @@ abstract class LintPlugin : Plugin<Project> {
     }
     private fun registerTasks(project: Project, dslOperationsRegistrar: DslLifecycleComponentsOperationsRegistrar<Lint>) {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
-        val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
+        val customLintChecksConfig = BasePlugin.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
         registerTasks(
             project,

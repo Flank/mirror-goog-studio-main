@@ -18,29 +18,25 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.dsl.CompileOptions
-import com.android.build.api.dsl.Lint
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.impl.SourcesImpl
-import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
@@ -86,13 +82,10 @@ interface ComponentCreationConfig : ComponentIdentity {
     val debuggable: Boolean
     val pseudoLocalesEnabled: Property<Boolean>
     val androidResourcesEnabled: Boolean
-    val namespacedAndroidResources: Boolean
 
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion
     val targetSdkVersionOverride: AndroidVersion?
-
-    val sdkComponents: SdkComponents
 
     // ---------------------------------------------------------------------------------------------
     // ---------------------------------------------------------------------------------------------
@@ -118,8 +111,10 @@ interface ComponentCreationConfig : ComponentIdentity {
     val paths: VariantPathHelper
     val services: TaskCreationServices
 
-    @Deprecated("Do not use if you can avoid it. Check if services has what you need")
-    val globalScope: GlobalScope
+    /**
+     * Access to the glabal task creation configuration
+     */
+    val global: GlobalTaskCreationConfig
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL HELPERS
@@ -170,8 +165,4 @@ interface ComponentCreationConfig : ComponentIdentity {
     val packageJacocoRuntime: Boolean
 
     val javaCompilation: JavaCompilation
-
-    val compileOptions: CompileOptions
-
-    val lintOptions: Lint
 }

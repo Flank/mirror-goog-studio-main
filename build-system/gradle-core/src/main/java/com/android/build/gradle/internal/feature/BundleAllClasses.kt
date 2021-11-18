@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
@@ -146,14 +147,14 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 creationConfig.variantData.allPreJavacGeneratedBytecode,
                 creationConfig.variantData.allPostJavacGeneratedBytecode
             )
-            if (creationConfig.namespacedAndroidResources) {
-                task.inputJars.from(
+            if (creationConfig.global.namespacedAndroidResources) {
+                task.inputJars.fromDisallowChanges(
                     creationConfig.artifacts.get(
                         InternalArtifactType.COMPILE_R_CLASS_JAR
                     )
                 )
             } else {
-                task.inputJars.from(
+                task.inputJars.fromDisallowChanges(
                     creationConfig.artifacts.get(
                         InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                     )

@@ -27,8 +27,6 @@ import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption

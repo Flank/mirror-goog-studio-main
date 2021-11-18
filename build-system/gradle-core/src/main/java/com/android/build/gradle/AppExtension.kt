@@ -19,8 +19,8 @@ package com.android.build.gradle
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import org.gradle.api.NamedDomainObjectContainer
 
 /**
@@ -28,17 +28,17 @@ import org.gradle.api.NamedDomainObjectContainer
  * declaration is not possible.
  */
 abstract class AppExtension(
-        dslServices: DslServices,
-        globalScope: GlobalScope,
-        buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
-        sourceSetManager: SourceSetManager,
-        extraModelInfo: ExtraModelInfo,
-        isBaseModule: Boolean
+    dslServices: DslServices,
+    bootClasspathConfig: BootClasspathConfig,
+    buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
+    sourceSetManager: SourceSetManager,
+    extraModelInfo: ExtraModelInfo,
+    isBaseModule: Boolean
 ) : AbstractAppExtension(
-        dslServices,
-        globalScope,
-        buildOutputs,
-        sourceSetManager,
-        extraModelInfo,
-        isBaseModule
+    dslServices,
+    bootClasspathConfig,
+    buildOutputs,
+    sourceSetManager,
+    extraModelInfo,
+    isBaseModule
 )

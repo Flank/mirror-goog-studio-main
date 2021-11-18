@@ -18,38 +18,37 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
-import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
+import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 
 internal class DynamicFeatureVariantFactory(
     projectServices: ProjectServices,
-    globalScope: GlobalScope
 ) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
     projectServices,
-    globalScope
 ) {
 
     override fun createVariantBuilder(
+        globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
@@ -58,6 +57,7 @@ internal class DynamicFeatureVariantFactory(
             .objectFactory
             .newInstance(
                 DynamicFeatureVariantBuilderImpl::class.java,
+                globalVariantBuilderConfig,
                 variantDslInfo,
                 componentIdentity,
                 variantApiServices
@@ -65,20 +65,20 @@ internal class DynamicFeatureVariantFactory(
     }
 
     override fun createVariant(
-            variantBuilder: DynamicFeatureVariantBuilderImpl,
-            componentIdentity: ComponentIdentity,
-            buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            variantScope: VariantScope,
-            variantData: BaseVariantData,
-            transformManager: TransformManager,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices,
-            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        variantBuilder: DynamicFeatureVariantBuilderImpl,
+        componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalConfig: GlobalTaskCreationConfig,
         ): DynamicFeatureVariantImpl {
         val variantProperties = projectServices
             .objectFactory
@@ -96,8 +96,7 @@ internal class DynamicFeatureVariantFactory(
                 transformManager,
                 variantPropertiesApiServices,
                 taskCreationServices,
-                androidComponentsExtension.sdkComponents,
-                globalScope
+                globalConfig,
             )
 
         // create default output
@@ -133,7 +132,7 @@ internal class DynamicFeatureVariantFactory(
 
     override fun createTestBuildFeatureValues(
         buildFeatures: BuildFeatures,
-        dataBindingOptions: DataBindingOptions,
+        dataBinding: DataBinding,
         projectOptions: ProjectOptions
     ): BuildFeatureValues {
         buildFeatures as? DynamicFeatureBuildFeatures
@@ -142,7 +141,7 @@ internal class DynamicFeatureVariantFactory(
         return BuildFeatureValuesImpl(
             buildFeatures,
             projectOptions,
-            dataBindingOverride = if (!dataBindingOptions.isEnabledForTests) {
+            dataBindingOverride = if (!dataBinding.isEnabledForTests) {
                 false
             } else {
                 null // means whatever is default.

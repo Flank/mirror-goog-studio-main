@@ -15,26 +15,27 @@
  */
 package com.android.build.gradle.internal.variant
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.api.ApplicationVariantImpl
+import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.variant.ComponentIdentity
-import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.api.BaseVariantImpl
-import com.android.builder.errors.IssueReporter
-import com.android.build.gradle.internal.api.ApplicationVariantImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.plugins.DslContainerProvider
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.builder.core.BuilderConstants
+import com.android.builder.errors.IssueReporter
+import org.gradle.api.Project
 
 /**
  * An implementation of VariantFactory for a project that generates APKs.
@@ -43,23 +44,21 @@ import com.android.builder.core.BuilderConstants
  * This can be an app project, or a test-only project, though the default behavior is app.
  */
 abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
-        projectServices: ProjectServices,
-        globalScope: GlobalScope
+    projectServices: ProjectServices,
 ) : BaseVariantFactory<VariantBuilderT, VariantT>(
-        projectServices,
-        globalScope
+    projectServices,
 ) {
 
     override fun createVariantData(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            variantDependencies: VariantDependencies,
-            variantSources: VariantSources,
-            paths: VariantPathHelper,
-            artifacts: ArtifactsImpl,
-            services: VariantPropertiesApiServices,
-            globalScope: GlobalScope,
-            taskContainer: MutableTaskContainer): BaseVariantData {
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        services: VariantPropertiesApiServices,
+        taskContainer: MutableTaskContainer
+    ): BaseVariantData {
         return ApplicationVariantData(
                 componentIdentity,
                 variantDslInfo,
@@ -68,7 +67,6 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, V
                 paths,
                 artifacts,
                 services,
-                globalScope,
                 taskContainer)
     }
 
@@ -77,9 +75,12 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, V
             return ApplicationVariantImpl::class.java
         }
 
-    override fun validateModel(
-            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
-        super.validateModel(model)
+    override fun preVariantCallback(
+        project: Project,
+        dslExtension: CommonExtension<*, *, *, *>,
+        model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+    ) {
+        super.preVariantCallback(project, dslExtension, model)
         validateVersionCodes(model)
         if (!variantType.isDynamicFeature) {
             return

@@ -22,7 +22,6 @@ import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
@@ -244,7 +243,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 isAndroid = true
             )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
-            task.lintRuleJars.from(creationConfig.globalScope.localCustomLintChecks)
+            task.lintRuleJars.from(creationConfig.global.localCustomLintChecks)
             task.lintRuleJars.from(
                 creationConfig
                     .variantDependencies
@@ -267,7 +266,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.checkOnly.set(
                 creationConfig.services.provider {
-                    creationConfig.lintOptions.checkOnly
+                    creationConfig.global.lintOptions.checkOnly
                 }
             )
             task.projectInputs.initialize(variant, isForAnalysis = true)

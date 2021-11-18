@@ -176,7 +176,6 @@ abstract class AidlCompile : NonIncrementalTask() {
             task: AidlCompile
         ) {
             super.configure(task)
-            val globalScope = creationConfig.globalScope
             val services = creationConfig.services
 
             val variantSources = creationConfig.variantSources
@@ -199,7 +198,7 @@ abstract class AidlCompile : NonIncrementalTask() {
             task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
             if (creationConfig.variantType.isAar) {
-                task.packagedList = globalScope.extension.aidlPackagedList
+                task.packagedList = creationConfig.global.aidlPackagedList
             }
             task.buildTools.initialize(creationConfig)
         }

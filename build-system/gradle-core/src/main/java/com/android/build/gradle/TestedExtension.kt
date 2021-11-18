@@ -5,8 +5,8 @@ import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
@@ -20,14 +20,14 @@ import org.gradle.api.file.FileCollection
  */
 abstract class TestedExtension(
     dslServices: DslServices,
-    globalScope: GlobalScope,
+    bootClasspathConfig: BootClasspathConfig,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     isBaseModule: Boolean
 ) : BaseExtension(
     dslServices,
-    globalScope,
+    bootClasspathConfig,
     buildOutputs,
     sourceSetManager,
     extraModelInfo,
@@ -83,7 +83,7 @@ abstract class TestedExtension(
     abstract override var testBuildType: String
 
     fun getMockableAndroidJar(): FileCollection {
-        return globalScope.mockableJarArtifact
+        return bootClasspathConfig.mockableJarArtifact
     }
 
     abstract override var testNamespace: String?

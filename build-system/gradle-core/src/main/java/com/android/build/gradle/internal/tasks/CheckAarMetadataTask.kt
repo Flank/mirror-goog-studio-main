@@ -142,10 +142,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
                 )
             task.aarFormatVersion.setDisallowChanges(AarMetadataTask.AAR_FORMAT_VERSION)
             task.aarMetadataVersion.setDisallowChanges(AarMetadataTask.AAR_METADATA_VERSION)
-            task.compileSdkVersion.setDisallowChanges(
-                creationConfig.globalScope.extension.compileSdkVersion
-                    ?: throw RuntimeException("compileSdkVersion is not specified.")
-            )
+            task.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
             task.agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         }
     }

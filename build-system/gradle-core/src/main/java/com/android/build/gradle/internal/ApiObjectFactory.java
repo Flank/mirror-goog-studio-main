@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.UnitTestVariantImpl;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -45,26 +44,21 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 public class ApiObjectFactory {
     @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory<?, ?> variantFactory;
-    @NonNull private final GlobalScope globalScope;
 
     @NonNull
     private final ReadOnlyObjectProvider readOnlyObjectProvider = new ReadOnlyObjectProvider();
 
     public ApiObjectFactory(
-            @NonNull BaseExtension extension,
-            @NonNull VariantFactory<?, ?> variantFactory,
-            @NonNull GlobalScope globalScope) {
+            @NonNull BaseExtension extension, @NonNull VariantFactory<?, ?> variantFactory) {
         this.extension = extension;
         this.variantFactory = variantFactory;
-        this.globalScope = globalScope;
     }
 
     public BaseVariantImpl create(@NonNull VariantImpl variant) {
         BaseVariantData variantData = variant.getVariantData();
 
         BaseVariantImpl variantApi =
-                variantFactory.createVariantApi(
-                        globalScope, variant, variantData, readOnlyObjectProvider);
+                variantFactory.createVariantApi(variant, variantData, readOnlyObjectProvider);
         if (variantApi == null) {
             return null;
         }

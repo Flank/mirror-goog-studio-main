@@ -132,15 +132,15 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
                 task.jarsInputDir
             )
 
-            task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
+            task.bootClasspath.from(creationConfig.global.bootClasspath).disallowChanges()
 
-            task.referencedClasses.from(creationConfig.variantScope.providedOnlyClasspath)
-
-            task.referencedClasses.from(
-                creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
-                    AndroidArtifacts.ArtifactScope.ALL
-                )
-            )
+            task.referencedClasses
+                .from(creationConfig.variantScope.providedOnlyClasspath)
+                .from(
+                    creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
+                        AndroidArtifacts.ArtifactScope.ALL
+                    )
+                ).disallowChanges()
 
             task.classesHierarchyBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)

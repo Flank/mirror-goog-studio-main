@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
-import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -47,11 +47,11 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.concurrent.Callable
 import java.util.function.Predicate
 import javax.inject.Inject
-import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task to merge java resources from multiple modules
@@ -314,7 +314,7 @@ fun getProjectJavaRes(
     )
     javaRes.from(creationConfig.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
-    if (creationConfig.namespacedAndroidResources) {
+    if (creationConfig.global.namespacedAndroidResources) {
         javaRes.from(creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }
     if (creationConfig.packageJacocoRuntime) {

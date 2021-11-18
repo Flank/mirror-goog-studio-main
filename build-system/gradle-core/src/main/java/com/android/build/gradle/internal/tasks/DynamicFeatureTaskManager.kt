@@ -23,13 +23,12 @@ import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
-import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.sync.DynamicFeatureVariantModelTask
 import org.gradle.api.Project
 
@@ -38,21 +37,17 @@ internal class DynamicFeatureTaskManager(
     variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
     testComponents: List<TestComponentImpl>,
     testFixturesComponents: List<TestFixturesImpl>,
-    hasFlavors: Boolean,
-    projectOptions: ProjectOptions,
-    globalScope: GlobalScope,
+    globalConfig: GlobalTaskCreationConfig,
+    localConfig: TaskManagerConfig,
     extension: BaseExtension,
-    projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
     project,
     variants,
     testComponents,
     testFixturesComponents,
-    hasFlavors,
-    projectOptions,
-    globalScope,
+    globalConfig,
+    localConfig,
     extension,
-    projectInfo
 ) {
 
     override fun doCreateTasksForVariant(
@@ -84,7 +79,7 @@ internal class DynamicFeatureTaskManager(
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
         // TODO(b/111168382): Remove this
-        if (variantProperties.namespacedAndroidResources) {
+        if (globalConfig.namespacedAndroidResources) {
             return
         }
 

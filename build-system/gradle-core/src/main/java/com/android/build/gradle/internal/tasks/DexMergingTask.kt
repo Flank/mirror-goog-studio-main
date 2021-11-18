@@ -306,7 +306,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                         ) && libraryScopes.intersect(scopes).isNotEmpty()
                     }
 
-                val bootClasspath = creationConfig.sdkComponents.bootClasspath
+                val bootClasspath = creationConfig.global.bootClasspath
                 task.sharedParams.mainDexListConfig.libraryClasses
                     .from(bootClasspath, libraryClasses).disallowChanges()
             }

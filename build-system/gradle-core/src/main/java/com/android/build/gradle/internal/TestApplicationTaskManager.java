@@ -30,14 +30,13 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -64,21 +63,17 @@ public class TestApplicationTaskManager
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         super(
                 project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalConfig,
+                localConfig,
+                extension);
     }
 
     @Override

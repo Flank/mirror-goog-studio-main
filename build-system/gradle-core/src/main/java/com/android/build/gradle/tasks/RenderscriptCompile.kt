@@ -344,12 +344,8 @@ abstract class RenderscriptCompile : NdkTask() {
 
             task.ndkConfig = variantDslInfo.ndkConfig
 
-            task.buildToolsRevision.setDisallowChanges(
-                creationConfig.globalScope.extension.buildToolsRevision
-            )
-            task.compileSdkVersion.setDisallowChanges(
-                creationConfig.globalScope.extension.compileSdkVersion
-            )
+            task.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
+            task.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )

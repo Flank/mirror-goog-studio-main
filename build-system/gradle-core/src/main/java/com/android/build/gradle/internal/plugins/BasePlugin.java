@@ -54,9 +54,11 @@ import com.android.build.gradle.internal.attribution.BuildAttributionService;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.JacocoInstrumentationService;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.AbstractPublishing;
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.CommonExtensionImpl;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension;
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension;
@@ -83,7 +85,6 @@ import com.android.build.gradle.internal.profile.NoOpAnalyticsService;
 import com.android.build.gradle.internal.res.Aapt2FromMaven;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
@@ -96,6 +97,13 @@ import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfigImpl;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.utils.KgpUtils;
 import com.android.build.gradle.internal.utils.PublishingUtils;
@@ -140,7 +148,6 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -158,7 +165,8 @@ public abstract class BasePlugin<
         implements Plugin<Project> {
 
     // TODO: BaseExtension should be changed into AndroidT
-    private BaseExtension extension;
+    @Deprecated private BaseExtension extension;
+    private AndroidT newExtension;
     private AndroidComponentsT androidComponentsExtension;
 
     private VariantManager<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT> variantManager;
@@ -168,8 +176,10 @@ public abstract class BasePlugin<
 
     protected ProjectServices projectServices;
     protected DslServicesImpl dslServices;
-    protected GlobalScope globalScope;
+    private TaskManagerConfig taskManagerConfig;
     protected SyncIssueReporterImpl syncIssueReporter;
+    protected VersionedSdkLoaderService versionedSdkLoaderService;
+    private BootClasspathConfigImpl bootClasspathConfig;
 
     private VariantFactory<VariantBuilderT, VariantT> variantFactory;
 
@@ -179,8 +189,6 @@ public abstract class BasePlugin<
     private LoggerWrapper loggerWrapper;
 
     protected ExtraModelInfo extraModelInfo;
-
-    private String creator;
 
     private boolean hasCreatedTasks = false;
 
@@ -197,33 +205,66 @@ public abstract class BasePlugin<
         ClasspathVerifier.checkClasspathSanity();
         this.registry = registry;
         this.componentFactory = componentFactory;
-        creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         this.listenerRegistry = listenerRegistry;
     }
 
+    protected static final class ExtensionData<AndroidT extends CommonExtension<?, ?, ?, ?>> {
+
+        @NonNull private final BaseExtension oldExtension;
+
+        @NonNull private final AndroidT newExtension;
+
+        @NonNull private final BootClasspathConfigImpl bootClasspathConfig;
+
+        ExtensionData(
+                @NonNull BaseExtension oldExtension,
+                @NonNull AndroidT newExtension,
+                @NonNull BootClasspathConfigImpl bootClasspathConfig) {
+            this.oldExtension = oldExtension;
+            this.newExtension = newExtension;
+            this.bootClasspathConfig = bootClasspathConfig;
+        }
+
+        @NonNull
+        public BaseExtension getOldExtension() {
+            return oldExtension;
+        }
+
+        @NonNull
+        public AndroidT getNewExtension() {
+            return newExtension;
+        }
+
+        @NonNull
+        public BootClasspathConfigImpl getBootClasspathConfig() {
+            return bootClasspathConfig;
+        }
+    }
+
     @NonNull
-    protected abstract BaseExtension createExtension(
+    protected abstract ExtensionData<AndroidT> createExtension(
             @NonNull DslServices dslServices,
-            @NonNull GlobalScope globalScope,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull ExtraModelInfo extraModelInfo);
+            @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull VersionedSdkLoaderService versionedSdkLoaderService);
 
     @NonNull
     protected abstract AndroidComponentsT createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<AndroidT, VariantBuilderT, VariantT>
-                            variantApiOperationsRegistrar);
+                            variantApiOperationsRegistrar,
+            @NonNull BootClasspathConfig bootClasspathConfig);
 
     @NonNull
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
     protected abstract VariantFactory<VariantBuilderT, VariantT> createVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope);
+            @NonNull ProjectServices projectServices);
 
     @NonNull
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
@@ -231,11 +272,9 @@ public abstract class BasePlugin<
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo);
+            @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension);
 
     protected abstract int getProjectType();
 
@@ -391,27 +430,16 @@ public abstract class BasePlugin<
                         project.getGradle().getSharedServices(),
                         AndroidLocationsBuildService.class);
 
-        ProviderFactory providers = project.getProviders();
-        Provider<VersionedSdkLoader> versionSdkLoader =
-                sdkComponentsBuildService.map(
-                        buildService ->
-                                buildService.sdkLoader(
-                                        providers.provider(() -> extension.getCompileSdkVersion()),
-                                        providers.provider(
-                                                () -> extension.getBuildToolsRevision())));
-        Provider<AvdComponentsBuildService> avdComponentsBuildService =
-                new AvdComponentsBuildService.RegistrationAction(
-                                project,
-                                getManagedDeviceAvdFolder(
-                                        project.getObjects(),
-                                        project.getProviders(),
-                                        locationsProvider.get()),
-                                sdkComponentsBuildService,
-                                project.getProviders()
-                                        .provider(() -> extension.getCompileSdkVersion()),
-                                project.getProviders()
-                                        .provider(() -> extension.getBuildToolsRevision()))
-                        .execute();
+        new AvdComponentsBuildService.RegistrationAction(
+                        project,
+                        getManagedDeviceAvdFolder(
+                                project.getObjects(),
+                                project.getProviders(),
+                                locationsProvider.get()),
+                        sdkComponentsBuildService,
+                        project.getProviders().provider(() -> extension.getCompileSdkVersion()),
+                        project.getProviders().provider(() -> extension.getBuildToolsRevision()))
+                .execute();
 
         new SymbolTableBuildService.RegistrationAction(project).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
@@ -434,23 +462,15 @@ public abstract class BasePlugin<
         dslServices =
                 new DslServicesImpl(
                         projectServices,
-                        sdkComponentsBuildService);
+                        sdkComponentsBuildService,
+                        () -> versionedSdkLoaderService);
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(
                         SyncOptions.getErrorFormatMode(projectOptions),
                         projectServices.getLogger());
 
-        globalScope =
-                new GlobalScope(
-                        project,
-                        creator,
-                        dslServices,
-                        sdkComponentsBuildService,
-                        avdComponentsBuildService,
-                        registry,
-                        messageReceiver,
-                        componentFactory);
+        taskManagerConfig = new TaskManagerConfigImpl(dslServices, componentFactory);
 
         project.getTasks()
                 .named("assemble")
@@ -462,12 +482,18 @@ public abstract class BasePlugin<
         // As soon as project is evaluated we can clear the shared state for deprecation reporting.
         gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
 
-        createAndroidJdkImageConfiguration(project, globalScope);
+        versionedSdkLoaderService =
+                new VersionedSdkLoaderService(
+                        dslServices,
+                        project,
+                        () -> extension.getCompileSdkVersion(),
+                        () -> extension.getBuildToolsRevision());
+
+        createAndroidJdkImageConfiguration();
     }
 
     /** Creates the androidJdkImage configuration */
-    public static void createAndroidJdkImageConfiguration(
-            @NonNull Project project, @NonNull GlobalScope globalScope) {
+    public void createAndroidJdkImageConfiguration() {
         Configuration config = project.getConfigurations().create(CONFIG_NAME_ANDROID_JDK_IMAGE);
         config.setVisible(false);
         config.setCanBeConsumed(false);
@@ -477,22 +503,49 @@ public abstract class BasePlugin<
                 .add(
                         CONFIG_NAME_ANDROID_JDK_IMAGE,
                         project.files(
-                                globalScope
+                                versionedSdkLoaderService
                                         .getVersionedSdkLoader()
                                         .flatMap(
                                                 VersionedSdkLoader
                                                         ::getCoreForSystemModulesProvider)));
     }
 
-    private void configureExtension() {
-        DslServices dslServices = globalScope.getDslServices();
+    public static Configuration createCustomLintChecksConfig(Project project) {
+        Configuration lintChecks =
+                project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_LINTCHECKS);
+        lintChecks.setVisible(false);
+        lintChecks.setDescription("Configuration to apply external lint check jar");
+        lintChecks.setCanBeConsumed(false);
+        return lintChecks;
+    }
 
+    private static Configuration createCustomLintPublishConfig(@NonNull Project project) {
+        Configuration lintChecks =
+                project.getConfigurations()
+                        .maybeCreate(VariantDependencies.CONFIG_NAME_LINTPUBLISH);
+        lintChecks.setVisible(false);
+        lintChecks.setDescription("Configuration to publish external lint check jar");
+        lintChecks.setCanBeConsumed(false);
+        return lintChecks;
+    }
+
+    private static Configuration createAndroidJarConfig(@NonNull Project project) {
+        Configuration androidJarConfig =
+                project.getConfigurations()
+                        .maybeCreate(VariantDependencies.CONFIG_NAME_ANDROID_APIS);
+        androidJarConfig.setDescription(
+                "Configuration providing various types of Android JAR file");
+        androidJarConfig.setCanBeConsumed(false);
+        return androidJarConfig;
+    }
+
+    private void configureExtension() {
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
                 project.container(BaseVariantOutput.class);
 
         project.getExtensions().add("buildOutputs", buildOutputs);
 
-        variantFactory = createVariantFactory(projectServices, globalScope);
+        variantFactory = createVariantFactory(projectServices);
 
         variantInputModel =
                 new LegacyVariantInputManager(
@@ -504,64 +557,73 @@ public abstract class BasePlugin<
                                 dslServices,
                                 new DelayedActionsExecutor()));
 
-        extension =
+        ExtensionData<AndroidT> extensionData =
                 createExtension(
-                        dslServices, globalScope, variantInputModel, buildOutputs, extraModelInfo);
+                        dslServices,
+                        variantInputModel,
+                        buildOutputs,
+                        extraModelInfo,
+                        versionedSdkLoaderService);
 
-        globalScope.setExtension(extension);
+        extension = extensionData.getOldExtension();
+        newExtension = extensionData.getNewExtension();
+        bootClasspathConfig = extensionData.getBootClasspathConfig();
+
+        GlobalTaskCreationConfig globalConfig =
+                new GlobalTaskCreationConfigImpl(
+                        project,
+                        extension,
+                        (CommonExtensionImpl<?, ?, ?, ?>) newExtension,
+                        dslServices,
+                        versionedSdkLoaderService,
+                        bootClasspathConfig,
+                        createCustomLintPublishConfig(project),
+                        createCustomLintChecksConfig(project),
+                        createAndroidJarConfig(project));
+
         VariantApiOperationsRegistrar<AndroidT, VariantBuilderT, VariantT> variantApiOperations =
-                new VariantApiOperationsRegistrar<>((AndroidT) extension);
+                new VariantApiOperationsRegistrar<>(newExtension);
 
-        androidComponentsExtension = createComponentExtension(dslServices, variantApiOperations);
+        androidComponentsExtension =
+                createComponentExtension(dslServices, variantApiOperations, bootClasspathConfig);
 
         variantManager =
                 new VariantManager(
-                        globalScope,
                         project,
-                        projectServices.getProjectOptions(),
-                        (CommonExtension<?, ?, ?, ?>) extension,
+                        dslServices,
+                        extension,
+                        newExtension,
                         androidComponentsExtension,
                         variantApiOperations,
                         variantFactory,
                         variantInputModel,
+                        globalConfig,
                         projectServices);
 
-        registerModels(
-                registry,
-                globalScope,
-                variantInputModel,
-                extension,
-                extraModelInfo);
+        registerModels(registry, variantInputModel, extension, extraModelInfo, globalConfig);
 
-        // create default Objects, signingConfig first as its used by the BuildTypes.
+        // create default Objects, signingConfig first as it's used by the BuildTypes.
         variantFactory.createDefaultComponents(variantInputModel);
 
         createAndroidTestUtilConfiguration();
     }
 
-
     protected void registerModels(
             @NonNull ToolingModelBuilderRegistry registry,
-            @NonNull GlobalScope globalScope,
             @NonNull
                     VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
                             variantInputModel,
             @NonNull BaseExtension extension,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull GlobalTaskCreationConfig globalConfig) {
         // Register a builder for the custom tooling model
-        VariantModel variantModel = createVariantModel();
+        VariantModel variantModel = createVariantModel(globalConfig);
 
-        registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
+        registerModelBuilder(registry, variantModel, extension, extraModelInfo);
 
         registry.register(
                 new com.android.build.gradle.internal.ide.v2.ModelBuilder(
-                        project,
-                        globalScope,
-                        projectServices.getProjectOptions(),
-                        variantModel,
-                        (CommonExtension) extension,
-                        projectServices.getIssueReporter(),
-                        getProjectTypeV2()));
+                        project, variantModel, newExtension));
 
         // Register a builder for the native tooling model
 
@@ -575,7 +637,7 @@ public abstract class BasePlugin<
     }
 
     @NonNull
-    private VariantModel createVariantModel() {
+    private VariantModel createVariantModel(@NonNull GlobalTaskCreationConfig globalConfig) {
         return new VariantModelImpl(
                 variantInputModel,
                 extension::getTestBuildType,
@@ -585,26 +647,18 @@ public abstract class BasePlugin<
                                 .collect(Collectors.toList()),
                 () -> variantManager.getTestComponents(),
                 () -> variantManager.getBuildFeatureValues(),
-                dslServices.getIssueReporter());
+                getProjectType(),
+                getProjectTypeV2(),
+                globalConfig);
     }
 
     /** Registers a builder for the custom tooling model. */
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
-            @NonNull GlobalScope globalScope,
             @NonNull VariantModel variantModel,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
-        registry.register(
-                new ModelBuilder<>(
-                        globalScope,
-                        variantModel,
-                        extension,
-                        extraModelInfo,
-                        projectServices.getProjectOptions(),
-                        projectServices.getIssueReporter(),
-                        getProjectType(),
-                        projectServices.getProjectInfo()));
+        registry.register(new ModelBuilder<>(project, variantModel, extension, extraModelInfo));
     }
 
     private void createTasks() {
@@ -615,11 +669,9 @@ public abstract class BasePlugin<
                 () ->
                         TaskManager.createTasksBeforeEvaluate(
                                 project,
-                                projectServices.getProjectOptions(),
-                                globalScope,
                                 variantFactory.getVariantType(),
                                 extension.getSourceSets(),
-                                projectServices.getProjectInfo()));
+                                variantManager.getGlobalTaskCreationConfig()));
 
         project.afterEvaluate(
                 CrashReporting.afterEvaluate(
@@ -636,6 +688,7 @@ public abstract class BasePlugin<
 
     @VisibleForTesting
     final void createAndroidTasks() {
+        GlobalTaskCreationConfig globalConfig = variantManager.getGlobalTaskCreationConfig();
 
         if (extension.getCompileSdkVersion() == null) {
             if (SyncOptions.getModelQueryMode(projectServices.getProjectOptions())
@@ -762,23 +815,17 @@ public abstract class BasePlugin<
                         variants,
                         variantManager.getTestComponents(),
                         variantManager.getTestFixturesComponents(),
-                        !variantInputModel.getProductFlavors().isEmpty(),
-                        projectServices.getProjectOptions(),
-                        globalScope,
-                        extension,
-                        projectServices.getProjectInfo());
+                        globalConfig,
+                        taskManagerConfig,
+                        extension);
 
-        taskManager.createTasks(variantFactory.getVariantType(), createVariantModel());
+        taskManager.createTasks(variantFactory.getVariantType(), createVariantModel(globalConfig));
 
         new DependencyConfigurator(
                         project,
                         project.getName(),
-                        projectServices.getProjectOptions(),
-                        globalScope,
+                        globalConfig,
                         variantInputModel,
-                        ((CommonExtension<?, ?, ?, ?>) extension)
-                                .getAndroidResources()
-                                .getNamespaced(),
                         projectServices)
                 .configureDependencySubstitutions()
                 .configureDependencyChecks()
@@ -787,8 +834,7 @@ public abstract class BasePlugin<
                 .configureAttributeMatchingStrategies();
 
         // Run the old Variant API, after the variants and tasks have been created.
-        ApiObjectFactory apiObjectFactory =
-                new ApiObjectFactory(extension, variantFactory, globalScope);
+        ApiObjectFactory apiObjectFactory = new ApiObjectFactory(extension, variantFactory);
 
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             apiObjectFactory.create(variant.getVariant());

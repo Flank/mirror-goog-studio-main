@@ -27,6 +27,7 @@ import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestFixtures
+import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.dsl.VariantDimension
 import com.android.build.api.transform.Transform
 import com.android.build.api.variant.BuildConfigField
@@ -36,7 +37,6 @@ import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.ProguardFiles
-import com.android.build.gradle.TestedExtension
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
@@ -118,6 +118,7 @@ open class VariantDslInfoImpl internal constructor(
      *  This trigger a mode where the namespaceForR just returns the same as namespace.
      */
     private val inconsistentTestAppId: Boolean,
+    @Deprecated("use extension") private val oldExtension: BaseExtension,
     private val extension: CommonExtension<*,*,*,*>
 ): VariantDslInfo, DimensionCombination {
 
@@ -1213,7 +1214,7 @@ open class VariantDslInfoImpl internal constructor(
 
     // when we remove the old DSL (and the old Transforms API) this should be deleted as well.
     override val transforms: List<Transform>
-        get() = (extension as BaseExtension).transforms
+        get() = oldExtension.transforms
 
     override val lintOptions: Lint
         get() = extension.lint
@@ -1235,7 +1236,7 @@ open class VariantDslInfoImpl internal constructor(
 
         private fun CommonExtension<*, *, *, *>.getDslNamespace(variantType: VariantType): String? {
             return if (variantType.isTestComponent) {
-                (this as com.android.build.api.dsl.TestedExtension).testNamespace
+                (this as TestedExtension).testNamespace
             } else if (variantType.isTestFixturesComponent) {
                 null
             } else {

@@ -60,11 +60,11 @@ class PrepareLintJarForPublishTest {
             it.analyticsService.set(FakeNoOpAnalyticsService())
         }
 
-        task.get().prepare()
+        task.get().taskAction()
         assertThat(outputLocation).exists()
 
         // Make sure we can run second time.
-        task.get().prepare()
+        task.get().taskAction()
         assertThat(outputLocation).exists()
     }
 }

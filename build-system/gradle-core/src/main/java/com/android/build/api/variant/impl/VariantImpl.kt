@@ -19,7 +19,6 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -39,12 +38,12 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
@@ -69,8 +68,7 @@ abstract class VariantImpl(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
-    sdkComponents: SdkComponents,
-    globalScope: GlobalScope
+    global: GlobalTaskCreationConfig
 ) : ComponentImpl(
     variantBuilder,
     buildFeatureValues,
@@ -84,8 +82,7 @@ abstract class VariantImpl(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    global
 ), Variant, ConsumableCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
@@ -196,7 +193,7 @@ abstract class VariantImpl(
 
     override val needsMainDexListForBundle: Boolean
         get() = isBaseModule
-                && globalScope.hasDynamicFeatures()
+                && global.hasDynamicFeatures
                 && dexingType.needsMainDexList
 
     // TODO: Move down to lower type and remove from VariantScope.

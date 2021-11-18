@@ -19,8 +19,6 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledTestFixtures
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
-import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
@@ -40,12 +38,12 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.TestFixturesVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -68,8 +66,7 @@ open class TestFixturesImpl @Inject constructor(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
-    sdkComponents: SdkComponents,
-    globalScope: GlobalScope
+    global: GlobalTaskCreationConfig
 ) : ComponentImpl(
     componentIdentity,
     buildFeatureValues,
@@ -83,8 +80,7 @@ open class TestFixturesImpl @Inject constructor(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    global
 ), TestFixtures, ComponentCreationConfig, AarCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
@@ -161,5 +157,5 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val androidResourcesEnabled: Boolean =
-        (globalScope.extension as TestedExtension).testFixtures.androidResources
+        variantDslInfo.testFixtures.androidResources
 }

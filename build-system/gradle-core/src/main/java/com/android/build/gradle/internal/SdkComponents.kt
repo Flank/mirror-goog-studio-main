@@ -433,13 +433,8 @@ abstract class AndroidJarInput {
 fun AndroidJarInput.initialize(creationConfig: ComponentCreationConfig) {
     sdkBuildService.setDisallowChanges(
         getBuildService(creationConfig.services.buildServiceRegistry))
-    this.compileSdkVersion.setDisallowChanges(
-        creationConfig.globalScope.extension.compileSdkVersion
-    )
-    this.buildToolsRevision.setDisallowChanges(
-        creationConfig.globalScope.extension.buildToolsRevision
-    )
-
+    this.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
+    this.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
 }
 
 /** This can be used by tasks requiring build-tools executables as input with [org.gradle.api.tasks.Nested]. */
@@ -500,10 +495,10 @@ fun BuildToolsExecutableInput.initialize(creationConfig: ComponentCreationConfig
         getBuildService(creationConfig.services.buildServiceRegistry)
     )
     this.compileSdkVersion.setDisallowChanges(
-        creationConfig.globalScope.extension.compileSdkVersion
+        creationConfig.global.compileSdkHashString
     )
     this.buildToolsRevision.setDisallowChanges(
-        creationConfig.globalScope.extension.buildToolsRevision
+        creationConfig.global.buildToolsRevision
     )
 }
 
@@ -524,9 +519,9 @@ abstract class NdkHandlerInput {
 }
 
 fun NdkHandlerInput.initialize(creationConfig: ComponentCreationConfig) {
-    compileSdkVersion.setDisallowChanges(creationConfig.globalScope.extension.compileSdkVersion)
-    ndkVersion.setDisallowChanges(creationConfig.globalScope.extension.ndkVersion)
-    ndkPath.setDisallowChanges(creationConfig.globalScope.extension.ndkPath)
+    compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
+    ndkVersion.setDisallowChanges(creationConfig.global.ndkVersion)
+    ndkPath.setDisallowChanges(creationConfig.global.ndkPath)
 }
 
 internal const val API_VERSIONS_FILE_NAME = "api-versions.xml"

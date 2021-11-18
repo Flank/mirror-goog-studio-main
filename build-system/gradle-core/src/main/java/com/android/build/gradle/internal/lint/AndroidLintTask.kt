@@ -26,7 +26,6 @@ import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
@@ -373,7 +372,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val description: String get() = "Run lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() =
-                creationConfig.lintOptions.checkDependencies
+                creationConfig.global.lintOptions.checkDependencies
                         && !variant.main.variantType.isDynamicFeature
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
@@ -386,7 +385,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         }
 
         override fun configureOutputSettings(task: AndroidLintTask) {
-            task.configureOutputSettings(creationConfig.lintOptions)
+            task.configureOutputSettings(creationConfig.global.lintOptions)
         }
 
         companion object {
@@ -429,7 +428,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val description: String get() = "Fix lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() =
-                creationConfig.lintOptions.checkDependencies
+                creationConfig.global.lintOptions.checkDependencies
                         && !variant.main.variantType.isDynamicFeature
 
         override fun configureOutputSettings(task: AndroidLintTask) {
@@ -486,7 +485,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 isAndroid = true
             )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
-            task.lintRuleJars.from(creationConfig.globalScope.localCustomLintChecks)
+            task.lintRuleJars.from(creationConfig.global.localCustomLintChecks)
             task.lintRuleJars.from(
                 creationConfig
                     .variantDependencies
@@ -513,8 +512,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             }
             task.lintFixBuildService.disallowChanges()
             task.checkDependencies.setDisallowChanges(checkDependencies)
-            task.checkOnly.set(creationConfig.services.provider {
-                creationConfig.lintOptions.checkOnly
+            task.checkOnly.setDisallowChanges(creationConfig.services.provider {
+                creationConfig.global.lintOptions.checkOnly
             })
             task.projectInputs.initialize(variant, isForAnalysis = false)
             task.outputs.upToDateWhen {
@@ -522,7 +521,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 // Ensure the task runs if baselineFile is set and the file doesn't exist
                 task.projectInputs.lintOptions.baselineFile.orNull?.asFile?.exists() ?: true
             }
-            val hasDynamicFeatures = creationConfig.globalScope.hasDynamicFeatures()
+            val hasDynamicFeatures = creationConfig.global.hasDynamicFeatures
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,

@@ -39,7 +39,11 @@ interface DslServices: BaseServices {
 
     val logger: Logger
     val buildDirectory: DirectoryProperty
+
+    @Deprecated("Should not be used in new DSL object. Only for older DSL objects.")
     val sdkComponents: Provider<SdkComponentsBuildService>
+    @Deprecated("Should not be used in new DSL object. Only for older DSL objects.")
+    val versionedSdkLoaderService: VersionedSdkLoaderService
 
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
     fun <T> domainObjectContainer(

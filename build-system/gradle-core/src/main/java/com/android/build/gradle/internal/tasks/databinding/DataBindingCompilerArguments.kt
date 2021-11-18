@@ -199,7 +199,6 @@ class DataBindingCompilerArguments constructor(
             isKaptPluginApplied: Boolean,
             projectKotlinVersion: KotlinVersion?
         ): DataBindingCompilerArguments {
-            val globalScope = creationConfig.globalScope
             val artifacts = creationConfig.artifacts
 
             val isNonTransitiveR = creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
@@ -235,7 +234,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(creationConfig),
                 packageName = creationConfig.namespace,
                 minApi = creationConfig.minSdkVersion.apiLevel,
-                apiVersionsFile = globalScope.versionedSdkLoader.flatMap { it.apiVersionsFile },
+                apiVersionsFile = creationConfig.global.versionedSdkLoader.flatMap { it.apiVersionsFile },
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(creationConfig)),
                 classLogDir = artifacts.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
@@ -256,7 +255,7 @@ class DataBindingCompilerArguments constructor(
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = creationConfig.variantType.isTestComponent,
-                isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
+                isEnabledForTests = creationConfig.global.dataBinding.isEnabledForTests,
                 isEnableV2 = true,
                 isNonTransitiveR = isNonTransitiveR,
                 mergedDependenciesRFile = mergedDependenciesRFile,

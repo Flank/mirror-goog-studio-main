@@ -68,11 +68,10 @@ const val DEFAULT_INCREMENTAL_COMPILATION = true
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
 fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, task: JavaCompile) {
-    val globalScope = creationConfig.globalScope
-    val compileOptions = creationConfig.compileOptions
+    val compileOptions = creationConfig.global.compileOptions
 
     if (compileOptions.sourceCompatibility.isJava9Compatible) {
-        checkSdkCompatibility(globalScope.extension.compileSdkVersion!!, creationConfig.services.issueReporter)
+        checkSdkCompatibility(creationConfig.global.compileSdkHashString, creationConfig.services.issueReporter)
         checkNotNull(task.project.configurations.findByName(CONFIG_NAME_ANDROID_JDK_IMAGE)) {
             "The $CONFIG_NAME_ANDROID_JDK_IMAGE configuration must exist for Java 9+ sources."
         }
@@ -88,11 +87,11 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
         this.classpath = project.files(
             // classes(e.g. android.jar) that were previously passed through bootstrapClasspath need to be provided
             // through classpath
-            creationConfig.sdkComponents.bootClasspath,
+            creationConfig.global.bootClasspath,
             creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
         )
     } else {
-        this.options.bootstrapClasspath = task.project.files(creationConfig.sdkComponents.bootClasspath)
+        this.options.bootstrapClasspath = task.project.files(creationConfig.global.bootClasspath)
         this.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
     }
 

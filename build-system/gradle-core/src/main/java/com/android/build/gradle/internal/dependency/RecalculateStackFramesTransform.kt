@@ -93,7 +93,7 @@ abstract class RecalculateStackFramesTransform :
                 registerRecalculateStackFramesTransform(
                     projectName,
                     dependencyHandler,
-                    creationConfig.globalScope.fullBootClasspathProvider,
+                    creationConfig.global.fullBootClasspathProvider,
                     creationConfig.services.buildServiceRegistry,
                     getAttributesForConfig(creationConfig),
                     true

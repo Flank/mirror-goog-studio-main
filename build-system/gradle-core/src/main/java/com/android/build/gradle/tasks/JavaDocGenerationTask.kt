@@ -214,7 +214,7 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
             )
 
             task.classpath.fromDisallowChanges(
-                creationConfig.sdkComponents.bootClasspath,
+                creationConfig.global.bootClasspath,
                 creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
             )
         }

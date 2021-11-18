@@ -553,8 +553,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.androidResources.noCompress)
 
-            task.bundleOptions =
-                ((creationConfig.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+            task.bundleOptions = creationConfig.global.bundleOptions.convert()
 
             task.compressNativeLibs.set(
                 componentProperties.packaging.jniLibs.useLegacyPackagingFromBundle
@@ -611,7 +610,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     }
 }
 
-private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
+private fun com.android.build.api.dsl.Bundle.convert() =
     PackageBundleTask.BundleOptions(
       enableAbi = abi.enableSplit,
       enableDensity = density.enableSplit,

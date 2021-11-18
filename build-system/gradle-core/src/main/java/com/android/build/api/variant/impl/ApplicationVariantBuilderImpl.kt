@@ -16,7 +16,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantBuilder
-import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.DependenciesInfoBuilder
@@ -28,13 +27,14 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class ApplicationVariantBuilderImpl @Inject constructor(
+    globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
-    dslDependencyInfo: com.android.build.api.dsl.DependenciesInfo,
-    variantConfiguration: ComponentIdentity,
+    componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) : VariantBuilderImpl(
+    globalVariantBuilderConfig,
     variantDslInfo,
-    variantConfiguration,
+    componentIdentity,
     variantApiServices
 ), ApplicationVariantBuilder {
 
@@ -55,8 +55,8 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
     override val dependenciesInfo: DependenciesInfoBuilder by lazy {
         variantApiServices.newInstance(
             DependenciesInfoBuilderImpl::class.java,
-                variantApiServices,
-                dslDependencyInfo
+            variantApiServices,
+            globalVariantBuilderConfig.dependenciesInfo
         )
     }
 
