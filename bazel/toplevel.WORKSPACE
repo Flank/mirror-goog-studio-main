@@ -318,6 +318,7 @@ local_maven_repository(
         "androidx.lifecycle:lifecycle-extensions:2.2.0",
         "androidx.lifecycle:lifecycle-livedata-ktx:2.2.0",
         "androidx.lifecycle:lifecycle-livedata-ktx:2.3.1",
+        "androidx.lifecycle:lifecycle-common-java8:2.4.0",
         "androidx.media:media:1.3.1",
         "androidx.navigation:navigation-fragment:2.0.0",
         "androidx.navigation:navigation-fragment-ktx:2.3.5",

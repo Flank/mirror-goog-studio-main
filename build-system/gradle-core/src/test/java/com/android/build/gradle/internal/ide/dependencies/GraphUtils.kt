@@ -59,6 +59,7 @@ interface DependencyBuilder {
     ): ModuleDependencyNodeBuilder
 
     fun dependency(node: DependencyNodeBuilder?)
+    fun dependencyConstraint(node: DependencyNodeBuilder)
 }
 
 interface DependencyNodeBuilder: DependencyBuilder {
@@ -78,6 +79,7 @@ interface ModuleDependencyNodeBuilder: DependencyNodeBuilder {
 
 open class DependencyBuilderImpl: DependencyBuilder {
     protected val children = mutableListOf<DependencyNodeBuilderImpl>()
+    protected val constraints = mutableListOf<DependencyNodeBuilderImpl>()
 
     override fun project(
         path: String,
@@ -106,29 +108,40 @@ open class DependencyBuilderImpl: DependencyBuilder {
         (node as? DependencyNodeBuilderImpl)?.let { children.add(it) }
     }
 
+    override fun dependencyConstraint(node: DependencyNodeBuilder) {
+        check(this is DependencyNodeBuilder) {
+            "Constraints must be added to existing node in the dependency graph."
+        }
+        (node as DependencyNodeBuilderImpl).let { constraints.add(it) }
+    }
+
     fun buildGraph(): Pair<Set<DependencyResult>, Set<ResolvedArtifact>> {
         // go through graph, convert to depresult and resolved-artifacts.
         // make sure to re-use node that are already converted.
-
-        val results = LinkedHashSet<DependencyResult>()
+        val nodeCache = mutableMapOf<DependencyNodeBuilderImpl, FakeResolvedDependencyResult>()
         val artifacts = mutableSetOf<ResolvedArtifact>()
         for (child in children) {
-            results.add(processNode(child, artifacts))
+            processNode(child, artifacts, nodeCache)
         }
-
-        return results to artifacts.toSet()
+        for (child in children) {
+            processConstrains(child, nodeCache)
+        }
+        return nodeCache.filter { it.key in children }.values.toSet() to artifacts.toSet()
     }
 
     private fun processNode(
         node: DependencyNodeBuilderImpl,
-        artifacts: MutableSet<ResolvedArtifact>
+        artifacts: MutableSet<ResolvedArtifact>,
+        nodeCache: MutableMap<DependencyNodeBuilderImpl, FakeResolvedDependencyResult>
     ): DependencyResult {
+        nodeCache[node]?.let { return it }
+
         val availableAt = if (node is ModuleDependencyNodeBuilder) node.availableAt else null
         var externalVariant: ResolvedVariantResult? = null
 
         val newChildren = LinkedHashSet<DependencyResult>()
         for (child in node.children) {
-            val newChild = processNode(child, artifacts)
+            val newChild = processNode(child, artifacts, nodeCache)
             if (child == availableAt) {
                 externalVariant = (newChild as? ResolvedDependencyResult)?.resolvedVariant
             }
@@ -175,7 +188,23 @@ open class DependencyBuilderImpl: DependencyBuilder {
             selected = resolvedComponentResult,
             resolvedVariant = resolvedVariantResult,
             constraint = false
-        )
+        ).also {
+            nodeCache[node] = it
+        }
+    }
+
+    private fun processConstrains(
+        node: DependencyNodeBuilderImpl,
+        nodeCache: MutableMap<DependencyNodeBuilderImpl, FakeResolvedDependencyResult>
+    ) {
+        val graphNode = nodeCache.getValue(node)
+        for (constraint in node.constraints) {
+            val constraintNode = nodeCache.getValue(constraint)
+            graphNode.addConstraint(constraintNode.copy(constraint = true))
+        }
+        for (child in node.children) {
+            processConstrains(child, nodeCache)
+        }
     }
 }
 
