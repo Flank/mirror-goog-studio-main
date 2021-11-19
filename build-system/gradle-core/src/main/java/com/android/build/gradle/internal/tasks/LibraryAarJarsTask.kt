@@ -136,7 +136,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     private fun computeExcludeList(): List<Pattern> {
         val namespaceValue = namespace.get()
 
-        val excludes = getDefaultExcludes(namespaceValue.replace(".", "/"))
+        val excludes = getDefaultExcludes()
 
         dataBindingExcludeDelegate.orNull?.let {
             excludes.addAll(it.getExcludedClassList(namespaceValue))
@@ -267,18 +267,14 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         }
 
 
-        fun getDefaultExcludes(
-            packagePath: String, packageR: Boolean = false
-        ): MutableList<String> {
-            val excludes = ArrayList<String>(5)
-            if (!packageR) {
-                // these must be regexp to match the zip entries
-                excludes.add(".*/R.class$")
-                excludes.add(".*/R\\$(.*).class$")
+        fun getDefaultExcludes(packageR: Boolean = false): MutableList<String> {
+            return mutableListOf<String>().apply {
+                if (!packageR) {
+                    // these must be regexp to match the zip entries
+                    add(".*/R.class$")
+                    add(".*/R\\$(.*).class$")
+                }
             }
-            excludes.add("$packagePath/Manifest.class$")
-            excludes.add("$packagePath/Manifest\\$(.*).class$")
-            return excludes
         }
     }
 

@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.isJarFile
-import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableFileChanges
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
@@ -296,7 +295,6 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
     override fun run() {
         val ignorePatterns =
             (LibraryAarJarsTask.getDefaultExcludes(
-                packagePath = parameters.namespace.get().replace('.', '/'),
                 packageR = parameters.packageRClass.get()
             ) + parameters.toIgnore.get())
                 .map { Pattern.compile(it) }

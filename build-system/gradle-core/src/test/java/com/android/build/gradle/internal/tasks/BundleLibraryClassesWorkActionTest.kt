@@ -177,8 +177,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         assertContains(outputFile, "A.class")
         assertDoesNotContain(outputFile, "com/example/R.class")
         assertDoesNotContain(outputFile, "com/example/R\$string.class")
-        assertDoesNotContain(outputFile, "com/example/Manifest.class")
-        assertDoesNotContain(outputFile, "com/example/Manifest\$nested.class")
+        assertContains(outputFile, "com/example/Manifest.class")
+        assertContains(outputFile, "com/example/Manifest\$nested.class")
     }
 
     @Test
@@ -217,8 +217,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         assertContains(outputFile, "A.class")
         assertContains(outputFile, "com/example/R.class")
         assertContains(outputFile, "com/example/R\$string.class")
-        assertDoesNotContain(outputFile, "com/example/Manifest.class")
-        assertDoesNotContain(outputFile, "com/example/Manifest\$nested.class")
+        assertContains(outputFile, "com/example/Manifest.class")
+        assertContains(outputFile, "com/example/Manifest\$nested.class")
     }
 
     @Test
