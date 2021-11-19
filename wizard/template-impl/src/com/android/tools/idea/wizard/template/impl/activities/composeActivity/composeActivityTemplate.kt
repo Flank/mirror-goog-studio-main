@@ -41,7 +41,7 @@ val composeActivityTemplate
     name = "Empty Compose Activity"
     description = "Create a new empty activity with Jetpack Compose"
     minApi = 21
-    constraints = listOf(TemplateConstraint.AndroidX, TemplateConstraint.Kotlin)
+    constraints = listOf(TemplateConstraint.AndroidX, TemplateConstraint.Kotlin, TemplateConstraint.Compose)
 
     category = Category.Compose
     formFactor = FormFactor.Mobile

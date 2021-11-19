@@ -341,6 +341,7 @@ local_maven_repository(
         "androidx.test:rules:1.4.0-alpha06",
         "androidx.test:runner:1.4.0-alpha06",
         "androidx.wear:wear:1.1.0",
+        "androidx.wear.compose:compose-material:1.0.0-alpha11",
         "com.android.support:animated-vector-drawable:26.1.0",
         "com.android.support:appcompat-v7:25.4.0",
         "com.android.support:appcompat-v7:26.1.0",
