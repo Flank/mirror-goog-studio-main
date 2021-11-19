@@ -173,6 +173,12 @@ InternalArtifactType<T : FileSystemLocation>(
     object FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- android res ---
+    // generated res
+    object GENERATED_RES: InternalArtifactType<Directory>(
+        DIRECTORY,
+        Category.GENERATED,
+        "res/resValues"
+    ), Replaceable
     // output of the resource merger ready for aapt.
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // folder for the blame report on the merged resources

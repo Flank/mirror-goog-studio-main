@@ -235,7 +235,7 @@ abstract class BaseVariantData(
         allRes.from(
             services.fileCollection(
                 paths.renderscriptResOutputDir,
-                paths.generatedResOutputDir,
+                artifacts.get(InternalArtifactType.GENERATED_RES),
                 extraGeneratedResFolders
             )
         )

@@ -137,7 +137,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.BundleAar::setVariantName",
                 "com.android.build.gradle.tasks.ExtractAnnotations::setBootClasspath",
                 "com.android.build.gradle.tasks.ExtractAnnotations::setEncoding",
-                "com.android.build.gradle.tasks.GenerateResValues::setResOutputDir",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setMainManifestFile",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setOutputFile",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setSecondaryManifestFiles",

@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -47,7 +48,7 @@ abstract class SourceSetInputs {
     abstract val extraGeneratedResDir: ConfigurableFileCollection
 
     @get:Internal
-    abstract val generatedResDir: Property<String>
+    abstract val generatedResDir: DirectoryProperty
 
     @get:Internal
     abstract val renderscriptResOutputDir: Property<String>
@@ -76,7 +77,7 @@ abstract class SourceSetInputs {
         localResources.setDisallowChanges(androidResources)
         resourceSourceSets.setFrom(androidResources.values)
         generatedResDir.setDisallowChanges(
-            paths.generatedResOutputDir.map { it.asFile.absolutePath})
+            creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES))
         renderscriptResOutputDir.setDisallowChanges(
             paths.renderscriptResOutputDir.map { it.asFile.absolutePath})
         extraGeneratedResDir.setFrom(

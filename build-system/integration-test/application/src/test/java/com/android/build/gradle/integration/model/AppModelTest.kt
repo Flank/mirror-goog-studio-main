@@ -187,7 +187,7 @@ class DisabledResValuesInAppModelTest: ReferenceModelComparator(
 ) {
     @Test
     fun `test AndroidProject model`() {
-        ensureAndroidProjectDeltaIsEmpty()
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
 
     @Test

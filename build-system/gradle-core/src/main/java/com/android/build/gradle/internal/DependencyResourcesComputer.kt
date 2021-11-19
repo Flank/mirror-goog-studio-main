@@ -173,8 +173,11 @@ class DependencyResourcesComputer {
         renderscriptResOutputDir = services.fileCollection(
             File(sourceSetInputs.renderscriptResOutputDir.forUseAtConfigurationTime().get()))
 
-        generatedResOutputDir = services.fileCollection(
-            File(sourceSetInputs.generatedResDir.forUseAtConfigurationTime().get()))
+        generatedResOutputDir = if (sourceSetInputs.generatedResDir.isPresent) {
+            services.fileCollection(sourceSetInputs.generatedResDir)
+        } else {
+            services.fileCollection()
+        }
 
         if (creationConfig.taskContainer.generateApkDataTask != null) {
             microApkResDirectory = microApkResDir

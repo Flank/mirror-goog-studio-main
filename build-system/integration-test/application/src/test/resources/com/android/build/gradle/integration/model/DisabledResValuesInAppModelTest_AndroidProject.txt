@@ -1,0 +1,15 @@
+> AndroidProject:
+   > variants:
+      - debug:
+         - mainArtifact:
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/debug{!}{REMOVED}
+         - androidTestArtifact:
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/androidTest/debug{!}{REMOVED}
+      - release:
+         - mainArtifact:
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/release{!}{REMOVED}
+   < variants
+< AndroidProject

@@ -151,7 +151,6 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import org.gradle.StartParameter;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
@@ -1227,11 +1226,12 @@ public class ModelBuilder<Extension extends BaseExtension>
             }
         }
         if (component.getAndroidResourcesEnabled()) {
-            fileCollection.from(component.getPaths().getGeneratedResOutputDir());
-            TaskProvider<? extends Task> generateResValuesTask =
-                    component.getTaskContainer().getGenerateResValuesTask();
-            if (generateResValuesTask != null) {
-                fileCollection.builtBy(generateResValuesTask);
+            if (component
+                    .getArtifacts()
+                    .get(InternalArtifactType.GENERATED_RES.INSTANCE)
+                    .isPresent()) {
+                fileCollection.from(
+                        component.getArtifacts().get(InternalArtifactType.GENERATED_RES.INSTANCE));
             }
         }
         fileCollection.disallowChanges();
