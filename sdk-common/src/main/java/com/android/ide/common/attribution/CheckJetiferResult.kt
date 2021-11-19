@@ -16,36 +16,119 @@
 
 package com.android.ide.common.attribution
 
-import com.android.ide.common.attribution.CheckJetifierResult.Companion.aggregateResults
-import com.android.ide.common.attribution.CheckJetifierResult.Version.CURRENT_VERSION
 import com.google.gson.GsonBuilder
 import java.io.File
+import java.util.SortedMap
 
 /**
- * Result of the `CheckJetifier` task.
+ * Aggregated over all projects result of the `CheckJetifier` task.
  *
- * It contains information about any direct dependencies that a project uses which
+ * It contains information about any direct dependencies that projects use which
  * directly/transitively depend on support libraries, or are support libraries themselves (see
  * [dependenciesDependingOnSupportLibs]).
- *
- * Note that this class can represent a sub-result as well as an aggregated result (see
- * [aggregateResults]).
  */
 data class CheckJetifierResult(
 
     /**
-     * Version of this object, used to handle backward/forward compatibility during deserialization.
+     * A map where the key is a direct dependency that a project uses and the value is a
+     * list of [FullDependencyPath] from a configuration of the project to the direct dependency, to any
+     * intermediate dependencies, then to a support library. List contains [FullDependencyPath] for
+     * each project where it was detected.
      *
-     * Note that if this object is created through deserialization, the version may be different
-     * from [CURRENT_VERSION].
+     * The direct dependency may be a support library itself.
      *
-     * We use type [Double] instead of [String] for easy parsing and comparison.
+     * There may be multiple paths to and from the direct dependency, but this class retains only
+     * one path per project.
      *
-     * IMPORTANT: If the name or type of any of this object's fields has changed, remember to
-     * increase [CURRENT_VERSION] (this applies recursively to the types of those fields). Note that
-     * the name and type of this [version] field must not change.
+     * A dependency is described by a String (as returned by
+     * `org.gradle.api.artifacts.component.ComponentIdentifier.getDisplayName()`), usually in the
+     * form of "group:name:version".
      */
-    val version: Double,
+    val dependenciesDependingOnSupportLibs: SortedMap<String, List<FullDependencyPath>>
+) {
+
+    fun isEmpty() = dependenciesDependingOnSupportLibs.isEmpty()
+
+    fun getDisplayString(): String {
+        return dependenciesDependingOnSupportLibs.flatMap { (directDependency, fullDependencyPath) ->
+            listOf(directDependency) + fullDependencyPath.map { "    ${it.getPathString()}" }
+        }.joinToString("\n")
+    }
+
+    companion object {
+
+        private val gson by lazy { GsonBuilder().setPrettyPrinting().create() }
+
+        fun save(result: CheckJetifierResult, resultFile: File) {
+            resultFile.writeText(
+                gson.toJson(
+                    CheckJetiferResultFile(
+                        resultData = result
+                    )
+                )
+            )
+        }
+
+        /**
+         * Loads [CheckJetifierResult] from a file, potentially throwing an exception if the data
+         * can't be read (e.g., if the file does not exist or if the data format has changed
+         * in an incompatible way).
+         *
+         * IMPORTANT: The caller of this method should ensure that the file exists and be prepared
+         * to handle exceptions caused by data incompatibility.
+         */
+        fun load(resultFile: File): CheckJetifierResult {
+            return gson
+                .fromJson(resultFile.readText(), DeserializedCheckJetifierResultFile::class.java)
+                .toOriginal()
+                .resultData
+        }
+
+        fun aggregateProjectResults(
+            projectResults: List<CheckJetifierProjectResult>
+        ): CheckJetifierResult = CheckJetifierResult(
+            projectResults.flatMap { it.dependenciesDependingOnSupportLibs.entries }
+                .groupBy { it.key }
+                .mapValues { (_, entriesList) ->
+                    entriesList.map { (_, fullDependencyPath) -> fullDependencyPath }
+                        .distinct()
+                        .sortedBy { it.getPathString() }
+                }
+                .toSortedMap()
+        )
+
+        fun aggregateResults(
+            first: CheckJetifierResult,
+            second: CheckJetifierResult
+        ): CheckJetifierResult {
+            val combinedResult = HashMap<String, List<FullDependencyPath>>(
+                first.dependenciesDependingOnSupportLibs.size + second.dependenciesDependingOnSupportLibs.size
+            )
+            for (key in first.dependenciesDependingOnSupportLibs.keys + second.dependenciesDependingOnSupportLibs.keys) {
+                val firstValue = first.dependenciesDependingOnSupportLibs[key] ?: emptyList()
+                val secondValue = second.dependenciesDependingOnSupportLibs[key] ?: emptyList()
+                val allPaths = (firstValue + secondValue).distinct().sortedBy { it.getPathString() }
+                combinedResult[key] = allPaths
+            }
+            return CheckJetifierResult(combinedResult.toSortedMap())
+        }
+    }
+}
+
+/**
+ * Result of the `CheckJetifier` task for one project.
+ *
+ * It contains information about any direct dependencies that projects use which
+ * directly/transitively depend on support libraries, or are support libraries themselves (see
+ * [dependenciesDependingOnSupportLibs]).
+ *
+ * These project results are used to print result per project during execution an
+ * aggregated to a single [CheckJetifierResult] in [CheckJetifierResult.aggregateProjectResults].
+ *
+ * This class is used only during execution for results aggregation and is not serialized to
+ * the results json file.
+ */
+data class CheckJetifierProjectResult(
 
     /**
      * A map where the key is a direct dependency that a project uses and the value is a
@@ -64,74 +147,12 @@ data class CheckJetifierResult(
     val dependenciesDependingOnSupportLibs: LinkedHashMap<String, FullDependencyPath>
 ) {
 
-    private object Version {
-
-        /**
-         * The current version of [CheckJetifierResult] (see [CheckJetifierResult.version]).
-         *
-         * IMPORTANT: If the name or type of any of [CheckJetifierResult]'s fields has changed,
-         * remember to increase [CURRENT_VERSION] (this applies recursively to the types of those
-         * fields). Note that the type of this [CURRENT_VERSION] constant must not change.
-         */
-        const val CURRENT_VERSION: Double = 1.0
-    }
-
-    constructor(dependenciesDependingOnSupportLibs: LinkedHashMap<String, FullDependencyPath>) :
-            this(CURRENT_VERSION, dependenciesDependingOnSupportLibs)
-
     fun isEmpty() = dependenciesDependingOnSupportLibs.isEmpty()
 
     fun getDisplayString(): String {
         return dependenciesDependingOnSupportLibs.map { (directDependency, fullDependencyPath) ->
             "$directDependency (${fullDependencyPath.getPathString()})"
         }.joinToString("\n")
-    }
-
-    companion object {
-
-        private val gson by lazy { GsonBuilder().setPrettyPrinting().create() }
-
-        fun save(result: CheckJetifierResult, resultFile: File) {
-            resultFile.writeText(gson.toJson(result))
-        }
-
-        /**
-         * Loads [CheckJetifierResult] from a file, potentially throwing an exception if the data
-         * can't be read (e.g., if the file does not exist or if the data format has changed
-         * in an incompatible way).
-         *
-         * IMPORTANT: The caller of this method should ensure that the file exists and be prepared
-         * to handle exceptions caused by data incompatibility.
-         */
-        fun load(resultFile: File): CheckJetifierResult {
-            return gson
-                .fromJson(resultFile.readText(), DeserializedCheckJetifierResult::class.java)
-                .toOriginal()
-        }
-
-        fun aggregateResults(
-            first: CheckJetifierResult,
-            second: CheckJetifierResult
-        ): CheckJetifierResult {
-            val combinedResult =
-                LinkedHashMap<String, FullDependencyPath>(
-                    first.dependenciesDependingOnSupportLibs.size + second.dependenciesDependingOnSupportLibs.size
-                )
-            // If a key exists in both map, keep only one value (see `CheckJetifierResult`'s kdoc).
-            for (key in first.dependenciesDependingOnSupportLibs.keys + second.dependenciesDependingOnSupportLibs.keys) {
-                val firstValue = first.dependenciesDependingOnSupportLibs[key]
-                val secondValue = second.dependenciesDependingOnSupportLibs[key]
-                // Compare values to get a deterministic merge
-                if (firstValue == null ||
-                    secondValue != null && firstValue.getPathString() > secondValue.getPathString()
-                ) {
-                    combinedResult[key] = secondValue!!
-                } else {
-                    combinedResult[key] = firstValue
-                }
-            }
-            return CheckJetifierResult(combinedResult)
-        }
     }
 }
 
@@ -169,6 +190,17 @@ data class DependencyPath(val elements: List<String>) {
     }
 
     fun getPathString() = elements.joinToString(" -> ")
+}
+
+data class CheckJetiferResultFile(
+    val version: Double = VERSION,
+    val resultData: CheckJetifierResult
+) {
+
+    companion object {
+
+        const val VERSION: Double = 2.0
+    }
 }
 
 /**
@@ -235,23 +267,9 @@ class RequiredFieldMissingException(
     field: String
 ) : RuntimeException("Required field '$field' was missing when deserializing object of type '${clazz.name}'")
 
-private class DeserializedCheckJetifierResult(
-    private val version: Double? = null,
-    private val dependenciesDependingOnSupportLibs: LinkedHashMap<String, DeserializedFullDependencyPath>? = null,
-) : Deserialized<CheckJetifierResult> {
-
-    override fun toOriginal(): CheckJetifierResult {
-        checkNotNull(version) {
-            throw RequiredFieldMissingException(DeserializedCheckJetifierResult::class.java, "version")
-        }
-        checkNotNull(dependenciesDependingOnSupportLibs) {
-            throw RequiredFieldMissingException(DeserializedCheckJetifierResult::class.java, "dependenciesDependingOnSupportLibs")
-        }
-        return CheckJetifierResult(
-            version,
-            dependenciesDependingOnSupportLibs.mapValuesTo(LinkedHashMap()) { it.value.toOriginal() })
-    }
-}
+class UnknownFileVersionException(
+    version: Double?
+) : RuntimeException("Unknown version '$version' met when deserializing checkJetifier result file.")
 
 private class DeserializedFullDependencyPath(
     private val projectPath: String? = null,
@@ -272,4 +290,52 @@ private class DeserializedDependencyPath(private val elements: List<String>? = n
 
     override fun toOriginal() = elements?.let { DependencyPath(it) }
         ?: throw RequiredFieldMissingException(DeserializedDependencyPath::class.java, "elements")
+}
+
+private data class DeserializedCheckJetifierResultFile(
+    private var version: Double? = null,
+    private var dependenciesDependingOnSupportLibs: Map<String, DeserializedFullDependencyPath>? = null,
+    private var resultData: DeserializedCheckJetifierResultV2? = null,
+) : Deserialized<CheckJetiferResultFile> {
+
+    override fun toOriginal(): CheckJetiferResultFile {
+        val resultData = when (version) {
+            1.0 -> convertFromV1Format()
+            2.0 -> convertFromV2Format()
+            else -> throw UnknownFileVersionException(version)
+        }
+        return CheckJetiferResultFile(version!!, resultData)
+    }
+
+    private fun convertFromV2Format(): CheckJetifierResult {
+        return resultData?.toOriginal() ?: throw RequiredFieldMissingException(
+            DeserializedCheckJetifierResultFile::class.java,
+            "resultData"
+        )
+    }
+
+    private fun convertFromV1Format(): CheckJetifierResult {
+        return dependenciesDependingOnSupportLibs?.let {
+            CheckJetifierResult(it.mapValues { listOf(it.value.toOriginal()) }.toSortedMap())
+        } ?: throw RequiredFieldMissingException(
+            DeserializedCheckJetifierResultFile::class.java,
+            "dependenciesDependingOnSupportLibs"
+        )
+    }
+}
+
+private class DeserializedCheckJetifierResultV2(
+    private val dependenciesDependingOnSupportLibs: Map<String, List<DeserializedFullDependencyPath>>? = null
+) : Deserialized<CheckJetifierResult> {
+
+    override fun toOriginal(): CheckJetifierResult {
+        return dependenciesDependingOnSupportLibs?.let {
+            CheckJetifierResult(
+                it.mapValues { (_, paths) -> paths.map { it.toOriginal() } }.toSortedMap()
+            )
+        } ?: throw RequiredFieldMissingException(
+            DeserializedCheckJetifierResultV2::class.java,
+            "dependenciesDependingOnSupportLibs"
+        )
+    }
 }

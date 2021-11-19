@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.ide.common.attribution.CheckJetifierResult
+import com.android.ide.common.attribution.CheckJetifierProjectResult
 import com.android.ide.common.attribution.DependencyPath
 import com.android.ide.common.attribution.FullDependencyPath
 import org.gradle.api.artifacts.Configuration
@@ -115,7 +115,7 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
         checkJetifierBuildService.get().addResult(result)
     }
 
-    private fun detect(): CheckJetifierResult {
+    private fun detect(): CheckJetifierProjectResult {
         val dependenciesDependingOnSupportLibs = LinkedHashMap<String, FullDependencyPath>()
         val resolveFirstNames = configurationToResolveFirst.get()
         val (handleFirst, theRest) = project.configurations.toList()
@@ -124,7 +124,7 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
         val handler = { configuration: Configuration ->
             for (pathToSupportLib in ConfigurationAnalyzer(configuration).findPathsToSupportLibs()) {
                 val directDependency = pathToSupportLib.elements.first()
-                // Store only one path, see `CheckJetifierResult`'s kdoc
+                // Store only one path, see `CheckJetifierProjectResult`'s kdoc
                 dependenciesDependingOnSupportLibs.computeIfAbsent(directDependency) {
                     FullDependencyPath(project.path, configuration.name, pathToSupportLib)
                 }
@@ -132,10 +132,10 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
         }
         handleFirst.forEach { handler(it) }
         theRest.forEach { handler(it) }
-        return CheckJetifierResult(dependenciesDependingOnSupportLibs)
+        return CheckJetifierProjectResult(dependenciesDependingOnSupportLibs)
     }
 
-    private fun reportToConsole(result: CheckJetifierResult) {
+    private fun reportToConsole(result: CheckJetifierProjectResult) {
         if (result.isEmpty()) {
             logger.quiet(
                 "Project '${project.path}' does not use any legacy support libraries." +

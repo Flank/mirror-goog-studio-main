@@ -160,9 +160,13 @@ class CheckJetifierTaskTest {
         val result = CheckJetifierResult.load(resultFile)
         assertThat(result.getDisplayString()).isEqualTo(
             """
-            example:A:1.0 (Project ':app', configuration 'debugAndroidTestCompileClasspath' -> example:A:1.0 -> example:B:1.0 -> com.android.support:support-annotations:28.0.0)
-            com.android.support:collections:28.0.0 (Project ':app', configuration 'debugAndroidTestCompileClasspath' -> com.android.support:collections:28.0.0)
-            example:B:1.0 (Project ':lib', configuration 'debugAndroidTestCompileClasspath' -> example:B:1.0 -> com.android.support:support-annotations:28.0.0)
+            com.android.support:collections:28.0.0
+                Project ':app', configuration 'debugAndroidTestCompileClasspath' -> com.android.support:collections:28.0.0
+                Project ':lib', configuration 'debugAndroidTestCompileClasspath' -> com.android.support:collections:28.0.0
+            example:A:1.0
+                Project ':app', configuration 'debugAndroidTestCompileClasspath' -> example:A:1.0 -> example:B:1.0 -> com.android.support:support-annotations:28.0.0
+            example:B:1.0
+                Project ':lib', configuration 'debugAndroidTestCompileClasspath' -> example:B:1.0 -> com.android.support:support-annotations:28.0.0
             """.trimIndent()
         )
     }

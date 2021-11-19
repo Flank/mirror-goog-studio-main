@@ -38,16 +38,20 @@ class CheckJetifierResultTest {
 
     private fun createSampleResult(): CheckJetifierResult {
         return CheckJetifierResult(
-            LinkedHashMap<String, FullDependencyPath>().apply {
-                put(
-                    "example:A:1.0",
+            sortedMapOf(
+                "example:A:1.0" to listOf(
                     FullDependencyPath(
-                        "myProject",
+                        "myProject1",
+                        "myConfiguration",
+                        DependencyPath(listOf("example:A:1.0", "example:B:1.0"))
+                    ),
+                    FullDependencyPath(
+                        "myProject2",
                         "myConfiguration",
                         DependencyPath(listOf("example:A:1.0", "example:B:1.0"))
                     )
                 )
-            }
+            )
         )
     }
 
@@ -59,17 +63,31 @@ class CheckJetifierResultTest {
         assertThat(resultFile.readText()).isEqualTo(
             """
             {
-              "version": 1.0,
-              "dependenciesDependingOnSupportLibs": {
-                "example:A:1.0": {
-                  "projectPath": "myProject",
-                  "configuration": "myConfiguration",
-                  "dependencyPath": {
-                    "elements": [
-                      "example:A:1.0",
-                      "example:B:1.0"
-                    ]
-                  }
+              "version": 2.0,
+              "resultData": {
+                "dependenciesDependingOnSupportLibs": {
+                  "example:A:1.0": [
+                    {
+                      "projectPath": "myProject1",
+                      "configuration": "myConfiguration",
+                      "dependencyPath": {
+                        "elements": [
+                          "example:A:1.0",
+                          "example:B:1.0"
+                        ]
+                      }
+                    },
+                    {
+                      "projectPath": "myProject2",
+                      "configuration": "myConfiguration",
+                      "dependencyPath": {
+                        "elements": [
+                          "example:A:1.0",
+                          "example:B:1.0"
+                        ]
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -87,6 +105,36 @@ class CheckJetifierResultTest {
     }
 
     @Test
+    fun `test deserialization of version 1_0`() {
+        resultFile.writeText(
+            """
+            {
+              "version": 1.0,
+              "dependenciesDependingOnSupportLibs": {
+                "example:A:1.0":
+                  {
+                    "projectPath": "myProject1",
+                    "configuration": "myConfiguration",
+                    "dependencyPath": {
+                      "elements": [
+                        "example:A:1.0",
+                        "example:B:1.0"
+                      ]
+                    }
+                  }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val deserializedResult = CheckJetifierResult.load(resultFile)
+        assertThat(deserializedResult.getDisplayString()).isEqualTo("""
+            example:A:1.0
+                Project 'myProject1', configuration 'myConfiguration' -> example:A:1.0 -> example:B:1.0
+                """.trimIndent())
+    }
+
+    @Test
     fun `test deserialization where an optional field is missing`() {
         val result = createSampleResult()
         CheckJetifierResult.save(result, resultFile)
@@ -95,7 +143,11 @@ class CheckJetifierResultTest {
 
         val deserializedResult = CheckJetifierResult.load(resultFile)
         assertThat(deserializedResult.getDisplayString())
-            .isEqualTo("example:A:1.0 (Project 'myProject', configuration 'Unknown' -> example:A:1.0 -> example:B:1.0)")
+            .isEqualTo("""
+                example:A:1.0
+                    Project 'myProject1', configuration 'Unknown' -> example:A:1.0 -> example:B:1.0
+                    Project 'myProject2', configuration 'Unknown' -> example:A:1.0 -> example:B:1.0
+                    """.trimIndent())
     }
 
     @Test
