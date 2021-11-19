@@ -666,6 +666,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 }
             }
 
+            if (overridesUnannotatedPlatformMethod(node)) {
+                return
+            }
+
             val location: Location =
                 when (node) {
                     is UVariable -> // UParameter, UField
@@ -711,6 +715,53 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     .build()
             )
             context.report(PLATFORM_NULLNESS, node as UElement, location, message, fix)
+        }
+
+        private fun overridesUnannotatedPlatformMethod(node: UDeclaration): Boolean {
+            if (node is UParameter) {
+                val method = node.getParentOfType(UMethod::class.java)
+                if (method != null && !method.isConstructor) {
+                    val superMethod = method.findRootMethod() ?: return false
+                    val superParameters = superMethod.parameterList.parameters
+                    val parameterIndex = method.uastParameters.indexOf(node)
+                    if (parameterIndex >= 0 && parameterIndex < superParameters.size) {
+                        if (isPlatformMethod(superMethod) && !hasNullnessAnnotation(superParameters[parameterIndex])) {
+                            return true
+                        }
+                    }
+                    return false
+
+                }
+            } else if (node is UMethod && !node.isConstructor) {
+                val superMethod = node.findRootMethod() ?: return false
+                if (isPlatformMethod(superMethod) && !hasNullnessAnnotation(superMethod)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        private fun UMethod.findRootMethod(): PsiMethod? {
+            var superMethod = javaPsi.findSuperMethods().firstOrNull() ?: return null
+            while (true) {
+                superMethod = superMethod.findSuperMethods().firstOrNull() ?: return superMethod
+            }
+        }
+
+        private fun isPlatformMethod(method: PsiMethod): Boolean {
+            val containingClass = method.containingClass ?: return false
+            val name = containingClass.qualifiedName ?: return false
+            return name.startsWith("android.") || name.startsWith("java.")
+        }
+
+        private fun hasNullnessAnnotation(corresponding: PsiModifierListOwner): Boolean {
+            for (annotation in context.evaluator.getAllAnnotations(corresponding, false)) {
+                val name = annotation.qualifiedName ?: continue
+                if (isNullableAnnotation(name) || isNonNullAnnotation(name)) {
+                    return true
+                }
+            }
+            return false
         }
 
         private fun isEqualsParameter(node: UDeclaration): Boolean {

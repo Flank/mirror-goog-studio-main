@@ -1105,4 +1105,62 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             ).indented(),
         ).run().expectClean()
     }
+
+    fun testOverridePlatform() {
+        // Regression test for 206454502: UnknownNullness check shouldn't trigger on overrides of un-annotated platform APIs
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.util.AttributeSet;
+                import android.view.View;
+                import android.view.ViewGroup;
+
+                public abstract class MyView extends ViewGroup {
+                    public MyView() {
+                        super(null);
+                    }
+
+                    @Override
+                    public void addView(View child) {
+                        if (getChildCount() > 0) {
+                            throw new IllegalStateException("ScrollView can host only one direct child");
+                        }
+
+                        super.addView(child);
+                    }
+
+                    public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
+                        throw new RuntimeException("Stub!");
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import android.util.AttributeSet;
+                import android.view.View;
+                import android.view.ViewGroup;
+
+                public abstract class MyIndirectView extends MyView {
+                    @Override
+                    public void addView(View child) {
+                        if (getChildCount() > 0) {
+                            throw new IllegalStateException("ScrollView can host only one direct child");
+                        }
+
+                        super.addView(child);
+                    }
+
+                    public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
+                        throw new RuntimeException("Stub!");
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }
