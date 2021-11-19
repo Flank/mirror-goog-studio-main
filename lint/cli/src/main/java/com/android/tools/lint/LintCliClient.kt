@@ -967,11 +967,50 @@ open class LintCliClient : LintClient {
     }
 
     override fun report(context: Context, incident: Incident, constraint: Constraint) {
-        incident.clientProperties = LintMap().put(KEY_CONDITION, constraint)
-        provisionalIncidents.add(incident)
+        if (driver.mode == LintDriver.DriverMode.MERGE) {
+            // Constraints were intended to be used when you are analyzing
+            // a module and storing constraints for later automatic filtering by
+            // lint. But there's really no reason why we can't also support
+            // them during the merge phase, so process them here.
+            if (constraint.accept(context, incident)) {
+                context.report(incident)
+            }
+        } else {
+            incident.clientProperties = LintMap().put(KEY_CONDITION, constraint)
+            provisionalIncidents.add(incident)
+        }
     }
 
     override fun report(context: Context, incident: Incident, map: LintMap) {
+        if (driver.mode == LintDriver.DriverMode.MERGE) {
+            // Unlike report(Incident, Constraint) it's definitely always an
+            // error to attempt to store more state during merging, so flag
+            // these for developers.
+            val (detector, issues) = Context.findCallingDetector(driver)
+                ?: error("Unexpected call to report(Incident, LintMap) during the merge phase")
+            val stack = StringBuilder()
+            LintDriver.appendStackTraceSummary(RuntimeException(), stack, skipFrames = 1, maxFrames = 20)
+            val message =
+                """
+                The lint detector
+                    `$detector`
+                called `${"report(Incident, LintMap)"}` during the merge phase.
+
+                This does not work correctly; this is already the merge phase, so storing
+                data for later processing is pointless and probably not what was intended.
+
+                ${issues.joinToString(separator = ",") { "\"$it\"" }}
+                """.trimIndent() + "\nCall stack: $stack"
+            report(
+                client = driver.client,
+                issue = IssueRegistry.LINT_ERROR,
+                message = message,
+                location = Location.create(incident.file),
+                project = incident.project,
+                driver = driver
+            )
+        }
+
         incident.clientProperties = map
         provisionalIncidents.add(incident)
     }
