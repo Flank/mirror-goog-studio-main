@@ -183,6 +183,18 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // folder for the blame report on the merged resources
     object MERGED_RES_BLAME_FOLDER: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // folder for the incremental support.
+    object MERGED_RES_INCREMENTAL_FOLDER: InternalArtifactType<Directory>(DIRECTORY,
+        Category.INTERMEDIATES,
+        "incremental",
+    ), Replaceable
+
+    object GENERATED_PNGS_RES: InternalArtifactType<Directory>(
+        DIRECTORY,
+        Category.GENERATED,
+        "res/pngs",
+    ), Replaceable
+
     // File containing map between a source set identifier and an absolute resource sourceset path
     // for generating absolute paths in resource linking error messages.
     object SOURCE_SET_PATH_MAP: InternalArtifactType<RegularFile>(FILE), Replaceable

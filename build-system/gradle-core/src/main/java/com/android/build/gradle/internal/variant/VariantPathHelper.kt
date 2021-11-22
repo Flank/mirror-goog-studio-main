@@ -49,9 +49,6 @@ class VariantPathHelper(
     fun reportsDir(vararg subDirs: String): Provider<Directory> =
         getBuildSubDir(BuilderConstants.FD_REPORTS, subDirs)
 
-    val generatedPngsOutputDir: Provider<Directory>
-            by lazy { getGeneratedResourcesDir("pngs") }
-
     val buildConfigSourceOutputDir: Provider<Directory>
             by lazy { generatedDir("source", "buildConfig", variantDslInfo.dirName) }
 
@@ -131,7 +128,7 @@ class VariantPathHelper(
         return intermediatesDir("incremental", name).get().asFile
     }
 
-    internal fun getGeneratedResourcesDir(name: String): Provider<Directory> {
+    fun getGeneratedResourcesDir(name: String): Provider<Directory> {
         val dirs: List<String> =
             listOf("res", name) + variantDslInfo.directorySegments.filterNotNull()
         return generatedDir(*dirs.toTypedArray())

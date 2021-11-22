@@ -23,18 +23,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.work.Incremental
 import java.io.File
 
 /**
@@ -54,10 +49,10 @@ abstract class SourceSetInputs {
     abstract val renderscriptResOutputDir: DirectoryProperty
 
     @get:Internal
-    abstract val mergeResourcesOutputDir: Property<String>
+    abstract val mergeResourcesOutputDir: DirectoryProperty
 
     @get:Internal
-    abstract val incrementalMergedDir: Property<String>
+    abstract val incrementalMergedDir: DirectoryProperty
 
     @get:Internal
     abstract val localResources: MapProperty<String, FileCollection>
@@ -70,8 +65,8 @@ abstract class SourceSetInputs {
 
     fun initialise(
         creationConfig: ComponentCreationConfig,
-        mergeResourcesTask: MergeResources,
-        includeDependencies: Boolean = true) {
+        includeDependencies: Boolean = true
+    ) {
         val androidResources = creationConfig.variantData.androidResources
         localResources.setDisallowChanges(androidResources)
         resourceSourceSets.setFrom(androidResources.values)
@@ -90,13 +85,12 @@ abstract class SourceSetInputs {
                 ).artifactFiles
             )
         }
-        if (mergeResourcesTask.outputDir.isPresent) {
-            mergeResourcesOutputDir.setDisallowChanges(
-                    creationConfig.artifacts.getOutputPath(InternalArtifactType.MERGED_RES).path)
-        }
-        mergeResourcesTask.incrementalFolder.get().asFile.let {
-            incrementalMergedDir.setDisallowChanges(it.absolutePath)
-        }
+        mergeResourcesOutputDir.setDisallowChanges(
+            creationConfig.artifacts.get(InternalArtifactType.MERGED_RES))
+
+        incrementalMergedDir.setDisallowChanges(
+            creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER)
+        )
     }
 
     fun listConfigurationSourceSets(additionalSourceSets: List<String>): List<File> {
@@ -111,9 +105,9 @@ abstract class SourceSetInputs {
             .plus(additionalSourceSets.map(::File)).toList()
     }
 
-    private fun getPathIfPresentOrNull(property: Property<String>, paths: List<String>) : String? {
+    private fun getPathIfPresentOrNull(property: Provider<Directory>, paths: List<String>) : String? {
         return if (property.isPresent && property.orNull != null) {
-            FileUtils.join(listOf(property.get()) + paths)
+            FileUtils.join(listOf(property.get().asFile.absolutePath) + paths)
         } else {
             null
         }

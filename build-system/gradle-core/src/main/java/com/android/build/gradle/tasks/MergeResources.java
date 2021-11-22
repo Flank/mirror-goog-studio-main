@@ -947,9 +947,27 @@ public abstract class MergeResources extends NewIncrementalTask {
                         .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE);
             }
 
-            VariantPathHelper paths = creationConfig.getPaths();
-            artifacts.setInitialProvider(taskProvider, MergeResources::getGeneratedPngsOutputDir)
-                    .atLocation(mergeResources -> paths.getGeneratedPngsOutputDir());
+            // use public API instead of setInitialProvider to ensure that the task name is embedded
+            // in the created directory path.
+            artifacts
+                    .use(taskProvider)
+                    .wiredWith(MergeResources::getIncrementalFolder)
+                    .toCreate(InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER.INSTANCE);
+
+            VectorDrawablesOptions vectorDrawablesOptions =
+                    creationConfig.getVariantDslInfo().getVectorDrawables();
+            boolean disableVectorDrawables = !processVectorDrawables
+                    || vectorDrawablesOptions.getGeneratedDensities() == null;
+            if (!disableVectorDrawables) {
+                artifacts.setInitialProvider(
+                        taskProvider, MergeResources::getGeneratedPngsOutputDir
+                ).atLocation(creationConfig.getPaths()
+                                .getGeneratedResourcesDir("pngs")
+                                .get()
+                                .getAsFile()
+                                .getAbsolutePath())
+                        .on(InternalArtifactType.GENERATED_PNGS_RES.INSTANCE);
+            }
         }
 
         @Override
@@ -957,7 +975,6 @@ public abstract class MergeResources extends NewIncrementalTask {
             super.configure(task);
 
             VariantScope variantScope = creationConfig.getVariantScope();
-            VariantPathHelper paths = creationConfig.getPaths();
 
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getNamespace(), creationConfig.getNamespace());
@@ -968,7 +985,6 @@ public abstract class MergeResources extends NewIncrementalTask {
                                             () -> creationConfig.getMinSdkVersion().getApiLevel()));
             task.getMinSdk().disallowChanges();
 
-            task.getIncrementalFolder().set(paths.getIncrementalDir(getName()));
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
 
@@ -989,9 +1005,6 @@ public abstract class MergeResources extends NewIncrementalTask {
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
             task.resourcesComputer = new DependencyResourcesComputer();
-            if (!task.disableVectorDrawables) {
-                task.getGeneratedPngsOutputDir().set(paths.getGeneratedPngsOutputDir());
-            }
             ArtifactCollection libraryArtifacts =
                     includeDependencies
                             ? creationConfig
@@ -1006,7 +1019,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                                     creationConfig
                                             .getArtifacts()
                                             .get(InternalArtifactType.MICRO_APK_RES.INSTANCE));
-            task.getSourceSetInputs().initialise(creationConfig, task, includeDependencies);
+            task.getSourceSetInputs().initialise(creationConfig, includeDependencies);
             if (includeDependencies) {
                 task.getLibrarySourceSets()
                         .setFrom(task.getSourceSetInputs().getLibrarySourceSets());

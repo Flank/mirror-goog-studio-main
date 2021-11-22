@@ -429,6 +429,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             "build",
             "intermediates",
             "incremental",
+            "debug",
             "mergeDebugResources",
             "merged.dir",
             "values",
