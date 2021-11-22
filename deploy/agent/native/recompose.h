@@ -40,8 +40,17 @@ class Recompose {
   // Load state for Jetpack Compose after activity restart.
   void LoadStateAndCompose(jobject reloader, jobject state) const;
 
+  // Load state for Jetpack Compose after activity restart.
+  // Reference to the error string is changed to the error message or
+  // empty string should there be no error messages.
+  bool InvalidateGroupsWithKey(jobject reloader, jstring className,
+                               jint offsetStart, jint offsetEnd,
+                               std::string& error) const;
+
   // Create ComposeHotReload object if needed.
   jobject GetComposeHotReload() const;
+
+  static const char* kComposeSupportClass;
 
  private:
   jvmtiEnv* jvmti_;

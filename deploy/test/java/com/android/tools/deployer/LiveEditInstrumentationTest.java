@@ -73,6 +73,34 @@ public class LiveEditInstrumentationTest extends AgentTestBase {
         Assert.assertEquals(Deploy.LiveEditResponse.Status.OK, response.getStatus());
     }
 
+    // TODO: Move this out of this class or rename this class's name to be something that
+    //       is more general.
+    @Test
+    public void testFunctionRecompose() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        Deploy.LiveEditClass clazz =
+                Deploy.LiveEditClass.newBuilder()
+                        .setClassName("pkg/LiveEditRecomposeTarget")
+                        .build();
+        Deploy.LiveEditRequest request =
+                Deploy.LiveEditRequest.newBuilder()
+                        .setTargetClass(clazz)
+                        .setComposable(true)
+                        .setStartOffset(1234)
+                        .setEndOffset(12340)
+                        .setPackageName(PACKAGE)
+                        .build();
+
+        installer.update(request);
+        Deploy.LiveEditResponse response = installer.getLiveEditResponse();
+        Assert.assertEquals(Deploy.LiveEditResponse.Status.OK, response.getStatus());
+
+        Assert.assertTrue(
+                android.waitForInput("invalidateGroupsWithKey(1122)", RETURN_VALUE_TIMEOUT));
+    }
+
     protected static class LiveEditClient extends InstallServerTestClient {
         protected LiveEditClient(FakeAndroidDriver android, TemporaryFolder messageDir) {
             super(android, messageDir);

@@ -58,21 +58,34 @@ public class LiveUpdateDeployer {
 
     /** Inputs for Live Edit updates. */
     public static class UpdateLiveEditsParam {
-        final String className;
-        final String methodName;
-        final String methodDesc;
-        final byte[] classData;
-        final Map<String, byte[]> supportClasses;
+        public final String className;
+        public final String methodName;
+        public final String methodDesc;
+        public final boolean isComposable;
+        public final int startOffSet;
+        public final int endOffSet;
+        public final byte[] classData;
+        public final Map<String, byte[]> supportClasses;
 
+        /**
+         * @param startOffSet The starting PSI index of that function node.
+         * @param endOffSet The ending PSI index of that function node.
+         */
         public UpdateLiveEditsParam(
                 String className,
                 String methodName,
                 String methodDesc,
+                boolean isComposable,
+                int startOffSet,
+                int endOffSet,
                 byte[] classData,
                 Map<String, byte[]> supportClasses) {
             this.className = className;
             this.methodName = methodName;
             this.methodDesc = methodDesc;
+            this.isComposable = isComposable;
+            this.startOffSet = startOffSet;
+            this.endOffSet = endOffSet;
             this.classData = classData;
             this.supportClasses = supportClasses;
         }

@@ -98,8 +98,25 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
   Recompose recompose(jvmti, jni);
   jobject reloader = recompose.GetComposeHotReload();
   if (reloader) {
-    jobject state = recompose.SaveStateAndDispose(reloader);
-    recompose.LoadStateAndCompose(reloader, state);
+    // This is a temp solution. If the new compose flag is set, we would
+    // use the new recompose API. Otherwise we just recompose everything.
+
+    // When the recompose API is stable, we will only call the new API
+    // and never call whole program recompose.
+    if (req.composable()) {
+      std::string error = "";
+      bool result = recompose.InvalidateGroupsWithKey(
+          reloader, jni->NewStringUTF(target_class.class_name().c_str()),
+          req.start_offset(), req.end_offset(), error);
+      if (!result) {
+        Log::E("%s", error.c_str());
+        resp.set_status(proto::LiveEditResponse::ERROR);
+        return resp;
+      }
+    } else {
+      jobject state = recompose.SaveStateAndDispose(reloader);
+      recompose.LoadStateAndCompose(reloader, state);
+    }
   }
 
   resp.set_status(proto::LiveEditResponse::OK);
