@@ -53,8 +53,8 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    val renderscriptResOutputDir: Property<String>
-        get() = sourceSetInputs.renderscriptResOutputDir
+    val renderscriptResOutputDir: Provider<String>
+        get() = sourceSetInputs.renderscriptResOutputDir.map { it.asFile.absolutePath }
 
     @get:Input
     @get:Optional

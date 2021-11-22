@@ -215,7 +215,6 @@ abstract class BaseVariantData(
     val allRawAndroidResources: FileCollection by lazy {
         val allRes: ConfigurableFileCollection = services.fileCollection().builtBy(
             listOfNotNull(
-                taskContainer.renderscriptCompileTask,
                 taskContainer.generateResValuesTask,
                 taskContainer.generateApkDataTask,
                 extraGeneratedResFolders.builtBy
@@ -234,7 +233,7 @@ abstract class BaseVariantData(
 
         allRes.from(
             services.fileCollection(
-                paths.renderscriptResOutputDir,
+                artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES),
                 artifacts.get(InternalArtifactType.GENERATED_RES),
                 extraGeneratedResFolders
             )

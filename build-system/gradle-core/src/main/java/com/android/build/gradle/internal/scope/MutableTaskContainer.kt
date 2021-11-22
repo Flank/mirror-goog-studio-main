@@ -53,7 +53,10 @@ import org.gradle.api.tasks.compile.JavaCompile
  */
 class MutableTaskContainer : TaskContainer {
 
-    // implementation of the API setter/getters as required by our current APIs.
+    // implementation of the API setter/getters as required by our old Variant APIs.
+    //
+    // DO NOT USE THESE GETTERS FOR TASK CONFIGURATION, USE ARTIFACTS INSTEAD
+    //
     override lateinit var assembleTask: TaskProvider<out Task>
     override lateinit var javacTask: TaskProvider<out JavaCompile>
     override lateinit var compileTask: TaskProvider<out Task>

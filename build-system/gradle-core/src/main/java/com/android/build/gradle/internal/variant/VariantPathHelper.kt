@@ -52,9 +52,6 @@ class VariantPathHelper(
     val generatedPngsOutputDir: Provider<Directory>
             by lazy { getGeneratedResourcesDir("pngs") }
 
-    val renderscriptResOutputDir: Provider<Directory>
-            by lazy { getGeneratedResourcesDir("rs") }
-
     val buildConfigSourceOutputDir: Provider<Directory>
             by lazy { generatedDir("source", "buildConfig", variantDslInfo.dirName) }
 

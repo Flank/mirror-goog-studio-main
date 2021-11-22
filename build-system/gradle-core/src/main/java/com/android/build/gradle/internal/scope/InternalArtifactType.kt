@@ -286,6 +286,11 @@ InternalArtifactType<T : FileSystemLocation>(
     object RENDERSCRIPT_SOURCE_OUTPUT_DIR: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
     // renderscript library
     object RENDERSCRIPT_LIB: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // renderscript generated res
+    object RENDERSCRIPT_GENERATED_RES: InternalArtifactType<Directory>(
+        DIRECTORY,
+        Category.GENERATED,
+        "res/rs"), Replaceable
 
     // An output of AndroidManifest.xml check.
     // REMOVE ME (bug 139855995): This artifact can be removed in the new variant API, we haven't

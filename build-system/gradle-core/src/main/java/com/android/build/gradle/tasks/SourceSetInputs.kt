@@ -51,7 +51,7 @@ abstract class SourceSetInputs {
     abstract val generatedResDir: DirectoryProperty
 
     @get:Internal
-    abstract val renderscriptResOutputDir: Property<String>
+    abstract val renderscriptResOutputDir: DirectoryProperty
 
     @get:Internal
     abstract val mergeResourcesOutputDir: Property<String>
@@ -72,14 +72,13 @@ abstract class SourceSetInputs {
         creationConfig: ComponentCreationConfig,
         mergeResourcesTask: MergeResources,
         includeDependencies: Boolean = true) {
-        val paths = creationConfig.paths
         val androidResources = creationConfig.variantData.androidResources
         localResources.setDisallowChanges(androidResources)
         resourceSourceSets.setFrom(androidResources.values)
         generatedResDir.setDisallowChanges(
             creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES))
         renderscriptResOutputDir.setDisallowChanges(
-            paths.renderscriptResOutputDir.map { it.asFile.absolutePath})
+            creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES))
         extraGeneratedResDir.setFrom(
             creationConfig.variantData.extraGeneratedResFolders)
         if (includeDependencies) {

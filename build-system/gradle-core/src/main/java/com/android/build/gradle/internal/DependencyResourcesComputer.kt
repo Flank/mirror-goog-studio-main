@@ -17,10 +17,6 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.build.gradle.tasks.SourceSetInputs
@@ -28,10 +24,10 @@ import com.android.builder.core.BuilderConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
 import java.io.File
 
 class DependencyResourcesComputer {
@@ -40,9 +36,6 @@ class DependencyResourcesComputer {
 
     @set:VisibleForTesting
     var libraries: ArtifactCollection? = null
-
-    @set:VisibleForTesting
-    lateinit var renderscriptResOutputDir: FileCollection
 
     @set:VisibleForTesting
     lateinit var generatedResOutputDir: FileCollection
@@ -98,7 +91,10 @@ class DependencyResourcesComputer {
      */
     @JvmOverloads
     fun compute(
-        precompileDependenciesResources: Boolean = false, aaptEnv: String?): List<ResourceSet> {
+        precompileDependenciesResources: Boolean = false,
+        aaptEnv: String?,
+        renderscriptResOutputDir: Provider<Directory>
+    ): List<ResourceSet> {
         val sourceFolderSets = getResSet(resources, aaptEnv)
         var size = sourceFolderSets.size
         libraries?.let {
@@ -120,7 +116,9 @@ class DependencyResourcesComputer {
         // We add the generated folders to the main set
         val generatedResFolders = mutableListOf<File>()
 
-        generatedResFolders.addAll(renderscriptResOutputDir.files)
+        if (renderscriptResOutputDir.isPresent) {
+            generatedResFolders.add(renderscriptResOutputDir.get().asFile)
+        }
 
         generatedResFolders.addAll(generatedResOutputDir.files)
 
@@ -170,8 +168,6 @@ class DependencyResourcesComputer {
         resources = sourceSetInputs.localResources.forUseAtConfigurationTime().get()
 
         extraGeneratedResFolders = sourceSetInputs.extraGeneratedResDir
-        renderscriptResOutputDir = services.fileCollection(
-            File(sourceSetInputs.renderscriptResOutputDir.forUseAtConfigurationTime().get()))
 
         generatedResOutputDir = if (sourceSetInputs.generatedResDir.isPresent) {
             services.fileCollection(sourceSetInputs.generatedResDir)

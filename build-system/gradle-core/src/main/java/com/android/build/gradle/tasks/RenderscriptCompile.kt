@@ -24,6 +24,8 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_GENERATED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.services.getBuildService
@@ -309,6 +311,12 @@ abstract class RenderscriptCompile : NdkTask() {
                 taskProvider,
                 RenderscriptCompile::libOutputDir
             ).withName("lib").on(RENDERSCRIPT_LIB)
+
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                RenderscriptCompile::resOutputDir
+            ).atLocation(creationConfig.paths.getGeneratedResourcesDir("rs").get().asFile.absolutePath)
+                .on(RENDERSCRIPT_GENERATED_RES)
         }
 
         override fun configure(
@@ -332,7 +340,6 @@ abstract class RenderscriptCompile : NdkTask() {
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
 
-            task.resOutputDir.setDisallowChanges(creationConfig.paths.renderscriptResOutputDir)
             task.objOutputDir = creationConfig.paths.renderscriptObjOutputDir
 
             task.ndkConfig = variantDslInfo.ndkConfig

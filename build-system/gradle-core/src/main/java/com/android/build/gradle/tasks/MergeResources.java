@@ -221,6 +221,11 @@ public abstract class MergeResources extends NewIncrementalTask {
     public abstract DirectoryProperty getGeneratedResDir();
 
     @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract DirectoryProperty getRenderscriptGeneratedResDir();
+
+    @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getExtraGeneratedResDir();
 
@@ -768,7 +773,10 @@ public abstract class MergeResources extends NewIncrementalTask {
         // back to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
         if (processedInputs == null) {
-            processedInputs = resourcesComputer.compute(precompileDependenciesResources, aaptEnv);
+            processedInputs = resourcesComputer.compute(
+                    precompileDependenciesResources,
+                    aaptEnv,
+                    getRenderscriptGeneratedResDir());
             List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
 
             for (ResourceSet resourceSet : processedInputs) {
@@ -1009,6 +1017,10 @@ public abstract class MergeResources extends NewIncrementalTask {
                                     .getArtifacts()
                                     .get(InternalArtifactType.GENERATED_RES.INSTANCE));
             task.getGeneratedResDir().disallowChanges();
+
+            task.getRenderscriptGeneratedResDir().set(creationConfig.getArtifacts().get(
+                    InternalArtifactType.RENDERSCRIPT_GENERATED_RES.INSTANCE));
+            task.getRenderscriptGeneratedResDir().disallowChanges();
 
             task.getExtraGeneratedResDir()
                     .setFrom(task.getSourceSetInputs().getExtraGeneratedResDir());

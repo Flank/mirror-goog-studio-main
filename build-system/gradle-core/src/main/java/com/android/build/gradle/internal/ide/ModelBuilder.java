@@ -1218,12 +1218,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
         fileCollection.from(component.getVariantData().getExtraGeneratedResFolders());
         if (component.getBuildFeatures().getRenderScript()) {
-            fileCollection.from(component.getPaths().getRenderscriptResOutputDir());
-            TaskProvider<? extends RenderscriptCompile> renderscriptCompileTask =
-                    component.getTaskContainer().getRenderscriptCompileTask();
-            if (renderscriptCompileTask != null) {
-                fileCollection.builtBy(renderscriptCompileTask);
-            }
+            fileCollection.from(component.getArtifacts()
+                    .get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES.INSTANCE));
         }
         if (component.getAndroidResourcesEnabled()) {
             if (component

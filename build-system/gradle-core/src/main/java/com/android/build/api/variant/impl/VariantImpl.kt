@@ -218,7 +218,7 @@ abstract class VariantImpl(
     ) {
         renderscript?.let {
             if (!it.ndkModeEnabled.get()
-                && taskContainer.renderscriptCompileTask != null
+                && artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR).isPresent
             ) {
                 sourceSets.add(
                     TaskProviderBasedDirectoryEntryImpl(
