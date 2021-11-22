@@ -50,9 +50,13 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
      *     }
      * }
      * ```
+     * isTestCoverageEnabled is deprecated. Use enableUnitTestCoverage and
+     * enableAndroidTestCoverage instead which allow you to enable coverage
+     * separately for unit and instrumentation tests.
      */
     @get:Incubating
     @set:Incubating
+    @Deprecated("Replaced with: enableUnitTestCoverage and or enableAndroidTestCoverage.")
     var isTestCoverageEnabled: Boolean
 
     /**
