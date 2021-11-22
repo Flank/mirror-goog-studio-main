@@ -171,7 +171,7 @@ open class TestVariantImpl @Inject constructor(
         get() = variantDslInfo.instrumentationRunnerArguments
 
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isTestCoverageEnabled
+        get() = variantDslInfo.isAndroidTestCoverageEnabled
 
     override val shouldPackageDesugarLibDex: Boolean = delegate.isCoreLibraryDesugaringEnabled(this)
     override val debuggable: Boolean

@@ -409,7 +409,7 @@ abstract class ProguardConfigurableTask(
                 keep("class **.R$* {*;}")
             }
 
-            if (variantDslInfo.isTestCoverageEnabled) {
+            if (variantDslInfo.isAndroidTestCoverageEnabled) {
                 // when collecting coverage, don't remove the JaCoCo runtime
                 keep("class com.vladium.** {*;}")
                 keep("class org.jacoco.** {*;}")

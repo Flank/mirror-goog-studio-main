@@ -69,6 +69,8 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         return name
     }
 
+    abstract override var enableAndroidTestCoverage: Boolean
+
     abstract override var enableUnitTestCoverage: Boolean
 
     abstract var _isDebuggable: Boolean
@@ -235,6 +237,7 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         _shrinkResources = thatBuildType._shrinkResources
         shaders._initWith(thatBuildType.shaders)
         enableUnitTestCoverage = thatBuildType.enableUnitTestCoverage
+        enableAndroidTestCoverage = thatBuildType.enableAndroidTestCoverage
         externalNativeBuildOptions._initWith(thatBuildType.externalNativeBuildOptions)
         _postProcessing.initWith(that.postprocessing)
         isCrunchPngs = thatBuildType.isCrunchPngs

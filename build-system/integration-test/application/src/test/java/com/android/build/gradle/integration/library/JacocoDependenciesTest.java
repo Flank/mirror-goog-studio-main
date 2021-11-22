@@ -29,11 +29,8 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.testutils.apk.Apk;
@@ -74,7 +71,7 @@ public class JacocoDependenciesTest {
 
         appendToFile(
                 project.getSubproject("library").getBuildFile(),
-                "\nandroid.buildTypes.debug.testCoverageEnabled = true");
+                "\nandroid.buildTypes.debug.enableAndroidTestCoverage = true");
     }
 
     @Test

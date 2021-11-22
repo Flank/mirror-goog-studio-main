@@ -67,6 +67,17 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
     var enableUnitTestCoverage: Boolean
 
     /**
+     * Specifies code coverage is enabled for module tests of type AndroidTest.
+     *
+     * If enabled, prepares module class files for code coverage collection such as instrumenting
+     * dependent library classes and module classes. This allows for code coverage reports to be
+     * generated.
+     */
+    @get:Incubating
+    @set:Incubating
+    var enableAndroidTestCoverage: Boolean
+
+    /**
      * Specifies whether the plugin should generate resources for pseudolocales.
      *
      * A pseudolocale is a locale that simulates characteristics of languages that cause UI,

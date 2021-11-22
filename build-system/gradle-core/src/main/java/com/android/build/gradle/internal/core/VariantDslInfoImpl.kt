@@ -847,8 +847,8 @@ open class VariantDslInfoImpl internal constructor(
             return signingConfig != null && signingConfig.isSigningReady
         }
 
-    override val isTestCoverageEnabled: Boolean
-        get() = buildTypeObj.isTestCoverageEnabled // so far, blindly override the build type placeholders
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = buildTypeObj.enableAndroidTestCoverage || buildTypeObj.isTestCoverageEnabled
 
     override val isUnitTestCoverageEnabled: Boolean
         get() = buildTypeObj.enableUnitTestCoverage || buildTypeObj.isTestCoverageEnabled

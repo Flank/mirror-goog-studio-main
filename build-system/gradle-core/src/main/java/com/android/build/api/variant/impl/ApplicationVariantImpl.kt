@@ -251,7 +251,7 @@ open class ApplicationVariantImpl @Inject constructor(
 
     // Apps include the jacoco agent if test coverage is enabled
     override val packageJacocoRuntime: Boolean
-        get() = variantDslInfo.isTestCoverageEnabled
+        get() = variantDslInfo.isAndroidTestCoverageEnabled
 
     override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
         CodeTransparencyImpl(

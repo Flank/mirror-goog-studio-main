@@ -75,7 +75,7 @@ abstract class TestComponentImpl @Inject constructor(
     // Only include the jacoco agent if coverage is enabled in library test components
     // as in apps it will have already been included in the tested application.
     override val packageJacocoRuntime: Boolean
-        get() = variantDslInfo.isTestCoverageEnabled && testedVariant.variantType.isAar
+        get() = variantDslInfo.isAndroidTestCoverageEnabled && testedVariant.variantType.isAar
 
     override val namespaceForR: Provider<String> = variantDslInfo.namespaceForR
 

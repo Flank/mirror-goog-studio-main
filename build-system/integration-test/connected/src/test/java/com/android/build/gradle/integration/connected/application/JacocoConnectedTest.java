@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.connected.application;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -45,15 +44,13 @@ public class JacocoConnectedTest {
     public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-                    .addGradleProperties(
-                            "org.gradle.unsafe.configuration-cache.max-problems=23") // b/158092419
                     .create();
 
     @Before
     public void setUp() throws IOException {
         TestFileUtils.appendToFile(
-                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true");
+                project.getBuildFile(),
+                "\nandroid.buildTypes.debug.enableAndroidTestCoverage true");
         // fail fast if no response
         project.addAdbTimeout();
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning

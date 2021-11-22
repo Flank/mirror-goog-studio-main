@@ -256,7 +256,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = variantDslInfo.instrumentationRunnerArguments
 
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isTestCoverageEnabled
+        get() = variantDslInfo.isAndroidTestCoverageEnabled
 
     override val renderscriptTargetApi: Int
         get() = testedVariant.variantBuilder.renderscriptTargetApi

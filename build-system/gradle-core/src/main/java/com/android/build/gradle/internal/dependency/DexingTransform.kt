@@ -335,7 +335,7 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
         asmTransformedVariant =
             if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null,
-        isCoverageEnabled = creationConfig.variantDslInfo.isTestCoverageEnabled,
+        isAndroidTestCoverageEnabled = creationConfig.variantDslInfo.isAndroidTestCoverageEnabled,
         useTransformInstrumentation =
             creationConfig.services
                 .projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
@@ -349,7 +349,7 @@ data class DexingArtifactConfiguration(
     private val enableCoreLibraryDesugaring: Boolean,
     private val needsShrinkDesugarLibrary: Boolean,
     private val asmTransformedVariant: String?,
-    private val isCoverageEnabled: Boolean,
+    private val isAndroidTestCoverageEnabled: Boolean,
     private val useTransformInstrumentation: Boolean
 ) {
 
@@ -405,7 +405,7 @@ data class DexingArtifactConfiguration(
             // used. These artifacts are the same as CLASSES, CLASSES_JAR and ASM_INSTRUMENTED_JARS,
             // but they have been offline instrumented by Jacoco and include Jacoco dependencies.
             val inputArtifact: AndroidArtifacts.ArtifactType =
-                if (isCoverageEnabled && useTransformInstrumentation) {
+                if (isAndroidTestCoverageEnabled && useTransformInstrumentation) {
                     when {
                         asmTransformedVariant != null ->
                             AndroidArtifacts.ArtifactType.JACOCO_ASM_INSTRUMENTED_JARS

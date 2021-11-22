@@ -124,8 +124,7 @@ open class UnitTestImpl @Inject constructor(
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isTestCoverageEnabled
-                || variantDslInfo.isUnitTestCoverageEnabled
+        get() = variantDslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<DirectoryEntry>) {}
