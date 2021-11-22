@@ -7494,6 +7494,24 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "13 errors, 0 warnings");
     }
 
+    public void testSparseArrayDesugared() {
+        lint().files(
+                        manifest().minSdk(21),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.util.SparseArray\n"
+                                        + "\n"
+                                        + "fun testArrayIndex() {\n"
+                                        + "    val array = SparseArray<String>()\n"
+                                        + "    array[1] = \"one\" // ERROR\n"
+                                        + "    array.set(1, \"one\") // ERROR\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testAnnotationOnExtend() {
         lint().files(
                         java(
