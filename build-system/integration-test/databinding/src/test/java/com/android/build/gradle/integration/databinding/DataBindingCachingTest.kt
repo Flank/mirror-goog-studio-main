@@ -56,7 +56,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
      */
     private val expectedTaskStates: Map<String, TaskStateList.ExecutionState> = mapOf(
         // Sort by alphabetical order for easier searching
-        ":checkDebugAarMetadata" to FROM_CACHE,
+        ":checkDebugAarMetadata" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
         ":clean" to UP_TO_DATE,
         ":compileDebugAidl" to SKIPPED,
         ":compileDebugJavaWithJavac" to FROM_CACHE,

@@ -38,7 +38,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -46,14 +45,21 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import java.io.File
 import java.io.Serializable
 import java.util.Properties
 
-/** A task that reads the dependencies' AAR metadata files and checks for compatibility */
-@CacheableTask
+/**
+ * A task that reads the dependencies' AAR metadata files and checks for compatibility.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class CheckAarMetadataTask : NonIncrementalTask() {
 
     // Dummy output allows this task to be up-to-date, and it provides a means of making other tasks

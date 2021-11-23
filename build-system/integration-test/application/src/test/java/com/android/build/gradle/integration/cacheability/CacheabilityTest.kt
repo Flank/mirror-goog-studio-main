@@ -46,7 +46,6 @@ class CacheabilityTest {
      */
     private val expectedTaskStates: List<TaskInfo> = listOf(
             // Sort alphabetically for readability
-            TaskInfo(FROM_CACHE, "check", "AarMetadata", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "check", "DuplicateClasses", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "compile", "JavaWithJavac",
                     listOf("Debug", "DebugUnitTest", "Release", "ReleaseUnitTest")),
@@ -83,6 +82,8 @@ class CacheabilityTest {
              */
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
             TaskInfo(DID_WORK, "bundle", "Classes", listOf("Debug", "Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
+            TaskInfo(DID_WORK, "check", "AarMetadata", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
             TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
             /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */

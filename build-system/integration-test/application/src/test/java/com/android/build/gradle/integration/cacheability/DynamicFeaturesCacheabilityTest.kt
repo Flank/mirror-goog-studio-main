@@ -66,7 +66,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:preDebugBuild"
                 ),
                 FROM_CACHE to setOf(
-                    ":app:checkDebugAarMetadata",
                     ":app:checkDebugDuplicateClasses",
                     ":app:checkDebugLibraries",
                     ":app:compileDebugJavaWithJavac",
@@ -90,7 +89,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:processDebugManifestForPackage",
                     ":app:processDebugResources", /* Bug 141301405 */
 
-                    ":feature1:checkDebugAarMetadata",
                     ":feature1:checkDebugDuplicateClasses",
                     ":feature1:compileDebugJavaWithJavac",
                     ":feature1:compressDebugAssets",
@@ -161,6 +159,7 @@ class DynamicFeaturesCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:bundleDebugClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
+                    ":app:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
                     ":app:createDebugApkListingFileRedirect",
                     ":app:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":app:copyDebugAndroidLintReports", // intentionally not cacheable
@@ -177,6 +176,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:writeDebugAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
                     ":app:writeDebugSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
 
+                    ":feature1:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
                     ":feature1:createDebugApkListingFileRedirect",
                     ":feature1:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":feature1:extractProguardFiles", // intentionally not cacheable
@@ -187,6 +187,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:packageDebug",
                     ":feature1:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
 
+                    ":feature2:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
                     ":feature2:createDebugApkListingFileRedirect",
                     ":feature2:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":feature2:extractProguardFiles", // intentionally not cacheable

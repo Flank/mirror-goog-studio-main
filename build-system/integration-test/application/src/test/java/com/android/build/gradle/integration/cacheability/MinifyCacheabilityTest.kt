@@ -52,7 +52,6 @@ class MinifyCacheabilityTest {
             ":preMinifiedBuild",
         ),
         FROM_CACHE to setOf(
-            ":checkMinifiedAarMetadata",
             ":checkMinifiedDuplicateClasses",
             ":compileMinifiedJavaWithJavac",
             ":compressMinifiedAssets",
@@ -77,6 +76,7 @@ class MinifyCacheabilityTest {
             }
         ),
         DID_WORK to setOf(
+            ":checkMinifiedAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
             ":createMinifiedApkListingFileRedirect",
             ":createMinifiedCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
             ":extractProguardFiles",
