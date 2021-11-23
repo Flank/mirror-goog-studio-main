@@ -1719,6 +1719,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
 
     fun test169255669() {
         // Regression test for 169255669: ClassCastException in RestrictToDetector.
+        @Suppress("ConvertSecondaryConstructorToPrimary")
         lint().files(
             kotlin(
                 """

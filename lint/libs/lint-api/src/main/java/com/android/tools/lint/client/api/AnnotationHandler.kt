@@ -52,8 +52,6 @@ import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.resolveKotlinCall
 import com.android.tools.lint.detector.api.resolveOperator
 import com.google.common.collect.Multimap
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -61,7 +59,6 @@ import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiNewExpression
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.kotlin.asJava.classes.KtUltraLightClass
 import org.jetbrains.kotlin.psi.KtFile
@@ -94,7 +91,6 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
-import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -200,10 +196,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             // We're only processing fields, not local variables, since those are
             // already visited
             val resolved = node.leftOperand.tryResolve() as? PsiField
-            if (resolved != null) {
+            if (resolved != null && !isOverloadedMethodCall(node.leftOperand)) {
                 val evaluator = context.evaluator
                 val annotations = getRelevantAnnotations(evaluator, resolved, FIELD)
-                checkAnnotations(context, node.rightOperand, ANNOTATION_REFERENCE, resolved, annotations)
+                checkAnnotations(context, node.rightOperand, ASSIGNMENT_RHS, resolved, annotations)
             }
         }
 
@@ -236,7 +232,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     }
 
     private fun visitClassReference(context: JavaContext, node: UElement, cls: PsiClass) {
-        val annotations = getMemberAnnotations(context, node, cls)
+        val annotations = getMemberAnnotations(context, cls)
         checkAnnotations(context, node, CLASS_REFERENCE, cls, annotations)
     }
 
@@ -256,11 +252,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     private fun MutableList<AnnotationInfo>.addAnnotations(
         evaluator: JavaEvaluator,
         owner: PsiModifierListOwner,
-        element: UElement,
         source: AnnotationOrigin,
         prepend: Boolean = false
     ): Int {
-        val annotations = getRelevantAnnotations(evaluator, owner, element)
+        val annotations = getRelevantAnnotations(evaluator, owner)
         return addAnnotations(owner, annotations, source, prepend)
     }
 
@@ -316,26 +311,24 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         owner: PsiModifierListOwner,
         origin: AnnotationOrigin
     ): List<AnnotationInfo> {
-        val allAnnotations: Array<PsiAnnotation> = evaluator.getAllAnnotations(owner, inHierarchy = true)
+        val allAnnotations = evaluator.getAnnotations(owner, inHierarchy = true)
         return filterRelevantAnnotations(evaluator, allAnnotations).mapNotNull { it.toAnnotationInfo(owner, origin) }
     }
 
     private fun getRelevantAnnotations(
         evaluator: JavaEvaluator,
-        owner: PsiModifierListOwner,
-        element: UElement
+        owner: PsiModifierListOwner
     ): List<UAnnotation> {
-        val allAnnotations = evaluator.getAllAnnotations(owner, inHierarchy = true)
-        return filterRelevantAnnotations(evaluator, allAnnotations, element)
+        val allAnnotations = evaluator.getAnnotations(owner, inHierarchy = true)
+        return filterRelevantAnnotations(evaluator, allAnnotations)
     }
 
     /**
      * Returns a list of annotations surrounding the given [annotated]
-     * accessed via [reference]
+     * element.
      */
     private fun getMemberAnnotations(
         context: JavaContext,
-        reference: UElement,
         annotated: PsiModifierListOwner
     ): MutableList<AnnotationInfo> {
 
@@ -346,11 +339,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val evaluator = context.evaluator
         val containingClass: PsiClass = when (annotated) {
             is PsiMethod -> {
-                list.addAnnotations(evaluator, annotated, reference, METHOD)
+                list.addAnnotations(evaluator, annotated, METHOD)
                 annotated.containingClass ?: return list
             }
             is PsiField -> {
-                list.addAnnotations(evaluator, annotated, reference, FIELD)
+                list.addAnnotations(evaluator, annotated, FIELD)
                 annotated.containingClass ?: return list
             }
             is PsiClass -> {
@@ -360,7 +353,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 error("Unexpected $annotated")
             }
         }
-        list.addAnnotations(evaluator, containingClass, reference, CLASS)
+        list.addAnnotations(evaluator, containingClass, CLASS)
 
         var topLevelClass = containingClass
         var outerClass = containingClass.containingClass
@@ -368,7 +361,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             if (outerClass is PsiAnonymousClass) {
                 break
             }
-            list.addAnnotations(evaluator, outerClass, reference, OUTER_CLASS)
+            list.addAnnotations(evaluator, outerClass, OUTER_CLASS)
             val outer = outerClass.containingClass
             if (outer != null) {
                 topLevelClass = outerClass
@@ -389,7 +382,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         val pkg = evaluator.getPackage(containingClass)
         if (pkg != null) {
-            list.addAnnotations(evaluator, pkg, reference, PACKAGE)
+            list.addAnnotations(evaluator, pkg, PACKAGE)
         }
 
         return list
@@ -479,7 +472,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         }
 
         val superMethod = evaluator.getSuperMethod(method) ?: return
-        val annotations = getMemberAnnotations(context, method, superMethod)
+        val annotations = getMemberAnnotations(context, superMethod)
         checkAnnotations(context, method, METHOD_OVERRIDE, superMethod, annotations)
     }
 
@@ -512,31 +505,35 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         val field = node.resolve() as? PsiModifierListOwner
         if (field is PsiField || field is PsiMethod) {
-            var prev: UElement = node
-            var parent = prev.uastParent
-            while (true) {
-                if (parent is UParenthesizedExpression ||
-                    parent is UQualifiedReferenceExpression && parent.selector === prev
-                ) {
-                    prev = parent
-                    parent = parent.uastParent ?: break
-                } else if (parent is UBinaryExpression && parent.leftOperand === prev) {
-                    val operatorMethod = parent.resolveOperator()
-                    if (operatorMethod != null && parent.operator is UastBinaryOperator.AssignOperator) {
-                        // The call is just the left hand side expression of an overloaded operator
-                        // so we won't actually call it (the overloaded operator will instead
-                        // be called, and that's handled separately via visitBinaryExpression)
-                        return
-                    }
-                    break
-                } else {
-                    break
-                }
-            }
-
-            val annotations = getMemberAnnotations(context, node, field)
+            if (isOverloadedMethodCall(node)) return
+            val annotations = getMemberAnnotations(context, field)
             checkAnnotations(context, node, FIELD_REFERENCE, field, annotations)
         }
+    }
+
+    private fun isOverloadedMethodCall(node: UExpression): Boolean {
+        var prev: UElement = node
+        var parent = prev.uastParent
+        while (true) {
+            if (parent is UParenthesizedExpression ||
+                parent is UQualifiedReferenceExpression && parent.selector === prev
+            ) {
+                prev = parent
+                parent = parent.uastParent ?: break
+            } else if (parent is UBinaryExpression && parent.leftOperand === prev) {
+                val operatorMethod = parent.resolveOperator()
+                if (operatorMethod != null && parent.operator is UastBinaryOperator.AssignOperator) {
+                    // The call is just the left hand side expression of an overloaded operator
+                    // so we won't actually call it (the overloaded operator will instead
+                    // be called, and that's handled separately via visitBinaryExpression)
+                    return true
+                }
+                break
+            } else {
+                break
+            }
+        }
+        return false
     }
 
     fun visitCallExpression(context: JavaContext, call: UCallExpression) {
@@ -556,7 +553,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         methodReference: UCallableReferenceExpression
     ) {
         val method = methodReference.resolve() as? PsiMethod ?: return
-        val annotations = getMemberAnnotations(context, methodReference, method)
+        val annotations = getMemberAnnotations(context, method)
         checkAnnotations(context, methodReference, METHOD_REFERENCE, method, annotations)
     }
 
@@ -663,7 +660,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     private fun doCheckCall(context: JavaContext, method: PsiMethod?, call: UExpression, containingClass: PsiClass?) {
         val evaluator = context.evaluator
         if (method != null) {
-            val annotations = getMemberAnnotations(context, call, method)
+            val annotations = getMemberAnnotations(context, method)
 
             if (annotations.isNotEmpty()) {
                 checkAnnotations(context, call, METHOD_CALL, method, annotations)
@@ -687,7 +684,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 }
             }
             for ((argument, parameter) in mapping) {
-                val added = annotations.addAnnotations(evaluator, parameter, call, PARAMETER, prepend = true)
+                val added = annotations.addAnnotations(evaluator, parameter, PARAMETER, prepend = true)
                 if (added > 0) {
                     checkAnnotations(context, argument, METHOD_CALL_PARAMETER, method, annotations)
                     repeat(added) { annotations.removeFirst() }
@@ -696,90 +693,9 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         } else if (containingClass != null) {
             // No method: this is to a constructor that doesn't actually have source (e.g. a default constructor);
             // we still want to check any annotations for the class, outer classes and the surrounding package.
-            val annotations = getMemberAnnotations(context, call, containingClass)
+            val annotations = getMemberAnnotations(context, containingClass)
             checkAnnotations(context, call, METHOD_CALL, null as PsiElement?, annotations)
         }
-    }
-
-    private fun filterRelevantAnnotations(
-        evaluator: JavaEvaluator,
-        annotations: Array<PsiAnnotation>,
-        context: UElement? = null
-    ): List<UAnnotation> {
-        var result: MutableList<UAnnotation>? = null
-        val length = annotations.size
-        if (length == 0) {
-            return emptyList()
-        }
-        for (annotation in annotations) {
-            val signature = annotation.qualifiedName
-            if (signature == null ||
-                (
-                    signature.startsWith("kotlin.") ||
-                        signature.startsWith("java.")
-                    ) && !relevantAnnotations.contains(signature)
-            ) {
-                // @Override, @SuppressWarnings etc. Ignore
-                continue
-            }
-
-            if (relevantAnnotations.contains(signature)) {
-                val uAnnotation = annotation.toUElement(UAnnotation::class.java) ?: continue
-
-                // Common case: there's just one annotation; no need to create a list copy
-                if (length == 1) {
-                    return listOf(uAnnotation)
-                }
-                if (result == null) {
-                    result = ArrayList(2)
-                }
-                result.add(uAnnotation)
-                continue
-            } else if (isPlatformAnnotation(signature)) {
-                if (result == null) {
-                    result = ArrayList(2)
-                }
-                result.add(annotation.fromPlatformAnnotation(signature))
-                continue
-            }
-
-            // Special case @IntDef and @StringDef: These are used on annotations
-            // themselves. For example, you create a new annotation named @foo.bar.Baz,
-            // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
-            // Here we want to map from @foo.bar.Baz to the corresponding int def.
-            // Don't need to compute this if performing @IntDef or @StringDef lookup
-
-            val cls = annotation.nameReferenceElement?.resolve() ?: run {
-                val project = annotation.project
-                JavaPsiFacade.getInstance(project).findClass(
-                    signature,
-                    GlobalSearchScope.projectScope(project)
-                )
-            } ?: continue
-            if (cls !is PsiClass || !cls.isAnnotationType) {
-                continue
-            }
-            val innerAnnotations = evaluator.getAllAnnotations(cls, inHierarchy = false)
-            for (j in innerAnnotations.indices) {
-                val inner = innerAnnotations[j]
-                val innerName = inner.qualifiedName ?: continue
-                if (relevantAnnotations.contains(innerName)) {
-                    if (result == null) {
-                        result = ArrayList(2)
-                    }
-                    val innerU = annotationLookup.findRealAnnotation(inner, cls, context)
-                    result.add(innerU)
-                } else if (isPlatformAnnotation(innerName)) {
-                    if (result == null) {
-                        result = ArrayList(2)
-                    }
-                    val innerU = annotationLookup.findRealAnnotation(inner, cls, context)
-                    result.add(innerU.fromPlatformAnnotation(innerName))
-                }
-            }
-        }
-
-        return result ?: emptyList()
     }
 
     private fun filterRelevantAnnotations(
@@ -827,7 +743,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             if (cls == null || !cls.isAnnotationType) {
                 continue
             }
-            val innerAnnotations = evaluator.getAllAnnotations(cls, inHierarchy = false)
+            val innerAnnotations = evaluator.getAnnotations(cls, inHierarchy = false)
             for (j in innerAnnotations.indices) {
                 val inner = innerAnnotations[j]
                 val innerName = inner.qualifiedName ?: continue
@@ -835,20 +751,16 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     if (result == null) {
                         result = ArrayList(2)
                     }
-                    val innerU = annotationLookup.findRealAnnotation(inner, cls)
-                    result.add(innerU)
+                    result.add(inner)
                 } else if (isPlatformAnnotation(innerName)) {
                     if (result == null) {
                         result = ArrayList(2)
                     }
-                    val innerU = annotationLookup.findRealAnnotation(inner, cls)
-                    result.add(innerU.fromPlatformAnnotation(innerName))
+                    result.add(inner.fromPlatformAnnotation(innerName))
                 }
             }
         }
 
         return result ?: emptyList()
     }
-
-    private val annotationLookup = AnnotationLookup()
 }

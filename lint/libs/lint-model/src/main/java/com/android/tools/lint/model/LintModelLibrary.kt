@@ -27,9 +27,7 @@ interface LintModelLibrary : Comparable<LintModelLibrary> {
      */
     val provided: Boolean
 
-    /**
-     * A unique identifier for the library or module.
-     */
+    /** A unique identifier for the library or module. */
     val identifier: String
 
     // FIXME this should not be here, this should show up via the module that contributes this rather than via all its consumer

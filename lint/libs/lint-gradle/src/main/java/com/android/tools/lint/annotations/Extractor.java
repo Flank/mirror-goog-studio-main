@@ -771,7 +771,7 @@ public class Extractor {
         return false;
     }
 
-    private AnnotationLookup annotationLookup = new AnnotationLookup();
+    private final AnnotationLookup annotationLookup = new AnnotationLookup();
 
     static boolean isNestedAnnotation(@Nullable String fqn) {
         return (fqn != null

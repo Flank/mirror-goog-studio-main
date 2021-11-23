@@ -283,7 +283,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             var unmatched: List<Any>? = null
             if (resolvedArgument is PsiModifierListOwner) {
                 val evaluator = context.evaluator
-                val annotations = evaluator.getAllAnnotations(resolvedArgument, true)
+                val annotations = evaluator.getAnnotations(resolvedArgument, true)
                 var hadTypeDef = false
                 for (a in evaluator.filterRelevantAnnotations(annotations, argument)) {
                     val qualifiedName = a.qualifiedName

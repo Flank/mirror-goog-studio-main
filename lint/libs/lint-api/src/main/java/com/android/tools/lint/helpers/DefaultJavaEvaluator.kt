@@ -52,9 +52,10 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
-import org.jetbrains.uast.toUElement
 import java.io.File
+import kotlin.math.min
 
 open class DefaultJavaEvaluator(
     private val myProject: com.intellij.openapi.project.Project?,
@@ -121,10 +122,9 @@ open class DefaultJavaEvaluator(
             // merge in external annotations and inherited annotations from the class
             // files, and pick unique.
             val annotations = owner.uAnnotations
-            val psiAnnotations = getAllAnnotations(owner.psi, inHierarchy)
-
+            val mergeAnnotations = getAnnotations(owner.javaPsi as? PsiModifierListOwner, inHierarchy, owner)
             if (annotations.isNotEmpty()) {
-                if (psiAnnotations.isEmpty()) {
+                if (mergeAnnotations.isEmpty()) {
                     return annotations
                 }
 
@@ -134,13 +134,11 @@ open class DefaultJavaEvaluator(
                     val name = annotation.qualifiedName ?: annotation.uastAnchor?.name ?: continue
                     map[name] = annotation
                 }
-                for (psi in psiAnnotations) {
-                    val signature = psi.qualifiedName ?: continue
+                for (annotation in mergeAnnotations) {
+                    val signature = annotation.qualifiedName ?: continue
                     if (map[signature] == null) {
-                        psi.toUElement(UAnnotation::class.java)?.let {
-                            map[signature] = it
-                            modified = true
-                        }
+                        map[signature] = annotation
+                        modified = true
                     }
                 }
                 return if (modified) {
@@ -150,14 +148,13 @@ open class DefaultJavaEvaluator(
                 }
             }
 
-            // Work around bug: Passing in a UAST node to this method generates a
-            // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
-            return psiAnnotations.mapNotNull { it.toUElement(UAnnotation::class.java) }
+            return mergeAnnotations
         }
 
         return owner.uAnnotations
     }
 
+    @Suppress("DEPRECATION", "OverridingDeprecatedMember")
     override fun getAllAnnotations(
         owner: PsiModifierListOwner,
         inHierarchy: Boolean
@@ -165,7 +162,8 @@ open class DefaultJavaEvaluator(
         if (owner is UDeclaration) {
             // Work around bug: Passing in a UAST node to this method generates a
             // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
-            return getAllAnnotations(owner.psi, inHierarchy)
+            val psi = owner.javaPsi as? PsiModifierListOwner ?: return emptyArray()
+            return getAllAnnotations(psi, inHierarchy)
         }
 
         // withInferred=false when running outside the IDE: we don't have
@@ -173,13 +171,37 @@ open class DefaultJavaEvaluator(
         return AnnotationUtil.getAllAnnotations(owner, inHierarchy, null, false)
     }
 
+    override fun getAnnotations(
+        owner: PsiModifierListOwner?,
+        inHierarchy: Boolean,
+        parent: UElement?
+    ): List<UAnnotation> {
+        owner ?: return emptyList()
+
+        if (owner is UDeclaration) {
+            // Work around bug: Passing in a UAST node to this method generates a
+            // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
+            // (See DefaultJavaEvaluatorTest#DefaultJavaEvaluatorTest)
+            val psi = owner.javaPsi as? PsiModifierListOwner ?: return emptyList()
+            return getAnnotations(psi, inHierarchy)
+        }
+
+        // withInferred=false when running outside the IDE: we don't have an InferredAnnotationsManager
+        val withInferred = false
+        return AnnotationUtil.getAllAnnotations(owner, inHierarchy, null, withInferred).mapNotNull { psi ->
+            UastFacade.convertElement(psi, if (inHierarchy) null else parent, UAnnotation::class.java) as? UAnnotation
+        }
+    }
+
+    @Suppress("DEPRECATION", "OverridingDeprecatedMember")
     override fun findAnnotationInHierarchy(
         listOwner: PsiModifierListOwner,
         vararg annotationNames: String
     ): PsiAnnotation? {
         if (listOwner is UDeclaration) {
             // Work around UAST bug
-            return findAnnotationInHierarchy(listOwner.psi, *annotationNames)
+            val psi = listOwner.javaPsi as? PsiModifierListOwner ?: return null
+            return findAnnotationInHierarchy(psi, *annotationNames)
         }
         return AnnotationUtil.findAnnotationInHierarchy(
             listOwner,
@@ -187,15 +209,34 @@ open class DefaultJavaEvaluator(
         )
     }
 
+    override fun getAnnotationInHierarchy(
+        listOwner: PsiModifierListOwner,
+        vararg annotationNames: String
+    ): UAnnotation? {
+        @Suppress("DEPRECATION")
+        return findAnnotationInHierarchy(listOwner, *annotationNames)?.let { psi ->
+            UastFacade.convertElement(psi, listOwner as? UElement) as? UAnnotation
+        }
+    }
+
+    @Suppress("DEPRECATION", "OverridingDeprecatedMember")
     override fun findAnnotation(
         listOwner: PsiModifierListOwner?,
         vararg annotationNames: String
     ): PsiAnnotation? {
         if (listOwner is UDeclaration) {
             // Work around UAST bug
-            return findAnnotation(listOwner.psi, *annotationNames)
+            val psi = listOwner.javaPsi as? PsiModifierListOwner ?: return null
+            return findAnnotation(psi, *annotationNames)
         }
         return AnnotationUtil.findAnnotation(listOwner, false, *annotationNames)
+    }
+
+    override fun getAnnotation(listOwner: PsiModifierListOwner?, vararg annotationNames: String): UAnnotation? {
+        @Suppress("DEPRECATION")
+        return findAnnotation(listOwner, *annotationNames)?.let { psi ->
+            UastFacade.convertElement(psi, listOwner as? UElement) as? UAnnotation
+        }
     }
 
     override fun areSignaturesEqual(method1: PsiMethod, method2: PsiMethod): Boolean {
@@ -287,10 +328,9 @@ open class DefaultJavaEvaluator(
     }
 
     override fun getPackage(node: UElement): PsiPackage? {
-        val uFile = node.getContainingUFile()
-        return if (uFile != null) {
-            getPackage(uFile.psi)
-        } else null
+        val uFile = node.getContainingUFile() ?: return null
+        val psi = uFile.javaPsi ?: uFile.sourcePsi
+        return getPackage(psi)
     }
 
     override fun getQualifiedName(psiClassType: PsiClassType): String? {
@@ -349,7 +389,7 @@ open class DefaultJavaEvaluator(
         }
 
         var i = 0
-        val n = Math.min(parameters.size, arguments.size)
+        val n = min(parameters.size, arguments.size)
         val map = HashMap<UExpression, PsiParameter>(2 * n)
 
         /* Here is a UAST supported way to compute this, but it doesn't handle

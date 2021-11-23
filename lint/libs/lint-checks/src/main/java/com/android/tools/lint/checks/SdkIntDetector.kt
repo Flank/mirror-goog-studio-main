@@ -104,7 +104,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             val evaluator = context.evaluator
             return evaluator.implementsInterface(clz, "kotlin.Function", false) ||
                 evaluator.implementsInterface(clz, "java.util.function.Function", false) ||
-                evaluator.findAnnotation(clz, "java.lang.FunctionalInterface") != null
+                evaluator.getAnnotation(clz, "java.lang.FunctionalInterface") != null
         }
 
         private val IMPLEMENTATION = Implementation(

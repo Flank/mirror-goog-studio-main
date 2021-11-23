@@ -105,7 +105,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 return directSuper
             }
 
-            val annotations = evaluator.getAllAnnotations(directSuper, true)
+            val annotations = evaluator.getAnnotations(directSuper, true)
             for (annotation in annotations) {
                 val signature = annotation.qualifiedName
                 if (CALL_SUPER_ANNOTATION.isEquals(signature) ||

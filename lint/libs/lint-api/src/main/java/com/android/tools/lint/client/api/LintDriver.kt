@@ -41,6 +41,8 @@ import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIF
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
+import com.android.tools.lint.client.api.LintDriver.DriverMode.ANALYSIS_ONLY
+import com.android.tools.lint.client.api.LintDriver.DriverMode.MERGE
 import com.android.tools.lint.client.api.LintListener.EventType
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
@@ -95,7 +97,6 @@ import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
-import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerExpression
 import com.intellij.psi.PsiArrayInitializerMemberValue
@@ -108,6 +109,7 @@ import com.intellij.psi.PsiParenthesizedExpression
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UAnnotated
+import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCatchClause
 import org.jetbrains.uast.UComment
@@ -119,6 +121,7 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.toUElement
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -254,9 +257,7 @@ class LintDriver(
      */
     var ignoreTestSources: Boolean = false
 
-    /**
-     * Whether we should ignore testFixtures sources.
-     */
+    /** Whether we should ignore testFixtures sources. */
     var ignoreTestFixturesSources: Boolean = false
 
     /** Whether we should include generated sources in the analysis. */
@@ -3987,9 +3988,8 @@ class LintDriver(
                         fqcn == SUPPRESS_LINT
                     )
                 ) {
-                    val parameterList = annotation.parameterList
-                    for (pair in parameterList.attributes) {
-                        if (isSuppressed(issue, pair.value)) {
+                    for (pair in annotation.attributeValues) {
+                        if (isSuppressedExpression(issue, pair.expression)) {
                             return true
                         }
                     }
@@ -4002,14 +4002,14 @@ class LintDriver(
         private fun getAnnotations(
             context: JavaContext?,
             modifierListOwner: PsiModifierListOwner?
-        ): Array<PsiAnnotation> {
+        ): List<UAnnotation> {
             return if (modifierListOwner == null) {
-                PsiAnnotation.EMPTY_ARRAY
+                emptyList()
             } else {
-                @Suppress("ExternalAnnotations") // We try external annotations first.
-                context?.evaluator?.getAllAnnotations(modifierListOwner, false)
-                    ?: modifierListOwner.modifierList?.annotations
-                    ?: PsiAnnotation.EMPTY_ARRAY
+                context?.evaluator?.getAnnotations(modifierListOwner, false)
+                    //noinspection ExternalAnnotations - We try external annotations first.
+                    ?: modifierListOwner.modifierList?.annotations?.mapNotNull { it.toUElement() as? UAnnotation }
+                    ?: emptyList()
             }
         }
 

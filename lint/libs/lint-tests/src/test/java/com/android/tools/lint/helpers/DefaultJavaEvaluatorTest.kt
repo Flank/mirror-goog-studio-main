@@ -33,15 +33,15 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.visitor.AbstractUastVisitor
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -264,15 +264,21 @@ class DefaultJavaEvaluatorTest {
                 }
             }
 
+            @Suppress("DEPRECATION")
             private fun processAnnotations(modifierListOwner: PsiModifierListOwner) {
                 context.evaluator.findAnnotationInHierarchy(modifierListOwner, "org.foo.bar")
                 context.evaluator.findAnnotation(modifierListOwner, "org.foo.bar")
+                context.evaluator.getAnnotation(modifierListOwner, "org.foo.bar")
                 context.evaluator.getAllAnnotations(
                     modifierListOwner,
                     true
                 ).mapNotNull { it.qualifiedName?.split(".")?.lastOrNull() }
                 // This detector doesn't actually report anything; the regression test
                 // ensures that the above calls don't crash
+                context.evaluator.getAnnotations(
+                    modifierListOwner,
+                    true
+                ).mapNotNull { it.qualifiedName?.split(".")?.lastOrNull() }
             }
         }
 

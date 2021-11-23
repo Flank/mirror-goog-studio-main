@@ -381,7 +381,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
             // Look for typedefs (and make sure they're specified on the right type)
             val cls = annotation.resolve() ?: return
             if (cls.isAnnotationType && cls.modifierList != null) {
-                for (a in context.evaluator.getAllAnnotations(cls, false)) {
+                for (a in context.evaluator.getAnnotations(cls, false)) {
                     var name = a.qualifiedName ?: continue
                     if (isPlatformAnnotation(name)) {
                         name = toAndroidxAnnotation(name)
@@ -620,7 +620,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
 
         private fun findTypeDef(expression: UExpression, owner: PsiModifierListOwner): UAnnotation? {
             val evaluator = context.evaluator
-            val annotations = evaluator.getAllAnnotations(owner, true)
+            val annotations = evaluator.getAnnotations(owner, true)
             val uAnnotations = evaluator.filterRelevantAnnotations(
                 annotations, expression, setOf(INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName())
             )

@@ -37,6 +37,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCallableReferenceExpression
@@ -225,6 +226,9 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
         return THREADING_ANNOTATIONS.contains(qualifiedName)
     }
 
+    private fun UAnnotation.isThreadingAnnotation(): Boolean {
+        return THREADING_ANNOTATIONS.contains(qualifiedName)
+    }
     /**
      * Attempts to infer the current thread context at the site of the
      * given method call.
@@ -274,7 +278,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
         val lambdaCallExpression = lambdaCall?.uastParent as? UCallExpression ?: return null
         val lambdaArgument = lambdaCallExpression.getParameterForArgument(lambdaCall) ?: return null
 
-        val annotations = context.evaluator.getAllAnnotations(lambdaArgument, false)
+        val annotations = context.evaluator.getAnnotations(lambdaArgument, false)
             .filter { it.isThreadingAnnotation() }
             .mapNotNull { it.qualifiedName }
             .toList()
@@ -297,7 +301,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
             var cls = method.containingClass
 
             while (method != null) {
-                val annotations = evaluator.getAllAnnotations(method, false)
+                val annotations = evaluator.getAnnotations(method, false)
                 for (annotation in annotations) {
                     result = addThreadAnnotations(annotation, result)
                 }
@@ -317,7 +321,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
 
             // See if we're extending a class with a known threading context
             while (cls != null) {
-                val annotations = evaluator.getAllAnnotations(cls, false)
+                val annotations = evaluator.getAnnotations(cls, false)
                 for (annotation in annotations) {
                     result = addThreadAnnotations(annotation, result)
                 }
@@ -340,7 +344,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
     }
 
     private fun addThreadAnnotations(
-        annotation: PsiAnnotation,
+        annotation: UAnnotation,
         result: MutableList<String>?
     ): MutableList<String>? {
         var resultList = result
