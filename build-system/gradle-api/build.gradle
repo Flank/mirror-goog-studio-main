@@ -93,7 +93,7 @@ String devsitePrefix = "tools/gradle-api/" +  version.substring(0, version.lastI
 def dackkaTask = tasks.register("dackkaDocs", DackkaTask) {
     devsiteTenant.set(devsitePrefix)
     destinationDirectory.set(project.layout.buildDirectory.dir("dackka"))
-    dackkaClasspath.from(rootProject.file("../prebuilts/tools/common/dackka/dackka-0.0.12.jar"))
+    dackkaClasspath.from(rootProject.file("../prebuilts/tools/common/dackka/dackka-0.0.13.jar"))
     dependenciesClasspath.from(configurations.compileClasspath)
     sourcesDir.set(sourceSets.main.java.sourceDirectories.singleFile)
     packageListsDirectory.set(rootProject.file("../prebuilts/tools/common/dackka/package-lists"))
@@ -101,7 +101,8 @@ def dackkaTask = tasks.register("dackkaDocs", DackkaTask) {
 }
 
 task dackkaZip(type: Zip) {
-    from(dackkaTask.map { it.destinationDirectory })
+    // The consumption script expects the reference/tools/gradle-api/<version>/ prefix to be removed
+    from(dackkaTask.flatMap{ it.destinationDirectory.dir('reference/' + devsitePrefix) })
     from writeVersionFileProvider.map { it.outputDirectory }
     destinationDirectory.set(rootProject.ext.androidHostDist)
     archiveFileName = "documentation.zip"
