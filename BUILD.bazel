@@ -43,7 +43,6 @@ maven_repository(
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:net.sf.proguard.proguard-gradle",
         "@maven//:nl.jqno.equalsverifier.equalsverifier",
-        "@maven//:org.antlr.antlr4",
         "@maven//:org.apache.commons.commons-compress",
         "@maven//:org.apache.httpcomponents.httpmime",
         "@maven//:org.apache.maven.maven-aether-provider",

@@ -208,7 +208,6 @@ local_maven_repository(
         "net.sf.kxml:kxml2:2.3.0",
         "net.sf.proguard:proguard-gradle:5.2.1",
         "nl.jqno.equalsverifier:equalsverifier:3.4.1",
-        "org.antlr:antlr4:4.5.3",
         "org.apache.commons:commons-compress:1.20",
         "org.apache.httpcomponents:httpclient:4.5.6",
         "org.apache.httpcomponents:httpcore:4.4.10",
