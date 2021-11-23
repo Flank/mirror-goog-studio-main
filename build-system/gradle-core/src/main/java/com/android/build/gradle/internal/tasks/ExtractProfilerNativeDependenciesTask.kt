@@ -25,10 +25,10 @@ import com.android.builder.utils.isValidZipEntryName
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -40,8 +40,13 @@ import java.util.zip.ZipInputStream
 
 /**
  * Task to extract native libraries needed for profilers support in the IDE.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The task extracts some files, unchanged, from the Inputs (all Jar files).
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class ExtractProfilerNativeDependenciesTask : NonIncrementalTask() {
 
     @get:OutputDirectory
