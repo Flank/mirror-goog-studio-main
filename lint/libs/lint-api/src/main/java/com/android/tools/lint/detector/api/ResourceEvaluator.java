@@ -604,7 +604,7 @@ public class ResourceEvaluator {
         if (evaluator == null) {
             return null;
         }
-        PsiAnnotation[] annotations = evaluator.getAllAnnotations(owner, true);
+        List<UAnnotation> annotations = evaluator.getAnnotations(owner, true, null);
         return getTypesFromAnnotations(annotations);
     }
 

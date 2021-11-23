@@ -311,7 +311,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         }
 
         private fun hasNullnessAnnotation(node: PsiModifierListOwner): Boolean {
-            for (annotation in context.evaluator.getAllAnnotations(node, false)) {
+            for (annotation in context.evaluator.getAnnotations(node, false)) {
                 val name = annotation.qualifiedName ?: continue
                 if (isNullableAnnotation(name) || isNonNullAnnotation(name)) {
                     return true

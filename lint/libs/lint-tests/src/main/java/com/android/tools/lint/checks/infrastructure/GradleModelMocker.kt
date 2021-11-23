@@ -509,17 +509,20 @@ class GradleModelMocker @JvmOverloads constructor(
     private fun createDependencies(dep: DepConf? = null): TestLintModelDependencies {
 
         fun <T : LintModelLibrary> Collection<T>.resolveConflicts(): Collection<T> {
-            return groupBy { when(it) {
-                is LintModelExternalLibrary -> it.resolvedCoordinates.groupId to it.resolvedCoordinates.artifactId
-                is LintModelModuleLibrary -> "artifacts" to it.projectPath
-                else -> throw RuntimeException("Not supported library type")
-            } }
+            return groupBy {
+                when (it) {
+                    is LintModelExternalLibrary -> it.resolvedCoordinates.groupId to it.resolvedCoordinates.artifactId
+                    is LintModelModuleLibrary -> "artifacts" to it.projectPath
+                    else -> throw RuntimeException("Not supported library type")
+                }
+            }
                 .mapValues { (_, libs) ->
                     libs.maxByOrNull {
                         when (it) {
                             is LintModelExternalLibrary -> GradleVersion.tryParse(it.resolvedCoordinates.version) ?: GradleVersion(0, 0)
                             else -> GradleVersion(0, 0)
-                        } }
+                        }
+                    }
                 }
                 .values
                 .mapNotNull { it }

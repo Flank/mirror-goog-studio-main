@@ -770,23 +770,48 @@ class JavaEvaluator {
 
     abstract fun getAllAnnotations(
         owner: UAnnotated,
-        inHierarchy: Boolean
+        inHierarchy: Boolean = false
     ): List<UAnnotation>
 
+    @Deprecated("Use getAllUAnnotations instead", replaceWith = ReplaceWith("getAllUAnnotations(owner, inHierarchy)"))
     abstract fun getAllAnnotations(
         owner: PsiModifierListOwner,
         inHierarchy: Boolean
     ): Array<PsiAnnotation>
 
+    abstract fun getAnnotations(
+        owner: PsiModifierListOwner?,
+        inHierarchy: Boolean = false,
+        parent: UElement? = null
+    ): List<UAnnotation>
+
+    @Deprecated(
+        "Use getAnnotationInHierarchy returning a UAnnotation instead",
+        replaceWith = ReplaceWith("getAnnotationInHierarchy(listOwner, *annotationNames)")
+    )
     abstract fun findAnnotationInHierarchy(
         listOwner: PsiModifierListOwner,
         vararg annotationNames: String
     ): PsiAnnotation?
 
+    abstract fun getAnnotationInHierarchy(
+        listOwner: PsiModifierListOwner,
+        vararg annotationNames: String
+    ): UAnnotation?
+
+    @Deprecated(
+        "Use getAnnotation returning a UAnnotation instead",
+        replaceWith = ReplaceWith("getAnnotation(listOwner, *annotationNames)")
+    )
     abstract fun findAnnotation(
         listOwner: PsiModifierListOwner?,
         vararg annotationNames: String
     ): PsiAnnotation?
+
+    abstract fun getAnnotation(
+        listOwner: PsiModifierListOwner?,
+        vararg annotationNames: String
+    ): UAnnotation?
 
     /**
      * Try to determine the path to the .jar file containing the
@@ -1121,7 +1146,7 @@ class JavaEvaluator {
             if (cls !is PsiClass || !cls.isAnnotationType) {
                 continue
             }
-            val innerAnnotations = getAllAnnotations(cls, inHierarchy = false)
+            val innerAnnotations = getAnnotations(cls, inHierarchy = false)
             for (j in innerAnnotations.indices) {
                 val inner = innerAnnotations[j]
                 val innerName = inner.qualifiedName ?: continue
@@ -1129,14 +1154,12 @@ class JavaEvaluator {
                     if (result == null) {
                         result = ArrayList(2)
                     }
-                    val innerU = getAnnotationLookup().findRealAnnotation(inner, cls, context)
-                    result.add(innerU)
+                    result.add(inner)
                 } else if (isPlatformAnnotation(innerName)) {
                     if (result == null) {
                         result = ArrayList(2)
                     }
-                    val innerU = getAnnotationLookup().findRealAnnotation(inner, cls, context)
-                    result.add(innerU.fromPlatformAnnotation(innerName))
+                    result.add(inner.fromPlatformAnnotation(innerName))
                 }
             }
         }
@@ -1144,9 +1167,84 @@ class JavaEvaluator {
         return result ?: emptyList()
     }
 
-    private var annotationLookup: AnnotationLookup? = null
-    private fun getAnnotationLookup(): AnnotationLookup {
-        return annotationLookup ?: AnnotationLookup().also { annotationLookup = it }
+    fun filterRelevantAnnotations(
+        annotations: List<UAnnotation>,
+        context: UElement? = null,
+        relevantAnnotations: Set<String>? = null
+    ): List<UAnnotation> {
+        val length = annotations.size
+        if (length == 0) {
+            return emptyList()
+        }
+        val relevant = relevantAnnotations ?: this.relevantAnnotations ?: return emptyList()
+        var result: MutableList<UAnnotation>? = null
+        for (annotation in annotations) {
+            val signature = annotation.qualifiedName
+            if (signature == null || (signature.startsWith("kotlin.") || signature.startsWith("java.")) &&
+                !relevant.contains(signature)
+            ) {
+                // @Override, @SuppressWarnings etc. Ignore
+                continue
+            }
+
+            if (relevant.contains(signature)) {
+                val uAnnotation = annotation
+
+                // Common case: there's just one annotation; no need to create a list copy
+                if (length == 1) {
+                    return annotations
+                }
+                if (result == null) {
+                    result = ArrayList(2)
+                }
+                result.add(uAnnotation)
+                continue
+            } else if (isPlatformAnnotation(signature)) {
+                if (result == null) {
+                    result = ArrayList(2)
+                }
+                result.add(annotation.fromPlatformAnnotation(signature))
+                continue
+            }
+
+            // Special case @IntDef and @StringDef: These are used on annotations
+            // themselves. For example, you create a new annotation named @foo.bar.Baz,
+            // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
+            // Here we want to map from @foo.bar.Baz to the corresponding int def.
+            // Don't need to compute this if performing @IntDef or @StringDef lookup
+            val cls = annotation.resolve() ?: run {
+                val project = annotation.sourcePsi?.project
+                if (project != null) {
+                    JavaPsiFacade.getInstance(project).findClass(
+                        signature,
+                        GlobalSearchScope.projectScope(project)
+                    )
+                } else {
+                    null
+                }
+            } ?: continue
+            if (!cls.isAnnotationType) {
+                continue
+            }
+            val innerAnnotations = getAnnotations(cls, inHierarchy = false)
+            for (j in innerAnnotations.indices) {
+                val inner = innerAnnotations[j]
+                val innerName = inner.qualifiedName ?: continue
+                if (relevant.contains(innerName)) {
+                    if (result == null) {
+                        result = ArrayList(2)
+                    }
+                    result.add(inner)
+                } else if (isPlatformAnnotation(innerName)) {
+                    if (result == null) {
+                        result = ArrayList(2)
+                    }
+                    result.add(inner.fromPlatformAnnotation(innerName))
+                }
+            }
+        }
+
+        return result ?: emptyList()
     }
 
     /**
@@ -1168,7 +1266,7 @@ class JavaEvaluator {
                 return superMethods.isNotEmpty()
             }
 
-            val superMethod = superCls.findMethodBySignature(method.psi, true)
+            val superMethod = superCls.findMethodBySignature(method.javaPsi, true)
             return superMethod != null
         }
 

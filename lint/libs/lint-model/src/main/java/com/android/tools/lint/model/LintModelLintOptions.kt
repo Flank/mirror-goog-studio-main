@@ -184,9 +184,7 @@ interface LintModelLintOptions {
      */
     val ignoreTestSources: Boolean
 
-    /**
-     * Whether lint should ignore all testFixtures sources.
-     */
+    /** Whether lint should ignore all testFixtures sources. */
     val ignoreTestFixturesSources: Boolean
 
     /**

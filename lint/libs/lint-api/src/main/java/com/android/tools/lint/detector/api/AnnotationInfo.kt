@@ -35,6 +35,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.asJava.elements.KtLightElement
+import org.jetbrains.kotlin.asJava.elements.KtLightField
+import org.jetbrains.kotlin.asJava.elements.KtLightMember
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
 
@@ -97,8 +100,18 @@ class AnnotationInfo(
                 annotationOwner
             }
         if (ownerPsi != null) {
-            val annotatedPsi = (annotated as? UElement)?.sourcePsi ?: annotated
-            return ownerPsi != annotatedPsi && annotatedPsi !is PsiPackage
+            if (ownerPsi == annotated || ownerPsi == (annotated as? UElement)?.sourcePsi ||
+                ownerPsi == (annotated as? KtLightElement<*, *>)?.kotlinOrigin ||
+                ownerPsi is KtLightField && annotated is KtLightMember<*> &&
+                ownerPsi.kotlinOrigin == annotated.lightMemberOrigin?.originalElement
+            ) {
+                return false
+            }
+
+            if (annotated is PsiPackage || (annotated as? UElement)?.sourcePsi is PsiPackage) {
+                return false
+            }
+            return true
         }
         return false
     }

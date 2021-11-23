@@ -332,9 +332,7 @@ public class LintCliFlags {
         }
     }
 
-    /**
-     * Whether we should completely skip testFixtures sources.
-     */
+    /** Whether we should completely skip testFixtures sources. */
     public boolean isIgnoreTestFixturesSources() {
         return ignoreTestFixtures;
     }

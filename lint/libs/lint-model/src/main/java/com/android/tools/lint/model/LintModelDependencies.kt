@@ -85,20 +85,18 @@ interface LintModelDependencyGraph {
  *
  * To get the full [LintModelLibrary] definition on item in the
  * dependency graph, call [LintModelLibraryResolver.getLibrary] with the
- * [identifier] from this [LintModelDependency], which you can do
- * with the convenience method [findLibrary].
+ * [identifier] from this [LintModelDependency], which you can do with
+ * the convenience method [findLibrary].
  */
 interface LintModelDependency {
-    /**
-     * An opaque unique identifier for the dependency.
-     */
+    /** An opaque unique identifier for the dependency. */
     val identifier: String
 
     /**
      * The simple name of a library: this is like the artifact address
      * but does not include version information or classifiers; for
-     * a Maven library it is the groupId and artifactId separated by
-     * a colon, such as "androidx.annotation:annotation".
+     * a Maven library it is the groupId and artifactId separated
+     * by a colon, such as "androidx.annotation:annotation".
      */
     val artifactName: String
 
@@ -143,8 +141,7 @@ interface LintModelLibraryResolver {
     fun getAllLibraries(): Collection<LintModelLibrary>
 
     /**
-     * Get the library corresponding to the given identifier, if
-     * any.
+     * Get the library corresponding to the given identifier, if any.
      */
     fun getLibrary(identifier: String): LintModelLibrary?
 }
