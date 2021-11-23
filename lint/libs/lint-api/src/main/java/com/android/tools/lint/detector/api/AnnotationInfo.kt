@@ -152,7 +152,19 @@ enum class AnnotationOrigin {
     FILE,
 
     /** The annotation appeared on a package declaration. */
-    PACKAGE
+    PACKAGE,
+
+    /**
+     * The annotation appeared on a Kotlin constructor property or class
+     * body property without specifying a use site. Technically, this
+     * means that it typically applies only to the parameter itself (for
+     * constructor properties), or the backing field itself (for class
+     * properties), and not the getters and setters of the property,
+     * but that's often what developers expect. Lint will also look for
+     * these annotations and include them, and their origin is then set
+     * to [PROPERTY_DEFAULT].
+     */
+    PROPERTY_DEFAULT
 }
 
 /**

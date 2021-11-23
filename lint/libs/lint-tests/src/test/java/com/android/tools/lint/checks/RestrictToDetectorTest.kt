@@ -1688,6 +1688,10 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 class MyViewModel {
                     @get:VisibleForTesting
                     internal var currentNamespace: String? = null
+                    // Without @get: the following annotation will default to apply to
+                    // the *field*, not the getter and/or setter. However, lint will
+                    // now search for these anyway since despite Kotlin's use site semantics
+                    // this is probably intended to apply for accesses to the property.
                     @VisibleForTesting
                     internal var currentNamespace2: String? = null
                 }
@@ -1712,7 +1716,10 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             src/test/pkg/MyActivity.kt:6: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
                     val foo = myViewModel.currentNamespace.orEmpty()
                                           ~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
+            src/test/pkg/MyActivity.kt:7: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    val bar = myViewModel.currentNamespace2.orEmpty()
+                                          ~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
             """
         )
     }
@@ -1753,19 +1760,77 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                import androidx.annotation.RestrictTo;
-                import androidx.annotation.RestrictTo.Scope.SUBCLASSES;
+                package test.pkg
+
+                import androidx.annotation.RestrictTo
+                import androidx.annotation.RestrictTo.Scope.SUBCLASSES
 
                 class Foo
-
-                class Bar {
+                open class Bar {
+                    // No use site target specified; Kotlin will take this to refer to the
+                    // field only; lint will also interpret this as applying to getters and setters
                     @RestrictTo(SUBCLASSES)
-                    val foo = Foo()
+                    val foo1: Foo = Foo()
+
+                    // Field explicitly requested; lint only enforce this on field references, not getters/setters
+                    @field:RestrictTo(SUBCLASSES)
+                    val foo2: Foo = Foo()
+
+                    // Setter only; don't enforce on getter
+                    @set:RestrictTo(SUBCLASSES)
+                    var foo3: Foo? = Foo()
+
+                    // Getter only, don't enforce on setter
+                    @get:RestrictTo(SUBCLASSES)
+                    var foo4: Foo? = Foo()
+                }
+              """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                class Sub : Bar() {
+                    fun test() {
+                        val test = foo1 // OK 1
+                        println(foo1)   // OK 2
+                        println(foo2)   // OK 3
+                        println(foo3)   // OK 4
+                        println(foo5)   // OK 5
+                    }
+                }
+                class NotSub(private val bar: Bar) {
+                    fun test() {
+                        val test = bar.foo1  // WARN 1
+                        println(bar.foo1)    // WARN 2
+                        val test2 = bar.foo2 // OK 6
+                        println(bar.foo2)    // OK 7
+                        val test3 = bar.foo3 // OK 8
+                        println(bar.foo3)    // OK 9
+                        bar.foo3 = null      // WARN 3
+                        println(bar.foo4)    // WARN 4
+                        bar.foo4 = null      // OK 10
+                    }
                 }
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expectClean()
+        ).run().expect(
+            """
+            src/test/pkg/Sub.kt:13: Error: Bar.getFoo1 can only be called from subclasses [RestrictedApi]
+                    val test = bar.foo1  // WARN 1
+                                   ~~~~
+            src/test/pkg/Sub.kt:14: Error: Bar.getFoo1 can only be called from subclasses [RestrictedApi]
+                    println(bar.foo1)    // WARN 2
+                                ~~~~
+            src/test/pkg/Sub.kt:19: Error: Bar.setFoo3 can only be called from subclasses [RestrictedApi]
+                    bar.foo3 = null      // WARN 3
+                        ~~~~
+            src/test/pkg/Sub.kt:20: Error: Bar.getFoo4 can only be called from subclasses [RestrictedApi]
+                    println(bar.foo4)    // WARN 4
+                                ~~~~
+            4 errors, 0 warnings
+            """
+        )
     }
 
     fun testAssignment() {
@@ -2283,6 +2348,66 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 TestClass4(foo) // WARN 2
                            ~~~
             0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testVisibleForTestingOnClassProperty() {
+        // Like testVisibleForTestingOnConstructorProperty but where the property
+        // is a class member instead of a constructor one
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.VisibleForTesting
+
+                class TestClass5 { @VisibleForTesting var property: String = "" }
+                class TestClass6 { @field:VisibleForTesting var property: String = "" }
+                class TestClass7 { @get:VisibleForTesting var property: String = "" }
+                class TestClass8 { @set:VisibleForTesting var property: String = "" }
+                class TestClass9 { @property:VisibleForTesting var property: String = "" }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                fun test(foo: String) {
+                    val t5 = TestClass5().property // WARN 1
+                    TestClass5().property = "" // WARN 2
+                    TestClass6().property // OK 1
+                    TestClass6().property = "" // OK 2
+                    TestClass7().property // WARN 3
+                    TestClass7().property = "" // OK 3
+                    TestClass8().property // OK 4
+                    TestClass8().property = "" // WARN 4
+                    TestClass9().property // WARN 5
+                    TestClass9().property = "" // WARN 6
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:3: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                val t5 = TestClass5().property // WARN 1
+                                      ~~~~~~~~
+            src/test/pkg/test.kt:4: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass5().property = "" // WARN 2
+                             ~~~~~~~~
+            src/test/pkg/test.kt:7: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass7().property // WARN 3
+                             ~~~~~~~~
+            src/test/pkg/test.kt:10: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass8().property = "" // WARN 4
+                             ~~~~~~~~
+            src/test/pkg/test.kt:11: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass9().property // WARN 5
+                             ~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass9().property = "" // WARN 6
+                             ~~~~~~~~
+            0 errors, 6 warnings
             """
         )
     }

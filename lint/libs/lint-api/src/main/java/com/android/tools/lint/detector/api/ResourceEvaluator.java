@@ -52,8 +52,13 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import org.jetbrains.kotlin.asJava.LightClassUtilsKt;
+import org.jetbrains.kotlin.asJava.elements.KtLightMethod;
+import org.jetbrains.kotlin.psi.KtAnnotationEntry;
+import org.jetbrains.kotlin.psi.KtProperty;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
@@ -63,6 +68,7 @@ import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UastCallKind;
+import org.jetbrains.uast.UastFacade;
 
 /** Evaluates constant expressions */
 public class ResourceEvaluator {
@@ -605,7 +611,30 @@ public class ResourceEvaluator {
             return null;
         }
         List<UAnnotation> annotations = evaluator.getAnnotations(owner, true, null);
-        return getTypesFromAnnotations(annotations);
+        EnumSet<ResourceType> typeAnnotations = getTypesFromAnnotations(annotations);
+        if ((typeAnnotations == null || typeAnnotations.isEmpty())
+                && owner instanceof KtLightMethod) {
+            PsiElement origin = LightClassUtilsKt.getUnwrapped(owner);
+            if (origin instanceof KtProperty) {
+                List<UAnnotation> newAnnotations = null;
+                List<KtAnnotationEntry> entries = ((KtProperty) origin).getAnnotationEntries();
+                for (KtAnnotationEntry entry : entries) {
+                    UAnnotation converted =
+                            (UAnnotation)
+                                    UastFacade.INSTANCE.convertElement(
+                                            entry, null, UAnnotation.class);
+                    if (newAnnotations == null) {
+                        newAnnotations = new ArrayList<>();
+                    }
+                    newAnnotations.add(converted);
+                }
+
+                if (newAnnotations != null) {
+                    return getTypesFromAnnotations(newAnnotations);
+                }
+            }
+        }
+        return typeAnnotations;
     }
 
     @Nullable
