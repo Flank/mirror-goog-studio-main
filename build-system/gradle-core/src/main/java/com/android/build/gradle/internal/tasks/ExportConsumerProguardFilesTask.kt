@@ -29,7 +29,6 @@ import com.android.builder.errors.EvalIssueException
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -37,10 +36,20 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.function.Consumer
 
-@CacheableTask
+/**
+ * Consolidates Proguard files into a single location for use in dependent modules
+ *
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Some verification logic is executed and some files are copied to new locations.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
 
     @get:Input
