@@ -151,6 +151,17 @@ public class AndroidxName {
         return myOldName.equalsIgnoreCase(strName) || myNewName.equalsIgnoreCase(strName);
     }
 
+    public boolean equals(Object other) {
+        if (other instanceof String) {
+            throw new IllegalStateException("You probably meant to call isEquals!");
+        }
+        return super.equals(other);
+    }
+
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     @Override
     public String toString() {
         assert false : "toString can not be used on AndroidxName";
