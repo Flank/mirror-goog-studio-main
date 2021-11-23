@@ -53,7 +53,8 @@ final class ConnectionHandler implements Runnable {
                                     "transport-local",
                                     "transport-any",
                                     "host-features",
-                                    "mdns")));
+                                    "mdns",
+                                    "pair")));
 
     @NonNull
     private final FakeAdbServer mServer;
