@@ -56,12 +56,23 @@ import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiNewExpression
+import com.intellij.psi.PsiParameter
 import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.kotlin.asJava.classes.KtUltraLightClass
+import org.jetbrains.kotlin.asJava.elements.KtLightMember
+import org.jetbrains.kotlin.asJava.elements.KtLightParameter
+import org.jetbrains.kotlin.asJava.unwrapped
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
@@ -195,10 +206,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (node.isAssignment()) {
             // We're only processing fields, not local variables, since those are
             // already visited
-            val resolved = node.leftOperand.tryResolve() as? PsiField
-            if (resolved != null && !isOverloadedMethodCall(node.leftOperand)) {
-                val evaluator = context.evaluator
-                val annotations = getRelevantAnnotations(evaluator, resolved, FIELD)
+            val resolved = node.leftOperand.tryResolve()
+            if (resolved != null && resolved is PsiModifierListOwner &&
+                resolved !is PsiLocalVariable && !isOverloadedMethodCall(node.leftOperand)
+            ) {
+                val annotations = getMemberAnnotations(context, resolved)
                 checkAnnotations(context, node.rightOperand, ASSIGNMENT_RHS, resolved, annotations)
             }
         }
@@ -256,7 +268,58 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         prepend: Boolean = false
     ): Int {
         val annotations = getRelevantAnnotations(evaluator, owner)
-        return addAnnotations(owner, annotations, source, prepend)
+        val count = addAnnotations(owner, annotations, source, prepend)
+        if (source == PARAMETER || source == METHOD || source == FIELD) {
+            return addDefaultAnnotations(owner) + count
+        }
+        return count
+    }
+
+    /**
+     * Pick up annotations that the developer may have intended to apply
+     * to the getter/setter: those using a default usage site which
+     * probably isn't what developers intended (this is usually the
+     * parameter or private field; it's never the property getter or
+     * setter), or specifying it on the property itself. (If specifying
+     * for example get: or set:, then UAST will already propagate the
+     * annotations to the correct place.)
+     */
+    private fun MutableList<AnnotationInfo>.addDefaultAnnotations(owner: PsiModifierListOwner): Int {
+        if (owner is KtLightMember<*>) {
+            val origin = owner.unwrapped
+            if (origin is KtProperty) {
+                return addDefaultSiteAnnotations(owner, origin.annotationEntries)
+            }
+        } else if (owner is KtLightParameter) {
+            val origin = owner.method.unwrapped as? KtDeclaration
+            if (origin is KtProperty || origin is KtParameter) {
+                return addDefaultSiteAnnotations(owner, origin.annotationEntries)
+            }
+        }
+
+        return 0
+    }
+
+    private fun MutableList<AnnotationInfo>.addDefaultSiteAnnotations(owner: PsiModifierListOwner, entries: List<KtAnnotationEntry>): Int {
+        var count = 0
+        for (ktAnnotation in entries) {
+            val site = ktAnnotation.useSiteTarget?.getAnnotationUseSiteTarget()
+            if (site == null || site == AnnotationUseSiteTarget.PROPERTY) {
+                val annotation = (UastFacade.convertElement(ktAnnotation, null) as? UAnnotation ?: continue).let {
+                    val signature = it.qualifiedName ?: ""
+                    if (isPlatformAnnotation(signature)) {
+                        it.fromPlatformAnnotation(signature)
+                    } else {
+                        it
+                    }
+                }
+                if (addAnnotation(annotation, owner, AnnotationOrigin.PROPERTY_DEFAULT, false)) {
+                    count++
+                }
+            }
+        }
+
+        return count
     }
 
     /**
@@ -348,6 +411,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             }
             is PsiClass -> {
                 annotated
+            }
+            is PsiParameter -> {
+                list.addAnnotations(evaluator, annotated, PARAMETER)
+                val method = annotated.getParentOfType<PsiMethod>(true) ?: return list
+                list.addAnnotations(evaluator, method, METHOD)
+                method.containingClass ?: return list
             }
             else -> {
                 error("Unexpected $annotated")
