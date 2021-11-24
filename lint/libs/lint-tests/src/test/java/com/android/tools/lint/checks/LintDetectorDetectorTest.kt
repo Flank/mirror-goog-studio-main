@@ -478,11 +478,11 @@ class LintDetectorDetectorTest {
             )
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/MyJavaLintDetector.java line 70: Surround with backtics:
+                Autofix for src/test/pkg/MyJavaLintDetector.java line 70: Surround with backtics:
                 @@ -70 +70
                 -             "Wrong use of LinearLayout.");
                 +             "Wrong use of `LinearLayout`.");
-                Fix for src/test/pkg/MyJavaLintDetector.java line 70: Remove period:
+                Autofix for src/test/pkg/MyJavaLintDetector.java line 70: Remove period:
                 @@ -70 +70
                 -             "Wrong use of LinearLayout.");
                 +             "Wrong use of LinearLayout");
@@ -490,15 +490,15 @@ class LintDetectorDetectorTest {
                 @@ -74 +74
                 -             "This is teh typo");
                 +             "This is the typo");
-                Fix for src/test/pkg/MyKotlinLintDetector.kt line 47: Surround with backtics:
+                Autofix for src/test/pkg/MyKotlinLintDetector.kt line 47: Surround with backtics:
                 @@ -47 +47
                 -                     |Instead you should call foo().bar().baz() here.
                 +                     |Instead you should call `foo().bar().baz()` here.
-                Fix for src/test/pkg/MyKotlinLintDetector.kt line 64: Surround with backtics:
+                Autofix for src/test/pkg/MyKotlinLintDetector.kt line 64: Surround with backtics:
                 @@ -64 +64
                 -                     Here's a call: foo.bar.baz(args).
                 +                     Here's a call: `foo.bar.baz(args)`.
-                Fix for src/test/pkg/MyJavaLintDetector.java line 34: Replace with Scope.JAVA_AND_RESOURCE_FILES:
+                Autofix for src/test/pkg/MyJavaLintDetector.java line 34: Replace with Scope.JAVA_AND_RESOURCE_FILES:
                 @@ -34 +34
                 -                     new Implementation(MyJavaLintDetector.class, EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)))
                 +                     new Implementation(MyJavaLintDetector.class, Scope.JAVA_AND_RESOURCE_FILES))

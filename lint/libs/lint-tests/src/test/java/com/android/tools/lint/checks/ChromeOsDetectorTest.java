@@ -53,7 +53,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 4: Set required=\"false\":\n"
+                                + "Autofix for AndroidManifest.xml line 5: Set required=\"false\":\n"
                                 + "@@ -7 +7\n"
                                 + "-         android:required=\"true\" />\n"
                                 + "+         android:required=\"false\" />\n");
@@ -280,7 +280,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 5: Set resizeableActivity=\"true\":\n"
+                                + "Autofix for AndroidManifest.xml line 5: Set resizeableActivity=\"true\":\n"
                                 + "@@ -8 +8\n"
                                 + "-             android:resizeableActivity=\"false\" />\n"
                                 + "+             android:resizeableActivity=\"true\" />");
@@ -325,7 +325,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 5: Set screenOrientation=\"fullSensor\":\n"
+                                + "Autofix for AndroidManifest.xml line 5: Set screenOrientation=\"fullSensor\":\n"
                                 + "@@ -8 +8\n"
                                 + "-             android:screenOrientation=\"portrait\" />\n"
                                 + "+             android:screenOrientation=\"fullSensor\" />");

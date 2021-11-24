@@ -479,15 +479,15 @@ class LintDriverCrashTest : AbstractCheckTest() {
             )
             .expectFixDiffs(
                 """
-                Fix for res/drawable/drawable.xml line 7: Convert to uppercase:
+                Autofix for res/drawable/drawable.xml line 7: Convert to uppercase:
                 @@ -7 +7
                 -       android:fillColor="#ffe000"
                 +       android:fillColor="#FFE000"
-                Fix for res/drawable/drawable.xml line 14: Convert to uppercase:
+                Autofix for res/drawable/drawable.xml line 14: Convert to uppercase:
                 @@ -14 +14
                 -       android:fillColor="#fff000"
                 +       android:fillColor="#FFF000"
-                Fix for res/drawable/drawable.xml line 21: Convert to uppercase:
+                Autofix for res/drawable/drawable.xml line 21: Convert to uppercase:
                 @@ -21 +21
                 -       android:fillColor="#ffe000"
                 +       android:fillColor="#FFE000"

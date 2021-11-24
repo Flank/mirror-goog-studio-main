@@ -173,7 +173,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "@@ -25 +25\n" +
                     "-     compile 'com.android.support:appcompat-v7:13.0.0'\n" +
                     "+     compile 'com.android.support:appcompat-v7:19.1.0'\n" +
-                    "Fix for build.gradle line 1: Replace with com.android.application:\n" +
+                    "Autofix for build.gradle line 1: Replace with com.android.application:\n" +
                     "@@ -1 +1\n" +
                     "- apply plugin: 'android'\n" +
                     "+ apply plugin: 'com.android.application'\n" +
@@ -297,7 +297,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "@@ -7 +7\n" +
                     "-         classpath 'com.android.tools.build:gradle:3.3.0'\n" +
                     "+         classpath 'com.android.tools.build:gradle:3.5.0'\n" +
-                    "Fix for build.gradle line 7: Change to 3.3.2:\n" +
+                    "Autofix for build.gradle line 7: Change to 3.3.2:\n" +
                     "@@ -7 +7\n" +
                     "-         classpath 'com.android.tools.build:gradle:3.3.0'\n" +
                     "+         classpath 'com.android.tools.build:gradle:3.3.2'"
@@ -1255,11 +1255,11 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "}\n"
             )
         ).issues(DEPRECATED).run().expect(expected).expectFixDiffs(
-            "Fix for build.gradle line 5: Replace 'packageName' with 'applicationId':\n" +
+            "Autofix for build.gradle line 5: Replace 'packageName' with 'applicationId':\n" +
                 "@@ -5 +5\n" +
                 "-         packageName 'my.pkg'\n" +
                 "+         applicationId 'my.pkg'\n" +
-                "Fix for build.gradle line 9: Replace 'packageNameSuffix' with 'applicationIdSuffix':\n" +
+                "Autofix for build.gradle line 9: Replace 'packageNameSuffix' with 'applicationIdSuffix':\n" +
                 "@@ -9 +9\n" +
                 "-             packageNameSuffix \".debug\"\n" +
                 "+             applicationIdSuffix \".debug\""
@@ -1417,11 +1417,11 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(DEPRECATED).ignoreUnknownGradleConstructs().run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for build.gradle line 4: Replace with com.android.application:\n" +
+                "Autofix for build.gradle line 4: Replace with com.android.application:\n" +
                 "@@ -4 +4\n" +
                 "- apply plugin: 'android'\n" +
                 "+ apply plugin: 'com.android.application'\n" +
-                "Fix for build.gradle line 5: Replace with com.android.library:\n" +
+                "Autofix for build.gradle line 5: Replace with com.android.library:\n" +
                 "@@ -5 +5\n" +
                 "- apply plugin: 'android-library'\n" +
                 "+ apply plugin: 'com.android.library'\n"
@@ -2864,7 +2864,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
             .expectFixDiffs(
                 """
-                Fix for build.gradle.kts line 3: Replace with com.android.application:
+                Autofix for build.gradle.kts line 3: Replace with com.android.application:
                 @@ -3 +3
                 -     id("android") version "2.3.3"
                 +     id("com.android.application") version "2.3.3"
@@ -3630,19 +3630,19 @@ class GradleDetectorTest : AbstractCheckTest() {
 
         val expectedFix =
             """
-            Fix for build.gradle line 9: Replace 'compile' with 'api':
+            Autofix for build.gradle line 9: Replace 'compile' with 'api':
             @@ -9 +9
             -     compile 'androidx.appcompat:appcompat:1.0.0'
             +     api 'androidx.appcompat:appcompat:1.0.0'
-            Fix for build.gradle line 9: Replace 'compile' with 'implementation':
+            Autofix for build.gradle line 9: Replace 'compile' with 'implementation':
             @@ -9 +9
             -     compile 'androidx.appcompat:appcompat:1.0.0'
             +     implementation 'androidx.appcompat:appcompat:1.0.0'
-            Fix for build.gradle line 10: Replace 'debugCompile' with 'debugApi':
+            Autofix for build.gradle line 10: Replace 'debugCompile' with 'debugApi':
             @@ -10 +10
             -     debugCompile 'androidx.appcompat:appcompat:1.0.0'
             +     debugApi 'androidx.appcompat:appcompat:1.0.0'
-            Fix for build.gradle line 10: Replace 'debugCompile' with 'debugImplementation':
+            Autofix for build.gradle line 10: Replace 'debugCompile' with 'debugImplementation':
             @@ -10 +10
             -     debugCompile 'androidx.appcompat:appcompat:1.0.0'
             +     debugImplementation 'androidx.appcompat:appcompat:1.0.0'
@@ -3682,7 +3682,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
         val expectedFix =
             """
-            Fix for build.gradle line 9: Replace 'compile' with 'implementation':
+            Autofix for build.gradle line 9: Replace 'compile' with 'implementation':
             @@ -9 +9
             -     compile 'androidx.appcompat:appcompat:1.0.0'
             +     implementation 'androidx.appcompat:appcompat:1.0.0'
@@ -3727,15 +3727,15 @@ class GradleDetectorTest : AbstractCheckTest() {
             """
 
         val fixDiff =
-            "Fix for build.gradle line 7: Replace 'testCompile' with 'testImplementation':\n" +
+            "Autofix for build.gradle line 7: Replace 'testCompile' with 'testImplementation':\n" +
                 "@@ -7 +7\n" +
                 "-     testCompile 'androidx.appcompat:appcompat:1.0.0'\n" +
                 "+     testImplementation 'androidx.appcompat:appcompat:1.0.0'\n" +
-                "Fix for build.gradle line 8: Replace 'testDebugCompile' with 'testDebugImplementation':\n" +
+                "Autofix for build.gradle line 8: Replace 'testDebugCompile' with 'testDebugImplementation':\n" +
                 "@@ -8 +8\n" +
                 "-     testDebugCompile 'androidx.appcompat:appcompat:1.0.0'\n" +
                 "+     testDebugImplementation 'androidx.appcompat:appcompat:1.0.0'\n" +
-                "Fix for build.gradle line 9: Replace 'androidTestDebugCompile' with 'androidTestDebugImplementation':\n" +
+                "Autofix for build.gradle line 9: Replace 'androidTestDebugCompile' with 'androidTestDebugImplementation':\n" +
                 "@@ -9 +9\n" +
                 "-     androidTestDebugCompile 'androidx.appcompat:appcompat:1.0.0'\n" +
                 "+     androidTestDebugImplementation 'androidx.appcompat:appcompat:1.0.0'"
@@ -3787,27 +3787,27 @@ class GradleDetectorTest : AbstractCheckTest() {
         """
         val fixDiff =
             """
-            Fix for build.gradle line 2: Replace api with annotationProcessor:
+            Autofix for build.gradle line 2: Replace api with annotationProcessor:
             @@ -2 +2
             -     api 'com.jakewharton:butterknife-compiler:10.1.0'
             +     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
-            Fix for build.gradle line 3: Replace implementation with annotationProcessor:
+            Autofix for build.gradle line 3: Replace implementation with annotationProcessor:
             @@ -3 +3
             -     implementation 'com.github.bumptech.glide:compiler:4.9.0'
             +     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
-            Fix for build.gradle line 4: Replace compile with annotationProcessor:
+            Autofix for build.gradle line 4: Replace compile with annotationProcessor:
             @@ -4 +4
             -     compile "androidx.lifecycle:lifecycle-compiler:2.2.0-alpha01"
             +     annotationProcessor "androidx.lifecycle:lifecycle-compiler:2.2.0-alpha01"
-            Fix for build.gradle line 5: Replace testImplementation with testAnnotationProcessor:
+            Autofix for build.gradle line 5: Replace testImplementation with testAnnotationProcessor:
             @@ -5 +5
             -     testImplementation "com.google.auto.value:auto-value:1.6.2"
             +     testAnnotationProcessor "com.google.auto.value:auto-value:1.6.2"
-            Fix for build.gradle line 6: Replace androidTestCompile with androidTestAnnotationProcessor:
+            Autofix for build.gradle line 6: Replace androidTestCompile with androidTestAnnotationProcessor:
             @@ -6 +6
             -     androidTestCompile "org.projectlombok:lombok:1.18.8"
             +     androidTestAnnotationProcessor "org.projectlombok:lombok:1.18.8"
-            Fix for build.gradle line 8: Replace debugCompile with debugAnnotationProcessor:
+            Autofix for build.gradle line 8: Replace debugCompile with debugAnnotationProcessor:
             @@ -8 +8
             -     debugCompile "android.arch.persistence.room:compiler:1.1.1"
             +     debugAnnotationProcessor "android.arch.persistence.room:compiler:1.1.1"

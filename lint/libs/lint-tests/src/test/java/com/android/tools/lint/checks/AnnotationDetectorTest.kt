@@ -221,23 +221,22 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/IntDefTest.java line 12: Replace with 1L << 44:
+                Autofix for src/test/pkg/IntDefTest.java line 13: Replace with 1L << 44:
                 @@ -13 +13
                 -     public static final long FLAG5 = 0x100000000000L;
                 +     public static final long FLAG5 = 1L << 44;
-                Fix for src/test/pkg/IntDefTest.java line 13: Replace with 1L << 49:
+                Autofix for src/test/pkg/IntDefTest.java line 14: Replace with 1L << 49:
                 @@ -14 +14
                 -     public static final long FLAG6 = 0x0002000000000000L;
                 +     public static final long FLAG6 = 1L << 49;
-                Fix for src/test/pkg/IntDefTest.java line 14: Replace with 1L << 3:
+                Autofix for src/test/pkg/IntDefTest.java line 15: Replace with 1L << 3:
                 @@ -15 +15
                 -     public static final long FLAG7 = 8L;
                 +     public static final long FLAG7 = 1L << 3;
-                Fix for src/test/pkg/IntDefTest.java line 19: Replace with 1 << 4:
+                Autofix for src/test/pkg/IntDefTest.java line 20: Replace with 1 << 4:
                 @@ -20 +20
                 -     public static final int  FLAG12 = 0x10;
                 +     public static final int  FLAG12 = 1 << 4;
-
                 """
             )
     }
@@ -271,7 +270,7 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/DividerFlags.kt line 12: Replace with 1 shl 1:
+                Autofix for src/test/pkg/DividerFlags.kt line 12: Replace with 1 shl 1:
                 @@ -12 +12
                 - const val DIVIDER_BOTTOM: Int = 2
                 @@ -13 +12

@@ -148,35 +148,35 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs(
             """
-            Fix for src/test/pkg/AccessTest.java line 33: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 33: Make package protected:
             @@ -13 +13
             -     private AccessTest() {
             +     AccessTest() {
-            Fix for src/test/pkg/AccessTest.java line 36: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 36: Make package protected:
             @@ -6 +6
             -     private int field1;
             +     int field1;
-            Fix for src/test/pkg/AccessTest.java line 40: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 40: Make package protected:
             @@ -10 +10
             -     private final Inner[] field5 = new Inner[100];
             +     final Inner[] field5 = new Inner[100];
-            Fix for src/test/pkg/AccessTest.java line 42: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 42: Make package protected:
             @@ -19 +19
             -     private void method1() {
             +     void method1() {
-            Fix for src/test/pkg/AccessTest.java line 66: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 66: Make package protected:
             @@ -13 +13
             -     private AccessTest() {
             +     AccessTest() {
-            Fix for src/test/pkg/AccessTest.java line 69: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 69: Make package protected:
             @@ -6 +6
             -     private int field1;
             +     int field1;
-            Fix for src/test/pkg/AccessTest.java line 73: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 73: Make package protected:
             @@ -10 +10
             -     private final Inner[] field5 = new Inner[100];
             +     final Inner[] field5 = new Inner[100];
-            Fix for src/test/pkg/AccessTest.java line 75: Make package protected:
+            Autofix for src/test/pkg/AccessTest.java line 75: Make package protected:
             @@ -19 +19
             -     private void method1() {
             +     void method1() {
@@ -301,43 +301,43 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs(
             """
-                Fix for src/test/pkg/AccessTest2.kt line 31: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 31: Make internal:
                 @@ -15 +15
                 -     private constructor()
                 +     internal constructor()
-                Fix for src/test/pkg/AccessTest2.kt line 37: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 37: Make internal:
                 @@ -9 +9
                 -     private val field4: Int get() = 100
                 +     internal val field4: Int get() = 100
-                Fix for src/test/pkg/AccessTest2.kt line 38: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 38: Make internal:
                 @@ -10 +10
                 -     private var field5 = 0
                 +     internal var field5 = 0
-                Fix for src/test/pkg/AccessTest2.kt line 39: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 39: Make internal:
                 @@ -10 +10
                 -     private var field5 = 0
                 +     internal var field5 = 0
-                Fix for src/test/pkg/AccessTest2.kt line 41: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 41: Make internal:
                 @@ -19 +19
                 -     private fun method1() {
                 +     internal fun method1() {
-                Fix for src/test/pkg/AccessTest2.kt line 59: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 59: Make internal:
                 @@ -15 +15
                 -     private constructor()
                 +     internal constructor()
-                Fix for src/test/pkg/AccessTest2.kt line 65: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 65: Make internal:
                 @@ -9 +9
                 -     private val field4: Int get() = 100
                 +     internal val field4: Int get() = 100
-                Fix for src/test/pkg/AccessTest2.kt line 66: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 66: Make internal:
                 @@ -10 +10
                 -     private var field5 = 0
                 +     internal var field5 = 0
-                Fix for src/test/pkg/AccessTest2.kt line 67: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 67: Make internal:
                 @@ -10 +10
                 -     private var field5 = 0
                 +     internal var field5 = 0
-                Fix for src/test/pkg/AccessTest2.kt line 69: Make internal:
+                Autofix for src/test/pkg/AccessTest2.kt line 69: Make internal:
                 @@ -19 +19
                 -     private fun method1() {
                 +     internal fun method1() {
@@ -406,19 +406,19 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
         ).expectFixDiffs(
             // TODO: Here I shouldn't make the private class public, I should add a new package private constructor!
             """
-                Fix for src/test/pkg/AccessTest3.java line 7: Make package protected:
+                Autofix for src/test/pkg/AccessTest3.java line 7: Make package protected:
                 @@ -21 +21
                 -     private static class Hidden2 { // synthetic constructor
                 +     static class Hidden2 { // synthetic constructor
-                Fix for src/test/pkg/AccessTest3.java line 8: Make package protected:
+                Autofix for src/test/pkg/AccessTest3.java line 8: Make package protected:
                 @@ -14 +14
                 -         private final int field;
                 +         final int field;
-                Fix for src/test/pkg/AccessTest3.java line 29: Make package protected:
+                Autofix for src/test/pkg/AccessTest3.java line 29: Make package protected:
                 @@ -14 +14
                 -         private final int field;
                 +         final int field;
-                Fix for src/test/pkg/AccessTest3.java line 33: Make package protected:
+                Autofix for src/test/pkg/AccessTest3.java line 33: Make package protected:
                 @@ -14 +14
                 -         private final int field;
                 +         final int field;
