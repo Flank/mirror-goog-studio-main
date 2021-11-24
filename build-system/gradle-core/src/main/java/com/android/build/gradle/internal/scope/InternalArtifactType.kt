@@ -184,11 +184,7 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // --- android res ---
     // generated res
-    object GENERATED_RES: InternalArtifactType<Directory>(
-        DIRECTORY,
-        Category.GENERATED,
-        "res/resValues"
-    ), Replaceable
+    object GENERATED_RES: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED,), Replaceable
     // output of the resource merger ready for aapt.
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // folder for the blame report on the merged resources
@@ -309,10 +305,7 @@ InternalArtifactType<T : FileSystemLocation>(
     // renderscript library
     object RENDERSCRIPT_LIB: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // renderscript generated res
-    object RENDERSCRIPT_GENERATED_RES: InternalArtifactType<Directory>(
-        DIRECTORY,
-        Category.GENERATED,
-        "res/rs"), Replaceable
+    object RENDERSCRIPT_GENERATED_RES: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
 
     // An output of AndroidManifest.xml check.
     // REMOVE ME (bug 139855995): This artifact can be removed in the new variant API, we haven't

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,15 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.SourceDirectories
+import com.android.build.api.variant.AbstractSourceDirectories
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.Task
 import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.TaskProvider
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
@@ -31,30 +33,46 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
 
-class AnalyticsEnabledSourceDirectoriesTest {
+class AnalyticsEnabledAbstractSourceDirectoriesTest {
     @get:Rule
     val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
     @Mock
-    lateinit var delegate: SourceDirectories
+    lateinit var delegate: AbstractSourceDirectories
 
     private val stats = GradleBuildVariant.newBuilder()
-    private val proxy: AnalyticsEnabledSourceDirectories by lazy {
-        object: AnalyticsEnabledSourceDirectories(delegate, stats, FakeObjectFactory.factory) {}
+    private val proxy: AnalyticsEnabledAbstractSourceDirectories by lazy {
+        object: AnalyticsEnabledAbstractSourceDirectories(
+            delegate,
+            stats,
+            FakeObjectFactory.factory) {}
     }
 
     @Test
-    fun getAll() {
-        val provider = Mockito.mock(Provider::class.java)
+    fun testAdd() {
+        abstract class CustomTask: Task {
+            abstract val output: Property<Directory>
+        }
         @Suppress("UNCHECKED_CAST")
-        Mockito.`when`(delegate.all).thenReturn(provider as Provider<List<Directory>>?)
+        val taskProvider = Mockito.mock(TaskProvider::class.java) as TaskProvider<CustomTask>
 
-        val providerProxy = proxy.all
-        Truth.assertThat(providerProxy).isEqualTo(provider)
+        proxy.add(taskProvider, CustomTask::output)
 
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE)
-        Mockito.verify(delegate, Mockito.times(1)).all
+        ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_ADD_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .add(taskProvider, CustomTask::output)
+    }
+
+    @Test
+    fun testAddSrcDir() {
+        proxy.addSrcDir("/path/to/directory")
+
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_SRC_DIR_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .addSrcDir("/path/to/directory")
     }
 }

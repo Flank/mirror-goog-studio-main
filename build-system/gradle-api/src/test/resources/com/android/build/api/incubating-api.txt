@@ -750,6 +750,9 @@ com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolea
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.AarMetadata.getMinAgpVersion: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.AbstractSourceDirectories implements org.gradle.api.Named
+com.android.build.api.variant.AbstractSourceDirectories.add: void (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Provider<org.gradle.api.file.Directory>>)
+com.android.build.api.variant.AbstractSourceDirectories.addSrcDir: void (java.lang.String)
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
 com.android.build.api.variant.AndroidComponentsExtension.registerSourceType: void (java.lang.String)
@@ -794,13 +797,14 @@ com.android.build.api.variant.JavaCompilation
 com.android.build.api.variant.JavaCompilation.getAnnotationProcessor: com.android.build.api.variant.AnnotationProcessor ()
 com.android.build.api.variant.LintLifecycleExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.api.dsl.SigningConfig)
-com.android.build.api.variant.SourceDirectories implements org.gradle.api.Named
-com.android.build.api.variant.SourceDirectories.add: void (org.gradle.api.tasks.TaskProvider<T>, kotlin.jvm.functions.Function1<? super T, ? extends org.gradle.api.provider.Provider<org.gradle.api.file.Directory>>)
-com.android.build.api.variant.SourceDirectories.addSrcDir: void (java.lang.String)
+com.android.build.api.variant.SourceAndOverlayDirectories implements com.android.build.api.variant.AbstractSourceDirectories
+com.android.build.api.variant.SourceAndOverlayDirectories.getAll: org.gradle.api.provider.Provider<java.util.List<java.util.Collection<org.gradle.api.file.Directory>>> ()
+com.android.build.api.variant.SourceDirectories implements com.android.build.api.variant.AbstractSourceDirectories
 com.android.build.api.variant.SourceDirectories.getAll: org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.Directory>> ()
 com.android.build.api.variant.Sources
 com.android.build.api.variant.Sources.getByName: com.android.build.api.variant.SourceDirectories (java.lang.String)
 com.android.build.api.variant.Sources.getJava: com.android.build.api.variant.SourceDirectories ()
+com.android.build.api.variant.Sources.getRes: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
 com.android.build.api.variant.TestFixtures.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()

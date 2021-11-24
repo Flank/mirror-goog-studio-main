@@ -17,7 +17,6 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
-import org.gradle.api.NamedDomainObjectContainer
 
 /**
  * Provides access to all source directories for a [Variant].
@@ -31,6 +30,11 @@ interface Sources {
      * Access to the Java source folders.
      */
     val java: SourceDirectories
+
+    /**
+     * Access to the Android resources sources folders.
+     */
+    val res: SourceAndOverlayDirectories
 
     /**
      * Access (and potentially creates) a new [SourceDirectories] for a custom source type that can

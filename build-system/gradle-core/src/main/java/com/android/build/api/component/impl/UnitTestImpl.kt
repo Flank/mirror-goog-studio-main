@@ -154,4 +154,9 @@ open class UnitTestImpl @Inject constructor(
                 variantDslInfo.manifestPlaceholders
         )
     }
+
+    /**
+     * There is no build config fields for unit tests.
+     */
+    override val buildConfigEnabled: Boolean = false
 }

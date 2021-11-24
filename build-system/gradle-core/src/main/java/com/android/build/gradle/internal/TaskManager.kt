@@ -963,7 +963,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         "Renderscript is enabled but no configuration available, please file a bug.")
             val taskContainer = creationConfig.taskContainer
             val rsTask = taskFactory.register(
-                RenderscriptCompile.CreationAction(creationConfig, renderscript))
+                RenderscriptCompile.
+                CreationAction(creationConfig, renderscript))
             taskContainer.resourceGenTask.dependsOn(rsTask)
             // since rs may generate Java code, always set the dependency.
             taskContainer.sourceGenTask.dependsOn(rsTask)
@@ -1063,7 +1064,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     fun createBuildConfigTask(creationConfig: VariantCreationConfig) {
-        if (creationConfig.buildFeatures.buildConfig) {
+        if (creationConfig.buildConfigEnabled) {
             val generateBuildConfigTask =
                     taskFactory.register(GenerateBuildConfig.CreationAction(creationConfig))
             val isBuildConfigBytecodeEnabled = creationConfig

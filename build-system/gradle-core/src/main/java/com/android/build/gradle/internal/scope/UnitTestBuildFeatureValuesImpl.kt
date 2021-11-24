@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant.impl
+package com.android.build.gradle.internal.scope
 
-enum class SourceType(name: String) {
+class UnitTestBuildFeatureValuesImpl(
+    delegate: BuildFeatureValues
+): BuildFeatureValues by delegate {
 
-    JAVA("java"),
-    RES("res"),
+    override val renderScript: Boolean = false
 }

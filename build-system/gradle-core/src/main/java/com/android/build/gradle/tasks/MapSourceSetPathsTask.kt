@@ -8,9 +8,11 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -23,6 +25,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 
 /**
  * Produces a file which lists project resource source set directories with an identifier.
@@ -72,6 +75,9 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val filepathMappingFile: RegularFileProperty
 
+    @get:Input
+    abstract val allGeneratedRes: ListProperty<Collection<String>>
+
     override fun doTaskAction() {
         val uncreatedSourceSets = listOfNotNull(
             generatedPngsOutputDir.orNull,
@@ -80,8 +86,14 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             mergeResourcesOutputDir.orNull,
         )
 
+        val generatedSourceSets = mutableListOf<String>()
+        allGeneratedRes.get().forEach { directories ->
+            generatedSourceSets.addAll(directories)
+        }
+
+
         writeIdentifiedSourceSetsFile(
-            resourceSourceSets = sourceSetInputs.listConfigurationSourceSets(uncreatedSourceSets),
+            resourceSourceSets = sourceSetInputs.listConfigurationSourceSets(uncreatedSourceSets, generatedSourceSets),
             namespace = namespace.get(),
             projectPath = projectPath.get(),
             output = filepathMappingFile.get().asFile
@@ -116,6 +128,14 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             super.configure(task)
             task.namespace.setDisallowChanges(creationConfig.namespace)
             task.sourceSetInputs.initialise(creationConfig, includeDependencies)
+            task.allGeneratedRes.setDisallowChanges(creationConfig.sources.res.getVariantSources().map { allRes ->
+                allRes.map { directoryEntries ->
+                    directoryEntries
+                        .filter { it.isGenerated }
+                        .map { it.asFiles(task.project.objects::directoryProperty) }
+                        .map { it.get().asFile.absolutePath }
+                }
+            })
             if (!mergeResourcesTask.get().isVectorSupportLibraryUsed) {
                 task.generatedPngsOutputDir.setDisallowChanges(
                     creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES).map {

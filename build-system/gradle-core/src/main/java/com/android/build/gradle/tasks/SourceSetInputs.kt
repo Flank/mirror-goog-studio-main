@@ -93,7 +93,7 @@ abstract class SourceSetInputs {
         )
     }
 
-    fun listConfigurationSourceSets(additionalSourceSets: List<String>): List<File> {
+    fun listConfigurationSourceSets(additionalSourceSets: List<String>, generatedSourceSets: List<String>): List<File> {
         val uncreatedSourceSets = listOfNotNull(
             getPathIfPresentOrNull(incrementalMergedDir, listOf(SdkConstants.FD_MERGED_DOT_DIR)),
             getPathIfPresentOrNull(incrementalMergedDir, listOf(SdkConstants.FD_STRIPPED_DOT_DIR))
@@ -103,7 +103,8 @@ abstract class SourceSetInputs {
             .plus(librarySourceSets)
             .plus(extraGeneratedResDir.files)
             .plus(uncreatedSourceSets.map(::File))
-            .plus(additionalSourceSets.map(::File)).toList()
+            .plus(additionalSourceSets.map(::File))
+            .plus(generatedSourceSets.map(::File)).toList()
     }
 
     private fun getPathIfPresentOrNull(property: Provider<Directory>, paths: List<String>) : String? {

@@ -83,6 +83,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val profileable: Boolean
     val pseudoLocalesEnabled: Property<Boolean>
     val androidResourcesEnabled: Boolean
+    val buildConfigEnabled: Boolean
 
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion

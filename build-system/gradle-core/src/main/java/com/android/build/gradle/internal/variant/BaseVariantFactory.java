@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
+import com.android.build.gradle.internal.scope.UnitTestBuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -143,7 +144,7 @@ public abstract class BaseVariantFactory<
                         .newInstance(
                                 UnitTestImpl.class,
                                 componentIdentity,
-                                buildFeatures,
+                                createUnitTestBuildFeatures(buildFeatures),
                                 variantDslInfo,
                                 variantDependencies,
                                 variantSources,
@@ -339,5 +340,10 @@ public abstract class BaseVariantFactory<
                 }
             }
         }
+    }
+
+    private BuildFeatureValues createUnitTestBuildFeatures(
+            BuildFeatureValues testedVariantBuildFeatures) {
+        return new UnitTestBuildFeatureValuesImpl(testedVariantBuildFeatures);
     }
 }

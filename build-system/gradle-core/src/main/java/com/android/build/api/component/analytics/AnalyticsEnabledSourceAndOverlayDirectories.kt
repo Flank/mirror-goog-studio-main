@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,28 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.SourceDirectories
+import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import groovy.lang.Closure
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
-import org.gradle.api.file.FileTree
-import org.gradle.api.file.FileTreeElement
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
-import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.api.tasks.util.PatternFilterable
-import javax.inject.Inject
 
-open class AnalyticsEnabledSourceDirectories @Inject constructor(
-    override val delegate: SourceDirectories,
+open class AnalyticsEnabledSourceAndOverlayDirectories(
+    override val delegate: SourceAndOverlayDirectories,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory,
 ):
     AnalyticsEnabledAbstractSourceDirectories(delegate, stats, objectFactory),
-    SourceDirectories
+    SourceAndOverlayDirectories
 {
 
-    override val all: Provider<List<Directory>>
+    override val all: Provider<List<Collection<Directory>>>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE
+                VariantPropertiesMethodType.SOURCES_AND_OVERLAY_DIRECTORIES_GET_ALL_VALUE
             return delegate.all
         }
 }

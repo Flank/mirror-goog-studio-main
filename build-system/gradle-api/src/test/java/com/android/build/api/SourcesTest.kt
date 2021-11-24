@@ -16,9 +16,11 @@
 
 package com.android.build.api
 
+import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskProvider
@@ -39,14 +41,14 @@ class SourcesTest {
     lateinit var sources: Sources
 
     @Test
-    fun testAll() {
+    fun testJavaAll() {
         val javaSources = Mockito.mock(SourceDirectories::class.java)
         Mockito.`when`(sources.java).thenReturn(javaSources)
         sources.java.all
     }
 
     @Test
-    fun testAddSource() {
+    fun testJavaAddSource() {
         abstract class AddingTask: DefaultTask() {
             @get:OutputFiles
             abstract val output: DirectoryProperty
@@ -61,14 +63,40 @@ class SourcesTest {
     }
 
     @Test
-    fun testAddDirectory() {
-        abstract class AddingTask: DefaultTask() {
-            @get:OutputFiles
-            abstract val output: DirectoryProperty
-        }
+    fun testJavaAddDirectory() {
         val javaSources = Mockito.mock(SourceDirectories::class.java)
         Mockito.`when`(sources.java).thenReturn(javaSources)
 
         sources.java.addSrcDir("/path/to/directory")
+    }
+
+    @Test
+    fun testResAll() {
+        val resSources = Mockito.mock(SourceAndOverlayDirectories::class.java)
+        Mockito.`when`(sources.res).thenReturn(resSources)
+        sources.res.all
+    }
+
+    @Test
+    fun testResAddSource() {
+        abstract class AddingTask: DefaultTask() {
+            @get:OutputFiles
+            abstract val output: DirectoryProperty
+        }
+        @Suppress("UNCHECKED_CAST")
+        val taskProvider = Mockito.mock(TaskProvider::class.java) as TaskProvider<AddingTask>
+
+        val resSources = Mockito.mock(SourceAndOverlayDirectories::class.java)
+        Mockito.`when`(sources.res).thenReturn(resSources)
+
+        sources.res.add(taskProvider, AddingTask::output)
+    }
+
+    @Test
+    fun testResAddDirectory() {
+        val resSources = Mockito.mock(SourceAndOverlayDirectories::class.java)
+        Mockito.`when`(sources.res).thenReturn(resSources)
+
+        sources.res.addSrcDir("/path/to/directory")
     }
 }

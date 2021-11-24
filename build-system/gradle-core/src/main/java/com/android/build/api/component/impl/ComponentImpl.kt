@@ -86,6 +86,7 @@ import com.google.common.collect.ImmutableSet
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.LibraryElements
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -93,6 +94,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
+import java.util.Collections
 import java.util.concurrent.Callable
 
 abstract class ComponentImpl(
@@ -144,7 +146,7 @@ abstract class ComponentImpl(
 
     override val sources: SourcesImpl by lazy {
         SourcesImpl(
-            ::defaultSources,
+            DefaultSourcesProviderImpl(this),
             internalServices.projectInfo.projectDirectory,
             internalServices,
             variantSources.variantSourceProvider,
@@ -318,6 +320,10 @@ abstract class ComponentImpl(
     }
 
     override val androidResourcesEnabled = buildFeatures.androidResources
+
+    // by default, we delegate to the build features flags.
+    override val buildConfigEnabled: Boolean
+        get() = buildFeatures.buildConfig
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -522,12 +528,14 @@ abstract class ComponentImpl(
     }
 
     /**
-     * Computes the default sources for a particular [SourceType].
+     * Computes the default sources for all [SourceType]s.
      */
-    private fun defaultSources(type: SourceType): List<DirectoryEntry> {
-        return when(type) {
-            SourceType.JAVA -> defaultJavaSources()
-        }
+    private class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesProvider {
+
+        override val java: List<DirectoryEntry>
+            get() = component.defaultJavaSources()
+        override val res: List<Collection<DirectoryEntry>>
+            get() = component.defaultResSources()
     }
 
     /**
@@ -556,7 +564,7 @@ abstract class ComponentImpl(
         }
 
         // for the other, there's no duplicate so no issue.
-        if (getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
+        if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
             sourceSets.add(
                 TaskProviderBasedDirectoryEntryImpl(
                     "generated_build_config",
@@ -604,6 +612,69 @@ abstract class ComponentImpl(
             )
         }
         return sourceSets.build()
+    }
+
+    private fun defaultResSources(): List<Collection<DirectoryEntry>> {
+        val sourceDirectories = mutableListOf<Collection<DirectoryEntry>>()
+
+        sourceDirectories.addAll(variantSources.resSourceList)
+
+        val generatedFolders = mutableListOf<DirectoryEntry>()
+        if (buildFeatures.renderScript) {
+            generatedFolders.add(
+                TaskProviderBasedDirectoryEntryImpl(
+                    name = "renderscript_generated_res",
+                    directoryProvider = artifacts.get(RENDERSCRIPT_GENERATED_RES)
+                )
+            )
+        }
+
+        if (buildFeatures.resValues) {
+            generatedFolders.add(
+                TaskProviderBasedDirectoryEntryImpl(
+                    name = "generated_res",
+                    directoryProvider = artifacts.get(GENERATED_RES),
+                )
+            )
+        }
+
+        sourceDirectories.add(generatedFolders)
+
+        return Collections.unmodifiableList(sourceDirectories)
+    }
+
+    // Deprecated, DO NOT USE, this will be removed once we can remove the old variant API.
+    // TODO : b/214316660
+    internal val allRawAndroidResources: FileCollection by lazy {
+        val allRes: ConfigurableFileCollection = services.fileCollection()
+
+        allRes.from(
+            variantDependencies
+                .getArtifactCollection(
+                    ConsumedConfigType.RUNTIME_CLASSPATH,
+                    ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.ANDROID_RES
+                )
+                .artifactFiles
+        )
+
+        allRes.from(
+            services.fileCollection(
+                variantData.extraGeneratedResFolders
+            ).builtBy(listOfNotNull(variantData.extraGeneratedResFolders.builtBy))
+        )
+
+        taskContainer.generateApkDataTask?.let {
+            allRes.from(artifacts.get(MICRO_APK_RES))
+        }
+
+        allRes.from(sources.res.getVariantSources().map { allRes ->
+            allRes.map { directoryEntries ->
+                directoryEntries
+                    .map { it.asFiles(services::directoryProperty) }
+            }
+        })
+        allRes
     }
 
     /**
@@ -789,7 +860,7 @@ abstract class ComponentImpl(
     }
 
     fun getBuildConfigType() : BuildConfigType {
-        return if (taskContainer.generateBuildConfigTask == null || !buildFeatures.buildConfig) {
+        return if (!buildConfigEnabled) {
             BuildConfigType.NONE
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
             && variantDslInfo.getBuildConfigFields().none()
@@ -804,7 +875,7 @@ abstract class ComponentImpl(
         instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
 
-    abstract fun <T: com.android.build.api.variant.Component> createUserVisibleVariantObject(
+    abstract fun <T: Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?

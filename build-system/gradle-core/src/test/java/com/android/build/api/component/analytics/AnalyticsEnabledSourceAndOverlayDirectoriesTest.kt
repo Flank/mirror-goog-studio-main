@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.SourceDirectories
+import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -31,30 +31,31 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
 
-class AnalyticsEnabledSourceDirectoriesTest {
+class AnalyticsEnabledSourceAndOverlayDirectoriesTest {
+
     @get:Rule
     val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
     @Mock
-    lateinit var delegate: SourceDirectories
+    lateinit var delegate: SourceAndOverlayDirectories
 
     private val stats = GradleBuildVariant.newBuilder()
-    private val proxy: AnalyticsEnabledSourceDirectories by lazy {
-        object: AnalyticsEnabledSourceDirectories(delegate, stats, FakeObjectFactory.factory) {}
+    private val proxy: AnalyticsEnabledSourceAndOverlayDirectories by lazy {
+        object: AnalyticsEnabledSourceAndOverlayDirectories(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     @Test
     fun getAll() {
         val provider = Mockito.mock(Provider::class.java)
         @Suppress("UNCHECKED_CAST")
-        Mockito.`when`(delegate.all).thenReturn(provider as Provider<List<Directory>>?)
+        Mockito.`when`(delegate.all).thenReturn(provider as Provider<List<Collection<Directory>>>?)
 
         val providerProxy = proxy.all
         Truth.assertThat(providerProxy).isEqualTo(provider)
 
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.SOURCES_AND_OVERLAY_DIRECTORIES_GET_ALL_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).all
     }
 }

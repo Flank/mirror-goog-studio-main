@@ -751,7 +751,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public FileCollection getAllRawAndroidResources() {
-        return getVariantData().getAllRawAndroidResources();
+        return component.getAllRawAndroidResources$gradle_core();
     }
 
     @Override

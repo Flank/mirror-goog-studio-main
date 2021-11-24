@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.services
 import com.android.build.gradle.internal.lint.LintFromMaven
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -35,6 +36,7 @@ import java.io.File
  */
 interface TaskCreationServices: BaseServices {
     fun file(file: Any): File
+    fun directoryProperty(): DirectoryProperty
     fun fileCollection(): ConfigurableFileCollection
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun initializeAapt2Input(aapt2Input: Aapt2Input)

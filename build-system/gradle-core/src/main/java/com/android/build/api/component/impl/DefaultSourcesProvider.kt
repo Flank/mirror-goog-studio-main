@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant.impl
+package com.android.build.api.component.impl
 
-enum class SourceType(name: String) {
+import com.android.build.api.variant.impl.DirectoryEntry
 
-    JAVA("java"),
-    RES("res"),
+/**
+ * Interface to calculate the default list of sources [DirectoryEntry] per source type.
+ */
+interface DefaultSourcesProvider {
+
+    /**
+     * the list of sources [DirectoryEntry] for java
+     */
+    val java: List<DirectoryEntry>
+
+    /**
+     * the list of sources [DirectoryEntry] for android resources.
+     */
+    val res: List<Collection<DirectoryEntry>>
 }
