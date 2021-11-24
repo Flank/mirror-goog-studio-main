@@ -113,7 +113,8 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
         var expected = expected
         val diff = StringBuilder(100)
         checkFixes(null, null, diff)
-        val actual = diff.toString().replace("\r\n", "\n").trimIndent().replace('$', '＄')
+        var actual = diff.toString().replace("\r\n", "\n").trimIndent().replace('$', '＄')
+        val originalActual = actual
         expected = expected.trimIndent().replace('$', '＄')
         if (expected != actual &&
             // Also allow trailing spaces in embedded lines since the old differ
@@ -121,6 +122,15 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
             actual.replace("\\s+\n".toRegex(), "\n")
                 .trim() != expected.replace("\\s+\n".toRegex(), "\n").trim()
         ) {
+            // Older files than AGP 7.2 may not have labeled auto-fixes as such.
+            // Being tolerant here makes us not break older fix description files,
+            // but means we won't intentionally break if mark an old fix as auto-fixable
+            // without updating the test description.  This seems like a fair tradeoff
+            // since the latter is not done frequently.
+            if (TOLERATE_AUTO_FIX_DIFFS && !expected.contains("Autofix for ")) {
+                actual = actual.replace("Autofix for ", "Fix for ")
+            }
+
             // Until 3.2 canary 10 the line numbers were off by one; try adjusting
             if (bumpFixLineNumbers(expected.replace("\\s+\n".toRegex(), "\n"))
                 .trim() != actual.replace("\\s+\n".toRegex(), "\n").trim()
@@ -135,7 +145,7 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
                 // test copying from the diff includes the new normalized output.
                 val modePrefix = TestLintClient.testModePrefix(mode)
                 val defaultPrefix = if (modePrefix.isEmpty()) "" else "Default:\n\n"
-                assertEquals(defaultPrefix + expected, modePrefix + actual)
+                assertEquals(defaultPrefix + expected, modePrefix + originalActual)
             }
         }
         return this
@@ -235,7 +245,7 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
                             }
                         }
                     }
-                    appendDiff(incident, lintFix.getDisplayName(), initial, edited, diffs)
+                    appendDiff(incident, lintFix.getDisplayName(), lintFix.robot, initial, edited, diffs)
                 }
                 val name = lintFix.getDisplayName()
                 if (fixName != null && fixName != name) {
@@ -293,6 +303,7 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
     private fun appendDiff(
         incident: Incident,
         fixDescription: String?,
+        autoFixable: Boolean,
         initial: MutableMap<String, String>,
         edited: MutableMap<String, String>,
         diffs: StringBuilder
@@ -322,7 +333,12 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
             if (diff.isNotEmpty()) {
                 val targetPath = file.replace(File.separatorChar, '/')
                 if (first) {
-                    diffs.append("Fix for ")
+                    if (autoFixable) {
+                        diffs.append("Autofix ")
+                    } else {
+                        diffs.append("Fix ")
+                    }
+                    diffs.append("for ")
                         .append(incidentPath)
                         .append(" line ")
                         .append(incident.line + 1)
@@ -384,6 +400,8 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
     companion object {
         /** Pattern recognizing lint quickfix test output messages */
         val FIX_PATTERN: Pattern = Pattern.compile("((Fix|Data) for .* line )(\\d+)(: .+)")
+
+        private const val TOLERATE_AUTO_FIX_DIFFS = true
 
         /**
          * Given fix-delta output, increases the line numbers by one

@@ -536,7 +536,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                 + "-         android:paddingRight=\"20dip\"\n"
                                 + "+         android:paddingEnd=\"20dip\"\n"
                                 + "          android:text=\"@string/creating_instant_mix\"\n"
-                                + "Fix for res/layout/rtl_quick_fixed.xml line 18: Delete layout_marginLeft:\n"
+                                + "Autofix for res/layout/rtl_quick_fixed.xml line 18: Delete layout_marginLeft:\n"
                                 + "@@ -20 +20\n"
                                 + "          android:id=\"@+id/text2\"\n"
                                 + "-         android:layout_marginLeft=\"35dip\"\n"

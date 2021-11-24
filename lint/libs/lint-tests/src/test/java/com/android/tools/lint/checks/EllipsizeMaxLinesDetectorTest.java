@@ -71,11 +71,11 @@ public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
                                 + "2 errors, 0 warnings\n")
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/sample.xml line 8: Replace with singleLine=\"true\":\n"
+                                + "Autofix for res/layout/sample.xml line 9: Replace with singleLine=\"true\":\n"
                                 + "@@ -10 +10\n"
                                 + "-         android:lines=\"1\"\n"
                                 + "+         android:singleLine=\"true\"\n"
-                                + "Fix for res/layout/sample.xml line 15: Replace with singleLine=\"true\":\n"
+                                + "Autofix for res/layout/sample.xml line 16: Replace with singleLine=\"true\":\n"
                                 + "@@ -17 +17\n"
                                 + "-         android:maxLines=\"1\"\n"
                                 + "+         android:singleLine=\"true\"\n");
