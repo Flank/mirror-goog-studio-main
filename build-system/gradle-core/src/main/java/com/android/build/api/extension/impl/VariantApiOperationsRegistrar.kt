@@ -19,7 +19,6 @@ package com.android.build.api.extension.impl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.tools.r8.internal.it
 
 /**
  * Holder of various [OperationsRegistrar] for all the variant API related operations to a plugin.
