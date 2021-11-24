@@ -23,6 +23,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.android.build.gradle.options.BooleanOption
+import com.android.Version
+import com.android.testutils.TestUtils
 import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER
@@ -88,8 +90,14 @@ class ProfileContentTest {
             assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isTrue()
             assertThat(gbv.targetSdkVersion.apiLevel).named("target sdk version").isEqualTo(SUPPORT_LIB_MIN_SDK)
             assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse()
-            assertThat(gbp.pluginNamesList).contains("com.android.build.gradle.AppPlugin")
-            assertThat(gbp.pluginNamesList).contains("org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper")
+            assertThat(gbp.appliedPluginsList.any {
+                it.className == "com.android.build.gradle.AppPlugin" &&
+                        it.jarName == "gradle-${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+            }).isTrue()
+            assertThat(gbp.appliedPluginsList.any {
+                it.className == "org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper" &&
+                        it.jarName == "kotlin-gradle-plugin-${TestUtils.KOTLIN_VERSION_FOR_TESTS}"
+            }).isTrue()
         }
         for (profile in listOf(cleanBuild, noOpBuild)) {
             assertThat(HashSet(profile.rawProjectIdList))

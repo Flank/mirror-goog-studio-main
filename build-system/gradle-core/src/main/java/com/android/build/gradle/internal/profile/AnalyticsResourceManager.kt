@@ -33,17 +33,16 @@ import com.android.tools.analytics.Anonymizer
 import com.android.tools.analytics.CommonMetricsData
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.base.Strings
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import com.google.wireless.android.sdk.stats.GradlePluginData
 import com.google.wireless.android.sdk.stats.GradleTransformExecution
 import org.gradle.api.Project
 import org.gradle.api.execution.TaskExecutionGraph
-import org.gradle.api.internal.StartParameterInternal
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.tooling.events.FinishEvent
@@ -361,8 +360,27 @@ class AnalyticsResourceManager constructor(
             val projectBuilder = getProjectBuilder(it.path)
             it.plugins.forEach { plugin ->
                 projectBuilder.addPlugin(AnalyticsUtil.toProto(plugin))
-                projectBuilder.addPluginNames(plugin.javaClass.name)
+                val pluginData = GradlePluginData.newBuilder().setClassName(plugin.javaClass.name)
+                maybeGetJarName(plugin.javaClass)?.let { jarName ->
+                    pluginData.setJarName(jarName)
+                }
+                projectBuilder.addAppliedPlugins(pluginData)
             }
+        }
+    }
+
+    private fun maybeGetJarName(pluginClass: Class<*>): String? {
+        val entryUrl = pluginClass.getResource(pluginClass.simpleName + ".class") ?:
+            // the plugin could be instrumented into a dynamic class, try to get the enclosing class
+            // if possible
+            pluginClass.simpleName.substringBefore('$', "")
+                .ifEmpty { null }?.let { enclosingClass ->
+                    pluginClass.getResource("$enclosingClass.class")
+                }
+
+        return entryUrl?.let {
+            it.path.substringBefore(".jar!", "")
+                .substringAfterLast('/', "").ifEmpty { null }
         }
     }
 
