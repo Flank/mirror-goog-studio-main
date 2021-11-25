@@ -100,6 +100,7 @@ abstract class SourceSetInputs {
         )
 
         return resourceSourceSets.asSequence()
+            .plus(librarySourceSets)
             .plus(extraGeneratedResDir.files)
             .plus(uncreatedSourceSets.map(::File))
             .plus(additionalSourceSets.map(::File)).toList()
