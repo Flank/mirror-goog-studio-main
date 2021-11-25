@@ -133,12 +133,12 @@ dependencies {
     implementation libs.com.android.databinding.baseLibrary
     implementation project(':base:builder-test-api')
     implementation libs.com.android.tools.layoutlib.layoutlibApi
-    implementation project(':base:utp:android-device-provider-ddmlib-proto')
-    implementation project(':base:utp:android-device-provider-gradle-proto')
-    implementation project(':base:utp:android-test-plugin-host-additional-test-output-proto')
-    implementation project(':base:utp:android-test-plugin-host-coverage-proto')
-    implementation project(':base:utp:android-test-plugin-host-retention-proto')
-    implementation project(':base:utp:android-test-plugin-result-listener-gradle-proto')
+    implementation libs.com.android.tools.utp.androidDeviceProviderDdmlibProto
+    implementation libs.com.android.tools.utp.androidDeviceProviderGradleProto
+    implementation libs.com.android.tools.utp.androidTestPluginHostAdditionalTestOutputProto
+    implementation libs.com.android.tools.utp.androidTestPluginHostCoverageProto
+    implementation libs.com.android.tools.utp.androidTestPluginHostRetentionProto
+    implementation libs.com.android.tools.utp.androidTestPluginResultListenerGradleProto
 
     implementation gradleApi()
     implementation libs.kotlin_stdlib

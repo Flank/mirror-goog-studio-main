@@ -24,7 +24,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     implementation libs.com.android.tools.common
-    implementation project(':base:utp:android-test-plugin-result-listener-gradle-proto')
+    implementation libs.com.android.tools.utp.androidTestPluginResultListenerGradleProto
     implementation libs.kotlin_stdlib
     implementation libs.kotlin_coroutines_core
     implementation libs.gson

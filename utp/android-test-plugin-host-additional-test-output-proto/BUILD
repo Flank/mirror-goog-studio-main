@@ -5,15 +5,9 @@ maven_proto_library(
     name = "android-test-plugin-host-additional-test-output-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-additional-test-output-proto:" + BASE_VERSION,
-    resource_strip_prefix = "tools/base/utp/android-test-plugin-host-additional-test-output-proto",
+    description = "A protobuf messages used in a UTP plugin to export additional test outputs",
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/utp/android-test-plugin-host-additional-test-output-proto/src/main/proto",
+    resources = glob(["src/main/proto/*.proto"]),
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["src/main/proto/*.proto"]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

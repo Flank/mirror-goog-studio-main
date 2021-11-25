@@ -5,6 +5,7 @@ maven_proto_library(
     name = "android-test-plugin-result-listener-gradle-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-result-listener-gradle-proto:" + BASE_VERSION,
+    description = "A protobuf messages used in a UTP plugin to listen test results",
     grpc_support = True,
     java_deps = [
         "@maven//:io.grpc.grpc-core",
@@ -14,7 +15,9 @@ maven_proto_library(
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
     ],
-    resource_strip_prefix = "tools/base/utp/android-test-plugin-result-listener-gradle-proto",
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/utp/android-test-plugin-result-listener-gradle-proto/src/main/proto",
+    resources = glob(["src/main/proto/*.proto"]),
     visibility = ["//visibility:public"],
 )
 
@@ -24,13 +27,4 @@ java_proto_library(
     srcs = glob(["src/main/proto/*.proto"]),
     proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["src/main/proto/*.proto"]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

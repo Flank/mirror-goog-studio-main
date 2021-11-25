@@ -816,10 +816,11 @@ com.android.tools.utp:android-test-plugin-result-listener-gradle-proto
   pomName=com.android.tools.utp.android-test-plugin-result-listener-gradle-proto
   description=A protobuf messages used in a UTP plugin to listen test results
   dependencies:
-    com.google.code.gson:gson (runtime)
     io.grpc:grpc-core (runtime)
     io.grpc:grpc-netty (runtime)
     io.grpc:grpc-protobuf (runtime)
     io.grpc:grpc-stub (runtime)
+    com.google.code.gson:gson (runtime)
     com.google.guava:guava (runtime)
+    javax.annotation:javax.annotation-api (runtime)
     com.google.protobuf:protobuf-java (runtime)

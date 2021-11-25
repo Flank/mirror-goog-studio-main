@@ -5,7 +5,10 @@ maven_proto_library(
     name = "android-device-provider-gradle-proto",
     srcs = glob(["*.proto"]),
     coordinates = "com.android.tools.utp:android-device-provider-gradle-proto:" + BASE_VERSION,
-    resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",
+    description = "A protobuf messages used in a UTP plugin to provide a Gradle managed virtual Android devices",
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto/",
+    resources = glob(["*.proto"]),
     visibility = ["//visibility:public"],
 )
 
@@ -15,13 +18,4 @@ java_proto_library(
     proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
     resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["*.proto"]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

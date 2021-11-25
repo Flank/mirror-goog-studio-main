@@ -5,10 +5,13 @@ maven_proto_library(
     name = "android-test-plugin-host-retention-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-retention-proto:" + BASE_VERSION,
+    description = "A protobuf message used in UTP plugin to take a device snapshot on test failures.",
     java_exports = [
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
-    resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention-proto",
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention-proto/src/main/proto",
+    resources = glob(["src/main/proto/*.proto"]),
     visibility = ["//visibility:public"],
 )
 
@@ -17,13 +20,4 @@ java_proto_library(
     srcs = glob(["src/main/proto/*.proto"]),
     proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["src/main/proto/*.proto"]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

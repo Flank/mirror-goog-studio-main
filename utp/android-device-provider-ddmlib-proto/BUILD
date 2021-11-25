@@ -5,15 +5,9 @@ maven_proto_library(
     name = "android-device-provider-ddmlib-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-device-provider-ddmlib-proto:" + BASE_VERSION,
-    resource_strip_prefix = "tools/base/utp/android-device-provider-ddmlib-proto",
+    description = "A protobuf messages used in a UTP plugin to provide Android device using ddmlib",
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/utp/android-device-provider-ddmlib-proto/src/main/proto",
+    resources = glob(["src/main/proto/*.proto"]),
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["src/main/proto/*.proto"]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

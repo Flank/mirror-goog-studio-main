@@ -96,6 +96,13 @@ AGP_ARTIFACTS = [
     "//tools/base/sdk-common:tools.sdk-common",
     "//tools/base/sdklib:tools.sdklib",
     "//tools/base/signflinger",
+    "//tools/base/utp/android-device-provider-ddmlib-proto",
+    "//tools/base/utp/android-device-provider-gradle-proto",
+    "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
+    "//tools/base/utp/android-test-plugin-host-coverage-proto",
+    "//tools/base/utp/android-test-plugin-host-device-info-proto",  # TODO(b/143864616): Only used for utp
+    "//tools/base/utp/android-test-plugin-host-retention-proto",
+    "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
     "//tools/base/zipflinger",
     "//tools/data-binding:tools.baseLibrary",
     "//tools/data-binding:tools.baseLibrarySupport",
