@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.DependencyConfigurator;
 import com.android.build.gradle.internal.DependencyResolutionChecks;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader;
 import com.android.build.gradle.internal.SdkComponentsKt;
@@ -199,7 +198,6 @@ public abstract class BasePlugin<
         this.registry = registry;
         this.componentFactory = componentFactory;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
-        NonFinalPluginExpiry.verifyRetirementAge();
         this.listenerRegistry = listenerRegistry;
     }
 
