@@ -119,6 +119,10 @@ enum class StringOption(
     // 30.0.0-beta02
     LINT_VERSION_OVERRIDE("android.experimental.lint.version", ApiStage.Experimental),
 
+    // User-specified flag for using a profileable or debuggable build,
+    // if the flag is not set, the debuggable value will fallback to using the DSL 'debuggable'.
+    PROFILING_MODE("android.experimental.profilingMode", ApiStage.Experimental),
+
     /* ---------------
      * DEPRECATED APIs
      */

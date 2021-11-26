@@ -21,9 +21,6 @@ import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.instrumentation.AsmClassVisitorFactory
-import com.android.build.api.instrumentation.InstrumentationParameters
-import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
@@ -130,7 +127,7 @@ open class  LibraryVariantImpl @Inject constructor(
         get() = delegate.dexingType
 
     override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
+        get() = global.profilingMode.isDebuggable ?: variantDslInfo.isDebuggable
 
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,

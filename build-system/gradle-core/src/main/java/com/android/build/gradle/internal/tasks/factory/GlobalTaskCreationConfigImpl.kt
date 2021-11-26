@@ -37,10 +37,12 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
+import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.options.StringOption
 import com.android.builder.core.LibraryRequest
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
@@ -157,6 +159,11 @@ class GlobalTaskCreationConfigImpl(
     override val prefab: Set<PrefabPackagingOptions>
         get() = (extension as? LibraryExtension)?.prefab
             ?: throw RuntimeException("calling prefab on non Library variant")
+
+    override val profilingMode: ProfilingMode
+        get() = ProfilingMode.getProfilingModeType(
+            services.projectOptions[StringOption.PROFILING_MODE]
+        )
 
     override val testCoverage: TestCoverage
         get() = extension.testCoverage

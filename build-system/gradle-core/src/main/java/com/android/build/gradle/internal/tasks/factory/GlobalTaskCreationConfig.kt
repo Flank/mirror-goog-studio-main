@@ -33,6 +33,7 @@ import com.android.build.api.dsl.TestOptions
 import com.android.build.api.transform.Transform
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
+import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.builder.core.LibraryRequest
 import com.android.builder.testing.api.DeviceProvider
@@ -84,6 +85,7 @@ interface GlobalTaskCreationConfig: BootClasspathConfig {
     val libraryRequests: Collection<LibraryRequest>
     val lintOptions: Lint
     val prefab: Set<PrefabPackagingOptions>
+    val profilingMode: ProfilingMode
     val resourcePrefix: String?
     val splits: Splits
     val testCoverage: TestCoverage

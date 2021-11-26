@@ -115,7 +115,7 @@ open class UnitTestImpl @Inject constructor(
         get() = testedConfig.applicationId
 
     override val debuggable: Boolean
-        get() = testedConfig.debuggable
+        get() = global.profilingMode.isDebuggable ?: testedConfig.debuggable
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.

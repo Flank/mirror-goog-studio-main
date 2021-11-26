@@ -90,7 +90,7 @@ open class TestFixturesImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.namespace)
     override val debuggable: Boolean
-        get() = mainVariant.debuggable
+        get() = global.profilingMode.isDebuggable ?: mainVariant.debuggable
     override val minSdkVersion: AndroidVersion
         get() = mainVariant.minSdkVersion
     override val targetSdkVersion: AndroidVersion
