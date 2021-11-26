@@ -17,6 +17,7 @@ maven_repository(
         "//tools/base/apkparser/analyzer:tools.analyzer.maven",
         "//tools/base/chunkio:tools.chunkio",
         "//tools/base/draw9patch:tools.draw9patch",
+        "//tools/base/emulator/proto",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
@@ -26,6 +27,7 @@ maven_repository(
         "//tools/base/ninepatch:tools.ninepatch",
         "//tools/base/pixelprobe:tools.pixelprobe",
         "//tools/base/testutils:tools.testutils",
+        "//tools/base/utp/android-test-plugin-host-device-info-proto",
         "//tools/data-binding:tools.compiler",
     ],
     include_transitive_deps = False,
@@ -38,6 +40,7 @@ merged_zip(
         ":other_gmaven_artifacts.zip",
         "//tools/base:agp_artifacts.zip",
         "//tools/base/build-system:android_gradle_plugin.zip",
+        "//tools/base/utp:utp.zip",
         "//tools/data-binding:data_binding_runtime.zip",
     ],
 )

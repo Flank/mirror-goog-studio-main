@@ -59,5 +59,5 @@ filegroup(
     ]) + [
         "build.gradle",
     ],
-    visibility = ["//tools/base/build-system:__pkg__"],
+    visibility = ["//tools/base/utp:__pkg__"],
 )

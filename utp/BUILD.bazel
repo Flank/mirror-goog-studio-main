@@ -1,0 +1,69 @@
+load("//tools/base/bazel:gradle.bzl", "gradle_build", "gradle_test")
+load("//tools/base/bazel:maven.bzl", "maven_repository")
+
+# keep sorted
+UTP_SOURCE_FILES = [
+    "//tools:agp_gradle_build_files",
+    "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
+    "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-additional-test-output:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-coverage:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-device-info:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-logcat:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-retention:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-result-listener-gradle:agp_gradle_build_files",
+    "//tools/buildSrc:agp_gradle_build_files",
+    "//tools/buildSrc/base:agp_gradle_build_files",
+]
+
+maven_repository(
+    name = "utp_dependencies",
+    # keep sorted
+    artifacts = [
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/emulator/proto",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/utp/android-device-provider-ddmlib-proto",
+        "//tools/base/utp/android-device-provider-gradle-proto",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
+        "//tools/base/utp/android-test-plugin-host-coverage-proto",
+        "//tools/base/utp/android-test-plugin-host-device-info-proto",
+        "//tools/base/utp/android-test-plugin-host-retention-proto",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
+        "@maven//:com.google.protobuf.protobuf-gradle-plugin",
+        "@maven//:com.google.testing.compile.compile-testing",
+        "@maven//:com.google.testing.platform.android-device-provider-local",
+        "@maven//:com.google.testing.platform.core-proto",
+        "@maven//:com.google.testing.platform.launcher",
+        "@maven//:com.googlecode.jarjar.jarjar",
+        "@maven//:commons-io.commons-io",
+        "@maven//:gradle.plugin.org.jetbrains.gradle.plugin.idea-ext.gradle-idea-ext",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin",
+        "@maven//:org.jsoup.jsoup",
+    ],
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__",
+    ],
+)
+
+gradle_build(
+    name = "utp",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    data = ["//prebuilts/studio/jdk"] + UTP_SOURCE_FILES,
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    output_file = "utp.zip",
+    output_file_source = "dist/repo.zip",
+    repos = [
+        ":utp_dependencies",
+    ],
+    tasks = [":zipPlugin"],
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__",
+        "//tools/base/gmaven:__pkg__",
+    ],
+)

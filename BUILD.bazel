@@ -20,10 +20,7 @@ maven_repository(
         "@maven//:com.google.jimfs.jimfs",
         "@maven//:com.google.protobuf.protobuf-gradle-plugin",
         "@maven//:com.google.protobuf.protoc_3.10.0",
-        "@maven//:com.google.testing.compile.compile-testing",
-        "@maven//:com.google.testing.platform.android-device-provider-local",
         "@maven//:com.google.testing.platform.core-proto",
-        "@maven//:com.google.testing.platform.launcher",
         "@maven//:com.google.truth.extensions.truth-java8-extension",
         "@maven//:com.googlecode.jarjar.jarjar",
         "@maven//:com.googlecode.json-simple.json-simple",
@@ -88,7 +85,6 @@ AGP_ARTIFACTS = [
     "//tools/base/common:tools.common",
     "//tools/base/ddmlib:tools.ddmlib",
     "//tools/base/device_validator:tools.dvlib",
-    "//tools/base/emulator/proto",  # TODO(b/143864616): Only used for utp
     "//tools/base/layoutlib-api:tools.layoutlib-api",
     "//tools/base/lint:tools.lint-model",
     "//tools/base/lint/libs/lint-typedef-remover",
@@ -100,7 +96,6 @@ AGP_ARTIFACTS = [
     "//tools/base/utp/android-device-provider-gradle-proto",
     "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
     "//tools/base/utp/android-test-plugin-host-coverage-proto",
-    "//tools/base/utp/android-test-plugin-host-device-info-proto",  # TODO(b/143864616): Only used for utp
     "//tools/base/utp/android-test-plugin-host-retention-proto",
     "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
     "//tools/base/zipflinger",
@@ -126,10 +121,12 @@ AGP_TEST_ARTIFACTS = [
     "//tools/analytics-library/testing:tools.analytics-testing",  # TODO: Only required for AGP tests
     "//tools/base/apkparser/analyzer:tools.analyzer.maven",  # TODO(b/143864616): Only required for tests
     "//tools/base/apkparser:tools.binary-resources",  # TODO(b/143864616): Only required for tests
+    "//tools/base/emulator/proto",  # Used for UTP
     "//tools/base/lint:tools.lint-gradle",  # TODO(b/143864616): Only used for tests
     "//tools/base/lint/cli",  # TODO(b/143864616): Only used for tests
     "//tools/base/lint:tools.lint-api",  # TODO(b/143864616): Only used for tests
     "//tools/base/lint:tools.lint-checks",  # TODO(b/143864616): Only used for tests
+    "//tools/base/utp/android-test-plugin-host-device-info-proto",  # Used for UTP
     "//prebuilts/tools/common/lint-psi/intellij-core",  # TODO(b/143864616): Only used for tests
     "//prebuilts/tools/common/lint-psi/kotlin-compiler",  # TODO(b/143864616): Only used for tests
     "//prebuilts/tools/common/lint-psi/uast",  # TODO(b/143864616): Only used for tests
