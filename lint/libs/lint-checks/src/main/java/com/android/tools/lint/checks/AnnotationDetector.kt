@@ -80,6 +80,7 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtWhenExpression
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
@@ -101,6 +102,7 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.namePsiElement
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.toUElement
@@ -129,8 +131,44 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
     private inner class AnnotationChecker(private val context: JavaContext) : UElementHandler() {
         override fun visitAnnotation(node: UAnnotation) {
             val type = node.qualifiedName ?: return
+            if (type == JAVA_ANNOTATION_TARGET_FQN) {
+                checkJavaTarget(node)
+            }
             if (type.startsWith("java.lang.")) return
             checkAnnotation(node, type)
+        }
+
+        private fun checkJavaTarget(node: UAnnotation) {
+            // Using java.lang.annotation.Target on a Kotlin annotation is wrong.
+            // The IDE Kotlin plugin already gives a warning about this, but we want
+            // to enforce this from the command line as an actual error because it
+            // has more dire consequences than suggested (specifying *both* actually
+            // causes the kotlin @Target attribute to be ignored, and the java @Target
+            // also breaks Java access to the annotation). See issue 207151948.
+            if (!isKotlin(node.sourcePsi)) {
+                return
+            }
+            val nameElement = node.namePsiElement
+            val location = if (nameElement != null) {
+                context.getLocation(nameElement)
+            } else {
+                context.getLocation(node)
+            }
+            val annotated = node.getParentOfType<UAnnotated>(true) ?: return
+            val hasTarget = context.evaluator.getAllAnnotations(annotated).any { it.qualifiedName == KOTLIN_ANNOTATION_TARGET_FQN }
+            val fix: LintFix
+            val message = if (hasTarget) {
+                fix = fix().replace().all().with("").range(context.getLocation(node)).build()
+                "Do not use `@java.lang.annotation.Target` here; it will cause the annotation to not be allowed on **any** element " +
+                    "types from Java"
+            } else {
+                fix = fix().replace().text(JAVA_ANNOTATION_TARGET_FQN).with("Target").range(context.getLocation(node)).build()
+                "Use `@kotlin.annotation.Target`, not `@java.lang.annotation.Target` here; these targets will be ignored from Kotlin " +
+                    "and the annotation will not be allowed on **any** element types from Java"
+            }
+            // TODO: Use new issue type? This isn't really the right one.
+            val incident = Incident(ANNOTATION_USAGE, node, location, message, fix).overrideSeverity(Severity.ERROR)
+            context.report(incident)
         }
 
         private fun checkAnnotation(annotation: UAnnotation, type: String) {
@@ -1077,6 +1115,8 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
         const val ATTR_ALL_OF = "allOf"
         const val ATTR_ANY_OF = "anyOf"
         const val ATTR_CONDITIONAL = "conditional"
+        private const val JAVA_ANNOTATION_TARGET_FQN = "java.lang.annotation.Target"
+        private const val KOTLIN_ANNOTATION_TARGET_FQN = "kotlin.annotation.Target"
 
         val IMPLEMENTATION = Implementation(
             AnnotationDetector::class.java, Scope.JAVA_FILE_SCOPE
