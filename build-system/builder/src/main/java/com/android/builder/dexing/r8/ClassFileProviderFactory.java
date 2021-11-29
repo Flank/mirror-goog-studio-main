@@ -84,10 +84,12 @@ public class ClassFileProviderFactory implements Closeable {
     @NonNull private List<ClassFileResourceProvider> providers;
     @NonNull private final OrderedClassFileResourceProvider orderedClassFileResourceProvider;
     private final long id;
+    private final boolean noClassFile;
 
     public ClassFileProviderFactory(@NonNull Collection<Path> paths) throws IOException {
         id = nextId.addAndGet(1);
 
+        noClassFile = paths.size() == 0;
         providers = Lists.newArrayListWithExpectedSize(paths.size());
         for (Path path : paths) {
             if (path.toFile().exists()) {
@@ -128,5 +130,9 @@ public class ClassFileProviderFactory implements Closeable {
         } else {
             throw new FileNotFoundException(entry.toString());
         }
+    }
+
+    public boolean noClassFile() {
+        return noClassFile;
     }
 }

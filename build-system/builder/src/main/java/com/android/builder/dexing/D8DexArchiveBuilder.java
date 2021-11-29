@@ -18,6 +18,7 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.Message;
 import com.android.tools.r8.AssertionsConfiguration;
 import com.android.tools.r8.CompilationMode;
@@ -90,9 +91,13 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                         AssertionsConfiguration.Builder::enableAllAssertions);
             }
 
+            ClassFileProviderFactory bootclasspath = dexParams.getBootclasspath();
+            if (bootclasspath.noClassFile()) {
+                throw new RuntimeException("Bootclasspath should not be empty.");
+            }
+            builder.addLibraryResourceProvider(bootclasspath.getOrderedProvider());
+
             if (dexParams.getWithDesugaring()) {
-                builder.addLibraryResourceProvider(
-                        dexParams.getDesugarBootclasspath().getOrderedProvider());
                 builder.addClasspathResourceProvider(
                         dexParams.getDesugarClasspath().getOrderedProvider());
 

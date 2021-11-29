@@ -196,8 +196,8 @@ private fun getDexArchiveBuilder(
                 debuggable = dexSpec.dexParams.debuggable,
                 dexPerClass = dexSpec.dexParams.dexPerClass,
                 withDesugaring = dexSpec.dexParams.withDesugaring,
-                desugarBootclasspath =
-                DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarBootclasspath).service,
+                bootclasspath =
+                DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.bootclasspath).service,
                 desugarClasspath =
                 DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarClasspath).service,
                 coreLibDesugarConfig = dexSpec.dexParams.coreLibDesugarConfig,

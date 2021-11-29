@@ -304,7 +304,7 @@ class DexingTransformTest {
         class TestParameters(
             minSdkVersion: Int = 12,
             debuggable: Boolean = true,
-            bootClasspath: List<File> = listOf(),
+            bootClasspath: List<File> = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
             desugaring: Boolean = false,
             errorFormat: SyncOptions.ErrorFormatMode = SyncOptions.ErrorFormatMode.MACHINE_PARSABLE,
         ) : Parameters {

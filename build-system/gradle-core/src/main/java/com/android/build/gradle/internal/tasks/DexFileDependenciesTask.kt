@@ -124,7 +124,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                         debuggable = parameters.debuggable.get(),
                         dexPerClass = false,
                         withDesugaring = true,
-                        desugarBootclasspath = ClassFileProviderFactory(bootClasspath).also {
+                        bootclasspath = ClassFileProviderFactory(bootClasspath).also {
                             closer.register(it)
                         },
                         desugarClasspath = ClassFileProviderFactory(classpath).also {
@@ -201,8 +201,8 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.PROCESSED_JAR
                     )
                 )
-                task.bootClasspath.from(creationConfig.global.bootClasspath)
             }
+            task.bootClasspath.from(creationConfig.global.bootClasspath)
 
             task.classpath.disallowChanges()
             task.bootClasspath.disallowChanges()

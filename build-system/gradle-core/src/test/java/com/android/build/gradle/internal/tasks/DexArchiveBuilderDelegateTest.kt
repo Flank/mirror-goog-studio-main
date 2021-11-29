@@ -447,7 +447,7 @@ class DexArchiveBuilderDelegateTest {
                 minSdkVersion = minSdkVersion,
                 debuggable = isDebuggable,
                 withDesugaring = (java8Desugaring == VariantScope.Java8LangSupport.D8),
-                desugarBootclasspath = emptyList(),
+                desugarBootclasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
                 desugarClasspath = desugaringClasspath.toList(),
                 coreLibDesugarConfig = libConfiguration,
                 errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
