@@ -253,4 +253,8 @@ class AnnotationUsageInfo(
         }
         return null
     }
+
+    override fun toString(): String {
+        return this::class.java.simpleName + "($type for $usage, index=$index in $annotations)"
+    }
 }

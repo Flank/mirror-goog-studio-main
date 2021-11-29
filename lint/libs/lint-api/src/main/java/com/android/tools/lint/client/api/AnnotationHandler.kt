@@ -131,7 +131,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             }
             if (check != null) {
                 val type = when (p.operator) {
-                    UastBinaryOperator.ASSIGN -> ASSIGNMENT_LHS
+                    UastBinaryOperator.ASSIGN -> if (check === rightOperand) ASSIGNMENT_LHS else BINARY
                     UastBinaryOperator.EQUALS,
                     UastBinaryOperator.NOT_EQUALS,
                     UastBinaryOperator.IDENTITY_EQUALS,
