@@ -32,7 +32,7 @@ abstract class BundleOptions : Bundle {
     abstract override val codeTransparency: BundleCodeTransparency
     abstract override val storeArchive: BundleOptionsStoreArchive
 
-    abstract val integrityConfigDir: DirectoryProperty
+    abstract override val integrityConfigDir: DirectoryProperty
 
     abstract fun abi(action: Action<BundleOptionsAbi>)
     abstract fun density(action: Action<BundleOptionsDensity>)

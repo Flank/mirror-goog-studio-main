@@ -228,6 +228,7 @@ com.android.build.api.dsl.Bundle.codeTransparency: void (kotlin.jvm.functions.Fu
 com.android.build.api.dsl.Bundle.deviceTier: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDeviceTier, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
 com.android.build.api.dsl.Bundle.getDeviceTier: com.android.build.api.dsl.BundleDeviceTier ()
+com.android.build.api.dsl.Bundle.getIntegrityConfigDir: org.gradle.api.file.DirectoryProperty ()
 com.android.build.api.dsl.Bundle.getStoreArchive: com.android.build.api.dsl.StoreArchive ()
 com.android.build.api.dsl.Bundle.storeArchive: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.StoreArchive, kotlin.Unit>)
 com.android.build.api.dsl.BundleAbi.getEnableSplit: java.lang.Boolean ()
