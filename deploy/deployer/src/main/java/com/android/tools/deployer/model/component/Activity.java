@@ -22,7 +22,6 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.utils.ILogger;
-import java.util.Locale;
 
 public class Activity extends AppComponent {
 
@@ -44,13 +43,14 @@ public class Activity extends AppComponent {
             @NonNull Mode activationMode,
             @NonNull IShellOutputReceiver receiver)
             throws DeployerException {
+        extraFlags = extraFlags.trim();
         validate(extraFlags, activationMode);
         logger.info("Activating Activity '%s' %s",
                     info.getQualifiedName(),
                     activationMode.equals(Mode.DEBUG) ? "for debug" : "");
         if (activationMode.equals(Mode.DEBUG)
-            && extraFlags.contains(Flags.ENABLE_DEBUGGING.string)) {
-            extraFlags = "-D " + extraFlags;
+                && !extraFlags.contains(Flag.ENABLE_DEBUGGING.string)) {
+            extraFlags = "-D" + (extraFlags.isEmpty() ? "" : (" " + extraFlags));
         }
         String command = getStartActivityCommand(extraFlags);
         logger.info("$ adb shell " + command);
@@ -75,7 +75,7 @@ public class Activity extends AppComponent {
                 hasArgument = false;
                 continue;
             } try {
-                Flags validFlag = Flags.valueOf(current.toUpperCase(Locale.US));
+                Flag validFlag = Flag.getFlag(current);
                 hasArgument = validFlag.hasArgument;
             }
             catch (Exception e) {
@@ -90,14 +90,15 @@ public class Activity extends AppComponent {
 
     @NonNull
     private String getStartActivityCommand(@NonNull String extraFlags) {
-        return "am start" +
-               " -n " + getFQEscapedName() +
-               " -a android.intent.action.MAIN" +
-               " -c android.intent.category.LAUNCHER" +
-               extraFlags;
+        return "am start"
+                + " -n "
+                + getFQEscapedName()
+                + " -a android.intent.action.MAIN"
+                + " -c android.intent.category.LAUNCHER"
+                + (extraFlags.isEmpty() ? "" : " " + extraFlags);
     }
 
-    private enum Flags {
+    private enum Flag {
         ENABLE_DEBUGGING("-D", false),
         WAIT_FOR_LAUNCH("-W", false),
         REPEAT("-R", true),
@@ -111,9 +112,16 @@ public class Activity extends AppComponent {
 
         public final boolean hasArgument;
 
-        Flags(String flag, boolean hasArgument) {
+        Flag(String flag, boolean hasArgument) {
             this.string = flag;
             this.hasArgument = hasArgument;
+        }
+
+        public static Flag getFlag(String value) {
+            for (Flag v : values()) {
+                if (v.string.equalsIgnoreCase(value)) return v;
+            }
+            throw new IllegalArgumentException();
         }
     }
 }
