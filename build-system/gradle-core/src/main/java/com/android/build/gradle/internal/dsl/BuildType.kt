@@ -163,16 +163,6 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
 
     override val shaders: ShaderOptions = dslServices.newInstance(ShaderOptions::class.java)
 
-    override val aarMetadata: AarMetadata = dslServices.newInstance(AarMetadata::class.java)
-
-    override fun aarMetadata(action: com.android.build.api.dsl.AarMetadata.() -> Unit) {
-        action.invoke(aarMetadata)
-    }
-
-    override fun aarMetadata(action: Action<com.android.build.api.dsl.AarMetadata>) {
-        action.execute(aarMetadata)
-    }
-
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build
      * scripts.

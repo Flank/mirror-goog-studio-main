@@ -109,12 +109,39 @@ sealed class SupportedPropertyType {
      */
     data class Block(
         override val type: Type,
-        override val implementationType: Type = type,
+        override val implementationType: Type,
     ): SupportedPropertyType() {
         constructor(
             type: Class<*>,
             implementationType: Class<*>,
         ) : this(Type.getType(type), Type.getType(implementationType))
+
+        init {
+            assert(type != implementationType) {
+                """
+                    Trying to decorate a class (${type.className}) with no implementation class.
+
+                    The decorator defines classes at runtime using MethodHandles.Lookup.defineClass,
+                    defining the implementation class in the same classloader as the DSL class.
+
+                    In some cases, no custom implementation is needed, and initially this meant
+                    that those implementations would be defined in the same classloader as the
+                    gradle-api classes, and those implementations refer to types defined in
+                    gradle-core.
+
+                    This is ok in the general case, as normally gradle-core and gradle-api are in
+                    the same classloader.
+
+                    However, in cases with buildSrc this can mean that gradle-api classes are in a
+                    parent classloader from gradle-core classes. Then the generated classes refer
+                    to types in gradle-core, which are not visible from their classloader.
+
+                    The defineClass API needs a related class, so even for types with no custom
+                    implementation, define an 'Impl' interface in gradle-core and decorate that
+                    instead.
+                """.trimIndent()
+            }
+        }
     }
 
     override fun toString(): String = "SupportedPropertyType(type=${type.className})"

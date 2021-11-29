@@ -85,11 +85,15 @@ fun getApiElements(klass: Class<*>, dslInterfaces: List<Class<*>>): List<String>
 fun getApiTester(): ApiTester {
     val classes = getApiClasses()
     return ApiTester(
-        "The Android Gradle Plugin internal implementation classes.",
+        "The Android Gradle Plugin undecorated dsl methods.",
         classes,
         ApiTester.Filter.ALL,
         """
-            The internal implementation classes have changed, either revert the change or re-run DecoratedApiChangesUpdater.main[] from the IDE to update the API file.
+            The undecorated dsl methods have changed. If you are adding a new property or block,
+            add it to AGP_SUPPORTED_PROPERTY_TYPES to be automatically implemented with locking
+            support by AndroidPluginDslDecorator. If it is not possible to decorate the property,
+            run DecoratedApiChangesUpdater.main[] from the IDE to update the API file.
+
             DecoratedApiChangesUpdater will apply the following changes if run:
 
             """.trimIndent(),

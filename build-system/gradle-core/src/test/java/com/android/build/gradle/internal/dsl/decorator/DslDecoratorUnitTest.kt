@@ -479,7 +479,7 @@ class DslDecoratorUnitTest {
     /** The new sub blocks require no explicit implementation  */
     @Test
     fun `check green-field sub-block instantiation`() {
-        val subBlockPropertyType = SupportedPropertyType.Block(SubBlock::class.java, SubBlock::class.java)
+        val subBlockPropertyType = SupportedPropertyType.Block(SubBlock::class.java, SubBlockImpl::class.java)
         val decorator = DslDecorator(listOf(subBlockPropertyType, SupportedPropertyType.Var.String))
         registerTestDecorator(decorator)
 
@@ -553,7 +553,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check locking works for subBlocks`() {
-        val subBlockPropertyType = SupportedPropertyType.Block(SubBlock::class.java, SubBlock::class.java)
+        val subBlockPropertyType = SupportedPropertyType.Block(SubBlock::class.java, SubBlockImpl::class.java)
         val decorator = DslDecorator(listOf(subBlockPropertyType, SupportedPropertyType.Var.String))
         registerTestDecorator(decorator)
 

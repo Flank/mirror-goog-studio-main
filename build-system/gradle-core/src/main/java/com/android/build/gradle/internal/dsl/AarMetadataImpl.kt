@@ -16,10 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.AarMetadata
+
 /** DSL object for configuring AAR metadata. */
-open class AarMetadata : com.android.build.api.dsl.AarMetadata {
-
-    override var minCompileSdk: Int? = null
-
-    override var minAgpVersion: String? = null
-}
+interface AarMetadataImpl: AarMetadata

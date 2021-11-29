@@ -491,16 +491,6 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         action.invoke(shaders)
     }
 
-    override val aarMetadata: AarMetadata = dslServices.newInstance(AarMetadata::class.java)
-
-    override fun aarMetadata(action: com.android.build.api.dsl.AarMetadata.() -> Unit) {
-        action.invoke(aarMetadata)
-    }
-
-    override fun aarMetadata(action: Action<com.android.build.api.dsl.AarMetadata>) {
-        action.execute(aarMetadata)
-    }
-
     /**
      * Deprecated equivalent of `vectorDrawablesOptions.generatedDensities`.
      */

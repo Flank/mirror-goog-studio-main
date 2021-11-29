@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.decorator
 
+import com.android.build.api.dsl.AarMetadata
 import com.android.build.api.dsl.AbiSplit
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.ApplicationPublishing
@@ -40,6 +41,7 @@ import com.android.build.api.dsl.Split
 import com.android.build.api.dsl.Splits
 import com.android.build.api.dsl.StoreArchive
 import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.dsl.AarMetadataImpl
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
 import com.android.build.gradle.internal.dsl.AssetPackBundleExtensionImpl
@@ -73,6 +75,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Collection.Set,
     SupportedPropertyType.Collection.Map,
 
+    SupportedPropertyType.Block(AarMetadata::class.java, AarMetadataImpl::class.java),
     SupportedPropertyType.Block(AbiSplit::class.java, AbiSplitOptions::class.java),
     SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),
     SupportedPropertyType.Block(ApplicationPublishing::class.java, ApplicationPublishingImpl::class.java),
