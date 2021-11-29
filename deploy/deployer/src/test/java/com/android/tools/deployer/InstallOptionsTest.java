@@ -62,7 +62,7 @@ public class InstallOptionsTest {
     @Test
     public void testCurrentUser() {
         InstallOptions.Builder optionsBuilder = InstallOptions.builder();
-        optionsBuilder.setInstallOnCurrentUser();
+        optionsBuilder.setInstallOnUser(InstallOptions.CURRENT_USER);
         List<String> options = optionsBuilder.build().getFlags();
         int ix = options.indexOf("--user");
         assertTrue(ix != -1);

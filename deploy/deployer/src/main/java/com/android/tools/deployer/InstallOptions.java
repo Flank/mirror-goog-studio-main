@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class InstallOptions {
+    // This value comes from the framework and should not be changed.
+    public static final String CURRENT_USER = "current";
 
     private final List<String> allFlags;
     private final List<String> userFlags;
@@ -85,9 +87,9 @@ public final class InstallOptions {
             return this;
         }
 
-        public Builder setInstallOnCurrentUser() {
+        public Builder setInstallOnUser(String targetUserId) {
             flags.add("--user");
-            flags.add("current");
+            flags.add(targetUserId);
             return this;
         }
 
