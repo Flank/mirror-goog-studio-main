@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class TypedefDetectorTest : AbstractCheckTest() {
@@ -1924,5 +1925,34 @@ class TypedefDetectorTest : AbstractCheckTest() {
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun test208002049() {
+        // Regression test for https://issuetracker.google.com/208002049
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.graphics.Paint;
+                import android.graphics.Typeface;
+
+                public class StyleTest {
+                    private static void apply(Paint paint, String family) {
+                        int oldStyle;
+
+                        Typeface old = paint.getTypeface();
+                        if (old == null) {
+                            oldStyle = 0;
+                        } else {
+                            oldStyle = old.getStyle();
+                        }
+
+                        Typeface tf = Typeface.create(family, oldStyle);
+                    }
+                }
+                """
+            ).indented()
+        ).testModes(TestMode.Companion.DEFAULT).run().expectClean()
     }
 }
