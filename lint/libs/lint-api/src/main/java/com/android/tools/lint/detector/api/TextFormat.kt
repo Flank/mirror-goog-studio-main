@@ -290,7 +290,7 @@ enum class TextFormat {
 
             if (!escaped && (c == '*' || c == '`') && i < n - 1) {
                 // Preformatted text?
-                if (i == 0 || i > 0 && text[i - 1] == '\n' &&
+                if ((i == 0 || text[i - 1] == '\n') &&
                     text.regionMatches(i, "```", 0, 3, false)
                 ) {
                     // Yes. Find end

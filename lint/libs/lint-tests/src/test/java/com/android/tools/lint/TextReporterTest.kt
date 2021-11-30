@@ -15,121 +15,66 @@
  */
 package com.android.tools.lint
 
-import com.android.tools.lint.LintStats.Companion.create
+import com.android.SdkConstants.DOT_TXT
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.BuiltinIssueRegistry
+import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
-import com.android.tools.lint.checks.ManifestDetector
-import com.android.tools.lint.checks.infrastructure.dos2unix
+import com.android.tools.lint.checks.InteroperabilityDetector
+import com.android.tools.lint.checks.infrastructure.TestLintResult
 import com.android.tools.lint.client.api.Vendor
-import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.Incident
-import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Location.Companion.create
-import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.detector.api.Severity
-import java.io.File
 import java.io.FileWriter
-import java.util.ArrayList
-import java.util.Collections
 
 class TextReporterTest : AbstractCheckTest() {
     fun testBasic() {
-        val file = File(targetDir, "report")
-        try {
-            val client: LintCliClient = createClient()
-            file.parentFile.mkdirs()
-            val writer = FileWriter(file)
-            val flags = client.flags
-            val reporter = TextReporter(client, flags, file, writer, true)
-            val project = Project.create(
-                client,
-                File("/foo/bar/Foo"),
-                File("/foo/bar/Foo")
-            )
-            flags.isShowEverything = true
-            val location1 =
-                create(
-                    File("/foo/bar/Foo/AndroidManifest.xml"),
-                    DefaultPosition(6, 4, 198),
-                    DefaultPosition(6, 42, 236)
-                )
-            val incident1 = Incident(
-                ManifestDetector.USES_SDK,
-                "<uses-sdk> tag should specify a target API level (the highest verified " +
-                    "version; when running on later versions, compatibility behaviors may " +
-                    "be enabled) with android:targetSdkVersion=\"?\"",
-                location1,
-                null
-            ).apply { this.project = project; this.severity = Severity.WARNING }
-            createTextWithLineAt(
-                client,
-                "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n",
-                location1
-            )
-            var secondary = create(
-                incident1.file,
-                DefaultPosition(7, 4, 198),
-                DefaultPosition(7, 42, 236)
-            )
-            secondary.message = "Secondary location"
-            incident1.location.secondary = secondary
-            val location2 =
-                create(
-                    File("/foo/bar/Foo/res/layout/main.xml"),
-                    DefaultPosition(11, 8, 377),
-                    DefaultPosition(11, 27, 396)
-                )
-            val incident2 = Incident(
-                HardcodedValuesDetector.ISSUE,
-                "Hardcoded string \"Fooo\", should use @string resource",
-                location2,
-                null
-            ).apply { this.project = project; this.severity = Severity.WARNING }
-            createTextWithLineAt(
-                client,
-                "        android:text=\"Fooo\" />\n        ~~~~~~~~~~~~~~~~~~~\n",
-                location2
-            )
-            secondary = create(
-                incident1.file,
-                DefaultPosition(7, 4, 198),
-                DefaultPosition(7, 42, 236)
-            )
-            secondary.message = "Secondary location"
-            incident2.location.secondary = secondary
-            val tertiary = create(
-                incident2.file,
-                DefaultPosition(5, 4, 198),
-                DefaultPosition(5, 42, 236)
-            )
-            secondary.secondary = tertiary
-            val incidents: MutableList<Incident> = ArrayList()
-            incidents.add(incident1)
-            incidents.add(incident2)
-            Collections.sort(incidents)
-            reporter.write(create(0, 2), incidents)
-            val report = file.readText()
-            assertEquals(
+        lint().files(
+            xml(
+                "res/menu/menu.xml",
                 """
-                AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion="?" [UsesMinSdkAttributes]
-                    <uses-sdk android:minSdkVersion="8" />
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    AndroidManifest.xml:8: Secondary location
-                res/layout/main.xml:12: Warning: Hardcoded string "Fooo", should use @string resource [HardcodedText]
-                        android:text="Fooo" />
-                        ~~~~~~~~~~~~~~~~~~~
-                    AndroidManifest.xml:8: Secondary location
-                Also affects: res/layout/main.xml:6
-                0 errors, 2 warnings
+                    <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+                        <item
+                            android:id="@+id/item1"
+                            android:icon="@drawable/icon1"
+                            android:title="My title 1">
+                        </item>
+                        <item
+                            android:id="@+id/item2"
+                            android:icon="@drawable/icon2"
+                            android:showAsAction="ifRoom"
+                            android:title="My title 2">
+                        </item>
+                    </menu>
+                    """
+            ).indented(),
+            xml(
+                "res/values/duplicate-strings.xml",
+                """
+                    <resources>
+                        <string name="app_name">App Name</string>
+                        <string name="hello_world">Hello world!</string>
+                        <string name="app_name">App Name 1</string>
+                        <string name="app_name2">App Name 2</string>
 
-                """.trimIndent(),
-                report.dos2unix()
-            )
-        } finally {
-            file.delete()
-        }
+                    </resources>
+                    """
+            ).indented()
+        ).issues(HardcodedValuesDetector.ISSUE, DuplicateResourceDetector.ISSUE).run().expectText(
+            """
+            res/values/duplicate-strings.xml:4: Error: app_name has already been defined in this folder [DuplicateDefinition]
+                <string name="app_name">App Name 1</string>
+                        ~~~~~~~~~~~~~~~
+                res/values/duplicate-strings.xml:2: Previously defined here
+            res/menu/menu.xml:5: Warning: Hardcoded string "My title 1", should use @string resource [HardcodedText]
+                    android:title="My title 1">
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/menu/menu.xml:11: Warning: Hardcoded string "My title 2", should use @string resource [HardcodedText]
+                    android:title="My title 2">
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 2 warnings
+                """,
+            LintCliFlags().apply { isShowEverything = true }
+        )
     }
 
     fun testWithExplanations() {
@@ -138,132 +83,60 @@ class TextReporterTest : AbstractCheckTest() {
         // (which we normally omit for built-in checks)
         HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
 
-        val file = File(targetDir, "report")
+        // Some sample errors with secondary locations, multiple incidents of each
+        // type to make sure we display the explanations only once per issue type etc
         try {
-            val client: LintCliClient = createClient()
-            file.parentFile.mkdirs()
-            val writer = FileWriter(file)
-            val flags = client.flags
-            val reporter =
-                TextReporter(client, flags, file, writer, true)
-            flags.isExplainIssues = true
-            val project =
-                Project.create(
-                    client,
-                    File("/foo/bar/Foo"),
-                    File("/foo/bar/Foo")
-                )
-            flags.isShowEverything = true
-            val location1 =
-                create(
-                    File("/foo/bar/Foo/AndroidManifest.xml"),
-                    DefaultPosition(6, 4, 198),
-                    DefaultPosition(6, 42, 236)
-                )
-            val incident1 = Incident(
-                ManifestDetector.USES_SDK,
-                "<uses-sdk> tag should specify a target API level (the highest verified " +
-                    "version; when running on later versions, compatibility behaviors may " +
-                    "be enabled) with android:targetSdkVersion=\"?\"",
-                location1,
-                null
-            ).apply { this.project = project; severity = Severity.WARNING }
-            createTextWithLineAt(
-                client,
-                "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n",
-                location1
-            )
-            var secondary =
-                create(
-                    incident1.file,
-                    DefaultPosition(7, 4, 198),
-                    DefaultPosition(7, 42, 236)
-                )
-            secondary.message = "Secondary location"
-            incident1.location.secondary = secondary
-            val location2 =
-                create(
-                    File("/foo/bar/Foo/res/layout/main.xml"),
-                    DefaultPosition(11, 8, 377),
-                    DefaultPosition(11, 27, 396)
-                )
-            val incident2 = Incident(
-                HardcodedValuesDetector.ISSUE,
-                "Hardcoded string \"Fooo\", should use @string resource",
-                location2,
-                null
-            ).apply { this.project = project; severity = Severity.WARNING }
-            createTextWithLineAt(
-                client,
-                "        android:text=\"Fooo\" />\n        ~~~~~~~~~~~~~~~~~~~\n",
-                location2
-            )
-            secondary = create(
-                incident1.file,
-                DefaultPosition(7, 4, 198),
-                DefaultPosition(7, 42, 236)
-            )
-            secondary.message = "Secondary location"
-            incident2.location.secondary = secondary
-            val tertiary =
-                create(
-                    incident2.file,
-                    DefaultPosition(5, 4, 198),
-                    DefaultPosition(5, 42, 236)
-                )
-            secondary.secondary = tertiary
+            lint().files(
+                xml(
+                    "res/menu/menu.xml",
+                    """
+                    <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+                        <item
+                            android:id="@+id/item1"
+                            android:icon="@drawable/icon1"
+                            android:title="My title 1">
+                        </item>
+                        <item
+                            android:id="@+id/item2"
+                            android:icon="@drawable/icon2"
+                            android:showAsAction="ifRoom"
+                            android:title="My title 2">
+                        </item>
+                    </menu>
+                    """
+                ).indented(),
+                xml(
+                    "res/values/duplicate-strings.xml",
+                    """
+                    <resources>
+                        <string name="app_name">App Name</string>
+                        <string name="hello_world">Hello world!</string>
+                        <string name="app_name">App Name 1</string>
+                        <string name="app_name2">App Name 2</string>
 
-            // Add another warning of the same type as warning 1 to make sure we
-            // (1) sort the warnings of the same issue together and (2) only print
-            // the explanation twice1
-            val location3 =
-                create(
-                    File("/foo/bar/Foo/AndroidManifest2.xml"),
-                    DefaultPosition(8, 4, 198),
-                    DefaultPosition(8, 42, 236)
-                )
-            val incident3 = Incident(
-                ManifestDetector.USES_SDK,
-                "<uses-sdk> tag should specify a target API level (the highest verified " +
-                    "version; when running on later versions, compatibility behaviors may " +
-                    "be enabled) with android:targetSdkVersion=\"?\"",
-                location3,
-                null
-            ).apply { this.project = project; severity = Severity.WARNING }
-            createTextWithLineAt(
-                client,
-                "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n",
-                location3
-            )
-            val incidents: MutableList<Incident> = ArrayList()
-            incidents.add(incident1)
-            incidents.add(incident2)
-            incidents.add(incident3)
-            Collections.sort(incidents)
-            reporter.write(create(0, 3), incidents)
-            val report = file.readText()
-            assertEquals(
+                    </resources>
+                    """
+                ).indented()
+            ).issues(HardcodedValuesDetector.ISSUE, DuplicateResourceDetector.ISSUE).run().expectText(
                 """
-                AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion="?" [UsesMinSdkAttributes]
-                    <uses-sdk android:minSdkVersion="8" />
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    AndroidManifest.xml:8: Secondary location
-                AndroidManifest2.xml:9: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion="?" [UsesMinSdkAttributes]
-                    <uses-sdk android:minSdkVersion="8" />
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                res/values/duplicate-strings.xml:4: Error: app_name has already been defined in this folder [DuplicateDefinition]
+                    <string name="app_name">App Name 1</string>
+                            ~~~~~~~~~~~~~~~
+                    res/values/duplicate-strings.xml:2: Previously defined here
 
-                   Explanation for issues of type "UsesMinSdkAttributes":
-                   The manifest should contain a <uses-sdk> element which defines the minimum
-                   API Level required for the application to run, as well as the target
-                   version (the highest API level you have tested the version for).
+                   Explanation for issues of type "DuplicateDefinition":
+                   You can define a resource multiple times in different resource folders;
+                   that's how string translations are done, for example. However, defining the
+                   same resource more than once in the same resource folder is likely an
+                   error, for example attempting to add a new resource without realizing that
+                   the name is already used, and so on.
 
-                   https://developer.android.com/guide/topics/manifest/uses-sdk-element.html
-
-                res/layout/main.xml:12: Warning: Hardcoded string "Fooo", should use @string resource [HardcodedText from mylibrary-1.0]
-                        android:text="Fooo" />
-                        ~~~~~~~~~~~~~~~~~~~
-                    AndroidManifest.xml:8: Secondary location
-                Also affects: res/layout/main.xml:6
+                res/menu/menu.xml:5: Warning: Hardcoded string "My title 1", should use @string resource [HardcodedText from mylibrary-1.0]
+                        android:title="My title 1">
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+                res/menu/menu.xml:11: Warning: Hardcoded string "My title 2", should use @string resource [HardcodedText from mylibrary-1.0]
+                        android:title="My title 2">
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                    Explanation for issues of type "HardcodedText":
                    Hardcoding text attributes directly in layout files is bad for several
@@ -284,38 +157,76 @@ class TextReporterTest : AbstractCheckTest() {
                    Contact: lint@example.com
                    Feedback: https://example.com/lint/file-new-bug.html
 
-                0 errors, 3 warnings
-
-                """.trimIndent(),
-                report.dos2unix()
+                1 errors, 2 warnings
+                """,
+                LintCliFlags().apply { isExplainIssues = true }
             )
         } finally {
-            file.delete()
             HardcodedValuesDetector.ISSUE.vendor = BuiltinIssueRegistry().vendor
         }
     }
 
-    override fun getDetector(): Detector {
-        error("Not used in this test")
+    fun testDescribeOptions() {
+        lint().files(
+            java(
+                """
+                package other.pkg;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class Test2 {
+                    public Float error4;
+                    /** @deprecated */
+                    public Float error5;
+                }
+                """
+            ).indented(),
+        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expectText(
+            """
+            src/other/pkg/Test2.java:5: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
+                public Float error4;
+                       ~~~~~
+            src/other/pkg/Test2.java:7: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
+                public Float error5;
+                       ~~~~~
+
+               Explanation for issues of type "UnknownNullness":
+               To improve referencing this code from Kotlin, consider adding explicit
+               nullness information here with either @NonNull or @Nullable.
+
+               https://developer.android.com/kotlin/interop#nullability_annotations
+
+               Available options:
+
+               **ignore-deprecated** (default is false):
+               Whether to ignore classes and members that have been annotated with `@Deprecated`.
+
+               Normally this lint check will flag all unannotated elements, but by setting this option to `true` it will skip any deprecated elements.
+
+               To configure this option, use a `lint.xml` file with an <option> like this:
+
+               ```xml
+               <lint>
+                   <issue id="UnknownNullness">
+                       <option name="ignore-deprecated" value="false" />
+                   </issue>
+               </lint>
+               ```
+
+            0 errors, 2 warnings
+            """,
+            LintCliFlags().apply { isExplainIssues = true }
+        )
     }
 
-    // Test utility which helps [Incident.getErrorLines()] work such that it will return the
-    // given error lines at the given location. This works by creating a fake source file
-    // which has the lines at the given location and storing that in the client's source map.
-    // Note that this only works when there's a single incident in a file.
-    private fun createTextWithLineAt(
-        client: LintCliClient,
-        errorLines: String,
-        location: Location
-    ) {
-        val line = location.start?.line ?: return
-        val sb = StringBuilder()
-        for (i in 0 until line) {
-            sb.append("\n")
-        }
-        sb.append(errorLines)
-        client.setSourceText(location.file, sb)
+    private fun TestLintResult.expectText(expected: String, flags: LintCliFlags) {
+        expectReported(
+            expected, DOT_TXT, { client, file ->
+                Reporter.createTextReporter(client, flags, file, FileWriter(file), true)
+            }
+        )
     }
+
+    override fun getDetector(): Detector = HardcodedValuesDetector()
 }
 
 fun createTestVendor(): Vendor {

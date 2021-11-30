@@ -108,7 +108,8 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             "Activity is set to be non resizeable",
                             "The `<activity>` element should be allowed to be resized to allow "
                                     + "users to take advantage of the multi-window environments available "
-                                    + "on larger screen Android devices."
+                                    + "on larger screen Android devices.\n"
+                                    + "\n"
                                     + "To fix the issue, consider declaring the corresponding "
                                     + "activity element with `resizableActivity=\"true\"` attribute.",
                             Category.CORRECTNESS,

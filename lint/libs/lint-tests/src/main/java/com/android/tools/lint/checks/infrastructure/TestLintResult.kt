@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_XML
+import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.UastEnvironment
@@ -620,6 +621,33 @@ class TestLintResult internal constructor(
     }
 
     /**
+     * Checks that the report (produced by a reporter provided via a
+     * lambda factory) is as expected
+     */
+    fun expectReported(
+        expected: String,
+        extension: String,
+        reporter: (LintCliClient, File) -> Reporter,
+        transformer: TestResultTransformer = TestResultTransformer { it }
+    ): TestLintResult {
+        val trimmed = normalizeOutput(expected.trimIndent())
+        return checkReport(
+            reporter,
+            extension,
+            false,
+            transformer,
+            TestResultChecker { actual ->
+                val s = normalizeOutput(actual.trimIndent())
+                if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                    // Allow Windows file separators to differ
+                } else {
+                    assertEquals(trimmed, s)
+                }
+            }
+        )
+    }
+
+    /**
      * Checks that the XML report is as expected
      *
      * @param checkers one or more checks to apply to the output
@@ -769,7 +797,28 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it },
         vararg checkers: TestResultChecker
     ): TestLintResult {
-        assertTrue(xml || html || sarif)
+        assertTrue(sequenceOf(xml, html, sarif).count { it } == 1)
+        val reporterFactory: (LintCliClient, File) -> Reporter = { client, file ->
+            val reporter = when {
+                html -> Reporter.createHtmlReporter(client, file, client.flags)
+                xml -> Reporter.createXmlReporter(client, file, xmlReportType)
+                sarif -> Reporter.createSarifReporter(client, file)
+                else -> throw IllegalStateException() // enforced by above assertion
+            }
+            reporter
+        }
+        val extension = if (html) ".html" else if (sarif) ".sarif" else DOT_XML
+
+        return checkReport(reporterFactory, extension, fullPaths, transformer, *checkers)
+    }
+
+    fun checkReport(
+        reporterFactory: (LintCliClient, File) -> Reporter,
+        extension: String,
+        fullPaths: Boolean = false,
+        transformer: TestResultTransformer = TestResultTransformer { it },
+        vararg checkers: TestResultChecker
+    ): TestLintResult {
         val state = states[defaultMode]!!
         val throwable = state.firstThrowable
         val incidents = state.incidents
@@ -782,7 +831,6 @@ class TestLintResult internal constructor(
             // possible
             val root = task.dirToProjectDescription.keys.firstOrNull()?.parentFile
             val name = "test-lint"
-            val extension = if (html) ".html" else if (sarif) ".sarif" else DOT_XML
 
             val file =
                 if (root != null) {
@@ -806,12 +854,7 @@ class TestLintResult internal constructor(
                 }
 
             file.parentFile.mkdirs()
-            val reporter = when {
-                html -> Reporter.createHtmlReporter(client, file, client.flags)
-                xml -> Reporter.createXmlReporter(client, file, xmlReportType)
-                else -> Reporter.createSarifReporter(client, file)
-            }
-
+            val reporter = reporterFactory(client, file)
             val oldFullPath = client.flags.isFullPath
             if (fullPaths) {
                 client.flags.isFullPath = true
@@ -826,7 +869,7 @@ class TestLintResult internal constructor(
             }
 
             // Make sure the XML is valid
-            if (xml) {
+            if (extension == DOT_XML) {
                 try {
                     val document = PositionXmlParser.parse(actual)
                     assertNotNull(document)

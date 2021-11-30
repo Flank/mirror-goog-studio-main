@@ -40,6 +40,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Option
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
@@ -656,6 +657,11 @@ class LintIssueDocGenerator constructor(
             )
         }
 
+        val options = issue.getOptions()
+        if (options.isNotEmpty()) {
+            writeOptions(sb, issue, options)
+        }
+
         if (includeExamples) {
             issueData?.example?.let { example ->
                 writeExample(sb, issueData, example, issue)
@@ -665,6 +671,36 @@ class LintIssueDocGenerator constructor(
 
         if (includeSuppressInfo) {
             writeSuppressInfo(sb, issue, id, issueData?.suppressExample)
+        }
+    }
+
+    private fun writeOptions(sb: StringBuilder, issue: Issue, options: List<Option>) {
+        sb.append("(##) Options\n\n")
+        sb.append("You can configure this lint checks using the following options:\n\n")
+        for (option in options) {
+            sb.append("(###) ").append(option.name).append("\n\n")
+            sb.append(option.getDescription()).append(".\n")
+            val explanation = option.getExplanation() ?: ""
+            if (explanation.isNotBlank()) {
+                sb.append(explanation).append("\n")
+            }
+            sb.append("\n")
+            val defaultValue = option.defaultAsString()
+            if (defaultValue != null) {
+                sb.append("Default is ").append(defaultValue).append(".\n")
+            }
+            sb.append("\n")
+            sb.append("Example `lint.xml`:\n\n")
+            sb.append(
+                "" +
+                    "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~xml linenumbers\n" +
+                    "&lt;lint&gt;\n" +
+                    "    &lt;issue id=\"${issue.id}\"&gt;\n" +
+                    "        &lt;option name=\"${option.name}\" value=\"${defaultValue ?: "some string"}\" /&gt;\n" +
+                    "    &lt;/issue&gt;\n" +
+                    "&lt;/lint&gt;\n" +
+                    "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
+            )
         }
     }
 
