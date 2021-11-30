@@ -445,6 +445,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 WorkManagerDetector.ISSUE,
                 WrongCallDetector.ISSUE,
                 WrongCaseDetector.WRONG_CASE,
+                WrongConstructorDetector.ISSUE,
                 WrongIdDetector.INVALID,
                 WrongIdDetector.NOT_SIBLING,
                 WrongIdDetector.UNKNOWN_ID,
