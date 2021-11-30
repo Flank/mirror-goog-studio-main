@@ -37,7 +37,8 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
@@ -164,7 +165,7 @@ class Aapt2FromMaven(val aapt2Directory: FileCollection, val version: String) {
 
         abstract class Aapt2Extractor : TransformAction<GenericTransformParameters> {
 
-            @get:Classpath
+            @get:PathSensitive(PathSensitivity.NAME_ONLY)
             @get:InputArtifact
             abstract val inputArtifact: Provider<FileSystemLocation>
 

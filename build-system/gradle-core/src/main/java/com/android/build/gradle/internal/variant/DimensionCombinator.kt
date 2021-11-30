@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.errors.IssueReporter

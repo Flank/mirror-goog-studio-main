@@ -37,9 +37,10 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildServiceRegistry
-import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 @CacheableTransform
 abstract class RecalculateStackFramesTransform :
@@ -146,7 +147,7 @@ abstract class RecalculateStackFramesTransform :
     @get:InputArtifactDependencies
     abstract val classpath: FileCollection
 
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputArtifact
     abstract val inputArtifact: Provider<FileSystemLocation>
 

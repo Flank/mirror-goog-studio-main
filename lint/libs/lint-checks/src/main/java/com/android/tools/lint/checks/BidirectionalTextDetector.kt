@@ -41,8 +41,7 @@ class BidirectionalTextDetector : ResourceXmlDetector(), SourceCodeScanner, Grad
         return object : UElementHandler() {
             override fun visitFile(node: UFile) {
                 for (comment in node.allCommentsInFile) {
-                    val contents = comment.text
-                    checkBidi(context, comment, contents)
+                    checkBidi(context, comment, comment.text)
                 }
             }
 

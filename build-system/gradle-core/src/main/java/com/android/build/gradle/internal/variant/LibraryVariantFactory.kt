@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.core.VariantSources
@@ -29,8 +28,8 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.api.dsl.LibraryBuildFeatures
-import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import java.lang.RuntimeException
 import com.android.build.gradle.internal.api.BaseVariantImpl

@@ -16,10 +16,10 @@
 package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
@@ -32,9 +32,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.ApiVersion
 import com.android.builder.model.VectorDrawablesOptions
-import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.RegularFile

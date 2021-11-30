@@ -17,6 +17,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.ComponentImpl
@@ -38,6 +39,7 @@ import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -76,6 +78,7 @@ import com.android.tools.lint.model.LintModelSerialization
 import com.android.tools.lint.model.LintModelSeverity
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
+import com.android.utils.PathUtils
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
@@ -88,6 +91,7 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
@@ -103,12 +107,25 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
 abstract class LintTool {
 
     /** Lint itself */
     @get:Classpath
     abstract val classpath: ConfigurableFileCollection
+
+    /**
+     * The identity of lint used as keys for caches
+     *
+     * Used both for the [lintCacheDirectory] and for the classloader cache in [AndroidLintWorkAction]
+     *
+     * For published versions it will include the version of lint from maven e.g. `30.2.0-alpha05`
+     * and for -dev versions, also a hash of the jars: `30.2.0-dev_920ff9cabfbb40d0318735f9fe403b9/`
+     */
+    @get:Input
+    abstract val versionKey: Property<String>
 
     @get:Input
     abstract val runInProcess: Property<Boolean>
@@ -117,11 +134,76 @@ abstract class LintTool {
     @get:Optional
     abstract val workerHeapSize: Property<String>
 
+    /**
+     * The lint cache parent dir for artifacts recomputable by lint that save analysis time
+     */
+    @get:Internal
+    abstract val lintCacheDirectory: DirectoryProperty
+
+    /**
+     * Computes the lint cache dir, cleaning up if lint version has changed
+     *
+     * This is passed to lint invocations using --cache-dir
+     *
+     * The lint cache is neither an input nor an output to the lint tasks, so it needs some manual
+     * handling to avoid lint trying to load cache items written by a different version of lint.
+     *
+     * A marker file of lint-cache-version is used, for published versions it will include the
+     * version of lint, e.g. `30.2.0-alpha05`
+     *
+     * And for -dev versions, also a hash of the jars, the same as the classloader hash
+     * 30.2.0-dev_920ff9cabfbb40d0318735f9fe403b9
+     *
+     * Returns the arguments to add to the lint invocation.
+     */
+    fun initializeLintCacheDir(): List<String> {
+        val directory = lintCacheDirectory.get().asFile.toPath()
+        val lintVersionMarkerFile = directory.resolve("lint-cache-version.txt")
+        val currentVersion = "Cache for Android Lint" + versionKey.get()
+        val previousVersion = lintVersionMarkerFile.takeIf { Files.exists(it) }?.let { Files.readAllLines(it).singleOrNull() }
+        if (previousVersion != currentVersion) {
+            PathUtils.deleteRecursivelyIfExists(directory)
+            Files.createDirectories(directory)
+            Files.write(lintVersionMarkerFile, listOf(currentVersion))
+        }
+        return listOf("--cache-dir", directory.toString())
+    }
+
+    @get:Internal
+    abstract val lintClassLoaderBuildService: Property<LintClassLoaderBuildService>
+
     fun initialize(taskCreationServices: TaskCreationServices) {
         classpath.fromDisallowChanges(taskCreationServices.lintFromMaven.files)
+        lintClassLoaderBuildService.setDisallowChanges(getBuildService(taskCreationServices.buildServiceRegistry))
+        versionKey.setDisallowChanges(deriveVersionKey(taskCreationServices, lintClassLoaderBuildService))
         val projectOptions = taskCreationServices.projectOptions
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
+        lintCacheDirectory.set(
+            taskCreationServices.projectInfo.getBuildDir().resolve("intermediates/lint-cache")
+        )
+        lintCacheDirectory.disallowChanges()
+    }
+
+    private fun deriveVersionKey(
+        taskCreationServices: TaskCreationServices,
+        lintClassLoaderBuildService: Provider<LintClassLoaderBuildService>
+    ): Provider<String> {
+        val lintVersion =
+            getLintMavenArtifactVersion(
+                taskCreationServices.projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
+                null
+            )
+        val versionProvider = taskCreationServices.provider { lintVersion }
+        // When using development versions also hash the jar contents to avoid reusing
+        // the classloader when the jars might change
+        return when {
+            lintVersion.endsWith("-dev") || lintVersion.endsWith("SNAPSHOT") -> {
+                val jarsHash = lintClassLoaderBuildService.zip(classpath.elements, LintClassLoaderBuildService::hashJars)
+                versionProvider.zip(jarsHash) { version, hash -> "${version}_$hash" }
+            }
+            else -> versionProvider
+        }
     }
 
     fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
@@ -159,6 +241,7 @@ abstract class LintTool {
             parameters.mainClass.set(mainClass)
             parameters.arguments.set(arguments)
             parameters.classpath.from(classpath)
+            parameters.versionKey.set(versionKey)
             parameters.android.set(android)
             parameters.fatalOnly.set(fatalOnly)
             parameters.runInProcess.set(runInProcess.get())
@@ -1667,7 +1750,7 @@ class LintFromMaven(val files: FileCollection, val version: String) {
 
 internal fun getLintMavenArtifactVersion(
     versionOverride: String?,
-    reporter: IssueReporter,
+    reporter: IssueReporter?,
     defaultVersion: String = Version.ANDROID_TOOLS_BASE_VERSION,
     agpVersion: String = Version.ANDROID_GRADLE_PLUGIN_VERSION
 ): String {
@@ -1677,7 +1760,7 @@ internal fun getLintMavenArtifactVersion(
     // Only verify versions that parse. If it is not valid, it will fail later anyway.
     val parsed = GradleVersion.tryParseAndroidGradlePluginVersion(versionOverride)
     if (parsed == null) {
-        reporter.reportError(
+        reporter?.reportError(
             IssueReporter.Type.GENERIC,
             """
                     Could not parse lint version override '$versionOverride'
@@ -1697,7 +1780,7 @@ internal fun getLintMavenArtifactVersion(
     // e.g. if the default lint version is 31.1.0 (as will be for AGP 8.1.0), fail is specifying
     // lint 30.2.0, but only warn if specifying lint 31.0.0
     if (normalizedParsed.major < default.major) {
-        reporter.reportError(
+        reporter?.reportError(
             IssueReporter.Type.GENERIC,
             """
                     Lint must be at least version ${agpVersion.substringBefore(".")}.0.0, and is recommended to be at least $agpVersion
@@ -1707,7 +1790,7 @@ internal fun getLintMavenArtifactVersion(
         return defaultVersion
     }
     if (normalizedParsed < default) {
-        reporter.reportWarning(
+        reporter?.reportWarning(
             IssueReporter.Type.GENERIC,
             """
                     The build will use lint version $versionOverride which is older than the default.
@@ -1717,5 +1800,3 @@ internal fun getLintMavenArtifactVersion(
     }
     return normalizedOverride
 }
-
-

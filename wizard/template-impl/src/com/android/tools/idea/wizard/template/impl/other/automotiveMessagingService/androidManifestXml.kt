@@ -25,27 +25,29 @@ fun androidManifestXml(
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application android:appCategory="audio">
-
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
 
-        <service android:name="${packageName}.${serviceName}">
-        </service>
+        <service
+            android:name="${packageName}.${serviceName}"
+            android:exported="true" />
 
-        <receiver android:name="${packageName}.${readReceiverName}">
+        <receiver
+            android:name="${packageName}.${readReceiverName}"
+            android:exported="true">
             <intent-filter>
                 <action android:name="${packageName}.ACTION_MESSAGE_READ"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="${packageName}.${replyReceiverName}">
+        <receiver
+            android:name="${packageName}.${replyReceiverName}"
+            android:exported="true">
             <intent-filter>
                 <action android:name="${packageName}.ACTION_MESSAGE_REPLY"/>
             </intent-filter>
         </receiver>
-
     </application>
-
 </manifest>
 """

@@ -17,7 +17,6 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
 import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile

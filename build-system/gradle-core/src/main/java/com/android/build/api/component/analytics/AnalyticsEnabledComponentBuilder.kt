@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.ComponentBuilder
+import com.android.build.api.variant.ComponentBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
@@ -28,11 +28,19 @@ abstract class AnalyticsEnabledComponentBuilder(
     protected val stats: GradleBuildVariant.Builder
 ) : ComponentBuilder {
 
+    @Suppress("OverridingDeprecatedMember")
     override var enabled: Boolean
-        get() = delegate.enabled
+        get() = delegate.enable
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
-            delegate.enabled = value
+            delegate.enable = value
+        }
+
+    override var enable: Boolean
+        get() = delegate.enable
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
+            delegate.enable = value
         }
 
     override val name: String

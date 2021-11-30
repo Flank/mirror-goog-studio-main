@@ -17,11 +17,16 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction
+import com.google.common.hash.HashCode
+import com.google.common.hash.Hashing
+import com.google.common.io.Files
 import java.net.URLClassLoader
 import org.gradle.api.Project
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-
+import java.net.URI
+import javax.annotation.concurrent.GuardedBy
 
 /**
  * Build service used to remove locks from jar files from lint's [URLClassLoader] after all lint
@@ -36,7 +41,29 @@ abstract class LintClassLoaderBuildService :
     @set:Synchronized
     var shouldDispose: Boolean = false
 
+    /**
+     * Cache of jar hashes during a build, to avoid rehashing the jars repeatedly
+     *
+     * This is cleared at the end of each build
+     */
+    @GuardedBy("this")
+    private val jarsToHashCode : MutableMap<List<URI>, HashCode> = mutableMapOf()
+
+    //** Hash the contents of the given file collection */
+    @Synchronized
+    internal fun hashJars(classpath: Iterable<FileSystemLocation>): String {
+        val uris = classpath.map { it.asFile.toURI() }
+        val hashCode = jarsToHashCode.getOrPut(uris) {
+            Hashing.combineOrdered(classpath.map {
+                Files.asByteSource(it.asFile).hash(Hashing.murmur3_128())
+            })
+        }
+        return hashCode.toString()
+    }
+
+
     override fun close() {
+        jarsToHashCode.clear()
         if (shouldDispose) {
             AndroidLintWorkAction.dispose()
         }

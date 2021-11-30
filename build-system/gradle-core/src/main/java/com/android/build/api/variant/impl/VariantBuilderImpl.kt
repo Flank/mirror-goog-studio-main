@@ -16,9 +16,9 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices

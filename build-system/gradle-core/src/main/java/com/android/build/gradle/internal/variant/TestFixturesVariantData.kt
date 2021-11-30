@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies

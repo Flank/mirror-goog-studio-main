@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig

@@ -22,17 +22,22 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.truth.Truth.assertThat
+import com.android.testutils.truth.PathSubject
 import org.junit.Rule
 import org.junit.Test
-import java.nio.file.Paths
 
 class AssetPackTest {
 
     private val assetPackTestApp = MultiModuleTestProject.builder().apply {
         val app = MinimalSubProject.app("com.example.assetpacktestapp")
             .appendToBuild(
-                """android.assetPacks = [':assetPackOne', ':assetPackTwo']"""
+                """android.assetPacks = [
+                    |':assetPackOne',
+                    |':assetPackTwo',
+                    |':assetPackA',
+                    |':assetPackAA',
+                    |':assetPackA:assetPackAB']""".trimMargin()
             )
 
         val assetPackOne = MinimalSubProject.assetPack()
@@ -60,9 +65,48 @@ class AssetPackTest {
             .withFile("src/main/assets/assetFileTwo.txt",
                 """This is an asset file from asset pack two.""")
 
+        val assetPackA = MinimalSubProject.assetPack()
+            .appendToBuild(
+                """assetPack {
+                          |  packName = "assetPackA"
+                          |  dynamicDelivery {
+                          |    deliveryType = "fast-follow"
+                          |  }
+                          |}""".trimMargin()
+            )
+            .withFile("src/main/assets/assetFileA.txt",
+                """This is an asset file from asset pack A.""")
+
+        val assetPackAA = MinimalSubProject.assetPack()
+            .appendToBuild(
+                """assetPack {
+                          |  packName = "assetPackAA"
+                          |  dynamicDelivery {
+                          |    deliveryType = "fast-follow"
+                          |  }
+                          |}""".trimMargin()
+            )
+            .withFile("src/main/assets/assetFileAA.txt",
+                """This is an asset file from asset pack AA.""")
+
+        val assetPackAB = MinimalSubProject.assetPack()
+            .appendToBuild(
+                """assetPack {
+                          |  packName = "assetPackAB"
+                          |  dynamicDelivery {
+                          |    deliveryType = "fast-follow"
+                          |  }
+                          |}""".trimMargin()
+            )
+            .withFile("src/main/assets/assetFileAB.txt",
+                """This is an asset file from asset pack AB.""")
+
         subproject(":app", app)
         subproject(":assetPackOne", assetPackOne)
         subproject(":assetPackTwo", assetPackTwo)
+        subproject(":assetPackA", assetPackA)
+        subproject(":assetPackAA", assetPackAA)
+        subproject(":assetPackA:assetPackAB", assetPackAB)
     }
         .build()
 
@@ -78,29 +122,29 @@ class AssetPackTest {
         val outputAppModel = project.model().fetchContainer(AppBundleProjectBuildOutput::class.java).rootBuildModelMap[":app"]
 
         val bundleFile = outputAppModel?.getOutputByName("debug")?.bundleFile
-        assertThat(bundleFile).exists()
+        PathSubject.assertThat(bundleFile).exists()
 
         if (bundleFile != null) {
             Zip(bundleFile).use { bundle ->
                 val bundleContents = bundle.entries
-                assert(bundleContents.any {
-                    it.toString().endsWith("assetPackOne/assets/assetFileOne.txt")
-                })
-                assert(bundleContents.any {
-                    it.toString().endsWith("assetPackOne/manifest/AndroidManifest.xml")
-                })
-                assert(bundleContents.any {
-                    it.toString().endsWith("assetPackOne/assets.pb")
-                })
-                assert(bundleContents.any {
-                    it.toString().endsWith("assetPackTwo/assets/assetFileTwo.txt")
-                })
-                assert(bundleContents.any {
-                    it.toString().endsWith("assetPackTwo/manifest/AndroidManifest.xml")
-                })
-                assert(bundleContents.any {
-                    it.toString().endsWith("assetPackTwo/assets.pb")
-                })
+
+                assertThat(bundleContents.map {it.toString()}).containsAtLeast(
+                    "/assetPackOne/assets/assetFileOne.txt",
+                    "/assetPackOne/manifest/AndroidManifest.xml",
+                    "/assetPackOne/assets.pb",
+                    "/assetPackTwo/assets/assetFileTwo.txt",
+                    "/assetPackTwo/manifest/AndroidManifest.xml",
+                    "/assetPackTwo/assets.pb",
+                    "/assetPackA/assets/assetFileA.txt",
+                    "/assetPackA/manifest/AndroidManifest.xml",
+                    "/assetPackA/assets.pb",
+                    "/assetPackAA/assets/assetFileAA.txt",
+                    "/assetPackAA/manifest/AndroidManifest.xml",
+                    "/assetPackAA/assets.pb",
+                    "/assetPackAB/assets/assetFileAB.txt",
+                    "/assetPackAB/manifest/AndroidManifest.xml",
+                    "/assetPackAB/assets.pb"
+                )
             }
         }
     }

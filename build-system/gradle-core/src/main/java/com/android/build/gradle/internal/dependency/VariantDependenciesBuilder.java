@@ -219,7 +219,7 @@ public class VariantDependenciesBuilder {
         VariantType variantType = variantDslInfo.getVariantType();
         String buildType = variantDslInfo.getComponentIdentity().getBuildType();
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
-                getFlavorAttributes(flavorSelection);
+                getConsumptionFlavorAttributes(flavorSelection);
 
         final ConfigurationContainer configurations = project.getConfigurations();
         final DependencyHandler dependencies = project.getDependencies();
@@ -374,7 +374,7 @@ public class VariantDependenciesBuilder {
                                 : variantName);
 
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
-                getFlavorAttributes(null);
+                getElementsPublicationFlavorAttributes();
 
         if (variantType.getPublishToOtherModules()) {
             // this is the configuration that contains the artifacts for inter-module
@@ -775,14 +775,27 @@ public class VariantDependenciesBuilder {
         }
     }
 
+    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getConsumptionFlavorAttributes(
+            @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
+        return getFlavorAttributes(flavorSelection, false);
+    }
+
+    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr>
+            getElementsPublicationFlavorAttributes() {
+        return getFlavorAttributes(null, true);
+    }
+
     /**
      * Returns a map of Configuration attributes containing all the flavor values.
      *
      * @param flavorSelection a list of override for flavor matching or for new attributes.
+     * @param addCompatibilityUnprefixedFlavorDimensionAttributes when true also add the previous
+     *     un-prefixed flavor dimension attributes for compatibility
      */
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
-            @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
+            @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection,
+            boolean addCompatibilityUnprefixedFlavorDimensionAttributes) {
         List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavorList();
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map =
                 Maps.newHashMapWithExpectedSize(productFlavors.size());
@@ -804,6 +817,13 @@ public class VariantDependenciesBuilder {
             map.put(
                     ProductFlavorAttr.of(f.getDimension()),
                     objectFactory.named(ProductFlavorAttr.class, f.getName()));
+            // Compatibility for e.g. the hilt plugin creates its own configuration with the
+            // old-style attributes
+            if (addCompatibilityUnprefixedFlavorDimensionAttributes) {
+                map.put(
+                        Attribute.of(f.getDimension(), ProductFlavorAttr.class),
+                        objectFactory.named(ProductFlavorAttr.class, f.getName()));
+            }
         }
 
         // then go through the override or new attributes.

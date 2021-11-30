@@ -26,6 +26,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AarMetadata
+import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.LibraryVariant
@@ -113,7 +114,7 @@ open class  LibraryVariantImpl @Inject constructor(
         super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
     }
 
-    override var androidTest: com.android.build.api.component.AndroidTest? = null
+    override var androidTest: AndroidTest? = null
 
     override var testFixtures: TestFixtures? = null
 

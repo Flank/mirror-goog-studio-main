@@ -160,7 +160,6 @@ public class GmavenZipTest {
                 "com/android/build/api/attributes/",
                 "com/android/build/api/component/",
                 "com/android/build/api/dsl/",
-                "com/android/build/api/extension/",
                 "com/android/build/api/instrumentation/",
                 "com/android/build/api/transform/",
                 "com/android/build/api/variant/",

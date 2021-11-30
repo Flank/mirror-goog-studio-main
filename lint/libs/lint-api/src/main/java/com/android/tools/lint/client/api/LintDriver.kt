@@ -109,6 +109,7 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCatchClause
+import org.jetbrains.uast.UComment
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
@@ -3166,6 +3167,12 @@ class LintDriver(
         issue: Issue,
         scope: UElement?
     ): Boolean {
+        if (scope is UComment && scope.uastParent is UFile) {
+            // UAST places all the comments at the file level, which isn't correct and
+            // in particular we won't be able to check surrounding @Suppress statements.
+            return isSuppressed(context, issue, scope.sourcePsi)
+        }
+
         val customSuppressNames = if (!allowSuppress) {
             issue.suppressNames?.toSet()
         } else {

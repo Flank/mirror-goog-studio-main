@@ -19,15 +19,12 @@ package com.android.build.gradle.internal.dependency
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.TransformAction
 
-import com.android.SdkConstants
-import com.android.builder.dexing.ClassFileInput
-import com.android.utils.FileUtils
-import com.google.gson.GsonBuilder
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 /**
  * A Gradle Artifact [TransformAction] that enumerates the classes in each module,
@@ -35,7 +32,7 @@ import org.gradle.api.tasks.Classpath
  */
 @CacheableTransform
 abstract class EnumerateClassesTransform : TransformAction<GenericTransformParameters> {
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputArtifact
     abstract val classesJar: Provider<FileSystemLocation>
 

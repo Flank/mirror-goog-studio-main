@@ -21,9 +21,9 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.SdkComponents;
-import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
+import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.TestAndroidComponentsExtension;
 import com.android.build.api.variant.TestVariant;
 import com.android.build.api.variant.TestVariantBuilder;
@@ -141,10 +141,7 @@ public class TestPlugin
     public abstract static class TestAndroidComponentsExtensionImplCompat
             extends TestAndroidComponentsExtensionImpl
             implements AndroidComponentsExtension<
-                            com.android.build.api.dsl.TestExtension,
-                            TestVariantBuilder,
-                            TestVariant>,
-                    com.android.build.api.extension.TestAndroidComponentsExtension {
+                    com.android.build.api.dsl.TestExtension, TestVariantBuilder, TestVariant> {
 
         public TestAndroidComponentsExtensionImplCompat(
                 @NonNull DslServices dslServices,
@@ -192,14 +189,6 @@ public class TestPlugin
                                 sdkComponents,
                                 variantApiOperationsRegistrar,
                                 getExtension());
-
-        // register under the new interface for kotlin, groovy will find both the old and new
-        // interfaces through the implementation class.
-        project.getExtensions()
-                .add(
-                        com.android.build.api.extension.TestAndroidComponentsExtension.class,
-                        "androidComponents_compat_by_type",
-                        (com.android.build.api.extension.TestAndroidComponentsExtension) extension);
 
         return extension;
     }

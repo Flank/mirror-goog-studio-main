@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.ComponentBuilder
+import com.android.build.api.variant.ComponentBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -47,11 +47,11 @@ class AnalyticsEnabledComponentBuilderTest {
 
     @Test
     fun setEnabled() {
-        proxy.enabled = false
+        proxy.enable = false
         Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantAccessList.first().type
         ).isEqualTo(VariantMethodType.ENABLED_VALUE)
-        Mockito.verify(delegate, times(1)).enabled = false
+        Mockito.verify(delegate, times(1)).enable = false
     }
 }
