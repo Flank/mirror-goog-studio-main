@@ -69,6 +69,7 @@ maven_repository(
         "@maven//:xerces.xercesImpl",
     ],
     visibility = [
+        "//tools/adt/idea/project-system-gradle-psd:__pkg__",
         "//tools/base/bazel/test/gradle:__pkg__",
         "//tools/base/build-system:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
@@ -106,6 +107,7 @@ maven_repository(
     artifacts = AGP_ARTIFACTS,
     include_transitive_deps = False,
     visibility = [
+        "//tools/adt/idea/project-system-gradle-psd:__pkg__",
         "//tools/base/bazel/test/gradle:__pkg__",
         "//tools/base/build-system:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
