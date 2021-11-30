@@ -57,8 +57,8 @@ class FileEndsWithDetector : Detector(), SourceCodeScanner {
             id = "FileEndsWithExt",
             briefDescription = "File endsWith on file extensions",
             explanation = """
-                The Kotlin extension method `File.endsWith(suffix)` checks whole path components,
-                not just string suffixes. This means that `File("foo.txt").endsWith(".txt")` will return
+                The Kotlin extension method `File.endsWith(suffix)` checks whole path components, \
+                not just string suffixes. This means that `File("foo.txt").endsWith(".txt")` will return \
                 false. Instead you might have intended `file.path.endsWith` or `file.extension.equals`.
                 """,
             category = Category.CORRECTNESS,

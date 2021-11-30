@@ -50,6 +50,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintModelModuleProject;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Option;
 import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -2001,6 +2002,12 @@ public class Main {
 
         System.out.println();
         System.out.println(wrap(issue.getExplanation(TEXT)));
+
+        List<Option> options = issue.getOptions();
+        if (!options.isEmpty()) {
+            System.out.println(Option.Companion.describe(options, TextFormat.TEXT, true));
+            System.out.println();
+        }
         List<String> moreInfo = issue.getMoreInfo();
         if (!moreInfo.isEmpty()) {
             System.out.println("More information: ");

@@ -265,6 +265,8 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             writer.writeDescription(indent, "fullDescription", full, comma = true)
             writer.indent(indent++).write("\"defaultConfiguration\": {\n")
             writer.indent(indent).write("\"level\": \"$level\",\n")
+            // TODO: parameters (detector options):
+            //  https://docs.oasis-open.org/sarif/sarif/v2.1.0/csprd01/sarif-v2.1.0-csprd01.html#_Toc10541295
             writer.indent(indent).write("\"rank\": $rank\n")
             writer.indent(--indent).write("},\n")
             writer.indent(indent++).write("\"properties\": {\n")

@@ -18,6 +18,7 @@ package com.android.tools.lint
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Option
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
@@ -283,7 +284,7 @@ class TextReporter(
             return
         }
         val explanation = issue.getExplanation(format)
-        if (explanation.trim { it <= ' ' }.isEmpty()) {
+        if (explanation.isBlank()) {
             return
         }
         val indent = "   "
@@ -309,6 +310,17 @@ class TextReporter(
                 output.append('\n')
             }
             output.append('\n')
+        }
+
+        val options = issue.getOptions()
+        if (options.isNotEmpty()) {
+            for (line in Option.describe(options).lines()) {
+                if (line.isBlank()) {
+                    output.append("\n")
+                } else {
+                    output.append(indent).append(line).append('\n')
+                }
+            }
         }
 
         val issueVendor = issue.vendor ?: issue.registry?.vendor

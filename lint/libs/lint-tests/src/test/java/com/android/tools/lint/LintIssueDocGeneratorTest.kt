@@ -929,4 +929,87 @@ class LintIssueDocGeneratorTest {
             text
         )
     }
+
+    @Test
+    fun testOptions() {
+        // (This is the default output format)
+        val outputFolder = temporaryFolder.root
+        LintIssueDocGenerator.run(
+            arrayOf(
+                "--no-index",
+                "--issues",
+                "UnknownNullness",
+                "--no-suppress-info",
+                "--output",
+                outputFolder.path
+            )
+        )
+        val files = outputFolder.listFiles()!!.sorted()
+        val names = files.joinToString { it.name }
+        assertEquals("UnknownNullness.md.html", names)
+        val text = files[0].readText()
+        assertEquals(
+            """
+            <meta charset="utf-8">
+            (#) Unknown nullness
+
+            !!! WARNING: Unknown nullness
+               This is a warning.
+
+            Id
+            :   `UnknownNullness`
+            Summary
+            :   Unknown nullness
+            Note
+            :   **This issue is disabled by default**; use `--enable UnknownNullness`
+            Severity
+            :   Warning
+            Category
+            :   Interoperability: Kotlin Interoperability
+            Platform
+            :   Any
+            Vendor
+            :   Android Open Source Project
+            Feedback
+            :   https://issuetracker.google.com/issues/new?component=192708
+            Affects
+            :   Kotlin and Java files
+            Editing
+            :   This check runs on the fly in the IDE editor
+            See
+            :   https://developer.android.com/kotlin/interop#nullability_annotations
+
+            To improve referencing this code from Kotlin, consider adding explicit
+            nullness information here with either `@NonNull` or `@Nullable`.
+
+            !!! Tip
+               This lint check has an associated quickfix available in the IDE.
+
+            (##) Options
+
+            You can configure this lint checks using the following options:
+
+            (###) ignore-deprecated
+
+            Whether to ignore classes and members that have been annotated with `@Deprecated`.
+            Normally this lint check will flag all unannotated elements, but by setting this option to `true` it will skip any deprecated elements.
+
+            Default is false.
+
+            Example `lint.xml`:
+
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~xml linenumbers
+            &lt;lint&gt;
+                &lt;issue id="UnknownNullness"&gt;
+                    &lt;option name="ignore-deprecated" value="false" /&gt;
+                &lt;/issue&gt;
+            &lt;/lint&gt;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+            <!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://morgan3d.github.io/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
+            """.trimIndent(),
+            text
+        )
+    }
 }
