@@ -16,6 +16,7 @@
 
 package com.android.prefs
 
+import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -24,7 +25,9 @@ import java.nio.file.Path
  *
  * This is accessible through common's text fixtures artifact.
  */
-class FakeAndroidLocationsProvider(override val userHomeLocation: Path): AndroidLocationsProvider {
+class FakeAndroidLocationsProvider(override val userHomeLocation: Path) : AndroidLocationsProvider {
+
+    constructor(fileSystem: FileSystem) : this(fileSystem.getPath(System.getProperty("user.home")))
 
     override val prefsLocation: Path
         get() = userHomeLocation.resolve(".android").also { Files.createDirectories(it) }
