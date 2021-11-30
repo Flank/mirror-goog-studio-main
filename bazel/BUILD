@@ -91,6 +91,23 @@ java_binary(
     ],
 )
 
+java_binary(
+    name = "modify_jar_manifest",
+    srcs = ["src/com/android/tools/binaries/ModifyJarManifest.java"],
+    main_class = "com.android.tools.binaries.ModifyJarManifest",
+    visibility = ["//visibility:public"],
+)
+
+java_test(
+    name = "modify_jar_manifest_test",
+    srcs = ["testSrc/com/android/tools/binaries/ModifyJarManifestTest.java"],
+    test_class = "com.android.tools.binaries.ModifyJarManifestTest",
+    deps = [
+        ":modify_jar_manifest",
+        "@maven//:junit.junit",
+    ],
+)
+
 coverage_java_test(
     name = "zip_merger_tests",
     srcs = ["testSrc/com/android/tools/binaries/ZipMergerTest.java"],
