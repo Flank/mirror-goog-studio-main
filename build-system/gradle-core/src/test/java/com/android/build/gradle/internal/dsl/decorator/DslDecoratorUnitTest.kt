@@ -448,6 +448,25 @@ class DslDecoratorUnitTest {
         assertThat(withSet.set).containsExactly("one", "two", "three").inOrder()
     }
 
+    interface WithMap {
+        val map: MutableMap<String, String>
+    }
+
+    @Test
+    fun `check groovy setter generation for map`() {
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.Map))
+            .decorate(WithMap::class)
+        val withMap = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+        assertThat(withMap.map::class.java).isEqualTo(LockableMap::class.java)
+        Eval.me("withMap", withMap, "withMap.map += ['one':'1', 'two': '2']")
+        assertThat(withMap.map).containsExactly("one", "1", "two", "2")
+        Eval.me("withMap", withMap, "withMap.map += ['three':'3']")
+        assertThat(withMap.map).containsExactly("one", "1", "two", "2", "three", "3")
+        // Check self-assignment preserves values
+        Eval.me("withMap", withMap, "withMap.map = withMap.map")
+        assertThat(withMap.map).containsExactly("one", "1", "two", "2", "three", "3")
+    }
+
     interface SubBlock {
         var string: String
     }

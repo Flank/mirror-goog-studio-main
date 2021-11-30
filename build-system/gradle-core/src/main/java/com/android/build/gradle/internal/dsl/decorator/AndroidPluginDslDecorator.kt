@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive
 import com.android.build.gradle.internal.dsl.BundleOptionsTexture
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.DexPackagingOptionsImpl
-import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
@@ -72,6 +71,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
 
     SupportedPropertyType.Collection.List,
     SupportedPropertyType.Collection.Set,
+    SupportedPropertyType.Collection.Map,
 
     SupportedPropertyType.Block(AbiSplit::class.java, AbiSplitOptions::class.java),
     SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),

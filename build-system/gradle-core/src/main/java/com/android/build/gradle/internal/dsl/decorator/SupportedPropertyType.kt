@@ -76,6 +76,11 @@ sealed class SupportedPropertyType {
                 Type.getType(Iterable::class.java),
             ),
         )
+        object Map : Collection(
+            Type.getType(kotlin.collections.Map::class.java),
+            implementationType = Type.getType(LockableMap::class.java),
+            bridgeTypes = emptyList()
+        )
     }
 
     /**
