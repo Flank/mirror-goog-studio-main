@@ -18,13 +18,13 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
-import com.android.build.gradle.internal.services.DslServices
 
 /** Implementation of CoreJavaCompileOptions used to merge multiple configs together.  */
-class MergedJavaCompileOptions(dslServices: DslServices) : JavaCompileOptions,
+abstract class MergedJavaCompileOptions : JavaCompileOptions,
+    com.android.build.api.dsl.JavaCompileOptions,
     MergedOptions<JavaCompileOptions> {
 
-    override val annotationProcessorOptions = AnnotationProcessorOptions(dslServices)
+    abstract override val annotationProcessorOptions: AnnotationProcessorOptions
 
     override fun reset() {
         annotationProcessorOptions.classNames.clear()

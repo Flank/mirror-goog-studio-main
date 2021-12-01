@@ -16,28 +16,12 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.services.DslServices
 import com.google.common.base.MoreObjects
-import javax.inject.Inject
-import org.gradle.api.Action
 
 /** DSL object for javaCompileOptions. */
-open class JavaCompileOptions @Inject constructor(
-    dslServices: DslServices
-) : com.android.build.gradle.api.JavaCompileOptions,
+abstract class JavaCompileOptions: com.android.build.gradle.api.JavaCompileOptions,
     com.android.build.api.dsl.JavaCompileOptions {
-    /** Options for configuration the annotation processor. */
-    final override val annotationProcessorOptions: AnnotationProcessorOptions =
-        dslServices.newInstance(AnnotationProcessorOptions::class.java, dslServices)
-
-    /** Configures annotation processor options. */
-    fun annotationProcessorOptions(configAction: Action<AnnotationProcessorOptions>) {
-        configAction.execute(annotationProcessorOptions)
-    }
-
-    override fun annotationProcessorOptions(action: com.android.build.api.dsl.AnnotationProcessorOptions.() -> Unit) {
-        action.invoke(annotationProcessorOptions)
-    }
+    abstract override val annotationProcessorOptions: AnnotationProcessorOptions
 
     override fun toString(): String {
         return MoreObjects.toStringHelper(this)

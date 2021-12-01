@@ -154,12 +154,7 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         matchingFallbacks.add(fallback)
     }
 
-    override val javaCompileOptions: JavaCompileOptions =
-        dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
-
-    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions.() -> Unit) {
-        action.invoke(javaCompileOptions)
-    }
+    abstract override val javaCompileOptions: JavaCompileOptions
 
     override val shaders: ShaderOptions = dslServices.newInstance(ShaderOptions::class.java)
 

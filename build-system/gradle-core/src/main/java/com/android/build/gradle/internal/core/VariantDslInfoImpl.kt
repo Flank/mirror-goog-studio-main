@@ -157,7 +157,8 @@ open class VariantDslInfoImpl internal constructor(
     private val mergedNdkConfig = MergedNdkConfig()
     private val mergedExternalNativeBuildOptions =
         MergedExternalNativeBuildOptions()
-    private val mergedJavaCompileOptions = MergedJavaCompileOptions(dslServices)
+    private val mergedJavaCompileOptions =
+        dslServices.newDecoratedInstance(MergedJavaCompileOptions::class.java, dslServices)
     private val mergedAarMetadata = MergedAarMetadata()
 
     init {

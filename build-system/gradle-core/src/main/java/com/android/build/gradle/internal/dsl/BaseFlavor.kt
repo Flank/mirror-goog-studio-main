@@ -468,16 +468,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         addResourceConfigurations(config)
     }
 
-    override val javaCompileOptions: JavaCompileOptions =
-        dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
-
-    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions.() -> Unit) {
-        action.invoke(javaCompileOptions)
-    }
-
-    fun javaCompileOptions(action: Action<JavaCompileOptions>) {
-        action.execute(javaCompileOptions)
-    }
+    abstract override val javaCompileOptions: JavaCompileOptions
 
     override val shaders: ShaderOptions =
         dslServices.newInstance(ShaderOptions::class.java)
