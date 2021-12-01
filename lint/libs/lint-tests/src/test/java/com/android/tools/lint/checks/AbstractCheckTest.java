@@ -35,11 +35,6 @@ import java.util.Set;
 
 public abstract class AbstractCheckTest extends LintDetectorTest {
     @Override
-    protected boolean allowAndroidBuildEnvironment() {
-        return false;
-    }
-
-    @Override
     protected List<Issue> getIssues() {
         return getRegisteredIssuesFromDetector();
     }

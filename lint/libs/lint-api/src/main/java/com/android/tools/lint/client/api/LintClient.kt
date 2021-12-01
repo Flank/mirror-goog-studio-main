@@ -1453,9 +1453,7 @@ abstract class LintClient {
      * @return true if the directory represents a lint project
      */
     open fun isProjectDirectory(dir: File): Boolean =
-        isManifestFolder(dir) ||
-            Project.isAospFrameworksRelatedProject(dir) ||
-            findGradleBuildFile(dir).exists()
+        isManifestFolder(dir) || findGradleBuildFile(dir).exists()
 
     /**
      * Returns whether lint should look for suppress comments. Tools

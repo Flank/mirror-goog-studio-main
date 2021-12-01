@@ -232,16 +232,6 @@ public class TestLintClient extends LintCliClient {
         fail(message);
     }
 
-    /**
-     * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea (because it enables
-     * some special support in lint for checking code in AOSP itself.) However, some lint tests
-     * (particularly custom lint checks) may not care about this.
-     */
-    @SuppressWarnings("MethodMayBeStatic")
-    protected boolean allowAndroidBuildEnvironment() {
-        return true;
-    }
-
     @Nullable
     private File findIncrementalProject(@NonNull List<File> files) {
         // Multiple projects: assume the project names were included in the incremental
@@ -340,13 +330,6 @@ public class TestLintClient extends LintCliClient {
                                 + " in the test project folders; did you mean one of "
                                 + all);
             }
-        }
-
-        if (!allowAndroidBuildEnvironment() && System.getenv("ANDROID_BUILD_TOP") != null) {
-            fail(
-                    "Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
-                            + "special support for detecting AOSP projects (looking for .class "
-                            + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
         }
 
         String result =

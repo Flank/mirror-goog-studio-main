@@ -26,7 +26,6 @@ import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.SdkConstants.FD_GRADLE_WRAPPER;
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.FN_BUILD_GRADLE_KTS;
 import static com.android.SdkConstants.FN_GRADLE_PROPERTIES;
@@ -38,13 +37,10 @@ import static com.android.SdkConstants.FN_SETTINGS_GRADLE_KTS;
 import static com.android.SdkConstants.OLD_PROGUARD_FILE;
 import static com.android.SdkConstants.PROGUARD_CONFIG;
 import static com.android.SdkConstants.PROJECT_PROPERTIES;
-import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.sdklib.AndroidTargetHash.PLATFORM_HASH_PREFIX;
-import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
-import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
@@ -77,7 +73,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
-import com.google.common.io.Files;
 import com.intellij.pom.java.LanguageLevel;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -92,10 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import kotlin.io.FilesKt;
-import kotlin.text.Charsets;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -435,20 +426,6 @@ public class Project {
         } else {
             directLibraries = Collections.emptyList();
         }
-
-        if (isAospBuildEnvironment()) {
-            if (isAospFrameworksRelatedProject(dir)) {
-                // No manifest file for this project: just init the manifest values here
-                manifestMinSdk = manifestTargetSdk = new AndroidVersion(HIGHEST_KNOWN_API, null);
-            } else if (buildSdk == -1) {
-                // only set BuildSdk for projects other than frameworks and
-                // the ones that don't have one set in project.properties.
-                buildSdk = getClient().getHighestKnownApiLevel();
-                buildTargetHash =
-                        AndroidTargetHash.getPlatformHashString(
-                                new AndroidVersion(HIGHEST_KNOWN_API, null));
-            }
-        }
     }
 
     /** Gets the namespacing mode used for this project */
@@ -537,17 +514,6 @@ public class Project {
     @NonNull
     public List<File> getJavaSourceFolders() {
         if (javaSourceFolders == null) {
-            if (isAospFrameworksRelatedProject(dir)) {
-                return Collections.singletonList(new File(dir, "java"));
-            }
-            if (isAospBuildEnvironment()) {
-                String top = getAospTop();
-                if (dir.getAbsolutePath().startsWith(top)) {
-                    javaSourceFolders = getAospJavaSourcePath();
-                    return javaSourceFolders;
-                }
-            }
-
             javaSourceFolders = client.getJavaSourceFolders(this);
         }
 
@@ -571,29 +537,6 @@ public class Project {
     @NonNull
     public List<File> getJavaClassFolders() {
         if (javaClassFolders == null) {
-            if (isAospFrameworksProject(dir)) {
-                String top = getAospTop();
-                if (top != null) {
-                    File out = new File(top, "out");
-                    if (out.exists()) {
-                        String relative =
-                                "target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar";
-                        File jar = new File(out, relative.replace('/', File.separatorChar));
-                        if (jar.exists()) {
-                            javaClassFolders = Collections.singletonList(jar);
-                            return javaClassFolders;
-                        }
-                    }
-                }
-            }
-            if (isAospBuildEnvironment()) {
-                String top = getAospTop();
-                if (dir.getAbsolutePath().startsWith(top)) {
-                    javaClassFolders = getAospJavaClassPath();
-                    return javaClassFolders;
-                }
-            }
-
             javaClassFolders = client.getJavaClassFolders(this);
         }
         return javaClassFolders;
@@ -613,21 +556,7 @@ public class Project {
     public List<File> getJavaLibraries(boolean includeProvided) {
         if (includeProvided) {
             if (javaLibraries == null) {
-                // AOSP builds already merge libraries and class folders into
-                // the single classes.jar file, so these have already been processed
-                // in getJavaClassFolders.
                 javaLibraries = client.getJavaLibraries(this, true);
-                if (isAospBuildEnvironment()) {
-                    // We still need to add the support-annotations library in the case of AOSP
-                    File out = new File(getAospTop(), "out");
-                    String relative =
-                            "target/common/obj/JAVA_LIBRARIES/"
-                                    + "android-support-annotations_intermediates/classes";
-                    File annotationsDir = new File(out, relative.replace('/', File.separatorChar));
-                    if (annotationsDir.exists()) {
-                        javaLibraries.add(annotationsDir);
-                    }
-                }
             }
             return javaLibraries;
         } else {
@@ -685,18 +614,7 @@ public class Project {
     @NonNull
     public List<File> getResourceFolders() {
         if (resourceFolders == null) {
-            List<File> folders = client.getResourceFolders(this);
-
-            if (folders.size() == 1 && isAospFrameworksRelatedProject(dir)) {
-                // No manifest file for this project: just init the manifest values here
-                manifestMinSdk = manifestTargetSdk = new AndroidVersion(HIGHEST_KNOWN_API, null);
-                File folder = new File(folders.get(0), RES_FOLDER);
-                if (!folder.exists()) {
-                    folders = Collections.emptyList();
-                }
-            }
-
-            resourceFolders = folders;
+            resourceFolders = client.getResourceFolders(this);
         }
 
         return resourceFolders;
@@ -1025,9 +943,6 @@ public class Project {
             } else {
                 manifestTargetSdk = manifestMinSdk;
             }
-        } else if (isAospBuildEnvironment()) {
-            extractAospMinSdkVersion();
-            manifestTargetSdk = manifestMinSdk;
         }
     }
 
@@ -1355,244 +1270,6 @@ public class Project {
      */
     public boolean isMergingManifests() {
         return mergeManifests;
-    }
-
-    // ---------------------------------------------------------------------------
-    // Support for running lint on the AOSP source tree itself
-
-    private static Boolean sAospBuild;
-
-    /** Is lint running in an AOSP build environment */
-    public static boolean isAospBuildEnvironment() {
-        if (sAospBuild == null) {
-            sAospBuild = getAospTop() != null;
-        }
-
-        return sAospBuild;
-    }
-
-    /**
-     * Is this the frameworks or related AOSP project? Needs some hardcoded support since it doesn't
-     * have a manifest file, etc.
-     *
-     * <p>A frameworks AOSP projects can be any directory under "frameworks" that 1. Is not the
-     * "support" directory (which uses the public support annotations) 2. Doesn't have an
-     * AndroidManifest.xml (it's an app instead)
-     *
-     * @param dir the project directory to check
-     * @return true if this looks like the frameworks/dir project and does not have an
-     *     AndroidManifest.xml
-     */
-    public static boolean isAospFrameworksRelatedProject(@NonNull File dir) {
-        if (isAospBuildEnvironment()) {
-            File frameworks = new File(getAospTop(), "frameworks");
-            String frameworksDir = frameworks.getAbsolutePath();
-            String supportDir = new File(frameworks, "support").getAbsolutePath();
-            if (dir.exists()
-                    && !dir.getAbsolutePath().startsWith(supportDir)
-                    && dir.getAbsolutePath().startsWith(frameworksDir)
-                    && !(new File(dir, FN_ANDROID_MANIFEST_XML).exists())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Is this the actual frameworks project.
-     *
-     * @param dir the project directory to check.
-     * @return true if this is the frameworks project.
-     */
-    @SuppressWarnings("FileComparisons")
-    public static boolean isAospFrameworksProject(@NonNull File dir) {
-        String top = getAospTop();
-        if (top != null) {
-            File toCompare = new File(top, "frameworks" + separator + "base" + separator + "core");
-            try {
-                return dir.getCanonicalFile().equals(toCompare) && dir.exists();
-            } catch (IOException e) {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    /** Get the root AOSP dir, if any */
-    private static String getAospTop() {
-        return System.getenv("ANDROID_BUILD_TOP");
-    }
-
-    /** Get the host out directory in AOSP, if any */
-    private static String getAospHostOut() {
-        return System.getenv("ANDROID_HOST_OUT");
-    }
-
-    /** Get the product out directory in AOSP, if any */
-    private static String getAospProductOut() {
-        return System.getenv("ANDROID_PRODUCT_OUT");
-    }
-
-    private List<File> getAospJavaSourcePath() {
-        List<File> sources = new ArrayList<>(2);
-        // Normal sources
-        File src = new File(dir, "src");
-        if (src.exists()) {
-            sources.add(src);
-        }
-
-        // Generates sources
-        for (File dir : getIntermediateDirs()) {
-            File classes = new File(dir, "src");
-            if (classes.exists()) {
-                sources.add(classes);
-            }
-        }
-
-        if (sources.isEmpty()) {
-            client.log(
-                    null,
-                    "Warning: Could not find sources or generated sources for project %1$s",
-                    getName());
-        }
-
-        return sources;
-    }
-
-    private List<File> getAospJavaClassPath() {
-        List<File> classDirs = new ArrayList<>(1);
-
-        for (File dir : getIntermediateDirs()) {
-            File classes = new File(dir, "classes");
-            if (classes.exists()) {
-                classDirs.add(classes);
-            } else {
-                classes = new File(dir, "classes.jar");
-                if (classes.exists()) {
-                    classDirs.add(classes);
-                }
-            }
-        }
-
-        if (classDirs.isEmpty()) {
-            client.log(null, "No bytecode found: Has the project been built? (%1$s)", getName());
-        }
-
-        return classDirs;
-    }
-
-    /** Find the _intermediates directories for a given module name */
-    private List<File> getIntermediateDirs() {
-        // See build/core/definitions.mk and in particular the "intermediates-dir-for" definition
-        List<File> intermediates = new ArrayList<>();
-
-        // TODO: Look up the module name, e.g. LOCAL_MODULE. However,
-        // some Android.mk files do some complicated things with it - and most
-        // projects use the same module name as the directory name.
-        String moduleName = dir.getName();
-        try {
-            // Get the actual directory name instead of '.' that's possible
-            // when using this via CLI.
-            moduleName = dir.getCanonicalFile().getName();
-        } catch (IOException ioe) {
-            // pass
-        }
-
-        String top = getAospTop();
-        final String[] outFolders =
-                new String[] {
-                    top + "/out/host/common/obj",
-                    top + "/out/target/common/obj",
-                    getAospHostOut() + "/obj",
-                    getAospProductOut() + "/obj"
-                };
-        final String[] moduleClasses =
-                new String[] {
-                    "APPS", "JAVA_LIBRARIES",
-                };
-
-        for (String out : outFolders) {
-            assert new File(out.replace('/', File.separatorChar)).exists() : out;
-            for (String moduleClass : moduleClasses) {
-                String path = out + '/' + moduleClass + '/' + moduleName + "_intermediates";
-                File file = new File(path.replace('/', File.separatorChar));
-                if (file.exists()) {
-                    intermediates.add(file);
-                }
-            }
-        }
-
-        return intermediates;
-    }
-
-    private void extractAospMinSdkVersion() {
-        // Is the SDK level specified by a Makefile?
-        boolean found = false;
-        File makefile = new File(dir, "Android.mk");
-        if (makefile.exists()) {
-            List<String> lines = FilesKt.readLines(makefile, Charsets.UTF_8);
-            Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)");
-            for (String line : lines) {
-                line = line.trim();
-                Matcher matcher = p.matcher(line);
-                if (matcher.matches()) {
-                    found = true;
-                    String version = matcher.group(1);
-                    if (version.equals("current")) {
-                        manifestMinSdk = findCurrentAospVersion();
-                    } else {
-                        manifestMinSdk = SdkVersionInfo.getVersion(version, null);
-                    }
-                    break;
-                }
-            }
-        }
-
-        if (!found) {
-            manifestMinSdk = findCurrentAospVersion();
-        }
-    }
-
-    /** Cache for {@link #findCurrentAospVersion()} */
-    private static AndroidVersion sCurrentVersion;
-
-    /** In an AOSP build environment, identify the currently built image version, if available */
-    private static AndroidVersion findCurrentAospVersion() {
-        if (sCurrentVersion == null) {
-            File versionMk =
-                    new File(
-                            getAospTop(),
-                            "build/core/version_defaults.mk".replace('/', File.separatorChar));
-
-            if (!versionMk.exists()) {
-                sCurrentVersion = AndroidVersion.DEFAULT;
-                return sCurrentVersion;
-            }
-            int sdkVersion = LOWEST_ACTIVE_API;
-            try {
-                Pattern p = Pattern.compile("PLATFORM_SDK_VERSION\\s*:=\\s*(.*)");
-                List<String> lines = Files.readLines(versionMk, Charsets.UTF_8);
-                for (String line : lines) {
-                    line = line.trim();
-                    Matcher matcher = p.matcher(line);
-                    if (matcher.matches()) {
-                        String version = matcher.group(1);
-                        try {
-                            sdkVersion = Integer.parseInt(version);
-                        } catch (NumberFormatException nfe) {
-                            // pass
-                        }
-                        break;
-                    }
-                }
-            } catch (IOException io) {
-                // pass
-            }
-            sCurrentVersion = new AndroidVersion(sdkVersion, null);
-        }
-
-        return sCurrentVersion;
     }
 
     /**
