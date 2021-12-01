@@ -47,6 +47,8 @@ public final class AndroidManifest {
     public static final String NODE_GRANT_URI_PERMISSION = "grant-uri-permission";
     public static final String NODE_PATH_PERMISSION = "path-permission";
     public static final String NODE_SUPPORTS_GL_TEXTURE = "supports-gl-texture";
+    public static final String NODE_SDK_LIBRARY = "sdk-library";
+    public static final String NODE_USES_SDK_LIBRARY = "uses-sdk-library";
 
     public static final String ATTRIBUTE_PACKAGE = "package";
     public static final String ATTRIBUTE_VERSIONCODE = "versionCode";

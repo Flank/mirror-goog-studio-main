@@ -34,6 +34,7 @@ import static com.android.xml.AndroidManifest.NODE_PERMISSION_GROUP;
 import static com.android.xml.AndroidManifest.NODE_PERMISSION_TREE;
 import static com.android.xml.AndroidManifest.NODE_PROVIDER;
 import static com.android.xml.AndroidManifest.NODE_RECEIVER;
+import static com.android.xml.AndroidManifest.NODE_SDK_LIBRARY;
 import static com.android.xml.AndroidManifest.NODE_SERVICE;
 import static com.android.xml.AndroidManifest.NODE_SUPPORTS_GL_TEXTURE;
 import static com.android.xml.AndroidManifest.NODE_SUPPORTS_SCREENS;
@@ -42,6 +43,7 @@ import static com.android.xml.AndroidManifest.NODE_USES_FEATURE;
 import static com.android.xml.AndroidManifest.NODE_USES_LIBRARY;
 import static com.android.xml.AndroidManifest.NODE_USES_PERMISSION;
 import static com.android.xml.AndroidManifest.NODE_USES_SDK;
+import static com.android.xml.AndroidManifest.NODE_USES_SDK_LIBRARY;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -77,7 +79,7 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
     private static final Set<String> sValidTags;
 
     static {
-        int expectedSize = 30;
+        int expectedSize = 32;
         sValidTags = Sets.newHashSetWithExpectedSize(expectedSize);
         sValidTags.add(NODE_MANIFEST);
         sValidTags.add(NODE_APPLICATION);
@@ -85,9 +87,11 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
         sValidTags.add(NODE_SERVICE);
         sValidTags.add(NODE_PROVIDER);
         sValidTags.add(NODE_RECEIVER);
+        sValidTags.add(NODE_SDK_LIBRARY);
         sValidTags.add(NODE_USES_FEATURE);
         sValidTags.add(NODE_USES_LIBRARY);
         sValidTags.add(NODE_USES_SDK);
+        sValidTags.add(NODE_USES_SDK_LIBRARY);
         sValidTags.add(NODE_INSTRUMENTATION);
         sValidTags.add(NODE_USES_PERMISSION);
         sValidTags.add(NODE_PERMISSION);

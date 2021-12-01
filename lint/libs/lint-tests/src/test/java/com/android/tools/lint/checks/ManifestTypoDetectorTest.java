@@ -331,7 +331,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesLibrary() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:16: Error: Misspelled tag <use-library>: Did you mean <uses-library>? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:16: Error: Misspelled tag <use-library>: Did you mean <uses-library> or <sdk-library>? [ManifestTypo]\n"
                         + "        <use-library android:name=\"com.example.helloworld\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -375,7 +375,7 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
     public void testTypoUsesLibrary2() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:16: Error: Misspelled tag <user-library>: Did you mean <uses-library>? [ManifestTypo]\n"
+                        + "AndroidManifest.xml:16: Error: Misspelled tag <user-library>: Did you mean <uses-library> or <sdk-library>? [ManifestTypo]\n"
                         + "        <user-library android:name=\"com.example.helloworld\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
