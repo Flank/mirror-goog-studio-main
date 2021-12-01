@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,45 +14,33 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.core;
+package com.android.build.gradle.internal.core
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.api.AnnotationProcessorOptions;
-import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.api.JavaCompileOptions
+import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
+import com.android.build.gradle.internal.services.DslServices
 
-/** Implementation of CoreJavaCompileOptions used to merge multiple configs together. */
-public class MergedJavaCompileOptions
-        implements JavaCompileOptions, MergedOptions<JavaCompileOptions> {
+/** Implementation of CoreJavaCompileOptions used to merge multiple configs together.  */
+class MergedJavaCompileOptions(dslServices: DslServices) : JavaCompileOptions,
+    MergedOptions<JavaCompileOptions> {
 
-    private final com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
-            annotationProcessorOptions;
+    override val annotationProcessorOptions = AnnotationProcessorOptions(dslServices)
 
-    public MergedJavaCompileOptions(@NonNull DslServices dslServices) {
-        annotationProcessorOptions =
-                new com.android.build.gradle.internal.dsl.AnnotationProcessorOptions(dslServices);
+    override fun reset() {
+        annotationProcessorOptions.classNames.clear()
+        annotationProcessorOptions.arguments.clear()
+        annotationProcessorOptions.compilerArgumentProviders.clear()
     }
 
-    @NonNull
-    @Override
-    public AnnotationProcessorOptions getAnnotationProcessorOptions() {
-        return annotationProcessorOptions;
-    }
-
-    @Override
-    public void reset() {
-        annotationProcessorOptions.getClassNames().clear();
-        annotationProcessorOptions.getArguments().clear();
-        annotationProcessorOptions.getCompilerArgumentProviders().clear();
-    }
-
-    @Override
-    public void append(@NonNull JavaCompileOptions javaCompileOptions) {
-        annotationProcessorOptions.classNames(
-                javaCompileOptions.getAnnotationProcessorOptions().getClassNames());
-        annotationProcessorOptions.arguments(
-                javaCompileOptions.getAnnotationProcessorOptions().getArguments());
-        annotationProcessorOptions.compilerArgumentProviders(
-                javaCompileOptions.getAnnotationProcessorOptions().getCompilerArgumentProviders());
+    override fun append(option: JavaCompileOptions) {
+        annotationProcessorOptions.classNames.addAll(
+            option.annotationProcessorOptions.classNames
+        )
+        annotationProcessorOptions.arguments.putAll(
+            option.annotationProcessorOptions.arguments
+        )
+        annotationProcessorOptions.compilerArgumentProviders.addAll(
+            option.annotationProcessorOptions.compilerArgumentProviders
+        )
     }
 }
