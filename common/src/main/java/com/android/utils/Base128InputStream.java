@@ -63,6 +63,26 @@ public final class Base128InputStream extends BufferedInputStream {
   }
 
   /**
+   * Reads a 16-bit integer from the stream. The integer had to be written by {@link Base128OutputStream#writeChar(char)}.
+   *
+   * @return the value read from the stream
+   * @throws IOException if an I/O error occurs
+   * @throws StreamFormatException if an invalid data format is detected
+   */
+  public char readChar() throws IOException, StreamFormatException {
+    int b = readByteAsInt();
+    int value = b & 0x7F;
+    for (int shift = 7; (b & 0x80) != 0; shift += 7) {
+      b = readByteAsInt();
+      if (shift == 14 && (b & 0xFC) != 0) {
+        throw StreamFormatException.invalidFormat();
+      }
+      value |= (b & 0x7F) << shift;
+    }
+    return (char)value;
+  }
+
+  /**
    * Reads a 32-bit integer from the stream. The integer had to be written by {@link Base128OutputStream#writeInt(int)}.
    *
    * @return the value read from the stream
@@ -70,17 +90,11 @@ public final class Base128InputStream extends BufferedInputStream {
    * @throws StreamFormatException if an invalid data format is detected
    */
   public int readInt() throws IOException {
-    int b = super.read();
-    if (b < 0) {
-      throw StreamFormatException.prematureEndOfFile();
-    }
+    int b = readByteAsInt();
     int value = b & 0x7F;
     for (int shift = 7; (b & 0x80) != 0; shift += 7) {
-      b = super.read();
-      if (b < 0) {
-        throw StreamFormatException.prematureEndOfFile();
-      }
-      if (shift == 28 && (b & 0x70) != 0) {
+      b = readByteAsInt();
+      if (shift == 28 && (b & 0xF0) != 0) {
         throw StreamFormatException.invalidFormat();
       }
       value |= (b & 0x7F) << shift;
@@ -96,17 +110,11 @@ public final class Base128InputStream extends BufferedInputStream {
    * @throws StreamFormatException if an invalid data format is detected
    */
   public long readLong() throws IOException, StreamFormatException {
-    int b = super.read();
-    if (b < 0) {
-      throw StreamFormatException.prematureEndOfFile();
-    }
+    int b = readByteAsInt();
     long value = b & 0x7F;
     for (int shift = 7; (b & 0x80) != 0; shift += 7) {
-      b = super.read();
-      if (b < 0) {
-        throw StreamFormatException.prematureEndOfFile();
-      }
-      if (shift == 63 && (b & 0x7E) != 0) {
+      b = readByteAsInt();
+      if (shift == 63 && (b & 0xFE) != 0) {
         throw StreamFormatException.invalidFormat();
       }
       value |= ((long) (b & 0x7F)) << shift;
@@ -144,21 +152,6 @@ public final class Base128InputStream extends BufferedInputStream {
   }
 
   /**
-   * Reads a 16-bit integer from the stream. The integer had to be written by {@link Base128OutputStream#writeChar(char)}.
-   *
-   * @return the value read from the stream
-   * @throws IOException if an I/O error occurs
-   * @throws StreamFormatException if an invalid data format is detected
-   */
-  public char readChar() throws IOException, StreamFormatException {
-    int c = readInt();
-    if ((c & 0xFFFF0000) != 0) {
-      throw StreamFormatException.invalidFormat();
-    }
-    return (char)c;
-  }
-
-  /**
    * Reads a byte value from the stream.
    *
    * @return the byte value read from the stream, or -1 if the end of the stream is reached
@@ -166,10 +159,7 @@ public final class Base128InputStream extends BufferedInputStream {
    * @throws StreamFormatException if the stream does not contain any more data
    */
   public byte readByte() throws IOException {
-    int b = super.read();
-    if (b < 0) {
-      throw StreamFormatException.prematureEndOfFile();
-    }
+    int b = readByteAsInt();
     return (byte)b;
   }
 
@@ -217,6 +207,14 @@ public final class Base128InputStream extends BufferedInputStream {
       }
     }
     return result;
+  }
+
+  private int readByteAsInt() throws IOException {
+    int b = super.read();
+    if (b < 0) {
+      throw StreamFormatException.prematureEndOfFile();
+    }
+    return b;
   }
 
   /**
