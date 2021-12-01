@@ -174,13 +174,16 @@ class ModelBuilder<
     }
 
     private fun buildModelVersions(): Versions {
+        val v2Version = VersionImpl(0,1)
         return VersionsImpl(
-            basicAndroidProject = VersionImpl(0, 1),
-            androidProject = VersionImpl(0, 1),
-            androidDsl = VersionImpl(0, 1),
-            variantDependencies = VersionImpl(0, 1),
-            nativeModule = VersionImpl(0, 1),
-            agp = Version.ANDROID_GRADLE_PLUGIN_VERSION
+            agp = Version.ANDROID_GRADLE_PLUGIN_VERSION,
+            versions = mapOf<String, Versions.Version>(
+                Versions.BASIC_ANDROID_PROJECT to v2Version,
+                Versions.ANDROID_PROJECT to v2Version,
+                Versions.ANDROID_DSL to v2Version,
+                Versions.VARIANT_DEPENDENCIES to v2Version,
+                Versions.NATIVE_MODULE to v2Version,
+            )
         )
     }
 

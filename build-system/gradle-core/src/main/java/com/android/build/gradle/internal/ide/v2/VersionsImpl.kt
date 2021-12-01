@@ -21,12 +21,8 @@ import com.android.builder.model.v2.models.Versions.Version
 import java.io.Serializable
 
 data class VersionsImpl(
-    override val basicAndroidProject: Version,
-    override val androidProject: Version,
-    override val androidDsl: Version,
-    override val variantDependencies: Version,
-    override val nativeModule: Version,
     override val agp: String,
+    override val versions: Map<String, Version>,
 ): Versions, Serializable {
     companion object {
         @JvmStatic

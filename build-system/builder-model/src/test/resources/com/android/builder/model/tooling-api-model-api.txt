@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a631021bddc008500805b84b5b1e5754e42d6b2544b80197e550fa14368aff81
+78e4c37a8c9259da6e8c63f54c6af9f5ec1bd968bf8134d1658f2d0e63565b6b
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -815,15 +815,12 @@ com.android.builder.model.v2.models.VariantDependencies.getName: java.lang.Strin
 com.android.builder.model.v2.models.VariantDependencies.getTestFixturesArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()
 com.android.builder.model.v2.models.VariantDependencies.getUnitTestArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()
 com.android.builder.model.v2.models.Versions implements com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.models.Versions$Companion
 com.android.builder.model.v2.models.Versions$Version
 com.android.builder.model.v2.models.Versions$Version.getMajor: int ()
 com.android.builder.model.v2.models.Versions$Version.getMinor: int ()
 com.android.builder.model.v2.models.Versions.getAgp: java.lang.String ()
-com.android.builder.model.v2.models.Versions.getAndroidDsl: com.android.builder.model.v2.models.Versions$Version ()
-com.android.builder.model.v2.models.Versions.getAndroidProject: com.android.builder.model.v2.models.Versions$Version ()
-com.android.builder.model.v2.models.Versions.getBasicAndroidProject: com.android.builder.model.v2.models.Versions$Version ()
-com.android.builder.model.v2.models.Versions.getNativeModule: com.android.builder.model.v2.models.Versions$Version ()
-com.android.builder.model.v2.models.Versions.getVariantDependencies: com.android.builder.model.v2.models.Versions$Version ()
+com.android.builder.model.v2.models.Versions.getVersions: java.util.Map<java.lang.String, com.android.builder.model.v2.models.Versions$Version> ()
 com.android.builder.model.v2.models.ndk.NativeAbi implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.models.ndk.NativeAbi.getAdditionalProjectFilesIndexFile: java.io.File ()
 com.android.builder.model.v2.models.ndk.NativeAbi.getBuildFileIndexFile: java.io.File ()

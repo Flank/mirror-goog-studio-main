@@ -65,27 +65,13 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 // snapshot fixtures specific to each model class
 
 internal fun ModelSnapshotter<Versions>.snapshotVersions() {
-    dataObject("BasicAndroidProject", Versions::basicAndroidProject) {
-        item("major", Version::major)
-        item("minor", Version::minor)
-    }
-
-    dataObject("AndroidProject", Versions::androidProject) {
-        item("major", Version::major)
-        item("minor", Version::minor)
-    }
-
-    dataObject("AndroidDsl", Versions::androidDsl) {
-        item("major", Version::major)
-        item("minor", Version::minor)
-    }
-
-    dataObject("VariantDependencies", Versions::variantDependencies) {
-        item("major", Version::major)
-        item("minor", Version::minor)
-    }
-
-    dataObject("nativeModule", Versions::nativeModule) {
+    convertedObjectList(
+        name = "versions",
+        propertyAction = { versions.entries },
+        nameAction = { key },
+        objectAction = { value },
+        sortAction = { collection -> collection?.sortedBy { it.key } }
+    ) {
         item("major", Version::major)
         item("minor", Version::minor)
     }

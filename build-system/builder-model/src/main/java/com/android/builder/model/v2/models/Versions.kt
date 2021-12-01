@@ -29,11 +29,15 @@ interface Versions: AndroidModel {
         val minor: Int
     }
 
-    val basicAndroidProject: Version
-    val androidProject: Version
-    val androidDsl: Version
-    val variantDependencies: Version
-    val nativeModule: Version
+    val versions: Map<String, Version>
+
+    companion object {
+        const val BASIC_ANDROID_PROJECT = "basic_android_project"
+        const val ANDROID_PROJECT = "android_project"
+        const val ANDROID_DSL = "android_dsl"
+        const val VARIANT_DEPENDENCIES = "variant_dependencies"
+        const val NATIVE_MODULE = "native_module"
+    }
 
     /**
      * The version of AGP.
