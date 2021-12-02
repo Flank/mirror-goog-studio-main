@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -24,7 +25,6 @@ import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManag
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -39,11 +39,13 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 @CacheableTransform
 abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Parameters> {
@@ -61,7 +63,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
         fun registerAsmTransformForComponent(
             projectName: String,
             dependencyHandler: DependencyHandler,
-            creationConfig: ComponentCreationConfig
+            creationConfig: ComponentImpl
         ) {
             if (creationConfig.dependenciesClassesAreInstrumented) {
                 dependencyHandler.registerTransform(AsmClassesTransform::class.java) { spec ->
@@ -71,10 +73,13 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                         parameters.framesComputationMode.set(
                             creationConfig.asmFramesComputationMode
                         )
+                        parameters.excludes.set(
+                            creationConfig.instrumentation.excludes
+                        )
                         parameters.visitorsList.set(
                             creationConfig.registeredDependenciesClassesVisitors
                         )
-                        parameters.bootClasspath.set(creationConfig.globalScope.fullBootClasspathProvider)
+                        parameters.bootClasspath.set(creationConfig.global.fullBootClasspathProvider)
                         parameters.classesHierarchyBuildService.set(
                             getBuildService(creationConfig.services.buildServiceRegistry)
                         )
@@ -109,7 +114,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
     @get:InputArtifactDependencies
     abstract val classpath: FileCollection
 
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputArtifact
     abstract val inputArtifact: Provider<FileSystemLocation>
 
@@ -129,6 +134,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
             parameters.asmApiVersion.get(),
             classesHierarchyResolver,
             parameters.framesComputationMode.get(),
+            parameters.excludes.get(),
             parameters.profilingTransforms.get()
         ).use {
             it.instrumentClassesFromJarToJar(
@@ -144,6 +150,9 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
         @get:Input
         val framesComputationMode: Property<FramesComputationMode>
+
+        @get:Input
+        val excludes: SetProperty<String>
 
         @get:Nested
         val visitorsList: ListProperty<AsmClassVisitorFactory<*>>

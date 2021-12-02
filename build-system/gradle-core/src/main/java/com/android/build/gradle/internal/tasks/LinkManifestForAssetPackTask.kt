@@ -114,7 +114,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         }
 
         override fun configure(task: LinkManifestForAssetPackTask) {
-            task.configureVariantProperties(variantName = "", task.project)
+            task.configureVariantProperties(variantName = "", projectServices.buildServiceRegistry)
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory
             )

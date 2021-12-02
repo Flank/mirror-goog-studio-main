@@ -28,6 +28,7 @@ import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
 import com.android.tools.lint.checks.RestrictToDetector
 import com.android.tools.lint.checks.ScopedStorageDetector
+import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
@@ -278,6 +279,7 @@ class LintBaselineTest {
         assertTrue(stringsEquivalent("````abc", "abc"))
         assertFalse(stringsEquivalent("abc", "def"))
         assertFalse(stringsEquivalent("abcd", "abce"))
+        assertTrue(stringsEquivalent("ab cd ?", "ab   c d?"))
     }
 
     @Test
@@ -374,6 +376,20 @@ class LintBaselineTest {
                 ApiDetector.UNSUPPORTED,
                 "Call requires API level R (current min is 29): `setZOrderedOnTop`",
                 "Call requires API level 30 (current min is 29): `setZOrdered`"
+            )
+        )
+    }
+
+    @Test
+    fun tolerateTypoMessageChange() {
+        // Generic test for grammar change to remove spaces before question marks
+        // as now enforced by LintImplTextFormat
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                TypoDetector.ISSUE,
+                "Did you mean \"intended\" instead of \"actual\" ?",
+                "Did you mean \"intended\" instead of \"actual\"?"
             )
         )
     }

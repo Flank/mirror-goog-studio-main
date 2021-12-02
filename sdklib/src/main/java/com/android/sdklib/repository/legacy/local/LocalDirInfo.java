@@ -19,9 +19,8 @@ package com.android.sdklib.repository.legacy.local;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.repository.api.RepoManager;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
-
+import com.android.sdklib.repository.legacy.FileOp;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;

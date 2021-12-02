@@ -8,7 +8,7 @@ repositories {
 dependencies {
     implementation project(':base:bazel:avd')
     implementation libs.junit
-    implementation project(':base:testutils')
+    implementation libs.com.android.tools.testutils
     implementation libs.com.android.tools.sdklib
 
 
@@ -19,7 +19,7 @@ dependencies {
     testImplementation project(':base:builder-model')
     testImplementation libs.com.android.tools.sdkCommon
     testImplementation project(':base:testing-infrastructure:device-pool:device-provider')
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation project(':base:gradle-api')
     testCompileOnly(project(':base:profile'))
 

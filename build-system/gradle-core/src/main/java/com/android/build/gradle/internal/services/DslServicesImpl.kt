@@ -30,8 +30,15 @@ import java.io.File
 
 class DslServicesImpl constructor(
     projectServices: ProjectServices,
-    override val sdkComponents: Provider<SdkComponentsBuildService>
+    override val sdkComponents: Provider<SdkComponentsBuildService>,
+    private val versionedSdkLoaderServiceProvider: (() -> VersionedSdkLoaderService)? = null,
 ) : BaseServicesImpl(projectServices), DslServices {
+
+    // this is due to ordering as versionSdkLoaderService also has a reference on DslService.
+    // This is only used for the old DSL and will be deleted alongside it in 8.0 anyway, and is
+    // used only in some corner cases.
+    override val versionedSdkLoaderService: VersionedSdkLoaderService
+        get() = versionedSdkLoaderServiceProvider?.invoke() ?: throw RuntimeException("Calling versionedSdkLoaderService on a plugin that does not support it")
 
     override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> =
         projectServices.objectFactory.domainObjectSet(type)

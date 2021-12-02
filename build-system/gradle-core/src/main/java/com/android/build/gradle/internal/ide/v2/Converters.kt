@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
+import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -184,10 +185,33 @@ internal fun DslApiVersion.convert() = ApiVersionImpl(
     codename = codename
 )
 
-internal fun DefaultAndroidSourceSet.convert(features: BuildFeatureValues) = SourceProviderImpl(
+internal fun DefaultAndroidSourceSet.convert(
+        features: BuildFeatureValues,
+) = SourceProviderImpl(
+        name = name,
+        manifestFile = manifestFile,
+        javaDirectories = javaDirectories,
+        kotlinDirectories = kotlinDirectories,
+        resourcesDirectories = resourcesDirectories,
+        aidlDirectories = if (features.aidl) aidlDirectories else null,
+        renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,
+        resDirectories = if (features.androidResources) resDirectories else null,
+        assetsDirectories = assetsDirectories,
+        jniLibsDirectories = jniLibsDirectories,
+        shadersDirectories = if (features.shaders) shadersDirectories else null,
+        mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
+        customDirectories = emptyList(),
+)
+
+internal fun DefaultAndroidSourceSet.convert(
+    features: BuildFeatureValues,
+    sources: SourcesImpl,
+) = SourceProviderImpl(
     name = name,
     manifestFile = manifestFile,
-    javaDirectories = javaDirectories,
+    javaDirectories = sources.java.variantSourcesForModel {
+              it.isUserAdded && it.shouldBeAddedToIdeModel
+    },
     kotlinDirectories = kotlinDirectories,
     resourcesDirectories = resourcesDirectories,
     aidlDirectories = if (features.aidl) aidlDirectories else null,
@@ -196,7 +220,8 @@ internal fun DefaultAndroidSourceSet.convert(features: BuildFeatureValues) = Sou
     assetsDirectories = assetsDirectories,
     jniLibsDirectories = jniLibsDirectories,
     shadersDirectories = if (features.shaders) shadersDirectories else null,
-    mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null
+    mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
+    customDirectories = customDirectories,
 )
 
 internal fun AndroidResources.convert() = AaptOptionsImpl(
@@ -232,6 +257,7 @@ internal fun Lint.convert() = LintOptionsImpl(
     checkReleaseBuilds = checkReleaseBuilds,
     checkTestSources = checkTestSources,
     ignoreTestSources = ignoreTestSources,
+    ignoreTestFixturesSources = ignoreTestFixturesSources,
     checkGeneratedSources = checkGeneratedSources,
     checkDependencies = checkDependencies,
     baseline = baseline,
@@ -255,4 +281,13 @@ internal fun TestOptions.Execution.convert(): TestInfo.Execution = when (this) {
     TestOptions.Execution.HOST -> TestInfo.Execution.HOST
     TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR -> TestInfo.Execution.ANDROID_TEST_ORCHESTRATOR
     TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR -> TestInfo.Execution.ANDROIDX_TEST_ORCHESTRATOR
+}
+
+internal fun String.convertToExecution(): TestInfo.Execution? = when (this) {
+    // The string coming from the old DSL (which is the enum converted) can be lowercase, so we
+    // need to handle both
+    "host","HOST" -> TestInfo.Execution.HOST
+    "android_test_orchestrator","ANDROID_TEST_ORCHESTRATOR" -> TestInfo.Execution.ANDROID_TEST_ORCHESTRATOR
+    "androidx_test_orchestrator","ANDROIDX_TEST_ORCHESTRATOR" -> TestInfo.Execution.ANDROIDX_TEST_ORCHESTRATOR
+    else -> null
 }

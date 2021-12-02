@@ -562,7 +562,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             }
             String message =
                     String.format(
-                            "Misspelled tag `<%1$s>`: Did you mean `%2$s` ?",
+                            "Misspelled tag `<%1$s>`: Did you mean `%2$s`?",
                             tagName, suggestionString);
 
             context.report(ISSUE, node, context.getNameLocation(node), message);
@@ -592,7 +592,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                         attr,
                         context.getNameLocation(attr),
                         String.format(
-                                "Misspelled attribute `%1$s`: Did you mean `%2$s` ?",
+                                "Misspelled attribute `%1$s`: Did you mean `%2$s`?",
                                 nodeName, attrName));
                 foundSpellingError |= true;
             }

@@ -24,6 +24,9 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.ide.common.build.ListingFileRedirect
 import com.google.common.truth.Truth
@@ -44,12 +47,16 @@ internal class ListingFileRedirectTaskTest {
     val temporaryFolder = TemporaryFolder()
 
     private lateinit var project: Project
+    private lateinit var taskCreationServices: TaskCreationServices
     private lateinit var taskProvider: TaskProvider<ListingFileRedirectTask>
     private lateinit var task: ListingFileRedirectTask
 
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
+
+        taskCreationServices = createTaskCreationServices(createProjectServices(project = project))
+
         @Suppress("UnstableApiUsage")
         project.gradle.sharedServices.registerIfAbsent(
             getBuildServiceName(AnalyticsService::class.java),
@@ -84,6 +91,7 @@ internal class ListingFileRedirectTaskTest {
         val artifacts = Mockito.mock(ArtifactsImpl::class.java)
         val creationConfig = Mockito.mock(ComponentCreationConfig::class.java)
         Mockito.`when`(creationConfig.artifacts).thenReturn(artifacts)
+        Mockito.`when`(creationConfig.services).thenReturn(taskCreationServices)
         val artifactType = object : Artifact.Single<RegularFile>(
             ArtifactKind.FILE,
             Category.INTERMEDIATES) {}

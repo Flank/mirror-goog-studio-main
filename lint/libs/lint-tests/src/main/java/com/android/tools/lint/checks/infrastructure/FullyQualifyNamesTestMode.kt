@@ -72,7 +72,7 @@ import java.util.ArrayDeque
  * TODO: See if we can do statically imported methods and fields as
  *     well?
  */
-class FullyQualifyNamesTestMode : SourceTransformationTestMode(
+class FullyQualifyNamesTestMode : UastSourceTransformationTestMode(
     description = "Names replaced with Fully Qualified Names",
     "TestMode.FULLY_QUALIFIED",
     "qualified-imports"

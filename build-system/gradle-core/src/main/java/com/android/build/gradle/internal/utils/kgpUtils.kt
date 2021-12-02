@@ -234,7 +234,7 @@ fun addComposeArgsToKotlinCompile(
  * Get information about Kotlin sources from KGP, until there is a KGP version that can work
  * with AGP which supports Kotlin source directories.
  */
-fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContainer<com.android.build.gradle.api.AndroidSourceSet>) {
+fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContainer<out com.android.build.gradle.api.AndroidSourceSet>) {
     val hasMpp = KOTLIN_MPP_PLUGIN_IDS.any { project.pluginManager.hasPlugin(it) }
     sourceSets.all {
         val kotlinConvention = (it as HasConvention).convention.plugins["kotlin"]

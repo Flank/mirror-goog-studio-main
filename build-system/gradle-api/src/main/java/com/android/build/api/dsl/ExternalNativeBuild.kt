@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * DSL object to configure external native builds using
  * [CMake](https://cmake.org/)

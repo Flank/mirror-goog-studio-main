@@ -41,7 +41,7 @@ class DataBindingDeterminismTest {
         private val INCONSISTENT_TASK_OUTPUTS = setOf(
             // The following are not specific to data binding but to the Android Gradle plugin (this
             // is a subset of DeterministicTaskOutputsTest.INCONSISTENT_TASK_OUTPUTS).
-            "build/intermediates/incremental/mergeDebugResources",
+            "build/intermediates/incremental/debug/mergeDebugResources",
             "build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt",
             "build/intermediates/merged_res_blame_folder/debug/out",
             "build/intermediates/merged_res/debug",

@@ -20,8 +20,8 @@ import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
@@ -63,10 +63,10 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val dslServices: DslServices,
     private val variantPropertiesApiServices: VariantPropertiesApiServices,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    private val oldExtension: BaseExtension,
     private val extension: CommonExtensionT,
     private val hasDynamicFeatures: Boolean,
     private val experimentalProperties: Map<String, Any>,
-    private val enableTestFixtures: Boolean,
     private val testFixtureMainVariantName: String?
 ) {
 
@@ -87,10 +87,10 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
+            oldExtension: BaseExtension,
             extension: CommonExtensionT,
             hasDynamicFeatures: Boolean,
             experimentalProperties: Map<String, Any> = mapOf(),
-            enableTestFixtures: Boolean = false,
             testFixtureMainVariantName: String? = null
         ): VariantDslInfoBuilder<CommonExtensionT> {
             return VariantDslInfoBuilder(
@@ -105,11 +105,11 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 dslServices,
                 variantPropertiesApiServices,
                 nativeBuildSystem,
+                oldExtension,
                 extension,
                 hasDynamicFeatures,
                 experimentalProperties,
-                enableTestFixtures,
-                testFixtureMainVariantName
+                testFixtureMainVariantName,
             )
         }
 
@@ -256,17 +256,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             }
             return sb.toString()
         }
-
-        @JvmStatic
-        private fun CommonExtension<*, *, *, *>.getDslNamespace(variantType: VariantType): String? {
-            return if (variantType.isTestComponent) {
-                (this as TestedExtension).testNamespace
-            } else if (variantType.isTestFixturesComponent) {
-                null
-            } else {
-                namespace
-            }
-        }
     }
 
     private lateinit var variantName: String
@@ -294,7 +283,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
 
     var variantSourceProvider: DefaultAndroidSourceSet? = null
     var multiFlavorSourceProvider: DefaultAndroidSourceSet? = null
-    var productionVariant: VariantDslInfoImpl<*>? = null
+    var productionVariant: VariantDslInfoImpl? = null
     var inconsistentTestAppId: Boolean = false
 
     fun addProductFlavor(
@@ -308,7 +297,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     }
 
     /** Creates a variant configuration  */
-    fun createVariantDslInfo(buildDirectory: DirectoryProperty): VariantDslInfoImpl<CommonExtensionT> {
+    fun createVariantDslInfo(buildDirectory: DirectoryProperty): VariantDslInfoImpl {
         val flavorList = flavors.map { it.first }
 
         val publishingInfo = if (extension is InternalLibraryExtension) {
@@ -351,12 +340,12 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslServices,
             variantPropertiesApiServices,
             buildDirectory,
-            extension.getDslNamespace(variantType),
             nativeBuildSystem,
             publishingInfo,
             experimentalProperties,
-            enableTestFixtures,
-            inconsistentTestAppId
+            inconsistentTestAppId,
+            oldExtension,
+            extension
         )
     }
 

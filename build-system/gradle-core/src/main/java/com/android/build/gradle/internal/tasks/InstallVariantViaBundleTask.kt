@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.internal.InstallUtils
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider
+import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.api.DeviceConfigProviderImpl
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
@@ -201,7 +201,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                 task.minSdkVersion = it.apiLevel
                 task.minSdkCodename = it.codename
             }
-            creationConfig.globalScope.extension.adbOptions.installOptions?.let {
+            creationConfig.global.installationOptions.installOptions?.let {
                 task.installOptions.addAll(it)
             }
 
@@ -210,7 +210,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                 task.apkBundle
             )
 
-            task.timeOutInMs = creationConfig.globalScope.extension.adbOptions.timeOutInMs
+            task.timeOutInMs = creationConfig.global.installationOptions.timeOutInMs
             task.buildTools.initialize(creationConfig)
         }
 

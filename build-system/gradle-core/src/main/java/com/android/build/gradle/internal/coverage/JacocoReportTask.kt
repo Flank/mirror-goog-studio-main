@@ -166,7 +166,7 @@ abstract class JacocoReportTask : NonIncrementalTask() {
             task.tabWidth.setDisallowChanges(4)
 
             task.classFileCollection.setFrom(creationConfig.testedConfig.artifacts.getAllClasses())
-            task.javaSources.setDisallowChanges(creationConfig.testedConfig.javaSources)
+            task.javaSources.setDisallowChanges(creationConfig.testedConfig.sources.java.getAsFileTrees())
         }
     }
 

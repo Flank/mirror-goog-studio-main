@@ -367,40 +367,4 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
         result = result.replace(System.lineSeparator(), "\n");
         return result;
     }
-
-    /** Get the location to write missing golden files to */
-    @SuppressWarnings("MethodMayBeStatic")
-    protected File findSrcDir() {
-        // Set $ANDROID_SRC to point to your git AOSP working tree
-        String rootPath = System.getenv("ANDROID_SRC");
-        if (rootPath == null) {
-            String sdk = System.getenv("ADT_SDK_SOURCE_PATH");
-            if (sdk != null) {
-                File root = new File(sdk);
-                if (root.exists()) {
-                    return root.getName().equals("sdk") ? root.getParentFile() : root;
-                }
-            }
-        } else {
-            File root = new File(rootPath);
-            if (root.exists()) {
-                return root;
-            }
-        }
-
-        return null;
-    }
-
-    protected File findSrcRelativeDir(String relative) {
-        // Set $ANDROID_SRC to point to your git AOSP working tree
-        File root = findSrcDir();
-        if (root != null) {
-            File testData = new File(root, relative.replace('/', File.separatorChar));
-            if (testData.exists()) {
-                return testData;
-            }
-        }
-
-        return null;
-    }
 }

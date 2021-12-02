@@ -18,7 +18,7 @@ dependencies {
     testImplementation libs.junit
     testImplementation libs.truth
     testImplementation libs.mockito_core
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
 }
 
 sourceSets {

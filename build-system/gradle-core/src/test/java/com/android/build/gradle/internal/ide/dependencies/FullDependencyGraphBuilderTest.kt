@@ -167,6 +167,25 @@ internal class FullDependencyGraphBuilderTest {
             .assertThat(children.map { it.key })
             .containsExactly("relocated-foo|bar|1.0||relocated-foo:bar:1.0")
     }
+
+    @Test
+    fun testDependencyConstraint() {
+        val (graphs, libraries) = buildModelGraph {
+            val barParentLib = module("foo", "bar-parent", "1.0") {
+                file = File("path/to/bar-parent-1.0.jar")
+            }
+
+            val barLib = module("foo", "bar", "1.0") {
+                file = File("path/to/bar-1.0.jar")
+                dependency(barParentLib)
+            }
+            barParentLib.dependencyConstraint(barLib)
+        }
+
+        Truth
+            .assertThat(graphs.compileDependencies.map { it.key })
+            .containsExactly("foo|bar-parent|1.0||", "foo|bar|1.0||")
+    }
 }
 
 // -------------

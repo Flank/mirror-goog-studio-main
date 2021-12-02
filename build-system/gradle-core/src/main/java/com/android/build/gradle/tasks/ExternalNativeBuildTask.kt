@@ -27,9 +27,9 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.objFolder
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter
 import org.gradle.api.tasks.Internal
@@ -114,10 +114,10 @@ fun createRepublishCxxBuildTask(
  * by [createRepublishCxxBuildTask].
  */
 fun createWorkingCxxBuildTask(
-        globalScope: GlobalScope,
-        abi : CxxAbiModel,
-        name : String
-) = object : GlobalTaskCreationAction<ExternalNativeBuildTask>(globalScope) {
+    creationConfig: GlobalTaskCreationConfig,
+    abi : CxxAbiModel,
+    name : String
+) = object : GlobalTaskCreationAction<ExternalNativeBuildTask>(creationConfig) {
     override val name = name
     override val type = ExternalNativeBuildTask::class.java
     override fun configure(task: ExternalNativeBuildTask) {

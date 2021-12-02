@@ -65,7 +65,7 @@ public class MergingLog {
                         public Map<SourceFile, Map<SourcePosition, SourceFilePosition>> load(
                                 String shard) throws Exception {
                             return MergingLogPersistUtil.loadFromMultiFileVersion2(
-                                    mOutputFolder, shard);
+                                    mOutputFolder, shard, !mSourceSetPaths.isEmpty());
                         }
                     };
 

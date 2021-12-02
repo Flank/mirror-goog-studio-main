@@ -271,7 +271,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 """.trimIndent()
             )
 
-            if (task.runner.currentTestMode is SourceTransformationTestMode) {
+            if (task.runner.currentTestMode is UastSourceTransformationTestMode) {
                 val files = context.project.dir.walk()
                     .filter { it.isFile && (it.path.endsWith(DOT_KT) || it.path.endsWith(DOT_JAVA)) }
                     .sortedBy { it.path }

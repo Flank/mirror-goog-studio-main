@@ -23,16 +23,17 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.zip.Deflater
 
@@ -43,8 +44,13 @@ import java.util.zip.Deflater
  * It is used for e.g.:
  * - dependent features to compile against these classes without bundling them.
  * - unit tests to compile and run them against these classes.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The task moves files from Inputs, unchanged, into a Jar file.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class BundleAllClasses : NonIncrementalTask() {
 
     @get:OutputFile
@@ -141,14 +147,14 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 creationConfig.variantData.allPreJavacGeneratedBytecode,
                 creationConfig.variantData.allPostJavacGeneratedBytecode
             )
-            if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
-                task.inputJars.from(
+            if (creationConfig.global.namespacedAndroidResources) {
+                task.inputJars.fromDisallowChanges(
                     creationConfig.artifacts.get(
                         InternalArtifactType.COMPILE_R_CLASS_JAR
                     )
                 )
             } else {
-                task.inputJars.from(
+                task.inputJars.fromDisallowChanges(
                     creationConfig.artifacts.get(
                         InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                     )

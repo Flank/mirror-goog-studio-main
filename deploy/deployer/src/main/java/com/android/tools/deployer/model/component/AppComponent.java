@@ -68,7 +68,7 @@ public abstract class AppComponent {
     }
 
     @NonNull
-    static String getFQEscapedName(@NonNull String appId, @NonNull String componentFqName) {
+    public static String getFQEscapedName(@NonNull String appId, @NonNull String componentFqName) {
         // Escape name declared as inner class name (resulting in foo.bar.Activity$SubActivity).
         return appId + "/" + componentFqName.replace("$", "\\$");
     }

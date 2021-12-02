@@ -18,19 +18,19 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Pre build task that performs comparison of runtime and compile classpath for application. If
  * there are any differences between the two, that could lead to runtime issues.
+ *
+ * Caching disabled by default for this task in line with behavior of parent: [ClasspathComparisonTask]
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class AppClasspathCheckTask : ClasspathComparisonTask() {
 
     @get:Internal("only for task execution")

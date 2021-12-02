@@ -163,7 +163,9 @@ public class ApkInstaller {
                     DeployMetric installMetric = new DeployMetric("INSTALL");
                     installMetric.finish(result.status.name(), metrics);
                     try {
-                        adb.shell(new String[] {"am", "force-stop", packageName});
+                        adb.shell(
+                                new String[] {"am", "force-stop", packageName},
+                                Timeouts.SHELL_AM_STOP);
                     } catch (IOException e) {
                         throw DeployerException.installFailed(
                                 SKIPPED_INSTALL, "Failure to kill " + packageName);

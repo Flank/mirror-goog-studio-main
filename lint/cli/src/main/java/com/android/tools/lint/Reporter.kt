@@ -42,7 +42,7 @@ import com.android.tools.lint.checks.CommentDetector
 import com.android.tools.lint.checks.DataBindingDetector
 import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.EllipsizeMaxLinesDetector
-import com.android.tools.lint.checks.ExportedReceiverDetector
+import com.android.tools.lint.checks.ExportedFlagDetector
 import com.android.tools.lint.checks.FontDetector
 import com.android.tools.lint.checks.GradleDetector
 import com.android.tools.lint.checks.GridLayoutDetector
@@ -434,7 +434,7 @@ abstract class Reporter protected constructor(
                     DuplicateResourceDetector.STRING_ESCAPING,
                     DuplicateResourceDetector.TYPE_MISMATCH,
                     EllipsizeMaxLinesDetector.ISSUE,
-                    ExportedReceiverDetector.ISSUE,
+                    ExportedFlagDetector.ISSUE,
                     FontDetector.FONT_VALIDATION,
                     GradleDetector.AGP_DEPENDENCY,
                     GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH,

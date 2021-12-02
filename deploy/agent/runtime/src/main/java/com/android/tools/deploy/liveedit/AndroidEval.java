@@ -22,14 +22,17 @@ import com.android.tools.deploy.interpreter.Eval;
 import com.android.tools.deploy.interpreter.FieldDescription;
 import com.android.tools.deploy.interpreter.FloatValue;
 import com.android.tools.deploy.interpreter.IntValue;
+import com.android.tools.deploy.interpreter.InterpreterException;
 import com.android.tools.deploy.interpreter.JNI;
 import com.android.tools.deploy.interpreter.LongValue;
 import com.android.tools.deploy.interpreter.MethodDescription;
 import com.android.tools.deploy.interpreter.ObjectValue;
+import com.android.tools.deploy.interpreter.Throw;
 import com.android.tools.deploy.interpreter.Value;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -94,9 +97,8 @@ class AndroidEval implements Eval {
             field.setAccessible(true);
             return makeValue(field.get(owner), Type.getType(type));
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleThrowable(e);
+            throw new InterpreterException(e);
         }
-        throw new IllegalStateException();
     }
 
     @NonNull
@@ -110,9 +112,8 @@ class AndroidEval implements Eval {
             field.setAccessible(true);
             return makeValue(field.get(owner), Type.getType(type));
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleThrowable(e);
+            throw new InterpreterException(e);
         }
-        throw new IllegalStateException();
     }
 
     @NonNull
@@ -244,8 +245,14 @@ class AndroidEval implements Eval {
                         throw new IllegalStateException(msg);
                     }
             }
-        } catch (Exception e) {
-            handleThrowable(e);
+        } catch (ClassNotFoundException
+                | IllegalAccessException
+                | IllegalArgumentException
+                | InstantiationException
+                | NoSuchMethodException e) {
+            throw new InterpreterException(e);
+        } catch (InvocationTargetException e) {
+            Throw.sneaky(e.getCause());
         }
         throw new IllegalStateException("Reached end of invokespecial");
     }
@@ -269,18 +276,13 @@ class AndroidEval implements Eval {
         String name = methodDesc.getName();
         String description = methodDesc.getDesc();
         Type[] parameterType = Type.getArgumentTypes(description);
-        Class<?>[] parameterClass = new Class[parameterType.length];
         try {
-            for (int i = 0; i < parameterClass.length; i++) {
-                parameterClass[i] = typeToClass(parameterType[i]);
-            }
-
             Object[] argValues = new Object[args.size()];
             for (int i = 0; i < argValues.length; i++) {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
-            Method method = methodLookup(owner, name, parameterClass);
+            Method method = methodLookup(owner, name, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
                 throw new IllegalStateException("Cannot find " + name + " in " + owner);
@@ -289,8 +291,10 @@ class AndroidEval implements Eval {
             method.setAccessible(true);
             Object result = method.invoke(target.obj(), argValues);
             return makeValue(result, Type.getReturnType(method));
-        } catch (Throwable t) {
-            handleThrowable(t);
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException e) {
+            throw new InterpreterException(e);
+        } catch (InvocationTargetException e) {
+            Throw.sneaky(e.getCause());
         }
         throw new IllegalStateException();
     }
@@ -303,18 +307,13 @@ class AndroidEval implements Eval {
         String methodName = description.getName();
         String signature = description.getDesc();
         Type[] parameterType = Type.getArgumentTypes(signature);
-        Class<?>[] parameterClass = new Class[parameterType.length];
         try {
-            for (int i = 0; i < parameterClass.length; i++) {
-                parameterClass[i] = typeToClass(parameterType[i]);
-            }
-
             Object[] argValues = new Object[args.size()];
             for (int i = 0; i < argValues.length; i++) {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
-            Method method = methodLookup(owner, methodName, parameterClass);
+            Method method = methodLookup(owner, methodName, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
                 throw new IllegalStateException(
@@ -324,8 +323,10 @@ class AndroidEval implements Eval {
             method.setAccessible(true);
             Object result = method.invoke(null, argValues);
             return makeValue(result, Type.getReturnType(method));
-        } catch (Exception e) {
-            handleThrowable(e);
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException e) {
+            throw new InterpreterException(e);
+        } catch (InvocationTargetException e) {
+            Throw.sneaky(e.getCause());
         }
         throw new IllegalStateException();
     }
@@ -336,9 +337,8 @@ class AndroidEval implements Eval {
             Class<?> c = typeToClass(type);
             return c.isInstance(target.obj());
         } catch (ClassNotFoundException e) {
-            handleThrowable(e);
+            throw new InterpreterException(e);
         }
-        throw new IllegalStateException();
     }
 
     @NonNull
@@ -348,10 +348,8 @@ class AndroidEval implements Eval {
             Class<?> c = typeToClass(type);
             return new ObjectValue(c, Type.getObjectType("java/lang/Class"));
         } catch (ClassNotFoundException e) {
-            // TODO: This needs to surface to the user.
-            handleThrowable(e);
+            throw new InterpreterException(e);
         }
-        throw new IllegalStateException();
     }
 
     @NonNull
@@ -412,11 +410,9 @@ class AndroidEval implements Eval {
             Field field = forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
             field.set(owner.obj(), value.obj());
-            return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleThrowable(e);
+            throw new InterpreterException(e);
         }
-        throw new IllegalStateException();
     }
 
     @Override
@@ -428,11 +424,9 @@ class AndroidEval implements Eval {
             Field field = ownerClass.getDeclaredField(name);
             field.setAccessible(true);
             field.set(ownerClass, value.obj());
-            return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleThrowable(e);
+            throw new InterpreterException(e);
         }
-        throw new IllegalStateException();
     }
 
     @Override
@@ -501,9 +495,15 @@ class AndroidEval implements Eval {
         }
     }
 
-    private Method methodLookup(String className, String methodName, Class[] parameterClass)
+    protected Method methodLookup(String className, String methodName, Type[] parameterType)
             throws ClassNotFoundException {
         Method method = null;
+
+        Class<?>[] parameterClass = new Class[parameterType.length];
+        for (int i = 0; i < parameterClass.length; i++) {
+            parameterClass[i] = typeToClass(parameterType[i]);
+        }
+
         Class curClass = forName(className.replace('/', '.'));
         while (curClass != null) {
             try {
@@ -514,15 +514,5 @@ class AndroidEval implements Eval {
             }
         }
         return method;
-    }
-
-    /**
-     * A placeholder to all the exceptions that needs to be dealt with.
-     *
-     * <p>Before shipping an MVP, this method should be removed and all exceptions be properly
-     * handled by either logging or displaying to the user.
-     */
-    private static void handleThrowable(Throwable t) {
-        throw new RuntimeException(t);
     }
 }

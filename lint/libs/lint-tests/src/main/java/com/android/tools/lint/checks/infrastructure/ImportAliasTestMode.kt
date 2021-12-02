@@ -37,7 +37,7 @@ import kotlin.math.min
  *
  * (See also the [TypeAliasTestMode].)
  */
-class ImportAliasTestMode : SourceTransformationTestMode(
+class ImportAliasTestMode : UastSourceTransformationTestMode(
     description = "Import aliases",
     "TestMode.IMPORT_ALIAS",
     "import-alias"

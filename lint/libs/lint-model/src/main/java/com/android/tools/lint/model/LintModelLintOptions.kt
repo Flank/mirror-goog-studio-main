@@ -185,6 +185,11 @@ interface LintModelLintOptions {
     val ignoreTestSources: Boolean
 
     /**
+     * Whether lint should ignore all testFixtures sources.
+     */
+    val ignoreTestFixturesSources: Boolean
+
+    /**
      * Returns whether lint should run checks on generated sources.
      *
      * @return true to check generated sources, defaults to false
@@ -301,6 +306,7 @@ class DefaultLintModelLintOptions(
     override val warningsAsErrors: Boolean,
     override val checkTestSources: Boolean,
     override val ignoreTestSources: Boolean,
+    override val ignoreTestFixturesSources: Boolean,
     override val checkGeneratedSources: Boolean,
     override val explainIssues: Boolean,
     override val showAll: Boolean,

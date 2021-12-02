@@ -31,10 +31,13 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.Companio
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_PUBLISH
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_WEAR_APP
+import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import groovy.lang.Closure
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
@@ -65,17 +68,18 @@ open class DefaultAndroidSourceSet @Inject constructor(
 
     init {
         java = DefaultAndroidSourceDirectorySet(
-            "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES
+            displayName, "Java source", project, SourceArtifactType.JAVA_SOURCES
         )
         java.filter.include("**/*.java")
 
         kotlin = DefaultAndroidSourceDirectorySet(
-                "$displayName Kotlin source", project, SourceArtifactType.KOTLIN_SOURCES
+                displayName, "Kotlin source", project, SourceArtifactType.KOTLIN_SOURCES
         )
         kotlin.filter.include("**/*.kt", "**/*.kts")
 
         resources = DefaultAndroidSourceDirectorySet(
-            "$displayName Java resources",
+            displayName,
+            "Java resources",
             project,
             SourceArtifactType.JAVA_RESOURCES
         )
@@ -84,39 +88,41 @@ open class DefaultAndroidSourceSet @Inject constructor(
         manifest = DefaultAndroidSourceFile("$displayName manifest", project)
 
         assets = DefaultAndroidSourceDirectorySet(
-            "$displayName assets", project, SourceArtifactType.ASSETS
+            displayName, "assets", project, SourceArtifactType.ASSETS
         )
 
         res = DefaultAndroidSourceDirectorySet(
-            "$displayName resources",
+            displayName,
+            "resources",
             project,
             SourceArtifactType.ANDROID_RESOURCES
         )
 
         aidl = DefaultAndroidSourceDirectorySet(
-            "$displayName aidl", project, SourceArtifactType.AIDL
+            displayName, "aidl", project, SourceArtifactType.AIDL
         )
 
         renderscript = DefaultAndroidSourceDirectorySet(
-            "$displayName renderscript",
+            displayName,
+            "renderscript",
             project,
             SourceArtifactType.RENDERSCRIPT
         )
 
         jni = DefaultAndroidSourceDirectorySet(
-            "$displayName jni", project, SourceArtifactType.JNI
+            displayName, "jni", project, SourceArtifactType.JNI
         )
 
         jniLibs = DefaultAndroidSourceDirectorySet(
-            "$displayName jniLibs", project, SourceArtifactType.JNI_LIBS
+            displayName, "jniLibs", project, SourceArtifactType.JNI_LIBS
         )
 
         shaders = DefaultAndroidSourceDirectorySet(
-            "$displayName shaders", project, SourceArtifactType.SHADERS
+            displayName, "shaders", project, SourceArtifactType.SHADERS
         )
 
         mlModels = DefaultAndroidSourceDirectorySet(
-            "$displayName ML models", project, SourceArtifactType.ML_MODELS
+            displayName, "ML models", project, SourceArtifactType.ML_MODELS
         )
 
         initRoot("src/$name")
@@ -350,5 +356,54 @@ open class DefaultAndroidSourceSet @Inject constructor(
 
     override fun getMlModelsDirectories(): Collection<File> {
         return mlModels.srcDirs
+    }
+
+    // needed for IDE model implementation, not part of the DSL.
+    override fun getCustomDirectories(): List<CustomSourceDirectory> {
+        return extras.asMap.values.groupBy(
+            DefaultAndroidSourceDirectorySet::getSourceSetName,
+            DefaultAndroidSourceDirectorySet::srcDirs
+        ).map {
+            // there can be only one directory per source set since we do not allow to have
+            // access to the extras field to end users (see below).
+            CustomSourceDirectory(
+                it.key,
+                it.value.flatten().single(),
+            )
+        }
+    }
+
+    /**
+     * Internal API to add customs folders to the DSL. Custom folders cannot be added through the
+     * public [com.android.build.api.dsl.AndroidSourceSet] interface because it would allow users
+     * to add a custom directory for a specific source set like 'main' or 'debug'.
+     *
+     * Since users cannot add have access to the created [DefaultAndroidSourceDirectorySet] for the
+     * source types, they cannot add to it. Therefore there can only be one source directory per
+     * custom source type on an Android Source Set.
+     *
+     * Users need to the use the public [AndroidComponents.registerSourceSet] API so
+     * custom sources are added to all the source sets of the application uniformly.
+     */
+    internal val extras: NamedDomainObjectContainer<DefaultAndroidSourceDirectorySet> =
+        project.objects.domainObjectContainer(
+            DefaultAndroidSourceDirectorySet::class.java,
+            AndroidSourceDirectorySetFactory(project, displayName)
+        )
+
+    class AndroidSourceDirectorySetFactory(
+        private val project: Project,
+        private val sourceSetName: String,
+    ): NamedDomainObjectFactory<DefaultAndroidSourceDirectorySet> {
+
+        override fun create(name: String): DefaultAndroidSourceDirectorySet {
+            return DefaultAndroidSourceDirectorySet(
+                sourceSetName,
+                name,
+                project,
+                SourceArtifactType.CUSTOMS).also {
+                    it.srcDir("src/$sourceSetName/$name")
+            }
+        }
     }
 }

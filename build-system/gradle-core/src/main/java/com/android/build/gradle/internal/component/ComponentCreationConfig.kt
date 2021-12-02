@@ -18,30 +18,29 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
-import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
@@ -88,8 +87,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val targetSdkVersion: AndroidVersion
     val targetSdkVersionOverride: AndroidVersion?
 
-    val sdkComponents: SdkComponents
-
     // ---------------------------------------------------------------------------------------------
     // ---------------------------------------------------------------------------------------------
 
@@ -104,17 +101,20 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     val buildFeatures: BuildFeatureValues
     val variantScope: VariantScope
-    val variantDslInfo: VariantDslInfo<*>
+    val variantDslInfo: VariantDslInfo
     val variantSources: VariantSources
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
+    val sources: SourcesImpl
     val taskContainer: MutableTaskContainer
     val transformManager: TransformManager
     val paths: VariantPathHelper
     val services: TaskCreationServices
 
-    @Deprecated("Do not use if you can avoid it. Check if services has what you need")
-    val globalScope: GlobalScope
+    /**
+     * Access to the glabal task creation configuration
+     */
+    val global: GlobalTaskCreationConfig
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL HELPERS
@@ -152,11 +152,6 @@ interface ComponentCreationConfig : ComponentIdentity {
         classesType: AndroidArtifacts.ArtifactType,
         generatedBytecodeKey: Any? = null
     ): FileCollection
-
-    /**
-     * Get the list of folders containing compilable source files.
-     */
-    val javaSources: List<ConfigurableFileTree>
 
     val needsMainDexListForBundle: Boolean
         get() = false

@@ -1,0 +1,10 @@
+<libraries>
+  <library
+      name="${projectDir}@@:javaLib"
+      jars="${projectDir}/javaLib/build/libs/javaLib.jar"
+      resolved="::"/>
+  <library
+      name="${projectDir}@@:lib::release"
+      project=":lib"
+      provided="true"/>
+</libraries>

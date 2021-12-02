@@ -14,7 +14,7 @@ dependencies {
     implementation libs.kxml
     implementation libs.protobuf
 
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
 }
 
 sourceSets {

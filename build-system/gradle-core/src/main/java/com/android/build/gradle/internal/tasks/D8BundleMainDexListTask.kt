@@ -188,7 +188,7 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
                 creationConfig.artifacts.getAll(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
             )
             task.userMultidexKeepFile.setDisallowChanges(creationConfig.multiDexKeepFile)
-            task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath).disallowChanges()
+            task.bootClasspath.from(creationConfig.global.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(
                     SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions))

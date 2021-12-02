@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.prefab
 
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -155,11 +156,10 @@ data class PrefabModuleTaskData(
 /**
  * Return information about each Prefab package output model.
  */
-fun ComponentCreationConfig.prefabPackageConfigurationData():
+fun LibraryCreationConfig.prefabPackageConfigurationData():
         List<PrefabModuleTaskData> {
-    val extension = globalScope.extension as LibraryExtension
     val project = services.projectInfo.getProject()
-    return extension.prefab.map { options ->
+    return global.prefab.map { options ->
         val headers = options.headers?.let { headers ->
             project.layout
                 .projectDirectory

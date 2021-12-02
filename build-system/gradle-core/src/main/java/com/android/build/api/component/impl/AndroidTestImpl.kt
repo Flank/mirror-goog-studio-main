@@ -20,7 +20,6 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidTest
@@ -45,16 +44,16 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.builder.dexing.DexingType
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -66,7 +65,7 @@ import javax.inject.Inject
 open class AndroidTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -77,8 +76,7 @@ open class AndroidTestImpl @Inject constructor(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
-    sdkComponents: SdkComponents,
-    globalScope: GlobalScope
+    global: GlobalTaskCreationConfig,
 ) : TestComponentImpl(
     componentIdentity,
     buildFeatureValues,
@@ -93,24 +91,21 @@ open class AndroidTestImpl @Inject constructor(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    global,
 ), AndroidTest, AndroidTestCreationConfig {
 
     init {
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                    .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
-                    )
+                .addInitialProvider(internalServices.toRegularFileProvider(it))
         }
     }
 
-    private val delegate by lazy { AndroidTestCreationConfigImpl(
-        this,
-        internalServices.projectOptions,
-        globalScope,
-        variantDslInfo) }
+    private val delegate by lazy {
+        AndroidTestCreationConfigImpl(
+            this, variantDslInfo
+        )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -143,14 +138,14 @@ open class AndroidTestImpl @Inject constructor(
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
-                taskCreationServices.projectInfo.getExtension().aaptOptions,
+                variantDslInfo.androidResources,
                 variantPropertiesApiServices
         )
     }
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            globalScope.extension.packagingOptions,
+            variantDslInfo.packaging,
             variantPropertiesApiServices,
             minSdkVersion.apiLevel
         )
@@ -203,11 +198,10 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantPropertiesApiServices.projectInfo.getProject().objects
-            .listProperty(RegularFile::class.java).also {
-                variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
-                it.finalizeValueOnRead()
-            }
+        variantPropertiesApiServices.listPropertyOf(
+            RegularFile::class.java) {
+            variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+        }
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key =

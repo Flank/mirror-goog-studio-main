@@ -48,8 +48,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.builder.core.LibraryRequest
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SourceProvider
@@ -97,7 +97,7 @@ import java.io.File
 // (yet), because the DSL reference generator doesn't understand them.
 abstract class BaseExtension protected constructor(
     protected val dslServices: DslServices,
-    protected val globalScope: GlobalScope,
+    protected val bootClasspathConfig: BootClasspathConfig,
     /** All build outputs for all variants, can be used by users to customize a build output. */
     override val buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     private val sourceSetManager: SourceSetManager,
@@ -372,11 +372,11 @@ abstract class BaseExtension protected constructor(
     }
 
     // do not call this method from within the plugin code as it forces SDK initialization.
-    // once this method is removed, remember to protect the globalScope.bootClasspath against
+    // once this method is removed, remember to protect the bootClasspathConfig.bootClasspath against
     // unsafe read.
     override val bootClasspath: List<File>
         get() = try {
-            globalScope.bootClasspath.get().map { it.asFile }
+            bootClasspathConfig.bootClasspath.get().map { it.asFile }
         } catch (e: IllegalStateException) {
             listOf()
         }
@@ -386,9 +386,10 @@ abstract class BaseExtension protected constructor(
      * [Android Debug Bridge (ADB)](https://developer.android.com/studio/command-line/adb.html)
      * executable from the Android SDK.
      */
+    @Suppress("DEPRECATION")
     val adbExecutable: File
         get() {
-            return globalScope.versionedSdkLoader.flatMap {
+            return dslServices.versionedSdkLoaderService.versionedSdkLoader.flatMap {
                 it.adbExecutableProvider }.get().asFile
         }
 

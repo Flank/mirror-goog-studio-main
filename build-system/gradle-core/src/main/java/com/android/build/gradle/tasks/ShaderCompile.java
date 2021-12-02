@@ -295,7 +295,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
 
             setDisallowChanges(
                     task.getBuildToolInfoRevisionProvider(),
-                    creationConfig.getGlobalScope().getExtension().getBuildToolsRevision());
+                    creationConfig.getGlobal().getBuildToolsRevision());
 
             creationConfig
                     .getArtifacts()

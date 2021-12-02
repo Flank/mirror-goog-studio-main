@@ -21,8 +21,10 @@ import com.android.deploy.asm.tree.MethodNode;
 import com.android.deploy.asm.tree.analysis.Frame;
 import com.android.tools.deploy.interpreter.ByteCodeInterpreter;
 import com.android.tools.deploy.interpreter.Eval;
+import com.android.tools.deploy.interpreter.InterpretedMethod;
 import com.android.tools.deploy.interpreter.InterpreterResult;
 import com.android.tools.deploy.interpreter.ObjectValue;
+import com.android.tools.deploy.interpreter.Throw;
 import com.android.tools.deploy.interpreter.Value;
 import com.android.tools.deploy.interpreter.ValueReturned;
 
@@ -30,24 +32,30 @@ public class MethodBodyEvaluator {
     private static final boolean DEBUG_EVAL = true;
 
     private final LiveEditContext context;
-    private final MethodNode target;
+    private final InterpretedMethod method;
 
     // TODO: We should always use the app's classloader. This method is here for
     // our unit tests. We should consider removing this after we refactor the tests.
-    public MethodBodyEvaluator(byte[] classData, String targetMethod) {
+    public MethodBodyEvaluator(byte[] classData, String methodName, String methodDesc) {
         this(
                 new LiveEditContext(MethodBodyEvaluator.class.getClassLoader()),
                 classData,
-                targetMethod);
+                methodName,
+                methodDesc);
     }
 
-    public MethodBodyEvaluator(LiveEditContext context, byte[] classData, String targetMethod) {
-        MethodNodeFinder finder = new MethodNodeFinder(classData, targetMethod);
+    public MethodBodyEvaluator(
+            LiveEditContext context, byte[] classData, String methodName, String methodDesc) {
+        MethodNodeFinder finder = new MethodNodeFinder(classData, methodName, methodDesc);
         this.context = context;
-        this.target = finder.getTarget();
-
-        if (target == null) {
-            String msg = String.format("Cannot find target '%s' in:\n", targetMethod);
+        this.method =
+                new InterpretedMethod(
+                        finder.getTarget(),
+                        finder.getFilename(),
+                        finder.getName(),
+                        finder.getOwnerInternalName());
+        if (method.getTarget() == null) {
+            String msg = String.format("Cannot find target '%s' in:\n", methodName + methodDesc);
             for (String method : finder.getVisited()) {
                 msg += "  -> " + method + "\n";
             }
@@ -60,6 +68,7 @@ public class MethodBodyEvaluator {
     }
 
     public Object eval(Object thisObject, String objectType, Object[] arguments) {
+        MethodNode target = method.getTarget();
         Frame<Value> init = new Frame<>(target.maxLocals, target.maxStack);
         int localIndex = 0;
         boolean isStatic = (target.access & Opcodes.ACC_STATIC) != 0;
@@ -78,13 +87,18 @@ public class MethodBodyEvaluator {
             evaluator = new LoggingEval(evaluator);
         }
 
-        InterpreterResult result = ByteCodeInterpreter.interpreterLoop(target, init, evaluator);
+        InterpreterResult result = ByteCodeInterpreter.interpreterLoop(method, init, evaluator);
         if (result instanceof ValueReturned) {
             Value value = ((ValueReturned) result).getResult();
             return value.obj();
         }
 
-        // TODO: Handle Exceptions
+        if (result instanceof ByteCodeInterpreter.ExceptionThrown) {
+            ByteCodeInterpreter.ExceptionThrown exceptionResult =
+                    (ByteCodeInterpreter.ExceptionThrown) result;
+            Throwable t = (Throwable) exceptionResult.getException().getValue();
+            Throw.sneaky(t);
+        }
         return null;
     }
 }

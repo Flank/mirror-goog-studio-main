@@ -17,16 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.SyncOptions
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 
 /** Parameters common to auto-namespacing transforms */

@@ -122,7 +122,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
             """
                 |    beforeVariants(selector().all(), {
                 |        if (buildType.equals("debug")) {
-                |            enabled = false
+                |            enable = false
                 |        }
                 |    })
             """
@@ -142,7 +142,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
         withAndroidComponents {
             """
                 |    beforeVariants(selector().withBuildType("debug"), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -174,7 +174,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
         withAndroidComponents {
             """
                 |    beforeVariants(selector().withFlavor(new kotlin.Pair("one", "flavor1")), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -215,7 +215,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
                 |    beforeVariants(selector()
                 |          .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |          .withFlavor(new kotlin.Pair("two", "flavorA")), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -261,7 +261,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
                 |    beforeVariants(selector()
                 |          .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |          .withBuildType("debug"), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -300,7 +300,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
                 |    beforeVariants(selector()
                 |          .withBuildType("debug")
                 |          .withFlavor(new kotlin.Pair("one", "flavor1")), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -346,7 +346,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
                 |          .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |          .withFlavor(new kotlin.Pair("two", "flavorA"))
                 |          .withBuildType("debug"), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -402,7 +402,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
                 |          .withBuildType("debug")
                 |          .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |          .withFlavor(new kotlin.Pair("two", "flavorA")), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }
@@ -451,7 +451,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
             """
                 |    beforeVariants(selector()
                 |          .withName("flavor1Debug"), {
-                |        enabled = false
+                |        enable = false
                 |    })
             """
         }

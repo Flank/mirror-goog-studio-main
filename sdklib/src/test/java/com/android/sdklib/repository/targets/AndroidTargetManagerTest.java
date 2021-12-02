@@ -24,15 +24,16 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,16 +48,16 @@ import junit.framework.TestCase;
 public class AndroidTargetManagerTest extends TestCase {
 
     public void testNewTarget() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform13(fop);
-        recordPlatform23(fop);
-        recordGoogleApisAddon23(fop);
-        recordGoogleTvAddon13(fop);
-        recordBuildTool23(fop);
-        recordSysImg13(fop);
-        recordGoogleApisSysImg23(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform13(sdkRoot);
+        recordPlatform23(sdkRoot);
+        recordGoogleApisAddon23(sdkRoot);
+        recordGoogleTvAddon13(sdkRoot);
+        recordBuildTool23(sdkRoot);
+        recordSysImg13(sdkRoot);
+        recordGoogleApisSysImg23(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
@@ -67,22 +68,22 @@ public class AndroidTargetManagerTest extends TestCase {
 
         IAndroidTarget addon13 = iter.next();
         IAndroidTarget platform13 = iter.next();
-        verifyPlatform13(platform13, fop);
-        verifyAddon13(addon13, platform13, fop);
+        verifyPlatform13(platform13, sdkRoot);
+        verifyAddon13(addon13, platform13, sdkRoot);
         IAndroidTarget addon23 = iter.next();
         IAndroidTarget platform23 = iter.next();
-        verifyPlatform23(platform23, fop);
-        verifyAddon23(addon23, platform23, fop);
+        verifyPlatform23(platform23, sdkRoot);
+        verifyAddon23(addon23, platform23, sdkRoot);
     }
 
     public void testLegacyAddon() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform23(fop);
-        recordLegacyGoogleApis23(fop);
-        recordBuildTool23(fop);
-        recordGoogleApisSysImg23(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform23(sdkRoot);
+        recordLegacyGoogleApis23(sdkRoot);
+        recordBuildTool23(sdkRoot);
+        recordGoogleApisSysImg23(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -92,18 +93,18 @@ public class AndroidTargetManagerTest extends TestCase {
 
         IAndroidTarget addon23 = iter.next();
         IAndroidTarget platform23 = iter.next();
-        verifyPlatform23(platform23, fop);
-        verifyAddon23(addon23, platform23, fop);
+        verifyPlatform23(platform23, sdkRoot);
+        verifyAddon23(addon23, platform23, sdkRoot);
     }
 
     public void testInstalledLegacyAddon() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform23(fop);
-        recordInstalledLegacyGoogleApis23(fop);
-        recordBuildTool23(fop);
-        recordGoogleApisSysImg23(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform23(sdkRoot);
+        recordInstalledLegacyGoogleApis23(sdkRoot);
+        recordBuildTool23(sdkRoot);
+        recordGoogleApisSysImg23(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -113,141 +114,137 @@ public class AndroidTargetManagerTest extends TestCase {
 
         IAndroidTarget addon23 = iter.next();
         IAndroidTarget platform23 = iter.next();
-        verifyAddon23(addon23, platform23, fop);
-        verifyPlatform23(platform23, fop);
+        verifyAddon23(addon23, platform23, sdkRoot);
+        verifyPlatform23(platform23, sdkRoot);
     }
 
     public void testSources() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform23(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform23(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         IAndroidTarget target = mgr.getTargets(progress).iterator().next();
         progress.assertNoErrorsOrWarnings();
         String sourcesPath = target.getPath(IAndroidTarget.SOURCES).toString();
-        assertEquals(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"), sourcesPath);
+        assertEquals(sdkRoot.resolve("platforms/android-23/sources").toString(), sourcesPath);
 
-        recordSources23(fop);
+        recordSources23(sdkRoot);
         handler.getSdkManager(progress).loadSynchronously(0, progress, null, null);
         mgr = handler.getAndroidTargetManager(progress);
         target = mgr.getTargets(progress).iterator().next();
         progress.assertNoErrorsOrWarnings();
         sourcesPath = target.getPath(IAndroidTarget.SOURCES).toString();
-        assertEquals(fop.getPlatformSpecificPath("/sdk/sources/android-23"), sourcesPath);
+        assertEquals(sdkRoot.resolve("sources/android-23").toString(), sourcesPath);
     }
 
-    private static void verifyPlatform13(IAndroidTarget target, MockFileOp fop) {
+    private static void verifyPlatform13(IAndroidTarget target, Path sdkRoot) {
         assertEquals(new AndroidVersion(13, null), target.getVersion());
         assertEquals("Android Open Source Project", target.getVendor());
         assertEquals(
-                fop.getPlatformSpecificPath("/sdk/platforms/android-13/"), target.getLocation());
+                sdkRoot.resolve("platforms/android-13") + File.separator, target.getLocation());
         assertNull(target.getParent());
 
         assertEquals(
                 ImmutableSet.of(
-                        fop.toPath("/sdk/platforms/android-13/skins/HVGA"),
-                        fop.toPath("/sdk/platforms/android-13/skins/WVGA800")),
+                        sdkRoot.resolve("platforms/android-13/skins/HVGA"),
+                        sdkRoot.resolve("platforms/android-13/skins/WVGA800")),
                 ImmutableSet.copyOf(target.getSkins()));
         assertEquals(
-                ImmutableList.of(
-                        fop.getPlatformSpecificPath("/sdk/platforms/android-13/android.jar")),
+                ImmutableList.of(sdkRoot.resolve("platforms/android-13/android.jar").toString()),
                 target.getBootClasspath());
         assertEquals(
-                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
-        assertEquals(fop.toPath("/sdk/platforms/android-13/skins/WXGA"), target.getDefaultSkin());
+                sdkRoot.resolve("build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
+        assertEquals(sdkRoot.resolve("platforms/android-13/skins/WXGA"), target.getDefaultSkin());
     }
 
-    private static void verifyPlatform23(IAndroidTarget target, MockFileOp fop) {
+    private static void verifyPlatform23(IAndroidTarget target, Path sdkRoot) {
         assertEquals(new AndroidVersion(23, null), target.getVersion());
         assertEquals("Android Open Source Project", target.getVendor());
         assertEquals(
-                fop.getPlatformSpecificPath("/sdk/platforms/android-23/"), target.getLocation());
+                sdkRoot.resolve("platforms/android-23") + File.separator, target.getLocation());
         assertNull(target.getParent());
         assertTrue(
                 Arrays.deepEquals(
                         new Path[] {
-                            fop.toPath("/sdk/platforms/android-23/skins/HVGA"),
-                            fop.toPath("/sdk/platforms/android-23/skins/WVGA800")
+                            sdkRoot.resolve("platforms/android-23/skins/HVGA"),
+                            sdkRoot.resolve("platforms/android-23/skins/WVGA800")
                         },
                         target.getSkins()));
         assertEquals(
-                ImmutableList.of(
-                        fop.getPlatformSpecificPath("/sdk/platforms/android-23/android.jar")),
+                ImmutableList.of(sdkRoot.resolve("platforms/android-23/android.jar").toString()),
                 target.getBootClasspath());
         assertEquals(
-                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
+                sdkRoot.resolve("build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(
-                fop.toPath("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
+                sdkRoot.resolve("platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
     }
 
-    private static void verifyAddon13(IAndroidTarget target, IAndroidTarget platform13,
-            MockFileOp fop) {
+    private static void verifyAddon13(
+            IAndroidTarget target, IAndroidTarget platform13, Path sdkRoot) {
         assertEquals(new AndroidVersion(13, null), target.getVersion());
         assertEquals("Google Inc.", target.getVendor());
         assertEquals(
-                fop.getPlatformSpecificPath("/sdk/add-ons/addon-google_tv_addon-google-13/"),
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/") + File.separator,
                 target.getLocation());
         assertEquals(platform13, target.getParent());
         assertEquals(
                 ImmutableSet.of(
-                        fop.toPath("/sdk/platforms/android-13/skins/HVGA"),
-                        fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p"),
-                        fop.toPath(
-                                "/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan"),
-                        fop.toPath("/sdk/platforms/android-13/skins/WVGA800")),
+                        sdkRoot.resolve("platforms/android-13/skins/HVGA"),
+                        sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/skins/1080p"),
+                        sdkRoot.resolve(
+                                "add-ons/addon-google_tv_addon-google-13/skins/720p-overscan"),
+                        sdkRoot.resolve("platforms/android-13/skins/WVGA800")),
                 ImmutableSet.copyOf(target.getSkins()));
         assertEquals(
-                ImmutableList.of(
-                        fop.getPlatformSpecificPath("/sdk/platforms/android-13/android.jar")),
+                ImmutableList.of(sdkRoot.resolve("platforms/android-13/android.jar").toString()),
                 target.getBootClasspath());
         assertEquals(
-                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
+                sdkRoot.resolve("build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(
-                fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p"),
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/skins/720p"),
                 target.getDefaultSkin());
     }
 
-    private static void verifyAddon23(IAndroidTarget target, IAndroidTarget platform23,
-            MockFileOp fop) {
+    private static void verifyAddon23(
+            IAndroidTarget target, IAndroidTarget platform23, Path sdkRoot) {
         assertEquals(new AndroidVersion(23, null), target.getVersion());
         assertEquals("Google Inc.", target.getVendor());
         assertEquals(
-                fop.getPlatformSpecificPath("/sdk/add-ons/addon-google_apis-google-23/"),
+                sdkRoot.resolve("add-ons/addon-google_apis-google-23") + File.separator,
                 target.getLocation());
         assertEquals(platform23, target.getParent());
         assertEquals(
                 ImmutableSet.of(
-                        fop.toPath("/sdk/platforms/android-23/skins/HVGA"),
-                        fop.toPath("/sdk/platforms/android-23/skins/WVGA800")),
+                        sdkRoot.resolve("platforms/android-23/skins/HVGA"),
+                        sdkRoot.resolve("platforms/android-23/skins/WVGA800")),
                 ImmutableSet.copyOf(target.getSkins()));
         assertEquals(
-                ImmutableList.of(
-                        fop.getPlatformSpecificPath("/sdk/platforms/android-23/android.jar")),
+                ImmutableList.of(sdkRoot.resolve("platforms/android-23/android.jar").toString()),
                 target.getBootClasspath());
         assertEquals(
-                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
+                sdkRoot.resolve("build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(
-                fop.toPath("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
+                sdkRoot.resolve("platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
 
         Set<OptionalLibrary> desired =
                 Sets.newHashSet(
                         new OptionalLibraryImpl(
                                 "com.google.android.maps",
-                                fop.toPath(
-                                        "/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar"),
+                                sdkRoot.resolve(
+                                        "add-ons/addon-google_apis-google-23/libs/maps.jar"),
                                 "",
                                 false),
                         new OptionalLibraryImpl(
                                 "com.android.future.usb.accessory",
-                                fop.toPath("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar"),
+                                sdkRoot.resolve("add-ons/addon-google_apis-google-23/libs/usb.jar"),
                                 "",
                                 false),
                         new OptionalLibraryImpl(
                                 "com.google.android.media.effects",
-                                fop.toPath(
-                                        "/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar"),
+                                sdkRoot.resolve(
+                                        "add-ons/addon-google_apis-google-23/libs/effects.jar"),
                                 "",
                                 false));
 
@@ -255,8 +252,9 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(desired, libraries);
     }
 
-    private static void recordBuildTool23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/build-tools/23.0.2/package.xml",
+    private static void recordBuildTool23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("build-tools/23.0.2/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -273,8 +271,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</ns2:sdk-repository>\n");
     }
 
-    private static void recordBuildTool24Preview1(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/build-tools/24.0.0-rc1/package.xml",
+    private static void recordBuildTool24Preview1(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("build-tools/24.0.0-rc1/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -291,8 +290,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</ns2:sdk-repository>\n");
     }
 
-    private static void recordBuildTool24(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/build-tools/24.0.0/package.xml",
+    private static void recordBuildTool24(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("build-tools/24.0.0/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -309,17 +309,23 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</ns2:sdk-repository>\n");
     }
 
-    private static void recordPlatform13(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/platforms/android-13/images/system.img");
-        fop.recordExistingFile("/sdk/platforms/android-13/android.jar");
-        fop.recordExistingFile("/sdk/platforms/android-13/framework.aidl");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/HVGA/layout");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/sample.txt");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/WVGA800/layout");
-        fop.recordExistingFile("/sdk/platforms/android-13/sdk.properties",
-                "sdk.ant.templates.revision=1\n" +
-                        "sdk.skin.default=WXGA\n");
-        fop.recordExistingFile("/sdk/platforms/android-13/build.prop",
+    private static void recordPlatform13(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/images/system.img"));
+        InMemoryFileSystems.recordExistingFile(sdkRoot.resolve("platforms/android-13/android.jar"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/framework.aidl"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/skins/HVGA/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/skins/sample.txt"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/skins/WVGA800/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/sdk.properties"),
+                "sdk.ant.templates.revision=1\n" + "sdk.skin.default=WXGA\n");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/build.prop"),
                 "ro.build.id=HTJ85B\n"
                         + "ro.build.display.id=sdk-eng 3.2 HTJ85B 140714 test-keys\n"
                         + "ro.build.version.incremental=140714\n"
@@ -367,7 +373,8 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "ro.product.manufacturer=generic\n"
                         + "ro.product.device=generic\n"
                         + "ro.build.product=generic\n");
-        fop.recordExistingFile("/sdk/platforms/android-13/package.xml",
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -385,8 +392,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</dependency></dependencies></localPackage></ns2:sdk-repository>");
     }
 
-    private static void recordSources23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/sources/android-23/package.xml",
+    private static void recordSources23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("sources/android-23/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
                         + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\">"
@@ -400,8 +408,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</ns2:sdk-repository>\n");
         }
 
-    private static void recordPlatform23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/platforms/android-23/package.xml",
+    private static void recordPlatform23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-23/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
                         + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
@@ -418,12 +427,17 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "<dependency path=\"tools\"><min-revision><major>22</major>"
                         + "</min-revision></dependency></dependencies></localPackage>"
                         + "</ns2:sdk-repository>\n");
-        fop.recordExistingFile("/sdk/platforms/android-23/android.jar");
-        fop.recordExistingFile("/sdk/platforms/android-23/framework.aidl");
-        fop.recordExistingFile("/sdk/platforms/android-23/skins/HVGA/layout");
-        fop.recordExistingFile("/sdk/platforms/android-23/skins/sample.txt");
-        fop.recordExistingFile("/sdk/platforms/android-23/skins/WVGA800/layout");
-        fop.recordExistingFile("/sdk/platforms/android-23/build.prop",
+        InMemoryFileSystems.recordExistingFile(sdkRoot.resolve("platforms/android-23/android.jar"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-23/framework.aidl"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-23/skins/HVGA/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-23/skins/sample.txt"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-23/skins/WVGA800/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-23/build.prop"),
                 "# autogenerated by buildinfo.sh\n"
                         + "ro.build.id=MRA44C\n"
                         + "ro.build.display.id=sdk_phone_armv7-eng 6.0 MRA44C 2166767 test-keys\n"
@@ -492,8 +506,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "ro.build.product=generic\n");
     }
 
-    private static void recordGoogleApisAddon23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/package.xml",
+    private static void recordGoogleApisAddon23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-23/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns5:sdk-addon "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -532,41 +547,49 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</localPackage></ns5:sdk-addon>\n");
     }
 
-    private static void recordGoogleTvAddon13(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/package.xml",
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                        "<ns5:sdk-addon xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
-                        +
-                        "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" " +
-                        "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" " +
-                        "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">" +
-                        "<license id=\"license-A06C75BE\" type=\"text\">Terms and Conditions\n" +
-                        "</license><localPackage " +
-                        "path=\"add-ons;addon-google_tv_addon-google-13\" obsolete=\"false\">" +
-                        "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-                        "xsi:type=\"ns5:addonDetailsType\"><api-level>13</api-level>" +
-                        "<vendor><id>google</id><display>Google Inc.</display></vendor>" +
-                        "<tag><id>google_tv_addon</id><display>Google TV Addon</display></tag>" +
-                        "<default-skin>720p</default-skin>" +
-                        "</type-details><revision><major>1</major><minor>0</minor>" +
-                        "<micro>0</micro></revision>" +
-                        "<display-name>Google TV Addon, Android 13</display-name>" +
-                        "<uses-license ref=\"license-A06C75BE\"/></localPackage>" +
-                        "</ns5:sdk-addon>\n");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p/layout");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/sample.txt");
-        fop.recordExistingFile(
-                "/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan/layout");
-        fop.recordExistingFile(
-                "/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/system.img");
+    private static void recordGoogleTvAddon13(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/package.xml"),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                        + "<ns5:sdk-addon xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                        + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                        + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                        + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                        + "<license id=\"license-A06C75BE\" type=\"text\">Terms and Conditions\n"
+                        + "</license><localPackage "
+                        + "path=\"add-ons;addon-google_tv_addon-google-13\" obsolete=\"false\">"
+                        + "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                        + "xsi:type=\"ns5:addonDetailsType\"><api-level>13</api-level>"
+                        + "<vendor><id>google</id><display>Google Inc.</display></vendor>"
+                        + "<tag><id>google_tv_addon</id><display>Google TV Addon</display></tag>"
+                        + "<default-skin>720p</default-skin>"
+                        + "</type-details><revision><major>1</major><minor>0</minor>"
+                        + "<micro>0</micro></revision>"
+                        + "<display-name>Google TV Addon, Android 13</display-name>"
+                        + "<uses-license ref=\"license-A06C75BE\"/></localPackage>"
+                        + "</ns5:sdk-addon>\n");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/skins/1080p/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/skins/sample.txt"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve(
+                        "add-ons/addon-google_tv_addon-google-13/skins/720p-overscan/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/images/x86/system.img"));
     }
 
-    private static void recordSysImg13(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-13/default/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-13/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-13/default/x86/skins/sample");
-        fop.recordExistingFile("/sdk/system-images/android-13/default/x86/skins/res2/layout");
-        fop.recordExistingFile("/sdk/system-images/android-13/default/x86/package.xml",
+    private static void recordSysImg13(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-13/default/x86/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-13/default/x86/skins/res1/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-13/default/x86/skins/sample"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-13/default/x86/skins/res2/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-13/default/x86/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -585,9 +608,11 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordGoogleApisSysImg23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/package.xml",
+    private static void recordGoogleApisSysImg23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/google_apis/x86_64/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/google_apis/x86_64/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -608,8 +633,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordLegacyGoogleApis23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
+    private static void recordLegacyGoogleApis23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-23/source.properties"),
                 "Addon.NameDisplay=Google APIs\n"
                         + "Addon.NameId=google_apis\n"
                         + "Addon.VendorDisplay=Google Inc.\n"
@@ -618,7 +644,8 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "Pkg.Desc=Android + Google APIs\n"
                         + "Pkg.Revision=1\n"
                         + "Pkg.SourceUrl=https\\://dl.google.com/android/repository/addon.xml\n");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-23/manifest.ini"),
                 "name=Google APIs\n"
                         + "name-id=google_apis\n"
                         + "vendor=Google Inc.\n"
@@ -642,8 +669,9 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "SystemImage.GpuSupport=true\n");
     }
 
-    private static void recordInstalledLegacyGoogleApis23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/package.xml",
+    private static void recordInstalledLegacyGoogleApis23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-23/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns5:sdk-addon "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -680,7 +708,8 @@ public class AndroidTargetManagerTest extends TestCase {
                         + "  <display-name>Google APIs, Android 23</display-name>"
                         + "  <uses-license ref=\"license-1E15FA4A\"/>"
                         + "</localPackage></ns5:sdk-addon>\n");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-23/manifest.ini"),
                 "name=Google APIs\n"
                         + "name-id=google_apis\n"
                         + "vendor=Google Inc.\n"
@@ -706,13 +735,13 @@ public class AndroidTargetManagerTest extends TestCase {
 
     @SuppressWarnings("ConstantConditions")
     public void testBuildTools() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform13(fop);
-        recordPlatform23(fop);
-        recordBuildTool23(fop);
-        recordBuildTool24Preview1(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform13(sdkRoot);
+        recordPlatform23(sdkRoot);
+        recordBuildTool23(sdkRoot);
+        recordBuildTool24Preview1(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         assertEquals("23.0.2", handler.getLatestBuildTool(progress, false).getRevision().toString());
@@ -721,15 +750,15 @@ public class AndroidTargetManagerTest extends TestCase {
 
     @SuppressWarnings("ConstantConditions")
     public void testBuildToolsWithPreviewOlderThanStable() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform13(fop);
-        recordPlatform23(fop);
-        recordBuildTool23(fop);
-        recordBuildTool24Preview1(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform13(sdkRoot);
+        recordPlatform23(sdkRoot);
+        recordBuildTool23(sdkRoot);
+        recordBuildTool24Preview1(sdkRoot);
         // This test like testBuildTools but also adds in a final version of 24
-        recordBuildTool24(fop);
+        recordBuildTool24(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         assertEquals("24.0.0", handler.getLatestBuildTool(progress, false).getRevision().toString());
@@ -737,16 +766,15 @@ public class AndroidTargetManagerTest extends TestCase {
     }
 
     public void testDuplicatePlatform() {
-        MockFileOp fop = new MockFileOp();
-        Path sdkPath = fop.toPath("/sdk");
+        Path sdkPath = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
         Path bogus1Location = sdkPath.resolve("foo");
         Path bogus2Location = sdkPath.resolve("bar");
         Path real1Location = sdkPath.resolve("platforms/android-20");
         Path real2Location = sdkPath.resolve("platforms/android-19");
-        fop.recordExistingFile(bogus1Location.resolve(SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(bogus2Location.resolve(SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(real1Location.resolve(SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(real2Location.resolve(SdkConstants.FN_BUILD_PROP));
+        InMemoryFileSystems.recordExistingFile(bogus1Location.resolve(SdkConstants.FN_BUILD_PROP));
+        InMemoryFileSystems.recordExistingFile(bogus2Location.resolve(SdkConstants.FN_BUILD_PROP));
+        InMemoryFileSystems.recordExistingFile(real1Location.resolve(SdkConstants.FN_BUILD_PROP));
+        InMemoryFileSystems.recordExistingFile(real2Location.resolve(SdkConstants.FN_BUILD_PROP));
         LocalPackage bogus1 = new FakePlatformPackage("foo", bogus1Location, 20);
         LocalPackage bogus2 = new FakePlatformPackage("bar", bogus2Location, 20);
         LocalPackage real1 = new FakePlatformPackage(
@@ -755,7 +783,7 @@ public class AndroidTargetManagerTest extends TestCase {
         List<LocalPackage> locals = ImmutableList.of(bogus1, bogus2, real1, real2);
         RepositoryPackages packages = new RepositoryPackages(locals, ImmutableList.of());
         RepoManager mgr = new FakeRepoManager(packages);
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, mgr);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkPath, null, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
                 handler.getAndroidTargetManager(progress);

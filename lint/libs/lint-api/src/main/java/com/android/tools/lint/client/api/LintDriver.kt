@@ -254,6 +254,11 @@ class LintDriver(
      */
     var ignoreTestSources: Boolean = false
 
+    /**
+     * Whether we should ignore testFixtures sources.
+     */
+    var ignoreTestFixturesSources: Boolean = false
+
     /** Whether we should include generated sources in the analysis. */
     var checkGeneratedSources: Boolean = false
 
@@ -1111,7 +1116,7 @@ class LintDriver(
         } else {
             val files = dir.listFiles()
             if (files != null) {
-                for (file in files) {
+                for (file in files.sorted()) {
                     if (file.isDirectory) {
                         addProjects(file, fileToProject, rootDir)
                     }
@@ -1947,32 +1952,49 @@ class LintDriver(
             }
         }
 
+        // TestFixtures sources
+        val testFixturesContexts: List<JavaContext> = if (ignoreTestFixturesSources) {
+            emptyList()
+        } else {
+            sources.clear()
+            project.testFixturesSourceFolders.forEach {
+                gatherJavaFiles(it, sources)
+            }
+            sources.map {
+                JavaContext(this, project, main, it).apply {
+                    isTestSource = true
+                }
+            }
+        }
+
         // build.gradle.kts files.
         val gradleKtsContexts = project.gradleBuildScripts.asSequence()
             .filter { it.name.endsWith(DOT_KTS) }
             .map { JavaContext(this, project, main, it) }
             .toList()
 
-        return findUastSources(contexts, testContexts, generatedContexts, gradleKtsContexts)
+        return findUastSources(contexts, testContexts, testFixturesContexts, generatedContexts, gradleKtsContexts)
     }
 
     private fun findUastSources(
         contexts: List<JavaContext>,
         testContexts: List<JavaContext>,
+        testFixturesContexts: List<JavaContext>,
         generatedContexts: List<JavaContext>,
         gradleKtsContexts: List<JavaContext>
     ): UastSourceList {
         val capacity =
-            contexts.size + testContexts.size + generatedContexts.size + gradleKtsContexts.size
+            contexts.size + testContexts.size + generatedContexts.size + gradleKtsContexts.size + testFixturesContexts.size
         val allContexts = ArrayList<JavaContext>(capacity)
         allContexts.addAll(contexts)
         allContexts.addAll(testContexts)
+        allContexts.addAll(testFixturesContexts)
         allContexts.addAll(generatedContexts)
         allContexts.addAll(gradleKtsContexts)
 
         val parser = client.getUastParser(currentProject)
         return UastSourceList(
-            parser, allContexts, contexts, testContexts, generatedContexts, gradleKtsContexts
+            parser, allContexts, contexts, testContexts, testFixturesContexts, generatedContexts, gradleKtsContexts
         )
     }
 
@@ -1994,6 +2016,7 @@ class LintDriver(
         val allContexts: List<JavaContext>,
         val srcContexts: List<JavaContext>,
         val testContexts: List<JavaContext>,
+        val testFixturesContexts: List<JavaContext>,
         val generatedContexts: List<JavaContext>,
         val gradleKtsContexts: List<JavaContext>
     )
@@ -2011,6 +2034,7 @@ class LintDriver(
         val allContexts = sourceList.allContexts
         val srcContexts = sourceList.srcContexts
         val testContexts = sourceList.testContexts
+        val testFixturesContexts = sourceList.testFixturesContexts
         val generatedContexts = sourceList.generatedContexts
         val uElementVisitor = UElementVisitor(parser, uastScanners)
 
@@ -2025,6 +2049,10 @@ class LintDriver(
             if (visitUastDetectors(generatedContexts, uElementVisitor)) {
                 return
             }
+        }
+
+        if (visitUastDetectors(testFixturesContexts, uElementVisitor)) {
+            return
         }
 
         if (testContexts.isNotEmpty()) {
@@ -2086,9 +2114,11 @@ class LintDriver(
     ): UastSourceList {
         val contexts = ArrayList<JavaContext>(files.size)
         val testContexts = ArrayList<JavaContext>(files.size)
+        val testFixturesContexts = ArrayList<JavaContext>(files.size)
         val generatedContexts = ArrayList<JavaContext>(files.size)
         val gradleKtsContexts = ArrayList<JavaContext>(files.size)
         val testFolders = project.testSourceFolders
+        val testFixturesFolders = project.testSourceFolders
         val generatedFolders = project.generatedSourceFolders
         for (file in files) {
             val path = file.path
@@ -2104,6 +2134,13 @@ class LintDriver(
                     testFolders.any { FileUtil.isAncestor(it, file, false) } -> {
                         context.isTestSource = true
                         testContexts.add(context)
+                    }
+                    // or a testFixtures context
+                    testFixturesFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        // while testFixtures sources are not test sources, they will be eventually consumed by test sources, and so we set
+                        // isTestSource flag to true to run test-related checks on them.
+                        context.isTestSource = true
+                        testFixturesContexts.add(context)
                     }
                     // or a generated context
                     generatedFolders.any { FileUtil.isAncestor(it, file, false) } -> {
@@ -2121,7 +2158,7 @@ class LintDriver(
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        return findUastSources(contexts, testContexts, generatedContexts, gradleKtsContexts)
+        return findUastSources(contexts, testContexts, testFixturesContexts, generatedContexts, gradleKtsContexts)
     }
 
     private var currentFolderType: ResourceFolderType? = null
@@ -3793,7 +3830,7 @@ class LintDriver(
         private fun gatherJavaFiles(dir: File, result: MutableList<File>) {
             val files = dir.listFiles()
             if (files != null) {
-                for (file in files) {
+                for (file in files.sorted()) {
                     if (file.isFile) {
                         val path = file.path
                         if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {

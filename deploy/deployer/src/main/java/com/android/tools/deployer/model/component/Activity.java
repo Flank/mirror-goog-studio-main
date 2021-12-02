@@ -22,7 +22,6 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.utils.ILogger;
-
 import java.util.Locale;
 
 public class Activity extends AppComponent {
@@ -66,6 +65,9 @@ public class Activity extends AppComponent {
     }
 
     private void validateFlags(String rawFlags, Mode mode) throws DeployerException {
+        if (rawFlags.isEmpty()) {
+            return;
+        }
         String[] flags = rawFlags.split("\\s+");
         boolean hasArgument = false;
         for (String current : flags) {

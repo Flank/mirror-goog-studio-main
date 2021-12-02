@@ -26,8 +26,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KClass
 
 /**
  * Services for the DSL objects.
@@ -41,7 +39,11 @@ interface DslServices: BaseServices {
 
     val logger: Logger
     val buildDirectory: DirectoryProperty
+
+    @Deprecated("Should not be used in new DSL object. Only for older DSL objects.")
     val sdkComponents: Provider<SdkComponentsBuildService>
+    @Deprecated("Should not be used in new DSL object. Only for older DSL objects.")
+    val versionedSdkLoaderService: VersionedSdkLoaderService
 
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
     fun <T> domainObjectContainer(

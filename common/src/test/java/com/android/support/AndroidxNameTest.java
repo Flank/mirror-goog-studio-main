@@ -16,6 +16,8 @@
 package com.android.support;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Splitter;
 import org.junit.Test;
@@ -91,6 +93,26 @@ public class AndroidxNameTest {
         assertEquals("androidx.recyclerview.widget.RecyclerView$Adapter", className.newName());
     }
 
+    @Test
+    public void isEquals() {
+        AndroidxName className =
+                AndroidxName.of("android.support.v7.widget.", "RecyclerView");
+        assertTrue(className.isEquals("android.support.v7.widget.RecyclerView"));
+        assertTrue(className.isEquals("androidx.recyclerview.widget.RecyclerView"));
+        assertTrue(className.isEquals("android.support.v7.widget.RecyclerView"));
+        assertFalse(className.isEquals("foo.bar.widget.RecyclerView"));
+        assertTrue(className.isEqualsIgnoreCase("androidx.recyclerview.widget.RecyclerView"));
+        assertTrue(className.isEqualsIgnoreCase("androidx.recyclerview.widget.RECYCLERVIEW"));
+        assertEquals(className, className);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    @SuppressWarnings({"SimplifiableAssertion", "EqualsBetweenInconvertibleTypes"})
+    public void equals() {
+        AndroidxName className =
+                AndroidxName.of("android.support.v7.widget.", "RecyclerView");
+        assertTrue(className.equals("android.support.v7.widget.RecyclerView"));
+    }
     /**
      * Verify that all the documented mappings in <a
      * href="https://developer.android.com/jetpack/androidx/migrate">ttps://developer.android.com/jetpack/androidx/migrate</a>

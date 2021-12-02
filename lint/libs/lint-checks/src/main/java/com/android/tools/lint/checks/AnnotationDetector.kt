@@ -369,7 +369,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
 
                     context.report(
                         ANNOTATION_USAGE, annotation, context.getLocation(annotation),
-                        "Did you mean `@get:$name` ? Without `get:` this annotates the constructor " +
+                        "Did you mean `@get:$name`? Without `get:` this annotates the constructor " +
                             "parameter itself instead of the associated getter.",
                         fix
                     )

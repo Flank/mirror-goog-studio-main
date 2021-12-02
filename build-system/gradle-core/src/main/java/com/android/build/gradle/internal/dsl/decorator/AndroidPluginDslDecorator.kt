@@ -71,6 +71,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
 
     SupportedPropertyType.Collection.List,
     SupportedPropertyType.Collection.Set,
+    SupportedPropertyType.Collection.Map,
 
     SupportedPropertyType.Block(AbiSplit::class.java, AbiSplitOptions::class.java),
     SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),

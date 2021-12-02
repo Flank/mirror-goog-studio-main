@@ -45,6 +45,7 @@ import java.util.EnumSet
 import javax.annotation.CheckReturnValue
 import kotlin.math.ceil
 import kotlin.math.log10
+import kotlin.math.max
 
 /**
  * The actual machinery for running lint tests for a given [task]. This
@@ -637,7 +638,7 @@ class TestLintRunner(private val task: TestLintTask) {
 internal fun String.withLineNumbers(): String {
     var lineNumber = 1
     val lines = this.lines()
-    val width = ceil(log10(lines.size.toDouble())).toInt()
+    val width = max(1, ceil(log10(lines.size.toDouble())).toInt())
     return lines.joinToString("\n") { String.format("%${width}d %s", lineNumber++, it) }
 }
 

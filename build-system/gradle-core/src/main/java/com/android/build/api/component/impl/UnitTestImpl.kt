@@ -17,16 +17,17 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -35,16 +36,15 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -52,7 +52,7 @@ import javax.inject.Inject
 open class UnitTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -63,8 +63,7 @@ open class UnitTestImpl @Inject constructor(
     transformManager: TransformManager,
     internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
-    sdkComponents: SdkComponents,
-    globalScope: GlobalScope
+    global: GlobalTaskCreationConfig
 ) : TestComponentImpl(
     componentIdentity,
     buildFeatureValues,
@@ -79,12 +78,15 @@ open class UnitTestImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    global
 ), UnitTest, UnitTestCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
     override val minSdkVersion: AndroidVersion
@@ -93,9 +95,9 @@ open class UnitTestImpl @Inject constructor(
     override val targetSdkVersion: AndroidVersion
         get() = testedVariant.targetSdkVersion
 
-    // ---------------------------------------------------------------------------------------------
-    // INTERNAL API
-    // ---------------------------------------------------------------------------------------------
+    override val dslAndroidResources: AndroidResources
+        get() = variantDslInfo.androidResources
+
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 
@@ -122,7 +124,7 @@ open class UnitTestImpl @Inject constructor(
                 || variantDslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
+        sourceSets: ImmutableList.Builder<DirectoryEntry>) {}
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,

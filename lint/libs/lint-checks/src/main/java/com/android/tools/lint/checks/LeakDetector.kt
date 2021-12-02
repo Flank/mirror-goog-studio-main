@@ -40,6 +40,7 @@ import com.intellij.psi.PsiField
 import com.intellij.psi.PsiKeyword
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiModifierList
+import org.jetbrains.kotlin.asJava.elements.KtLightFieldForSourceDeclarationSupport
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -168,7 +169,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
             val cls = type.resolve() ?: return
             if (fqn.startsWith("android.")) {
                 if (isLeakCandidate(cls, context.evaluator) &&
-                    !isAppContextName(cls, node) &&
+                    !isAppContext(cls, node) &&
                     !isInitializedToAppContext(node, cls)
                 ) {
                     val message =
@@ -196,7 +197,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
 
                     if (canonical.startsWith("android.")) {
                         if (isLeakCandidate(innerCls, context.evaluator) &&
-                            !isAppContextName(innerCls, referenced) &&
+                            !isAppContext(innerCls, referenced) &&
                             !isInitializedToAppContext(context, referenced, innerCls)
                         ) {
                             val message = "Do not place Android context classes in static " +
@@ -353,7 +354,16 @@ class LeakDetector : Detector(), SourceCodeScanner {
         private const val CLASS_LIFECYCLE = "androidx.lifecycle.Lifecycle"
         private const val CLASS_LIFECYCLE_OLD = "android.arch.lifecycle.Lifecycle"
 
-        private fun isAppContextName(cls: PsiClass, field: PsiField): Boolean {
+        private fun isAppContext(cls: PsiClass, field: PsiField): Boolean {
+            if (field.getAnnotation("dagger.hilt.android.qualifiers.ApplicationContext") != null) {
+                return true
+            } else if (field is KtLightFieldForSourceDeclarationSupport) {
+                val origin = field.kotlinOrigin
+                if (origin != null && origin.annotationEntries.any { it.shortName?.identifier == "ApplicationContext" }) {
+                    return true
+                }
+            }
+
             // Don't flag names like "sAppContext" or "applicationContext".
             val name = field.name
             val lower = name.toLowerCase(Locale.US)

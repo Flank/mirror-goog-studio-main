@@ -94,12 +94,14 @@ fun relativeResourcePathToAbsolutePath(
  * Parses identifier and file path into a map from a file
  * in the format 'packageName.projectName-sortedOrderPosition absolutePath'.
  */
-fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
+fun readFromSourceSetPathsFile(artifactFile: File): Map<String, String> {
     if (!artifactFile.exists() || !artifactFile.isFile) {
         throw IOException("$artifactFile does not exist or is not a file.")
     }
-    return artifactFile.bufferedReader().lineSequence().associate {
-        it.substringBefore(" ") to it.substringAfter(" ")
+    return artifactFile.bufferedReader().use { bufferedReader ->
+        bufferedReader.lineSequence().associate {
+            it.substringBefore(" ") to it.substringAfter(" ")
+        }
     }
 }
 
@@ -153,6 +155,11 @@ fun getIdentifiedSourceSetMap(
             appId to sourceSet.absolutePath
         }
 }
+
+/**
+ * Verifies if a string is relative resource sourceset filepath. This is for cases where it is
+ * not possible to determine if relative resource filepaths are enabled by default.
+ */
 fun isRelativeSourceSetResource(filepath: String) : Boolean {
     return filepath.contains(separator)
 }

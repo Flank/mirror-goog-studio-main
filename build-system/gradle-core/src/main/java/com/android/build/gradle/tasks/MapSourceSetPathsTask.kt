@@ -12,6 +12,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -40,23 +41,25 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    val generatedResDir: Property<String>
-        get() = sourceSetInputs.generatedResDir
+    val generatedResDir: Provider<String>
+        get() = sourceSetInputs.generatedResDir.map { it.asFile.absolutePath }
 
     @get:Input
     @get:Optional
-    val mergeResourcesOutputDir: Property<String>
-        get() = sourceSetInputs.mergeResourcesOutputDir
+    val mergeResourcesOutputDir: Provider<String>
+        get() = sourceSetInputs.mergeResourcesOutputDir.map {
+            it.asFile.absolutePath
+        }
 
     @get:Input
     @get:Optional
-    val renderscriptResOutputDir: Property<String>
-        get() = sourceSetInputs.renderscriptResOutputDir
+    val renderscriptResOutputDir: Provider<String>
+        get() = sourceSetInputs.renderscriptResOutputDir.map { it.asFile.absolutePath }
 
     @get:Input
     @get:Optional
-    val incrementalMergeDir: Property<String>
-        get() = sourceSetInputs.incrementalMergedDir
+    val incrementalMergeDir: Provider<String>
+        get() = sourceSetInputs.incrementalMergedDir.map { it.asFile.absolutePath }
 
     @get:Input
     val localResources: MapProperty<String, FileCollection>
@@ -109,12 +112,12 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
         override fun configure(task: MapSourceSetPathsTask) {
             super.configure(task)
             task.namespace.setDisallowChanges(creationConfig.namespace)
-            task.sourceSetInputs.initialise(
-                creationConfig, mergeResourcesTask.get(), includeDependencies
-            )
+            task.sourceSetInputs.initialise(creationConfig, includeDependencies)
             if (!mergeResourcesTask.get().isVectorSupportLibraryUsed) {
                 task.generatedPngsOutputDir.setDisallowChanges(
-                        creationConfig.paths.generatedPngsOutputDir.map { it.asFile.absolutePath }
+                    creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES).map {
+                        it.asFile.absolutePath
+                    }
                 )
             }
         }

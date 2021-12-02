@@ -21,6 +21,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,6 +36,8 @@ public class LibMinifyLibDepTest {
         project.executor().run("lint");
     }
 
+    // TODO(b/205264185): re-enable and publicize
+    @Ignore
     @Test
     public void checkMapping() throws Exception {
         project.executor().run("assembleDebug");

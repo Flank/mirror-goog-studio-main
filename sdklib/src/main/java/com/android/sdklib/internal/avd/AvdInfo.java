@@ -63,7 +63,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
 
     private final String mName;
     private final Path mIniFile;
-    private final String mFolderPath;
+    private final Path mFolderPath;
     /** An immutable map of properties. This must not be modified. Map can be empty. Never null. */
     private final Map<String, String> mProperties;
     private final AvdStatus mStatus;
@@ -84,7 +84,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     public AvdInfo(
             @NonNull String name,
             @NonNull Path iniFile,
-            @NonNull String folderPath,
+            @NonNull Path folderPath,
             @NonNull ISystemImage systemImage,
             @Nullable Map<String, String> properties) {
          this(name, iniFile, folderPath,
@@ -106,7 +106,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     public AvdInfo(
             @NonNull String name,
             @NonNull Path iniFile,
-            @NonNull String folderPath,
+            @NonNull Path folderPath,
             @Nullable ISystemImage systemImage,
             @Nullable Map<String, String> properties,
             @NonNull AvdStatus status) {
@@ -138,7 +138,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
 
     /** Returns the path of the AVD data directory. */
     @NonNull
-    public String getDataFolderPath() {
+    public Path getDataFolderPath() {
         return mFolderPath;
     }
 
@@ -306,19 +306,15 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         return mIniFile;
     }
 
-    /**
-     * Helper method that returns the Config {@link File} for a given AVD name.
-     */
+    /** Helper method that returns the Config file for a given AVD name. */
     @NonNull
-    public static File getConfigFile(@NonNull String path) {
-        return new File(path, AvdManager.CONFIG_INI);
+    public static Path getConfigFile(@NonNull Path path) {
+        return path.resolve(AvdManager.CONFIG_INI);
     }
 
-    /**
-     * Returns the Config {@link File} for this AVD.
-     */
+    /** Returns the Config file for this AVD. */
     @NonNull
-    public File getConfigFile() {
+    public Path getConfigFile() {
         return getConfigFile(mFolderPath);
     }
 
@@ -390,7 +386,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      */
     @Override
     public int compareTo(@NonNull AvdInfo o) {
-        int imageDiff = 0;
+        int imageDiff;
         if (mSystemImage == null) {
             if (o.mSystemImage == null) {
                 imageDiff = 0;

@@ -56,6 +56,7 @@ public class LintCliFlags {
     private boolean warnAll;
     private boolean checkTests;
     private boolean ignoreTests;
+    private boolean ignoreTestFixtures;
     private boolean checkGenerated;
     private boolean checkDependencies = true;
     private boolean noWarnings;
@@ -329,6 +330,22 @@ public class LintCliFlags {
         if (ignoreTests) {
             this.checkTests = false;
         }
+    }
+
+    /**
+     * Whether we should completely skip testFixtures sources.
+     */
+    public boolean isIgnoreTestFixturesSources() {
+        return ignoreTestFixtures;
+    }
+
+    /**
+     * Sets whether we should completely skip testFixtures sources.
+     *
+     * @param ignoreTestFixtures if true, ignore testFixtures completely
+     */
+    public void setIgnoreTestFixturesSources(boolean ignoreTestFixtures) {
+        this.ignoreTestFixtures = ignoreTestFixtures;
     }
 
     /** Returns whether lint should run checks on generated sources. */

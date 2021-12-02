@@ -93,7 +93,7 @@ class FullDependencyGraphBuilder(
         visited: MutableMap<ResolvedVariantResult, GraphItem>,
         artifactMap: Map<VariantKey, ResolvedArtifact>
     ): GraphItem? {
-
+        if (dependency.isConstraint) return null
         if (dependency !is ResolvedDependencyResult) {
             (dependency as? UnresolvedDependencyResult)?.let {
                 val name = it.attempted.toString()

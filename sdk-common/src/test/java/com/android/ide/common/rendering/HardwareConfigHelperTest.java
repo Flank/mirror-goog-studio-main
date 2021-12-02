@@ -96,7 +96,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(isAutomotive(nexus5));
         assertFalse(nexus5.isScreenRound());
 
-        Device square = deviceManager.getDevice("wear_square", "Google");
+        Device square = deviceManager.getDevice("wearos_square", "Google");
         assertNotNull(square);
         assertTrue(isWear(square));
         assertFalse(square.isScreenRound());
@@ -104,15 +104,15 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(isMobile(square));
         assertFalse(isAutomotive(square));
 
-        Device round = deviceManager.getDevice("wear_round", "Google");
+        Device round = deviceManager.getDevice("wearos_small_round", "Google");
         assertNotNull(round);
         assertTrue(isWear(round));
         assertTrue(round.isScreenRound());
         assertFalse(isTv(round));
         assertFalse(isMobile(round));
         assertFalse(isAutomotive(round));
-        assertEquals("Wear OS Round (1.8\", 320 \u00d7 320, hdpi)", getNexusLabel(round));
-        assertEquals("320 \u00d7 320, hdpi (Round)", getNexusMenuLabel(round));
+        assertEquals("Wear OS Small Round (1.2\", 384 \u00d7 384, xhdpi)", getNexusLabel(round));
+        assertEquals("384 \u00d7 384, xhdpi (Small Round)", getNexusMenuLabel(round));
 
 
         Device tv1080p = deviceManager.getDevice("tv_1080p", "Google");

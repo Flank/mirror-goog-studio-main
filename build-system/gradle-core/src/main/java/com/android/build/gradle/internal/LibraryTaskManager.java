@@ -48,9 +48,7 @@ import com.android.build.gradle.internal.publishing.VariantPublishingInfo;
 import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
@@ -63,11 +61,12 @@ import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
 import com.android.build.gradle.tasks.ExtractAnnotations;
@@ -88,6 +87,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.tasks.TaskProvider;
@@ -98,23 +98,21 @@ import org.jetbrains.annotations.NotNull;
 public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> {
 
     public LibraryTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         super(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalConfig,
+                localConfig,
+                extension);
     }
 
     @Override
@@ -136,7 +134,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             taskFactory.register(new ExtractDeepLinksTask.CreationAction(libraryVariant));
         } else { // Resource processing is disabled.
             // TODO(b/147579629): add a warning for manifests containing resource references.
-            if (extension.getAaptOptions().getNamespaced()) {
+            if (globalConfig.getNamespacedAndroidResources()) {
                 getLogger()
                         .error(
                                 "Disabling resource processing in resource namespace aware "
@@ -186,7 +184,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                     libraryVariant.getServices().getProjectInfo().getProjectBaseName());
 
             // Only verify resources if in Release and not namespaced.
-            if (!libraryVariant.getDebuggable() && !extension.getAaptOptions().getNamespaced()) {
+            if (!libraryVariant.getDebuggable() && !globalConfig.getNamespacedAndroidResources()) {
                 createVerifyLibraryResTask(libraryVariant);
             }
 
@@ -248,8 +246,8 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
         // ----- External Transforms -----
         // apply all the external transforms.
-        List<Transform> customTransforms = extension.getTransforms();
-        List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
+        List<Transform> customTransforms = globalConfig.getTransforms();
+        List<List<Object>> customTransformsDependencies = globalConfig.getTransformsDependencies();
 
         final IssueReporter issueReporter = libraryVariant.getServices().getIssueReporter();
 
@@ -388,7 +386,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         AdhocComponentWithVariants component =
                 (AdhocComponentWithVariants) project.getComponents().findByName(componentName);
         if (component == null) {
-            component = globalScope.getComponentFactory().adhoc(componentName);
+            component = localConfig.getComponentFactory().adhoc(componentName);
             project.getComponents().add(component);
         }
         final Configuration apiPub =
@@ -461,11 +459,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     private void createMergeResourcesTasks(@NonNull VariantImpl variant) {
         ImmutableSet<MergeResources.Flag> flags;
-        if (variant.getServices()
-                .getProjectInfo()
-                .getExtension()
-                .getAaptOptions()
-                .getNamespaced()) {
+        if (globalConfig.getNamespacedAndroidResources()) {
             flags =
                     Sets.immutableEnumSet(
                             MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
@@ -548,7 +542,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             variant.getArtifacts()
                     .copy(
                             InternalArtifactType.LINT_PUBLISH_JAR.INSTANCE,
-                            globalScope.getGlobalArtifacts());
+                            globalConfig.getGlobalArtifacts());
         }
     }
 }

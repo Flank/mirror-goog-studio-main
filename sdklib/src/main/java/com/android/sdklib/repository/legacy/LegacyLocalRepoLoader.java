@@ -34,7 +34,6 @@ import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.PkgProps;
@@ -105,7 +104,7 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
                     Class<?> mockFileOp =
                             FileOp.class
                                     .getClassLoader()
-                                    .loadClass("com.android.repository.testframework.MockFileOp");
+                                    .loadClass("com.android.sdklib.repository.legacy.MockFileOp");
                     return (FileOp)
                             mockFileOp.getConstructor(FileSystem.class).newInstance(desiredFs);
                 }

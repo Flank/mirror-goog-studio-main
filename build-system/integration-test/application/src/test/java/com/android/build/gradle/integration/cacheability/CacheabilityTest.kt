@@ -46,14 +46,9 @@ class CacheabilityTest {
      */
     private val expectedTaskStates: List<TaskInfo> = listOf(
             // Sort alphabetically for readability
-            TaskInfo(FROM_CACHE, "bundle", "Classes", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "check", "AarMetadata", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "check", "DuplicateClasses", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "compile", "JavaWithJavac",
                     listOf("Debug", "DebugUnitTest", "Release", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "compress", "Assets", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "create", "CompatibleScreenManifests",
-                    listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "desugar", "FileDependencies", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "dexBuilder", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "extractDeepLinks", "", listOf("Debug", "Release")),
@@ -76,7 +71,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "process", "Manifest", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "process", "ManifestForPackage", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "test", "", listOf("DebugUnitTest", "ReleaseUnitTest")),
-            TaskInfo(FROM_CACHE, "validateSigning", "", listOf("Debug")),
             TaskInfo(FROM_CACHE, "compile", "ArtProfile", listOf("Release")),
 
             /*
@@ -85,8 +79,17 @@ class CacheabilityTest {
              *
              * If you add a task to this list, remember to add an explanation/file a bug for it.
              */
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
+            TaskInfo(DID_WORK, "bundle", "Classes", listOf("Debug", "Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
+            TaskInfo(DID_WORK, "check", "AarMetadata", listOf("Debug", "Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */
+            TaskInfo(DID_WORK, "check", "DuplicateClasses", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
             TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
+            TaskInfo(DID_WORK, "create", "CompatibleScreenManifests",
+                    listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
             TaskInfo(DID_WORK, "generate", "JacocoPropertiesFile", listOf("Debug")),
@@ -103,6 +106,8 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "package", "", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "merge", "ArtProfile", listOf("Release")),
             TaskInfo(DID_WORK, "sdk", "DependencyData", listOf("Release")),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.ValidateSigningTask] */
+            TaskInfo(DID_WORK, "validateSigning", "", listOf("Debug")),
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
             TaskInfo(DID_WORK, "write", "AppMetadata", listOf("Debug", "Release")),
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */

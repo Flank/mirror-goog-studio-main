@@ -30,7 +30,7 @@ if [[ $lsb_release == "crostini" ]]; then
   if [[ -f "${crostini_timestamp_file}" ]]; then
     last_run_time=$(cat $crostini_timestamp_file)
     #if the last build occurred less than three hours ago it exits
-    if [[ $(($current_time-$last_run_time)) -lt 10800 ]]; then
+    if [[ $(($current_time-$last_run_time)) -lt 12600 ]]; then
       exit 0
     fi
   fi

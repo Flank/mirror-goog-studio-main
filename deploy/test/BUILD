@@ -49,6 +49,11 @@ swap_test(
     srcs = ["java/com/android/tools/deployer/CrashLogTest.java"],
 )
 
+swap_test(
+    name = "LiveEditInstrumentationTest",
+    srcs = ["java/com/android/tools/deployer/LiveEditInstrumentationTest.java"],
+)
+
 #Todo rename this to something besides swap test.
 swap_test(
     name = "LiveLiteralUpdateTest",

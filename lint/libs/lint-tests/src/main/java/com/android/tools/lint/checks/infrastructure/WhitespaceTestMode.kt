@@ -37,7 +37,7 @@ import org.jetbrains.uast.UFile
  * Test mode which inserts unnecessary whitespace characters into the
  * source code
  */
-class WhitespaceTestMode : SourceTransformationTestMode(
+class WhitespaceTestMode : UastSourceTransformationTestMode(
     description = "Extra whitespace added",
     "TestMode.WHITESPACE",
     "whitespace"

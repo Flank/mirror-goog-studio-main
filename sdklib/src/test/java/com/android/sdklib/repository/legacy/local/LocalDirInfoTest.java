@@ -16,7 +16,7 @@
 
 package com.android.sdklib.repository.legacy.local;
 
-import com.android.repository.io.FileOp;
+import com.android.sdklib.repository.legacy.FileOp;
 import com.android.sdklib.repository.legacy.io.FileOpImpl;
 import java.io.File;
 import java.io.FileOutputStream;

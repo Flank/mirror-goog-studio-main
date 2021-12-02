@@ -107,6 +107,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     id.projectPath,
                     buildId,
                     artifact.variantName,
+                    artifact.isTestFixturesArtifact,
                     modelAddressSupplier
                 )
             }
@@ -148,6 +149,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
         projectPath: String,
         buildId: String,
         variantName: String?,
+        isTestFixtures: Boolean,
         addressSupplier: () -> String
     ) : DependencyItemT
 }

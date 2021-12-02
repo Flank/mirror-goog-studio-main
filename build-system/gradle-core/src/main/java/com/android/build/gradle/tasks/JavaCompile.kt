@@ -43,7 +43,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.util.PatternSet
 import org.gradle.process.CommandLineArgumentProvider
-import java.util.concurrent.Callable
 
 /**
  * [TaskCreationAction] for the [JavaCompile] task.
@@ -56,7 +55,6 @@ class JavaCompileCreationAction(
     private val creationConfig: ComponentCreationConfig, private val usingKapt: Boolean
 ) : TaskCreationAction<JavaCompile>() {
 
-    private val globalScope = creationConfig.globalScope
     private val project = creationConfig.services.projectInfo.getProject()
 
     private val dataBindingArtifactDir = project.objects.directoryProperty()
@@ -123,10 +121,10 @@ class JavaCompileCreationAction(
         task.options.compilerArgumentProviders.add(
             JavaCompileOptionsForRoom(
                 creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST),
-                creationConfig.globalScope.extension.compileOptions.targetCompatibility.isJava8Compatible
+                creationConfig.global.compileOptions.targetCompatibility.isJava8Compatible
             )
         )
-        task.options.isIncremental = globalScope.extension.compileOptions.incremental
+        task.options.isIncremental = creationConfig.global.compileOptionsIncremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
         // Record apList as input. It impacts recordAnnotationProcessors() below.
@@ -251,8 +249,8 @@ private fun JavaCompile.recordAnnotationProcessors(
 }
 
 fun computeJavaSource(creationConfig: ComponentCreationConfig, project: Project): FileTree {
-    // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-    val sourcesToCompile = Callable { listOf(creationConfig.javaSources) }
+    // do not resolve the provider before execution phase, b/117161463.
+    val sourcesToCompile = creationConfig.sources.java.getAsFileTrees()
     // Include only java sources, otherwise we hit b/144249620.
     val javaSourcesFilter = PatternSet().include("**/*.java")
     return project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)

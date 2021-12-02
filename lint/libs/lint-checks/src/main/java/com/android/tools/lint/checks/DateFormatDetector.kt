@@ -132,7 +132,7 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
 
             context.report(
                 WEEK_YEAR, argument, location,
-                "`DateFormat` character 'Y' in $digits is the week-era-year; did you mean 'y' ?"
+                "`DateFormat` character 'Y' in $digits is the week-era-year; did you mean 'y'?"
             )
         }
     }

@@ -22,8 +22,9 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.io.FileOpUtils
-import com.android.repository.testframework.MockFileOp
 import com.android.sdklib.repository.AndroidSdkHandler
+import com.android.testutils.file.createInMemoryFileSystemAndFolder
+import com.android.testutils.file.recordExistingFile
 import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -44,7 +45,7 @@ import org.mockito.Mockito.`when`
 @RunWith(JUnit4::class)
 class AvdManagerTest {
 
-    val fileOp = MockFileOp()
+    private val rootDir = createInMemoryFileSystemAndFolder("")
     private lateinit var manager: AvdManager
     private lateinit var sdkFolder: Path
     private lateinit var systemImageFolder: Path
@@ -57,19 +58,19 @@ class AvdManagerTest {
 
     @Before
     fun setup() {
-        sdkFolder = Files.createDirectories(fileOp.toPath("/sdk"))
+        sdkFolder = Files.createDirectories(rootDir.resolve("sdk"))
         systemImageFolder = sdkFolder.resolve("system-images/android-29/default/x86")
         Files.createDirectories(systemImageFolder)
         val vendorImage = systemImageFolder.resolve("system.img")
-        fileOp.recordExistingFile(vendorImage)
+        vendorImage.recordExistingFile()
         val userImg =
             systemImageFolder.resolve(com.android.sdklib.internal.avd.AvdManager.USERDATA_IMG)
-        fileOp.recordExistingFile(userImg)
+        userImg.recordExistingFile()
         emulatorFolder = sdkFolder.resolve("tools/lib/emulator")
         Files.createDirectories(emulatorFolder)
-        androidPrefsFolder = fileOp.toPath("/android-home")
-        avdFolder = fileOp.toPath("/avd")
-        adbExecutable = fileOp.toPath("/adb")
+        androidPrefsFolder = rootDir.resolve("android-home")
+        avdFolder = rootDir.resolve("avd")
+        adbExecutable = rootDir.resolve("adb")
         Files.createDirectories(avdFolder)
 
         snapshotHandler = mock(AvdSnapshotHandler::class.java)
@@ -97,7 +98,7 @@ class AvdManagerTest {
     fun addSingleDevice() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -112,17 +113,17 @@ class AvdManagerTest {
     fun addMultipleDevices() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device2",
             "Pixel 3")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device3",
@@ -139,12 +140,12 @@ class AvdManagerTest {
     fun addSameDeviceDoesNotDuplicate() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -159,12 +160,12 @@ class AvdManagerTest {
     fun testDeleteDevices() {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device2",
@@ -197,7 +198,7 @@ class AvdManagerTest {
             // first return false to force generation, then return true to assert success.
             .thenReturn(false, true)
 
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -230,7 +231,7 @@ class AvdManagerTest {
                 anyString()))
             .thenReturn(true)
 
-        manager.createOrRetrieveAvd(
+        manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
@@ -260,23 +261,23 @@ class AvdManagerTest {
         }
 
     private fun setupSdkHandler(): AndroidSdkHandler {
-        fileOp.recordExistingFile(emulatorFolder.resolve("snapshots.img"))
-        fileOp.recordExistingFile(
-            emulatorFolder.resolve(SdkConstants.FD_LIB).resolve(SdkConstants.FN_HARDWARE_INI))
+        emulatorFolder.resolve("snapshots.img").recordExistingFile()
+        emulatorFolder.resolve(SdkConstants.FD_LIB).resolve(SdkConstants.FN_HARDWARE_INI)
+                .recordExistingFile()
         recordSysImg()
 
         return AndroidSdkHandler(sdkFolder, androidPrefsFolder)
     }
 
     private fun recordSysImg() {
-        fileOp.recordExistingFile(systemImageFolder.resolve("system.img"))
-        fileOp.recordExistingFile(
-            systemImageFolder.resolve(com.android.sdklib.internal.avd.AvdManager.USERDATA_IMG))
-        fileOp.recordExistingFile(systemImageFolder.resolve("skins/res1/layout"))
-        fileOp.recordExistingFile(systemImageFolder.resolve("skins/sample"))
-        fileOp.recordExistingFile(systemImageFolder.resolve("skins/res2/layout"))
-        fileOp.recordExistingFile(
-            systemImageFolder.resolve("package.xml"),
+        systemImageFolder.resolve("system.img").recordExistingFile()
+        systemImageFolder.resolve(com.android.sdklib.internal.avd.AvdManager.USERDATA_IMG)
+                .recordExistingFile(
+        )
+        systemImageFolder.resolve("skins/res1/layout").recordExistingFile()
+        systemImageFolder.resolve("skins/sample").recordExistingFile()
+        systemImageFolder.resolve("skins/res2/layout").recordExistingFile()
+        systemImageFolder.resolve("package.xml").recordExistingFile(
             0,
             """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                     <ns3:sdk-sys-img
@@ -298,5 +299,5 @@ class AvdManagerTest {
     }
 
     // to fix "cannot be null" issues with argument matchers
-    private fun <T> any(type: Class<T>): T = Mockito.any<T>(type)
+    private fun <T> any(type: Class<T>): T = Mockito.any(type)
 }

@@ -16,12 +16,13 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.DexPackagingOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.sdklib.AndroidVersion.VersionCodes.P
 
 class DexPackagingOptionsImpl(
-        dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+        dslPackagingOptions: PackagingOptions,
         variantPropertiesApiServices: VariantPropertiesApiServices,
         minSdk: Int
 ) : DexPackagingOptions {

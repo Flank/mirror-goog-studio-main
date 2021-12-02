@@ -16,7 +16,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantBuilder
-import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.DependenciesInfoBuilder
@@ -28,13 +27,14 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class ApplicationVariantBuilderImpl @Inject constructor(
-    variantDslInfo: VariantDslInfo<ApplicationExtension>,
-    dslDependencyInfo: com.android.build.api.dsl.DependenciesInfo,
-    variantConfiguration: ComponentIdentity,
+    globalVariantBuilderConfig: GlobalVariantBuilderConfig,
+    variantDslInfo: VariantDslInfo,
+    componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) : VariantBuilderImpl(
+    globalVariantBuilderConfig,
     variantDslInfo,
-    variantConfiguration,
+    componentIdentity,
     variantApiServices
 ), ApplicationVariantBuilder {
 
@@ -49,14 +49,14 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
 
     override var enableAndroidTest: Boolean = true
 
-    override var enableTestFixtures: Boolean = variantDslInfo.enableTestFixtures
+    override var enableTestFixtures: Boolean = variantDslInfo.testFixtures.enable
 
     // only instantiate this if this is needed. This allows non-built variant to not do too much work.
     override val dependenciesInfo: DependenciesInfoBuilder by lazy {
         variantApiServices.newInstance(
             DependenciesInfoBuilderImpl::class.java,
-                variantApiServices,
-                dslDependencyInfo
+            variantApiServices,
+            globalVariantBuilderConfig.dependenciesInfo
         )
     }
 

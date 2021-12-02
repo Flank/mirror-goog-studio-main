@@ -1,0 +1,276 @@
+> VariantDependencies:
+   - name                 = "debug"
+   > mainArtifact:
+      > compileDependencies:
+         > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common:2.4.0:
+                  - requestedCoordinates = (null)
+                  - dependencies:
+                     - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+                        - requestedCoordinates = (null)
+                        - dependencies         = []
+               - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+                  - dependencies = "*visited*"
+         < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0
+      < compileDependencies
+      > runtimeDependencies:
+         > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common:2.4.0:
+                  - requestedCoordinates = (null)
+                  - dependencies:
+                     - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.1.0:
+                        - requestedCoordinates = (null)
+                        - dependencies         = []
+               - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.1.0:
+                  - dependencies = "*visited*"
+         < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0
+      < runtimeDependencies
+      - unresolvedDependencies = []
+   < mainArtifact
+   > androidTestArtifact:
+      > compileDependencies:
+         - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common:2.4.0:
+                  - requestedCoordinates = (null)
+                  - dependencies:
+                     - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+                        - requestedCoordinates = (null)
+                        - dependencies         = []
+               - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+                  - dependencies = "*visited*"
+         < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0
+      < compileDependencies
+      - runtimeDependencies    = []
+      - unresolvedDependencies = []
+   < androidTestArtifact
+   > unitTestArtifact:
+      > compileDependencies:
+         - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common:2.4.0:
+                  - requestedCoordinates = (null)
+                  - dependencies:
+                     - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+                        - requestedCoordinates = (null)
+                        - dependencies         = []
+               - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+                  - dependencies = "*visited*"
+         < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0
+      < compileDependencies
+      > runtimeDependencies:
+         > :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+            - requestedCoordinates = (null)
+            > dependencies:
+               > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+                  - requestedCoordinates = (null)
+                  - dependencies:
+                     - androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common:2.4.0:
+                        - requestedCoordinates = (null)
+                        - dependencies:
+                           - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.1.0:
+                              - requestedCoordinates = (null)
+                              - dependencies         = []
+                     - androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.1.0:
+                        - dependencies = "*visited*"
+               < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0
+            < dependencies
+         < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
+         - androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+            - dependencies = "*visited*"
+      < runtimeDependencies
+      - unresolvedDependencies = []
+   < unitTestArtifact
+   - testFixturesArtifact = (null)
+   > libraries:
+      > :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+         - type               = PROJECT
+         - artifact           = (null)
+         > projectInfo:
+            - buildId        = ":"
+            - projectPath    = ":app"
+            - isTestFixtures = false
+            - buildType      = "debug"
+            - productFlavors = []
+            - attributes:
+               * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "project:app:unspecified"
+         < projectInfo
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
+      > :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+         - type               = PROJECT
+         - artifact           = (null)
+         > projectInfo:
+            - buildId        = ":"
+            - projectPath    = ":app"
+            - isTestFixtures = false
+            - buildType      = "debug"
+            - productFlavors = []
+            - attributes:
+               * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "project:app:unspecified"
+         < projectInfo
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
+      > androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.annotation"
+            - name           = "annotation"
+            - version        = "1.1.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "androidx.annotation:annotation:1.1.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.1.0
+      > androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.1.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.annotation"
+            - name           = "annotation"
+            - version        = "1.1.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "androidx.annotation:annotation:1.1.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.annotation|annotation|1.1.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.1.0
+      > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/lifecycle/lifecycle-common-java8/2.4.0/lifecycle-common-java8-2.4.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.lifecycle"
+            - name           = "lifecycle-common-java8"
+            - version        = "2.4.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "androidx.lifecycle:lifecycle-common-java8:2.4.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common-java8:2.4.0
+      > androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/lifecycle/lifecycle-common-java8/2.4.0/lifecycle-common-java8-2.4.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.lifecycle"
+            - name           = "lifecycle-common-java8"
+            - version        = "2.4.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "androidx.lifecycle:lifecycle-common-java8:2.4.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.lifecycle|lifecycle-common-java8|2.4.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common-java8:2.4.0
+      > androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common:2.4.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/lifecycle/lifecycle-common/2.4.0/lifecycle-common-2.4.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.lifecycle"
+            - name           = "lifecycle-common"
+            - version        = "2.4.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.dependency.bundling -> external"
+               * "org.gradle.jvm.version -> 8"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "androidx.lifecycle:lifecycle-common:2.4.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.lifecycle:lifecycle-common:2.4.0
+      > androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common:2.4.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/lifecycle/lifecycle-common/2.4.0/lifecycle-common-2.4.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.lifecycle"
+            - name           = "lifecycle-common"
+            - version        = "2.4.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.dependency.bundling -> external"
+               * "org.gradle.jvm.version -> 8"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "androidx.lifecycle:lifecycle-common:2.4.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.lifecycle|lifecycle-common|2.4.0|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>8, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.lifecycle:lifecycle-common:2.4.0
+   < libraries
+< VariantDependencies

@@ -23,49 +23,93 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.util.Scanner
 
 /** Tests the error message rewriting logic.  */
-class MessageRewriteTest {
+@RunWith(Parameterized::class)
+class MessageRewriteTest(private val isRelativeResSourceSetsEnabled: Boolean) {
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("flavored").create()
+    val project = GradleTestProject.builder().fromTestProject("flavoredlib").create()
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun isRelativeResSourceSetsEnabled() = arrayOf(true, false)
+    }
 
     @Test
-    fun invalidLayoutFile() {
-        project.execute("assembleDebug")
+    fun invalidAppLayoutFile() {
+        project.executor()
+            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
+            .run("assembleDebug")
         TemporaryProjectModification.doTest(project) {
-            it.replaceInFile("src/main/res/layout/main.xml", "</LinearLayout>", "")
+            it.replaceInFile("app/src/main/res/layout/main.xml", "</LinearLayout>", "")
             val result = project.executor()
                 .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
                 .expectFailure()
                 .run("assembleF1Debug")
             checkPathInOutput(
-                    FileUtils.join("src", "main", "res", "layout", "main.xml"), result.stdout)
+                    FileUtils.join("app", "src", "main", "res", "layout", "main.xml"),
+                result.stdout)
         }
     }
 
     @Test
-    fun nonExistentResourceReferenceInLayout() {
+    fun nonExistentResourceReferenceInAppLayout() {
         TemporaryProjectModification.doTest(project) {
-            it.replaceInFile("src/main/res/layout/main.xml","@string/text", "@string/agloe")
+            it.replaceInFile("app/src/main/res/layout/main.xml","@string/app_string", "@string/agloe")
             val result = project.executor()
-                    .expectFailure()
-                    .run("assembleDebug")
+                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
+                .expectFailure()
+                .run("assembleDebug")
             checkPathInOutput(
-                    FileUtils.join("src", "main", "res", "layout", "main.xml"), result.stderr)
+                    FileUtils.join("app", "src", "main", "res", "layout", "main.xml"), result.stderr)
         }
     }
 
     @Test
-    fun nonExistentResourceReferenceInValues() {
+    fun nonExistentResourceReferenceInAppValues() {
         TemporaryProjectModification.doTest(project) {
-            it.replaceInFile("src/main/res/values/strings.xml", "string", "")
+            it.replaceInFile("app/src/main/res/values/strings.xml", "string", "")
             val result = project.executor()
-                    .expectFailure()
-                    .run("assembleDebug")
+                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
+                .expectFailure()
+                .run("assembleDebug")
             checkPathInOutput(
-                    FileUtils.join("src", "main", "res", "values", "strings.xml"), result.stderr)
+                    FileUtils.join("app", "src", "main", "res", "values", "strings.xml"), result.stderr)
+        }
+    }
+
+    @Test
+    fun nonExistentResourceReferenceInLibLayout() {
+        TemporaryProjectModification.doTest(project) {
+            it.replaceInFile(
+                "lib/src/flavor1/res/layout/lib_main.xml",
+                "@string/lib_string",
+                "@string/agloe"
+            )
+            val result = project.executor()
+                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
+                .expectFailure()
+                .run("assembleDebug")
+            // b/206624424 - Errors in libraries currently (and incorrectly) rewrite as
+            // the packaged res for full builds and merged intermediate filepaths for incremental
+            // builds.
+            checkPathInOutput(
+                FileUtils.join(
+                    "lib",
+                    "build",
+                    "intermediates",
+                    "packaged_res",
+                    "flavor1Debug",
+                    "layout",
+                    "lib_main.xml"
+                ),
+                result.stderr
+            )
         }
     }
 

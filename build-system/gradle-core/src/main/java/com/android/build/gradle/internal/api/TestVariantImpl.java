@@ -23,7 +23,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,7 +52,7 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
             @NonNull TestVariantData variantData,
             @NonNull ComponentImpl component,
             @NonNull BaseVariant testedVariantData,
-            @NonNull BaseServices services,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         super(component, services, readOnlyObjectProvider, outputs);

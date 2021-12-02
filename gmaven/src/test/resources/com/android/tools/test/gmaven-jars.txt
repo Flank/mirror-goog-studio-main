@@ -30,9 +30,25 @@ androidx/databinding/databinding-compiler-common
   META-INF/
   META-INF/MANIFEST.MF
   META-INF/databinding-compiler-common.kotlin_module
+  META-INF/maven/
+  META-INF/maven/org.antlr/
+  META-INF/maven/org.antlr/antlr4-runtime/
+  META-INF/maven/org.antlr/antlr4-runtime/pom.properties
+  META-INF/maven/org.antlr/antlr4-runtime/pom.xml
   NOTICE
   android/
   android/databinding/
+  android/databinding/internal/
+  android/databinding/internal/org/
+  android/databinding/internal/org/antlr/
+  android/databinding/internal/org/antlr/v4/
+  android/databinding/internal/org/antlr/v4/runtime/
+  android/databinding/internal/org/antlr/v4/runtime/atn/
+  android/databinding/internal/org/antlr/v4/runtime/dfa/
+  android/databinding/internal/org/antlr/v4/runtime/misc/
+  android/databinding/internal/org/antlr/v4/runtime/tree/
+  android/databinding/internal/org/antlr/v4/runtime/tree/pattern/
+  android/databinding/internal/org/antlr/v4/runtime/tree/xpath/
   android/databinding/parser/
   android/databinding/tool/
   android/databinding/tool/expr/

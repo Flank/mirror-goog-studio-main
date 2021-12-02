@@ -33,7 +33,7 @@ import java.util.Locale
 
 class VariantPathHelper(
     val buildDirectory: DirectoryProperty,
-    private val variantDslInfo: VariantDslInfo<*>,
+    private val variantDslInfo: VariantDslInfo,
     private val dslServices: DslServices
 ) {
 
@@ -48,15 +48,6 @@ class VariantPathHelper(
 
     fun reportsDir(vararg subDirs: String): Provider<Directory> =
         getBuildSubDir(BuilderConstants.FD_REPORTS, subDirs)
-
-    val generatedResOutputDir: Provider<Directory>
-            by lazy { getGeneratedResourcesDir("resValues") }
-
-    val generatedPngsOutputDir: Provider<Directory>
-            by lazy { getGeneratedResourcesDir("pngs") }
-
-    val renderscriptResOutputDir: Provider<Directory>
-            by lazy { getGeneratedResourcesDir("rs") }
 
     val buildConfigSourceOutputDir: Provider<Directory>
             by lazy { generatedDir("source", "buildConfig", variantDslInfo.dirName) }
@@ -137,11 +128,7 @@ class VariantPathHelper(
         return intermediatesDir("incremental", name).get().asFile
     }
 
-    fun getIntermediateDir(taskOutput: Artifact<Directory>): File {
-        return intermediate(taskOutput.name().toLowerCase(Locale.US))
-    }
-
-    private fun getGeneratedResourcesDir(name: String): Provider<Directory> {
+    fun getGeneratedResourcesDir(name: String): Provider<Directory> {
         val dirs: List<String> =
             listOf("res", name) + variantDslInfo.directorySegments.filterNotNull()
         return generatedDir(*dirs.toTypedArray())

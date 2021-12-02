@@ -190,6 +190,13 @@ interface Lint {
     @set:Incubating
     var ignoreTestSources: Boolean
 
+    /**
+     * Whether lint should ignore all testFixtures sources.
+     */
+    @get:Incubating
+    @set:Incubating
+    var ignoreTestFixturesSources: Boolean
+
     /** Returns whether lint should run checks on generated sources. */
     @get:Incubating
     @set:Incubating

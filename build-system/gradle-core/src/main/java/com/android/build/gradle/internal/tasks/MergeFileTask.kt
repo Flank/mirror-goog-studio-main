@@ -20,16 +20,23 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 
-/** Task to merge files. This appends all the files together into an output file.  */
-@CacheableTask
+/**
+ * Task to merge files. This appends all the files together into an output file.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Concatenates the registered Inputs into a single Output file, requiring no computation.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class MergeFileTask : NonIncrementalTask() {
 
     @get:InputFiles

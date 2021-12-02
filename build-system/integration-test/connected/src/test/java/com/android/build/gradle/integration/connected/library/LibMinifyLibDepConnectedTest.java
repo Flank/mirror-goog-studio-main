@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
@@ -44,6 +45,8 @@ public class LibMinifyLibDepConnectedTest {
         project.execute("uninstallAll");
     }
 
+    // TODO(b/205264185): To re-enable
+    @Ignore
     @Test
     public void connectedCheck() throws IOException, InterruptedException {
         project.executor().run("connectedCheck");

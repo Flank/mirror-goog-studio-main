@@ -26,7 +26,7 @@ public class CmpTest {
         byte[] classInput = buildClass(CmpTarget.class);
         int i1 = 1;
         int i2 = 2;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpEq(II)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpEq", "(II)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {i1, i2});
@@ -44,7 +44,7 @@ public class CmpTest {
         byte[] classInput = buildClass(CmpTarget.class);
         int i1 = 1;
         int i2 = 2;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpNeq(II)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpNeq", "(II)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {i1, i2});
@@ -62,7 +62,7 @@ public class CmpTest {
         byte[] classInput = buildClass(CmpTarget.class);
         int i1 = 1;
         int i2 = 2;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpGe(II)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpGe", "(II)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {i1, i2});
@@ -80,7 +80,7 @@ public class CmpTest {
         byte[] classInput = buildClass(CmpTarget.class);
         int i1 = 1;
         int i2 = 2;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpLe(II)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpLe", "(II)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {i1, i2});
@@ -98,7 +98,7 @@ public class CmpTest {
         byte[] classInput = buildClass(CmpTarget.class);
         int i1 = 1;
         int i2 = 2;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpGt(II)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpGt", "(II)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {i1, i2});
@@ -116,7 +116,7 @@ public class CmpTest {
         byte[] classInput = buildClass(CmpTarget.class);
         int i1 = 1;
         int i2 = 2;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpLt(II)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIcmpLt", "(II)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {i1, i2});
@@ -136,7 +136,7 @@ public class CmpTest {
         Object o2 = new Object();
         MethodBodyEvaluator ev =
                 new MethodBodyEvaluator(
-                        classInput, "testIcmpLe(Ljava/lang/Object;Ljava/lang/Object;)Z");
+                        classInput, "testIcmpLe", "(Ljava/lang/Object;Ljava/lang/Object;)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {o1, null});
@@ -167,7 +167,7 @@ public class CmpTest {
         Object o2 = new Object();
         MethodBodyEvaluator ev =
                 new MethodBodyEvaluator(
-                        classInput, "testIcmpNe(Ljava/lang/Object;Ljava/lang/Object;)Z");
+                        classInput, "testIcmpNe", "(Ljava/lang/Object;Ljava/lang/Object;)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {o1, null});

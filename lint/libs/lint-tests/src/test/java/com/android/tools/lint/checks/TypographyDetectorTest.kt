@@ -77,13 +77,13 @@ class TypographyDetectorTest : AbstractCheckTest() {
             res/values/typography.xml:15: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
                 <string name="ellipsis">40 times...</string>
                                         ~~~~~~~~~~~
-            res/values/typography.xml:12: Warning: Use fraction character ½ (&#189;) instead of 1/2 ? [TypographyFractions]
+            res/values/typography.xml:12: Warning: Use fraction character ½ (&#189;) instead of 1/2? [TypographyFractions]
                 <string name="fraction1">5 1/2 times</string>
                                          ~~~~~~~~~~~
-            res/values/typography.xml:13: Warning: Use fraction character ¼ (&#188;) instead of 1/4 ? [TypographyFractions]
+            res/values/typography.xml:13: Warning: Use fraction character ¼ (&#188;) instead of 1/4? [TypographyFractions]
                 <string name="fraction4">1/4 times</string>
                                          ~~~~~~~~~
-            res/values/typography.xml:25: Warning: Use fraction character ½ (&#189;) instead of 1/2 ? [TypographyFractions]
+            res/values/typography.xml:25: Warning: Use fraction character ½ (&#189;) instead of 1/2? [TypographyFractions]
                     <item>Age 5 1/2</item>
                           ~~~~~~~~~
             res/values/typography.xml:3: Warning: Replace straight quotes ('') with directional quotes (‘’, &#8216; and &#8217;) ? [TypographyQuotes]
@@ -237,7 +237,7 @@ class TypographyDetectorTest : AbstractCheckTest() {
             res/values/plurals_typography.xml:5: Warning: Replace "-" with an "en dash" character (–, &#8211;) ? [TypographyDashes]
                     <item quantity="one">For ages 3-5</item>
                                          ~~~~~~~~~~~~
-            res/values/plurals_typography.xml:6: Warning: Use fraction character ¼ (&#188;) instead of 1/4 ? [TypographyFractions]
+            res/values/plurals_typography.xml:6: Warning: Use fraction character ¼ (&#188;) instead of 1/4? [TypographyFractions]
                     <item quantity="few">1/4 times</item>
                                          ~~~~~~~~~
             res/values/plurals_typography.xml:14: Warning: Avoid quoting with grave accents; use apostrophes or better yet directional quotes instead [TypographyQuotes]

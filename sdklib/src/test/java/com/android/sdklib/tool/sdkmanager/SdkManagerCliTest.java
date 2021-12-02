@@ -43,7 +43,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
-import com.android.repository.testframework.MockFileOp;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.file.InMemoryFileSystems;
@@ -73,15 +72,14 @@ import org.junit.Test;
 @SuppressWarnings("resource")
 public class SdkManagerCliTest {
 
-    private final MockFileOp mFileOp = new MockFileOp();
-    private final Path mSdkLocation = mFileOp.toPath("/sdk");
+    private final Path mSdkLocation = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
 
     private AndroidSdkHandler mSdkHandler;
     private FakeDownloader mDownloader;
 
     @Before
     public void setUp() throws Exception {
-        mDownloader = new FakeDownloader(mFileOp.toPath("tmp"));
+        mDownloader = new FakeDownloader(mSdkLocation.getRoot().resolve("tmp"));
 
         RemoteRepoLoader loader = createRemoteRepo();
 
@@ -171,40 +169,40 @@ public class SdkManagerCliTest {
     public void determineRoot() throws Exception {
         System.setProperty(
                 "com.android.sdklib.toolsdir",
-                mFileOp.getPlatformSpecificPath("/sdk/cmdline-tools/1.0.0"));
+                mSdkLocation.resolve("cmdline-tools/1.0.0").toString());
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--list"), mFileOp.getFileSystem());
+                        ImmutableList.of("--list"), mSdkLocation.getFileSystem());
         assertEquals(mSdkLocation, settings.getLocalPath());
 
         System.setProperty(
-                "com.android.sdklib.toolsdir", mFileOp.getPlatformSpecificPath("/sdk/foo/bar"));
+                "com.android.sdklib.toolsdir", mSdkLocation.resolve("foo/bar").toString());
         try {
             // This is expected to fail, since the path isn't what's expected
             SdkManagerCliSettings.createSettings(
-                    ImmutableList.of("--list"), mFileOp.getFileSystem());
+                    ImmutableList.of("--list"), mSdkLocation.getFileSystem());
             fail();
         } catch (SdkManagerCliSettings.FailSilentlyException expected) {
         }
 
         System.setProperty(
-                "com.android.sdklib.toolsdir", mFileOp.getPlatformSpecificPath("/sdk/foo/bar"));
+                "com.android.sdklib.toolsdir", mSdkLocation.resolve("foo/bar").toString());
+        String sdk2Path = mSdkLocation.getRoot().resolve("sdk2").toString();
         settings =
                 SdkManagerCliSettings.createSettings(
-                        ImmutableList.of(
-                                "--list", "--sdk_root=" + mFileOp.getPlatformSpecificPath("/sdk2")),
-                        mFileOp.getFileSystem());
-        assertEquals(mFileOp.getPlatformSpecificPath("/sdk2"), settings.getLocalPath().toString());
+                        ImmutableList.of("--list", "--sdk_root=" + sdk2Path),
+                        mSdkLocation.getFileSystem());
+        assertEquals(sdk2Path, settings.getLocalPath().toString());
 
         // There was a problem when tools was installed directly in the root
-        System.setProperty(
-                "com.android.sdklib.toolsdir", mFileOp.getPlatformSpecificPath("/tools"));
+        String toolsPath = mSdkLocation.getRoot().resolve("tools").toString();
+        System.setProperty("com.android.sdklib.toolsdir", toolsPath);
+        String sdk3Path = mSdkLocation.getRoot().resolve("sdk3").toString();
         settings =
                 SdkManagerCliSettings.createSettings(
-                        ImmutableList.of(
-                                "--list", "--sdk_root=" + mFileOp.getPlatformSpecificPath("/sdk3")),
-                        mFileOp.getFileSystem());
-        assertEquals(mFileOp.getPlatformSpecificPath("/sdk3"), settings.getLocalPath().toString());
+                        ImmutableList.of("--list", "--sdk_root=" + sdk3Path),
+                        mSdkLocation.getFileSystem());
+        assertEquals(sdk3Path, settings.getLocalPath().toString());
     }
 
     /**
@@ -215,7 +213,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader = new SdkManagerCli(settings,
@@ -254,7 +252,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list_installed", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -289,7 +287,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader =
@@ -328,7 +326,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--sdk_root=" + mSdkLocation, "--verbose"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader = new SdkManagerCli(settings,
@@ -390,7 +388,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--channel=1", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         assertEquals("channel-1", settings.getChannel().getId());
     }
@@ -404,7 +402,7 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of(
                                 "--list", "--include_obsolete", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         SdkManagerCli downloader = new SdkManagerCli(settings,
@@ -456,7 +454,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--newer", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         SdkManagerCli downloader =
@@ -489,7 +487,7 @@ public class SdkManagerCliTest {
                                 "--newer",
                                 "--include_obsolete",
                                 "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         SdkManagerCli downloader =
@@ -520,7 +518,7 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of(
                                 "--list", "--sdk_root=" + mSdkLocation, "--verbose", "--newer"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader =
@@ -563,7 +561,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "test;remote1"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
@@ -588,7 +586,7 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of(
                                 "--sdk_root=" + mSdkLocation, "test;remote1", "depends_on"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
@@ -613,7 +611,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--update", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mSdkHandler
@@ -653,7 +651,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--update", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         assertNotNull("Arguments should be valid", settings);
@@ -678,7 +676,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "test;remote1"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNull(mSdkHandler.getLocalPackage("test;remote1", new FakeProgressIndicator()));
         assertNotNull("Arguments should be valid", settings);
@@ -707,7 +705,7 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of(
                                 "--update", "--include_obsolete", "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mSdkHandler
@@ -743,7 +741,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--uninstall", "--sdk_root=" + mSdkLocation, "obsolete"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mSdkHandler
@@ -778,7 +776,7 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of(
                                 "--uninstall", "--sdk_root=" + mSdkLocation, "obsolete", "upgrade"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         mSdkHandler
@@ -814,7 +812,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "depended_on"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(mSdkHandler.getLocalPackage("depended_on", progress));
@@ -849,7 +847,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--licenses"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
@@ -874,7 +872,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--licenses", "--verbose"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
@@ -911,7 +909,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--licenses"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
@@ -957,7 +955,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--licenses"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         // Accept one of the licences
@@ -1010,7 +1008,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--licenses"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
 
         // Accept the existing licenses
@@ -1064,7 +1062,7 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of(
                                 "--sdk_root=" + mSdkLocation, "depends_on", "test;remote1"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         // Accept depending license but not depended-on license, then continue.
@@ -1089,7 +1087,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--version"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
 
         AndroidSdkHandler handler = new AndroidSdkHandler(mSdkLocation, null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -1108,31 +1106,31 @@ public class SdkManagerCliTest {
                 () ->
                         SdkManagerCliSettings.createSettings(
                                 ImmutableList.of("--sdk_root=" + mSdkLocation, "--foo"),
-                                mFileOp.getFileSystem()));
+                                mSdkLocation.getFileSystem()));
         assertThrows(
                 SdkManagerCliSettings.ShowUsageException.class,
                 () ->
                         SdkManagerCliSettings.createSettings(
                                 ImmutableList.of("--sdk_root=" + mSdkLocation, "--list", "foo"),
-                                mFileOp.getFileSystem()));
+                                mSdkLocation.getFileSystem()));
         assertThrows(
                 SdkManagerCliSettings.ShowUsageException.class,
                 () ->
                         SdkManagerCliSettings.createSettings(
                                 ImmutableList.of("--sdk_root=" + mSdkLocation, "--update", "foo"),
-                                mFileOp.getFileSystem()));
+                                mSdkLocation.getFileSystem()));
         assertThrows(
                 SdkManagerCliSettings.ShowUsageException.class,
                 () ->
                         SdkManagerCliSettings.createSettings(
                                 ImmutableList.of("--sdk_root=" + mSdkLocation, "--version", "foo"),
-                                mFileOp.getFileSystem()));
+                                mSdkLocation.getFileSystem()));
         assertThrows(
                 SdkManagerCliSettings.ShowUsageException.class,
                 () ->
                         SdkManagerCliSettings.createSettings(
                                 ImmutableList.of("--sdk_root=" + mSdkLocation, "--licenses", "foo"),
-                                mFileOp.getFileSystem()));
+                                mSdkLocation.getFileSystem()));
     }
 
     // TODO: remove when we move past junit 4.12 in tools/idea
@@ -1156,7 +1154,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "test;bad"),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SdkManagerCli downloader =
                 new SdkManagerCli(
@@ -1194,7 +1192,7 @@ public class SdkManagerCliTest {
                                         "--sdk_root=" + mSdkLocation,
                                         "--no_proxy",
                                         "--proxy_port=80"),
-                                mFileOp.getFileSystem(),
+                                mSdkLocation.getFileSystem(),
                                 environment));
         assertThrows(
                 SdkManagerCliSettings.FailSilentlyException.class,
@@ -1204,7 +1202,7 @@ public class SdkManagerCliTest {
                                         "--sdk_root=" + mSdkLocation,
                                         "--no_proxy",
                                         "--proxy_host=foo.bar"),
-                                mFileOp.getFileSystem(),
+                                mSdkLocation.getFileSystem(),
                                 environment));
         assertThrows(
                 SdkManagerCliSettings.FailSilentlyException.class,
@@ -1214,14 +1212,14 @@ public class SdkManagerCliTest {
                                         "--sdk_root=" + mSdkLocation,
                                         "--no_proxy",
                                         "--proxy=bar.baz"),
-                                mFileOp.getFileSystem(),
+                                mSdkLocation.getFileSystem(),
                                 environment));
 
         {
             SdkManagerCliSettings settings =
                     SdkManagerCliSettings.createSettings(
                             ImmutableList.of("--sdk_root=" + mSdkLocation, "--no_proxy"),
-                            mFileOp.getFileSystem(),
+                            mSdkLocation.getFileSystem(),
                             environment);
             assertNotNull(settings);
             assertTrue(settings.getForceNoProxy());
@@ -1232,7 +1230,7 @@ public class SdkManagerCliTest {
             SdkManagerCliSettings settings =
                     SdkManagerCliSettings.createSettings(
                             ImmutableList.of("--sdk_root=" + mSdkLocation, "--no_https"),
-                            mFileOp.getFileSystem(),
+                            mSdkLocation.getFileSystem(),
                             environment);
             assertNotNull(settings);
             assertTrue(settings.getForceHttp());
@@ -1243,7 +1241,7 @@ public class SdkManagerCliTest {
             SdkManagerCliSettings settings =
                     SdkManagerCliSettings.createSettings(
                             ImmutableList.of("--sdk_root=" + mSdkLocation),
-                            mFileOp.getFileSystem(),
+                            mSdkLocation.getFileSystem(),
                             environment);
             assertNotNull(settings);
             assertFalse(settings.getForceNoProxy());
@@ -1258,7 +1256,7 @@ public class SdkManagerCliTest {
             SdkManagerCliSettings settings =
                     SdkManagerCliSettings.createSettings(
                             ImmutableList.of("--sdk_root=" + mSdkLocation),
-                            mFileOp.getFileSystem(),
+                            mSdkLocation.getFileSystem(),
                             environmentHttpOnly);
             assertNotNull(settings);
             assertFalse(settings.getForceNoProxy());
@@ -1276,19 +1274,19 @@ public class SdkManagerCliTest {
                     () ->
                             SdkManagerCliSettings.createSettings(
                                     ImmutableList.of("--sdk_root=" + mSdkLocation),
-                                    mFileOp.getFileSystem(),
+                                    mSdkLocation.getFileSystem(),
                                     environmentInvalidProxyUrl));
         }
     }
 
     @Test
     public void packageFile() throws Exception {
-        String path = InMemoryFileSystems.getPlatformSpecificPath("/foo.bar");
-        mFileOp.recordExistingFile(path, "package1\r\n package2 \r\n\r\n");
+        Path path = mSdkLocation.getRoot().resolve("foo.bar");
+        InMemoryFileSystems.recordExistingFile(path, "package1\r\n package2 \r\n\r\n");
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--package_file=" + path, "--sdk_root=" + mSdkLocation),
-                        mFileOp.getFileSystem());
+                        mSdkLocation.getFileSystem());
 
         assertNotNull(settings);
         SdkAction action = settings.getAction();

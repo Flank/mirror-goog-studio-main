@@ -525,7 +525,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.setType(creationConfig.variantType)
             if (creationConfig is ApkCreationConfig) {
-                task.noCompress.setDisallowChanges(creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress)
+                task.noCompress.set(creationConfig.androidResources.noCompress)
                 task.aaptAdditionalParameters.set(creationConfig.androidResources.aaptAdditionalParameters)
             }
             task.noCompress.disallowChanges()

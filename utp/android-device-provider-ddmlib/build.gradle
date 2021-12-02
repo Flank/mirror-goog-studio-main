@@ -34,7 +34,7 @@ dependencies {
     compileOnly libs.unified_test_platform_launcher
 
     testImplementation libs.com.android.tools.fakeadbserver.fakeadbserver
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation libs.unified_test_platform_launcher
     testImplementation libs.mockito_core
     testImplementation libs.junit

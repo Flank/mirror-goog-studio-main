@@ -24,8 +24,16 @@ import com.android.utils.ILogger;
 
 public class WatchFace extends AppComponent {
 
-    static final String LAUNCH_COMMAND =
-            "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --ecn component";
+    public static class ShellCommand {
+        public static final String SHOW_WATCH_FACE =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SYSUI --es operation show-watchface";
+
+        public static final String SET_WATCH_FACE =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --ecn component "; // + componentName
+
+        public static final String UNSET_WATCH_FACE =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation unset-watchface";
+    }
 
     static final String DEBUG_COMMAND = "am set-debug-app -w";
 
@@ -71,6 +79,6 @@ public class WatchFace extends AppComponent {
 
     @NonNull
     private String getStartWatchFaceCommand() {
-        return LAUNCH_COMMAND + " " + getFQEscapedName();
+        return ShellCommand.SET_WATCH_FACE + getFQEscapedName();
     }
 }

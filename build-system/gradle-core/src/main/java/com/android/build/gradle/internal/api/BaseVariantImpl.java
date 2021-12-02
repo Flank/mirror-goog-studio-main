@@ -21,7 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.variant.ResValue;
+import com.android.build.api.variant.impl.ConfigurableFileTreeBasedDirectoryEntryImpl;
 import com.android.build.api.variant.impl.ResValueKeyImpl;
+import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -32,7 +34,7 @@ import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -58,6 +60,8 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
@@ -84,7 +88,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
             "https://d.android.com/r/tools/use-properties";
 
     @NonNull protected final ComponentImpl component;
-    @NonNull protected final BaseServices services;
+    @NonNull protected final VariantPropertiesApiServices services;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
 
@@ -92,7 +96,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     BaseVariantImpl(
             @NonNull ComponentImpl component,
-            @NonNull BaseServices services,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         this.component = component;
@@ -191,7 +195,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
         switch (folderType) {
             case JAVA:
-                return component.getJavaSources();
+                return component.getSources().getJava().getAsFileTrees$gradle_core().get();
             default:
                 services.getIssueReporter()
                         .reportError(
@@ -582,30 +586,59 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     @Override
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... sourceFolders) {
-        getVariantData().registerJavaGeneratingTask(task, Arrays.asList(sourceFolders));
+        registerJavaGeneratingTask(task, Arrays.asList(sourceFolders));
     }
 
     @Override
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders) {
-        getVariantData().registerJavaGeneratingTask(task, sourceFolders);
+
+        TaskProvider<?> taskProvider = task.getProject().getTasks().named(task.getName());
+        for (File file : sourceFolders) {
+            task.getOutputs().dir(file);
+        }
+        registerJavaGeneratingTask(taskProvider, sourceFolders);
     }
 
     @Override
     public void registerJavaGeneratingTask(
             @NonNull TaskProvider<? extends Task> taskProvider, @NonNull File... sourceFolders) {
-        getVariantData().registerJavaGeneratingTask(taskProvider, Arrays.asList(sourceFolders));
+        registerJavaGeneratingTask(taskProvider, Arrays.asList(sourceFolders));
     }
 
     @Override
     public void registerJavaGeneratingTask(
             @NonNull TaskProvider<? extends Task> taskProvider,
             @NonNull Collection<File> sourceFolders) {
+        // TODO : Find a better way to express this.
+        TaskFactoryUtils.dependsOn(component.getTaskContainer().sourceGenTask, taskProvider);
+        for (File sourceFolder : sourceFolders) {
+            DirectoryProperty directoryProperty = services.directoryProperty();
+            directoryProperty.set(sourceFolder);
+            Provider<Directory> mappedDirectory =
+                    taskProvider.map(_task -> directoryProperty.get());
+
+            component
+                    .getSources()
+                    .getJava()
+                    .addSource$gradle_core(
+                            new TaskProviderBasedDirectoryEntryImpl(
+                                    "legacy_" + taskProvider.getName(),
+                                    mappedDirectory,
+                                    true, /* isGenerated */
+                                    true, /*isUserProvidesd */
+                                    true /* shouldBeAddedToIdeModel */));
+        }
         getVariantData().registerJavaGeneratingTask(taskProvider, sourceFolders);
+
     }
 
     @Override
     public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
-        getVariantData().registerExternalAptJavaOutput(folder);
+        component
+                .getSources()
+                .getJava()
+                .addSource$gradle_core(
+                        new ConfigurableFileTreeBasedDirectoryEntryImpl("legacy_api_apt", folder));
     }
 
     @Override

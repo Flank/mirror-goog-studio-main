@@ -59,8 +59,7 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
     fun lazyInit() {
         renderscriptOptimLevel = 3
         isEmbedMicroApp = true
-        enableUnitTestCoverage = dslServices.projectInfo.getProject().pluginManager
-            .hasPlugin(JacocoPlugin.PLUGIN_EXTENSION_NAME)
+        enableUnitTestCoverage = dslServices.projectInfo.hasPlugin(JacocoPlugin.PLUGIN_EXTENSION_NAME)
     }
 
     /**

@@ -515,6 +515,7 @@ private fun ModelSnapshotter<LintOptions>.snapshotLintOptions() {
     item("warningsAsErrors", LintOptions::warningsAsErrors)
     item("checkTestSources", LintOptions::checkTestSources)
     item("ignoreTestSources", LintOptions::ignoreTestSources)
+    item("ignoreTestFixturesSources", LintOptions::ignoreTestFixturesSources)
     item("checkGeneratedSources", LintOptions::checkGeneratedSources)
     item("explainIssues", LintOptions::explainIssues)
     item("showAll", LintOptions::showAll)

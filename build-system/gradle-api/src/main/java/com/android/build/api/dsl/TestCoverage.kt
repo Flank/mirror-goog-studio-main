@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /** Settings related to the gathering of code-coverage data from tests */
 interface TestCoverage {
     /**

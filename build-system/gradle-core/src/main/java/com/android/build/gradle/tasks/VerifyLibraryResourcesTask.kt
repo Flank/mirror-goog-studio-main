@@ -252,10 +252,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            task.androidJarInput.compileSdkVersion.setDisallowChanges(
-                creationConfig.globalScope.extension.compileSdkVersion)
-            task.androidJarInput.buildToolsRevision.setDisallowChanges(
-                creationConfig.globalScope.extension.buildToolsRevision)
+            task.androidJarInput.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
+            task.androidJarInput.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
+
             if (creationConfig.services
                             .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
                 val sourceSetMap =

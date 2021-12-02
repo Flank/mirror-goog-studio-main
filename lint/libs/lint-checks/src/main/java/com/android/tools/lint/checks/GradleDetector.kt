@@ -1784,7 +1784,11 @@ open class GradleDetector : Detector(), GradleScanner {
             for (path in dependencies) {
                 val message = getBlockedDependencyMessage(path)
                 val projectDir = context.project.dir
-                val gc = LintModelMavenName.parse(path[0].artifactAddress)
+                val gc = path[0].findLibrary()?.let {
+                    if (it is LintModelExternalLibrary) {
+                        it.resolvedCoordinates
+                    } else null
+                }
                 val location = if (gc != null) {
                     getDependencyLocation(context, gc.groupId, gc.artifactId, gc.version)
                 } else {

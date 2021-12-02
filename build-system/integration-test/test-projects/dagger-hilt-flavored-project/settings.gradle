@@ -1,0 +1,15 @@
+pluginManagement { t ->
+    apply from: "../commonLocalRepo.gradle", to: t
+
+    resolutionStrategy {
+        eachPlugin {
+            if(requested.id.id == "dagger.hilt.android.plugin") {
+                useModule("com.google.dagger:hilt-android-gradle-plugin:2.40.1")//${requested.version}")
+            }
+        }
+    }
+}
+
+rootProject.name='Flavored Project'
+include ':app'
+include ':feature'

@@ -201,7 +201,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.PROCESSED_JAR
                     )
                 )
-                task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
+                task.bootClasspath.from(creationConfig.global.bootClasspath)
             }
 
             task.classpath.disallowChanges()

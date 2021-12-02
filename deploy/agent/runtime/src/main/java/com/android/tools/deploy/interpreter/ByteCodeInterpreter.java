@@ -31,10 +31,10 @@ import com.android.deploy.asm.Type;
 import com.android.deploy.asm.tree.AbstractInsnNode;
 import com.android.deploy.asm.tree.InsnList;
 import com.android.deploy.asm.tree.JumpInsnNode;
+import com.android.deploy.asm.tree.LineNumberNode;
 import com.android.deploy.asm.tree.MethodNode;
 import com.android.deploy.asm.tree.TryCatchBlockNode;
 import com.android.deploy.asm.tree.VarInsnNode;
-import com.android.deploy.asm.tree.analysis.AnalyzerException;
 import com.android.deploy.asm.tree.analysis.Frame;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,17 +44,21 @@ public class ByteCodeInterpreter {
 
     private AbstractInsnNode currentInsn;
     private final Eval eval;
-    private final MethodNode m;
+    private final InterpretedMethod im;
     private final OpcodeInterpreter interpreter;
     private final Frame<Value> frame;
     private final List<TryCatchBlockNode>[] handlers;
 
-    private ByteCodeInterpreter(
-            @NonNull MethodNode m, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
-        this.eval = eval;
-        this.m = m;
+    // If the interpreter calls a method, it will declare it here. This field is used for stacktrace
+    // cleaning.
+    private MethodDescription exitPoint = MethodDescription.EMPTY;
 
-        AbstractInsnNode firstInsn = m.instructions.getFirst();
+    private ByteCodeInterpreter(
+            @NonNull InterpretedMethod im, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
+        this.eval = eval;
+        this.im = im;
+
+        AbstractInsnNode firstInsn = im.getTarget().instructions.getFirst();
         if (firstInsn == null) {
             throw new IllegalArgumentException("Empty method");
         }
@@ -63,7 +67,7 @@ public class ByteCodeInterpreter {
 
         interpreter = new OpcodeInterpreter(eval, this);
         frame = new Frame<>(initialState);
-        handlers = computeHandlers(m);
+        handlers = computeHandlers(im.getTarget());
     }
 
     void goTo(@Nullable AbstractInsnNode nextInsn) {
@@ -75,9 +79,17 @@ public class ByteCodeInterpreter {
 
     @NonNull
     public static InterpreterResult interpreterLoop(
-            @NonNull MethodNode m, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
-        ByteCodeInterpreter bci = new ByteCodeInterpreter(m, initialState, eval);
-        return bci.doInterpret();
+            @NonNull InterpretedMethod method,
+            @NonNull Frame<Value> initialState,
+            @NonNull Eval eval) {
+        ByteCodeInterpreter bci = new ByteCodeInterpreter(method, initialState, eval);
+
+        try {
+            Houdini.startFrame(bci);
+            return bci.doInterpret();
+        } finally {
+            Houdini.endFrame();
+        }
     }
 
     @NonNull
@@ -117,6 +129,12 @@ public class ByteCodeInterpreter {
                         return new ValueReturned(Value.VOID_VALUE);
                     case ATHROW:
                         ObjectValue exceptionValue = (ObjectValue) getStackTop(frame);
+
+                        // Regardless if the exception is caught in this method or not, we must
+                        // clean it.
+                        Throwable cleaned = clear((Throwable) exceptionValue.getValue());
+                        exceptionValue.setValue(cleaned);
+
                         if (exceptionCaught(exceptionValue)) {
                             continue loop;
                         }
@@ -130,7 +148,7 @@ public class ByteCodeInterpreter {
 
                 try {
                     frame.execute(currentInsn, interpreter);
-                } catch (ThrownFromEvalExceptionBase e) {
+                } catch (InterpreterException e) {
                     if (e.getCause() == null) {
                         throw new NullPointerException("Exception without cause");
                     }
@@ -148,24 +166,44 @@ public class ByteCodeInterpreter {
                         exceptionType = ExceptionKind.FROM_EVALUATOR;
                     }
                     return new ExceptionThrown(exceptionValue, exceptionType);
-                } catch (ThrownFromEvaluatedCodeException e) {
-                    if (exceptionCaught(e.getException())) {
-                        continue loop;
-                    }
-                    return new ExceptionThrown(e.getException(), ExceptionKind.FROM_EVALUATED_CODE);
+                } catch (Exception e) {
+                    Throw.sneaky(clear(e));
                 }
                 goTo(currentInsn.getNext());
             }
         } catch (ResultException e) {
             return e.result;
-        } catch (AnalyzerException e) {
-            throw new IllegalStateException(e);
         }
+    }
+
+    public StackTraceElement createStackTraceElement() {
+        int line = getLineNumber();
+        String ownerName = im.getOwnerName();
+        String name = im.getName();
+        String filename = im.getFilename();
+        return new StackTraceElement(ownerName, name, filename, line);
+    }
+
+    private Throwable clear(Throwable t) {
+        return Houdini.clean(t);
+    }
+
+    private int getLineNumber() {
+        AbstractInsnNode cursor = currentInsn;
+        while (cursor.getPrevious() != null) {
+            AbstractInsnNode node = cursor.getPrevious();
+            if (node instanceof LineNumberNode) {
+                LineNumberNode lineNumberNode = (LineNumberNode) node;
+                return lineNumberNode.line;
+            }
+            cursor = cursor.getPrevious();
+        }
+        return -1;
     }
 
     private InterpreterResult computeReturn(int insnOpcode) {
         Value value = getStackTop(frame);
-        Type expectedType = Type.getReturnType(m.desc);
+        Type expectedType = Type.getReturnType(im.getTarget().desc);
         if (expectedType.getSort() == Type.OBJECT || expectedType.getSort() == Type.ARRAY) {
             Value coerced = value;
             if (!value.equals(Value.NULL_VALUE) && value.asmType.equals(expectedType)) {
@@ -234,7 +272,8 @@ public class ByteCodeInterpreter {
 
     boolean exceptionCaught(
             @NonNull Value exceptionValue, @NonNull Function<Type, Boolean> instanceOf) {
-        List<TryCatchBlockNode> catchBlocks = handlers[m.instructions.indexOf(currentInsn)];
+        List<TryCatchBlockNode> catchBlocks =
+                handlers[im.getTarget().instructions.indexOf(currentInsn)];
         if (catchBlocks == null) {
             catchBlocks = new ArrayList<>();
         }
@@ -279,7 +318,15 @@ public class ByteCodeInterpreter {
                 });
     }
 
-    static class ExceptionThrown implements InterpreterResult {
+    void setExitPoint(MethodDescription method) {
+        this.exitPoint = method;
+    }
+
+    public MethodDescription getExitPoint() {
+        return exitPoint;
+    }
+
+    public static class ExceptionThrown implements InterpreterResult {
 
         private final ObjectValue exception;
         private final ExceptionKind kind;
@@ -290,7 +337,7 @@ public class ByteCodeInterpreter {
         }
 
         @NonNull
-        ObjectValue getException() {
+        public ObjectValue getException() {
             return exception;
         }
 
@@ -306,19 +353,7 @@ public class ByteCodeInterpreter {
         BROKEN_CODE
     }
 
-    abstract static class ThrownFromEvalExceptionBase extends RuntimeException {
-
-        protected ThrownFromEvalExceptionBase(@NonNull Throwable cause) {
-            super(cause);
-        }
-
-        @Override
-        public String toString() {
-            return "Thrown by evaluator: " + getCause();
-        }
-    }
-
-    static class BrokenCode extends ThrownFromEvalExceptionBase {
+    static class BrokenCode extends InterpreterException {
         BrokenCode(@NonNull Throwable cause) {
             super(cause);
         }

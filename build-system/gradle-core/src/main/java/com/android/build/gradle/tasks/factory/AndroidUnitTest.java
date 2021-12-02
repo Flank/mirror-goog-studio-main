@@ -24,19 +24,18 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.gradle.BaseExtension;
+import com.android.build.api.dsl.TestOptions;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.dsl.TestOptions.UnitTestOptions;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
@@ -154,14 +153,12 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
+            boolean jacocoArtifactTransform = unitTestCreationConfig.getServices()
+                    .getProjectOptions().get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION);
 
             unitTestCreationConfig.onTestedConfig(
                     testedConfig -> {
                         if (unitTestCreationConfig.isTestCoverageEnabled()) {
-                            // Library project runtime classes are instrumented by Jacoco offline
-                            // instrumentation in artifact transforms, therefore offline
-                            // instrumented classes are excluded from being re-instrumented by the
-                            // Jacoco agent.
                             task.getProject()
                                     .getPlugins()
                                     .withType(
@@ -171,7 +168,18 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                         task.getExtensions()
                                                                 .findByType(
                                                                         JacocoTaskExtension.class);
-                                                if (testedConfig.getVariantType().isAar()) {
+                                                // The previous method of Jacoco offline
+                                                // instrumenting library classes i.e. by a task
+                                                // replacing source classes with instrumented
+                                                // classes. This meant that library classes needed
+                                                // to be excluded from the input classes to the
+                                                // JacocoPlugin, as the code was already
+                                                // instrumented. This case will be supported until
+                                                // legacy transforms are removed as they are not
+                                                // supported in the current artifact transform
+                                                // based instrumentation.
+                                                if (testedConfig.getVariantType().isAar()
+                                                        && !jacocoArtifactTransform) {
                                                     jacocoTaskExtension.setExcludes(
                                                             Collections.singletonList("*"));
                                                 }
@@ -183,13 +191,12 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                         return null;
                     });
 
-            GlobalScope globalScope = creationConfig.getGlobalScope();
-            BaseExtension extension = globalScope.getExtension();
-
             VariantCreationConfig testedVariant = creationConfig.getTestedConfig();
 
+            TestOptions testOptions = creationConfig.getGlobal().getTestOptions();
+
             boolean includeAndroidResources =
-                    extension.getTestOptions().getUnitTests().isIncludeAndroidResources();
+                    testOptions.getUnitTests().isIncludeAndroidResources();
 
             ProjectOptions configOptions = creationConfig.getServices().getProjectOptions();
             boolean useRelativePathInTestConfig = configOptions
@@ -236,7 +243,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                             creationConfig.getServices().getProjectInfo().getTestReportFolder(),
                             task.getName()));
 
-            extension.getTestOptions().getUnitTests().applyConfiguration(task);
+            ((UnitTestOptions) testOptions.getUnitTests()).applyConfiguration(task);
 
             // The task is not yet cacheable when includeAndroidResources=true and
             // android.testConfig.useRelativePath=false (bug 115873047). We set it explicitly here
@@ -263,7 +270,6 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @NonNull
         private ConfigurableFileCollection computeClasspath(
                 ComponentCreationConfig creationConfig, boolean includeAndroidResources) {
-            GlobalScope globalScope = creationConfig.getGlobalScope();
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
 
             ConfigurableFileCollection collection = creationConfig.getServices().fileCollection();
@@ -291,22 +297,16 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             // 4. The separately compile R class, if applicable.
             if (creationConfig.getBuildFeatures().getAndroidResources()
-                    && !creationConfig
-                            .getServices()
-                            .getProjectInfo()
-                            .getExtension()
-                            .getAaptOptions()
-                            .getNamespaced()) {
+                    && !creationConfig.getGlobal().getNamespacedAndroidResources()) {
                 collection.from(creationConfig.getVariantScope().getRJarForUnitTests());
             }
 
             // 5. Any additional or requested optional libraries
-            collection.from(
-                    getAdditionalAndRequestedOptionalLibraries(creationConfig.getGlobalScope()));
+            collection.from(getAdditionalAndRequestedOptionalLibraries());
 
             // 6. Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(creationConfig.getGlobalScope().getMockableJarArtifact());
+            collection.from(creationConfig.getGlobal().getMockableJarArtifact());
 
             return collection;
         }
@@ -318,8 +318,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
          *     filtered boot classpath
          */
         @NonNull
-        private ConfigurableFileCollection getAdditionalAndRequestedOptionalLibraries(
-                GlobalScope globalScope) {
+        private ConfigurableFileCollection getAdditionalAndRequestedOptionalLibraries() {
             return creationConfig
                     .getServices()
                     .fileCollection(
@@ -327,7 +326,10 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                     () -> {
                                         SdkComponentsBuildService.VersionedSdkLoader
                                                 versionedSdkLoader =
-                                                        globalScope.getVersionedSdkLoader().get();
+                                                        creationConfig
+                                                                .getGlobal()
+                                                                .getVersionedSdkLoader()
+                                                                .get();
                                         return BootClasspathBuilder.INSTANCE
                                                 .computeAdditionalAndRequestedOptionalLibraries(
                                                         creationConfig
@@ -348,8 +350,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                                 .get(),
                                                         false,
                                                         ImmutableList.copyOf(
-                                                                globalScope
-                                                                        .getExtension()
+                                                                creationConfig
+                                                                        .getGlobal()
                                                                         .getLibraryRequests()),
                                                         creationConfig
                                                                 .getServices()

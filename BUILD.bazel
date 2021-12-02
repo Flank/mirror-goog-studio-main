@@ -43,7 +43,6 @@ maven_repository(
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:net.sf.proguard.proguard-gradle",
         "@maven//:nl.jqno.equalsverifier.equalsverifier",
-        "@maven//:org.antlr.antlr4",
         "@maven//:org.apache.commons.commons-compress",
         "@maven//:org.apache.httpcomponents.httpmime",
         "@maven//:org.apache.maven.maven-aether-provider",
@@ -70,8 +69,10 @@ maven_repository(
         "@maven//:xerces.xercesImpl",
     ],
     visibility = [
+        "//tools/adt/idea/project-system-gradle-psd:__pkg__",
         "//tools/base/bazel/test/gradle:__pkg__",
         "//tools/base/build-system:__pkg__",
+        "//tools/base/build-system/integration-test:__subpackages__",
     ],
 )
 
@@ -94,6 +95,7 @@ AGP_ARTIFACTS = [
     "//tools/base/repository:tools.repository",
     "//tools/base/sdk-common:tools.sdk-common",
     "//tools/base/sdklib:tools.sdklib",
+    "//tools/base/signflinger",
     "//tools/base/zipflinger",
     "//tools/data-binding:tools.baseLibrary",
     "//tools/data-binding:tools.baseLibrarySupport",
@@ -105,8 +107,10 @@ maven_repository(
     artifacts = AGP_ARTIFACTS,
     include_transitive_deps = False,
     visibility = [
+        "//tools/adt/idea/project-system-gradle-psd:__pkg__",
         "//tools/base/bazel/test/gradle:__pkg__",
         "//tools/base/build-system:__pkg__",
+        "//tools/base/build-system/integration-test:__subpackages__",
         "//tools/base/gmaven:__pkg__",
     ],
 )
@@ -125,6 +129,7 @@ AGP_TEST_ARTIFACTS = [
     "//tools/base/lint/libs/lint-tests",  # TODO(b/143864616): Only used for tests
     "//tools/data-binding:tools.compiler",  # TODO(b/143864616): Only used for data binding runtime & tests
     "//tools/base/fakeadbserver:tools.fakeadbserver",  # TODO(b/143864616): Only used for tests
+    "//tools/base/testutils:tools.testutils",  # TODO(b/143864616): Only used for tests
 ]
 
 # Test only dependencies that are not published to gmaven,

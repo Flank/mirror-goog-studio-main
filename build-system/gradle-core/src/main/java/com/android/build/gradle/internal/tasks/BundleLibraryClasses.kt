@@ -53,6 +53,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
@@ -126,8 +127,15 @@ private fun BundleLibraryClassesInputs.configureWorkerActionParams(
     params.jarCreatorType.set(jarCreatorType)
 }
 
-/** Bundles all library classes to a directory. */
-@CacheableTask
+/**
+ * Bundles all library classes to a directory.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input files are copied, unchanged, to an Output directory.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClassesInputs {
 
     @get:OutputDirectory
@@ -183,8 +191,15 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
     }
 }
 
-/** Bundles all library classes to a jar. */
-@CacheableTask
+/**
+ * Bundles all library classes to a jar.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Input files are collected, unchanged, into a new Jar file.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClassesInputs {
 
     @get:OutputFile

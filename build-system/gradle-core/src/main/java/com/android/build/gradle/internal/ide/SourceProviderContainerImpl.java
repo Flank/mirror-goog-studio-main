@@ -78,8 +78,7 @@ final class SourceProviderContainerImpl implements SourceProviderContainer, Seri
     static SourceProviderContainer create(
             @NonNull String name,
             @NonNull SourceProvider sourceProvider) {
-        return new SourceProviderContainerImpl(name,
-                new SourceProviderImpl(sourceProvider));
+        return new SourceProviderContainerImpl(name, new SourceProviderImpl(sourceProvider));
     }
 
     private SourceProviderContainerImpl(@NonNull String name,

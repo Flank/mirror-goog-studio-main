@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c52d5d9fc4a142ab087fdfe039fc21fbe8791fec7133743cb738af4e33205503
+84f885356bcb08817f3f983ea7c490935b0a6891dbd56ab69cef53472d6f2cd0
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -420,7 +420,10 @@ com.android.build.api.variant.Component.getArtifacts: com.android.build.api.arti
 com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
 com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.ComponentBuilder implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.ComponentBuilder$DefaultImpls
+com.android.build.api.variant.ComponentBuilder.getEnable: boolean ()
 com.android.build.api.variant.ComponentBuilder.getEnabled: boolean ()
+com.android.build.api.variant.ComponentBuilder.setEnable: void (boolean)
 com.android.build.api.variant.ComponentBuilder.setEnabled: void (boolean)
 com.android.build.api.variant.ComponentIdentity
 com.android.build.api.variant.ComponentIdentity.getBuildType: java.lang.String ()

@@ -64,16 +64,6 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
     public void updateAnnotationRoots(
             @NonNull LintClient client, @Nullable IAndroidTarget target, boolean nonAndroid) {
         Collection<Project> projects = client.getKnownProjects();
-        if (Project.isAospBuildEnvironment()) {
-            for (Project project : projects) {
-                // If we are dealing with the AOSP frameworks project, we explicitly
-                // set the external annotations manager to be a no-op.
-                if (Project.isAospFrameworksProject(project.getDir())) {
-                    return;
-                }
-            }
-        }
-
         File sdkAnnotations = findSdkAnnotations(client, target, nonAndroid);
         List<File> libraryAnnotations = client.getExternalAnnotations(projects);
         updateAnnotationRoots(sdkAnnotations, libraryAnnotations);

@@ -47,7 +47,7 @@ class GenerateResValuesTest {
         task.items.put(
             ResValueKeyImpl("string", "VALUE_DEFAULT"), ResValue("1")
         )
-        task.resOutputDir = testDir
+        task.outputDirectory.set(testDir)
         task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()

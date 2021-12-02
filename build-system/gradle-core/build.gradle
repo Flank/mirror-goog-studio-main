@@ -175,6 +175,7 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation libs.truth
+    testImplementation libs.truth_java8_extension
     testImplementation libs.kotlin_test
     testImplementation libs.mockito_core
     testImplementation libs.guava
@@ -182,7 +183,7 @@ dependencies {
     testImplementation libs.jimfs
     testImplementation libs.equalsverifier
     testImplementation project(':base:project-test-lib')
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
     testImplementation 'org.jetbrains:annotations:13.0'
     testImplementation libs.bouncycastle_prov
     testImplementation libs.jsoup

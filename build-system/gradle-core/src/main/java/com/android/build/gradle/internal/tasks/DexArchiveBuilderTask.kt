@@ -400,7 +400,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 mixedScopeClasses = creationConfig.services.fileCollection(
                     creationConfig.artifacts.get(
                         InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES),
-                    creationConfig.services.projectInfo.getProject().files(
+                    creationConfig.services.fileCollection(
                         creationConfig.artifacts.get(
                             InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS
                         )
@@ -582,7 +582,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             val libraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled
             if (languageDesugaringNeeded || libraryDesugaring) {
                 task.dexParams.desugarBootclasspath
-                        .from(creationConfig.globalScope.filteredBootClasspath)
+                        .from(creationConfig.global.filteredBootClasspath)
             }
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))

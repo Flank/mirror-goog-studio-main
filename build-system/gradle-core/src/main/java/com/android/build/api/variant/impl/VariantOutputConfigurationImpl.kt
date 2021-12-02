@@ -50,7 +50,7 @@ data class VariantOutputConfigurationImpl(
             : FilterConfiguration? = filters.firstOrNull { it.filterType == type }
 }
 
-fun VariantOutputConfiguration.baseName(variantDslInfo: VariantDslInfo<*>): String =
+fun VariantOutputConfiguration.baseName(variantDslInfo: VariantDslInfo): String =
         when(this.outputType) {
             OutputType.SINGLE -> variantDslInfo.baseName
             OutputType.UNIVERSAL -> variantDslInfo.computeBaseNameWithSplits(
@@ -71,7 +71,7 @@ fun VariantOutputConfiguration.dirName(): String {
     }
 }
 
-fun VariantOutputConfiguration.fullName(variantDslInfo: VariantDslInfo<*>): String {
+fun VariantOutputConfiguration.fullName(variantDslInfo: VariantDslInfo): String {
     return when (this.outputType) {
         OutputType.UNIVERSAL ->
             variantDslInfo.computeFullNameWithSplits(

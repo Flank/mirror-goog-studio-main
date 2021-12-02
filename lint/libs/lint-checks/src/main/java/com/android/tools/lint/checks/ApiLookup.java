@@ -178,21 +178,6 @@ public class ApiLookup extends ApiDatabase {
                             versionKey = "old-30.0.5"; // platform-versions
                         }
 
-                        if (file == null) {
-                            // AOSP build environment?
-                            String build = System.getenv("ANDROID_BUILD_TOP");
-                            if (build != null) {
-                                database =
-                                        new File(
-                                                build,
-                                                "development/sdk/api-versions.xml"
-                                                        .replace('/', File.separatorChar));
-                                if (database.exists()) {
-                                    file = database;
-                                }
-                            }
-                        }
-
                         // Fallback for compatibility reasons; metalava for example
                         // locates the file by providing a custom lint client which
                         // overrides findResource to point to the right file

@@ -931,8 +931,8 @@ fun getFileUri(file: File): String {
  *
  * @param client the client to use for I/O operations
  * @param file the file to read from
- * @param createString If true, create a [String] instead of a general [
- *     ]
+ * @param createString If true, create a [String] instead of a general
+ *     [CharSequence]
  * @return the string
  */
 @Throws(IOException::class)

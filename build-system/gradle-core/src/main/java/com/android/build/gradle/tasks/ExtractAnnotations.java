@@ -30,7 +30,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.lint.LintTool;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
@@ -48,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -367,13 +365,8 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getStrictTypedefRetention(), strictTypedefRetention);
 
-            task.source(creationConfig.getJavaSources());
-            task.setEncoding(
-                    creationConfig
-                            .getGlobalScope()
-                            .getExtension()
-                            .getCompileOptions()
-                            .getEncoding());
+            task.source(creationConfig.getSources().getJava().getAll());
+            task.setEncoding(creationConfig.getGlobal().getCompileOptions().getEncoding());
             task.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null);
 
             task.libraries =
@@ -381,19 +374,17 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             .getVariantDependencies()
                             .getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES_JAR);
 
-            GlobalScope globalScope = creationConfig.getGlobalScope();
-
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)
             task.setBootClasspath(
                     creationConfig
                             .getServices()
-                            .fileCollection(globalScope.getFilteredBootClasspath()));
+                            .fileCollection(creationConfig.getGlobal().getFilteredBootClasspath()));
 
             task.getLintTool().initialize(creationConfig.getServices());
             task.sourcesFileTree =
                     task.getProject()
-                            .files((Callable<List<Object>>) () -> task.sources)
+                            .files(creationConfig.getSources().getJava().getAll())
                             .getAsFileTree();
 
             HasConfigurableValuesKt.setDisallowChanges(

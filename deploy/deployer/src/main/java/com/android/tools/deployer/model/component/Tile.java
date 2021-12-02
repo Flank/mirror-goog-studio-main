@@ -24,8 +24,16 @@ import com.android.utils.ILogger;
 
 public class Tile extends AppComponent {
 
-    static final String LAUNCH_COMMAND =
-            "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation 'add-tile' --ecn component";
+    public static class ShellCommand {
+        public static String SET_TILE =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation 'add-tile' --ecn component "; // + component name
+
+        public static String UNSET_TILE =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation remove-tile --ecn component "; // + component name
+
+        public static String SHOW_TILE_COMMAND =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SYSUI --es operation show-tile --ei index "; // + index
+    }
 
     static final String DEBUG_COMMAND = "am set-debug-app -w";
 
@@ -71,6 +79,6 @@ public class Tile extends AppComponent {
 
     @NonNull
     private String getStartTileCommand() {
-        return String.format("%s %s", LAUNCH_COMMAND, getFQEscapedName());
+        return ShellCommand.SET_TILE + getFQEscapedName();
     }
 }

@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.tasks.DexingExternalLibArtifactTransfor
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -408,6 +409,56 @@ dependencies {
             .isEqualTo(projectTimestamp)
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).containsClass("Lcom/google/common/collect/ImmutableList;")
+    }
+
+    /** Regression test for b/205968564. */
+    @Test
+    fun testNameImpactsDexingTransformOutput() {
+        // Generate 2 identical libraries.
+        project.projectDir.resolve("mavenRepo").also {
+            it.mkdirs()
+            MavenRepoGenerator(
+                    listOf(
+                            MavenRepoGenerator.Library(
+                                    "com.example:lib:1.0",
+                                    TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/MyClass"))
+                            ),
+                            MavenRepoGenerator.Library(
+                                    "com.example:lib:2.0",
+                                    TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/MyClass"))
+                            )
+                    )
+            ).generate(it.toPath())
+        }
+        project.buildFile.appendText(
+                """
+
+repositories {
+    maven { url 'mavenRepo' }
+}
+dependencies {
+    implementation 'com.example:lib:1.0'
+}
+        """.trimIndent()
+        )
+        project.executor().run("mergeExtDexDebug")
+        val transformCacheDir = project.location.testLocation.gradleCacheDir
+        assertThat(transformCacheDir.walk()
+                .filter { it.invariantSeparatorsPath.endsWith("lib-1.0/classes.dex") }
+                .single()).exists()
+
+        project.buildFile.appendText(
+                """
+
+dependencies {
+    implementation 'com.example:lib:2.0'
+}
+        """.trimIndent()
+        )
+        project.executor().run("mergeExtDexDebug")
+        assertThat(transformCacheDir.walk()
+                .filter { it.invariantSeparatorsPath.endsWith("lib-2.0/classes.dex") }
+                .single()).exists()
     }
 
     private fun executor() =

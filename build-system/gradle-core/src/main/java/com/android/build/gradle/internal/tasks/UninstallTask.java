@@ -134,11 +134,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
             task.setDescription("Uninstalls the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
-                    creationConfig
-                            .getGlobalScope()
-                            .getExtension()
-                            .getAdbOptions()
-                            .getTimeOutInMs());
+                    creationConfig.getGlobal().getInstallationOptions().getTimeOutInMs());
 
             SdkComponentsKt.initialize(task.getBuildToolsExecutableInput(), creationConfig);
         }

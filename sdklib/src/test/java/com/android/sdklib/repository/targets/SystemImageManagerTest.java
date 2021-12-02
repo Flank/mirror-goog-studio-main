@@ -19,7 +19,6 @@ import static org.junit.Assert.assertArrayEquals;
 
 import com.android.annotations.NonNull;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.file.InMemoryFileSystems;
@@ -35,16 +34,15 @@ import junit.framework.TestCase;
 public class SystemImageManagerTest extends TestCase {
     // TODO: break up tests into separate cases
 
-
     public void testSystemImageManager() {
-        MockFileOp fop = new MockFileOp();
-        recordPlatform13(fop);
-        recordGoogleTvAddon13(fop);
-        recordGoogleApisSysImg23(fop);
-        recordSysImg23(fop);
-        recordGoogleApis13(fop);
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        recordPlatform13(sdkRoot);
+        recordGoogleTvAddon13(sdkRoot);
+        recordGoogleApisSysImg23(sdkRoot);
+        recordSysImg23(sdkRoot);
+        recordGoogleApis13(sdkRoot);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null);
+        AndroidSdkHandler handler = new AndroidSdkHandler(sdkRoot, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         SystemImageManager mgr =
@@ -57,25 +55,21 @@ public class SystemImageManagerTest extends TestCase {
         Iterator<SystemImage> resultIter = images.iterator();
 
         ISystemImage platform13 = resultIter.next();
-        verifyPlatform13(platform13, handler);
+        verifyPlatform13(platform13, sdkRoot);
         assertEquals(2, platform13.getSkins().length);
 
-        verifySysImg23(resultIter.next(), handler);
+        verifySysImg23(resultIter.next(), sdkRoot);
 
         ISystemImage google13 = resultIter.next();
         verifyGoogleAddon13(google13);
         assertEquals(2, google13.getSkins().length);
 
         ISystemImage google23 = resultIter.next();
-        verifyGoogleApisSysImg23(google23, handler);
+        verifyGoogleApisSysImg23(google23, sdkRoot);
 
         ISystemImage addon13 = resultIter.next();
-        verifyTvAddon13(addon13, handler);
+        verifyTvAddon13(addon13, sdkRoot);
         assertEquals("google_tv_addon", addon13.getTag().getId());
-    }
-
-    private @NonNull Path toPath(@NonNull String path, @NonNull AndroidSdkHandler sdkHandler) {
-        return sdkHandler.toCompatiblePath(InMemoryFileSystems.getPlatformSpecificPath(path));
     }
 
     private void verifyGoogleAddon13(ISystemImage img) {
@@ -83,59 +77,61 @@ public class SystemImageManagerTest extends TestCase {
         // the platform.
     }
 
-    private void verifyPlatform13(@NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
+    private void verifyPlatform13(@NonNull ISystemImage img, @NonNull Path sdkRoot) {
         assertEquals("armeabi", img.getAbiType());
         assertNull(img.getAddonVendor());
-        assertEquals(toPath("/sdk/platforms/android-13/images/", sdk), img.getLocation());
+        assertEquals(sdkRoot.resolve("platforms/android-13/images/"), img.getLocation());
         assertEquals("default", img.getTag().getId());
     }
 
-    private void verifyTvAddon13(@NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
+    private void verifyTvAddon13(@NonNull ISystemImage img, @NonNull Path sdkRoot) {
         assertEquals("x86", img.getAbiType());
         assertEquals("google", img.getAddonVendor().getId());
         assertEquals(
-                toPath("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/", sdk),
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/images/x86/"),
                 img.getLocation());
     }
 
-    private void verifyGoogleApisSysImg23(
-            @NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
+    private void verifyGoogleApisSysImg23(@NonNull ISystemImage img, @NonNull Path sdkRoot) {
         assertEquals("x86_64", img.getAbiType());
         assertEquals("google", img.getAddonVendor().getId());
         assertEquals(
-                toPath("/sdk/system-images/android-23/google_apis/x86_64/", sdk),
-                img.getLocation());
+                sdkRoot.resolve("system-images/android-23/google_apis/x86_64/"), img.getLocation());
         assertEquals("google_apis", img.getTag().getId());
     }
 
-    private void verifySysImg23(@NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
+    private void verifySysImg23(@NonNull ISystemImage img, @NonNull Path sdkRoot) {
         assertEquals("x86", img.getAbiType());
         assertNull(img.getAddonVendor());
-        assertEquals(
-                toPath("/sdk/system-images/android-23/default/x86/", sdk),
-                img.getLocation());
+        assertEquals(sdkRoot.resolve("system-images/android-23/default/x86/"), img.getLocation());
         assertEquals(2, img.getSkins().length);
         assertArrayEquals(
                 new Path[] {
-                    toPath("/sdk/system-images/android-23/default/x86/skins/res1/", sdk),
-                    toPath("/sdk/system-images/android-23/default/x86/skins/res2/", sdk)
+                    sdkRoot.resolve("system-images/android-23/default/x86/skins/res1/"),
+                    sdkRoot.resolve("system-images/android-23/default/x86/skins/res2/")
                 },
                 img.getSkins());
         assertEquals("default", img.getTag().getId());
     }
 
-    private static void recordPlatform13(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/platforms/android-13/images/system.img");
+    private static void recordPlatform13(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/images/system.img"));
 
-        fop.recordExistingFile("/sdk/platforms/android-13/android.jar");
-        fop.recordExistingFile("/sdk/platforms/android-13/framework.aidl");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/HVGA/layout");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/sample.txt");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/WVGA800/layout");
-        fop.recordExistingFile("/sdk/platforms/android-13/sdk.properties",
-                               "sdk.ant.templates.revision=1\n" +
-                               "sdk.skin.default=WXGA\n");
-        fop.recordExistingFile("/sdk/platforms/android-13/package.xml",
+        InMemoryFileSystems.recordExistingFile(sdkRoot.resolve("platforms/android-13/android.jar"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/framework.aidl"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/skins/HVGA/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/skins/sample.txt"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/skins/WVGA800/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/sdk.properties"),
+                "sdk.ant.templates.revision=1\n" + "sdk.skin.default=WXGA\n");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("platforms/android-13/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -153,8 +149,9 @@ public class SystemImageManagerTest extends TestCase {
                         + "</dependency></dependencies></localPackage></ns2:sdk-repository>");
     }
 
-    private static void recordGoogleTvAddon13(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/package.xml",
+    private static void recordGoogleTvAddon13(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns5:sdk-addon xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
                         + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
@@ -173,19 +170,29 @@ public class SystemImageManagerTest extends TestCase {
                         + "<display-name>Google TV Addon, Android 13</display-name>"
                         + "<uses-license ref=\"license-A06C75BE\"/></localPackage>"
                         + "</ns5:sdk-addon>\n");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p/layout");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/sample.txt");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan/layout");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/system.img");
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/skins/1080p/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/skins/sample.txt"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve(
+                        "add-ons/addon-google_tv_addon-google-13/skins/720p-overscan/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_tv_addon-google-13/images/x86/system.img"));
     }
 
-    private static void recordSysImg23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/sample");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res2/layout");
+    private static void recordSysImg23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/default/x86/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/default/x86/skins/res1/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/default/x86/skins/sample"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/default/x86/skins/res2/layout"));
 
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/package.xml",
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/default/x86/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -204,10 +211,12 @@ public class SystemImageManagerTest extends TestCase {
                         + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordGoogleApisSysImg23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/system.img");
+    private static void recordGoogleApisSysImg23(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/google_apis/x86_64/system.img"));
 
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/package.xml",
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("system-images/android-23/google_apis/x86_64/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -228,9 +237,11 @@ public class SystemImageManagerTest extends TestCase {
                         + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordGoogleApis13(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-13/images/system.img");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-13/package.xml",
+    private static void recordGoogleApis13(Path sdkRoot) {
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-13/images/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                sdkRoot.resolve("add-ons/addon-google_apis-google-13/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
                         + "<ns5:sdk-addon "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "

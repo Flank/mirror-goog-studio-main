@@ -17,7 +17,7 @@
 package com.android.fakeadbserver;
 
 import com.android.annotations.NonNull;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 public final class MdnsService {
@@ -26,19 +26,15 @@ public final class MdnsService {
 
     @NonNull private final String mServiceName;
 
-    @NonNull private final InetAddress mIpAddress;
-
-    private final int mPort;
+    @NonNull private final InetSocketAddress mDeviceAddress;
 
     public MdnsService(
             @NonNull String instanceName,
             @NonNull String serviceName,
-            @NonNull InetAddress ipAddress,
-            int port) {
+            @NonNull InetSocketAddress deviceAddress) {
         mInstanceName = instanceName;
         mServiceName = serviceName;
-        mIpAddress = ipAddress;
-        mPort = port;
+        mDeviceAddress = deviceAddress;
     }
 
     @NonNull
@@ -52,12 +48,8 @@ public final class MdnsService {
     }
 
     @NonNull
-    public InetAddress getIpAddress() {
-        return mIpAddress;
-    }
-
-    public int getPort() {
-        return mPort;
+    public InetSocketAddress getDeviceAddress() {
+        return mDeviceAddress;
     }
 
     @Override
@@ -67,12 +59,11 @@ public final class MdnsService {
         MdnsService state = (MdnsService) o;
         return mInstanceName.equals(state.mInstanceName)
                 && mServiceName.equals(state.mServiceName)
-                && mIpAddress.equals(state.mIpAddress)
-                && mPort == state.mPort;
+                && mDeviceAddress.equals(state.mDeviceAddress);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mInstanceName, mServiceName, mIpAddress, mPort);
+        return Objects.hash(mInstanceName, mServiceName, mDeviceAddress);
     }
 }

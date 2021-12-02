@@ -27,31 +27,62 @@ import java.util.List;
 /** This class searches the .class bytecode for a methodNode. */
 class MethodNodeFinder extends ClassVisitor {
     private MethodNode target = null;
-    private final String targetName;
+    private String filename = null;
+    private final String methodName;
+    private final String methodDesc;
+    private String ownerInternalName;
     private final List<String> visited = new ArrayList<>();
 
-    MethodNodeFinder(byte[] classData, String name) {
+    MethodNodeFinder(byte[] classData, String methodName, String methodDesc) {
         super(Opcodes.ASM6);
-        targetName = name;
+        this.methodName = methodName;
+        this.methodDesc = methodDesc;
         ClassReader reader = new ClassReader(classData);
         reader.accept(this, 0);
     }
 
     @Override
+    public void visit(
+            final int version,
+            final int access,
+            final String name,
+            final String signature,
+            final String superName,
+            final String[] interfaces) {
+        this.ownerInternalName = name;
+    }
+
+    @Override
     public MethodVisitor visitMethod(
             int access, String name, String desc, String signature, String[] exceptions) {
-        String prospect = name + desc;
-        visited.add(prospect);
+        visited.add(name + desc);
 
-        if (!targetName.equals(prospect)) {
+        if (!methodName.equals(name) || !methodDesc.equals(desc)) {
             return null;
         }
         target = new TryCatchBlockSorter(null, access, name, desc, signature, exceptions);
         return target;
     }
 
+    @Override
+    public void visitSource(String source, String debug) {
+        this.filename = source;
+    }
+
+    public String getName() {
+        return methodName;
+    }
+
     public MethodNode getTarget() {
         return target;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public String getOwnerInternalName() {
+        return ownerInternalName;
     }
 
     List<String> getVisited() {

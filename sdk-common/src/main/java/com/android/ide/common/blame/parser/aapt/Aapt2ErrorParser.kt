@@ -101,8 +101,12 @@ class Aapt2ErrorParser(val identifiedSourceSetMap: Map<String, String> = emptyMa
             return if (!m.matches()) {
                 null
             } else {
-                val rawSourcePath =  getSourcePath(m)
-                val absoluteSourcePath = if (isRelativeSourceSetResource(rawSourcePath)) {
+                val rawSourcePath = getSourcePath(m)
+                // As rawSourcePath doesn't provide a relative resource filepath or a absolute
+                // filepath, the rawSourcePath must be parsed in the event it is a relative path.
+                val userReadableSourcePath = if (isRelativeSourceSetResource(rawSourcePath) &&
+                    sourceSetMap.any()
+                ) {
                     relativeResourcePathToAbsolutePath(rawSourcePath, sourceSetMap)
                 } else {
                     rawSourcePath
@@ -110,7 +114,7 @@ class Aapt2ErrorParser(val identifiedSourceSetMap: Map<String, String> = emptyMa
                 createMessage(
                         Message.Kind.ERROR,
                         getMessageText(m),
-                        absoluteSourcePath,
+                        userReadableSourcePath,
                         getLineNumber(m),
                         getColumnStart(m),
                         getColumnEnd(m),

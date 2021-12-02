@@ -16,15 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.test.AbstractTestDataImpl
-import com.android.build.gradle.internal.testing.utp.TEST_RESULT_PB_FILE_NAME
 import com.android.build.gradle.internal.testing.utp.UtpTestSuiteResultMerger
-import com.android.builder.core.BuilderConstants
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import java.io.File
 import org.gradle.api.file.ConfigurableFileCollection
@@ -70,8 +65,8 @@ abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncreme
 
     class CreationAction(
         creationConfig: VariantCreationConfig,
-        private val devices: List<ManagedVirtualDevice>,
-        private val testData: AbstractTestDataImpl,
+        private val deviceTestResultFiles: List<File>,
+        private val testResultOutputFile: File,
     ) : VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestResultAggregationTask,
             VariantCreationConfig>(creationConfig) {
@@ -87,47 +82,15 @@ abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncreme
                 .setInitialProvider(
                     taskProvider,
                     ManagedDeviceInstrumentationTestResultAggregationTask::outputTestResultProto)
-                .withName(TEST_RESULT_PB_FILE_NAME)
-                .atLocation(getResultsProtoDirectory(taskProvider.get(), null))
+                .withName(testResultOutputFile.name)
+                .atLocation(testResultOutputFile.parentFile.absolutePath)
                 .on(InternalArtifactType.MANAGED_DEVICE_ANDROID_TEST_MERGED_RESULTS_PROTO)
         }
 
         override fun configure(task: ManagedDeviceInstrumentationTestResultAggregationTask) {
             super.configure(task)
 
-            devices.forEach { device ->
-                task.inputTestResultProtos.from(
-                    File(getResultsProtoDirectory(task, device) + "/${TEST_RESULT_PB_FILE_NAME}")
-                )
-            }
-        }
-
-        /**
-         * Returns an absolete path to a directory that contains a test results proto
-         * for a given [device]. If the [device] is null, it returns a directory to store
-         * the top-level merged test results proto.
-         */
-        private fun getResultsProtoDirectory(
-            task: ManagedDeviceInstrumentationTestResultAggregationTask,
-            device: ManagedVirtualDevice?
-        ): String {
-            val extension = creationConfig.globalScope.extension
-            val resultsLocation =
-                extension.testOptions.resultsDir
-                    ?: "${task.project.buildDir}/${SdkConstants.FD_OUTPUTS}/${BuilderConstants.FD_ANDROID_RESULTS}"
-            val flavor: String? = testData.flavorName.get()
-            val flavorFolder = if (flavor.isNullOrEmpty()) "" else "${BuilderConstants.FD_FLAVORS}/$flavor"
-
-            return if (device == null) {
-                resultsLocation +
-                "/${BuilderConstants.MANAGED_DEVICE}" +
-                "/${flavorFolder}"
-            } else {
-                resultsLocation +
-                "/${BuilderConstants.MANAGED_DEVICE}" +
-                "/${device.name}" +
-                "/${flavorFolder}"
-            }
+            task.inputTestResultProtos.from(deviceTestResultFiles)
         }
     }
 }

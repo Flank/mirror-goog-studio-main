@@ -73,6 +73,7 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.util.EnumSet
 import java.util.Locale
+import kotlin.math.max
 
 /**
  * A special check which analyzes lint detectors themselves, looking for
@@ -728,15 +729,31 @@ class LintDetectorDetector : Detector(), UastScanner {
         private fun getStringLocation(
             argument: UExpression,
             string: String,
-            location: Location = context.getLocation(argument)
+            location: Location = context.getLocation(argument),
+            // a string where "|" represents the target position surrounded by additional
+            // string context; for example, in the string "hello world", if we're looking
+            // for the string "l" we might pick the very first "l" in "hello", but if we
+            // pass in the window "wor|ld" it will find the "l" in "world" instead.
+            window: String = ""
         ): Location {
             val start = location.start?.offset
                 ?: return location
             val end = location.end?.offset
                 ?: return location
-            val contents = context.getContents()
-            var index = contents?.indexOf(string, ignoreCase = false, startIndex = start)
-                ?: return location
+            val contents = context.getContents() ?: return location
+            var index = if (window.isNotEmpty()) {
+                val caret = window.indexOf('|')
+                assert(caret != -1)
+                val match = window.substring(0, caret) + window.substring(caret + 1)
+                val i = contents.indexOf(match, ignoreCase = false, startIndex = start)
+                if (i == -1) {
+                    return location
+                } else {
+                    i + caret
+                }
+            } else {
+                contents.indexOf(string, ignoreCase = false, startIndex = start)
+            }
             return if (index != -1) {
                 if (index > end) {
                     // Look for earlier occurrence too. We're seeking the string in the given
@@ -940,6 +957,22 @@ class LintDetectorDetector : Detector(), UastScanner {
             return ""
         }
 
+        private fun isInCodeFragment(s: String, index: Int): Boolean {
+            var escaped = false
+            var code = false
+            for (i in 0 until index) {
+                val c = s[i]
+                if (escaped) {
+                    escaped = false
+                } else if (c == '`') {
+                    code = !code // also works for preformatted text since ``` is an odd number of backticks
+                } else if (c == '\\') {
+                    escaped = true
+                }
+            }
+            return code
+        }
+
         private fun checkTypos(argument: UExpression, string: String) {
             var start = 0
             val length = string.length
@@ -948,6 +981,21 @@ class LintDetectorDetector : Detector(), UastScanner {
             while (true) {
                 // Find beginning of next word
                 while (index < length && !string[index].isLetter()) {
+                    if (string[index] == '?' && index > 0 && string[index - 1] == ' ' && !isInCodeFragment(string, index)) {
+                        // warn about ? in error messages separated by a space,
+                        // but make sure code fragments ('foo ?: bar', `x = '?'`, ...) is ok.
+                        val fallback = context.getLocation(argument)
+                        // 5: arbitrarily chosen prefix; long enough to make ? likely to be found uniquely and short enough
+                        // to usually match when strings are broken up into segments, since we search in source code (like
+                        // x = "is " + price + " too expensive ?" -- we'll be searching the string "is too expensive ?"; if the
+                        // window was the whole concatenated string it would not match the sources.
+                        val window = string.substring(max(0, index - 5), index) + "|?"
+                        val location = getStringLocation(
+                            argument, "?", fallback, window
+                        )
+                        context.report(TEXT_FORMAT, argument, location, "Question marks should not be separated by a space")
+                    }
+
                     index++
                 }
                 start = index
@@ -1084,7 +1132,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 }
                 "\"$word\" is usually capitalized as \"$first\""
             } else {
-                "\"$word\" is a common misspelling; did you mean $sb ?"
+                "\"$word\" is a common misspelling; did you mean $sb?"
             }
             context.report(TEXT_FORMAT, argument, location, message, if (canFix) fix else null)
         }

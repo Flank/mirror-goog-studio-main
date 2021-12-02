@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.lint;
 
+import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -63,6 +64,13 @@ public class LintKotlinTest {
         }
         assertThat(exception.getMessage())
                 .contains("Lint found errors in the project; aborting build");
+
+        assertThat(result.getStdout()).contains("Lint found 9 errors, 4 warnings. First failure:");
+        assertThat(result.getStdout())
+                .contains(
+                        "AndroidManifest.xml:6: Error: Class referenced "
+                                + "in the manifest, com.example.android.lint.kotlin.MainActivity, "
+                                + "was not found in the project or the libraries [MissingClass]");
 
         File lintReport = project.file("app/lint-report.xml");
         assertThat(lintReport)

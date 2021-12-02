@@ -113,4 +113,8 @@ abstract class AndroidComponentsExtensionImpl<
             }
         }
     }
+
+    override fun registerSourceType(name: String) {
+        variantApiOperations.sourceSetExtensions.add(name)
+    }
 }

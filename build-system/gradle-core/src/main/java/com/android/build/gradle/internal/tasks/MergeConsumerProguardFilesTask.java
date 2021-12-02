@@ -28,16 +28,22 @@ import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.work.DisableCachingByDefault;
 
-/** Configuration action for a merge-Proguard-files task. */
-@CacheableTask
+/**
+ * Configuration action for a merge-Proguard-files task.
+ *
+ * <p>Caching disabled by default for this task in line with behavior of parent class.
+ *
+ * @see MergeFileTask
+ */
+@DisableCachingByDefault
 public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
     private boolean isDynamicFeature;

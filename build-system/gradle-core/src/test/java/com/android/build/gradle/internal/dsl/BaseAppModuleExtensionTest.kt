@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -20,16 +19,15 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
-import com.android.build.gradle.internal.dsl.decorator.DslDecorator
 import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager
 import com.android.builder.core.VariantTypeImpl
 import com.google.common.truth.Truth.assertThat
@@ -67,7 +65,7 @@ class BaseAppModuleExtensionTest {
 
         appExtension = BaseAppModuleExtension(
             dslServices,
-            Mockito.mock(GlobalScope::class.java),
+            Mockito.mock(BootClasspathConfig::class.java),
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,
             variantInputModel.sourceSetManager,
             Mockito.mock(ExtraModelInfo::class.java),

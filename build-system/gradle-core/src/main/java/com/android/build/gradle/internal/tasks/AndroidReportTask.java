@@ -23,8 +23,8 @@ import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.ProjectInfo;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
@@ -160,19 +160,14 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
 
         public enum TaskKind { CONNECTED, DEVICE_PROVIDER }
 
-        private final GlobalScope scope;
+        @NonNull private final GlobalTaskCreationConfig creationConfig;
 
-        private final TaskKind taskKind;
-
-        private final ProjectInfo projectInfo;
+        @NonNull private final TaskKind taskKind;
 
         public CreationAction(
-                @NonNull GlobalScope scope,
-                @NonNull TaskKind taskKind,
-                @NonNull ProjectInfo projectInfo) {
-            this.scope = scope;
+                @NonNull GlobalTaskCreationConfig creationConfig, @NonNull TaskKind taskKind) {
+            this.creationConfig = creationConfig;
             this.taskKind = taskKind;
-            this.projectInfo = projectInfo;
         }
 
         @NonNull
@@ -190,12 +185,13 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
 
         @Override
         public void configure(@NonNull AndroidReportTask task) {
-
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setDescription((taskKind == TaskKind.CONNECTED) ?
                     "Installs and runs instrumentation tests for all flavors on connected devices.":
                     "Installs and runs instrumentation tests using all Device Providers.");
             task.setReportType(ReportType.MULTI_FLAVOR);
+
+            ProjectInfo projectInfo = creationConfig.getServices().getProjectInfo();
 
             final String defaultReportsDir =
                     projectInfo.getReportsDir().getAbsolutePath() + "/" + FD_ANDROID_TESTS;
@@ -211,16 +207,12 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
                             .provider(
                                     () -> {
                                         String dir =
-                                                scope.getExtension()
-                                                        .getTestOptions()
-                                                        .getResultsDir();
+                                                creationConfig.getTestOptions().getResultsDir();
                                         String rootLocation =
                                                 dir != null && !dir.isEmpty()
                                                         ? dir
                                                         : defaultResultsDir;
                                         return projectInfo
-                                                .getProject()
-                                                .getLayout()
                                                 .getProjectDirectory()
                                                 .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
                                     }));
@@ -230,17 +222,12 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
                     task.getProject()
                             .provider(
                                     () -> {
-                                        String dir =
-                                                scope.getExtension()
-                                                        .getTestOptions()
-                                                        .getReportDir();
+                                        String dir = creationConfig.getTestOptions().getReportDir();
                                         String rootLocation =
                                                 dir != null && !dir.isEmpty()
                                                         ? dir
                                                         : defaultReportsDir;
                                         return projectInfo
-                                                .getProject()
-                                                .getLayout()
                                                 .getProjectDirectory()
                                                 .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
                                     }));

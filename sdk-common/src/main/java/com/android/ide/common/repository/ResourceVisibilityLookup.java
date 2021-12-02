@@ -277,12 +277,9 @@ public abstract class ResourceVisibilityLookup {
             mPublic = computeVisibilityMap(publicResources);
             Multimap<String, ResourceType> all = null;
             //noinspection VariableNotUsedInsideIf
-            if (mPublic != null) {
-                try {
-                    all = readSymbolFile(allResources);
-                }
-                catch (IOException ignore) {
-                }
+            try {
+                all = readSymbolFile(allResources);
+            } catch (IOException ignore) {
             }
             mAll = all;
             mMapKey = mapKey;

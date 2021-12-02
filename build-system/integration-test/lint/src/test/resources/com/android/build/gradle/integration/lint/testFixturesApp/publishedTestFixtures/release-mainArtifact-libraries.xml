@@ -1,0 +1,21 @@
+<libraries>
+  <library
+      name="com.example.javaLib:javaLib:1.0@jar"
+      jars="${projectDir}/testrepo/com/example/javaLib/javaLib/1.0/javaLib-1.0.jar"
+      resolved="com.example.javaLib:javaLib:1.0"
+      provided="true"/>
+  <library
+      name="com.example.lib:lib:1.0@aar"
+      jars="${gradleCacheDir}/<digest>/transformed/lib-1.0/jars/classes.jar"
+      resolved="com.example.lib:lib:1.0"
+      provided="true"
+      folder="${gradleCacheDir}/<digest>/transformed/lib-1.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+</libraries>

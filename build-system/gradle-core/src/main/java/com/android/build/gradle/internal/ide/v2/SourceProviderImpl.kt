@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
+import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.v2.ide.SourceProvider
 import java.io.File
 import java.io.Serializable
@@ -35,7 +36,8 @@ data class SourceProviderImpl(
     override val assetsDirectories: Collection<File>?,
     override val jniLibsDirectories: Collection<File>,
     override val shadersDirectories: Collection<File>?,
-    override val mlModelsDirectories: Collection<File>?
+    override val mlModelsDirectories: Collection<File>?,
+    override val customDirectories: Collection<CustomSourceDirectory>?,
 ) : SourceProvider, Serializable {
     companion object {
         @JvmStatic

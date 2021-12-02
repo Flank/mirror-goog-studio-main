@@ -721,6 +721,9 @@ private class LintModelModuleWriter(
         if (lintOptions.ignoreTestSources) {
             printer.printAttribute("ignoreTestSources", VALUE_TRUE, indent)
         }
+        if (lintOptions.ignoreTestFixturesSources) {
+            printer.printAttribute("ignoreTestFixturesSources", VALUE_TRUE, indent)
+        }
         if (lintOptions.checkGeneratedSources) {
             printer.printAttribute("checkGeneratedSources", VALUE_TRUE, indent)
         }
@@ -979,7 +982,7 @@ private class LintModelDependenciesWriter(
         indent(indent)
         printer.print("<")
         printer.print(tag)
-        val roots = graph.roots.joinToString(separator = ",") { it.artifactAddress }
+        val roots = graph.roots.joinToString(separator = ",") { it.identifier }
         printer.printAttribute("roots", roots, indent)
         printer.println(">")
         for (item in graphItems) {
@@ -995,11 +998,11 @@ private class LintModelDependenciesWriter(
         item: LintModelDependency,
         map: MutableMap<String, LintModelDependency>
     ) {
-        if (map.containsKey(item.artifactAddress)) {
+        if (map.containsKey(item.identifier)) {
             return
         }
 
-        map[item.artifactAddress] = item
+        map[item.identifier] = item
 
         for (dependency in item.dependencies) {
             addDependencies(dependency, map)
@@ -1009,15 +1012,13 @@ private class LintModelDependenciesWriter(
     private fun writeDependency(library: LintModelDependency, indent: Int) {
         indent(indent)
         printer.print("<dependency")
-        printer.printName(library.artifactAddress, indent)
-        if (!library.artifactAddress.startsWith(library.artifactName)) {
-            printer.printAttribute("simpleName", library.artifactName, indent)
-        }
+        printer.printName(library.identifier, indent)
+        printer.printAttribute("simpleName", library.artifactName, indent)
         val requestedCoordinates = library.requestedCoordinates
-        if (requestedCoordinates != null && requestedCoordinates != library.artifactAddress) {
+        if (requestedCoordinates != null) {
             printer.printAttribute("requested", requestedCoordinates, indent)
         }
-        val roots = library.dependencies.joinToString(separator = ",") { it.artifactAddress }
+        val roots = library.dependencies.joinToString(separator = ",") { it.identifier }
         if (roots.isNotEmpty()) {
             printer.printAttribute("dependencies", roots, indent)
         }
@@ -1065,7 +1066,7 @@ private class LintModelLibrariesWriter(
     private fun writeLibrary(library: LintModelLibrary, indent: Int) {
         indent(indent)
         printer.print("<library")
-        printer.printName(library.artifactAddress, indent)
+        printer.printName(library.identifier, indent)
         if (library is LintModelExternalLibrary) {
             printer.printFiles("jars", library.jarFiles, indent)
             printer.printAttribute("resolved", library.resolvedCoordinates.toString(), indent)
@@ -1275,6 +1276,7 @@ private class LintModelModuleReader(
         val ignoreWarnings = getOptionalBoolean("ignoreWarnings", false)
         val warningsAsErrors = getOptionalBoolean("warningsAsErrors", false)
         val ignoreTestSources = getOptionalBoolean("ignoreTestSources", false)
+        val ignoreTestFixturesSources = getOptionalBoolean("ignoreTestFixturesSources", false)
         val checkGeneratedSources = getOptionalBoolean("checkGeneratedSources", false)
         val checkReleaseBuilds = getOptionalBoolean("checkReleaseBuilds", false)
         val explainIssues = getOptionalBoolean("explainIssues", false)
@@ -1318,6 +1320,7 @@ private class LintModelModuleReader(
             ignoreWarnings = ignoreWarnings,
             warningsAsErrors = warningsAsErrors,
             ignoreTestSources = ignoreTestSources,
+            ignoreTestFixturesSources = ignoreTestFixturesSources,
             checkGeneratedSources = checkGeneratedSources,
             checkReleaseBuilds = checkReleaseBuilds,
             explainIssues = explainIssues,
@@ -1801,7 +1804,7 @@ private class LintModelDependenciesReader(
                 when (parser.name) {
                     "dependency" -> {
                         val item = readGraphItem()
-                        allNodes[item.artifactAddress] = item
+                        allNodes[item.identifier] = item
                     }
                     else -> unexpectedTag()
                 }
@@ -1836,23 +1839,25 @@ private class LintModelDependenciesReader(
     private fun readGraphItem(): LazyLintModelDependency {
         expectTag("dependency")
 
-        val artifactAddress = getName()
+        val identifier = getName()
+        // if simpleName is not available, this means that the name contains the removed value artifactAddress as the name
+        // In that case, use the identifier to get it as it would have happened before
         val artifactName = getOptionalAttribute("simpleName") ?: run {
-            val index1 = artifactAddress.indexOf(':')
-            val index2 = artifactAddress.indexOf(':', index1 + 1)
+            val index1 = identifier.indexOf(':')
+            val index2 = identifier.indexOf(':', index1 + 1)
             if (index2 == -1) {
-                artifactAddress
+                identifier
             } else {
-                artifactAddress.substring(0, index2)
+                identifier.substring(0, index2)
             }
         }
-        val requestedCoordinates = getOptionalAttribute("requested") ?: artifactAddress
+        val requestedCoordinates = getOptionalAttribute("requested")
         val dependencyIds = getOptionalAttribute("dependencies") ?: ""
 
         finishTag("dependency")
         return LazyLintModelDependency(
+            identifier = identifier,
             artifactName = artifactName,
-            artifactAddress = artifactAddress,
             requestedCoordinates = requestedCoordinates,
             libraryResolver = libraryResolver,
             dependencyIds = dependencyIds
@@ -1888,7 +1893,7 @@ private class LintModelLibrariesReader(
                 when (parser.name) {
                     "library" -> {
                         val library = readLibrary()
-                        libraryResolverMap[library.artifactAddress] = library
+                        libraryResolverMap[library.identifier] = library
                     }
                     else -> unexpectedTag()
                 }
@@ -1905,7 +1910,7 @@ private class LintModelLibrariesReader(
         expectTag("library")
         var android = false
 
-        val artifactAddress = getName()
+        val identifier = getName()
         val jars = getFiles("jars")
         val project = getOptionalAttribute("project")
         val resolved = getOptionalAttribute("resolved")?.toMavenCoordinate()
@@ -1940,13 +1945,13 @@ private class LintModelLibrariesReader(
 
         return when {
             project != null -> DefaultLintModelModuleLibrary(
+                identifier = identifier,
                 projectPath = project,
-                artifactAddress = artifactAddress,
                 lintJar = lintJar,
                 provided = provided
             )
             android -> DefaultLintModelAndroidLibrary(
-                artifactAddress = artifactAddress,
+                identifier = identifier,
                 jarFiles = jars,
                 manifest = manifestFile!!,
                 folder = folder!!,
@@ -1961,7 +1966,7 @@ private class LintModelLibrariesReader(
                 resolvedCoordinates = resolved!!
             )
             else -> DefaultLintModelJavaLibrary(
-                artifactAddress = artifactAddress,
+                identifier = identifier,
                 jarFiles = jars,
                 provided = provided,
                 resolvedCoordinates = resolved!!
@@ -1977,14 +1982,14 @@ private class LintModelLibrariesReader(
  * to elements that have not been read in yet.)
  */
 private class LazyLintModelDependency(
+    identifier: String,
     artifactName: String,
-    artifactAddress: String,
     requestedCoordinates: String?,
     libraryResolver: LintModelLibraryResolver,
     val dependencyIds: String
 ) : DefaultLintModelDependency(
+    identifier = identifier,
     artifactName = artifactName,
-    artifactAddress = artifactAddress,
     requestedCoordinates = requestedCoordinates,
     dependencies = emptyList(),
     libraryResolver = libraryResolver

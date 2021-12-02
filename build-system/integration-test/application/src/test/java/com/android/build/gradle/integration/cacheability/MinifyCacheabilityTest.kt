@@ -52,25 +52,20 @@ class MinifyCacheabilityTest {
             ":preMinifiedBuild",
         ),
         FROM_CACHE to setOf(
-            ":checkMinifiedAarMetadata",
-            ":checkMinifiedDuplicateClasses",
             ":compileMinifiedJavaWithJavac",
             ":compressMinifiedAssets",
-            ":createMinifiedCompatibleScreenManifests",
             ":extractDeepLinksMinified",
             ":generateMinifiedBuildConfig",
             ":generateMinifiedResValues",
             ":jacocoMinified",
             ":javaPreCompileMinified",
             ":mergeMinifiedAssets",
-            ":mergeMinifiedGeneratedProguardFiles",
             ":mergeMinifiedJniLibFolders",
             ":mergeMinifiedShaders",
             ":minifyMinifiedWithR8",
             ":processMinifiedMainManifest",
             ":processMinifiedManifest",
             ":processMinifiedManifestForPackage",
-            ":validateSigningMinified",
 
         ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
@@ -80,12 +75,17 @@ class MinifyCacheabilityTest {
             }
         ),
         DID_WORK to setOf(
+            ":checkMinifiedAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
+            ":checkMinifiedDuplicateClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */
             ":createMinifiedApkListingFileRedirect",
+            ":createMinifiedCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
             ":extractProguardFiles",
             ":generateMinifiedJacocoPropertiesFile", /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
+            ":mergeMinifiedGeneratedProguardFiles", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction] */
             ":mergeMinifiedResources",
             ":packageMinified",
+            ":validateSigningMinified", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.ValidateSigningTask] */
             ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
             ":writeMinifiedSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
         ).plus(

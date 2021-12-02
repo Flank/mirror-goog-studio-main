@@ -7,6 +7,7 @@ com.android.build.api.AndroidPluginVersion.dev: com.android.build.api.AndroidPlu
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ASSETS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
+com.android.build.api.artifact.SingleArtifact$METADATA_LIBRARY_DEPENDENCIES_REPORT extends com.android.build.api.artifact.SingleArtifact implements com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.attributes.ProductFlavorAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr$Companion.of: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.ProductFlavorAttr> (java.lang.String)
 com.android.build.api.attributes.ProductFlavorAttr.of: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.ProductFlavorAttr> (java.lang.String)
@@ -227,6 +228,7 @@ com.android.build.api.dsl.Bundle.codeTransparency: void (kotlin.jvm.functions.Fu
 com.android.build.api.dsl.Bundle.deviceTier: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDeviceTier, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
 com.android.build.api.dsl.Bundle.getDeviceTier: com.android.build.api.dsl.BundleDeviceTier ()
+com.android.build.api.dsl.Bundle.getIntegrityConfigDir: org.gradle.api.file.DirectoryProperty ()
 com.android.build.api.dsl.Bundle.getStoreArchive: com.android.build.api.dsl.StoreArchive ()
 com.android.build.api.dsl.Bundle.storeArchive: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.StoreArchive, kotlin.Unit>)
 com.android.build.api.dsl.BundleAbi.getEnableSplit: java.lang.Boolean ()
@@ -450,6 +452,7 @@ com.android.build.api.dsl.Lint.getFatal: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.Lint.getHtmlOutput: java.io.File ()
 com.android.build.api.dsl.Lint.getHtmlReport: boolean ()
 com.android.build.api.dsl.Lint.getIgnore: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.Lint.getIgnoreTestFixturesSources: boolean ()
 com.android.build.api.dsl.Lint.getIgnoreTestSources: boolean ()
 com.android.build.api.dsl.Lint.getIgnoreWarnings: boolean ()
 com.android.build.api.dsl.Lint.getInformational: java.util.Set<java.lang.String> ()
@@ -476,6 +479,7 @@ com.android.build.api.dsl.Lint.setCheckTestSources: void (boolean)
 com.android.build.api.dsl.Lint.setExplainIssues: void (boolean)
 com.android.build.api.dsl.Lint.setHtmlOutput: void (java.io.File)
 com.android.build.api.dsl.Lint.setHtmlReport: void (boolean)
+com.android.build.api.dsl.Lint.setIgnoreTestFixturesSources: void (boolean)
 com.android.build.api.dsl.Lint.setIgnoreTestSources: void (boolean)
 com.android.build.api.dsl.Lint.setIgnoreWarnings: void (boolean)
 com.android.build.api.dsl.Lint.setLintConfig: void (java.io.File)
@@ -721,6 +725,7 @@ com.android.build.api.dsl.TestOptions.getManagedDevices: com.android.build.api.d
 com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getResultsDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()
+com.android.build.api.dsl.TestOptions.managedDevices: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ManagedDevices, kotlin.Unit>)
 com.android.build.api.dsl.TestOptions.setAnimationsDisabled: void (boolean)
 com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
@@ -774,6 +779,8 @@ com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.b
 com.android.build.api.variant.AarMetadata.getMinAgpVersion: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
+com.android.build.api.variant.AndroidComponentsExtension.registerSourceType: void (java.lang.String)
+com.android.build.api.variant.AndroidResources.getNoCompress: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.AnnotationProcessor
 com.android.build.api.variant.AnnotationProcessor.getArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.variant.AnnotationProcessor.getArguments: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
@@ -783,7 +790,9 @@ com.android.build.api.variant.BundleConfig
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.getInstrumentation: com.android.build.api.variant.Instrumentation ()
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
+com.android.build.api.variant.Component.getSources: com.android.build.api.variant.Sources ()
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder
 com.android.build.api.variant.DslExtension$Builder.<init>: com.android.build.api.variant.DslExtension$Builder (java.lang.String)
@@ -804,10 +813,21 @@ com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build
 com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
 com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)
+com.android.build.api.variant.Instrumentation
+com.android.build.api.variant.Instrumentation.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.Instrumentation.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
+com.android.build.api.variant.Instrumentation.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.JavaCompilation
 com.android.build.api.variant.JavaCompilation.getAnnotationProcessor: com.android.build.api.variant.AnnotationProcessor ()
 com.android.build.api.variant.LintLifecycleExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.SourceDirectories implements org.gradle.api.Named
+com.android.build.api.variant.SourceDirectories.add: void (org.gradle.api.tasks.TaskProvider<T>, kotlin.jvm.functions.Function1<? super T, ? extends org.gradle.api.provider.Provider<org.gradle.api.file.Directory>>)
+com.android.build.api.variant.SourceDirectories.addSrcDir: void (java.lang.String)
+com.android.build.api.variant.SourceDirectories.getAll: org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.Directory>> ()
+com.android.build.api.variant.Sources
+com.android.build.api.variant.Sources.getByName: com.android.build.api.variant.SourceDirectories (java.lang.String)
+com.android.build.api.variant.Sources.getJava: com.android.build.api.variant.SourceDirectories ()
 com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
 com.android.build.api.variant.TestFixtures.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()

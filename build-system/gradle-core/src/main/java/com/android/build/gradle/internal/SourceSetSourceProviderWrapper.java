@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.v2.CustomSourceDirectory;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -120,6 +121,12 @@ public class SourceSetSourceProviderWrapper implements SourceProvider {
     @NonNull
     @Override
     public Collection<File> getMlModelsDirectories() {
+        return ImmutableList.of();
+    }
+
+    @NotNull
+    @Override
+    public Collection<CustomSourceDirectory> getCustomDirectories() {
         return ImmutableList.of();
     }
 }

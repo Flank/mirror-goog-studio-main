@@ -24,20 +24,17 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.intellij.psi.PsiElement
+import com.android.tools.lint.detector.api.isBelow
 import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULiteralExpression
-import org.jetbrains.uast.UQualifiedReferenceExpression
-import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.USwitchClauseExpression
+import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.skipParenthesizedExprDown
-import org.jetbrains.uast.skipParenthesizedExprUp
-import org.jetbrains.uast.tryResolve
-import org.jetbrains.uast.util.isAssignment
 
 /**
  * Detector looking for suspicious combinations of intent.setData and
@@ -79,35 +76,6 @@ class IntentDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         constructor: PsiMethod
     ) {
-        var constructorStatement: UExpression? = null
-        var variable: PsiElement? = null
-        var block: UBlockExpression? = null
-        var p: UElement? = skipParenthesizedExprUp(node.uastParent)
-        while (p != null) {
-            if (p is UVariable) {
-                variable = p.psi
-            } else if (p.isAssignment()) {
-                variable = (p as UBinaryExpression).leftOperand.tryResolve()
-            }
-            val parent = skipParenthesizedExprUp(p.uastParent)
-            if (parent is UBlockExpression) {
-                block = parent
-                constructorStatement = p as? UExpression
-                break
-            }
-            p = parent
-        }
-
-        variable ?: return
-        constructorStatement ?: return
-        block ?: return
-
-        val statements = block.expressions
-        val start = statements.indexOf(constructorStatement)
-        if (start == -1) {
-            return
-        }
-
         var seenInConstructor = false
         var seenData: UElement? = null
         var seenType: UElement? = null
@@ -125,64 +93,64 @@ class IntentDetector : Detector(), SourceCodeScanner {
             }
         }
 
-        for (index in start + 1 until statements.size) {
-            val statement = statements[index].skipParenthesizedExprDown()
-            if (statement is UQualifiedReferenceExpression) {
-                val statementReceiver = statement.receiver.skipParenthesizedExprDown()?.tryResolve()
-                if (statementReceiver == variable) {
-                    val call = statement.selector.skipParenthesizedExprDown()
-                    if (call is UCallExpression) {
-                        val args = call.valueArguments
-                        if (args.size != 1) {
-                            continue
-                        }
-                        val arg = args[0].skipParenthesizedExprDown()
-                        if (arg is ULiteralExpression && arg.isNull) {
-                            continue
-                        }
+        val method = node.getParentOfType(UMethod::class.java) ?: return
+        val analyzer = object : DataFlowAnalyzer(listOf(node)) {
+            override fun receiver(call: UCallExpression) {
+                val args = call.valueArguments
+                if (args.size != 1) {
+                    return
+                }
+                val arg = args[0].skipParenthesizedExprDown()
+                if (arg is ULiteralExpression && arg.isNull) {
+                    return
+                }
 
-                        val name = call.methodName
-                        if (name == SET_DATA) {
-                            seenData = call
-                        } else if (name == SET_TYPE) {
-                            seenType = call
-                        } else {
-                            continue
-                        }
-                        if (seenData != null && seenType != null) {
-                            val prev = if (name == SET_DATA) {
-                                seenType
-                            } else {
-                                seenData
-                            }
+                val name = call.methodName
+                when (name) {
+                    SET_DATA -> seenData = call
+                    SET_TYPE -> seenType = call
+                    else -> return
+                }
 
-                            val prevDesc = if (seenInConstructor) {
-                                "setting URI in `Intent` constructor"
-                            } else {
-                                "calling `${(prev as? UCallExpression)?.methodName}`"
-                            }
-                            val data = if (name == SET_DATA) {
-                                "type"
-                            } else {
-                                "data"
-                            }
-                            val location = context.getLocation(call)
-                                .withSecondary(
-                                    context.getLocation(prev),
-                                    "Originally set here"
-                                )
-                            context.report(
-                                ISSUE,
-                                call,
-                                location,
-                                "Calling `$name` after $prevDesc will clear " +
-                                    "the $data: Call `setDataAndType` instead?",
-                                null
-                            )
-                        }
+                seenData ?: return
+                seenType ?: return
+
+                val dataParent = findParent(seenData)
+                val typeParent = findParent(seenType)
+                //noinspection LintImplPsiEquals
+                if (dataParent != typeParent) {
+                    return
+                } else if (dataParent is UIfExpression) {
+                    // Make sure they're both inside the same then clause or same else clause
+                    val parent = dataParent.thenExpression
+                    if (parent != null && seenData!!.isBelow(parent) != seenType!!.isBelow(parent)) {
+                        return
                     }
                 }
+
+                val prev = if (name == SET_DATA) seenType else seenData
+                val prevDesc = if (seenInConstructor) {
+                    "setting URI in `Intent` constructor"
+                } else {
+                    "calling `${(prev as? UCallExpression)?.methodName}`"
+                }
+                val data = if (name == SET_DATA) "type" else "data"
+                val location = context.getCallLocation(call, includeReceiver = false, includeArguments = true)
+                    .withSecondary(context.getLocation(prev), "Originally set here")
+                val message = "Calling `$name` after $prevDesc will clear the $data: Call `setDataAndType` instead?"
+                context.report(ISSUE, call, location, message, null)
+                seenData = null
+                seenType = null
+            }
+
+            private fun findParent(call: UElement?): UElement? {
+                call ?: return null
+                return call.getParentOfType(
+                    strict = true, UMethod::class.java, UBlockExpression::class.java,
+                    UIfExpression::class.java, USwitchClauseExpression::class.java
+                )
             }
         }
+        method.accept(analyzer)
     }
 }

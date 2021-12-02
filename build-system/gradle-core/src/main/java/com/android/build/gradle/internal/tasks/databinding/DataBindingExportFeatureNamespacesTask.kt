@@ -29,21 +29,27 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.SetProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.FileNotFoundException
 
 /**
  * This task collects the feature information and exports their namespaces into a file which can be
  * read by the DataBindingAnnotationProcessor.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The task reads a small number of files, parses the contents as JSON, and writes a new JSON file
+ * containing some of the same data.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class DataBindingExportFeatureNamespacesTask : NonIncrementalTask() {
     // where to keep the log of the task
     @get:OutputDirectory abstract val packageListOutFolder: DirectoryProperty

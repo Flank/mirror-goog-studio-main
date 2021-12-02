@@ -27,6 +27,7 @@ import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildServiceRegistry
 import java.io.File

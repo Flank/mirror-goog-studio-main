@@ -18,14 +18,15 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.api.variant.impl.SourcesImpl;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.v2.CustomSourceDirectory;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of SourceProvider that is serializable. Objects used in the DSL cannot be
@@ -56,6 +57,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
     @NonNull
     private final Collection<File> shaderDirs;
     @NonNull private final Collection<File> mlModelsDirs;
+    @NonNull private final Collection<CustomSourceDirectory> customDirectories;
 
     public SourceProviderImpl(@NonNull SourceProvider sourceProvider) {
         this.name = sourceProvider.getName();
@@ -70,6 +72,33 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.libsDirs = sourceProvider.getJniLibsDirectories();
         this.shaderDirs = sourceProvider.getShadersDirectories();
         this.mlModelsDirs = sourceProvider.getMlModelsDirectories();
+        this.customDirectories = sourceProvider.getCustomDirectories();
+    }
+
+    /**
+     * @param sourceProvider SourceProvider for DSL specified source folders.
+     * @param variantSources Variant's {@link com.android.build.api.variant.Sources} if available or
+     *     null if there is no variant attached to this instance.
+     */
+    public SourceProviderImpl(
+            @NonNull SourceProvider sourceProvider, @NonNull SourcesImpl variantSources) {
+        this.name = sourceProvider.getName();
+        this.manifestFile = sourceProvider.getManifestFile();
+        this.javaDirs =
+                variantSources
+                        .getJava()
+                        .variantSourcesForModel$gradle_core(
+                                directoryEntry -> directoryEntry.isUserAdded());
+        this.kotlinDirs = sourceProvider.getKotlinDirectories();
+        this.resourcesDirs = sourceProvider.getResourcesDirectories();
+        this.aidlDirs = sourceProvider.getAidlDirectories();
+        this.rsDirs = sourceProvider.getRenderscriptDirectories();
+        this.resDirs = sourceProvider.getResDirectories();
+        this.assetsDirs = sourceProvider.getAssetsDirectories();
+        this.libsDirs = sourceProvider.getJniLibsDirectories();
+        this.shaderDirs = sourceProvider.getShadersDirectories();
+        this.mlModelsDirs = sourceProvider.getMlModelsDirectories();
+        this.customDirectories = sourceProvider.getCustomDirectories();
     }
 
     @NonNull
@@ -90,7 +119,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         return javaDirs;
     }
 
-    @NotNull
+    @NonNull
     @Override
     public Collection<File> getKotlinDirectories() {
         return kotlinDirs;
@@ -156,6 +185,12 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         return mlModelsDirs;
     }
 
+    @NonNull
+    @Override
+    public Collection<CustomSourceDirectory> getCustomDirectories() {
+        return customDirectories;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -176,7 +211,8 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 && Objects.equals(assetsDirs, that.assetsDirs)
                 && Objects.equals(libsDirs, that.libsDirs)
                 && Objects.equals(shaderDirs, that.shaderDirs)
-                && Objects.equals(mlModelsDirs, that.mlModelsDirs);
+                && Objects.equals(mlModelsDirs, that.mlModelsDirs)
+                && Objects.equals(customDirectories, that.customDirectories);
     }
 
     @Override
@@ -193,7 +229,8 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 assetsDirs,
                 libsDirs,
                 shaderDirs,
-                mlModelsDirs);
+                mlModelsDirs,
+                customDirectories);
     }
 
     @Override
@@ -211,6 +248,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 .add("libsDirs", libsDirs)
                 .add("shaderDirs", shaderDirs)
                 .add("mlModelsDirs", mlModelsDirs)
+                .add("customDirectories", customDirectories)
                 .toString();
     }
 }

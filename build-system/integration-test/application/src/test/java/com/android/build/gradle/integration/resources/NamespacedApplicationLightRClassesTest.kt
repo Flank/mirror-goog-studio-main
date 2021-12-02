@@ -90,6 +90,7 @@ class NamespacedApplicationLightRClassesTest {
     @Test
     fun testResourcesCompiled() {
         project.executor()
+            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
             .run(":app:assembleDebug")
 
         // Check library resources

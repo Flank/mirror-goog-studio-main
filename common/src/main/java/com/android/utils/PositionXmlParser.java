@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
 import org.w3c.dom.Attr;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -51,6 +53,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.android.SdkConstants.UTF_8;
+import static com.android.utils.XmlUtils.CDATA_PREFIX;
 
 /**
  * A simple DOM XML parser which can retrieve exact beginning and end offsets
@@ -61,6 +64,7 @@ public class PositionXmlParser {
     private static final String UTF_16LE = "UTF_16LE";
     public static final String CONTENT_KEY = "contents";
     private static final String POS_KEY = "offsets";
+    private static final int CDATA_PREFIX_LENGTH = CDATA_PREFIX.length();
     /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
     private static final Pattern ENCODING_PATTERN =
             Pattern.compile("encoding=['\"](\\S*)['\"]");
@@ -644,7 +648,7 @@ public class PositionXmlParser {
                     return pos;
                 }
             }
-        } else if (node instanceof Text) {
+        } else if (node instanceof Text) { // includes CharacterData
             // Position of parent element, if any.
             Position pos = null;
             if (node.getPreviousSibling() != null) {
@@ -675,6 +679,13 @@ public class PositionXmlParser {
                         // Skip >
                         offset++;
                         column++;
+
+                        if (node instanceof CDATASection
+                            && contents.regionMatches(
+                                    offset, CDATA_PREFIX, 0, CDATA_PREFIX_LENGTH)) {
+                            offset += CDATA_PREFIX_LENGTH;
+                            column += CDATA_PREFIX_LENGTH;
+                        }
 
                         String text = node.getNodeValue();
                         int textIndex = 0;

@@ -31,7 +31,6 @@ import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -40,13 +39,19 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Task that merges the .so.dbg or .so.sym native debug metadata files into a zip to be published in
  * the outputs folder.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * The task moves files from Inputs, unchanged, into a Zip file.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
 
     @get:SkipWhenEmpty

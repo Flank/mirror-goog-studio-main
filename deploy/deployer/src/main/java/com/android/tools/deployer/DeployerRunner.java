@@ -95,8 +95,10 @@ public class DeployerRunner {
 
     public int run(String[] args, ILogger logger) {
         if (args.length < 3) {
+            // The values for --user come directly from the framework's package manager, and is
+            // passed directly through to pm.
             logger.info(
-                    "Usage: {install | codeswap | fullswap} [--device=<serial>] [--adb=<path>] packageName baseApk [splitApk1, splitApk2, ...]");
+                    "Usage: {install | codeswap | fullswap} [--device=<serial>] [--user=<user id>|all|current] [--adb=<path>] packageName baseApk [splitApk1, splitApk2, ...]");
             return ERR_BAD_ARGS;
         }
 
@@ -186,6 +188,10 @@ public class DeployerRunner {
                 Deployer.InstallMode installMode = Deployer.InstallMode.DELTA;
                 if (parameters.isForceFullInstall()) {
                     installMode = Deployer.InstallMode.FULL;
+                }
+
+                if (parameters.getTargetUserId() != null) {
+                    options.setInstallOnUser(parameters.getTargetUserId());
                 }
                 deployResult =
                         deployer.install(

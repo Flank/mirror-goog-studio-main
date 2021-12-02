@@ -34,8 +34,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.AnalyticsRecordingTask;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
@@ -49,7 +47,9 @@ import com.android.build.gradle.internal.tasks.ExtractProfilerNativeDependencies
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
@@ -72,23 +73,21 @@ public abstract class AbstractAppTaskManager<
         extends TaskManager<VariantBuilderT, VariantT> {
 
     protected AbstractAppTaskManager(
+            @NonNull Project project,
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
             @NonNull List<TestFixturesImpl> testFixturesComponents,
-            boolean hasFlavors,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull ProjectInfo projectInfo) {
+            @NonNull GlobalTaskCreationConfig globalConfig,
+            @NonNull TaskManagerConfig localConfig,
+            @NonNull BaseExtension extension) {
         super(
+                project,
                 variants,
                 testComponents,
                 testFixturesComponents,
-                hasFlavors,
-                projectOptions,
-                globalScope,
-                extension,
-                projectInfo);
+                globalConfig,
+                localConfig,
+                extension);
     }
 
     protected void createCommonTasks(@NonNull ComponentInfo<VariantBuilderT, VariantT> variant) {
@@ -230,7 +229,7 @@ public abstract class AbstractAppTaskManager<
                 TaskFactoryUtils.dependsOn(task, classpathCheck);
             }
 
-            if (variantType.isBaseModule() && globalScope.hasDynamicFeatures()) {
+            if (variantType.isBaseModule() && globalConfig.getHasDynamicFeatures()) {
                 TaskProvider<CheckMultiApkLibrariesTask> checkMultiApkLibrariesTask =
                         taskFactory.register(
                                 new CheckMultiApkLibrariesTask.CreationAction(creationConfig));
@@ -283,12 +282,7 @@ public abstract class AbstractAppTaskManager<
 
         ProjectOptions projectOptions = variant.getServices().getProjectOptions();
         boolean nonTransitiveR = projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
-        boolean namespaced =
-                variant.getServices()
-                        .getProjectInfo()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getNamespaced();
+        boolean namespaced = variant.getGlobal().getNamespacedAndroidResources();
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)

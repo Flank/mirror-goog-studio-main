@@ -178,7 +178,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             task: ParseLibraryResourcesTask
         ) {
             super.configure(task)
-            task.platformAttrRTxt.set(creationConfig.globalScope.platformAttrs)
+            task.platformAttrRTxt.set(creationConfig.global.platformAttrs)
             task.enablePartialRIncrementalBuilds.setDisallowChanges(
                 creationConfig.services
                     .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS])

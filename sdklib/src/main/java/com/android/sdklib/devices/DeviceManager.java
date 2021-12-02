@@ -383,8 +383,20 @@ public class DeviceManager {
                                     mSysImgDevices.putAll(loadDevices(deviceXml));
                                 }
                             });
+            markDeprecatedWearSkins();
             return true;
         }
+    }
+
+    private void markDeprecatedWearSkins() {
+        mSysImgDevices.values().forEach(device -> {
+            if ("android-wear".equals(device.getTagId())) {
+                device.setIsDeprecated(!device.getDefaultHardware()
+                        .getSkinFile()
+                        .getName()
+                        .startsWith("wearos"));
+            }
+        });
     }
 
     /**

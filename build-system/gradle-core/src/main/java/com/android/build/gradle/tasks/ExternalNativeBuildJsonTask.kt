@@ -21,9 +21,9 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerat
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.builder.errors.DefaultIssueReporter
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -73,10 +73,10 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
  * Create a C/C++ configure task.
  */
 fun createCxxConfigureTask(
-        globalScope: GlobalScope,
-        abi : CxxAbiModel,
-        name : String
-) = object : GlobalTaskCreationAction<ExternalNativeBuildJsonTask>(globalScope) {
+    globalConfig: GlobalTaskCreationConfig,
+    abi: CxxAbiModel,
+    name: String
+) = object : GlobalTaskCreationAction<ExternalNativeBuildJsonTask>(globalConfig) {
     override val name = name
     override val type = ExternalNativeBuildJsonTask::class.java
     override fun configure(task: ExternalNativeBuildJsonTask) {

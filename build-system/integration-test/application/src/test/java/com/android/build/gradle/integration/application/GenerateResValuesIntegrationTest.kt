@@ -100,7 +100,7 @@ class GenerateResValuesIntegrationTest {
         )
 
         val incrementalMergedFile = app.getIntermediateFile(
-            "incremental", "mergeReleaseResources", "merged.dir", "values", "values.xml"
+            "incremental", "release", "mergeReleaseResources", "merged.dir", "values", "values.xml"
         )
         assertThat(incrementalMergedFile).contentWithUnixLineSeparatorsIsExactly(
             """

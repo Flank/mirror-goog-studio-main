@@ -833,14 +833,14 @@ class LintBaseline(
         /**
          * Compares two string messages from lint and returns true if
          * they're equivalent, which will be true if they only vary by
-         * suffix or presence of ` characters. This is done to handle
-         * the case where we tweak the message format over time to
-         * either append extra information or to add better formatting
-         * (e.g. to put backticks around symbols) or to remove trailing
-         * periods from single sentence error messages. Lint is
-         * recently suggesting these edits to lint checks -- and we
-         * want baselines to continue to match in the presence of these
-         * edits.
+         * suffix or presence of ` characters or spaces. This is done
+         * to handle the case where we tweak the message format over
+         * time to either append extra information or to add better
+         * formatting (e.g. to put backticks around symbols) or to
+         * remove trailing periods from single sentence error messages.
+         * Lint is recently suggesting these edits to lint checks -- and
+         * we want baselines to continue to match in the presence of
+         * these edits.
          */
         fun stringsEquivalent(s1: String, s2: String, start1: Int = 0, start2: Int = 0): Boolean {
             var i1 = start1
@@ -855,10 +855,10 @@ class LintBaseline(
                 val c1 = s1[i1]
                 val c2 = s2[i2]
                 if (c1 != c2) {
-                    while (i1 < n1 && s1[i1] == '`') {
+                    while (i1 < n1 && (s1[i1] == '`' || s1[i1] == ' ')) {
                         i1++
                     }
-                    while (i2 < n2 && s2[i2] == '`') {
+                    while (i2 < n2 && (s2[i2] == '`' || s2[i2] == ' ')) {
                         i2++
                     }
                     if (i1 == n1 || i2 == n2) {

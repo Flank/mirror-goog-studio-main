@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
@@ -109,4 +110,11 @@ interface SourceProvider: AndroidModel {
      * @return a list of folders. They may not all exist.
      */
     val mlModelsDirectories: Collection<File>?
+
+    /**
+     * Returns a [Collection] of all registered custom directories.
+     *
+     * @return a [Collection] of custom directories.
+     */
+    val customDirectories: Collection<CustomSourceDirectory>?
 }

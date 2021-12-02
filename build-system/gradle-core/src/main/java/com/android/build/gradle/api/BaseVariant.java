@@ -19,6 +19,9 @@ package com.android.build.gradle.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.variant.Component;
+import com.android.build.api.variant.SourceDirectories;
+import com.android.build.api.variant.Sources;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -134,6 +137,9 @@ public interface BaseVariant {
 
     /**
      * Returns a list of FileCollection representing the source folders.
+     *
+     * <p>You can replace calls to this method by using {@link Component#getSources()}, then use the
+     * {@link Sources#getJava()} and then {@link SourceDirectories#getAll()}.
      *
      * @param folderType the type of folder to return.
      * @return a list of folder + dependency as file collections.

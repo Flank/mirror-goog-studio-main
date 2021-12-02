@@ -51,7 +51,7 @@ import org.jetbrains.uast.util.isArrayInitializer
  * and `skipParenthesizedExprDown` to navigate through
  * UParenthesizedExpression nodes
  */
-class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : SourceTransformationTestMode(
+class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : UastSourceTransformationTestMode(
     description = "Extra parentheses added",
     "TestMode.PARENTHESIZED",
     "parentheses"

@@ -90,7 +90,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.3-rc-1"
+GRADLE_VERSION = "7.3"
 
 filegroup(
     name = "gradle-distrib",
@@ -186,7 +186,6 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/base/build-system/gradle-core:gradle-core",
     "//tools/base/lint:tools.lint-gradle",
     "@maven//:com.github.javaparser.javaparser-core",
-    "@maven//:org.junit.junit-bom",  # Added because of http://b/202838125
 ]
 
 maven_repository(
@@ -211,14 +210,20 @@ maven_repository(
 maven_repository(
     name = "performance_test_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS + [
-        # TODO(b/201790375): Update Kotlin deps.
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.4.32",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.4.32",
-        "@maven//:androidx.activity.activity-compose_1.3.0-alpha02",
-        "@maven//:androidx.compose.compiler.compiler_1.0.0-beta07",
-        "@maven//:androidx.compose.material.material_1.0.0-beta07",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.5.30",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
+        "@maven//:androidx.activity.activity-compose_1.3.0-alpha02",
+        "@maven//:androidx.compose.compiler.compiler_1.0.5",
+        "@maven//:androidx.compose.material.material_1.0.5",
+        "@maven//:androidx.compose.material.material-icons-extended_1.0.5",
+        "@maven//:androidx.compose.ui.ui-tooling_1.0.5",
+        "@maven//:androidx.compose.runtime.runtime-livedata_1.0.5",
+        "@maven//:androidx.appcompat.appcompat_1.3.0-beta01",
+        "@maven//:androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
     ],
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
@@ -263,8 +268,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/profile:agp_gradle_build_files",
     "//tools/base/mlkit-common:agp_gradle_build_files",
     "//tools/base/profgen/profgen:agp_gradle_build_files",
-    "//tools/base/signflinger:agp_gradle_build_files",
-    "//tools/base/testutils:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-ddmlib-proto:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
@@ -305,7 +308,9 @@ gradle_build(
 #  org.jetbrains.kotlin:kotlin-test-junit:1.5.3
 maven_repository(
     name = "android_gradle_plugin_gradle_api_test_repository",
+    # keep sorted
     artifacts = [
+        "//tools/base/testutils:tools.testutils",
         "@maven//:org.jetbrains.kotlin.kotlin-test-junit_1.5.31",
     ],
 )
@@ -322,7 +327,6 @@ gradle_test(
         "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
         "//tools/base/build-system/gradle-api:agp_gradle_build_files",
         "//tools/base/build-system/gradle-api:agp_gradle_test_files",
-        "//tools/base/testutils:agp_gradle_build_files",
         "//tools/buildSrc:agp_gradle_build_files",
         "//tools/buildSrc/base:agp_gradle_build_files",
     ],

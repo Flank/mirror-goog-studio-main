@@ -70,11 +70,7 @@ internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<App
 
         Mockito.`when`(creationConfig.name).thenReturn("debug")
         Mockito.`when`(creationConfig.services).thenReturn(
-            createTaskCreationServices(
-                createProjectServices(
-                    projectInfo = ProjectInfo(project)
-                )
-            )
+            createTaskCreationServices(createProjectServices(project))
         )
         val creationAction = ApplicationVariantModelTask.CreationAction(creationConfig)
         project.gradle.sharedServices.registerIfAbsent(

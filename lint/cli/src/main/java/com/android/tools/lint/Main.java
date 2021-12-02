@@ -31,7 +31,6 @@ import static com.android.tools.lint.detector.api.Lint.endsWith;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -88,7 +87,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -329,6 +327,17 @@ public class Main {
                                 module.getModulePath(),
                                 variant.getName());
                     }
+                    int testFixturesSourceProviderIndex = 0;
+                    for (LintModelSourceProvider testFixturesSourceProvider :
+                            variant.getTestFixturesSourceProviders()) {
+                        addSourceProviderPathVariables(
+                                pathVariables,
+                                testFixturesSourceProvider,
+                                "testFixturesSourceProvider",
+                                testFixturesSourceProviderIndex++,
+                                module.getModulePath(),
+                                variant.getName());
+                    }
                 }
             }
 
@@ -447,7 +456,6 @@ public class Main {
             }
         }
 
-        private Pattern mAndroidAnnotationPattern;
         private Project unexpectedGradleProject = null;
 
         @Override
@@ -624,18 +632,7 @@ public class Main {
                 return new String(srcJarBytes, Charsets.UTF_8);
             }
 
-            CharSequence contents = super.readFile(file);
-            if (Project.isAospBuildEnvironment()
-                    && file.getPath().endsWith(SdkConstants.DOT_JAVA)) {
-                if (mAndroidAnnotationPattern == null) {
-                    mAndroidAnnotationPattern = Pattern.compile("android\\.annotation");
-                }
-                return mAndroidAnnotationPattern
-                        .matcher(contents)
-                        .replaceAll("android.support.annotation");
-            } else {
-                return contents;
-            }
+            return super.readFile(file);
         }
 
         @NonNull

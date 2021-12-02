@@ -56,12 +56,12 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
      */
     private val expectedTaskStates: Map<String, TaskStateList.ExecutionState> = mapOf(
         // Sort by alphabetical order for easier searching
-        ":checkDebugAarMetadata" to FROM_CACHE,
+        ":checkDebugAarMetadata" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
         ":clean" to UP_TO_DATE,
         ":compileDebugAidl" to SKIPPED,
         ":compileDebugJavaWithJavac" to FROM_CACHE,
         ":compileDebugRenderscript" to SKIPPED,
-        ":createDebugCompatibleScreenManifests" to FROM_CACHE,
+        ":createDebugCompatibleScreenManifests" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
         ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
         ":dataBindingMergeDependencyArtifactsDebug" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask] */
         ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
@@ -77,7 +77,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":processDebugMainManifest" to FROM_CACHE,
         ":processDebugManifest" to FROM_CACHE,
         ":processDebugManifestForPackage" to FROM_CACHE,
-        ":processDebugResources" to DID_WORK
     ).plus(
         if (withKotlin) {
             mapOf(
@@ -89,11 +88,14 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             emptyMap()
         }
     ).plus(
-            if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                mapOf(":mapDebugSourceSetPaths" to FROM_CACHE)
-            } else {
-                emptyMap()
-            }
+        if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+            mapOf(
+                ":mapDebugSourceSetPaths" to DID_WORK,
+                ":processDebugResources" to FROM_CACHE
+            )
+        } else {
+            mapOf(":processDebugResources" to DID_WORK)
+        }
     ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
                 mapOf(":generateDebugManifestClass" to FROM_CACHE)

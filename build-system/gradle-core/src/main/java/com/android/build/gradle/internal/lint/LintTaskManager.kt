@@ -2,30 +2,35 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
-import com.android.build.gradle.internal.dsl.LintOptions
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
+import org.gradle.api.Project
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /** Factory for the LintModel based lint tasks */
-class LintTaskManager constructor(private val globalScope: GlobalScope, private val taskFactory: TaskFactory, private val projectInfo: ProjectInfo) {
+class LintTaskManager constructor(
+    private val globalTaskCreationConfig: GlobalTaskCreationConfig,
+    private val taskFactory: TaskFactory,
+    private val project: Project
+) {
 
     fun createBeforeEvaluateLintTasks() {
         // LintFix task
-        taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction(globalScope))
+        taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction(globalTaskCreationConfig))
 
         // LintGlobalTask
-        val globalTask = taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction(globalScope))
+        val globalTask = taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction(globalTaskCreationConfig))
         taskFactory.configure(JavaBasePlugin.CHECK_TASK_NAME) { it.dependsOn(globalTask) }
 
     }
@@ -42,11 +47,12 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
 
         val variantsWithTests = attachTestsToVariants(
             variantPropertiesList = variantPropertiesList,
-            testComponentPropertiesList = if (globalScope.extension.lintOptions.isIgnoreTestSources) {
+            testComponentPropertiesList = if (globalTaskCreationConfig.lintOptions.ignoreTestSources) {
                 listOf()
             } else {
                 testComponentPropertiesList
-            }
+            },
+            ignoreTestFixturesSources = globalTaskCreationConfig.lintOptions.ignoreTestFixturesSources
         )
 
         // Map of task path to the providers for tasks that that task subsumes,
@@ -55,7 +61,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         val variantLintTaskToLintVitalTask =
             mutableMapOf<String, TaskProvider<AndroidLintTextOutputTask>>()
 
-        val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions)
+        val needsCopyReportTask = needsCopyReportTask(globalTaskCreationConfig.lintOptions)
 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) {
@@ -108,7 +114,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             val mainVariant = variantWithTests.main
             if (mainVariant.variantType.isBaseModule &&
                 !mainVariant.variantDslInfo.isDebuggable &&
-                globalScope.extension.lintOptions.isCheckReleaseBuilds
+                globalTaskCreationConfig.lintOptions.checkReleaseBuilds
             ) {
                 taskFactory.register(
                     AndroidLintAnalysisTask.LintVitalCreationAction(mainVariant)
@@ -143,7 +149,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
 
         val lintTaskPath = getTaskPath("lint")
 
-        projectInfo.getProject().gradle.taskGraph.whenReady {
+        project.gradle.taskGraph.whenReady {
             variantLintTaskToLintVitalTask.forEach { (taskPath, taskToDisable) ->
                 if (it.hasTask(taskPath)) {
                     taskToDisable.configure { it.enabled = false }
@@ -158,13 +164,19 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
     }
 
     private fun attachTestsToVariants(
-            variantPropertiesList: List<VariantImpl>,
-            testComponentPropertiesList: List<TestComponentImpl>): LinkedHashMap<String, VariantWithTests> {
+        variantPropertiesList: List<VariantImpl>,
+        testComponentPropertiesList: List<TestComponentImpl>,
+        ignoreTestFixturesSources: Boolean
+    ): LinkedHashMap<String, VariantWithTests> {
         val variantsWithTests = LinkedHashMap<String, VariantWithTests>()
         for (variant in variantPropertiesList) {
             variantsWithTests[variant.name] = VariantWithTests(
                 variant,
-                testFixtures = variant.testFixturesComponent as TestFixturesImpl?
+                testFixtures = if (ignoreTestFixturesSources) {
+                    null
+                } else {
+                    variant.testFixturesComponent as TestFixturesImpl?
+                }
             )
         }
         for (testComponent in testComponentPropertiesList) {
@@ -206,7 +218,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
     }
 
     private fun getTaskPath(taskName: String): String {
-        return if (projectInfo.getProject().rootProject === projectInfo.getProject()) ":$taskName" else projectInfo.getProject().path + ':' + taskName
+        return if (project.rootProject === project) ":$taskName" else project.path + ':' + taskName
     }
 
     companion object {
@@ -214,7 +226,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         internal fun File.isLintStdout() = this.path == File("stdout").path
         internal fun File.isLintStderr() = this.path == File("stderr").path
 
-        internal fun needsCopyReportTask(lintOptions: LintOptions) : Boolean {
+        internal fun needsCopyReportTask(lintOptions: Lint) : Boolean {
             val textOutput = lintOptions.textOutput
             return (lintOptions.textReport && textOutput != null && !textOutput.isLintStdout() && !textOutput.isLintStderr()) ||
                     (lintOptions.htmlReport && lintOptions.htmlOutput != null) ||

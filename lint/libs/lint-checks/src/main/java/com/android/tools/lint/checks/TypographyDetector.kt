@@ -34,6 +34,7 @@ import com.android.utils.SdkUtils
 import com.android.utils.childrenIterator
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.w3c.dom.Node.CDATA_SECTION_NODE
 import org.w3c.dom.Node.ELEMENT_NODE
 import org.w3c.dom.Node.TEXT_NODE
 import java.util.regex.Pattern
@@ -43,6 +44,7 @@ import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_EMBEDDING
 import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_OVERRIDE
 
 /** Checks for various typographical issues in string definitions. */
+@Suppress("LintImplTextFormat")
 class TypographyDetector : ResourceXmlDetector() {
     private var checkDashes = false
     private var checkQuotes = false
@@ -75,7 +77,7 @@ class TypographyDetector : ResourceXmlDetector() {
             return
         }
         for (child in element.childrenIterator()) {
-            if (child.nodeType == TEXT_NODE) {
+            if (child.nodeType == TEXT_NODE || child.nodeType == CDATA_SECTION_NODE) {
                 val text = child.nodeValue
                 checkText(context, element, child, text)
             } else if (child.nodeType == ELEMENT_NODE &&
@@ -86,7 +88,7 @@ class TypographyDetector : ResourceXmlDetector() {
             ) {
                 // String array or plural item children
                 for (item in child.childrenIterator()) {
-                    if (item.nodeType == TEXT_NODE) {
+                    if (item.nodeType == TEXT_NODE || item.nodeType == CDATA_SECTION_NODE) {
                         val text = item.nodeValue
                         checkText(context, child as Element, item, text)
                     }
@@ -403,8 +405,7 @@ class TypographyDetector : ResourceXmlDetector() {
          */
         private val SINGLE_QUOTE: Pattern = Pattern.compile(".*\\W*'[^']+'(\\W.*)?", Pattern.UNICODE_CHARACTER_CLASS)
 
-        private const val FRACTION_MESSAGE = "Use fraction character %1\$c (%2\$s) instead of %3\$s ?"
-        private const val FRACTION_MESSAGE_PATTERN = "Use fraction character (.+) \\((.+)\\) instead of (.+) \\?"
+        private const val FRACTION_MESSAGE = "Use fraction character %1\$c (%2\$s) instead of %3\$s?"
         private fun isAnalyticsTrackingId(element: Element): Boolean {
             val name = element.getAttribute(ATTR_NAME)
             return "ga_trackingId" == name

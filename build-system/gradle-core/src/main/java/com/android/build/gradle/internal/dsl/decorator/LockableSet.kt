@@ -28,11 +28,10 @@ import javax.inject.Inject
  * This is intentionally not serializable, as model classes should take copies
  * e.g. [com.google.common.collect.ImmutableList.copyOf]
  */
-class LockableSet<T> @Inject constructor(
-    private val name: String
-) :  java.util.AbstractSet<T>(), MutableSet<T>, Lockable {
-
+class LockableSet<T> @Inject @JvmOverloads constructor(
+    private val name: String,
     private val delegate: MutableSet<T> = mutableSetOf()
+) :  java.util.AbstractSet<T>(), MutableSet<T>, Lockable {
 
     private var locked = false
 

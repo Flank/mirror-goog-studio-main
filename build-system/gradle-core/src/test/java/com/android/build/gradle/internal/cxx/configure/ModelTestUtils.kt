@@ -18,7 +18,6 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
-import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -28,18 +27,20 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.Splits
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.build.gradle.internal.ndk.*
+import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.internal.ndk.NdkInfo
+import com.android.build.gradle.internal.ndk.NdkInstallStatus
+import com.android.build.gradle.internal.ndk.NdkPlatform
+import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -50,13 +51,12 @@ import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
-import org.gradle.api.provider.Provider
 
 fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAbiModel {
-    val global = Mockito.mock(GlobalScope::class.java)
     val projectOptions = Mockito.mock(ProjectOptions::class.java)
     val extension = Mockito.mock(BaseExtension::class.java)
     val externalNativeBuild = Mockito.mock(ExternalNativeBuild::class.java)
@@ -82,7 +82,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val mergedNdkConfig = Mockito.mock(MergedNdkConfig::class.java)
     val projectInfo = Mockito.mock(ProjectInfo::class.java)
     val minSdkVersion = AndroidVersionImpl(19)
-    Mockito.doReturn(global).`when`(variantImpl).globalScope
     Mockito.doReturn(variantScope).`when`(variantImpl).variantScope
     Mockito.doReturn(baseVariantData).`when`(variantImpl).variantData
     projectParentFolder.create()
@@ -99,7 +98,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
                 Pkg.Desc = Android NDK
                 Pkg.Revision = 17.2.4988734
             """.trimIndent())
-    Mockito.doReturn(extension).`when`(global).extension
     Mockito.doReturn(splits).`when`(extension).splits
     Mockito.doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
     Mockito.doReturn(cmake).`when`(externalNativeBuild).cmake
@@ -111,7 +109,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn("app:").`when`(project).path
     Mockito.doReturn(intermediatesDir).`when`(projectInfo).getIntermediatesDir()
     Mockito.doReturn(File("build.gradle")).`when`(project).buildFile
-    Mockito.doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
     Mockito.doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
         Mockito.anyString(), Mockito.anyString(), Mockito.anyString()
     )

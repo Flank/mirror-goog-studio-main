@@ -111,11 +111,11 @@ class AsmTransformApiConfigurationCachingTest {
                         androidComponents.onVariants(androidComponents.selector().all(),
                                 variantProperties -> {
                                     ApplicationVariant appVariant = (ApplicationVariant) variantProperties;
-                                    appVariant.transformClassesWith(
+                                    appVariant.getInstrumentation().transformClassesWith(
                                             ClassVisitorFactory.class,
                                             InstrumentationScope.ALL,
                                             params -> Unit.INSTANCE);
-                                    appVariant.setAsmFramesComputationMode(
+                                    appVariant.getInstrumentation().setAsmFramesComputationMode(
                                             FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES);
                                     });
                     }

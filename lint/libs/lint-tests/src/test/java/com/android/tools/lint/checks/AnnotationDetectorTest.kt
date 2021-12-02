@@ -1323,10 +1323,10 @@ class AnnotationDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-            src/test/pkg/TestClass.kt:6: Error: Did you mean @get:VisibleForTesting ? Without get: this annotates the constructor parameter itself instead of the associated getter. [SupportAnnotationUsage]
+            src/test/pkg/TestClass.kt:6: Error: Did you mean @get:VisibleForTesting? Without get: this annotates the constructor parameter itself instead of the associated getter. [SupportAnnotationUsage]
                 @VisibleForTesting val p1: String, // ERROR
                 ~~~~~~~~~~~~~~~~~~
-            src/test/pkg/TestClass.kt:7: Error: Did you mean @get:VisibleForTesting ? Without get: this annotates the constructor parameter itself instead of the associated getter. [SupportAnnotationUsage]
+            src/test/pkg/TestClass.kt:7: Error: Did you mean @get:VisibleForTesting? Without get: this annotates the constructor parameter itself instead of the associated getter. [SupportAnnotationUsage]
                 @param:VisibleForTesting val p2: String, // ERROR
                 ~~~~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings

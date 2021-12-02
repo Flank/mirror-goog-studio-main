@@ -1662,6 +1662,7 @@ public final class SdkConstants {
     public static final String ATTR_DIAL = "dial";
     public static final String ATTR_HAND_HOUR = "hand_hour";
     public static final String ATTR_HAND_MINUTE = "hand_minute";
+    public static final String ATTR_HAND_SECOND = "hand_second";
 
     // CalendarView
     public static final String ATTR_SELECTED_DATE_VERTICAL_BAR = "selectedDateVerticalBar";
@@ -2862,7 +2863,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.3-rc-1";
+    public static final String GRADLE_LATEST_VERSION = "7.3";
 
     /**
      * The minimum released version of the Android Gradle Plugin that this version of Studio will

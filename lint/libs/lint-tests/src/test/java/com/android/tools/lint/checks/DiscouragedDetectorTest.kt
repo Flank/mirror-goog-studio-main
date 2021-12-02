@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.detector.api.Detector
 
 class DiscouragedDetectorTest : AbstractCheckTest() {
@@ -89,6 +90,46 @@ class DiscouragedDetectorTest : AbstractCheckTest() {
             resourcesStub,
             discouragedAnnotationStub
         ).run().expect(expected)
+    }
+
+    fun test205800560() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.Activity
+                import android.os.Bundle
+                import android.widget.TextView
+                import androidx.annotation.Discouraged
+                import java.util.UUID
+
+                class MainActivity : Activity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContentView(R.layout.activity_main)
+                        findViewById<TextView>(R.id.text)?.text = getSomeString()
+                    }
+
+                    companion object {
+                        @Discouraged(message = "don't use this")
+                        fun getSomeString(): String {
+                            return UUID.randomUUID().toString()
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            rClass("test.pkg", "@layout/activity_main", "@id/text"),
+            discouragedAnnotationStub
+        ).allowDuplicates().run().expect(
+            """
+            src/test/pkg/MainActivity.kt:13: Warning: don't use this [DiscouragedApi]
+                    findViewById<TextView>(R.id.text)?.text = getSomeString()
+                                                              ~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
     override fun getDetector(): Detector {

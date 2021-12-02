@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.lint.LintFromMaven
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
+import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
@@ -82,7 +83,7 @@ import javax.inject.Inject
 abstract class LintPlugin : Plugin<Project> {
     private lateinit var projectServices: ProjectServices
     private lateinit var dslServices: DslServicesImpl
-    private var lintOptions: LintOptions? = null
+    private var lintOptions: Lint? = null
 
     @get:Inject
     abstract val listenerRegistry: BuildEventsListenerRegistry
@@ -103,7 +104,7 @@ abstract class LintPlugin : Plugin<Project> {
     }
     private fun registerTasks(project: Project, dslOperationsRegistrar: DslLifecycleComponentsOperationsRegistrar<Lint>) {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
-        val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
+        val customLintChecksConfig = BasePlugin.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
         registerTasks(
             project,
@@ -122,9 +123,7 @@ abstract class LintPlugin : Plugin<Project> {
     ) {
         registerBuildServices(project)
         val artifacts = ArtifactsImpl(project, "global")
-        val taskCreationServices: TaskCreationServices = TaskCreationServicesImpl(
-            VariantPropertiesApiServicesImpl(projectServices), projectServices
-        )
+        val taskCreationServices: TaskCreationServices = TaskCreationServicesImpl(projectServices)
         // Create the 'lint' task before afterEvaluate to avoid breaking existing build scripts that
         // expect it to be present during evaluation
         val lintTask = project.tasks.register("lint", AndroidLintTextOutputTask::class.java)
@@ -309,12 +308,13 @@ abstract class LintPlugin : Plugin<Project> {
         dslServices: DslServicesImpl
     ): DslLifecycleComponentsOperationsRegistrar<Lint> {
         val lintImplClass = androidPluginDslDecorator.decorate(LintImpl::class.java)
-        val newLintExtension = project.extensions.create(Lint::class.java, "lint", lintImplClass, dslServices)
+        val lintOptions = project.extensions.create(Lint::class.java, "lint", lintImplClass, dslServices)
+        this.lintOptions = lintOptions
         val decoratedLintOptionsClass =
             androidPluginDslDecorator.decorate(LintOptions::class.java)
-        lintOptions =
-            project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices, newLintExtension)
-        val dslOperationsRegistrar= DslLifecycleComponentsOperationsRegistrar<Lint>(newLintExtension)
+        // create the old lintOptions DSL that just delegates to the new one anyway.
+        project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices, lintOptions)
+        val dslOperationsRegistrar= DslLifecycleComponentsOperationsRegistrar<Lint>(lintOptions)
         project.extensions.create(
             "lintLifecycle",
             LintLifecycleExtensionImpl::class.java,

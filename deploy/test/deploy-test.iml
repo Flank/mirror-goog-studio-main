@@ -27,5 +27,9 @@
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.deployer" scope="TEST" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
+    <orderEntry type="library" name="studio-sdk" level="project" />
+    <orderEntry type="library" name="studio-proto" level="project" />
   </component>
 </module>

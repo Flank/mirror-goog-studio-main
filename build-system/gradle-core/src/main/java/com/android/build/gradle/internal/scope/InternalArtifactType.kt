@@ -173,10 +173,28 @@ InternalArtifactType<T : FileSystemLocation>(
     object FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- android res ---
+    // generated res
+    object GENERATED_RES: InternalArtifactType<Directory>(
+        DIRECTORY,
+        Category.GENERATED,
+        "res/resValues"
+    ), Replaceable
     // output of the resource merger ready for aapt.
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // folder for the blame report on the merged resources
     object MERGED_RES_BLAME_FOLDER: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // folder for the incremental support.
+    object MERGED_RES_INCREMENTAL_FOLDER: InternalArtifactType<Directory>(DIRECTORY,
+        Category.INTERMEDIATES,
+        "incremental",
+    ), Replaceable
+
+    object GENERATED_PNGS_RES: InternalArtifactType<Directory>(
+        DIRECTORY,
+        Category.GENERATED,
+        "res/pngs",
+    ), Replaceable
+
     // File containing map between a source set identifier and an absolute resource sourceset path
     // for generating absolute paths in resource linking error messages.
     object SOURCE_SET_PATH_MAP: InternalArtifactType<RegularFile>(FILE), Replaceable
@@ -280,6 +298,11 @@ InternalArtifactType<T : FileSystemLocation>(
     object RENDERSCRIPT_SOURCE_OUTPUT_DIR: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
     // renderscript library
     object RENDERSCRIPT_LIB: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // renderscript generated res
+    object RENDERSCRIPT_GENERATED_RES: InternalArtifactType<Directory>(
+        DIRECTORY,
+        Category.GENERATED,
+        "res/rs"), Replaceable
 
     // An output of AndroidManifest.xml check.
     // REMOVE ME (bug 139855995): This artifact can be removed in the new variant API, we haven't
@@ -465,8 +488,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // Project metadata
     object METADATA_FEATURE_DECLARATION: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object METADATA_FEATURE_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // The metadata for the library dependencies: InternalArtifactType<RegularFile>(FILE), Replaceable direct and indirect: InternalArtifactType<RegularFile>(FILE), Replaceable published for each module.
-    object METADATA_LIBRARY_DEPENDENCIES_REPORT: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // The library dependencies report: InternalArtifactType<RegularFile>(FILE), Replaceable direct and indirect: InternalArtifactType<RegularFile>(FILE), Replaceable published for the entire app to
     // package in the bundle.

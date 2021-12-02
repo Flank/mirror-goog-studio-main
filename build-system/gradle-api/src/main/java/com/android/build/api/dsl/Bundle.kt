@@ -17,6 +17,7 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
+import org.gradle.api.file.DirectoryProperty
 
 /** Features that apply to distribution by the bundle  */
 interface Bundle {
@@ -37,6 +38,9 @@ interface Bundle {
 
     @get:Incubating
     val storeArchive: StoreArchive
+
+    @get:Incubating
+    val integrityConfigDir: DirectoryProperty
 
     fun abi(action: BundleAbi.() -> Unit)
 

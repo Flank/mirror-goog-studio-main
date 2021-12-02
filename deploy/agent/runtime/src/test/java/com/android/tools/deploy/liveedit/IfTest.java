@@ -25,7 +25,7 @@ public class IfTest {
     public void testIfEq() throws Exception {
         byte[] classInput = buildClass(IfTarget.class);
         int i = 1;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfEq(I)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfEq", "(I)Z");
         Object result = ev.evalStatic(new Object[] {i});
         Assert.assertEquals("testIfEq", IfTarget.testIfEq(i), result);
     }
@@ -34,7 +34,7 @@ public class IfTest {
     public void testIfNEq() throws Exception {
         byte[] classInput = buildClass(IfTarget.class);
         int i = 1;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfNeq(I)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfNeq", "(I)Z");
         Object result = ev.evalStatic(new Object[] {i});
         Assert.assertEquals("testIfEq", IfTarget.testIfNeq(i), result);
     }
@@ -43,7 +43,7 @@ public class IfTest {
     public void testIfGt() throws Exception {
         byte[] classInput = buildClass(IfTarget.class);
         int i = 1;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfGt(I)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfGt", "(I)Z");
         Object result = ev.evalStatic(new Object[] {i});
         Assert.assertEquals("testIfGt", IfTarget.testIfGt(i), result);
     }
@@ -52,7 +52,7 @@ public class IfTest {
     public void testIfGe() throws Exception {
         byte[] classInput = buildClass(IfTarget.class);
         int i = 1;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfGe(I)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfGe", "(I)Z");
         Object result = ev.evalStatic(new Object[] {i});
         Assert.assertEquals("testIfGe", IfTarget.testIfGe(i), result);
     }
@@ -61,7 +61,7 @@ public class IfTest {
     public void testIfLt() throws Exception {
         byte[] classInput = buildClass(IfTarget.class);
         int i = 1;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfLt(I)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfLt", "(I)Z");
         Object result = ev.evalStatic(new Object[] {i});
         Assert.assertEquals("testIfLt", IfTarget.testIfLt(i), result);
     }
@@ -70,7 +70,7 @@ public class IfTest {
     public void testIfLe() throws Exception {
         byte[] classInput = buildClass(IfTarget.class);
         int i = 1;
-        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfLe(I)Z");
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "testIfLe", "(I)Z");
         Object result = ev.evalStatic(new Object[] {i});
         Assert.assertEquals("testIfLe", IfTarget.testIfLe(i), result);
     }
@@ -80,7 +80,7 @@ public class IfTest {
         byte[] classInput = buildClass(IfTarget.class);
         Object o = new Object();
         MethodBodyEvaluator ev =
-                new MethodBodyEvaluator(classInput, "testIfNull(Ljava/lang/Object;)Z");
+                new MethodBodyEvaluator(classInput, "testIfNull", "(Ljava/lang/Object;)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {o});
@@ -95,7 +95,7 @@ public class IfTest {
         byte[] classInput = buildClass(IfTarget.class);
         Object o = new Object();
         MethodBodyEvaluator ev =
-                new MethodBodyEvaluator(classInput, "testIfNonNull(Ljava/lang/Object;)Z");
+                new MethodBodyEvaluator(classInput, "testIfNonNull", "(Ljava/lang/Object;)Z");
         Object result = null;
 
         result = ev.evalStatic(new Object[] {o});

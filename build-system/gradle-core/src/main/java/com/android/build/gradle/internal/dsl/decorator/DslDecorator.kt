@@ -539,34 +539,80 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             Type.VOID_TYPE,
             arrayOf(property.supportedPropertyType.type)
         )
-        GeneratorAdapter(Opcodes.ACC_PUBLIC.or(Opcodes.ACC_SYNTHETIC), extraSetter, null, null, classWriter).apply {
-            // val newList = ArrayList(argument) // Take a copy so e.g. field = field doesn't clear the field!
-            // __backingField.clear()
-            // __backingField.addAll(newList)
-            newInstance(ARRAY_LIST)
-            dup()
-            loadArg(0)
-            checkCast(COLLECTION)
-            invokeConstructor(
-                ARRAY_LIST,
-                ARRAY_LIST_COPY_CONSTRUCTOR
-            )
-            loadThis()
-            getField(generatedClass, property.backingFieldName,
-                property.supportedPropertyType.implementationType
-            )
-            dup()
-            invokeVirtual(
-                property.supportedPropertyType.implementationType,
-                CLEAR
-            )
-            swap()
-            invokeVirtual(
-                property.supportedPropertyType.implementationType,
-                ADD_ALL
-            )
-            returnValue()
-            endMethod()
+        if (property.supportedPropertyType == SupportedPropertyType.Collection.Map) {
+            GeneratorAdapter(
+                Opcodes.ACC_PUBLIC.or(Opcodes.ACC_SYNTHETIC),
+                extraSetter,
+                null,
+                null,
+                classWriter
+            ).apply {
+                // val newMap = HashMap(argument) // Take a copy so e.g. field = field doesn't clear the field!
+                // __backingField.clear()
+                // __backingField.putAll(newMap)
+                newInstance(HASH_MAP)
+                dup()
+                loadArg(0)
+                checkCast(MAP)
+                invokeConstructor(
+                    HASH_MAP,
+                    HASH_MAP_COPY_CONSTRUCTOR
+                )
+                loadThis()
+                getField(
+                    generatedClass, property.backingFieldName,
+                    property.supportedPropertyType.implementationType
+                )
+                dup()
+                invokeVirtual(
+                    property.supportedPropertyType.implementationType,
+                    CLEAR
+                )
+                swap()
+                invokeVirtual(
+                    property.supportedPropertyType.implementationType,
+                    PUT_ALL
+                )
+                returnValue()
+                endMethod()
+            }
+        } else {
+            GeneratorAdapter(
+                Opcodes.ACC_PUBLIC.or(Opcodes.ACC_SYNTHETIC),
+                extraSetter,
+                null,
+                null,
+                classWriter
+            ).apply {
+                // val newList = ArrayList(argument) // Take a copy so e.g. field = field doesn't clear the field!
+                // __backingField.clear()
+                // __backingField.addAll(newList)
+                newInstance(ARRAY_LIST)
+                dup()
+                loadArg(0)
+                checkCast(COLLECTION)
+                invokeConstructor(
+                    ARRAY_LIST,
+                    ARRAY_LIST_COPY_CONSTRUCTOR
+                )
+                loadThis()
+                getField(
+                    generatedClass, property.backingFieldName,
+                    property.supportedPropertyType.implementationType
+                )
+                dup()
+                invokeVirtual(
+                    property.supportedPropertyType.implementationType,
+                    CLEAR
+                )
+                swap()
+                invokeVirtual(
+                    property.supportedPropertyType.implementationType,
+                    ADD_ALL
+                )
+                returnValue()
+                endMethod()
+            }
         }
     }
 
@@ -663,9 +709,13 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
 
         private val COLLECTION = Type.getType(Collection::class.java)
         private val ARRAY_LIST = Type.getType(ArrayList::class.java)
+        private val MAP = Type.getType(Map::class.java)
+        private val HASH_MAP = Type.getType(HashMap::class.java)
         private val ARRAY_LIST_COPY_CONSTRUCTOR = Method("<init>", Type.VOID_TYPE, arrayOf(COLLECTION))
+        private val HASH_MAP_COPY_CONSTRUCTOR = Method("<init>", Type.VOID_TYPE, arrayOf(MAP))
         private val CLEAR = Method("clear", Type.VOID_TYPE, arrayOf())
         private val ADD_ALL = Method("addAll", Type.BOOLEAN_TYPE, arrayOf(COLLECTION))
+        private val PUT_ALL = Method("putAll", Type.VOID_TYPE, arrayOf(MAP))
         private val KOTLIN_FUNCTION1 = Type.getType("Lkotlin/jvm/functions/Function1;")
 
         private val KOTLIN_FUNCTION1_INVOKE = Method("invoke", OBJECT_TYPE, arrayOf(OBJECT_TYPE))

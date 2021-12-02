@@ -119,6 +119,7 @@ class OverlayableResourcesTest {
 
         val mergedAppValues = appFiles.getIntermediateFile(
             "incremental",
+            "debug",
             "mergeDebugResources",
             "merged.dir",
             "values",

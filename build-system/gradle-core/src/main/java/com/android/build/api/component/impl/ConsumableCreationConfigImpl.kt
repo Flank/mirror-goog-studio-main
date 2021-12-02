@@ -18,13 +18,10 @@ package com.android.build.api.component.impl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.impl.getFeatureLevel
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 
@@ -50,9 +47,7 @@ import com.android.builder.errors.IssueReporter
  */
 open class ConsumableCreationConfigImpl(
         open val config: ConsumableCreationConfig,
-        val projectOptions: ProjectOptions,
-        val globalScope: GlobalScope,
-        val variantDslInfo: VariantDslInfo<*>) {
+        val variantDslInfo: VariantDslInfo) {
 
     val dexingType: DexingType
         get() = variantDslInfo.dexingType ?: if (config.isMultiDexEnabled) {
@@ -70,18 +65,15 @@ open class ConsumableCreationConfigImpl(
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
         return (variantDslInfo.variantType.isAar
-                || globalScope.extension.transforms.isNotEmpty()
+                || variantDslInfo.transforms.isNotEmpty()
                 || config.minifiedEnabled)
     }
 
     open fun getJava8LangSupportType(): VariantScope.Java8LangSupport {
         // in order of precedence
-        return if (!globalScope.extension
-                        .compileOptions
-                        .targetCompatibility
-                        .isJava8Compatible) {
+        return if (!variantDslInfo.compileOptions.targetCompatibility.isJava8Compatible) {
             VariantScope.Java8LangSupport.UNUSED
-        } else if (config.services.projectInfo.getProject().plugins.hasPlugin("me.tatarka.retrolambda")) {
+        } else if (config.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
             VariantScope.Java8LangSupport.RETROLAMBDA
         } else if (config.minifiedEnabled) {
             VariantScope.Java8LangSupport.R8
@@ -104,22 +96,21 @@ open class ConsumableCreationConfigImpl(
      * @param creationConfig
      */
     fun isCoreLibraryDesugaringEnabled(creationConfig: ConsumableCreationConfig): Boolean {
-        val extension: BaseExtension = globalScope.getExtension()
-        val libDesugarEnabled = extension.compileOptions.coreLibraryDesugaringEnabled ?: false
+        val libDesugarEnabled = variantDslInfo.compileOptions.isCoreLibraryDesugaringEnabled
         val multidexEnabled = creationConfig.isMultiDexEnabled
         val langSupportType: VariantScope.Java8LangSupport = getJava8LangSupportType()
         val langDesugarEnabled = langSupportType == VariantScope.Java8LangSupport.D8 || langSupportType == VariantScope.Java8LangSupport.R8
         if (libDesugarEnabled && !langDesugarEnabled) {
-            globalScope
-                .getDslServices()
+            config
+                .services
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC, "In order to use core library desugaring, "
                         + "please enable java 8 language desugaring with D8 or R8.")
         }
         if (libDesugarEnabled && !multidexEnabled) {
-            globalScope
-                .getDslServices()
+            config
+                .services
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC, "In order to use core library desugaring, "

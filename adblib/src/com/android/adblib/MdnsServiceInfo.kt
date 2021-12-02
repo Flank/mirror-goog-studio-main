@@ -25,8 +25,6 @@ data class MdnsServiceInfo(
     val instanceName: String,
     /** The service type */
     val serviceName: String,
-    /** The [IP address][InetAddress] of the service */
-    val ipAddress: InetAddress,
-    /** The UDP/TCP port of the service */
-    val port: Int
+    /** The [DeviceAddress] of the service */
+    val deviceAddress: DeviceAddress
 )

@@ -16,14 +16,16 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
-import com.android.ide.common.attribution.CheckJetifierResult
+import com.android.ide.common.attribution.CheckJetifierProjectResult
 import com.android.ide.common.attribution.DependencyPath
 import com.android.ide.common.attribution.FullDependencyPath
 import org.gradle.api.artifacts.Configuration
@@ -31,6 +33,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Internal
@@ -54,14 +57,34 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
     @get:Internal
     abstract val checkJetifierBuildService: Property<CheckJetifierBuildService>
 
+    /**
+     * Because of b/204421586, we need to resolve AGP's configurations first. This
+     * is required as AGP tries to sync versions between configurations in [ConstraintHandler].
+     * If an external configuration extends both main and test configurations, those two
+     * may be resolved w/o [ConstraintHandler] running. Following that, when we resolve test
+     * configuration on its own, [ConstraintHandler] will run and it may try to add dependencies
+     * to it, which is not legal and Gradle will fail the build.
+     */
+    @get:Internal
+    abstract val configurationToResolveFirst: ListProperty<String>
+
     class CreationAction(
-        globalScope: GlobalScope,
-        private val projectOptions: ProjectOptions,
-        private val checkJetifierBuildService: Provider<CheckJetifierBuildService>
-    ) : GlobalTaskCreationAction<CheckJetifierTask>(globalScope) {
+        creationConfig: GlobalTaskCreationConfig,
+        private val checkJetifierBuildService: Provider<CheckJetifierBuildService>,
+        variants: List<ComponentInfo<*, *>>,
+        testComponents: List<TestComponentImpl>,
+        testFixturesComponents: List<TestFixturesImpl>
+    ) : GlobalTaskCreationAction<CheckJetifierTask>(creationConfig) {
 
         override val name = "checkJetifier"
         override val type = CheckJetifierTask::class.java
+
+        private val configurationsToResolveFirst =
+            (variants.map { it.variant.variantDependencies } +
+                    testComponents.map { it.variantDependencies } +
+                    testFixturesComponents.map { it.variantDependencies }).flatMap {
+                listOf(it.compileClasspath.name, it.runtimeClasspath.name,)
+            }
 
         override fun configure(task: CheckJetifierTask) {
             super.configure(task)
@@ -69,8 +92,9 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
             task.description = "Checks whether Jetifier is needed for the current project"
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
-            task.jetifierEnabled.setDisallowChanges(projectOptions.get(BooleanOption.ENABLE_JETIFIER))
+            task.jetifierEnabled.setDisallowChanges(creationConfig.services.projectOptions.get(BooleanOption.ENABLE_JETIFIER))
             task.checkJetifierBuildService.setDisallowChanges(checkJetifierBuildService)
+            task.configurationToResolveFirst.setDisallowChanges(configurationsToResolveFirst)
 
             // This task should always run
             task.outputs.upToDateWhen { false }
@@ -89,21 +113,27 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
         checkJetifierBuildService.get().addResult(result)
     }
 
-    private fun detect(): CheckJetifierResult {
+    private fun detect(): CheckJetifierProjectResult {
         val dependenciesDependingOnSupportLibs = LinkedHashMap<String, FullDependencyPath>()
-        for (configuration in project.configurations) {
+        val resolveFirstNames = configurationToResolveFirst.get()
+        val (handleFirst, theRest) = project.configurations.toList()
+            .partition { resolveFirstNames.contains(it.name) }
+
+        val handler = { configuration: Configuration ->
             for (pathToSupportLib in ConfigurationAnalyzer(configuration).findPathsToSupportLibs()) {
                 val directDependency = pathToSupportLib.elements.first()
-                // Store only one path, see `CheckJetifierResult`'s kdoc
+                // Store only one path, see `CheckJetifierProjectResult`'s kdoc
                 dependenciesDependingOnSupportLibs.computeIfAbsent(directDependency) {
                     FullDependencyPath(project.path, configuration.name, pathToSupportLib)
                 }
             }
         }
-        return CheckJetifierResult(dependenciesDependingOnSupportLibs)
+        handleFirst.forEach { handler(it) }
+        theRest.forEach { handler(it) }
+        return CheckJetifierProjectResult(dependenciesDependingOnSupportLibs)
     }
 
-    private fun reportToConsole(result: CheckJetifierResult) {
+    private fun reportToConsole(result: CheckJetifierProjectResult) {
         if (result.isEmpty()) {
             logger.quiet(
                 "Project '${project.path}' does not use any legacy support libraries." +

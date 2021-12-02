@@ -17,8 +17,6 @@ package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
-import java.io.IOException;
-import java.util.function.Supplier;
 import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
@@ -32,32 +30,32 @@ public class MethodBodyEvaluatorTest {
 
         // return 5
         Object result =
-                new MethodBodyEvaluator(classInput, "returnFive()I")
+                new MethodBodyEvaluator(classInput, "returnFive", "()I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Integer intResult = (Integer) result;
         Assert.assertEquals(owner.returnFive(), intResult.intValue());
 
         // return Happiness
         result =
-                new MethodBodyEvaluator(classInput, "returnHappiness()Ljava/lang/String;")
+                new MethodBodyEvaluator(classInput, "returnHappiness", "()Ljava/lang/String;")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         String stringResult = (String) result;
         Assert.assertEquals(owner.returnHappiness(), stringResult);
 
         result =
-                new MethodBodyEvaluator(classInput, "returnField()Ljava/lang/String;")
+                new MethodBodyEvaluator(classInput, "returnField", "()Ljava/lang/String;")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         stringResult = (String) result;
         Assert.assertEquals(owner.returnField(), stringResult);
 
         result =
-                new MethodBodyEvaluator(classInput, "returnPlusOne(I)I")
+                new MethodBodyEvaluator(classInput, "returnPlusOne", "(I)I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {1});
         intResult = (Integer) result;
         Assert.assertEquals(owner.returnPlusOne(1), intResult.intValue());
 
         result =
-                new MethodBodyEvaluator(classInput, "returnSeventeen()I")
+                new MethodBodyEvaluator(classInput, "returnSeventeen", "()I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         intResult = (Integer) result;
         Assert.assertEquals(owner.returnSeventeen(), intResult.intValue());
@@ -69,7 +67,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getPrivateField()I")
+                new MethodBodyEvaluator(classInput, "getPrivateField", "()I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
 
         Integer integer = (Integer) result;
@@ -82,7 +80,9 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
         Object result =
                 new MethodBodyEvaluator(
-                                classInput, "newParent()Lcom/android/tools/deploy/liveedit/Parent;")
+                                classInput,
+                                "newParent",
+                                "()Lcom/android/tools/deploy/liveedit/Parent;")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
 
         Parent actual = (Parent) result;
@@ -99,7 +99,8 @@ public class MethodBodyEvaluatorTest {
         Object result =
                 new MethodBodyEvaluator(
                                 classInput,
-                                "newParentWithParameter(I)Lcom/android/tools/deploy/liveedit/Parent;")
+                                "newParentWithParameter",
+                                "(I)Lcom/android/tools/deploy/liveedit/Parent;")
                         .eval(
                                 owner,
                                 TestTarget.class.getTypeName(),
@@ -117,7 +118,8 @@ public class MethodBodyEvaluatorTest {
         Object result =
                 new MethodBodyEvaluator(
                                 classInput,
-                                "callProtectedConstructor()Lcom/android/tools/deploy/liveedit/Parent;")
+                                "callProtectedConstructor",
+                                "()Lcom/android/tools/deploy/liveedit/Parent;")
                         .eval(child, Child.class.getTypeName(), new Object[] {});
 
         Assert.assertNotNull(result);
@@ -129,7 +131,7 @@ public class MethodBodyEvaluatorTest {
         int a = 1;
         Child c = new Child(1);
         Object result =
-                new MethodBodyEvaluator(classInput, "callSuperMethod(I)I")
+                new MethodBodyEvaluator(classInput, "callSuperMethod", "(I)I")
                         .eval(c, Parent.class.getTypeName(), new Object[] {a});
 
         int actual = (Integer) result;
@@ -143,7 +145,7 @@ public class MethodBodyEvaluatorTest {
         int a = 1;
         Child c = new Child(1);
         Object result =
-                new MethodBodyEvaluator(classInput, "callInheritedProtectedMethod(I)I")
+                new MethodBodyEvaluator(classInput, "callInheritedProtectedMethod", "(I)I")
                         .eval(c, Parent.class.getTypeName(), new Object[] {a});
 
         int actual = (Integer) result;
@@ -156,7 +158,7 @@ public class MethodBodyEvaluatorTest {
         byte[] classInput = buildClass(TestTarget.class);
         TestTarget owner = new TestTarget();
         Object result =
-                new MethodBodyEvaluator(classInput, "getLongFields()J")
+                new MethodBodyEvaluator(classInput, "getLongFields", "()J")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Long l = (Long) result;
         Assert.assertEquals(owner.getLongFields(), l.longValue());
@@ -168,7 +170,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getFloatFields()F")
+                new MethodBodyEvaluator(classInput, "getFloatFields", "()F")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Float f = (Float) result;
         Assert.assertTrue(owner.getFloatFields() == f.floatValue());
@@ -180,7 +182,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getDoubleFields()D")
+                new MethodBodyEvaluator(classInput, "getDoubleFields", "()D")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Double d = (Double) result;
         Assert.assertTrue(owner.getDoubleFields() == d.doubleValue());
@@ -192,7 +194,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getBooleanFields()Z")
+                new MethodBodyEvaluator(classInput, "getBooleanFields", "()Z")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Boolean z = (Boolean) result;
         Assert.assertEquals(owner.getBooleanFields(), z);
@@ -204,7 +206,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getByteFields()B")
+                new MethodBodyEvaluator(classInput, "getByteFields", "()B")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Byte b = (Byte) result;
         Assert.assertEquals(owner.getByteFields(), b.byteValue());
@@ -216,7 +218,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getShortFields()S")
+                new MethodBodyEvaluator(classInput, "getShortFields", "()S")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Short s = (Short) result;
         Assert.assertEquals(owner.getShortFields(), s.byteValue());
@@ -228,7 +230,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getCharacterFields()C")
+                new MethodBodyEvaluator(classInput, "getCharacterFields", "()C")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Character c = (Character) result;
         Assert.assertEquals(owner.getCharacterFields(), c.charValue());
@@ -240,7 +242,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "getIntegerFields()I")
+                new MethodBodyEvaluator(classInput, "getIntegerFields", "()I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Integer i = (Integer) result;
         Assert.assertEquals(owner.getIntegerFields(), i.intValue());
@@ -252,7 +254,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnBooleanFromArray()Z")
+                new MethodBodyEvaluator(classInput, "returnBooleanFromArray", "()Z")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Boolean b = (Boolean) result;
         Assert.assertEquals(owner.returnBooleanFromArray(), b.booleanValue());
@@ -264,7 +266,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnCharFromArray()C")
+                new MethodBodyEvaluator(classInput, "returnCharFromArray", "()C")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Character charResult = (Character) result;
         Assert.assertEquals(owner.returnCharFromArray(), charResult.charValue());
@@ -276,7 +278,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnByteFromArray()B")
+                new MethodBodyEvaluator(classInput, "returnByteFromArray", "()B")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Byte byteResult = (Byte) result;
         Assert.assertEquals(owner.returnByteFromArray(), byteResult.byteValue());
@@ -288,7 +290,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnShortFromArray()S")
+                new MethodBodyEvaluator(classInput, "returnShortFromArray", "()S")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Short shortResult = (Short) result;
         Assert.assertEquals(owner.returnShortFromArray(), shortResult.shortValue());
@@ -300,7 +302,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnObjectFromArray()Ljava/lang/Object;")
+                new MethodBodyEvaluator(classInput, "returnObjectFromArray", "()Ljava/lang/Object;")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Object objectResult = result;
         Assert.assertEquals(owner.returnObjectFromArray(), objectResult);
@@ -312,7 +314,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnIntFromArray()I")
+                new MethodBodyEvaluator(classInput, "returnIntFromArray", "()I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Integer r = (Integer) result;
         Assert.assertEquals(owner.returnIntFromArray(), r.intValue());
@@ -324,7 +326,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnLongFromArray()J")
+                new MethodBodyEvaluator(classInput, "returnLongFromArray", "()J")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Long r = (Long) result;
         Assert.assertEquals(owner.returnLongFromArray(), r.longValue());
@@ -336,7 +338,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnFloatFromArray()F")
+                new MethodBodyEvaluator(classInput, "returnFloatFromArray", "()F")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Float r = (Float) result;
         Assert.assertTrue(owner.returnFloatFromArray() == r.floatValue());
@@ -348,7 +350,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "returnDoubleFromArray()D")
+                new MethodBodyEvaluator(classInput, "returnDoubleFromArray", "()D")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Double r = (Double) result;
         Assert.assertTrue(owner.returnDoubleFromArray() == r.doubleValue());
@@ -360,7 +362,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "isInstanceOf()Z")
+                new MethodBodyEvaluator(classInput, "isInstanceOf", "()Z")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Boolean z = (Boolean) result;
         Assert.assertEquals(owner.isInstanceOf(), z.booleanValue());
@@ -372,7 +374,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "callParentStaticPlusFive()I")
+                new MethodBodyEvaluator(classInput, "callParentStaticPlusFive", "()I")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Integer r = (Integer) result;
         Assert.assertTrue(owner.callParentStaticPlusFive() == r.intValue());
@@ -384,7 +386,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "functionReturningVoid()V")
+                new MethodBodyEvaluator(classInput, "functionReturningVoid", "()V")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Assert.assertTrue("Expected void value", result == null);
     }
@@ -395,7 +397,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
         Integer result =
                 (Integer)
-                        new MethodBodyEvaluator(classInput, "tryFinally()I")
+                        new MethodBodyEvaluator(classInput, "tryFinally", "()I")
                                 .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Assert.assertEquals("finally block missed", result.intValue(), owner.tryFinally());
     }
@@ -406,7 +408,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
         Integer result =
                 (Integer)
-                        new MethodBodyEvaluator(classInput, "tryCatch()I")
+                        new MethodBodyEvaluator(classInput, "tryCatch", "()I")
                                 .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Assert.assertEquals("catch block missed", result.intValue(), owner.tryCatch());
     }
@@ -417,7 +419,7 @@ public class MethodBodyEvaluatorTest {
         TestTarget owner = new TestTarget();
 
         Object result =
-                new MethodBodyEvaluator(classInput, "invokeBooleanParamWithBool(Z)Z")
+                new MethodBodyEvaluator(classInput, "invokeBooleanParamWithBool", "(Z)Z")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {true});
         Boolean r = (Boolean) result;
         Assert.assertTrue(
@@ -428,7 +430,7 @@ public class MethodBodyEvaluatorTest {
     public void testStaticParameterInvokeTypes() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "staticInvokeBooleanParamWithBool(Z)Z")
+                new MethodBodyEvaluator(classInput, "staticInvokeBooleanParamWithBool", "(Z)Z")
                         .evalStatic(new Object[] {true});
         Boolean r = (Boolean) result;
         Assert.assertTrue(
@@ -441,7 +443,7 @@ public class MethodBodyEvaluatorTest {
         byte[] classInput = buildClass(TestTarget.class);
         for (int i = 0; i < 5; i++) {
             Object result =
-                    new MethodBodyEvaluator(classInput, "tableSwitch1to4(I)I")
+                    new MethodBodyEvaluator(classInput, "tableSwitch1to4", "(I)I")
                             .evalStatic(new Object[] {i});
             Integer r = (Integer) result;
             Assert.assertTrue("Tableswitch for value " + i, TestTarget.tableSwitch1to4(i) == r);
@@ -453,7 +455,7 @@ public class MethodBodyEvaluatorTest {
         byte[] classInput = buildClass(TestTarget.class);
         for (int i = 0; i < 16; i++) {
             Object result =
-                    new MethodBodyEvaluator(classInput, "lookupSwitch1_5_10_15(I)I")
+                    new MethodBodyEvaluator(classInput, "lookupSwitch1_5_10_15", "(I)I")
                             .evalStatic(new Object[] {i});
             Integer r = (Integer) result;
             Assert.assertTrue("LookupSwitch for value " + i, TestTarget.lookupSwitch1_5_10_15(i) == r);
@@ -464,11 +466,14 @@ public class MethodBodyEvaluatorTest {
     public void testOverload() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "returnMax(I)I").evalStatic(new Object[] {0});
+                new MethodBodyEvaluator(classInput, "returnMax", "(I)I")
+                        .evalStatic(new Object[] {0});
         Integer i = (Integer) result;
         Assert.assertTrue("Overload (I)I", TestTarget.returnMax(0) == i);
 
-        result = new MethodBodyEvaluator(classInput, "returnMax(J)J").evalStatic(new Object[] {0L});
+        result =
+                new MethodBodyEvaluator(classInput, "returnMax", "(J)J")
+                        .evalStatic(new Object[] {0L});
         Long l = (Long) result;
         Assert.assertTrue("Overload (L)L", TestTarget.returnMax(0L) == l);
     }
@@ -478,7 +483,7 @@ public class MethodBodyEvaluatorTest {
     public void testArrayParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testArrayParameters()I")
+                new MethodBodyEvaluator(classInput, "testArrayParameters", "()I")
                         .evalStatic(new Object[0]);
         Integer i = (Integer) result;
         Assert.assertEquals("Array parameters", TestTarget.testArrayParameters(), i.intValue());
@@ -488,7 +493,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayIntParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiIntArray()I")
+                new MethodBodyEvaluator(classInput, "testMultiIntArray", "()I")
                         .evalStatic(new Object[0]);
         Integer i = (Integer) result;
         Assert.assertEquals("Multi Array Int get/set", TestTarget.testMultiIntArray(), i.intValue());
@@ -498,7 +503,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayCharParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiCharacterArray()I")
+                new MethodBodyEvaluator(classInput, "testMultiCharacterArray", "()I")
                         .evalStatic(new Object[0]);
         Integer i = (Integer) result;
         Assert.assertEquals("Multi Array Char get/set", TestTarget.testMultiCharacterArray(), i.intValue());
@@ -508,7 +513,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayByteParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiByteArray()I")
+                new MethodBodyEvaluator(classInput, "testMultiByteArray", "()I")
                         .evalStatic(new Object[0]);
         Integer i = (Integer) result;
         Assert.assertEquals("Multi Array Byte get/set", TestTarget.testMultiByteArray(), i.intValue());
@@ -518,7 +523,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayShortParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiShortArray()I")
+                new MethodBodyEvaluator(classInput, "testMultiShortArray", "()I")
                         .evalStatic(new Object[0]);
         Integer i = (Integer) result;
         Assert.assertEquals("Multi Array Short get/set", TestTarget.testMultiShortArray(), i.intValue());
@@ -528,7 +533,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayLongParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiLongArray()J")
+                new MethodBodyEvaluator(classInput, "testMultiLongArray", "()J")
                         .evalStatic(new Object[0]);
         Long l = (Long) result;
         Assert.assertEquals("Multi Array Long get/set", TestTarget.testMultiLongArray(), l.longValue());
@@ -538,7 +543,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayFloatParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiFloatArray()F")
+                new MethodBodyEvaluator(classInput, "testMultiFloatArray", "()F")
                         .evalStatic(new Object[0]);
         Float f = (Float) result;
         Assert.assertEquals(TestTarget.testMultiFloatArray(), f.floatValue(), NO_DELTA);
@@ -547,7 +552,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayDoubleParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiDoubleArray()D")
+                new MethodBodyEvaluator(classInput, "testMultiDoubleArray", "()D")
                         .evalStatic(new Object[0]);
         Double d = (Double) result;
         Assert.assertEquals(TestTarget.testMultiDoubleArray(), d.doubleValue(), NO_DELTA);
@@ -557,7 +562,7 @@ public class MethodBodyEvaluatorTest {
     public void testMultiArrayObjectParameter() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testMultiObjectArray()Ljava/lang/Integer;")
+                new MethodBodyEvaluator(classInput, "testMultiObjectArray", "()Ljava/lang/Integer;")
                         .evalStatic(new Object[0]);
         Assert.assertEquals(
                 "Multi Array Object get/set", TestTarget.testMultiObjectArray(), result);
@@ -569,7 +574,7 @@ public class MethodBodyEvaluatorTest {
         Child child = new Child(0);
         int protectedFieldValue = 5;
         Object result =
-                new MethodBodyEvaluator(classInput, "accessParentProtectedField(I)I")
+                new MethodBodyEvaluator(classInput, "accessParentProtectedField", "(I)I")
                         .eval(child, Child.class.getTypeName(), new Object[] {protectedFieldValue});
         Integer i = (Integer) result;
 

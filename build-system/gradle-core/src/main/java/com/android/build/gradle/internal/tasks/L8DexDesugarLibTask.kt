@@ -208,7 +208,7 @@ fun setDesugarLibKeepRules(
     }
 
     val nonMinified = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8
-    if (creationConfig.globalScope.hasDynamicFeatures() && nonMinified) {
+    if (creationConfig.global.hasDynamicFeatures && nonMinified) {
         keepRulesFiles.from(
             creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,

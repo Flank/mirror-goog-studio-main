@@ -16,6 +16,7 @@
 
 package com.android.build.api.artifact
 
+import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -102,4 +103,14 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      * See [Choose resources to make public](https://developer.android.com/studio/projects/android-library.html#PrivateResources).
      */
     object PUBLIC_ANDROID_RESOURCES_LIST: SingleArtifact<RegularFile>(FILE)
+
+    /**
+     * The metadata for the library dependencies.
+     *
+     * Format of the file is described by com.android.tools.build.libraries.metadata.AppDependencies
+     * which is not guaranteed to be stable.
+     */
+
+    @Incubating
+    object METADATA_LIBRARY_DEPENDENCIES_REPORT: SingleArtifact<RegularFile>(FILE), Replaceable, Transformable
 }

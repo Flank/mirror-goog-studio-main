@@ -33,9 +33,9 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.dsl.CompileOptions;
 import com.android.build.api.variant.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
@@ -98,10 +99,12 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final VariantDependencies variantDependencies;
 
     @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
-    @Nullable private final VariantImpl testedVariantProperties;
 
-    // Global Data
-    @NonNull private final GlobalScope globalScope;
+    @NonNull private final String compileSdkVersion;
+
+    private final boolean hasDynamicFeatures;
+
+    @Nullable private final VariantImpl testedVariantProperties;
 
     // other
 
@@ -112,12 +115,13 @@ public class VariantScopeImpl implements VariantScope {
 
     public VariantScopeImpl(
             @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo<?> variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,
             @NonNull BaseServices baseServices,
-            @NonNull GlobalScope globalScope,
+            @Nullable String compileSdkVersion,
+            boolean hasDynamicFeatures,
             @Nullable VariantImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
@@ -125,9 +129,10 @@ public class VariantScopeImpl implements VariantScope {
         this.pathHelper = pathHelper;
         this.artifacts = artifacts;
         this.baseServices = baseServices;
-        this.globalScope = globalScope;
         this.variantPublishingSpec =
                 PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
+        this.compileSdkVersion = compileSdkVersion;
+        this.hasDynamicFeatures = hasDynamicFeatures;
         this.testedVariantProperties = testedVariantProperties;
 
         this.postProcessingOptions = variantDslInfo.getPostProcessingOptions();
@@ -218,11 +223,8 @@ public class VariantScopeImpl implements VariantScope {
         }
         // Otherwise, if set globally, respect that.
         Boolean globalOverride =
-                baseServices
-                        .getProjectInfo()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getCruncherEnabledOverride();
+                ((AaptOptions) variantDslInfo.getAndroidResources()).getCruncherEnabledOverride();
+
         if (globalOverride != null) {
             return globalOverride;
         }
@@ -235,15 +237,14 @@ public class VariantScopeImpl implements VariantScope {
     public boolean consumesFeatureJars() {
         return variantDslInfo.getVariantType().isBaseModule()
                 && variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
-                && globalScope.hasDynamicFeatures();
+                && hasDynamicFeatures;
     }
 
     @Override
     public boolean getNeedsJavaResStreams() {
         // We need to create original java resource stream only if we're in a library module with
         // custom transforms.
-        return variantDslInfo.getVariantType().isAar()
-                && !globalScope.getExtension().getTransforms().isEmpty();
+        return variantDslInfo.getVariantType().isAar() && !variantDslInfo.getTransforms().isEmpty();
     }
 
     @NonNull
@@ -316,9 +317,7 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     private boolean isPreviewTargetPlatform() {
-        AndroidVersion version =
-                AndroidTargetHash.getVersionFromHash(
-                        globalScope.getExtension().getCompileSdkVersion());
+        AndroidVersion version = AndroidTargetHash.getVersionFromHash(compileSdkVersion);
         return version != null && version.isPreview();
     }
 
@@ -329,12 +328,9 @@ public class VariantScopeImpl implements VariantScope {
      */
     @Override
     public boolean isCoreLibraryDesugaringEnabled(ConsumableCreationConfig creationConfig) {
-        BaseExtension extension = globalScope.getExtension();
+        CompileOptions compileOptions = creationConfig.getGlobal().getCompileOptions();
 
-        boolean libDesugarEnabled =
-                extension.getCompileOptions().getCoreLibraryDesugaringEnabled() != null
-                        && extension.getCompileOptions().getCoreLibraryDesugaringEnabled();
-
+        boolean libDesugarEnabled = compileOptions.isCoreLibraryDesugaringEnabled();
         boolean multidexEnabled = creationConfig.isMultiDexEnabled();
 
         Java8LangSupport langSupportType = creationConfig.getJava8LangSupportType();
@@ -342,8 +338,8 @@ public class VariantScopeImpl implements VariantScope {
                 langSupportType == Java8LangSupport.D8 || langSupportType == Java8LangSupport.R8;
 
         if (libDesugarEnabled && !langDesugarEnabled) {
-            globalScope
-                    .getDslServices()
+            creationConfig
+                    .getServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -352,8 +348,8 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         if (libDesugarEnabled && !multidexEnabled) {
-            globalScope
-                    .getDslServices()
+            creationConfig
+                    .getServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,

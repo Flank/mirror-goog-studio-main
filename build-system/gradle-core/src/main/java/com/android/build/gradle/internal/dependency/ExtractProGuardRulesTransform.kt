@@ -27,7 +27,8 @@ import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -48,7 +49,7 @@ fun isToolsConfigurationFile(entry: ZipEntry): Boolean {
 abstract class ExtractProGuardRulesTransform @Inject constructor() :
     TransformAction<GenericTransformParameters> {
 
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputArtifact
     abstract val inputArtifact: Provider<FileSystemLocation>
 

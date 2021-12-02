@@ -53,6 +53,7 @@ import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldState
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
@@ -64,6 +65,7 @@ import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
@@ -136,9 +138,9 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun foldEventsSent() = createViewInspector { viewInspector ->
-        viewInspector.foldObserver = object: FoldObserver {
-            override val foldState: LayoutInspectorViewProtocol.FoldEvent.FoldState =
-                LayoutInspectorViewProtocol.FoldEvent.FoldState.HALF_OPEN
+        val myObserver = object : FoldObserver {
+            override var foldState: FoldState? =
+                FoldState.HALF_OPEN
             override val orientation: LayoutInspectorViewProtocol.FoldEvent.FoldOrientation =
                 LayoutInspectorViewProtocol.FoldEvent.FoldOrientation.HORIZONTAL
 
@@ -146,6 +148,8 @@ class ViewLayoutInspectorTest {
             override fun stopObservingFoldState(rootView: View) {}
             override fun shutdown() {}
         }
+        viewInspector.foldObserver = myObserver
+
         val eventQueue = ArrayBlockingQueue<ByteArray>(15)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
@@ -203,6 +207,26 @@ class ViewLayoutInspectorTest {
             assertThat(event.foldEvent.angle).isEqualTo(100)
         }
 
+        // Set the state to null. We should get one empty event and then no more.
+        myObserver.foldState = null
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(0f) })
+
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.foldState).isEqualTo(FoldState.UNKNOWN_FOLD_STATE)
+        }
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(1f) })
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(2f) })
+
+        // Set the state back to something, and we should start getting events again.
+        myObserver.foldState = FoldState.HALF_OPEN
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(30f) })
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.angle).isEqualTo(30)
+        }
+
+        // Turn off live updates. We should stop getting events.
         val stopFetchCommand = Command.newBuilder().apply {
             stopFetchCommand = StopFetchCommand.getDefaultInstance()
         }.build()
@@ -1792,6 +1816,122 @@ class ViewLayoutInspectorTest {
         checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
         }
+    }
+
+    // This test starts two captures at the same time, after stopping capturing.
+    // The first capture have isLastCapture = true and will return a LAYOUT_EVENT. The second
+    // capture should return without an exception.
+    @Test
+    fun cancelWhileCapturing() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(10)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val mainScreen = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 400
+            height = 800
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(mainScreen))
+
+        // Set up the two capture threads.
+        var exception: Exception? = null
+        val t1 = thread(start = false) {
+            try {
+                mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
+            }
+            catch (e: Exception) {
+                exception = e
+            }
+        }
+        val t2 = thread(start = false) {
+            try {
+                mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
+            }
+            catch (e: Exception) {
+                exception = e
+            }
+        }
+
+        // Set up the synchronization between the threads, so both requests start before the
+        // executors are shut down and neither thinks it's obsolete and exits right away.
+        // t1 will run and send events, and t2 will exit because the inner executor has already been
+        // removed from the context.
+        val t2StartedExecution = CountDownLatch(1)
+        val receivedLayoutResponse = CountDownLatch(1)
+        viewInspector.basicExecutorFactory = { body: (Runnable) -> Unit ->
+            Executor {
+                if (Thread.currentThread() == t1) {
+                    t2StartedExecution.await()
+                }
+                if (Thread.currentThread() == t2) {
+                    t2StartedExecution.countDown()
+                    receivedLayoutResponse.await()
+                }
+                body(it)
+            }
+        }
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.remove()
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.remove()
+
+        val stopFetchCommand = Command.newBuilder().apply {
+            stopFetchCommand = StopFetchCommand.getDefaultInstance()
+        }.build()
+        viewInspector.onReceiveCommand(
+            stopFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.STOP_FETCH_RESPONSE)
+        }
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+        mainScreen.viewRootImpl = ViewRootImpl()
+        mainScreen.viewRootImpl.mSurface = Surface()
+        mainScreen.viewRootImpl.mSurface.bitmapBytes = byteArrayOf(1, 2, 3)
+
+        t1.start()
+        t2.start()
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+        }
+        checkNonProgressEvent(eventQueue) { event ->
+            receivedLayoutResponse.countDown()
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+        }
+
+        t1.join()
+        t2.join()
+        assertThat(exception).isNull()
     }
 
     private fun checkNonProgressEvent(

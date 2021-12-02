@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.CheckJetifierTask
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.utils.SynchronizedFile
+import com.android.ide.common.attribution.CheckJetifierProjectResult
 import com.android.ide.common.attribution.CheckJetifierResult
 import com.android.utils.FileUtils
 import org.gradle.api.Project
@@ -74,23 +75,20 @@ abstract class CheckJetifierBuildService
         }
     }
 
-    private var aggregatedResult: CheckJetifierResult? = null
+    private val projectResults: MutableList<CheckJetifierProjectResult> = mutableListOf()
 
     @Synchronized
-    fun addResult(result: CheckJetifierResult) {
+    fun addResult(result: CheckJetifierProjectResult) {
         if (parameters.resultFile.isPresent) {
-            aggregatedResult = if (aggregatedResult != null) {
-                CheckJetifierResult.aggregateResults(aggregatedResult!!, result)
-            } else {
-                result
-            }
+            projectResults.add(result)
         }
     }
 
     override fun close() {
         parameters.resultFile.orNull?.let {
-            if (aggregatedResult != null) {
-                writeResult(aggregatedResult!!, it.asFile)
+            if (projectResults.isNotEmpty()) {
+                val aggregatedResult = CheckJetifierResult.aggregateProjectResults(projectResults)
+                writeResult(aggregatedResult, it.asFile)
             }
         }
     }

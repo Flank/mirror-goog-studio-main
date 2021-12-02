@@ -57,7 +57,7 @@ class AndroidComponentsBuilderImpl: AndroidComponentsBuilder {
             for ((name, state) in disabledMap) {
                 sb.append("  beforeVariants(selector().withName(\"$name\")) { variant ->\n")
                 if (!state.main) {
-                    sb.append("    variant.enabled = false\n")
+                    sb.append("    variant.enable = false\n")
                 }
                 if (!state.androidTest) {
                     sb.append("    variant.enableAndroidTest = false\n")

@@ -30,4 +30,9 @@ class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *
     internal val variantBuilderOperations = OperationsRegistrar<VariantBuilderT>()
     internal val variantOperations = OperationsRegistrar<VariantT>()
     internal val dslExtensions = mutableListOf<AndroidComponentsExtensionImpl.RegisteredApiExtension<VariantT>>()
+    internal val sourceSetExtensions = mutableListOf<String>()
+
+    fun onEachSourceSetExtensions(action: (name: String) -> Unit) {
+        sourceSetExtensions.forEach(action)
+    }
 }

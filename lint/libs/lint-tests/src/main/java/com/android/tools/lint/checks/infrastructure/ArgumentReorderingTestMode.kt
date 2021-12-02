@@ -35,7 +35,7 @@ import org.jetbrains.uast.UFile
  * Test mode which reorders the argument order in Kotlin files to make
  * sure that detectors are properly computing the argument map.
  */
-class ArgumentReorderingTestMode : SourceTransformationTestMode(
+class ArgumentReorderingTestMode : UastSourceTransformationTestMode(
     description = "Reordered Named Arguments",
     "TestMode.REORDER_ARGUMENTS",
     "reorder-arguments"

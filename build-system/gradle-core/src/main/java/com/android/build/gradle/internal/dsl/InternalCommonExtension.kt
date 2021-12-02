@@ -19,14 +19,10 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.ComposeOptions
-import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.Installation
 import com.android.build.api.dsl.Lint
-import com.android.build.api.dsl.Splits
 import com.android.build.api.dsl.TestCoverage
-import com.android.build.api.dsl.TestOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl

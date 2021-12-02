@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_CREATED_BASELINE
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_ERRORS
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.maybeThrowException
@@ -45,7 +45,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
-import java.lang.RuntimeException
+import java.io.File
 
 /**
  * Task to print lint text output to stdout or stderr if necessary.
@@ -88,12 +88,8 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         maybeWarnAboutDeprecatedGlobalRuleJars()
-        if (outputStream.get() != OutputStream.NONE) {
+        if (outputStream.get() != OutputStream.ABBREVIATED) {
             textReportInputFile.get().asFile.let { textReportFile ->
-                if (!textReportFile.isFile) {
-                    logger.debug("Missing lint intermediate text report.")
-                    return@let
-                }
                 val text = textReportFile.readText()
                 if (text.startsWith("No issues found")
                     || text.contains("0 errors, 0 warnings")) {
@@ -112,12 +108,39 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             }
             val returnValue = returnValueFile.readText().toInt()
             if (returnValue in HANDLED_ERRORS) {
+                if (outputStream.get() == OutputStream.ABBREVIATED) {
+                    logger.lifecycle(abbreviateLintTextFile(textReportInputFile.get().asFile))
+                }
                 if (returnValue == ERRNO_ERRORS && !abortOnError.get()) {
                     return
                 }
                 maybeThrowException(returnValue, android.get(), fatalOnly.get())
             }
         }
+    }
+
+    private fun abbreviateLintTextFile(file: File) : String {
+        val lines = file.readLines()
+        if (lines.count() < 25) return lines.joinToString("\n")
+        // Append the first issue and the footer text
+        return StringBuilder().apply {
+            append("Lint found ")
+            append(lines.last { it.isNotEmpty() })
+            append(". First failure:\n\n")
+            // This is dependent on the format of the text output, but should be good enough for now
+            val firstError = lines.indexOfFirst { !it.startsWith(" ") && it.contains("Error: ") }
+            var line = maxOf(0, firstError) // Default to the first line if 'Error:' not found
+            while(true) {
+                append(lines[line]).append("\n")
+                line += 1
+                if (!lines[line].startsWith(" ") && lines[line].isNotEmpty()) {
+                    break
+                }
+
+            }
+            append("\nThe full lint text report is located at:\n  ")
+            append(file.absolutePath)
+        }.toString()
     }
 
     private fun maybeWarnAboutDeprecatedGlobalRuleJars() {
@@ -166,7 +189,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             task.initializeCommonInputs(
                 creationConfig.services.projectInfo.getProject(),
                 creationConfig.artifacts,
-                creationConfig.globalScope.extension.lintOptions,
+                creationConfig.global.lintOptions,
                 fatalOnly
             )
         }
@@ -175,7 +198,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     internal fun initializeCommonInputs(
         project: Project,
         artifacts: ArtifactsImpl,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         fatalOnly: Boolean
     ) {
         textReportInputFile.setDisallowChanges(
@@ -195,7 +218,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             )
         )
         this.fatalOnly.setDisallowChanges(fatalOnly)
-        abortOnError.setDisallowChanges(lintOptions.isAbortOnError)
+        abortOnError.setDisallowChanges(lintOptions.abortOnError)
         val textOutput = lintOptions.textOutput
         when {
             fatalOnly || (lintOptions.textReport && textOutput?.isLintStderr() == true) ->
@@ -203,7 +226,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             // If text report is requested, but no path specified, use stdout, hence the ?: true
             lintOptions.textReport && textOutput?.isLintStdout() ?: true ->
                 outputStream.setDisallowChanges(OutputStream.STDOUT)
-            else -> outputStream.setDisallowChanges(OutputStream.NONE)
+            else -> outputStream.setDisallowChanges(OutputStream.ABBREVIATED)
         }
         val locationsBuildService =
             getBuildService<AndroidLocationsBuildService>(project.gradle.sharedServices)
@@ -215,7 +238,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     internal fun configureForStandalone(
         taskCreationServices: TaskCreationServices,
         artifacts: ArtifactsImpl,
-        lintOptions: LintOptions,
+        lintOptions: Lint,
         fatalOnly: Boolean = false
     ) {
         analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -234,7 +257,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     enum class OutputStream {
         STDOUT,
         STDERR,
-        NONE
+        ABBREVIATED,
     }
 
     companion object {

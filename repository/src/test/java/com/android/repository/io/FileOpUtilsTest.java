@@ -28,9 +28,8 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.file.DelegatingFileSystemProvider;
-import java.io.File;
+import com.android.testutils.file.InMemoryFileSystems;
 import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.FileSystem;
@@ -100,59 +99,59 @@ public class FileOpUtilsTest {
 
     @Test
     public void recursiveCopySuccess() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File s3 = new File("/root/src/foo/b");
-        File s4 = new File("/root/src/foo/bar/a");
-        File s5 = new File("/root/src/baz/c");
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("root");
+        Path s1 = root.resolve("src/a");
+        Path s2 = root.resolve("src/foo/a");
+        Path s3 = root.resolve("src/foo/b");
+        Path s4 = root.resolve("src/foo/bar/a");
+        Path s5 = root.resolve("src/baz/c");
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(s3.getPath(), "content3");
-        fop.recordExistingFile(s4.getPath(), "content4");
-        fop.recordExistingFile(s5.getPath(), "content5");
+        InMemoryFileSystems.recordExistingFile(s1, "content1");
+        InMemoryFileSystems.recordExistingFile(s2, "content2");
+        InMemoryFileSystems.recordExistingFile(s3, "content3");
+        InMemoryFileSystems.recordExistingFile(s4, "content4");
+        InMemoryFileSystems.recordExistingFile(s5, "content5");
 
         FileOpUtils.recursiveCopy(
-                fop.toPath("/root/src/"),
-                fop.toPath("/root/dest"),
+                root.resolve("src/"),
+                root.resolve("dest"),
                 false,
                 null,
                 new FakeProgressIndicator());
 
-        assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
-        assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
-        assertEquals("content3", new String(fop.getContent(new File("/root/dest/foo/b"))));
-        assertEquals("content4", new String(fop.getContent(new File("/root/dest/foo/bar/a"))));
-        assertEquals("content5", new String(fop.getContent(new File("/root/dest/baz/c"))));
+        assertEquals("content1", new String(Files.readAllBytes(root.resolve("dest/a"))));
+        assertEquals("content2", new String(Files.readAllBytes(root.resolve("dest/foo/a"))));
+        assertEquals("content3", new String(Files.readAllBytes(root.resolve("dest/foo/b"))));
+        assertEquals("content4", new String(Files.readAllBytes(root.resolve("dest/foo/bar/a"))));
+        assertEquals("content5", new String(Files.readAllBytes(root.resolve("dest/baz/c"))));
 
         // Also verify the sources are unchanged
-        assertEquals("content1", new String(fop.getContent(s1)));
-        assertEquals("content2", new String(fop.getContent(s2)));
-        assertEquals("content3", new String(fop.getContent(s3)));
-        assertEquals("content4", new String(fop.getContent(s4)));
-        assertEquals("content5", new String(fop.getContent(s5)));
+        assertEquals("content1", new String(Files.readAllBytes(s1)));
+        assertEquals("content2", new String(Files.readAllBytes(s2)));
+        assertEquals("content3", new String(Files.readAllBytes(s3)));
+        assertEquals("content4", new String(Files.readAllBytes(s4)));
+        assertEquals("content5", new String(Files.readAllBytes(s5)));
 
         // Finally verify that nothing else is created
-        assertEquals(10, fop.getExistingFiles().size());
+        assertEquals(10, InMemoryFileSystems.getExistingFiles(root.getFileSystem()).size());
     }
 
     @Test
-    public void recursiveCopyAlreadyExists() {
-        MockFileOp fop = new MockFileOp();
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
+    public void recursiveCopyAlreadyExists() throws Exception {
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("root");
+        Path s1 = root.resolve("src/a");
+        Path s2 = root.resolve("src/foo/a");
 
-        File d1 = new File("/root/dest/b");
+        Path d1 = root.resolve("dest/b");
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
+        InMemoryFileSystems.recordExistingFile(s1, "content1");
+        InMemoryFileSystems.recordExistingFile(s2, "content2");
+        InMemoryFileSystems.recordExistingFile(d1, "content3");
 
         try {
             FileOpUtils.recursiveCopy(
-                    fop.toPath("/root/src/"),
-                    fop.toPath("/root/dest"),
+                    root.resolve("src"),
+                    root.resolve("dest"),
                     false,
                     null,
                     new FakeProgressIndicator());
@@ -161,12 +160,12 @@ public class FileOpUtilsTest {
         }
 
         // verify that nothing is changed
-        assertEquals("content3", new String(fop.getContent(d1)));
-        assertEquals("content1", new String(fop.getContent(s1)));
-        assertEquals("content2", new String(fop.getContent(s2)));
+        assertEquals("content3", new String(Files.readAllBytes(d1)));
+        assertEquals("content1", new String(Files.readAllBytes(s1)));
+        assertEquals("content2", new String(Files.readAllBytes(s2)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().size());
+        assertEquals(3, InMemoryFileSystems.getExistingFiles(root.getFileSystem()).size());
     }
 
     @Test
@@ -207,58 +206,58 @@ public class FileOpUtilsTest {
 
     @Test
     public void recursiveCopyMerge() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File s3 = new File("/root/src/foo/b");
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("root");
+        Path s1 = root.resolve("src/a");
+        Path s2 = root.resolve("src/foo/a");
+        Path s3 = root.resolve("src/foo/b");
 
-        File d1 = new File("/root/dest/b");
-        File d2 = new File("/root/dest/foo/b");
-        File d3 = new File("/root/dest/bar/b");
+        Path d1 = root.resolve("dest/b");
+        Path d2 = root.resolve("dest/foo/b");
+        Path d3 = root.resolve("dest/bar/b");
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(s3.getPath(), "content3");
-        fop.recordExistingFile(d1.getPath(), "content4");
-        fop.recordExistingFile(d2.getPath(), "content5");
-        fop.recordExistingFile(d3.getPath(), "content6");
+        InMemoryFileSystems.recordExistingFile(s1, "content1");
+        InMemoryFileSystems.recordExistingFile(s2, "content2");
+        InMemoryFileSystems.recordExistingFile(s3, "content3");
+        InMemoryFileSystems.recordExistingFile(d1, "content4");
+        InMemoryFileSystems.recordExistingFile(d2, "content5");
+        InMemoryFileSystems.recordExistingFile(d3, "content6");
 
         FileOpUtils.recursiveCopy(
-                fop.toPath("/root/src/"),
-                fop.toPath("/root/dest"),
+                root.resolve("src/"),
+                root.resolve("dest"),
                 true,
                 null,
                 new FakeProgressIndicator());
 
         // Verify the existing dest files
-        assertEquals("content4", new String(fop.getContent(d1)));
-        assertEquals("content5", new String(fop.getContent(d2)));
-        assertEquals("content6", new String(fop.getContent(d3)));
+        assertEquals("content4", new String(Files.readAllBytes(d1)));
+        assertEquals("content5", new String(Files.readAllBytes(d2)));
+        assertEquals("content6", new String(Files.readAllBytes(d3)));
 
         // Verify the new dest files
-        assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
-        assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
+        assertEquals("content1", new String(Files.readAllBytes(root.resolve("dest/a"))));
+        assertEquals("content2", new String(Files.readAllBytes(root.resolve("dest/foo/a"))));
 
         // Finally verify that nothing else is created
-        assertEquals(8, fop.getExistingFiles().size());
+        assertEquals(8, InMemoryFileSystems.getExistingFiles(root.getFileSystem()).size());
     }
 
     @Test
-    public void recursiveCopyMergeFailed() {
-        MockFileOp fop = new MockFileOp();
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
+    public void recursiveCopyMergeFailed() throws Exception {
+        Path root = InMemoryFileSystems.createInMemoryFileSystemAndFolder("root");
+        Path s1 = root.resolve("src/a");
+        Path s2 = root.resolve("src/foo/a");
 
-        File d1 = new File("/root/dest/a/b");
+        Path d1 = root.resolve("dest/a/b");
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
+        InMemoryFileSystems.recordExistingFile(s1, "content1");
+        InMemoryFileSystems.recordExistingFile(s2, "content2");
+        InMemoryFileSystems.recordExistingFile(d1, "content3");
 
         try {
             FileOpUtils.recursiveCopy(
-                    fop.toPath("/root/src/"),
-                    fop.toPath("/root/dest"),
+                    root.resolve("src/"),
+                    root.resolve("dest"),
                     true,
                     null,
                     new FakeProgressIndicator());
@@ -267,12 +266,12 @@ public class FileOpUtilsTest {
         }
 
         // Ensure nothing changed
-        assertEquals("content1", new String(fop.getContent(s1)));
-        assertEquals("content2", new String(fop.getContent(s2)));
-        assertEquals("content3", new String(fop.getContent(d1)));
+        assertEquals("content1", new String(Files.readAllBytes(s1)));
+        assertEquals("content2", new String(Files.readAllBytes(s2)));
+        assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().size());
+        assertEquals(3, InMemoryFileSystems.getExistingFiles(root.getFileSystem()).size());
     }
 
     @Test

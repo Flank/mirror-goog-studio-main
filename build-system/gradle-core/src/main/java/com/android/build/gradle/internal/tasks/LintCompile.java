@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.ProjectInfo;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.utils.FileUtils;
-import java.io.File;
-import org.gradle.api.DefaultTask;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 
 /**
@@ -32,32 +30,21 @@ import org.gradle.work.DisableCachingByDefault;
  * <p>TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
  */
 @DisableCachingByDefault
-public class LintCompile extends DefaultTask {
-
-    private File outputDirectory;
+public abstract class LintCompile extends NonIncrementalGlobalTask {
 
     @OutputDirectory
-    public File getOutputDirectory() {
-        return outputDirectory;
-    }
+    public abstract DirectoryProperty getOutputDirectory();
 
-    public void setOutputDirectory(File outputDirectory) {
-        this.outputDirectory = outputDirectory;
-    }
-
-    @TaskAction
-    public void compile() {
+    @Override
+    protected void doTaskAction() {
         // TODO
-        FileUtils.mkdirs(getOutputDirectory());
+        FileUtils.mkdirs(getOutputDirectory().get().getAsFile());
     }
 
+    public static class CreationAction extends GlobalTaskCreationAction<LintCompile> {
 
-    public static class CreationAction extends TaskCreationAction<LintCompile> {
-
-        private final ProjectInfo projectInfo;
-
-        public CreationAction(@NonNull ProjectInfo projectInfo) {
-            this.projectInfo = projectInfo;
+        public CreationAction(@NonNull GlobalTaskCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull
@@ -74,7 +61,14 @@ public class LintCompile extends DefaultTask {
 
         @Override
         public void configure(@NonNull LintCompile task) {
-            task.setOutputDirectory(new File(projectInfo.getIntermediatesDir(), "lint"));
+            super.configure(task);
+
+            task.getOutputDirectory()
+                    .set(
+                            creationConfig
+                                    .getServices()
+                                    .getProjectInfo()
+                                    .intermediatesDirectory("lint"));
         }
     }
 }

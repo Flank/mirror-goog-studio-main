@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class LeakDetectorTest : AbstractCheckTest() {
@@ -575,5 +576,46 @@ class LeakDetectorTest : AbstractCheckTest() {
                 """
             )
         ).run().expectClean()
+    }
+
+    fun testHilt() {
+        // Regression test for
+        // 206207283: StaticFieldLeak should not report usage of hilt annotated @ApplicationContext
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import dagger.hilt.android.qualifiers.ApplicationContext
+
+                class Model constructor(
+                    @ApplicationContext private val context: Context // OK
+                ) {
+                    companion object {
+                        var model: Model? = null
+                    }
+                }
+
+                @Suppress("CanBePrimaryConstructorProperty")
+                class Model2 constructor(context: Context) {
+                    @ApplicationContext private val context: Context = context // OK
+                    companion object {
+                        var model: Model2? = null
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                // Stub
+                """
+                package dagger.hilt.android.qualifiers;
+                import java.lang.annotation.ElementType;
+                import java.lang.annotation.Target;
+                @Target({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
+                public @interface ApplicationContext {}
+                """
+            ).indented()
+        ).skipTestModes(TestMode.TYPE_ALIAS, TestMode.IMPORT_ALIAS).run().expectClean()
     }
 }

@@ -23,7 +23,6 @@ androidx.databinding:databinding-compiler
     com.squareup:javapoet (runtime)
     commons-codec:commons-codec (runtime)
     commons-io:commons-io (runtime)
-    org.antlr:antlr4 (runtime)
     org.glassfish.jaxb:jaxb-runtime (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
@@ -40,7 +39,6 @@ androidx.databinding:databinding-compiler-common
     com.googlecode.juniversalchardet:juniversalchardet (runtime)
     com.squareup:javapoet (runtime)
     commons-io:commons-io (runtime)
-    org.antlr:antlr4 (runtime)
     org.glassfish.jaxb:jaxb-runtime (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
@@ -76,9 +74,9 @@ com.android:signflinger
   pomName=com.android.signflinger
   description=Library used to sign APKs
   dependencies:
+    com.android.tools:annotations (runtime)
     com.android.tools.build:apksig (runtime)
     com.android:zipflinger (runtime)
-    com.android.tools:annotations (runtime)
 
 com.android:zipflinger
   pomName=com.android.zipflinger
@@ -234,19 +232,19 @@ com.android.tools:sdklib
 
 com.android.tools:testutils
   pomName=com.android.tools.testutils
-  description=API used by lint testing infrastructure
+  description=Internal test utilities for Android Studio and other tools developed alongside Studio
   dependencies:
-    com.google.truth:truth (compile)
     com.google.truth.extensions:truth-java8-extension (compile)
+    com.google.truth:truth (compile)
     com.android.tools:common (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
-    org.jetbrains.kotlin:kotlin-test (runtime)
+    com.google.jimfs:jimfs (runtime)
     junit:junit (runtime)
     org.easymock:easymock (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
+    org.jetbrains.kotlin:kotlin-test (runtime)
     org.mockito:mockito-core (runtime)
-    com.google.jimfs:jimfs (runtime)
-    org.smali:dexlib2 (runtime)
     org.ow2.asm:asm (runtime)
+    org.smali:dexlib2 (runtime)
 
 com.android.tools.analytics-library:crash
   pomName=Android Tools Analytics Crash Library

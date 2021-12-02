@@ -28,6 +28,7 @@ import com.android.tools.lint.model.LintModelDependencies
 import com.android.tools.lint.model.LintModelDependency
 import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelModuleLibrary
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -88,16 +89,17 @@ class LintDependencyModelBuilder(
         }
 
         val artifactName =
-            if (lintModelLibrary is LintModelExternalLibrary) {
-                "${lintModelLibrary.resolvedCoordinates.groupId}:${lintModelLibrary.resolvedCoordinates.artifactId}"
-            } else {
-                lintModelLibrary.artifactAddress
+            when (lintModelLibrary) {
+                is LintModelExternalLibrary ->
+                    "${lintModelLibrary.resolvedCoordinates.groupId}:${lintModelLibrary.resolvedCoordinates.artifactId}"
+                is LintModelModuleLibrary -> "artifacts:${lintModelLibrary.projectPath}"
+                else -> throw RuntimeException("Not supported library type")
             }
 
         // create a graph node with no transitive dependencies (at the moment)
         val dependency = DefaultLintModelDependency(
+            identifier = lintModelLibrary.identifier,
             artifactName = artifactName,
-            artifactAddress = lintModelLibrary.artifactAddress,
             requestedCoordinates = null, // FIXME
             dependencies = listOf(),
             libraryResolver = libraryResolver

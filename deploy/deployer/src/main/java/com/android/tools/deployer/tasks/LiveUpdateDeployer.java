@@ -60,16 +60,19 @@ public class LiveUpdateDeployer {
     public static class UpdateLiveEditsParam {
         final String className;
         final String methodName;
+        final String methodDesc;
         final byte[] classData;
         final Map<String, byte[]> supportClasses;
 
         public UpdateLiveEditsParam(
                 String className,
                 String methodName,
+                String methodDesc,
                 byte[] classData,
                 Map<String, byte[]> supportClasses) {
             this.className = className;
             this.methodName = methodName;
+            this.methodDesc = methodDesc;
             this.classData = classData;
             this.supportClasses = supportClasses;
         }
@@ -146,7 +149,8 @@ public class LiveUpdateDeployer {
                 Deploy.LiveEditClass.newBuilder()
                         .setClassName(param.className)
                         .setClassData(ByteString.copyFrom(param.classData))
-                        .setMethodSignature(param.methodName));
+                        .setMethodName(param.methodName)
+                        .setMethodDesc(param.methodDesc));
 
         for (String name : param.supportClasses.keySet()) {
             ByteString data = ByteString.copyFrom(param.supportClasses.get(name));

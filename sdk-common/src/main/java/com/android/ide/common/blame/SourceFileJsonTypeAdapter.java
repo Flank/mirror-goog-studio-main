@@ -88,9 +88,6 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
                     } else {
                         sf = new SourceFile(file);
                     }
-                    if (RelativeResourceUtils.isRelativeSourceSetResource(filePath)) {
-                        sf.setOverrideSourcePath(filePath);
-                    }
                     return sf;
                 } else {
                     if (!Strings.isNullOrEmpty(description)) {
@@ -104,11 +101,7 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
                 if (Strings.isNullOrEmpty(fileName)) {
                     return SourceFile.UNKNOWN;
                 }
-                SourceFile sf = new SourceFile(new File(fileName));
-                if (RelativeResourceUtils.isRelativeSourceSetResource(fileName)) {
-                    sf.setOverrideSourcePath(fileName);
-                }
-                return sf;
+                return new SourceFile(new File(fileName));
             default:
                 return SourceFile.UNKNOWN;
         }

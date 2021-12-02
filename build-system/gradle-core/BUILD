@@ -190,6 +190,7 @@ kotlin_test(
         "@maven//:com.android.tools.desugar_jdk_libs",
         "@maven//:com.android.tools.desugar_jdk_libs_configuration",
         "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.truth.extensions.truth-java8-extension",
         "@maven//:com.google.jimfs.jimfs",
         "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:com.google.truth.truth",

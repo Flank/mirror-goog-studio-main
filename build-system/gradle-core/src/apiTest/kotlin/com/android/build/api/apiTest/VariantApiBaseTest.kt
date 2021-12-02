@@ -325,6 +325,8 @@ ${
 
         private val sourceFiles = mutableListOf<Pair<String, String>>()
 
+        private val customFolders = mutableListOf<Pair<String, File.()-> Unit>>()
+
         /**
          * Add a source file to the current module
          *
@@ -335,8 +337,20 @@ ${
             sourceFiles.add(Pair(path, content))
         }
 
+        /**
+         * Add a directory to the current module.
+         *
+         * @param path the relative path from the module root folder to create the directory at.
+         * @param action: the lambda to execute once the directory is created to configure its
+         * content.
+         */
+        fun addDirectory(path: String, action: File.() -> Unit) {
+            customFolders.add(path to action)
+        }
+
         internal open fun writeModule(folder: File) {
             Truth.assertThat(buildFile != null)
+
             addBuildFile(folder)
 
             if (manifest != null) {
@@ -359,6 +373,12 @@ ${
                         writeText(it.second.replaceIndent())
                     }
                 }
+            }
+
+            customFolders.forEach { (folderPath, folderAction) ->
+                val newFolder = File(folder, folderPath)
+                newFolder.mkdirs()
+                folderAction.invoke(newFolder)
             }
         }
 
@@ -393,6 +413,7 @@ ${
         : ModuleGivenBuilder(scriptingLanguage) {
 
         private val modules = mutableListOf<Pair<String, GivenBuilder>>()
+
 
         /**
          * the list of tasks' names to invoke on the project, by default, we only invoke
@@ -465,10 +486,10 @@ rootProject.name = "${testName?.methodName ?: javaClass.simpleName}"
 
             super.writeModule(folder)
 
-            modules.forEach {
-                File(folder, it.first.replace(':', File.separatorChar)).apply {
+            modules.forEach { (path, givenBuilder) ->
+                File(folder, path.replace(':', File.separatorChar)).apply {
                     mkdirs()
-                    it.second.writeModule(this)
+                    givenBuilder.writeModule(this)
                 }
             }
         }

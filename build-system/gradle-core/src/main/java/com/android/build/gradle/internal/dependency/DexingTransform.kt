@@ -61,6 +61,8 @@ import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.work.FileChange
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
@@ -91,7 +93,7 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
     @get:Inject
     abstract val inputChanges: InputChanges
 
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputArtifact
     @get:Incremental
     abstract val primaryInput: Provider<FileSystemLocation>

@@ -18,8 +18,10 @@ package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.utils.immutableMapBuilder
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
+import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.SourceProvider
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.AssetSet
@@ -303,5 +305,17 @@ class VariantSources internal constructor(
             Function { obj: SourceProvider -> obj.cDirectories }
         )
 
-
+    /**
+     * Returns a map af all customs source directories registered. Key is the source set name as
+     * registered by the user. Value is also a map of source set name to list of folders registered
+     * for this source set.
+     */
+    val customSourceList: Map<String, Collection<CustomSourceDirectory>>
+        get() {
+            return immutableMapBuilder<String, Collection<CustomSourceDirectory>> {
+             sortedSourceProviders.forEach {
+                 this.put(it.name, it.customDirectories)
+             }
+            }.toMap()
+        }
 }

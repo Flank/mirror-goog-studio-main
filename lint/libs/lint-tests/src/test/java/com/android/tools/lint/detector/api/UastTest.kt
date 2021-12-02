@@ -32,12 +32,14 @@ import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
@@ -185,6 +187,39 @@ class UastTest : TestCase() {
                     "                    ULiteralExpression (value = true) [true] : PsiType:boolean\n",
                 file.asLogTypes()
             )
+        }
+    }
+
+    fun testNodeIsConstructor() {
+        // Regression test for
+        // 206982645: UMethod#isConstructor returns false on actual constructor
+        // https://youtrack.jetbrains.com/issue/KTIJ-20200
+        val source = kotlin(
+            """
+            class Test(private val parameter: Int)  {
+                @Deprecated(message = "Binary compatibility", level = DeprecationLevel.HIDDEN)
+                constructor() : this(42)
+            }
+          """
+        ).indented()
+
+        check(source) { file ->
+            try {
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitMethod(node: UMethod): Boolean {
+                        if (node.sourcePsi is KtConstructor<*>) {
+                            assertTrue("`${node.name}` is not marked as a UAST constructor", node.isConstructor)
+                        }
+                        return super.visitMethod(node)
+                    }
+                })
+                fail("Expected incorrect node.isConstructor or secondary constructor: see KTIJ-20200; has bug been fixed?")
+            } catch (failure: AssertionFailedError) {
+                assertEquals(
+                    "`Test` is not marked as a UAST constructor",
+                    failure.message
+                )
+            }
         }
     }
 

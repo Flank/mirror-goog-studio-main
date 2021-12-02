@@ -85,29 +85,22 @@ interface LintModelDependencyGraph {
  *
  * To get the full [LintModelLibrary] definition on item in the
  * dependency graph, call [LintModelLibraryResolver.getLibrary] with the
- * [artifactAddress] from this [LintModelDependency], which you can do
+ * [identifier] from this [LintModelDependency], which you can do
  * with the convenience method [findLibrary].
  */
 interface LintModelDependency {
     /**
-     * The simple name of a library: this is like the [artifactAddress]
-     * but does not include version information or classifiers; for
-     * a Maven library it is the groupId and artifactId separated by
-     * a colon, such as "androidx.annotation:annotation", and for
-     * a local dependency it is the same as the artifact address.
+     * An opaque unique identifier for the dependency.
      */
-    val artifactName: String
+    val identifier: String
 
     /**
-     * The unique address of an artifact.
-     *
-     * This is either a module path for sub-modules, or a full maven
-     * coordinate for external dependencies.
-     *
-     * The maven coordinates are in the format:
-     * groupId:artifactId:version[:classifier][@extension].
+     * The simple name of a library: this is like the artifact address
+     * but does not include version information or classifiers; for
+     * a Maven library it is the groupId and artifactId separated by
+     * a colon, such as "androidx.annotation:annotation".
      */
-    val artifactAddress: String
+    val artifactName: String
 
     /**
      * The Maven coordinates, as requested in the build file or POM
@@ -150,10 +143,10 @@ interface LintModelLibraryResolver {
     fun getAllLibraries(): Collection<LintModelLibrary>
 
     /**
-     * Get the library corresponding to the given artifact address, if
+     * Get the library corresponding to the given identifier, if
      * any.
      */
-    fun getLibrary(artifactAddress: String): LintModelLibrary?
+    fun getLibrary(identifier: String): LintModelLibrary?
 }
 
 // Default implementations
@@ -162,7 +155,7 @@ class DefaultLintModelDependencyGraph(
     override val roots: List<LintModelDependency>,
     private val libraryResolver: LintModelLibraryResolver
 ) : LintModelDependencyGraph {
-    /** All libraries that we depend on, keyed by artifact address */
+    /** All libraries that we depend on, keyed by the identifier */
     private val transitiveDependencies = mutableMapOf<String, LintModelDependency>()
 
     /**
@@ -178,11 +171,11 @@ class DefaultLintModelDependencyGraph(
     }
 
     private fun register(item: LintModelDependency) {
-        if (transitiveDependencies.containsKey(item.artifactAddress)) {
+        if (transitiveDependencies.containsKey(item.identifier)) {
             return
         }
 
-        transitiveDependencies[item.artifactAddress] = item
+        transitiveDependencies[item.identifier] = item
 
         // Update mavenTransitiveDependencies for the findLibrary convenience method. If
         // item.artifactName is ":", the dependency's maven name is unknown (for example, in the
@@ -198,16 +191,16 @@ class DefaultLintModelDependencyGraph(
     }
 
     override fun findLibrary(mavenName: String, direct: Boolean): LintModelLibrary? {
-        val artifactAddress = if (direct) {
-            roots.firstOrNull { it.artifactName == mavenName }?.artifactAddress
+        val identifier = if (direct) {
+            roots.firstOrNull { it.artifactName == mavenName }?.identifier
         } else {
-            mavenTransitiveDependencies[mavenName]?.artifactAddress
+            mavenTransitiveDependencies[mavenName]?.identifier
         }
 
         // Not found?
-        artifactAddress ?: return null
+        identifier ?: return null
 
-        return libraryResolver.getLibrary(artifactAddress)
+        return libraryResolver.getLibrary(identifier)
     }
 
     // Cache for [getAllLibraries]
@@ -222,7 +215,7 @@ class DefaultLintModelDependencyGraph(
 
     override fun getAllLibraries(): List<LintModelLibrary> {
         return allLibraries
-            ?: getAllGraphItems().mapNotNull { libraryResolver.getLibrary(it.artifactAddress) }
+            ?: getAllGraphItems().mapNotNull { libraryResolver.getLibrary(it.identifier) }
                 .toList()
                 .also { allLibraries = it }
     }
@@ -234,17 +227,17 @@ class DefaultLintModelDependencyGraph(
 }
 
 open class DefaultLintModelDependency(
+    override val identifier: String,
     override val artifactName: String,
-    override val artifactAddress: String,
     override val requestedCoordinates: String?,
     override val dependencies: List<LintModelDependency>,
     private val libraryResolver: LintModelLibraryResolver
 ) : LintModelDependency {
-    override fun findLibrary(): LintModelLibrary? = libraryResolver.getLibrary(artifactAddress)
+    override fun findLibrary(): LintModelLibrary? = libraryResolver.getLibrary(identifier)
 
     // For debugging purposes only; should not be used for other purposes such as persistence
     override fun toString(): String =
-        "$artifactAddress${if (dependencies.isNotEmpty()) dependencies.toString() else ""}"
+        "$identifier${if (dependencies.isNotEmpty()) dependencies.toString() else ""}"
 }
 
 class DefaultLintModelDependencies(
@@ -267,6 +260,6 @@ class DefaultLintModelLibraryResolver(
         return libraryMap.values.toList()
     }
 
-    override fun getLibrary(artifactAddress: String): LintModelLibrary? =
-        libraryMap[artifactAddress]
+    override fun getLibrary(identifier: String): LintModelLibrary? =
+        libraryMap[identifier]
 }

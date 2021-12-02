@@ -234,7 +234,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             super.configure(task)
 
             val variantDslInfo = creationConfig.variantDslInfo
-            val project = creationConfig.services.projectInfo.getProject()
+            val services = creationConfig.services
             task.namespace.setDisallowChanges(creationConfig.namespace)
 
             if (creationConfig is ApkCreationConfig) {
@@ -258,9 +258,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             // no need to memoize, variant configuration does that already.
             task.flavorName.setDisallowChanges(
-                    project.provider { creationConfig.flavorName ?: "" })
+                services.provider { creationConfig.flavorName ?: "" })
 
-            task.flavorNamesWithDimensionNames.setDisallowChanges(project.provider {
+            task.flavorNamesWithDimensionNames.setDisallowChanges(services.provider {
                 variantDslInfo.flavorNamesWithDimensionNames
             })
 

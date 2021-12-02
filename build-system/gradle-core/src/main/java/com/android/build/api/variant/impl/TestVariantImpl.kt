@@ -21,8 +21,6 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
-import com.android.build.api.dsl.TestExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
@@ -41,11 +39,11 @@ import com.android.build.gradle.internal.dsl.ModulePropertyKeys
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
@@ -58,20 +56,19 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class TestVariantImpl @Inject constructor(
-        override val variantBuilder: TestVariantBuilderImpl,
-        buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo<TestExtension>,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
-        artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
-        variantData: BaseVariantData,
-        transformManager: TransformManager,
-        internalServices: VariantPropertiesApiServices,
-        taskCreationServices: TaskCreationServices,
-        sdkComponents: SdkComponents,
-        globalScope: GlobalScope
+    override val variantBuilder: TestVariantBuilderImpl,
+    buildFeatureValues: BuildFeatureValues,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: ArtifactsImpl,
+    variantScope: VariantScope,
+    variantData: BaseVariantData,
+    transformManager: TransformManager,
+    internalServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
+    globalTaskCreationConfig: GlobalTaskCreationConfig
 ) : VariantImpl(
     variantBuilder,
     buildFeatureValues,
@@ -85,23 +82,22 @@ open class TestVariantImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    globalTaskCreationConfig
 ), TestVariant, TestVariantCreationConfig {
 
     init {
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                    .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
-                    )
+                .addInitialProvider(internalServices.toRegularFileProvider(it))
         }
     }
-    private val delegate by lazy { TestVariantCreationConfigImpl(
-        this,
-        internalServices.projectOptions,
-        globalScope,
-        variantDslInfo) }
+
+    private val delegate by lazy {
+        TestVariantCreationConfigImpl(
+            this,
+            variantDslInfo
+        )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -111,10 +107,7 @@ open class TestVariantImpl @Inject constructor(
         internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(
-            taskCreationServices.projectInfo.getExtension().aaptOptions,
-            internalServices
-        )
+        initializeAaptOptionsFromDsl(variantDslInfo.androidResources, internalServices)
     }
 
     // TODO: We should keep this (for the manifest) but just fix the test runner to get the
@@ -146,7 +139,7 @@ open class TestVariantImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            globalScope.extension.packagingOptions,
+            variantDslInfo.packaging,
             internalServices,
             minSdkVersion.apiLevel
         )
@@ -157,11 +150,9 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        internalServices.projectInfo.getProject().objects
-            .listProperty(RegularFile::class.java).also {
-                variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
-                it.finalizeValueOnRead()
-            }
+        internalServices.listPropertyOf(RegularFile::class.java) {
+            variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+        }
     }
 
     // ---------------------------------------------------------------------------------------------

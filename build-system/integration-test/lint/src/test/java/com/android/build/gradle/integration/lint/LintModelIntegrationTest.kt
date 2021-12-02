@@ -15,22 +15,14 @@
  */
 package com.android.build.gradle.integration.lint
 
-import com.android.Version
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
-import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.Collections
-import java.util.stream.Collectors
 
 /** Integration test for the new lint models.  */
 class LintModelIntegrationTest {
@@ -43,9 +35,6 @@ class LintModelIntegrationTest {
             .dontOutputLogOnFailure()
             .create()
 
-    @get:Rule
-    val temporaryFolder = TemporaryFolder()
-
     @Test
     fun checkLintModels() {
         // Check lint runs correctly before asserting about the model.
@@ -54,13 +43,11 @@ class LintModelIntegrationTest {
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("9 errors, 4 warnings")
 
-        val lintModelDir =
-            project.getSubproject("app").intermediatesDir.toPath()
-                .resolve("incremental/lintReportDebug")
-
-        val models = Files.list(lintModelDir).use { stream -> stream.collect(Collectors.toList()) }
-
-        assertThat(models.map { it.fileName.toString() }).containsExactly(
+        checkLintModels(
+            project = project,
+            lintModelDir = project.getSubproject("app").intermediatesDir.toPath()
+                .resolve("incremental/lintReportDebug"),
+            modelSnapshotResourceRelativePath = "kotlinmodel/lintDebug",
             "debug-androidTestArtifact-dependencies.xml",
             "debug-androidTestArtifact-libraries.xml",
             "debug-mainArtifact-dependencies.xml",
@@ -70,31 +57,6 @@ class LintModelIntegrationTest {
             "debug.xml",
             "module.xml",
         )
-
-        val errors = mutableListOf<String>()
-        val replacements = createReplacements(project.location)
-        for (model in models) {
-            val actual = Files.readAllLines(model).map { applyReplacements(it, replacements) }
-            val expected = getExpectedModel(model.fileName.toString())
-            if (actual != expected){
-                val diff: String = TestUtils.getDiff(
-                    expected.toTypedArray(),
-                    actual.toTypedArray()
-                )
-                if (System.getenv("GENERATE_MODEL_GOLDEN_FILES").isNullOrEmpty()) {
-                    errors += "Unexpected lint model change for ${model.fileName}\n" +
-                                "Run with env var GENERATE_MODEL_GOLDEN_FILES=true to regenerate\n" +
-                                diff
-                } else {
-                    val fileToUpdate = TestUtils.resolveWorkspacePath("tools/base/build-system/integration-test/lint/src/test/resources/com/android/build/gradle/integration/lint/kotlinmodel/lintDebug/${model.fileName}")
-                    Files.write(fileToUpdate, actual)
-                    errors += "Updated ${model.fileName} with \n$diff"
-                }
-            }
-        }
-        if (errors.isNotEmpty()) {
-            throw AssertionError(errors.joinToString("\n\n"))
-        }
     }
 
     @Test
@@ -126,7 +88,7 @@ class LintModelIntegrationTest {
         assertThat(projectModelFile).isFile()
         assertThat(
             Files.readAllLines(projectModelFile.toPath())
-                .map { applyReplacements(it, createReplacements(project.location)) }
+                .map { applyReplacements(it, createReplacements(project)) }
                 .none { it.contains("neverShrinking") }
         ).isTrue()
 
@@ -134,45 +96,8 @@ class LintModelIntegrationTest {
         assertThat(variantModelFile).isFile()
         assertThat(
             Files.readAllLines(variantModelFile.toPath())
-                .map { applyReplacements(it, createReplacements(project.location)) }
+                .map { applyReplacements(it, createReplacements(project)) }
                 .any { it.contains("shrinking=\"true\"") }
         ).isTrue()
-    }
-
-    private val cacheReplace = Regex("""/[a-zA-Z0-9]{32}/""")
-
-    private val localRepositories = GradleTestProject.localRepositories.map { it.toAbsolutePath().toString() }
-
-    private fun applyReplacements(original: String, replacements: Map<String, String>): String {
-        var normalized = original
-        replacements.forEach { (from, to) -> normalized = normalized.replace(from, to) }
-        return normalized.replace(cacheReplace, "/<digest>/")
-    }
-
-    private fun createReplacements(projectLocation: ProjectLocation): Map<String, String> {
-        return Collections.unmodifiableMap(mutableMapOf<String, String>().apply {
-            put(projectLocation.projectDir.absolutePath, "${"$"}{projectDir}")
-            put(projectLocation.testLocation.androidSdkHome.absolutePath, "${"$"}{androidSdkUserHome}")
-            put(project.androidSdkDir!!.absolutePath, "${"$"}{androidSdkDir}")
-            put(projectLocation.testLocation.gradleCacheDir.absolutePath, "${"$"}{gradleCacheDir}")
-            put(projectLocation.testLocation.gradleUserHome.toAbsolutePath().toString(), "${"$"}{gradleUserHome}")
-            for (repository in localRepositories) {
-                put(repository, "${"$"}{mavenRepo}")
-            }
-            put(Version.ANDROID_GRADLE_PLUGIN_VERSION, "${"$"}androidGradlePluginVersion")
-            put(File.separator, "/")
-            put(File.pathSeparator, ":")
-            put("kotlin-stdlib:${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib:${"$"}{kotlinVersion}")
-            put("kotlin-stdlib/${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib/${"$"}{kotlinVersion}")
-            put("kotlin-stdlib-${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-${"$"}{kotlinVersion}")
-            put("kotlin-stdlib-common:${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-common:${"$"}{kotlinVersion}")
-            put("kotlin-stdlib-common/${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-common/${"$"}{kotlinVersion}")
-            put("kotlin-stdlib-common-${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-common-${"$"}{kotlinVersion}")
-        })
-    }
-
-    private fun getExpectedModel(name: String): List<String> {
-        val resource = Resources.getResource(this::class.java, "kotlinmodel/lintDebug/$name")
-        return Resources.readLines(resource, StandardCharsets.UTF_8)
     }
 }

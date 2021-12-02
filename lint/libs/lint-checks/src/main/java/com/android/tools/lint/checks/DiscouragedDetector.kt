@@ -18,6 +18,13 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
+import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.AnnotationUsageType.CLASS_REFERENCE
+import com.android.tools.lint.detector.api.AnnotationUsageType.EXTENDS
+import com.android.tools.lint.detector.api.AnnotationUsageType.FIELD_REFERENCE
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_OVERRIDE
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_REFERENCE
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
@@ -33,6 +40,11 @@ class DiscouragedDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
         "androidx.annotation.Discouraged"
     )
+
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+        return type == METHOD_CALL || type == METHOD_REFERENCE || type == CLASS_REFERENCE ||
+            type == METHOD_OVERRIDE || type == EXTENDS || type == FIELD_REFERENCE
+    }
 
     override fun visitAnnotationUsage(
         context: JavaContext,

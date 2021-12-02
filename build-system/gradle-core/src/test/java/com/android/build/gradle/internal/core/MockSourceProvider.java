@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.core;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.v2.CustomSourceDirectory;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -117,5 +118,11 @@ class MockSourceProvider implements SourceProvider {
     @Override
     public Collection<File> getMlModelsDirectories() {
         return Collections.singleton(new File(mRoot, "ml"));
+    }
+
+    @NotNull
+    @Override
+    public Collection<CustomSourceDirectory> getCustomDirectories() {
+        return Collections.EMPTY_LIST;
     }
 }

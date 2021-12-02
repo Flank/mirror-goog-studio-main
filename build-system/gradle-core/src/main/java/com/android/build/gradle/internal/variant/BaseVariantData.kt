@@ -17,52 +17,43 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Splits
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.google.common.base.MoreObjects
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
-import org.gradle.api.logging.Logging
 import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.Collections
-import java.util.HashSet
 
 /** Base data about a variant.  */
 abstract class BaseVariantData(
     // Variant specific Data
     protected val componentIdentity: ComponentIdentity,
-    protected val variantDslInfo: VariantDslInfo<*>,
+    protected val variantDslInfo: VariantDslInfo,
     val variantDependencies: VariantDependencies,
     protected val variantSources: VariantSources,
     protected val paths: VariantPathHelper,
     protected val artifacts: ArtifactsImpl,
     protected val services: VariantPropertiesApiServices,
-    // Global Data
-    @get:Deprecated("Use {@link ComponentPropertiesImpl#getGlobalScope()} ") val globalScope: GlobalScope,
     val taskContainer: MutableTaskContainer
 ) {
 
     // Storage for Old Public API
-    val extraGeneratedSourceFolders: MutableList<File> = mutableListOf()
-    internal var extraGeneratedSourceFileTrees: MutableList<ConfigurableFileTree>? = null
-    internal var externalAptJavaOutputFileTrees: MutableList<ConfigurableFileTree>? = null
+    val extraGeneratedSourceFoldersOnlyInModel: MutableList<File> = mutableListOf()
     val extraGeneratedResFolders: ConfigurableFileCollection = services.fileCollection()
     private var preJavacGeneratedBytecodeMap: MutableMap<Any, FileCollection>? = null
     private var preJavacGeneratedBytecodeLatest: FileCollection = services.fileCollection()
@@ -81,28 +72,9 @@ abstract class BaseVariantData(
     @JvmField
     var outputsAreSigned = false
     @JvmField
-    var applicationIdTextResource: TextResource = services.projectInfo.getProject().resources.text.fromString("")
+    var applicationIdTextResource: TextResource = services.projectInfo.createTestResources("")
 
     abstract val description: String
-
-    init {
-        val splits = globalScope.extension.splits
-        val splitsEnabled = (splits.density.isEnable
-                || splits.abi.isEnable
-                || splits.language.isEnable)
-
-        // warn the user if we are forced to ignore the generatePureSplits flag.
-        if (splitsEnabled && globalScope.extension.generatePureSplits) {
-            Logging.getLogger(BaseVariantData::class.java)
-                .warn(
-                    String.format(
-                        "Variant %s requested removed pure splits support, reverted to full splits",
-                        componentIdentity.name
-                    )
-                )
-        }
-    }
-
 
     fun getGeneratedBytecode(generatorKey: Any?): FileCollection {
         return if (generatorKey == null) {
@@ -112,61 +84,22 @@ abstract class BaseVariantData(
     }
 
     fun addJavaSourceFoldersToModel(generatedSourceFolder: File) {
-        extraGeneratedSourceFolders.add(generatedSourceFolder)
+        extraGeneratedSourceFoldersOnlyInModel.add(generatedSourceFolder)
     }
 
     fun addJavaSourceFoldersToModel(vararg generatedSourceFolders: File) {
         Collections
-            .addAll(extraGeneratedSourceFolders, *generatedSourceFolders)
+            .addAll(extraGeneratedSourceFoldersOnlyInModel, *generatedSourceFolders)
     }
 
     fun addJavaSourceFoldersToModel(generatedSourceFolders: Collection<File>) {
-        extraGeneratedSourceFolders.addAll(generatedSourceFolders)
-    }
-
-    open fun registerJavaGeneratingTask(
-        task: Task,
-        generatedSourceFolders: Collection<File>
-    ) {
-        @Suppress("DEPRECATION")
-        taskContainer.sourceGenTask.dependsOn(task)
-
-        val fileTrees = extraGeneratedSourceFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
-            extraGeneratedSourceFileTrees = it
-        }
-
-        for (f in generatedSourceFolders) {
-            val fileTree = services.fileTree(f).builtBy(task)
-            fileTrees.add(fileTree)
-        }
-        addJavaSourceFoldersToModel(generatedSourceFolders)
+        extraGeneratedSourceFoldersOnlyInModel.addAll(generatedSourceFolders)
     }
 
     open fun registerJavaGeneratingTask(
         taskProvider: TaskProvider<out Task>,
         generatedSourceFolders: Collection<File>
     ) {
-        taskContainer.sourceGenTask.dependsOn(taskProvider)
-
-        val fileTrees =
-            extraGeneratedSourceFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
-                extraGeneratedSourceFileTrees = it
-            }
-
-        for (f in generatedSourceFolders) {
-            val fileTree = services.fileTree(f).builtBy(taskProvider)
-            fileTrees.add(fileTree)
-        }
-        addJavaSourceFoldersToModel(generatedSourceFolders)
-    }
-
-    fun registerExternalAptJavaOutput(folder: ConfigurableFileTree) {
-        val fileTrees = externalAptJavaOutputFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
-            externalAptJavaOutputFileTrees = it
-        }
-
-        fileTrees.add(folder)
-        addJavaSourceFoldersToModel(folder.dir)
     }
 
     fun registerGeneratedResFolders(folders: FileCollection) {
@@ -258,7 +191,6 @@ abstract class BaseVariantData(
     val allRawAndroidResources: FileCollection by lazy {
         val allRes: ConfigurableFileCollection = services.fileCollection().builtBy(
             listOfNotNull(
-                taskContainer.renderscriptCompileTask,
                 taskContainer.generateResValuesTask,
                 taskContainer.generateApkDataTask,
                 extraGeneratedResFolders.builtBy
@@ -277,8 +209,8 @@ abstract class BaseVariantData(
 
         allRes.from(
             services.fileCollection(
-                paths.renderscriptResOutputDir,
-                paths.generatedResOutputDir,
+                artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES),
+                artifacts.get(InternalArtifactType.GENERATED_RES),
                 extraGeneratedResFolders
             )
         )
@@ -305,7 +237,7 @@ abstract class BaseVariantData(
         },
         LANGUAGE {
             override fun getConfiguredFilters(splits: Splits): Collection<String> {
-                return splits.languageFilters
+                return (splits as com.android.build.gradle.internal.dsl.Splits).languageFilters
             }
         },
         ABI {

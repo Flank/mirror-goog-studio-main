@@ -44,7 +44,7 @@ class DeterministicTaskOutputsTest {
             "app/build/intermediates/incremental/debug-mergeNativeLibs",
             "app/build/intermediates/incremental/mergeDebugAssets/merger.xml",
             "app/build/intermediates/incremental/mergeDebugJniLibFolders",
-            "app/build/intermediates/incremental/mergeDebugResources",
+            "app/build/intermediates/incremental/debug/mergeDebugResources",
             "app/build/intermediates/incremental/packageDebugResources",
             "app/build/intermediates/incremental/mergeDebugShaders",
             "app/build/intermediates/incremental/packageDebug/tmp/debug/dex-renamer-state.txt",
@@ -142,6 +142,9 @@ class DeterministicTaskOutputsTest {
                 expect.fail("${file.path} is not found in the second build")
             } else {
                 if (!contents.contentEquals(contents1)) {
+                    println(String(contents1))
+                    println("<< >>")
+                    println(String(contents2))
                     expect.fail("${file.path} is not consistent across two builds")
                 }
             }

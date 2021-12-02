@@ -21,6 +21,7 @@ import static com.google.common.base.Verify.verifyNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.prefs.AndroidLocationsException;
 import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -940,13 +941,16 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             // This is a move (of the data files) if there's a new location path
-            String paramFolderPath = getParamLocationPath();
+            String paramFolderLocation = getParamLocationPath();
+            Path paramFolderPath =
+                    paramFolderLocation == null
+                            ? null
+                            : mSdkHandler.toCompatiblePath(paramFolderLocation);
             if (paramFolderPath != null) {
                 // check if paths are the same. Use File methods to account for OS idiosyncrasies.
                 try {
-                    File f1 = new File(paramFolderPath).getCanonicalFile();
-                    File f2 = new File(info.getDataFolderPath()).getCanonicalFile();
-                    if (f1.equals(f2)) {
+                    Path f2 = info.getDataFolderPath();
+                    if (CancellableFileIo.isSameFile(paramFolderPath, f2)) {
                         // same canonical path, so not actually a move
                         paramFolderPath = null;
                     }
@@ -972,15 +976,14 @@ class AvdManagerCli extends CommandLineParser {
                         AndroidLocationsSingleton.INSTANCE
                                 .getAvdLocation()
                                 .resolve(info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
-                if (originalFolder.equals(Paths.get(info.getDataFolderPath()))) {
+                if (originalFolder.equals(info.getDataFolderPath())) {
                     try {
                         // The AVD is using the default data folder path based on the AVD name.
                         // That folder needs to be adjusted to use the new name.
                         paramFolderPath =
                                 AndroidLocationsSingleton.INSTANCE
                                         .getAvdLocation()
-                                        .resolve(newName + AvdManager.AVD_FOLDER_EXTENSION)
-                                        .toString();
+                                        .resolve(newName + AvdManager.AVD_FOLDER_EXTENSION);
                     } catch (Throwable e) {
                         // Fail to resolve canonical path. Fail now rather than later.
                         errorAndExit(e.getMessage());
@@ -1002,7 +1005,7 @@ class AvdManagerCli extends CommandLineParser {
                 }
             }
 
-            if (paramFolderPath != null && new File(paramFolderPath).exists()) {
+            if (paramFolderPath != null && CancellableFileIo.exists(paramFolderPath)) {
                 errorAndExit(
                         "There is already a file or directory at '%s'.\nUse --path to specify a different data folder.",
                         paramFolderPath);

@@ -28,12 +28,14 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class DynamicFeatureVariantBuilderImpl @Inject constructor(
-    variantDslInfo: VariantDslInfo<DynamicFeatureExtension>,
-    variantConfiguration: ComponentIdentity,
+    globalVariantBuilderConfig: GlobalVariantBuilderConfig,
+    variantDslInfo: VariantDslInfo,
+    componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) : VariantBuilderImpl(
+    globalVariantBuilderConfig,
     variantDslInfo,
-    variantConfiguration,
+    componentIdentity,
     variantApiServices
 ), DynamicFeatureVariantBuilder {
 
@@ -45,7 +47,7 @@ open class DynamicFeatureVariantBuilderImpl @Inject constructor(
 
     override var enableAndroidTest: Boolean = true
 
-    override var enableTestFixtures: Boolean = variantDslInfo.enableTestFixtures
+    override var enableTestFixtures: Boolean = variantDslInfo.testFixtures.enable
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,

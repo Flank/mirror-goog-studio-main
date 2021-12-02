@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.utils.GradleEnvironmentProvider
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
+import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildServiceRegistry
 
 /**

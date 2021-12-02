@@ -19,11 +19,10 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
-import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -78,25 +77,25 @@ abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
 
     class CreationAction @JvmOverloads constructor(
         override val name: String,
-        globalScope: GlobalScope,
+        creationConfig: GlobalTaskCreationConfig,
         private val definedDevices: List<ManagedVirtualDevice> = listOf()
-    ) : GlobalTaskCreationAction<ManagedDeviceCleanTask>(globalScope) {
+    ) : GlobalTaskCreationAction<ManagedDeviceCleanTask>(creationConfig) {
 
         override val type: Class<ManagedDeviceCleanTask>
             get() = ManagedDeviceCleanTask::class.java
 
         override fun configure(task: ManagedDeviceCleanTask) {
+            super.configure(task)
+
             task.preserveDefined.convention(false)
-            task.avdService.setDisallowChanges(globalScope.avdComponents)
+            task.avdService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+
             task.dslDevices.setDisallowChanges(
                 definedDevices.map {
                     computeAvdName(it)
                 }
-            )
-            task.analyticsService.set(
-                getBuildService(
-                    task.project.gradle.sharedServices, AnalyticsService::class.java
-                )
             )
         }
     }

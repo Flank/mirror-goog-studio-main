@@ -23,10 +23,7 @@ import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
-import java.io.BufferedInputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -290,27 +287,8 @@ class TypoLookup private constructor(
                 if (db == null) {
                     val name = "typos-$key.txt"
                     val path = "/typos/$name"
-                    var stream: InputStream? = TypoLookup::class.java.getResourceAsStream(path)
+                    val stream: InputStream? = TypoLookup::class.java.getResourceAsStream(path)
                     if (stream == null) {
-                        // AOSP build environment?
-                        val build = System.getenv("ANDROID_BUILD_TOP")
-                        if (build != null) {
-                            val file = File(
-                                build,
-                                "sdk/files$path".replace('/', File.separatorChar)
-                            )
-                            if (file.exists()) {
-                                try {
-                                    // noinspection resource,IOResourceOpenedButNotSafelyClosed
-                                    stream = BufferedInputStream(FileInputStream(file))
-                                } catch (ignore: FileNotFoundException) {
-                                }
-                            }
-                        }
-                    }
-
-                    if (stream == null) {
-
                         if (region != null) {
                             // Fall back to the generic locale (non-region-specific) database
                             return get(client, locale, null)

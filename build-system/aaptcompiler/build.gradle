@@ -14,7 +14,7 @@ dependencies {
     testImplementation libs.kotlin_test
     testImplementation libs.junit
     testImplementation libs.truth
-    testImplementation project(':base:testutils')
+    testImplementation libs.com.android.tools.testutils
 }
 
 group = 'com.android.tools.build'

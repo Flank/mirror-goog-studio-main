@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.ide.dependencies
 import com.android.SdkConstants
 import com.android.build.api.attributes.BuildTypeAttr
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.v2.LibraryImpl
 import com.android.build.gradle.internal.ide.v2.LibraryInfoImpl
 import com.android.build.gradle.internal.ide.v2.ProjectInfoImpl
@@ -126,10 +125,11 @@ class LibraryServiceImpl(
             projectInfoCache.computeIfAbsent(variant) {
                 val component = it.owner as ProjectComponentIdentifier
 
+                val productFlavors = getProductFlavors(it)
                 ProjectInfoImpl(
                     getBuildType(it),
-                    getProductFlavors(it),
-                    getAttributeMap(it),
+                    productFlavors,
+                    getAttributeMap(it, productFlavors),
                     getCapabilityList(it),
                     stringCache.cacheString(component.build.name),
                     stringCache.cacheString(component.projectPath),
@@ -154,10 +154,11 @@ class LibraryServiceImpl(
                 is ModuleComponentIdentifier -> {
                     // simply query for the variant.
                     libraryInfoCache.computeIfAbsent(artifact.variant) {
+                        val productFlavors = getProductFlavors(it)
                         LibraryInfoImpl(
                             getBuildType(it),
-                            getProductFlavors(it),
-                            getAttributeMap(it),
+                            productFlavors,
+                            getAttributeMap(it, productFlavors),
                             getCapabilityList(it),
                             stringCache.cacheString(component.group),
                             stringCache.cacheString(component.module),
@@ -190,10 +191,11 @@ class LibraryServiceImpl(
                     }
                     synchronized(libraryInfoCache) {
                         libraryInfoCache.computeIfAbsent(artifact.variant) {
+                            val productFlavors = getProductFlavors(it)
                             LibraryInfoImpl(
                                 buildType = getBuildType(it),
-                                productFlavors = getProductFlavors(it),
-                                attributes = getAttributeMap(it),
+                                productFlavors = productFlavors,
+                                attributes = getAttributeMap(it, productFlavors),
                                 capabilities = getCapabilityList(it),
                                 group = WRAPPED_AAR_GROUPID,
                                 name = stringCache.cacheString("${component.build.name}|${component.projectPath}"),
@@ -292,16 +294,17 @@ class LibraryServiceImpl(
                 {stringCache.cacheString(it.name.substring(productFlavorAttrPrefix.length))},
                 {stringCache.cacheString(variant.attributes.getAttribute(it).toString())})
 
-    private fun getAttributeMap(variant: ResolvedVariantResult): Map<String, String> =
+    private fun getAttributeMap(variant: ResolvedVariantResult, productFlavors: Map<String, String>): Map<String, String> =
             variant.attributes.keySet()
                 .asSequence()
                 .filter {
                     // Build types and product flavors are handled explicitly,
                     // So filter them out from the generic attribute map
                     it.name != BuildTypeAttr.ATTRIBUTE.name &&
-                            !it.name.startsWith(productFlavorAttrPrefix)
+                            !it.name.startsWith(productFlavorAttrPrefix) &&
+                            !productFlavors.containsKey(it.name) // Also exclude the un-prefixed product flavor attributes.
                 }.mapNotNull { key ->
-                val attr = variant.attributes.getAttribute(key)
+                    val attr = variant.attributes.getAttribute(key)
                     attr?.let { stringCache.cacheString(key.name) to stringCache.cacheString(it.toString()) }
                 }
                 // this is residual information from the way we combine the dependency graph and

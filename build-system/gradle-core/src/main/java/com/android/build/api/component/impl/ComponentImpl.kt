@@ -19,7 +19,6 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -30,6 +29,12 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
+import com.android.build.api.variant.impl.SourceDirectoriesImpl
+import com.android.build.api.variant.impl.SourceType
+import com.android.build.api.variant.impl.SourcesImpl
+import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -48,7 +53,7 @@ import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraA
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
+import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -57,13 +62,13 @@ import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
@@ -79,9 +84,7 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -94,7 +97,7 @@ import java.util.concurrent.Callable
 abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
-    override val variantDslInfo: VariantDslInfo<*>,
+    final override val variantDslInfo: VariantDslInfo,
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
@@ -103,10 +106,8 @@ abstract class ComponentImpl(
     override val variantData: BaseVariantData,
     override val transformManager: TransformManager,
     protected val internalServices: VariantPropertiesApiServices,
-    override val services: TaskCreationServices,
-    override val sdkComponents: SdkComponents,
-    @Deprecated("Do not use if you can avoid it. Check if services has what you need")
-    override val globalScope: GlobalScope
+    final override val services: TaskCreationServices,
+    final override val global: GlobalTaskCreationConfig,
 ): Component, ComponentCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
@@ -115,8 +116,7 @@ abstract class ComponentImpl(
     override val namespace: Provider<String> =
         internalServices.providerOf(
             type = String::class.java,
-            value = variantDslInfo.namespace,
-            disallowUnsafeRead = false, // allow unsafe read for KAGP : b/193706116
+            value = variantDslInfo.namespace
         )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
@@ -124,7 +124,7 @@ abstract class ComponentImpl(
         scope: InstrumentationScope,
         instrumentationParamsConfig: (ParamT) -> Unit
     ) {
-        asmClassVisitorsRegistry.register(
+        instrumentation.transformClassesWith(
             classVisitorFactoryImplClass,
             scope,
             instrumentationParamsConfig
@@ -132,7 +132,7 @@ abstract class ComponentImpl(
     }
 
     override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
-        asmClassVisitorsRegistry.setAsmFramesComputationMode(mode)
+        instrumentation.setAsmFramesComputationMode(mode)
     }
 
     override val javaCompilation: JavaCompilation =
@@ -140,6 +140,35 @@ abstract class ComponentImpl(
             variantDslInfo.javaCompileOptions,
             buildFeatures.dataBinding,
             internalServices)
+
+    override val sources: SourcesImpl by lazy {
+        SourcesImpl(
+            ::defaultSources,
+            internalServices.projectInfo.projectDirectory,
+            internalServices,
+            variantSources.variantSourceProvider,
+        ).also { sourcesImpl ->
+            // add all source sets extra directories added by the user
+            variantSources.customSourceList.forEach{ (_, srcEntries) ->
+                srcEntries.forEach { customSourceDirectory ->
+                    sourcesImpl.extras.maybeCreate(customSourceDirectory.sourceTypeName).also {
+                        (it as SourceDirectoriesImpl).addSource(
+                                FileBasedDirectoryEntryImpl(
+                                    customSourceDirectory.sourceTypeName,
+                                    customSourceDirectory.directory,
+                                )
+                            )
+                    }
+                }
+            }
+        }
+    }
+
+    override val instrumentation = InstrumentationImpl(
+        services,
+        internalServices,
+        isLibraryVariant = false
+    )
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -177,17 +206,13 @@ abstract class ComponentImpl(
                 !useResourceShrinker()
 
     override val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
-        get() {
-            return asmClassVisitorsRegistry.projectClassesVisitors.map { it.visitorFactory }
-        }
+        get() = instrumentation.registeredProjectClassesVisitors
 
     override val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
-        get() {
-            return asmClassVisitorsRegistry.dependenciesClassesVisitors.map { it.visitorFactory }
-        }
+        get() = instrumentation.registeredDependenciesClassesVisitors
 
     override val asmFramesComputationMode: FramesComputationMode
-        get() = asmClassVisitorsRegistry.framesComputationMode
+        get() = instrumentation.finalAsmFramesComputationMode
 
     override val allProjectClassesPostAsmInstrumentation: FileCollection
         get() =
@@ -255,35 +280,31 @@ abstract class ComponentImpl(
         }
         val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
         if (variantType.isDynamicFeature) {
-            globalScope
-                .dslServices
+            internalServices
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC,
                         "Resource shrinking must be configured for base module.")
             return false
         }
-        if (!newResourceShrinker && globalScope.hasDynamicFeatures()) {
+        if (!newResourceShrinker && global.hasDynamicFeatures) {
             val message = String.format(
                 "Resource shrinker for multi-apk applications can be enabled via " +
                         "experimental flag: '%s'.",
                 BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER.propertyName)
-            globalScope
-                    .dslServices
+            internalServices
                     .issueReporter
                     .reportError(IssueReporter.Type.GENERIC, message)
             return false
         }
         if (variantType.isAar) {
-            globalScope
-                .dslServices
+            internalServices
                 .issueReporter
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
             return false
         }
         if (!variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
-            globalScope
-                .dslServices
+            internalServices
                 .issueReporter
                 .reportError(
                         IssueReporter.Type.GENERIC,
@@ -302,7 +323,6 @@ abstract class ComponentImpl(
     // ---------------------------------------------------------------------------------------------
 
     private val variantOutputs = mutableListOf<VariantOutputImpl>()
-    private val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
 
     // FIXME make internal
     fun addVariantOutput(
@@ -313,7 +333,7 @@ abstract class ComponentImpl(
         return VariantOutputImpl(
             createVersionCodeProperty(),
             createVersionNameProperty(),
-            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
+            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
             variantOutputConfiguration,
             variantOutputConfiguration.baseName(variantDslInfo),
             variantOutputConfiguration.fullName(variantDslInfo),
@@ -324,7 +344,7 @@ abstract class ComponentImpl(
                         internalServices.projectInfo.getProjectBaseName(),
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
-                "$name::archivesBaseName")
+            )
         ).also {
             variantOutputs.add(it)
         }
@@ -409,7 +429,7 @@ abstract class ComponentImpl(
             mainCollection,
             combinedCollection,
             extraArtifact,
-            internalServices.projectInfo.getProject().path
+            internalServices.projectInfo.path
         )
 
         return onTestedConfig { testedVariant ->
@@ -437,7 +457,7 @@ abstract class ComponentImpl(
                 extraCollection,
                 combinedCollectionForTest,
                 testedAllClasses,
-                internalServices.projectInfo.getProject().path,
+                internalServices.projectInfo.path,
                 null
             )
         } ?: extraCollection
@@ -501,63 +521,55 @@ abstract class ComponentImpl(
     }
 
     /**
-     * Computes the Java sources to use for compilation.
-     *
-     *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
+     * Computes the default sources for a particular [SourceType].
      */
-    override val javaSources: List<ConfigurableFileTree>
-        get() {
-            // Shortcut for the common cases, otherwise we build the full list below.
-            if (variantData.extraGeneratedSourceFileTrees == null
-                && variantData.externalAptJavaOutputFileTrees == null
-            ) {
-                return defaultJavaSources
-            }
-
-            // Build the list of source folders.
-            val sourceSets = ImmutableList.builder<ConfigurableFileTree>()
-
-            // First the default source folders.
-            sourceSets.addAll(defaultJavaSources)
-
-            // then the third party ones
-            variantData.extraGeneratedSourceFileTrees?.let {
-                sourceSets.addAll(it)
-            }
-            variantData.externalAptJavaOutputFileTrees?.let {
-                sourceSets.addAll(it)
-            }
-
-            return sourceSets.build()
+    private fun defaultSources(type: SourceType): List<DirectoryEntry> {
+        return when(type) {
+            SourceType.JAVA -> defaultJavaSources()
         }
+    }
 
     /**
      * Computes the default java sources: source sets and generated sources.
-     *
+     * For access to the final list of java sources, use [sources]
      *
      * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
-    private val defaultJavaSources: List<ConfigurableFileTree> by lazy {
+    private fun defaultJavaSources(): List<DirectoryEntry> {
         // Build the list of source folders.
-        val sourceSets = ImmutableList.builder<ConfigurableFileTree>()
+        val sourceSets = ImmutableList.builder<DirectoryEntry>()
 
         // First the actual source folders.
         val providers = variantSources.sortedSourceProviders
-        for (provider in providers) {
-            sourceSets.addAll((provider as AndroidSourceSet).java.getSourceDirectoryTrees())
+        for (provider  in providers) {
+            val sourceSet = provider as AndroidSourceSet
+            for (srcDir in sourceSet.java.srcDirs) {
+                sourceSets.add(
+                    FileBasedDirectoryEntryImpl(
+                        name = sourceSet.name,
+                        directory = srcDir,
+                        filter = (provider as AndroidSourceSet).java.filter,
+                    )
+                )
+            }
         }
 
         // for the other, there's no duplicate so no issue.
         if (getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
-            val generatedBuildConfig =
-                artifacts.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
-            sourceSets.add(internalServices.fileTree(generatedBuildConfig)
-                .builtBy(generatedBuildConfig))
+            sourceSets.add(
+                TaskProviderBasedDirectoryEntryImpl(
+                    "generated_build_config",
+                    artifacts.get(GENERATED_BUILD_CONFIG_JAVA),
+                )
+            )
         }
         if (taskContainer.aidlCompileTask != null) {
-            val aidlFC = artifacts.get(AIDL_SOURCE_OUTPUT_DIR)
-            sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
+            sourceSets.add(
+                TaskProviderBasedDirectoryEntryImpl(
+                    "generated_aidl",
+                    artifacts.get(AIDL_SOURCE_OUTPUT_DIR),
+                )
+            )
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
             // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
@@ -570,27 +582,34 @@ abstract class ComponentImpl(
                 if (!artifacts.getArtifactContainer(DATA_BINDING_TRIGGER)
                         .needInitialProducer().get()
                 ) {
-                    sourceSets.add(internalServices.fileTree(artifacts.get(DATA_BINDING_TRIGGER)))
+                    sourceSets.add(
+                        TaskProviderBasedDirectoryEntryImpl(
+                            name = "databinding_generated",
+                            directoryProvider = artifacts.get(DATA_BINDING_TRIGGER),
+                        )
+                    )
                 }
             }
             addDataBindingSources(sourceSets)
         }
         addRenderscriptSources(sourceSets)
         if (buildFeatures.mlModelBinding) {
-            val mlModelClassSourceOut: Provider<Directory> =
-                artifacts.get(ML_SOURCE_OUT)
             sourceSets.add(
-                internalServices.fileTree(mlModelClassSourceOut).builtBy(mlModelClassSourceOut)
+                TaskProviderBasedDirectoryEntryImpl(
+                    name = "mlModel_generated",
+                    directoryProvider = artifacts.get(ML_SOURCE_OUT),
+                    shouldBeAddedToIdeModel = false,
+                )
             )
         }
-        sourceSets.build()
+        return sourceSets.build()
     }
 
     /**
      * adds renderscript sources if present.
      */
     open fun addRenderscriptSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+        sourceSets: ImmutableList.Builder<DirectoryEntry>,
     ) {
         // not active by default, only sub types will have renderscript enabled.
     }
@@ -599,17 +618,21 @@ abstract class ComponentImpl(
      * adds databinding sources to the list of sources.
      */
     open fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+        sourceSets: ImmutableList.Builder<DirectoryEntry>
     ) {
-        val baseClassSource = artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
-        sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
+        sourceSets.add(
+            TaskProviderBasedDirectoryEntryImpl(
+                "databinding_generated",
+                artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT),
+            )
+        )
     }
 
     /**
      * Returns the path(s) to compiled R classes (R.jar).
      */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
-        return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
+        return if (global.namespacedAndroidResources) {
             internalServices.fileCollection().also { fileCollection ->
                 val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
                 val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
@@ -671,7 +694,7 @@ abstract class ComponentImpl(
      * This can be null for unit tests without resource support.
      */
     fun getCompiledRClassArtifact(): Provider<RegularFile>? {
-        return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
+        return if (global.namespacedAndroidResources) {
             artifacts.get(COMPILE_R_CLASS_JAR)
         } else {
             val variantType = variantDslInfo.variantType
@@ -777,7 +800,7 @@ abstract class ComponentImpl(
     }
 
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
-        asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
+        instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
 
     abstract fun <T: com.android.build.api.variant.Component> createUserVisibleVariantObject(

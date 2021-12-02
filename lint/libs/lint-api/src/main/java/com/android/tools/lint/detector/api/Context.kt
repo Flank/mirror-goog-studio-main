@@ -760,7 +760,7 @@ open class Context(
             return false
         }
 
-        private fun findCallingDetector(driver: LintDriver): Pair<String, List<Issue>>? {
+        fun findCallingDetector(driver: LintDriver): Pair<String, List<Issue>>? {
             val throwable = Throwable().fillInStackTrace()
             val frames = throwable.stackTrace
 

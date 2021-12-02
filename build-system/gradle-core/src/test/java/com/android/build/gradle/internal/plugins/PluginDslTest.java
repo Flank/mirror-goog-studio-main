@@ -83,6 +83,8 @@ public class PluginDslTest {
                 TestProjects.builder(projectDirectory.newFolder("project").toPath())
                         .withPlugin(TestProjects.Plugin.APP)
                         .withProperty(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true)
+                        // turns this on to disable unsafe read checks in properties.
+                        .withProperty("_agp_internal_test_mode_", "true")
                         .build();
         android = project.getExtensions().getByType(BaseAppModuleExtension.class);
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
@@ -536,7 +538,7 @@ public class PluginDslTest {
         Map<String, VariantImpl> componentMap = getComponentMap();
         Map.Entry<String, VariantImpl> vsentry = componentMap.entrySet().iterator().next();
         File mockableJarFile =
-                vsentry.getValue().getGlobalScope().getMockableJarArtifact().getSingleFile();
+                vsentry.getValue().getGlobal().getMockableJarArtifact().getSingleFile();
         assertThat(mockableJarFile).isNotNull();
 
         if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
@@ -670,8 +672,9 @@ public class PluginDslTest {
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
         plugin.createAndroidTasks();
+
         assertThat(
-                        plugin.globalScope
+                        plugin.versionedSdkLoaderService
                                 .getVersionedSdkLoader()
                                 .get()
                                 .getBuildToolsRevisionProvider()

@@ -227,6 +227,17 @@ class LintIssueDocGenerator constructor(
         return vendors
     }
 
+    private fun getYears(issues: List<Issue>): HashMap<Int, MutableList<Issue>> {
+        val years = HashMap<Int, MutableList<Issue>>()
+        for (issue in issues) {
+            val year = issueMap[issue.id]?.copyrightYear ?: -1
+            val list = years[year]
+                ?: ArrayList<Issue>().also { years[year] = it }
+            list.add(issue)
+        }
+        return years
+    }
+
     private fun writeStats(
         sb: StringBuilder,
         categories: HashMap<Category, MutableList<Issue>>,
@@ -326,7 +337,7 @@ class LintIssueDocGenerator constructor(
             vendor.contact?.let { "Contact: $it\n" }
             vendor.feedbackUrl?.let { "Feedback: $it\n" }
         }
-        sb.append("\n(Additional metadata not available.)")
+        sb.append("\n(Additional metadata not available.)\n")
         sb.append(format.footer)
         file.writeText(sb.trim().toString())
     }
@@ -335,7 +346,8 @@ class LintIssueDocGenerator constructor(
         ALPHABETICAL("Alphabetical", "index"),
         CATEGORY("By category", "categories"),
         VENDOR("By vendor", "vendors"),
-        SEVERITY("By severity", "severity")
+        SEVERITY("By severity", "severity"),
+        YEAR("By year", "year")
     }
 
     private fun writeIndexPage(type: IndexType) {
@@ -425,6 +437,23 @@ class LintIssueDocGenerator constructor(
                     sb.append("  - [$id: $summary]($id${format.extension})\n")
                 }
             }
+        } else if (type == IndexType.YEAR) {
+            val years = getYears(issues)
+            for (year in years.keys.sortedByDescending { it }) {
+                val issuesFromYear = years[year]?.sortedBy { it.id } ?: continue
+                sb.append("\n$bullet")
+                if (year == -1) {
+                    sb.append("Unknown (${issuesFromYear.size})")
+                } else {
+                    sb.append("$year (${issuesFromYear.size})")
+                }
+                sb.append("\n\n")
+                for (issue in issuesFromYear) {
+                    val id = issue.id
+                    val summary = issue.getBriefDescription(TextFormat.RAW)
+                    sb.append("  - [$id: $summary]($id${format.extension})\n")
+                }
+            }
         }
 
         val deleted = registry.deletedIssues.filter { !skipIssue(it) }
@@ -478,6 +507,12 @@ class LintIssueDocGenerator constructor(
             } else {
                 it
             }
+        }
+        val copyrightYear = issueMap[issue.id]?.copyrightYear ?: -1
+        val copyrightYearInfo = if (copyrightYear != -1) {
+            arrayOf("Copyright Year" to copyrightYear.toString())
+        } else {
+            emptyArray()
         }
 
         val platforms = when (issue.platforms) {
@@ -556,7 +591,8 @@ class LintIssueDocGenerator constructor(
             "Affects" to scopeDescription,
             "Editing" to inEditor,
             *moreInfoUrls,
-            *sourceUrls
+            *sourceUrls,
+            *copyrightYearInfo
         )
 
         val table = if (isMarkDeep) markdeepTable(*array) else markdownTable(*array)
@@ -1043,6 +1079,7 @@ class LintIssueDocGenerator constructor(
             issueData.sourceUrl = url
             if (file != null) {
                 issueData.detectorSource = file
+                issueData.copyrightYear = findCopyrightYear(file)
             }
         }
 
@@ -1053,6 +1090,41 @@ class LintIssueDocGenerator constructor(
                 initializeExamples(issueData)
             }
         }
+    }
+
+    private fun findCopyrightYear(file: File): Int {
+        val lines = file.readLines()
+        for (line in lines) {
+            if (line.contains("opyright") ||
+                line.contains("(C)") ||
+                line.contains("(c)") ||
+                line.contains('\u00a9') // Copyright unicode symbol, ©
+            ) {
+                val matcher = YEAR_PATTERN.matcher(line)
+                var start = 0
+                var maxYear = -1
+                // Match on all years on the line and take the max -- that way we handle
+                //   (c) 2020 Android
+                //   Copyright 2007-2020 Android
+                //   © 2018, 2019, 2020, 2021 Android
+                // etc.
+                while (matcher.find(start)) {
+                    val year = matcher.group(1).toInt()
+                    maxYear = max(maxYear, year)
+                    start = matcher.end()
+                }
+
+                if (maxYear != -1) {
+                    return maxYear
+                }
+            }
+        }
+
+        // Couldn't find a copyright
+        val prefix = lines.subList(0, min(8, lines.size)).joinToString("\n")
+        println("Couldn't find copyright year in ${file.name} (${file.path}):\n$prefix\n\n")
+
+        return -1
     }
 
     private fun findSourceFiles(issue: Issue): Array<Pair<String, String>> {
@@ -1640,6 +1712,7 @@ class LintIssueDocGenerator constructor(
     companion object {
         val MESSAGE_PATTERN: Pattern = Pattern.compile("""(.+): (Error|Warning|Information): (.+) \[(.+)]""")
         val LOCATION_PATTERN: Pattern = Pattern.compile("""(.+):(\d+)""")
+        private val YEAR_PATTERN = Pattern.compile("""\b(\d\d\d\d)\b""")
         private val ANDROID_SUPPORT_SYMBOL_PATTERN = Pattern.compile("\\b(android.support.[a-zA-Z0-9_.]+)\\b")
 
         @Suppress("SpellCheckingInspection")
@@ -1664,7 +1737,7 @@ class LintIssueDocGenerator constructor(
             if (jars.isEmpty()) {
                 return BuiltinIssueRegistry()
             }
-            val registries = JarFileIssueRegistry.get(client, jars) +
+            val registries = JarFileIssueRegistry.get(client, jars, skipVerification = true) +
                 if (includeBuiltins) listOf(BuiltinIssueRegistry()) else emptyList()
 
             return when {
@@ -2231,6 +2304,7 @@ class LintIssueDocGenerator constructor(
         var example: Example? = null
         var suppressExample: Example? = null
         var quickFixable: Boolean = false
+        var copyrightYear: Int = -1
     }
 
     enum class DocFormat(val extension: String, val header: String = "", val footer: String = "") {

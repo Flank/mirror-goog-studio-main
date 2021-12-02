@@ -234,7 +234,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             val projectOptions = creationConfig.services.projectOptions
 
-            task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
+            task.platformAttrRTxt.fromDisallowChanges(creationConfig.global.platformAttrs)
 
             val nonTransitiveRClass = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
             val compileClasspathLibraryRClasses = projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]
@@ -317,7 +317,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             super.configure(task)
             val projectOptions = creationConfig.services.projectOptions
 
-            task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
+            task.platformAttrRTxt.fromDisallowChanges(creationConfig.global.platformAttrs)
 
             // We need the runtime dependencies for generating a set of consistent runtime R classes
             // for android test, and in the case of transitive R classes, we also need them

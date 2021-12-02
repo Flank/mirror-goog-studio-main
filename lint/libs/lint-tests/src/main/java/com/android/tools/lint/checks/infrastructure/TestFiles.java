@@ -160,7 +160,7 @@ public class TestFiles {
         Map<ResourceType, List<ResourceUrl>> map = new HashMap<>();
         for (String url : urls) {
             ResourceUrl reference = ResourceUrl.parse(url);
-            assertNotNull("Resource reference was not a valid URL: " + reference, reference);
+            assertNotNull("Resource reference was not a valid URL: " + url, reference);
             List<ResourceUrl> list = map.computeIfAbsent(reference.type, o -> new ArrayList<>());
             list.add(reference);
         }

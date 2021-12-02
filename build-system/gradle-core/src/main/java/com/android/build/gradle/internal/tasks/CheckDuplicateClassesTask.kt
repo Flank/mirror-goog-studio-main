@@ -25,19 +25,23 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * A task that checks that project external dependencies do not contain duplicate classes. Without
  * this task in case duplicate classes exist the failure happens during dexing stage and the error
  * is not especially user friendly. Moreover, we would like to fail fast.
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ * simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val dummyOutputDirectory: DirectoryProperty

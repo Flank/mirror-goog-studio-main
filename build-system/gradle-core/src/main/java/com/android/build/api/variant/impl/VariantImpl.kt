@@ -19,7 +19,6 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -39,18 +38,17 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -60,7 +58,7 @@ import java.io.Serializable
 abstract class VariantImpl(
     open val variantBuilder: VariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo<*>,
+    variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -70,8 +68,7 @@ abstract class VariantImpl(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
-    sdkComponents: SdkComponents,
-    globalScope: GlobalScope
+    global: GlobalTaskCreationConfig
 ) : ComponentImpl(
     variantBuilder,
     buildFeatureValues,
@@ -85,8 +82,7 @@ abstract class VariantImpl(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
-    sdkComponents,
-    globalScope
+    global
 ), Variant, ConsumableCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
@@ -127,7 +123,7 @@ abstract class VariantImpl(
     }
 
     override val packaging: Packaging by lazy {
-        PackagingImpl(globalScope.extension.packagingOptions, internalServices)
+        PackagingImpl(variantDslInfo.packaging, internalServices)
     }
 
 
@@ -155,13 +151,10 @@ abstract class VariantImpl(
     override fun <T> getExtension(type: Class<T>): T? =
         type.cast(externalExtensions?.get(type))
 
-    override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantPropertiesApiServices.projectInfo.getProject().objects
-            .listProperty(RegularFile::class.java).also {
-                variantDslInfo.getProguardFiles(it)
-                it.finalizeValueOnRead()
-            }
-    }
+    override val proguardFiles: ListProperty<RegularFile> =
+        variantPropertiesApiServices.listPropertyOf(RegularFile::class.java) {
+            variantDslInfo.getProguardFiles(it)
+        }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -200,7 +193,7 @@ abstract class VariantImpl(
 
     override val needsMainDexListForBundle: Boolean
         get() = isBaseModule
-                && globalScope.hasDynamicFeatures()
+                && global.hasDynamicFeatures
                 && dexingType.needsMainDexList
 
     // TODO: Move down to lower type and remove from VariantScope.
@@ -218,14 +211,18 @@ abstract class VariantImpl(
      * adds renderscript sources if present.
      */
     override fun addRenderscriptSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+            sourceSets: ImmutableList.Builder<DirectoryEntry>,
     ) {
         renderscript?.let {
             if (!it.ndkModeEnabled.get()
-                && taskContainer.renderscriptCompileTask != null
+                && artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR).isPresent
             ) {
-                val rsFC = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
-                sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
+                sourceSets.add(
+                    TaskProviderBasedDirectoryEntryImpl(
+                        name = "generated_renderscript",
+                        directoryProvider = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR),
+                    )
+                )
             }
         }
     }

@@ -31,7 +31,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.gradle.BaseExtension;
+import com.android.build.api.dsl.Installation;
+import com.android.build.api.dsl.TestOptions;
 import com.android.build.gradle.internal.BuildToolsExecutableInput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
@@ -64,7 +65,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.TestOptions;
+import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
@@ -142,7 +143,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         public abstract Property<Boolean> getUninstallIncompatibleApks();
 
         @Input
-        public abstract Property<TestOptions.Execution> getExecutionEnum();
+        public abstract Property<Execution> getExecutionEnum();
 
         @Input
         public abstract Property<RetentionConfig> getRetentionConfig();
@@ -705,7 +706,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         public void configure(@NonNull DeviceProviderInstrumentTestTask task) {
             super.configure(task);
 
-            BaseExtension extension = creationConfig.getGlobalScope().getExtension();
+            Installation installationOptions = creationConfig.getGlobal().getInstallationOptions();
+            TestOptions testOptions = creationConfig.getGlobal().getTestOptions();
+
             Project project = task.getProject();
             ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
 
@@ -738,7 +741,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.getTestData().set(testData);
             task.getDeviceProviderFactory()
                     .getTimeOutInMs()
-                    .set(extension.getAdbOptions().getTimeOutInMs());
+                    .set(installationOptions.getTimeOutInMs());
             if (deviceProvider != null) {
                 Preconditions.checkState(
                         type != Type.INTERNAL_CONNECTED_DEVICE_PROVIDER,
@@ -747,7 +750,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 + "caching (DeviceProvider is not serializable currently).");
                 task.getDeviceProviderFactory().deviceProvider = deviceProvider;
             }
-            task.getInstallOptions().set(extension.getAdbOptions().getInstallOptions());
+            task.getInstallOptions().set(installationOptions.getInstallOptions());
             task.getTestRunnerFactory()
                     .getShardBetweenDevices()
                     .set(projectOptions.getProvider(BooleanOption.ENABLE_TEST_SHARDING));
@@ -764,15 +767,15 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             SdkComponentsKt.initialize(task.getTestRunnerFactory().getBuildTools(), creationConfig);
 
-            TestOptions.Execution executionEnum = extension.getTestOptions().getExecutionEnum();
-            task.getTestRunnerFactory().getExecutionEnum().set(executionEnum);
+            task.getTestRunnerFactory()
+                    .getExecutionEnum()
+                    .set(this.creationConfig.getGlobal().getTestOptionExecutionEnum());
             if (connectedCheckTargetSerials != null) {
                 task.getTestRunnerFactory()
                         .getConnectedCheckDeviceSerials()
                         .set(connectedCheckTargetSerials);
             }
-            boolean useUtp =
-                    shouldEnableUtp(projectOptions, extension.getTestOptions(), variantType);
+            boolean useUtp = shouldEnableUtp(projectOptions, testOptions, variantType);
             task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
             if (useUtp) {
                 if (!projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
@@ -806,8 +809,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     .set(
                             createRetentionConfig(
                                     projectOptions,
-                                    (EmulatorSnapshots)
-                                            extension.getTestOptions().getEmulatorSnapshots()));
+                                    (EmulatorSnapshots) testOptions.getEmulatorSnapshots()));
 
             task.getCodeCoverageEnabled()
                     .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());
@@ -837,7 +839,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             : DEVICE + "/" + deviceProviderName;
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            String rootLocation = extension.getTestOptions().getResultsDir();
+            String rootLocation = testOptions.getResultsDir();
             if (rootLocation == null) {
                 rootLocation =
                         project.getBuildDir()
@@ -848,7 +850,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             }
             task.getResultsDir().set(new File(rootLocation + subFolder));
 
-            rootLocation = extension.getTestOptions().getReportDir();
+            rootLocation = testOptions.getReportDir();
             if (rootLocation == null) {
                 rootLocation = project.getBuildDir() + "/" + FD_REPORTS + "/" + FD_ANDROID_TESTS;
             }

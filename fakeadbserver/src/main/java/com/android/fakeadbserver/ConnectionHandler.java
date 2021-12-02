@@ -53,7 +53,8 @@ final class ConnectionHandler implements Runnable {
                                     "transport-local",
                                     "transport-any",
                                     "host-features",
-                                    "mdns")));
+                                    "mdns",
+                                    "pair")));
 
     @NonNull
     private final FakeAdbServer mServer;
@@ -117,6 +118,8 @@ final class ConnectionHandler implements Runnable {
                     }
                     sendFailWithReason(
                             "Command not handled [" + request.mCommand + "] " + request.mArguments);
+                    // If we receive an unknown command, exit the loop
+                    return;
                 }
             }
         } catch (IOException e) {

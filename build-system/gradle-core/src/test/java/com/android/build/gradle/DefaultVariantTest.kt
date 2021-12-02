@@ -16,21 +16,25 @@
 
 package com.android.build.gradle
 
-import com.android.build.api.variant.VariantFilter
+import com.android.AndroidProjectTypes
 import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.variant.VariantFilter
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
 import com.android.build.gradle.internal.variant.TestVariantInputModel
 import com.android.build.gradle.internal.variant.DimensionCombinator
 import com.android.build.gradle.internal.variant.VariantModelImpl
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.model.AndroidProject
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SyncIssue
+import com.android.builder.model.v2.ide.ProjectType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.mockito.Mockito
@@ -487,6 +491,9 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         // convert to mock VariantScope
         val components = mutableListOf<VariantImpl>()
 
+        val globalTaskCreationConfig = Mockito.mock(GlobalTaskCreationConfig::class.java)
+        Mockito.`when`(globalTaskCreationConfig.services).thenReturn(dslServices)
+
         for (variant in variantComputer.computeVariants()) {
             val name = VariantDslInfoBuilder.computeName(variant, variantType)
 
@@ -529,7 +536,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         // finally get the computed default variant
         return VariantModelImpl(
             given,
-            { testBuildType },
+            { testBuildType!! },
             { components },
             { listOf() },
             {
@@ -538,7 +545,9 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                     dslServices.projectOptions
                 )
             },
-            dslServices.issueReporter
+            AndroidProjectTypes.PROJECT_TYPE_APP,
+            ProjectType.APPLICATION,
+            globalTaskCreationConfig
         ).defaultVariant
     }
 

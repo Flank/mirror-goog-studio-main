@@ -253,6 +253,27 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                 + "0 errors, 1 warnings\n");
     }
 
+    public void test145767092() {
+        // Handle CDATA nodes
+        lint().files(
+                        xml(
+                                "res/values-mk/strings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "<plurals name=\"foo\">\n"
+                                        + "       <item quantity=\"one\"><![CDATA[<b>%1$d</b> foo]]></item>\n"
+                                        + "       <item quantity=\"other\"><![CDATA[<b>%1$d</b> foos]]></item>\n"
+                                        + "</plurals>\n"
+                                        + "<!-- This doesn't trigger ImpliedQuantity -->\n"
+                                        + "<plurals name=\"foo2\">\n"
+                                        + "       <item quantity=\"one\">%1$d foo</item>\n"
+                                        + "       <item quantity=\"other\">%1$d foos</item>\n"
+                                        + "</plurals>\n"
+                                        + "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mPlurals =
             xml(

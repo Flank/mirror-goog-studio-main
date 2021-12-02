@@ -24,7 +24,8 @@ public class FieldAccessTest {
     public void testIntFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testIntFields()I").evalStatic(new Object[0]);
+                new MethodBodyEvaluator(classInput, "testIntFields", "()I")
+                        .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testIntFields(), result);
     }
 
@@ -32,7 +33,8 @@ public class FieldAccessTest {
     public void testByteFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testByteFields()I").evalStatic(new Object[0]);
+                new MethodBodyEvaluator(classInput, "testByteFields", "()I")
+                        .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testByteFields(), result);
     }
 
@@ -40,7 +42,8 @@ public class FieldAccessTest {
     public void testShortFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testShortFields()I").evalStatic(new Object[0]);
+                new MethodBodyEvaluator(classInput, "testShortFields", "()I")
+                        .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testShortFields(), result);
     }
 
@@ -48,7 +51,8 @@ public class FieldAccessTest {
     public void testLongFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testLongFields()J").evalStatic(new Object[0]);
+                new MethodBodyEvaluator(classInput, "testLongFields", "()J")
+                        .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testLongFields(), result);
     }
 
@@ -56,7 +60,8 @@ public class FieldAccessTest {
     public void testFloatFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testFloatFields()F").evalStatic(new Object[0]);
+                new MethodBodyEvaluator(classInput, "testFloatFields", "()F")
+                        .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testFloatFields(), result);
     }
 
@@ -64,7 +69,7 @@ public class FieldAccessTest {
     public void testDoubleFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testDoubleFields()D")
+                new MethodBodyEvaluator(classInput, "testDoubleFields", "()D")
                         .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testDoubleFields(), result);
     }
@@ -73,7 +78,7 @@ public class FieldAccessTest {
     public void testBooleanFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testBooleanFields()Z")
+                new MethodBodyEvaluator(classInput, "testBooleanFields", "()Z")
                         .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testBooleanFields(), result);
     }
@@ -82,7 +87,7 @@ public class FieldAccessTest {
     public void testCharFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testCharFields()Ljava/lang/String;")
+                new MethodBodyEvaluator(classInput, "testCharFields", "()Ljava/lang/String;")
                         .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testCharFields(), result);
     }
@@ -91,7 +96,7 @@ public class FieldAccessTest {
     public void testObjectFields() throws Exception {
         byte[] classInput = buildClass(FieldTestTarget.class);
         Object result =
-                new MethodBodyEvaluator(classInput, "testObjectFields()Ljava/lang/String;")
+                new MethodBodyEvaluator(classInput, "testObjectFields", "()Ljava/lang/String;")
                         .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testObjectFields(), result);
     }

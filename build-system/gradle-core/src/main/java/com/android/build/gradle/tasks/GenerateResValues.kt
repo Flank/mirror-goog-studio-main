@@ -19,12 +19,15 @@ import com.android.build.api.variant.HasAndroidResources
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.generators.ResValueGenerator
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -34,16 +37,21 @@ abstract class GenerateResValues : NonIncrementalTask() {
 
     // ----- PUBLIC TASK API -----
 
-    @get:OutputDirectory
-    lateinit var resOutputDir: File
+    @get:Internal
+    val resOutputDir: File
+        get() {
+            return outputDirectory.get().asFile
+        }
 
     // ----- PRIVATE TASK API -----
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
 
     @get:Input
     abstract val items: MapProperty<ResValue.Key, ResValue>
 
     override fun doTaskAction() {
-        val folder = resOutputDir
+        val folder = outputDirectory.get().asFile
 
         // Always clean up the directory before use.
         FileUtils.cleanOutputDir(folder)
@@ -67,6 +75,10 @@ abstract class GenerateResValues : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.generateResValuesTask = taskProvider
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider, GenerateResValues::outputDirectory
+            ).atLocation(deprecatedGeneratedResOutputDir.get().asFile.absolutePath)
+                .on(InternalArtifactType.GENERATED_RES)
         }
 
         override fun configure(
@@ -79,8 +91,11 @@ abstract class GenerateResValues : NonIncrementalTask() {
             } else {
                 task.items.empty()
             }
-            task.resOutputDir =
-                creationConfig.paths.generatedResOutputDir.forUseAtConfigurationTime().get().asFile
         }
+
+        // use the old generated res output dir since some released plugins are directly referencing
+        // the output folder location to generate resources in.
+        val deprecatedGeneratedResOutputDir by lazy {
+            creationConfig.paths.getGeneratedResourcesDir("resValues") }
     }
 }

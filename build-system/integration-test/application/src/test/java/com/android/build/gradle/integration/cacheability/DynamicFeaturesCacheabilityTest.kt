@@ -66,13 +66,9 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:preDebugBuild"
                 ),
                 FROM_CACHE to setOf(
-                    ":app:bundleDebugClasses",
-                    ":app:checkDebugAarMetadata",
-                    ":app:checkDebugDuplicateClasses",
                     ":app:checkDebugLibraries",
                     ":app:compileDebugJavaWithJavac",
                     ":app:compressDebugAssets",
-                    ":app:createDebugCompatibleScreenManifests",
                     ":app:desugarDebugFileDependencies",
                     ":app:dexBuilderDebug",
                     ":app:extractDeepLinksDebug",
@@ -86,18 +82,13 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugJniLibFolders",
                     ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
-                    ":app:preDebugBuild",
                     ":app:processDebugMainManifest",
                     ":app:processDebugManifest",
                     ":app:processDebugManifestForPackage",
                     ":app:processDebugResources", /* Bug 141301405 */
-                    ":app:validateSigningDebug",
 
-                    ":feature1:checkDebugAarMetadata",
-                    ":feature1:checkDebugDuplicateClasses",
                     ":feature1:compileDebugJavaWithJavac",
                     ":feature1:compressDebugAssets",
-                    ":feature1:createDebugCompatibleScreenManifests",
                     ":feature1:desugarDebugFileDependencies",
                     ":feature1:dexBuilderDebug",
                     ":feature1:extractDeepLinksDebug",
@@ -119,10 +110,8 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:processManifestDebugForFeature",
 
                     ":feature2:checkDebugAarMetadata",
-                    ":feature2:checkDebugDuplicateClasses",
                     ":feature2:compileDebugJavaWithJavac",
                     ":feature2:compressDebugAssets",
-                    ":feature2:createDebugCompatibleScreenManifests",
                     ":feature2:desugarDebugFileDependencies",
                     ":feature2:dexBuilderDebug",
                     ":feature2:extractDeepLinksDebug",
@@ -165,7 +154,11 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:bundleDebugClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
+                    ":app:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
+                    ":app:checkDebugDuplicateClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */
                     ":app:createDebugApkListingFileRedirect",
+                    ":app:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":app:copyDebugAndroidLintReports", // intentionally not cacheable
                     ":app:extractProguardFiles", // intentionally not cacheable
                     ":app:generateDebugLintModel", // intentionally not cacheable
@@ -174,12 +167,17 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
+                    ":app:preDebugBuild", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppPreBuildTask]*/
                     ":app:signingConfigWriterDebug", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigWriterTask]*/
+                    ":app:validateSigningDebug", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.ValidateSigningTask] */
                     ":app:writeDebugModuleMetadata",
                     ":app:writeDebugAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
                     ":app:writeDebugSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
 
+                    ":feature1:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
+                    ":feature1:checkDebugDuplicateClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */
                     ":feature1:createDebugApkListingFileRedirect",
+                    ":feature1:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":feature1:extractProguardFiles", // intentionally not cacheable
                     ":feature1:featureDebugWriter",
                     ":feature1:generateDebugLintModel", // intentionally not cacheable
@@ -188,7 +186,10 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:packageDebug",
                     ":feature1:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
 
+                    ":feature2:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
+                    ":feature2:checkDebugDuplicateClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */
                     ":feature2:createDebugApkListingFileRedirect",
+                    ":feature2:createDebugCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
                     ":feature2:extractProguardFiles", // intentionally not cacheable
                     ":feature2:featureDebugWriter",
                     ":feature2:generateDebugLintModel", // intentionally not cacheable
