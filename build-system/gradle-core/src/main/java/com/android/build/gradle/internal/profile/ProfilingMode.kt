@@ -25,9 +25,10 @@ enum class ProfilingMode(val modeName: String?, val isDebuggable: Boolean?) {
 
     companion object {
 
+        private val profilingModeConverter = HelpfulEnumConverter(ProfilingMode::class.java)
+
         fun getProfilingModeType(modeName: String?): ProfilingMode {
-            val converter = HelpfulEnumConverter(ProfilingMode::class.java)
-            return converter.convert(modeName) ?: UNDEFINED
+            return profilingModeConverter.convert(modeName) ?: UNDEFINED
         }
     }
 }

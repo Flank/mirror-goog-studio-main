@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier
+import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -32,6 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
@@ -99,6 +101,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:Input
     abstract val packageOverride: Property<String>
 
+    @get:Input
+    abstract val profileable: Property<Boolean>
+
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val manifestOverlays: ListProperty<File>
@@ -148,13 +153,14 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             navJsons,
             featureName.orNull,
             packageOverride.get(),
+            profileable.get(),
             variantOutput.get().versionCode.orNull,
             variantOutput.get().versionName.orNull,
             minSdkVersion.orNull,
             targetSdkVersion.orNull,
             maxSdkVersion.orNull,
-            mergedManifest.get().asFile.absolutePath,
-            null /* aaptFriendlyManifestOutputFile */,
+            mergedManifest.get().asFile.absolutePath /* aaptFriendlyManifestOutputFile */,
+            null /* outAaptSafeManifestLocation */,
             ManifestMerger2.MergeType.APPLICATION,
             manifestPlaceholders.get(),
             optionalFeatures.get().plus(
@@ -411,6 +417,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             }
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
+            task.profileable.setDisallowChanges(
+                creationConfig.global.profilingMode == ProfilingMode.PROFILEABLE
+            )
             task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()
             task.mainManifest.setDisallowChanges(creationConfig.services.provider(variantSources::mainManifestFilePath))

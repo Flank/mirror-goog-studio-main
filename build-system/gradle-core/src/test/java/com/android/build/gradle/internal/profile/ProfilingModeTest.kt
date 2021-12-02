@@ -25,8 +25,8 @@ internal class ProfilingModeTest {
 
     @Test
     fun supportsTypicalProfilingModeTypes() {
-        val profilable = ProfilingMode.getProfilingModeType("profileable")
-        assertThat(profilable).`is`(ProfilingMode.PROFILEABLE::class.java)
+        val profileable = ProfilingMode.getProfilingModeType("profileable")
+        assertThat(profileable).`is`(ProfilingMode.PROFILEABLE::class.java)
 
         val debuggable = ProfilingMode.getProfilingModeType("debuggable")
         assertThat(debuggable).`is`(ProfilingMode.DEBUGGABLE::class.java)

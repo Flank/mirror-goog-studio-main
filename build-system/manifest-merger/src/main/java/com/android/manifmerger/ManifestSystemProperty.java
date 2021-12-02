@@ -21,6 +21,8 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
+import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -179,6 +181,30 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
             addToElementInAndroidNS(this, actionRecorder, value,
                     createOrGetInstrumentation(actionRecorder, document));
         }
+    },
+    /**
+     * Shell attribute set for Profileable
+     *
+     * @see <a href="https://developer.android.com/guide/topics/manifest/profileable-element">
+     * https://developer.android.com/guide/topics/manifest/profileable-element</a>
+     */
+    SHELL {
+        @Override
+        public void addTo(
+                @NonNull ActionRecorder actionRecorder,
+                @NonNull XmlDocument document,
+                @NonNull String value) {
+            // Assume there is always an application element.
+            Optional<XmlElement> applicationElement =
+                    document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
+            XmlElement profileable =
+                    ManifestSystemProperty.createOrGetProfileable(
+                            actionRecorder, document, applicationElement.get().getXml());
+            ManifestSystemProperty.addToElementInAndroidNS(this,
+                    actionRecorder,
+                    value,
+                    profileable);
+        }
     };
 
     public String toCamelCase() {
@@ -195,13 +221,7 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
         to.getXml().setAttribute(manifestSystemProperty.toCamelCase(), value);
         XmlAttribute xmlAttribute = new XmlAttribute(to,
                 to.getXml().getAttributeNode(manifestSystemProperty.toCamelCase()), null);
-        actionRecorder.recordNodeAction(to, Actions.ActionType.INJECTED);
-        actionRecorder.recordAttributeAction(xmlAttribute, new Actions.AttributeRecord(
-                Actions.ActionType.INJECTED,
-                new SourceFilePosition(to.getSourceFile(), SourcePosition.UNKNOWN),
-                xmlAttribute.getId(),
-                null, /* reason */
-                null /* attributeOperationType */));
+        recordElementInjectionAction(actionRecorder, to, xmlAttribute);
     }
 
     // utility method to add an attribute in android namespace which local name is derived from
@@ -222,17 +242,20 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
                 manifestSystemProperty.toCamelCase());
 
         XmlAttribute xmlAttribute = new XmlAttribute(to, attr, null);
-        actionRecorder.recordNodeAction(to, Actions.ActionType.INJECTED);
-        actionRecorder.recordAttributeAction(xmlAttribute,
-                new Actions.AttributeRecord(
-                        Actions.ActionType.INJECTED,
-                        new SourceFilePosition(to.getSourceFile(), SourcePosition.UNKNOWN),
-                        xmlAttribute.getId(),
-                        null, /* reason */
-                        null /* attributeOperationType */
-                )
-        );
+        recordElementInjectionAction(actionRecorder, to, xmlAttribute);
+    }
 
+    private static void recordElementInjectionAction(
+            @NotNull ActionRecorder actionRecorder,
+            @NotNull XmlElement to,
+            XmlAttribute xmlAttribute) {
+        actionRecorder.recordNodeAction(to, Actions.ActionType.INJECTED);
+        actionRecorder.recordAttributeAction(xmlAttribute, new Actions.AttributeRecord(
+                Actions.ActionType.INJECTED,
+                new SourceFilePosition(to.getSourceFile(), SourcePosition.UNKNOWN),
+                xmlAttribute.getId(),
+                null, /* reason */
+                null /* attributeOperationType */));
     }
 
     // utility method to create or get an existing use-sdk xml element under manifest.
@@ -241,33 +264,62 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
     @NonNull
     private static XmlElement createOrGetUseSdk(
             @NonNull ActionRecorder actionRecorder, @NonNull XmlDocument document) {
-        return createOrGetElement(actionRecorder, document,
-                ManifestModel.NodeTypes.USES_SDK, "use-sdk injection requested");
+        return createOrGetElementInManifest(
+                actionRecorder,
+                document,
+                ManifestModel.NodeTypes.USES_SDK,
+                "use-sdk injection requested");
     }
 
     /** See above for details, similar like for uses-sdk tag*/
     @NonNull
     private static XmlElement createOrGetInstrumentation(
             @NonNull ActionRecorder actionRecorder, @NonNull XmlDocument document) {
-        return createOrGetElement(actionRecorder, document,
-                ManifestModel.NodeTypes.INSTRUMENTATION, "instrumentation injection requested");
+        return createOrGetElementInManifest(
+                actionRecorder,
+                document,
+                ManifestModel.NodeTypes.INSTRUMENTATION,
+                "instrumentation injection requested");
+    }
+
+    private static XmlElement createOrGetProfileable(
+            @NonNull ActionRecorder actionRecorder,
+            @NonNull XmlDocument document,
+            @NonNull Element applicationElement) {
+        return createOrGetElement(
+                actionRecorder,
+                document,
+                applicationElement,
+                ManifestModel.NodeTypes.PROFILEABLE,
+                "profileable injection requested");
+    }
+
+    @NonNull
+    private static XmlElement createOrGetElementInManifest(
+            @NonNull ActionRecorder actionRecorder,
+            @NonNull XmlDocument document,
+            @NonNull ManifestModel.NodeTypes nodeType,
+            @NonNull String message) {
+        Element manifest = document.getXml().getDocumentElement();
+        return createOrGetElement(actionRecorder, document, manifest, nodeType, message);
     }
 
     @NonNull
     private static XmlElement createOrGetElement(
-            @NonNull ActionRecorder actionRecorder, @NonNull XmlDocument document,
-            @NonNull ManifestModel.NodeTypes nodeType, @NonNull String message) {
-
+            @NonNull ActionRecorder actionRecorder,
+            @NonNull XmlDocument document,
+            @NonNull Element parentElement,
+            @NonNull ManifestModel.NodeTypes nodeType,
+            @NonNull String message) {
         String elementName = document.getModel().toXmlName(nodeType);
-        Element manifest = document.getXml().getDocumentElement();
-        NodeList nodes = manifest.getElementsByTagName(elementName);
+        NodeList nodes = parentElement.getElementsByTagName(elementName);
         if (nodes.getLength() == 0) {
-            nodes = manifest.getElementsByTagNameNS(SdkConstants.ANDROID_URI, elementName);
+            nodes = parentElement.getElementsByTagNameNS(SdkConstants.ANDROID_URI, elementName);
         }
         if (nodes.getLength() == 0) {
             // create it first.
-            Element node = manifest.getOwnerDocument().createElement(elementName);
-            manifest.appendChild(node);
+            Element node = parentElement.getOwnerDocument().createElement(elementName);
+            parentElement.appendChild(node);
             XmlElement xmlElement = new XmlElement(node, document);
             Actions.NodeRecord nodeRecord = new Actions.NodeRecord(
                     Actions.ActionType.INJECTED,

@@ -508,6 +508,20 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                 AttributeModel.newModel(SdkConstants.ATTR_NAME)),
 
         /**
+         * Profileable <br>
+         * <b>See also : </b> {@link <a
+         * href=https://developer.android.com/guide/topics/manifest/profileable-element>Profileable
+         * Xml documentation</a>}
+         */
+        PROFILEABLE(
+                MergeType.MERGE,
+                PROVIDER_KEY_RESOLVER,
+                AttributeModel.newModel("shell")
+                        .setDefaultValue("true")
+                        .setMergingPolicy(AttributeModel.NO_MERGING_POLICY),
+                AttributeModel.newModel("enable")),
+
+        /**
          * Provider (contained in application or queries) <br>
          * <b>See also : </b> {@link <a
          * href=http://developer.android.com/guide/topics/manifest/provider-element.html>Provider
