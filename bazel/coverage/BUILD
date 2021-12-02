@@ -884,7 +884,7 @@ coverage_report(
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib:intellij.android.layoutlib.tests_tests",
-        "//tools/adt/idea/logcat:intellij.android.logcat_tests",
+        "//tools/adt/idea/logcat:intellij.android.logcat.tests_tests",
         "//tools/adt/idea/mlkit:intellij.android.mlkit.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
