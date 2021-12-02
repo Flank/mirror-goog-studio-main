@@ -16,14 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
-import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.Version
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
-import com.android.Version
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
@@ -89,19 +87,20 @@ class CheckAarMetadataTaskTest {
 
     @Test
     fun testFailsOnAarFormatVersion() {
+        val aarMetadataFile = temporaryFolder.newFile().also {
+            writeAarMetadataFile(
+                file = it,
+                aarFormatVersion = "2.0",
+                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                minCompileSdk = 28,
+                minAgpVersion = "3.0.0"
+            )
+        }
         task.aarMetadataArtifacts =
             FakeArtifactCollection(
                 mutableSetOf(
                     FakeResolvedArtifactResult(
-                        file = temporaryFolder.newFile().also {
-                            writeAarMetadataFile(
-                                file = it,
-                                aarFormatVersion = "2.0",
-                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
-                                minCompileSdk = 28,
-                                minAgpVersion = "3.0.0"
-                            )
-                        },
+                        file = aarMetadataFile,
                         identifier = FakeComponentIdentifier("displayName")
                     )
                 )
@@ -115,25 +114,35 @@ class CheckAarMetadataTaskTest {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
-            assertThat(e.message).contains("The $AAR_FORMAT_VERSION_PROPERTY (2.0) specified")
+            assertThat(e.message).isEqualTo("""
+                An issue was found when checking AAR metadata:
+
+                  1.  The aarFormatVersion (2.0) specified in a dependency's AAR metadata
+                      (META-INF/com/android/build/gradle/aar-metadata.properties)
+                      is not compatible with this version of the Android Gradle plugin.
+                      Please upgrade to a newer version of the Android Gradle plugin.
+                      Dependency: displayName.
+                      AAR metadata file: ${aarMetadataFile.absolutePath}.
+            """.trimIndent())
         }
     }
 
     @Test
     fun testFailsOnAarMetadataVersion() {
+        val aarMetadataFile = temporaryFolder.newFile().also {
+            writeAarMetadataFile(
+                file = it,
+                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                aarMetadataVersion = "2.0",
+                minCompileSdk = 28,
+                minAgpVersion = "3.0.0"
+            )
+        }
         task.aarMetadataArtifacts =
             FakeArtifactCollection(
                 mutableSetOf(
                     FakeResolvedArtifactResult(
-                        file = temporaryFolder.newFile().also {
-                            writeAarMetadataFile(
-                                file = it,
-                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
-                                aarMetadataVersion = "2.0",
-                                minCompileSdk = 28,
-                                minAgpVersion = "3.0.0"
-                            )
-                        },
+                        file = aarMetadataFile,
                         identifier = FakeComponentIdentifier("displayName")
                     )
                 )
@@ -147,7 +156,16 @@ class CheckAarMetadataTaskTest {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
-            assertThat(e.message).contains("The $AAR_METADATA_VERSION_PROPERTY (2.0) specified")
+            assertThat(e.message).isEqualTo("""
+               An issue was found when checking AAR metadata:
+
+                 1.  The aarMetadataVersion (2.0) specified in a dependency's AAR metadata
+                     (META-INF/com/android/build/gradle/aar-metadata.properties)
+                     is not compatible with this version of the Android Gradle plugin.
+                     Please upgrade to a newer version of the Android Gradle plugin.
+                     Dependency: displayName.
+                     AAR metadata file: ${aarMetadataFile.absolutePath}.
+            """.trimIndent())
         }
     }
 
@@ -173,15 +191,88 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-27")
-        task.agpVersion.set(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+        task.agpVersion.set("7.2.0")
+        task.maxRecommendedStableCompileSdkVersionForThisAgp.set(30)
         task.projectPath.set(":app")
         try {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
-            assertThat(e.message).contains(
-                "Dependency 'displayName' requires 'compileSdkVersion' to be set to 28 or higher."
+            assertThat(e.message).isEqualTo(
+                """
+                    An issue was found when checking AAR metadata:
+
+                      1.  Dependency 'displayName' requires libraries and applications that
+                          depend on it to compile against version 28 or later of the
+                          Android APIs.
+
+                          :app is currently compiled against android-27.
+
+                          Recommended action: Update this project to use a newer compileSdkVersion
+                          of at least 28, for example 30.
+
+                          Note that updating a library or application's compileSdkVersion (which
+                          allows newer APIs to be used) can be done separately from updating
+                          targetSdkVersion (which opts the app in to new runtime behavior) and
+                          minSdkVersion (which determines which devices the app can be installed
+                          on).
+                """.trimIndent()
             )
+        }
+    }
+
+
+    @Test
+    fun testFailsOnMinCompileSdkVersionAboveMaxAgp() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 47,
+                                minAgpVersion = "3.0.0"
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-27")
+        task.agpVersion.set("7.2.0")
+        task.maxRecommendedStableCompileSdkVersionForThisAgp.set(30)
+        task.projectPath.set(":app")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).isEqualTo("""
+                An issue was found when checking AAR metadata:
+
+                  1.  Dependency 'displayName' requires libraries and applications that
+                      depend on it to compile against version 47 or later of the
+                      Android APIs.
+
+                      :app is currently compiled against android-27.
+
+                      Also, the maximum recommended compile SDK version for Android Gradle
+                      plugin 7.2.0 is 30.
+
+                      Recommended action: Update this project's version of the Android Gradle
+                      plugin to one that supports 47, then update this project to use
+                      compileSdkVerion of at least 47.
+
+                      Note that updating a library or application's compileSdkVersion (which
+                      allows newer APIs to be used) can be done separately from updating
+                      targetSdkVersion (which opts the app in to new runtime behavior) and
+                      minSdkVersion (which determines which devices the app can be installed
+                      on).
+            """.trimIndent())
         }
     }
 
@@ -213,30 +304,33 @@ class CheckAarMetadataTaskTest {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
-            assertThat(e.message).contains(
+            assertThat(e.message).isEqualTo(
                 """
-                    Dependency 'displayName' requires an Android Gradle Plugin version of 3.0.0 or higher.
-                    The Android Gradle Plugin version used for this build is 3.0.0-beta01.
-                    """.trimIndent()
-            )
+                    An issue was found when checking AAR metadata:
+
+                      1.  Dependency 'displayName' requires Android Gradle plugin 3.0.0 or higher.
+
+                          This build currently uses Android Gradle plugin 3.0.0-beta01.
+                """.trimIndent())
         }
     }
 
     @Test
     fun tesMultipleFailures() {
+        val aarMetadataFile = temporaryFolder.newFile().also {
+            writeAarMetadataFile(
+                file = it,
+                aarFormatVersion = "2.0",
+                aarMetadataVersion = "2.0",
+                minCompileSdk = 28,
+                minAgpVersion = "3.0.0"
+            )
+        }
         task.aarMetadataArtifacts =
             FakeArtifactCollection(
                 mutableSetOf(
                     FakeResolvedArtifactResult(
-                        file = temporaryFolder.newFile().also {
-                            writeAarMetadataFile(
-                                file = it,
-                                aarFormatVersion = "2.0",
-                                aarMetadataVersion = "2.0",
-                                minCompileSdk = 28,
-                                minAgpVersion = "3.0.0"
-                            )
-                        },
+                        file = aarMetadataFile,
                         identifier = FakeComponentIdentifier("displayName")
                     )
                 )
@@ -246,21 +340,47 @@ class CheckAarMetadataTaskTest {
         task.compileSdkVersion.set("android-27")
         task.agpVersion.set("3.0.0-beta01")
         task.projectPath.set(":app")
+        task.maxRecommendedStableCompileSdkVersionForThisAgp.set(30)
         try {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
-            assertThat(e.message).contains("The $AAR_FORMAT_VERSION_PROPERTY (2.0) specified")
-            assertThat(e.message).contains("The $AAR_METADATA_VERSION_PROPERTY (2.0) specified")
-            assertThat(e.message).contains(
-                "Dependency 'displayName' requires 'compileSdkVersion' to be set to 28 or higher."
-            )
-            assertThat(e.message).contains(
-                """
-                    Dependency 'displayName' requires an Android Gradle Plugin version of 3.0.0 or higher.
-                    The Android Gradle Plugin version used for this build is 3.0.0-beta01.
-                    """.trimIndent()
-            )
+            assertThat(e.message).isEqualTo("""
+                4 issues were found when checking AAR metadata:
+
+                  1.  The aarFormatVersion (2.0) specified in a dependency's AAR metadata
+                      (META-INF/com/android/build/gradle/aar-metadata.properties)
+                      is not compatible with this version of the Android Gradle plugin.
+                      Please upgrade to a newer version of the Android Gradle plugin.
+                      Dependency: displayName.
+                      AAR metadata file: ${aarMetadataFile.absolutePath}.
+
+                  2.  The aarMetadataVersion (2.0) specified in a dependency's AAR metadata
+                      (META-INF/com/android/build/gradle/aar-metadata.properties)
+                      is not compatible with this version of the Android Gradle plugin.
+                      Please upgrade to a newer version of the Android Gradle plugin.
+                      Dependency: displayName.
+                      AAR metadata file: ${aarMetadataFile.absolutePath}.
+
+                  3.  Dependency 'displayName' requires libraries and applications that
+                      depend on it to compile against version 28 or later of the
+                      Android APIs.
+
+                      :app is currently compiled against android-27.
+
+                      Recommended action: Update this project to use a newer compileSdkVersion
+                      of at least 28, for example 30.
+
+                      Note that updating a library or application's compileSdkVersion (which
+                      allows newer APIs to be used) can be done separately from updating
+                      targetSdkVersion (which opts the app in to new runtime behavior) and
+                      minSdkVersion (which determines which devices the app can be installed
+                      on).
+
+                  4.  Dependency 'displayName' requires Android Gradle plugin 3.0.0 or higher.
+
+                      This build currently uses Android Gradle plugin 3.0.0-beta01.
+            """.trimIndent())
         }
     }
 }

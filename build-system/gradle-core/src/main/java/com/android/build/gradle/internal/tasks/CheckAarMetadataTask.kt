@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.core.ToolsRevisionUtils
 import com.android.ide.common.repository.GradleVersion
 import com.android.repository.Revision
 import com.android.sdklib.SdkVersionInfo
@@ -50,6 +51,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import java.io.File
 import java.io.Serializable
+import java.util.Locale
 import java.util.Properties
 
 /**
@@ -88,6 +90,9 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     @get:Input
     abstract val agpVersion: Property<String>
 
+    @get:Input
+    abstract val maxRecommendedStableCompileSdkVersionForThisAgp: Property<Int>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(
             CheckAarMetadataWorkAction::class.java
@@ -109,6 +114,9 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.compileSdkVersion.set(compileSdkVersion)
             it.agpVersion.set(agpVersion)
+            it.maxRecommendedStableCompileSdkVersionForThisAgp.set(
+                maxRecommendedStableCompileSdkVersionForThisAgp
+            )
             it.projectPath.set(projectPath)
         }
     }
@@ -144,6 +152,9 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             task.aarMetadataVersion.setDisallowChanges(AarMetadataTask.AAR_METADATA_VERSION)
             task.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
             task.agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+            task.maxRecommendedStableCompileSdkVersionForThisAgp.setDisallowChanges(
+                ToolsRevisionUtils.MAX_RECOMMENDED_COMPILE_SDK_VERSION.apiLevel
+            )
         }
     }
 }
@@ -152,13 +163,54 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
 abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParameters> {
 
     override fun execute() {
-        val errorMessages: MutableList<String> =
-            mutableListOf("One or more issues found when checking AAR metadata values:")
+        val errorMessages: MutableList<String> = mutableListOf()
         parameters.aarMetadataArtifacts.get().forEach {
             checkAarMetadataArtifact(it, errorMessages)
         }
-        if (errorMessages.size > 1) {
-            throw RuntimeException(errorMessages.joinToString(separator = "\n\n"))
+        if (errorMessages.size > 0) {
+            throw RuntimeException(StringBuilder().apply {
+                when (errorMessages.size) {
+                    1 -> {
+                        append("An issue was")
+                    }
+                    else -> {
+                        append(errorMessages.size).append(" issues were")
+                    }
+                }
+                append(" found when checking AAR metadata:")
+                appendNumberedErrorMessages(errorMessages)
+            }.toString())
+        }
+    }
+
+    /**
+     * Number and indent the issues, e.g.
+     * ```
+     * 2 issues were found when checking AAR metadata:
+     *
+     *   1.  Dependency 'displayName' requires Android Gradle plugin 3.0.0 or higher.
+     *
+     *       This build currently uses Android Gradle plugin 3.0.0-beta01.
+     *
+     *   2.  Another issue with some description.
+     *
+     *       More description.
+     * ```
+     */
+    private fun StringBuilder.appendNumberedErrorMessages(errorMessages: List<String>) {
+        errorMessages.forEachIndexed { index ,errorMessage ->
+            append("\n\n")
+            append("%3d".format(Locale.US, index+1))
+            append(".  ")
+            errorMessage.lines().forEachIndexed { lineIndex, line ->
+                if (lineIndex > 0) {
+                    append("\n")
+                    if (line.isNotEmpty()) {
+                        append("      ")
+                    }
+                }
+                append(line)
+            }
         }
     }
 
@@ -191,10 +243,10 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 if (majorAarVersion > maxMajorAarVersion) {
                     errorMessages.add(
                         """
-                            The $AAR_FORMAT_VERSION_PROPERTY ($aarFormatVersion) specified in a
-                            dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                            is not compatible with this version of the Android Gradle Plugin.
-                            Please upgrade to a newer version of the Android Gradle Plugin.
+                            The $AAR_FORMAT_VERSION_PROPERTY ($aarFormatVersion) specified in a dependency's AAR metadata
+                            (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
+                            is not compatible with this version of the Android Gradle plugin.
+                            Please upgrade to a newer version of the Android Gradle plugin.
                             Dependency: $displayName.
                             AAR metadata file: ${aarMetadataFile.absolutePath}.
                             """.trimIndent()
@@ -233,10 +285,10 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 if (majorAarMetadataVersion > maxMajorAarMetadataVersion) {
                     errorMessages.add(
                         """
-                            The $AAR_METADATA_VERSION_PROPERTY ($aarMetadataVersion) specified in a
-                            dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                            is not compatible with this version of the Android Gradle Plugin.
-                            Please upgrade to a newer version of the Android Gradle Plugin.
+                            The $AAR_METADATA_VERSION_PROPERTY ($aarMetadataVersion) specified in a dependency's AAR metadata
+                            (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
+                            is not compatible with this version of the Android Gradle plugin.
+                            Please upgrade to a newer version of the Android Gradle plugin.
                             Dependency: $displayName.
                             AAR metadata file: ${aarMetadataFile.absolutePath}.
                             """.trimIndent()
@@ -274,11 +326,36 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 val compileSdkVersionInt = getApiIntFromString(compileSdkVersion)
                 if (minCompileSdkInt > compileSdkVersionInt) {
                     // TODO(b/199900566) - change compileSdkVersion to compileSdk for AGP 8.0.
+                    val maxRecommendedCompileSdk = parameters.maxRecommendedStableCompileSdkVersionForThisAgp.get()
+                    val recommendation = if (minCompileSdkInt <= maxRecommendedCompileSdk) {
+                        """
+                            Recommended action: Update this project to use a newer compileSdkVersion
+                            of at least $minCompileSdk, for example $maxRecommendedCompileSdk.
+                        """.trimIndent()
+                    } else {
+                        """
+                            Also, the maximum recommended compile SDK version for Android Gradle
+                            plugin ${parameters.agpVersion.get()} is $maxRecommendedCompileSdk.
+
+                            Recommended action: Update this project's version of the Android Gradle
+                            plugin to one that supports $minCompileSdk, then update this project to use
+                            compileSdkVerion of at least $minCompileSdk.
+                        """.trimIndent()
+                    }
                     errorMessages.add(
                         """
-                            Dependency '$displayName' requires 'compileSdkVersion' to be set to $minCompileSdk or higher.
-                            Compilation target for module '${parameters.projectPath.get()}' is '$compileSdkVersion'.
-                            """.trimIndent()
+                            Dependency '$displayName' requires libraries and applications that
+                            depend on it to compile against version $minCompileSdk or later of the
+                            Android APIs.
+
+                            ${parameters.projectPath.get()} is currently compiled against $compileSdkVersion.
+                        """.trimIndent() + "\n\n" + recommendation + "\n\n" + """
+                            Note that updating a library or application's compileSdkVersion (which
+                            allows newer APIs to be used) can be done separately from updating
+                            targetSdkVersion (which opts the app in to new runtime behavior) and
+                            minSdkVersion (which determines which devices the app can be installed
+                            on).
+                        """.trimIndent()
                     )
                 }
             }
@@ -307,8 +384,9 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 if (parsedMinAgpVersion > parsedAgpVersion) {
                     errorMessages.add(
                         """
-                            Dependency '$displayName' requires an Android Gradle Plugin version of $minAgpVersion or higher.
-                            The Android Gradle Plugin version used for this build is ${parameters.agpVersion.get()}.
+                            Dependency '$displayName' requires Android Gradle plugin $minAgpVersion or higher.
+
+                            This build currently uses Android Gradle plugin ${parameters.agpVersion.get()}.
                             """.trimIndent()
                     )
                 }
@@ -344,6 +422,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val aarMetadataVersion: Property<String>
     abstract val compileSdkVersion: Property<String>
     abstract val agpVersion: Property<String>
+    abstract val maxRecommendedStableCompileSdkVersionForThisAgp: Property<Int>
     abstract val projectPath: Property<String>
 }
 
