@@ -102,7 +102,7 @@ open class AndroidTestImpl @Inject constructor(
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                     .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
+                            null, taskCreationServices.regularFile(internalServices.provider { it })
                     )
         }
     }

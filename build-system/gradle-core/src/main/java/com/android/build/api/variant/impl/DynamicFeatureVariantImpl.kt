@@ -19,7 +19,9 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
+import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.dsl.SdkComponents
@@ -31,7 +33,6 @@ import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.Renderscript
-import com.android.build.api.variant.TestFixtures
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -95,7 +96,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                     .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
+                            null, taskCreationServices.regularFile(internalServices.provider { it })
                     )
         }
     }
@@ -137,9 +138,9 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         )
     }
 
-    override var androidTest: AndroidTest? = null
+    override var androidTest: AndroidTestImpl? = null
 
-    override var testFixtures: TestFixtures? = null
+    override var testFixtures: TestFixturesImpl? = null
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)
