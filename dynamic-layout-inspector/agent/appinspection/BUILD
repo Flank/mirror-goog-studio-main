@@ -123,6 +123,31 @@ kotlin_test(
 )
 
 kotlin_test(
+    name = "fold_observer_with_beta04_tests",
+    srcs = ["src/test/com/android/tools/agent/appinspection/nojarjar/FoldObserverImplTest.kt"] + glob([
+        "src/test/com/android/tools/agent/appinspection/testutils/**",
+    ]),
+    jvm_flags = [
+        "-Dtest.suite.jar=fold_observer_with_beta04_tests.jar",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
+    ],
+    deps = [
+        ":agent-sources_undexed",
+        ":nojarjar",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:androidx.window-beta04",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:fake_android",
+        "//tools/base/testutils:tools.testutils",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
+)
+
+kotlin_test(
     name = "fold_observer_with_beta03_tests",
     srcs = ["src/test/com/android/tools/agent/appinspection/nojarjar/FoldObserverImplTest.kt"] + glob([
         "src/test/com/android/tools/agent/appinspection/testutils/**",

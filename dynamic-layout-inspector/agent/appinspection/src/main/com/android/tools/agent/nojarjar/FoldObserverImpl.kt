@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import com.android.tools.agent.shared.FoldObserver
@@ -52,27 +53,47 @@ class FoldObserverImpl(private val sendFoldStateEvent: Any) : FoldObserver {
     private val windowLayoutInfoClass = Class.forName("androidx.window.layout.WindowLayoutInfo")
     // The relevant class name was changed between beta02 and beta03.
     private val windowRepositoryCompanionClass = try {
+        // beta03 and later
         Class.forName("androidx.window.layout.WindowInfoTracker\$Companion")
     }
     catch (e: ClassNotFoundException) {
-        // Try the older name
+        // Pre-beta03
         Class.forName("androidx.window.layout.WindowInfoRepository\$Companion")
     }
     private val windowRepositoryClass = try {
+        // beta03 and later
         Class.forName("androidx.window.layout.WindowInfoTracker")
     }
     catch (e: ClassNotFoundException) {
-        // Try the older name
+        // Pre-beta03
         Class.forName("androidx.window.layout.WindowInfoRepository")
     }
-    private val windowRepositoryGetter = windowRepositoryCompanionClass.getDeclaredMethod(
-        "getOrCreate", Activity::class.java
-    )
+    private val windowRepositoryGetter = try {
+        // beta04 and later
+        windowRepositoryCompanionClass.getDeclaredMethod("getOrCreate", Context::class.java)
+    }
+    catch (e: NoSuchMethodException) {
+        // Pre-beta04
+        windowRepositoryCompanionClass.getDeclaredMethod("getOrCreate", Activity::class.java)
+    }
+
     private val windowRepositoryCompanion = windowRepositoryClass.getField("Companion").get(null)
-    private val windowLayoutInfoGetter =
+    private val windowLayoutInfoGetter = try {
+        // beta04 and later
+        windowRepositoryClass.getDeclaredMethod("windowLayoutInfo", Activity::class.java)
+    }
+    catch (e: NoSuchMethodException) {
+        // Pre-beta04
         windowRepositoryClass.getDeclaredMethod("getWindowLayoutInfo")
-    private val displayFeaturesGetter =
+    }
+    private val displayFeaturesGetter = try {
+        // beta04 and later
+        windowLayoutInfoClass.getDeclaredMethod("displayFeatures")
+    }
+    catch (e: NoSuchMethodException) {
+        // Pre-beta04
         windowLayoutInfoClass.getDeclaredMethod("getDisplayFeatures")
+    }
 
     private val listeners = mutableMapOf<View, Job?>()
     private val context = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
@@ -111,20 +132,27 @@ class FoldObserverImpl(private val sendFoldStateEvent: Any) : FoldObserver {
 
     override fun startObservingFoldState(rootView: View) {
         listeners.computeIfAbsent(rootView) { view ->
-            val windowInfoRepo = runOnMainThread {
+            val windowInfo = runOnMainThread {
                 // The DecorView doesn't have the Activity as context, so we need to get a different
                 // view.
                 val viewGroup = view as? ViewGroup ?: return@runOnMainThread null
+                val activity = viewGroup.getChildAt(0)?.context?.getActivity()
                 if (viewGroup.childCount > 0) {
-                    val activity = viewGroup.getChildAt(0)?.context?.getActivity()
                     if (activity != null) {
-                        windowRepositoryGetter.invoke(windowRepositoryCompanion, activity)
+                        val windowInfoRepo = windowRepositoryGetter.invoke(windowRepositoryCompanion, activity)
+                        if (windowLayoutInfoGetter.parameterCount == 1) {
+                            // beta04 and later
+                            windowLayoutInfoGetter.invoke(windowInfoRepo, activity) as Flow<*>
+                        }
+                        else {
+                            // pre-beta04
+                            windowLayoutInfoGetter.invoke(windowInfoRepo) as Flow<*>
+                        }
                     }
                     else null
                 }
                 else null
             }.get() ?: return@computeIfAbsent null
-            val windowInfo = windowLayoutInfoGetter.invoke(windowInfoRepo) as Flow<*>
 
             scope.launch {
                 windowInfo.collect { newLayoutInfo ->

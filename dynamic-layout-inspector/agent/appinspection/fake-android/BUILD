@@ -37,3 +37,12 @@ kotlin_library(
     ]),
     deps = [":fake_android"],
 )
+
+kotlin_library(
+    name = "androidx.window-beta04",
+    srcs = glob([
+        "src/libraries/androidx-window-beta-04/**/*.kt",
+        "src/libraries/androidx-window-beta-04/**/*.java",
+    ]),
+    deps = [":fake_android"],
+)
