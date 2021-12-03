@@ -99,7 +99,7 @@ class CombiningOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
         closeRequest()
         val artifactContainer = artifacts.getArtifactContainer(type)
         val newList = objects.listProperty(type.kind.dataType().java)
-        val currentProviders= artifactContainer.transform(taskProvider.flatMap { newList })
+        val currentProviders= artifactContainer.transform(taskProvider, taskProvider.flatMap { newList })
         taskProvider.configure {
             newList.add(into(it))
             into(it).set(artifacts.getOutputPath(type, taskProvider.name))
@@ -134,7 +134,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
 
         closeRequest()
         val artifactContainer = artifacts.getArtifactContainer(type)
-        val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
+        val currentProvider =  artifactContainer.transform(taskProvider, taskProvider.flatMap { into(it) })
         val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
 
         initializeInput(
@@ -155,9 +155,10 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         // new location, a successful sync must be performed.
         publicTypesToIdeModelTypeMap[type]?.let {
             val ideModelContainer = artifacts.getArtifactContainer(it)
-            ideModelContainer.replace(taskProvider.flatMap { task ->
-                into(task).file(BuiltArtifactsImpl.METADATA_FILE_NAME)
-            })
+            ideModelContainer.replace(taskProvider,
+                taskProvider.flatMap { task ->
+                    into(task).file(BuiltArtifactsImpl.METADATA_FILE_NAME)
+                })
         }
 
         return ArtifactTransformationRequestImpl(
@@ -264,7 +265,7 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toAppend
     // all producers of a multiple artifact type are added to the initial list (just like
     // the AGP producers) since the transforms always operate on the complete list of added
     // providers.
-    artifactContainer.addInitialProvider(taskProvider.flatMap { with(it) })
+    artifactContainer.addInitialProvider(taskProvider, taskProvider.flatMap { with(it) })
 }
 
 
@@ -280,7 +281,7 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toCreate
     taskProvider.configure {
         with(it).set(artifacts.getOutputPath(type, taskProvider.name))
     }
-    artifactContainer.replace(taskProvider.flatMap { with(it) })
+    artifactContainer.replace(taskProvider, taskProvider.flatMap { with(it) })
 }
 
 private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toTransform(
@@ -292,7 +293,7 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toTransf
         where ArtifactTypeT : Single<FileTypeT>,
               ArtifactTypeT : Artifact.Transformable {
     val artifactContainer = artifacts.getArtifactContainer(type)
-    val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
+    val currentProvider =  artifactContainer.transform(taskProvider, taskProvider.flatMap { into(it) })
     val fileName = if (type.kind is ArtifactKind.FILE
         && type.getFileSystemLocationName().isNullOrEmpty()) {
         DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS

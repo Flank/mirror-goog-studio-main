@@ -30,6 +30,7 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.VariantBuilder;
+import com.android.build.api.variant.impl.ArtifactMetadataProcessor;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -867,6 +868,7 @@ public abstract class BasePlugin<
         variantManager.setHasCreatedTasks(true);
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             variant.getVariant().getArtifacts().ensureAllOperationsAreSatisfied();
+            ArtifactMetadataProcessor.Companion.wireAllFinalizedBy(variant.getVariant());
         }
     }
 

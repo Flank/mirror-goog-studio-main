@@ -98,7 +98,7 @@ class TaskBasedOperationsImplTest {
         ).save(inputFolderProperty.get())
 
         artifacts.getArtifactContainer(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
-            .setInitialProvider(inputFolderProperty)
+            .setInitialProvider(Mockito.mock(TaskProvider::class.java), inputFolderProperty)
         Mockito.`when`(component.artifacts).thenReturn(artifacts)
         profileDir = tmpDir.newFolder("profile_proto")
     }
