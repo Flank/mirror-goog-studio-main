@@ -18,6 +18,7 @@ package com.android.build.gradle.internal
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.UnitTest
+import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
@@ -942,7 +943,7 @@ class VariantManager<
                         )
                         androidTest?.let {
                             addTestComponent(it)
-                            (variant as HasAndroidTest).androidTest = it as AndroidTest
+                            (variant as HasAndroidTest).androidTest = it as AndroidTestImpl
                         }
                     }
                     val unitTest = createTestComponents(

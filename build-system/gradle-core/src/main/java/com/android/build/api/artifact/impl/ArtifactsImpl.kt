@@ -186,7 +186,7 @@ class ArtifactsImpl(
             // be multiple ones, just put the task name at all times.
             property(it).set(type.getOutputPath(buildDirectory, identifier, taskProvider.name))
         }
-        artifactContainer.addInitialProvider(taskProvider.flatMap { property(it) })
+        artifactContainer.addInitialProvider(taskProvider, taskProvider.flatMap { property(it) })
     }
 
     /**
@@ -239,8 +239,8 @@ class ArtifactsImpl(
      * @param type the multiple type to append to.
      * @param element the element to add.
      */
-    fun <T: FileSystemLocation> appendTo(type: Artifact.Multiple<T>, element: Provider<T>) {
-        getArtifactContainer(type).addInitialProvider(element)
+    fun <T: FileSystemLocation> appendTo(type: Multiple<T>, from: Single<T>) {
+        getArtifactContainer(type).transferFrom(this, from)
     }
     /**
      * Appends a [List] of [Provider] of [T] to a [MultipleArtifactType] of <T>
@@ -248,8 +248,8 @@ class ArtifactsImpl(
      * @param type the multiple type to append to.
      * @param elements the list of elements to add.
      */
-    fun <T: FileSystemLocation> appendAll(type: Artifact.Multiple<T>, elements: Provider<List<T>>) {
-        getArtifactContainer(type).setInitialProvider(elements);
+    fun <T: FileSystemLocation> appendAll(type: Multiple<T>, elements: Provider<List<T>>) {
+        getArtifactContainer(type).addInitialProvider(listOf(), elements);
     }
 
     private val allClasses = project.files().from(
@@ -348,7 +348,7 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
             // since the taskProvider will execute, resolve its output path.
             from(it).set(outputAbsolutePath)
         }
-        artifactContainer.setInitialProvider(taskProvider.flatMap { from(it) })
+        artifactContainer.setInitialProvider(taskProvider, taskProvider.flatMap { from(it) })
     }
 }
 

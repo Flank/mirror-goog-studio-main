@@ -18,7 +18,9 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
+import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
@@ -26,7 +28,6 @@ import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.NdkOptions
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -83,7 +84,7 @@ open class ApplicationVariantImpl @Inject constructor(
     init {
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                .addInitialProvider(internalServices.toRegularFileProvider(it))
+                .addInitialProvider(null, internalServices.toRegularFileProvider(it))
         }
     }
 
@@ -129,9 +130,9 @@ open class ApplicationVariantImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
-    override var androidTest: AndroidTest? = null
+    override var androidTest: AndroidTestImpl? = null
 
-    override var testFixtures: TestFixtures? = null
+    override var testFixtures: TestFixturesImpl? = null
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)
