@@ -30,9 +30,15 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
+import org.junit.Before
 import org.junit.Test
 
 class SarifReporterTest {
+    @Before
+    fun setUp() {
+        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
+    }
+
     private val sampleManifest = manifest(
         """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -197,7 +203,7 @@ class SarifReporterTest {
                             },
                             "originalUriBaseIds": {
                                 "%SRCROOT%": {
-                                    "uri": "file://TESTROOT/app/"
+                                    "uri": "file://TESTROOT/app"
                                 }
                             },
                             "results": [
@@ -633,7 +639,7 @@ class SarifReporterTest {
                         },
                         "originalUriBaseIds": {
                             "%SRCROOT%": {
-                                "uri": "file://TESTROOT/app/"
+                                "uri": "file://TESTROOT/app"
                             }
                         },
                         "results": [
@@ -870,7 +876,7 @@ class SarifReporterTest {
                         },
                         "originalUriBaseIds": {
                             "%SRCROOT%": {
-                                "uri": "file://TESTROOT/app/"
+                                "uri": "file://TESTROOT/app"
                             }
                         },
                         "results": [

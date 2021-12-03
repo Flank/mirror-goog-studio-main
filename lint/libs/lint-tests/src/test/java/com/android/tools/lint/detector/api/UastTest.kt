@@ -19,6 +19,7 @@ package com.android.tools.lint.detector.api
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.helpers.DefaultJavaEvaluator
 import com.intellij.openapi.util.Disposer
 import com.intellij.pom.java.LanguageLevel
@@ -117,7 +118,7 @@ class UastTest : TestCase() {
                     "    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {\n" +
                     "    }\n" +
                     "}",
-                file.asSourceString().trim()
+                file.asSourceString().dos2unix().trim()
             )
         }
     }
@@ -274,7 +275,7 @@ class UastTest : TestCase() {
                 }
 
                 """.trimIndent(),
-                file.asSourceString()
+                file.asSourceString().dos2unix()
             )
 
             assertEquals(
@@ -521,7 +522,7 @@ class UastTest : TestCase() {
                 }
 
                 """.trimIndent(),
-                file.asSourceString()
+                file.asSourceString().dos2unix()
             )
 
             assertEquals(
@@ -617,7 +618,7 @@ class UastTest : TestCase() {
                 }
 
                 """.trimIndent(),
-                file.asSourceString()
+                file.asSourceString().dos2unix()
             )
         }
     }
@@ -916,7 +917,7 @@ class UastTest : TestCase() {
                 }
 
                 """.trimIndent(),
-                file.asSourceString()
+                file.asSourceString().dos2unix()
             )
         }
     }
@@ -965,7 +966,7 @@ class UastTest : TestCase() {
                     public fun TryCatchKotlin() = UastEmptyExpression
                 }
                 """.trimIndent().trim(),
-                file.asSourceString().trim().replace("\n        \n", "\n")
+                file.asSourceString().dos2unix().trim().replace("\n        \n", "\n")
             )
         }
 
@@ -1008,7 +1009,7 @@ class UastTest : TestCase() {
                     }
                 }
                 """.trimIndent().trim(),
-                file.asSourceString().trim().replace("\n        \n", "\n")
+                file.asSourceString().dos2unix().trim().replace("\n        \n", "\n")
             )
         }
     }
@@ -1217,7 +1218,7 @@ class UastTest : TestCase() {
                     }
                 }
                     """.trimIndent(),
-                    file.asSourceString().trim()
+                    file.asSourceString().dos2unix().trim()
                 )
             }
         )

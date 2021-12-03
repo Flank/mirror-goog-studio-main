@@ -19,11 +19,15 @@ package com.android.tools.lint.detector.api;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.kotlin;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
@@ -36,16 +40,22 @@ import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiRecursiveElementVisitor;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicReference;
-import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
-public class ResourceEvaluatorTest extends TestCase {
+public class ResourceEvaluatorTest {
+
+    @Before
+    public void setUp() {
+        TestUtils.disableIfOnWindowsWithBazel(); // b/73709727
+    }
 
     @Language("JAVA")
     private static String getFullKotlinSource(String statementsSource) {
@@ -343,10 +353,12 @@ public class ResourceEvaluatorTest extends TestCase {
                 allowDereference);
     }
 
+    @Test
     public void testBasic() {
         checkType("@string/foo", "int x = R.string.foo;", "val x = R.string.foo", "x");
     }
 
+    @Test
     public void testIndirectFieldReference() {
         checkType(
                 "@color/red",
@@ -355,6 +367,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
+    @Test
     public void testMethodCall() {
         checkType(
                 "@color/green",
@@ -366,6 +379,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
+    @Test
     public void testMethodCallNoDereference() {
         check(
                 null,
@@ -380,6 +394,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 false);
     }
 
+    @Test
     public void testReassignment() {
         checkType(
                 "@string/foo",
@@ -400,6 +415,7 @@ public class ResourceEvaluatorTest extends TestCase {
 
     // Resource Types
 
+    @Test
     public void testReassignmentType() {
         checkTypes(
                 "[string]",
@@ -418,6 +434,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "z");
     }
 
+    @Test
     public void testMethodCallTypes() {
         // public=color int marker
         checkTypes(
@@ -431,6 +448,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
+    @Test
     public void testConditionalTypes() {
         // Constant expression: we know exactly which branch to take
         checkTypes(
@@ -440,6 +458,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
+    @Test
     public void testConditionalTypesUnknownCondition() {
         // Constant expression: we know exactly which branch to take
         checkTypes(
@@ -449,6 +468,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
+    @Test
     public void testResourceTypes() {
         assertEquals(
                 ResourceType.ANIM,

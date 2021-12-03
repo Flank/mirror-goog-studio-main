@@ -20,24 +20,33 @@ import java.io.File
 import java.net.URI
 import java.util.jar.JarFile
 
-fun findKotlinStdlibPath(): List<String> {
+fun findKotlinStdlibPath(): List<File> {
+    return findFromRuntimeClassPath(::isKotlinStdLib)
+}
+
+fun findFromRuntimeClassPath(accept: (File) -> Boolean): List<File> {
     val classPath: String = System.getProperty("java.class.path")
-    val paths = mutableListOf<String>()
+    val paths = mutableListOf<File>()
     for (path in classPath.split(File.pathSeparatorChar)) {
         val file = File(path)
-        if (isKotlinStdLib(file)) {
-            paths.add(file.absolutePath)
+        if (accept(file)) {
+            paths.add(file.absoluteFile)
         }
     }
     // Handle running from the IDE in jar-manifest mode.
     if (paths.isEmpty()) {
         for (jar in classPath.split(File.pathSeparatorChar)) {
             try {
-                JarFile(File(jar)).use {
+                val jarFile = File(jar)
+                JarFile(jarFile).use {
                     for (path in it.manifest.mainAttributes.getValue("Class-Path").split(" ")) {
                         val file = File(URI(path).path)
-                        if (isKotlinStdLib(file)) {
-                            paths.add(file.absolutePath)
+                        if (accept(file)) {
+                            if (!file.isAbsolute) {
+                                paths.add(File(jarFile.parentFile, file.path))
+                            } else {
+                                paths.add(file)
+                            }
                         }
                     }
                 }

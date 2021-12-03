@@ -1513,9 +1513,7 @@ public class TestLintClient extends LintCliClient {
 
         // Also add in the kotlin standard libraries if applicable
         if (hasKotlin(knownProjects)) {
-            for (String path : findKotlinStdlibPath()) {
-                files.add(new File(path));
-            }
+            files.addAll(findKotlinStdlibPath());
         }
 
         return ok;

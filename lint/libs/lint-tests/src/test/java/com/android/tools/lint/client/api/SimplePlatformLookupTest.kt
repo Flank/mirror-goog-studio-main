@@ -23,6 +23,7 @@ import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.AndroidSdkHandler
+import com.android.tools.lint.checks.AbstractCheckTest.isWindows
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -55,7 +56,9 @@ class SimplePlatformLookupTest {
 
     private fun checkQueries(sdkFolder: File, checks: (PlatformLookup) -> Unit) {
         checkWithSimple(sdkFolder, checks)
-        checkWithFull(sdkFolder, checks)
+        if (!isWindows()) {
+            checkWithFull(sdkFolder, checks)
+        }
     }
 
     private fun checkWithFull(
@@ -303,7 +306,7 @@ class SimplePlatformLookupTest {
             assertEquals(
                 // Order should be same as in the optional.json file
                 "OptionalLibrary(org.apache.http.legacy,org.apache.http.legacy.jar,false)\n" +
-                    "OptionalLibrary(android.test.mock,android.\"test\".mock.jar,false)\n" +
+                    "OptionalLibrary(android.test.mock,android.test.mock.jar,false)\n" +
                     "OptionalLibrary(android.test.base,android.test.base.jar,false)\n" +
                     "OptionalLibrary(android.test.runner,android.test.runner.jar,true)",
                 target?.optionalLibraries?.joinToString(separator = "\n") { it.describe() }
@@ -491,7 +494,7 @@ class SimplePlatformLookupTest {
                   },
                   {
                     "name": "android.test.mock",
-                    "jar": "android.\"test\".mock.jar",
+                    "jar": "android.test.mock.jar",
                     "manifest": false
                   },
                   {

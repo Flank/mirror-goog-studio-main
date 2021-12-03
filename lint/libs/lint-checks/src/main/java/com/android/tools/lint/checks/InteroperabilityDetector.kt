@@ -730,7 +730,6 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         }
                     }
                     return false
-
                 }
             } else if (node is UMethod && !node.isConstructor) {
                 val superMethod = node.findRootMethod() ?: return false

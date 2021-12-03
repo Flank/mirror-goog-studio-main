@@ -609,7 +609,7 @@ class TestLintResult internal constructor(
         return checkHtmlReport(
             TestResultChecker { actual ->
                 val s = normalizeOutput(actual.trimIndent())
-                if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                if (s != trimmed && s.dos2unix() == trimmed.dos2unix()) {
                     // Allow Windows file separators to differ
                 } else {
                     assertEquals(trimmed, s)
@@ -852,6 +852,7 @@ class TestLintResult internal constructor(
             state.client.disposeProjects(emptyList())
         }
         UastEnvironment.disposeApplicationEnvironment()
+        task.tempDir.deleteRecursively()
     }
 
     @Throws(BadLocationException::class)

@@ -29,7 +29,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -253,7 +252,7 @@ android {
         val mainSourceProvider = variant.sourceProviders.first()
         val manifestFile = mainSourceProvider.manifestFile
         Truth.assertThat(manifestFile.path).endsWith("AndroidManifest.xml")
-        Truth.assertThat(manifestFile.path.replace(File.separatorChar, '/'))
+        Truth.assertThat(manifestFile.path.portablePath())
             .endsWith("src/main/AndroidManifest.xml")
         Truth.assertThat(mainSourceProvider.javaDirectories).isNotEmpty()
     }

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint
 
+import com.android.testutils.TestUtils
 import com.android.tools.lint.client.api.LintClient
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -33,6 +34,7 @@ class LintIssueDocGeneratorTest {
     @Before
     fun setUp() {
         LintClient.clientName = LintClient.CLIENT_UNIT_TESTS
+        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
     }
 
     @Test

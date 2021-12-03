@@ -38,6 +38,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.checks.infrastructure.findFromRuntimeClassPath
 import org.junit.Test
 import java.io.File
 
@@ -534,21 +535,16 @@ class LintDetectorDetectorTest {
         }
 
         val libs = mutableListOf<File>()
-        val classPath: String = System.getProperty("java.class.path")
-        for (path in classPath.split(':')) {
-            val file = File(path)
+        findFromRuntimeClassPath { file ->
             val name = file.name
-            if (name.endsWith(DOT_JAR)) {
-                libs.add(file)
-            } else {
-                val filePath = file.path
-                if (!filePath.endsWith("android.sdktools.base.lint.checks-base") &&
-                    !filePath.endsWith("android.sdktools.base.lint.studio-checks") &&
-                    !filePath.contains("lint-tests")
-                ) {
-                    libs.add(file)
-                }
-            }
+            val path = file.path
+            name.endsWith(DOT_JAR) || (
+                !path.endsWith("android.sdktools.base.lint.checks-base") &&
+                    !path.endsWith("android.sdktools.base.lint.studio-checks") &&
+                    !path.contains("lint-tests")
+                )
+        }.forEach {
+            libs.add(it)
         }
 
         // Symlink to all the jars on the classpath and insert a src/ link

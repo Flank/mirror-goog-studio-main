@@ -21,6 +21,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
+import static com.android.tools.lint.checks.infrastructure.LintTestUtils.dos2unix;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
@@ -120,10 +121,7 @@ public class MainTest extends AbstractCheckTest {
                     expectedOutput = cleanup.cleanup(expectedOutput);
                     stdout = cleanup.cleanup(stdout);
                 }
-                if (!expectedOutput
-                        .replace('\\', '/')
-                        .trim()
-                        .equals(stdout.replace('\\', '/').trim())) {
+                if (!dos2unix(expectedOutput.trim()).equals(dos2unix(stdout.trim()))) {
                     assertEquals(expectedOutput.trim(), stdout.trim());
                 }
             }
@@ -551,6 +549,8 @@ public class MainTest extends AbstractCheckTest {
                 Files.readAllLines(baseline.toPath()).stream()
                         .skip(3)
                         .collect(Collectors.joining("\n"));
+        // TODO: See b/209433064
+        newBaseline = dos2unix(newBaseline);
 
         String expected =
                 "    <issue\n"
@@ -1050,6 +1050,10 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testPrintFirstError() throws Exception {
+        if (isWindows()) {
+            return; // b/73709727
+        }
+
         // Regression test for 183625575: Lint tasks doesn't output errors anymore
         File project =
                 getProjectDir(
@@ -1100,7 +1104,7 @@ public class MainTest extends AbstractCheckTest {
                     "--disable",
                     "UsesMinSdkAttributes",
                     "--exitcode",
-                    "--disable", // Test 182321297
+                    "--disable", // Regression test for b/182321297
                     "UnknownIssueId",
                     "--enable",
                     "SomeUnknownId",

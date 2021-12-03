@@ -57,6 +57,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.getNamedDependency
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestResultTransformer
+import com.android.tools.lint.checks.infrastructure.platformPath
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -64,12 +65,11 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.utils.FileUtils
 import junit.framework.TestCase
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import java.io.File
 import java.io.IOException
 import java.util.Calendar
-import java.util.Locale
 import java.util.function.Predicate
 
 /**
@@ -2124,10 +2124,6 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
-    private fun isWindows(): Boolean {
-        return System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")
-    }
-
     fun testOldRobolectric() {
         // Old robolectric warning is shown only for windows users
         val expected =
@@ -2135,16 +2131,16 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                     build.gradle:2: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:4.1'
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     build.gradle:3: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:3.8'
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     build.gradle:4: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:3.6'
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     build.gradle:5: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:2.0'
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     0 errors, 4 warnings
                 """
             else
@@ -4430,7 +4426,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         @JvmStatic
         fun createRelativePaths(sdkDir: File, paths: Array<String>) {
             for (path in paths) {
-                val file = File(sdkDir, path.replace('/', File.separatorChar))
+                val file = File(sdkDir, path.platformPath())
                 val parent = file.parentFile
                 if (!parent.exists()) {
                     val ok = parent.mkdirs()

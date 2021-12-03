@@ -31,6 +31,7 @@ import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestResultTransformer
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintRequest
@@ -39,7 +40,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestName
-import java.io.File
 
 class HtmlReporterTest {
     @get:Rule
@@ -82,7 +82,7 @@ class HtmlReporterTest {
             assertTrue(end != -1)
             report = output.substring(0, begin) + "\$DATE" + output.substring(end)
 
-            report = report.replace(File.separatorChar, '/')
+            report = report.dos2unix()
 
             // There's some (single) trailing space in the output, but
             // the IDE strips it out of the expected output's raw string literal:
