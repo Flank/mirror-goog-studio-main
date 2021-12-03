@@ -43,7 +43,6 @@ import static com.android.tools.lint.detector.api.Lint.assertionsEnabled;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.support.AndroidxName;
-import com.android.tools.lint.client.api.AnnotationLookup;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.typedefs.TypedefRemover;
@@ -345,7 +344,6 @@ public class Extractor {
             boolean quiet = false;
             boolean verbose = false;
             boolean dryRun = false;
-            //noinspection ConstantConditions
             TypedefRemover remover = new TypedefRemover(quiet, verbose, dryRun);
             remover.remove(classDir, typedefsToRemove);
         }
@@ -375,7 +373,6 @@ public class Extractor {
         boolean quiet = false;
         boolean verbose = false;
         boolean dryRun = false;
-        //noinspection ConstantConditions
         TypedefRemover remover = new TypedefRemover(quiet, verbose, dryRun);
         remover.removeFromTypedefFile(classDirs, typedefFile);
     }
@@ -583,7 +580,7 @@ public class Extractor {
 
     private void addAnnotations(@Nullable UAnnotated annotated, @NonNull Item item) {
         if (annotated != null) {
-            for (UAnnotation annotation : annotated.getAnnotations()) {
+            for (UAnnotation annotation : annotated.getUAnnotations()) {
                 if (isRelevantAnnotation(annotation)) {
                     String fqn = getFqn(annotation);
                     if (SUPPORT_KEEP.equals(fqn)) {
@@ -679,7 +676,7 @@ public class Extractor {
 
     private boolean hasRelevantAnnotations(@Nullable UAnnotated annotated) {
         if (annotated != null) {
-            for (UAnnotation annotation : annotated.getAnnotations()) {
+            for (UAnnotation annotation : annotated.getUAnnotations()) {
                 if (isRelevantAnnotation(annotation)) {
                     return true;
                 }
@@ -699,7 +696,7 @@ public class Extractor {
                 return true; // even with class file retention we want to process these
             }
 
-            //noinspection PointlessBooleanExpression,ConstantConditions,RedundantIfStatement
+            //noinspection RedundantIfStatement
             if (!includeClassRetentionAnnotations && !hasSourceRetention(fqn, annotation)) {
                 return false;
             }
@@ -752,12 +749,17 @@ public class Extractor {
                 for (PsiAnnotation pa : modifierList.getAnnotations()) {
                     String fqn = pa.getQualifiedName();
                     if (isNestedAnnotation(fqn)) {
-                        UAnnotation a = annotationLookup.findRealAnnotation(pa, resolved, null);
+                        UAnnotation a =
+                                (UAnnotation)
+                                        UastFacade.INSTANCE.convertElement(
+                                                pa, null, UAnnotation.class);
                         List<AnnotationData> list =
                                 types.computeIfAbsent(typeName, k -> new ArrayList<>(2));
-                        addAnnotation(a, fqn, list);
-                        match = true; // can't break yet: there could be multiple, e.g.
-                        // both intdef and intrange
+                        if (a != null) {
+                            addAnnotation(a, fqn, list);
+                            match = true; // can't break yet: there could be multiple, e.g.
+                            // both intdef and intrange
+                        }
                     }
                 }
                 if (match) {
@@ -770,8 +772,6 @@ public class Extractor {
 
         return false;
     }
-
-    private final AnnotationLookup annotationLookup = new AnnotationLookup();
 
     static boolean isNestedAnnotation(@Nullable String fqn) {
         return (fqn != null
@@ -981,7 +981,7 @@ public class Extractor {
         try {
             return XmlUtils.parseDocument(xml, namespaceAware);
         } catch (SAXException sax) {
-            warning("Failed to parse document for package " + pkg + ": " + sax.toString());
+            warning("Failed to parse document for package " + pkg + ": " + sax);
         } catch (Exception e) {
             // pass
             // This method is deliberately silent; will return null
@@ -1006,7 +1006,7 @@ public class Extractor {
                     String xml = FilesKt.readText(file, Charsets.UTF_8);
                     mergeAnnotationsXml(file.getPath(), xml);
                 } catch (Exception e) {
-                    error("Aborting: I/O problem during transform: " + e.toString());
+                    error("Aborting: I/O problem during transform: " + e);
                 }
             }
         }
@@ -1030,9 +1030,8 @@ public class Extractor {
                 entry = zis.getNextEntry();
             }
         } catch (IOException e) {
-            error("Aborting: I/O problem during transform: " + e.toString());
+            error("Aborting: I/O problem during transform: " + e);
         } finally {
-            //noinspection deprecation
             try {
                 Closeables.close(zis, true /* swallowIOException */);
             } catch (IOException e) {
@@ -1046,7 +1045,7 @@ public class Extractor {
             Document document = XmlUtils.parseDocument(xml, false);
             mergeDocument(document);
         } catch (Exception e) {
-            String message = "Failed to merge " + path + ": " + e.toString();
+            String message = "Failed to merge " + path + ": " + e;
             if (e instanceof SAXParseException) {
                 SAXParseException spe = (SAXParseException) e;
                 message =
@@ -1567,12 +1566,12 @@ public class Extractor {
             if (intDef) {
                 annotationName =
                         name.startsWith(ANDROIDX_PKG_PREFIX)
-                                ? INT_DEF_ANNOTATION.oldName()
+                                ? INT_DEF_ANNOTATION.newName()
                                 : INT_DEF_ANNOTATION.oldName();
             } else if (longDef) {
                 annotationName =
                         name.startsWith(ANDROIDX_PKG_PREFIX)
-                                ? LONG_DEF_ANNOTATION.oldName()
+                                ? LONG_DEF_ANNOTATION.newName()
                                 : LONG_DEF_ANNOTATION.oldName();
             } else {
                 annotationName =
@@ -1610,7 +1609,6 @@ public class Extractor {
         } else if (isNonNull(name)) {
             annotation = new AnnotationData(SUPPORT_NOTNULL);
         } else if (isNullable(name)) {
-            //noinspection PointlessBooleanExpression,ConstantConditions
             if (!INCLUDE_INFERRED_NULLABLE && IDEA_NULLABLE.equals(name)) {
                 return null;
             }
@@ -1769,7 +1767,6 @@ public class Extractor {
             if (attributes != null) {
                 writer.print("\">");
                 writer.println();
-                //noinspection PointlessBooleanExpression,ConstantConditions
                 if (attributes.size() > 1 && sortAnnotations) {
                     // Ensure that the value attribute is written first
                     attributes = new ArrayList<>(attributes); // make list mutable
@@ -2049,7 +2046,7 @@ public class Extractor {
     private static boolean appendLiteralValue(
             @NonNull StringBuilder sb, @Nullable Object literalValue) {
         if (literalValue instanceof Number || literalValue instanceof Boolean) {
-            sb.append(literalValue.toString());
+            sb.append(literalValue);
             return true;
         } else if (literalValue instanceof String || literalValue instanceof Character) {
             sb.append('"');
@@ -2139,7 +2136,7 @@ public class Extractor {
         abstract String getSignature();
 
         @Override
-        public int compareTo(@SuppressWarnings("NullableProblems") @NonNull Item item) {
+        public int compareTo(@NonNull Item item) {
             String signature1 = getSignature();
             String signature2 = item.getSignature();
 
@@ -2560,7 +2557,7 @@ public class Extractor {
         return null;
     }
 
-    @Nullable
+    @NonNull
     private static String getVariableType(PsiVariable variable) {
         PsiType type = variable.getType();
         return type.getCanonicalText();
@@ -2850,7 +2847,7 @@ public class Extractor {
             if (aClass.isAnnotationType()) {
                 // Let's see if it's a typedef
                 //noinspection RedundantCast
-                for (UAnnotation annotation : ((UAnnotated) aClass).getAnnotations()) {
+                for (UAnnotation annotation : ((UAnnotated) aClass).getUAnnotations()) {
                     String fqn = annotation.getQualifiedName();
                     if (isNestedAnnotation(fqn)) {
                         if (requireHide && !javadocContainsHide(aClass)) {
