@@ -41,6 +41,7 @@ import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.detector.api.Category
@@ -70,6 +71,8 @@ class LintResourceRepositoryTest {
 
     @Test
     fun testRepository() {
+        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
+
         checkRepository(
             xml(
                 "res/values/test.xml",
@@ -503,7 +506,7 @@ class LintResourceRepositoryTest {
         description.append("${drawable.type.displayName}/${drawable.name}: ${densityValue.resourceDensity}: ${densityValue.value}")
         assertEquals(
             "Drawable/ic_launcher2: XHIGH: /app/res/drawable-xhdpi-v4/ic_launcher2.png",
-            description.toString().replace(root.path, "").replace("\\", "/")
+            description.toString().replace(root.path, "").dos2unix()
         )
 
         // For file based resources the value is the path; make sure we
@@ -711,7 +714,7 @@ class LintResourceRepositoryTest {
                   @xml/backup (file) config=mcc source=/res/xml-mcc/backup.xml;  /res/xml-mcc/backup.xml
 
                 """.trimIndent(),
-                resources
+                resources.dos2unix()
             )
         }
 

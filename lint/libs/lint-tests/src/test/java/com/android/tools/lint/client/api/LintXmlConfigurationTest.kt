@@ -34,6 +34,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.checks.infrastructure.portablePath
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Location.Companion.create
@@ -259,7 +260,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
 
         fun getPath(file: File?): String {
             file ?: return "null"
-            return file.path.removePrefix(temporaryFolder.root.path).replace(File.separatorChar, '/')
+            return file.path.removePrefix(temporaryFolder.root.path).portablePath()
         }
 
         assertEquals(

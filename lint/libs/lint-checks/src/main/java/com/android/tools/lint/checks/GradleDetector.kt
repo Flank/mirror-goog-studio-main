@@ -22,8 +22,10 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.FD_BUILD_TOOLS
 import com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION
 import com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION
+import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.SdkConstants.SUPPORT_LIB_GROUP_ID
 import com.android.SdkConstants.TAG_USES_FEATURE
+import com.android.SdkConstants.currentPlatform
 import com.android.ide.common.repository.GoogleMavenRepository
 import com.android.ide.common.repository.GoogleMavenRepository.Companion.MAVEN_GOOGLE_CACHE_DIR_KEY
 import com.android.ide.common.repository.GradleCoordinate
@@ -77,12 +79,8 @@ import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
-import java.util.ArrayList
 import java.util.Calendar
 import java.util.Collections
-import java.util.HashMap
-import java.util.HashSet
-import java.util.Locale
 import java.util.function.Predicate
 import kotlin.text.Charsets.UTF_8
 
@@ -961,9 +959,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
             // https://issuetracker.google.com/120098460
             "org.robolectric" -> {
-                if ("robolectric" == artifactId &&
-                    System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")
-                ) {
+                if ("robolectric" == artifactId && currentPlatform() == PLATFORM_WINDOWS) {
                     if (!version.isAtLeast(4, 2, 1)) {
                         val fix = getUpdateDependencyFix(revision, "4.2.1")
                         report(

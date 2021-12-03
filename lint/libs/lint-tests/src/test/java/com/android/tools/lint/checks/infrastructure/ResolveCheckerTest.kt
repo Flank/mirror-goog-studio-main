@@ -70,7 +70,7 @@ class ResolveCheckerTest {
                 For more information, see the "Library Dependencies and Stubs" section in
                 https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent(),
-                e.message?.replace(" \n", "\n")?.trim()
+                e.message?.replace(" \n", "\n")?.dos2unix()?.trim()
             )
         }
     }
@@ -116,7 +116,7 @@ class ResolveCheckerTest {
                 For more information, see the "Library Dependencies and Stubs" section in
                 https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent(),
-                e.message?.replace(" \n", "\n")?.trim()
+                e.message?.replace(" \n", "\n")?.dos2unix()?.trim()
             )
         }
     }
@@ -161,7 +161,7 @@ class ResolveCheckerTest {
                 For more information, see the "Library Dependencies and Stubs" section in
                 https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent(),
-                e.message?.replace(" \n", "\n")?.trim()
+                e.message?.replace(" \n", "\n")?.dos2unix()?.trim()
             )
         }
     }

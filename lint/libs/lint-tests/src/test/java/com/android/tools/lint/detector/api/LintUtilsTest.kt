@@ -19,8 +19,6 @@ package com.android.tools.lint.detector.api
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_NAME
-import com.android.SdkConstants.DOT_JAVA
-import com.android.SdkConstants.DOT_KT
 import com.android.ide.common.repository.GradleVersion
 import com.android.resources.ResourceFolderType
 import com.android.testutils.TestUtils
@@ -33,6 +31,8 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.createXmlContext
+import com.android.tools.lint.checks.infrastructure.platformPath
+import com.android.tools.lint.checks.infrastructure.portablePath
 import com.android.tools.lint.client.api.LintClient.Companion.CLIENT_UNIT_TESTS
 import com.android.tools.lint.client.api.TYPE_BOOLEAN
 import com.android.tools.lint.client.api.TYPE_BOOLEAN_WRAPPER
@@ -70,6 +70,7 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.BufferedOutputStream
 import java.io.File
+import java.io.File.separator
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.util.Arrays
@@ -619,9 +620,9 @@ class LintUtilsTest : TestCase() {
                 TestLintClient(),
                 File(
                     "tmp" +
-                        File.separator +
+                        separator +
                         "foo" +
-                        File.separator +
+                        separator +
                         "bar.baz"
                 )
             )
@@ -632,14 +633,14 @@ class LintUtilsTest : TestCase() {
                 LintCliClient(CLIENT_UNIT_TESTS),
                 File(
                     "tmp" +
-                        File.separator +
+                        separator +
                         "foo" +
-                        File.separator +
+                        separator +
                         "bar.baz"
                 )
             )
         )
-            .isEqualTo(if (File.separatorChar == '/') "foo/bar.baz" else "foo\\\\bar.baz")
+            .isEqualTo(if (File.separatorChar == '/') "foo/bar.baz" else "foo\\bar.baz")
     }
 
     fun testResolvePlaceholders() {
@@ -676,7 +677,7 @@ class LintUtilsTest : TestCase() {
 
     fun testIsParent() {
         fun file(path: String): File {
-            return File(path.replace("/", File.separator))
+            return File(path.platformPath())
         }
 
         assertTrue(isParent(file("foo"), file("foo"), strict = false))
@@ -690,7 +691,7 @@ class LintUtilsTest : TestCase() {
 
     fun testGetFileUri() {
         val pwd = System.getProperty("user.dir")
-        val uri = getFileUri(File("$pwd${File.separator}foo"))
+        val uri = getFileUri(File("$pwd${separator}foo"))
         assertTrue(uri.startsWith("file://"))
         assertTrue(uri.endsWith("/foo"))
     }
@@ -894,21 +895,12 @@ class LintUtilsTest : TestCase() {
             var path = relativePath
             if (path == null) {
                 val className = ClassName(javaSource)
-                val pkg = className.packageName
-                val name = className.className
-                assert(pkg != null)
-                assert(name != null)
-                path = File(
-                    "src" +
-                        File.separatorChar +
-                        pkg!!.replace('.', File.separatorChar) +
-                        File.separatorChar +
-                        name +
-                        DOT_JAVA
-                )
+                val pkg = className.packageName!!
+                val name = className.className!!
+                path = File("src$separator$pkg$separator$name.java")
             }
 
-            return parse(java(path.path, javaSource))
+            return parse(java(path.path.portablePath(), javaSource))
         }
 
         @JvmStatic
@@ -923,17 +915,10 @@ class LintUtilsTest : TestCase() {
                 val name = className.className
                 assert(pkg != null)
                 assert(name != null)
-                path = File(
-                    "src" +
-                        File.separatorChar +
-                        pkg!!.replace('.', File.separatorChar) +
-                        File.separatorChar +
-                        name +
-                        DOT_KT
-                )
+                path = File("src$separator$pkg$separator$name.kt")
             }
 
-            return parse(kotlin(path.path, kotlinSource))
+            return parse(kotlin(path.path.portablePath(), kotlinSource))
         }
 
         @JvmStatic

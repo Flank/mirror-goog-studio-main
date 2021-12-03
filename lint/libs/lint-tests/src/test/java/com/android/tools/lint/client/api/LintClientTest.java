@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.checks.infrastructure.LintTestUtils.platformPath;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 
 import com.android.testutils.TestUtils;
@@ -55,7 +56,7 @@ public class LintClientTest extends TestCase {
     }
 
     private static File file(String path) {
-        return new File(path.replace('/', File.separatorChar));
+        return new File(platformPath(path));
     }
 
     public void testRelative() {

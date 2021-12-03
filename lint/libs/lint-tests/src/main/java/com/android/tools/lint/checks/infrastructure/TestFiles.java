@@ -26,7 +26,6 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -40,8 +39,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.intellij.lang.annotations.Language;
@@ -439,58 +436,39 @@ public class TestFiles {
     }
 
     public static TestFile[] getLintClassPath() throws IOException {
-        String classPath = System.getProperty("java.class.path");
         List<TestFile> paths = new ArrayList<>();
-        String[] split = classPath.split(":");
-        if (split.length == 1) {
-            // Classpath jar?
-            try (JarFile jarFile = new JarFile(new File(split[0]))) {
-                Attributes attributes = jarFile.getManifest().getMainAttributes();
-                String value = attributes.getValue("Class-Path");
-                if (value != null) {
-                    List<String> list = new ArrayList<>();
-                    for (String s : value.split(" ")) {
-                        if (s.startsWith("file:")) {
-                            list.add(SdkUtils.urlToFile(s).getPath());
-                        } else {
-                            list.add(s);
-                        }
-                    }
-                    if (!list.isEmpty()) {
-                        split = list.toArray(new String[0]);
-                    }
-                }
-            }
-        }
-        for (String path : split) { // ; on Windows?
-            File file = new File(path);
-            String name = file.getName();
-            if (name.startsWith("lint-")
-                    || name.startsWith("kotlin-compiler")
-                    || name.startsWith("uast-")
-                    || name.startsWith("intellij-core")
-                    || name.endsWith("uast.jar") // bazel
-                    || name.startsWith("android.sdktools.lint") // IJ ADT
-                    || name.endsWith(".lint-api-base") // IJ BASE
-                    || name.endsWith("lint-api.jar") // bazel
-                    || name.endsWith(".lint.checks-base") // IJ
-                    || name.endsWith("lint-checks.jar") // bazel
-                    || name.endsWith(".lint-model-base") // IJ
-                    || name.endsWith("lint-model.jar") // bazel
-                    || name.startsWith("lint-model") // Gradle
-                    || name.endsWith(".testutils")
-                    || name.endsWith("testutils.jar")
-                    || name.startsWith("testutils-")
-                    || name.endsWith(".lint.tests")
-                    || name.endsWith("lint-tests.jar") // bazel
-                    || (name.equals("main") && path.contains("lint-tests")) // Gradle
-                    || name.endsWith(".lint.cli")) {
-                TestFile testFile = new LibraryReferenceTestFile(file);
-                paths.add(testFile);
-            }
+        List<File> libraries = KotlinClasspathKt.findFromRuntimeClassPath(TestFiles::isLintJar);
+
+        for (File file : libraries) {
+            TestFile testFile = new LibraryReferenceTestFile(file);
+            paths.add(testFile);
         }
 
         return paths.toArray(new TestFile[0]);
+    }
+
+    private static boolean isLintJar(File file) {
+        String name = file.getName();
+        return name.startsWith("lint-")
+                || name.startsWith("kotlin-compiler")
+                || name.startsWith("uast-")
+                || name.startsWith("intellij-core")
+                || name.endsWith("uast.jar") // bazel
+                || name.startsWith("android.sdktools.lint") // IJ ADT
+                || name.endsWith(".lint-api-base") // IJ BASE
+                || name.endsWith("lint-api.jar") // bazel
+                || name.endsWith(".lint.checks-base") // IJ
+                || name.endsWith("lint-checks.jar") // bazel
+                || name.endsWith(".lint-model-base") // IJ
+                || name.endsWith("lint-model.jar") // bazel
+                || name.startsWith("lint-model") // Gradle
+                || name.endsWith(".testutils")
+                || name.endsWith("testutils.jar")
+                || name.startsWith("testutils-")
+                || name.endsWith(".lint.tests")
+                || name.endsWith("lint-tests.jar") // bazel
+                || (name.equals("main") && file.getPath().contains("lint-tests")) // Gradle
+                || name.endsWith(".lint.cli");
     }
 
     public static class LibraryReferenceTestFile extends TestFile {

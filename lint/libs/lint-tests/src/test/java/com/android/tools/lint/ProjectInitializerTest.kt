@@ -34,6 +34,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintListener
 import com.android.tools.lint.client.api.LintListener.EventType.REGISTERED_PROJECT
@@ -369,7 +370,7 @@ class ProjectInitializerTest {
                     .replace(canonicalRoot, "ROOT")
                     .replace(root.path, "ROOT")
                     .replace(baseline.parentFile.path, "TESTROOT")
-                    .replace('\\', '/')
+                    .dos2unix()
             },
             listener
         )
@@ -817,8 +818,7 @@ class ProjectInitializerTest {
 
         MainTest.checkDriver(
             "" +
-                "src/main/java/test/pkg/Private.java".replace('/', File.separatorChar) +
-                ":5: Warning: The resource @string/my_private_string is marked as private in foo-bar.aar [PrivateResource]\n" +
+                "src/main/java/test/pkg/Private.java:5: Warning: The resource @string/my_private_string is marked as private in foo-bar.aar [PrivateResource]\n" +
                 "                            int x = R.string.my_private_string; // ERROR\n" +
                 "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "0 errors, 1 warnings\n",
@@ -835,7 +835,7 @@ class ProjectInitializerTest {
                 descriptorFile.path
             ),
 
-            null, null
+            { it.dos2unix() }, null
         )
     }
 
@@ -984,7 +984,7 @@ class ProjectInitializerTest {
                 "src/test/pkg/RequiresApiFieldTest.java:14: Error: Call requires API level 24 (current min is 1): Method24 [NewApi]\n" +
                 "        Log.d(\"zzzz\", \"ReferenceField24: \" + Method24());\n" +
                 "                                             ~~~~~~~~\n" +
-                "1 errors, 0 warnings\n".replace('/', File.separatorChar),
+                "1 errors, 0 warnings\n",
             "",
 
             // Expected exit code
@@ -998,7 +998,7 @@ class ProjectInitializerTest {
                 descriptorFile.path
             ),
 
-            null, null
+            { it.dos2unix() }, null
         )
     }
 
@@ -1296,7 +1296,7 @@ class ProjectInitializerTest {
                 "src/test/pkg/Client.java:8: Error: Method method2 must be called from the UI thread, currently inferred thread is worker thread [WrongThread]\n" +
                 "        new test.pkg2.Library2().method2();\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "2 errors, 0 warnings".replace('/', File.separatorChar),
+                "2 errors, 0 warnings",
             "",
 
             // Expected exit code
@@ -1310,7 +1310,7 @@ class ProjectInitializerTest {
                 descriptorFile.path
             ),
 
-            null, null
+            { it.dos2unix() }, null
         )
     }
 
@@ -1374,7 +1374,7 @@ class ProjectInitializerTest {
                     return switch (duration) {
                            ^
             0 errors, 1 warnings
-            """.replace('/', File.separatorChar),
+            """,
             "",
 
             // Expected exit code
@@ -1387,7 +1387,7 @@ class ProjectInitializerTest {
                 "--project",
                 descriptorFile.path
             ),
-            null, null
+            { it.dos2unix() }, null
         )
     }
 
@@ -1433,7 +1433,7 @@ class ProjectInitializerTest {
 
         MainTest.checkDriver(
             "No issues found.",
-            "The source file ClassCRLF.java does not appear to be in the right project location; its package implies .../com/example/foo/notification/ClassCRLF.java but it was found in ...src/main/java/ClassCRLF.java".replace("\\", "/"),
+            "The source file ClassCRLF.java does not appear to be in the right project location; its package implies .../com/example/foo/notification/ClassCRLF.java but it was found in ...src/main/java/ClassCRLF.java",
 
             // Expected exit code
             ERRNO_SUCCESS,
@@ -1444,7 +1444,7 @@ class ProjectInitializerTest {
                 descriptorFile.path
             ),
 
-            null, null
+            { it.dos2unix() }, null
         )
     }
 
@@ -1594,7 +1594,7 @@ class ProjectInitializerTest {
                 it
                     .replace(canonicalRoot, "ROOT")
                     .replace(root.path, "ROOT")
-                    .replace('\\', '/')
+                    .dos2unix()
             },
             null
         )
@@ -1630,7 +1630,7 @@ class ProjectInitializerTest {
                 it
                     .replace(canonicalRoot, "ROOT")
                     .replace(root.path, "ROOT")
-                    .replace('\\', '/')
+                    .dos2unix()
             },
             null
         )

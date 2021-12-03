@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Detector
@@ -124,7 +125,7 @@ class TextReporterTest : AbstractCheckTest() {
                 0 errors, 2 warnings
 
                 """.trimIndent(),
-                report.replace(File.separatorChar, '/')
+                report.dos2unix()
             )
         } finally {
             file.delete()
@@ -286,7 +287,7 @@ class TextReporterTest : AbstractCheckTest() {
                 0 errors, 3 warnings
 
                 """.trimIndent(),
-                report.replace(File.separatorChar, '/')
+                report.dos2unix()
             )
         } finally {
             file.delete()

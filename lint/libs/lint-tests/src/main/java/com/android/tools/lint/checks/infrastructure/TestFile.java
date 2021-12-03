@@ -47,10 +47,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -150,6 +146,7 @@ public class TestFile {
             assert stream != null : sourceRelativePath + " does not exist";
         }
         String target = getTargetPath();
+        assert target.indexOf('\\') == -1 : target;
         int index = target.lastIndexOf('/');
         String relative = null;
         String name = target;
@@ -805,25 +802,6 @@ public class TestFile {
     public static File createTempDirectory() {
         try {
             return java.nio.file.Files.createTempDirectory("").toFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /** Deletes all files in a directory tree but preserves all directories. */
-    public static void deleteFilesRecursively(@NonNull File dir) {
-        Path path = dir.toPath();
-        try {
-            java.nio.file.Files.walkFileTree(
-                    path,
-                    new SimpleFileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                                throws IOException {
-                            java.nio.file.Files.delete(file);
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

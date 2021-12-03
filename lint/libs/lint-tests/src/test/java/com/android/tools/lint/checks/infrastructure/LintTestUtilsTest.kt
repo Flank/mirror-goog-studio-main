@@ -38,6 +38,7 @@ class LintTestUtilsTest {
                 return v.toString()
             }
         }
+
         val list = listOf(Test(1), Test(2), Test(3), Test(4))
         try {
             checkTransitiveComparator(list)
@@ -59,5 +60,24 @@ class LintTestUtilsTest {
         } catch (a: AssertionError) {
             assertEquals("x.compareTo(y) != -y.compareTo(x) for x=1 and y=1", a.message)
         }
+    }
+
+    @Test
+    fun testDos2Unix() {
+        assertEquals("", "".dos2unix())
+        assertEquals(";", ";".dos2unix())
+        assertEquals("/", "\\".dos2unix())
+        assertEquals("\n", "\r\n".dos2unix())
+        assertEquals("This is a test", "This is a test".dos2unix())
+        assertEquals("This is a test\n", "This is a test\n".dos2unix())
+        assertEquals("This is a test\n", "This is a test\r\n".dos2unix())
+        assertEquals("This is a path:\nC:/a/b/c.kt\n", "This is a path:\nC:\\a\\b\\c.kt\r\n".dos2unix())
+        assertEquals(
+            "This is a path separator:\nsrc/java/main:src/java/test\n",
+            "This is a path separator:\nsrc\\java\\main;src\\java\\test\r\n".dos2unix()
+        )
+        assertEquals("This is &quot;XML&QUOT; &lt; and &#9029;.", "This is &quot;XML&QUOT; &lt; and &#9029;.".dos2unix())
+        assertEquals("First, a test; ", "First, a test; ".dos2unix())
+        assertEquals("style=\"display: block;\"", "style=\"display: block;\"".dos2unix())
     }
 }

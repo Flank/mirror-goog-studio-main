@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.model
 
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -60,7 +61,6 @@ class PathVariablesTest {
 
         check(variables, home, "\$HOME")
         assertEquals("\$HOME", variables.toPathString(home))
-        assertEquals("\$HOME/", variables.toPathString(home) + separator)
     }
 
     @Test
@@ -158,7 +158,7 @@ class PathVariablesTest {
                 "V8_canonical=canonicalized_foo/bar\n" +
                 "V7_canonical=canonicalized_foo\n" +
                 "V9_canonical=canonicalized_foo",
-            variables.toString()
+            variables.toString().dos2unix()
         )
     }
 }
