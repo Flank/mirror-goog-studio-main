@@ -38,7 +38,8 @@ public final class SyncOptions {
     private SyncOptions() {}
 
     public static EvaluationMode getModelQueryMode(@NonNull ProjectOptions options) {
-        if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)) {
+        if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)
+                || options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_V2)) {
             return EvaluationMode.IDE;
         }
 

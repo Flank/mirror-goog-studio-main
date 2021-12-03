@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.integration.application
-
-
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
+import com.android.build.gradle.integration.common.truth.checkSingleIssue
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.StringOption
-import com.android.builder.model.SyncIssue
+import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-
 
 class AbiRelatedDslUsageTest {
 
@@ -75,17 +71,19 @@ class AbiRelatedDslUsageTest {
                 "}\n")
 
         // Query the model to get the incorrect DSL declaration.
-        val modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        val result = project.modelV2().ignoreSyncIssues().fetchModels()
+
+        val rootBuild = result.container.getProject(":")
+        val issues = rootBuild.issues?.syncIssues ?: throw RuntimeException("Missing issues model")
 
         if (isUniversalApkRequested) {
-            assertThat(modelContainer).rootBuild().onlyProject().hasNoIssues()
+            assertThat(issues).isEmpty()
         } else {
-            val dslIssue = assertThat(modelContainer).rootBuild().onlyProject().hasIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_GENERIC)
-
-            assertThat(dslIssue.message).contains("x86")
-            assertThat(dslIssue.message).contains("armeabi-v7a")
+            issues.checkSingleIssue(
+                type = com.android.builder.model.v2.ide.SyncIssue.TYPE_GENERIC,
+                severity = com.android.builder.model.v2.ide.SyncIssue.SEVERITY_ERROR,
+                message = "Conflicting configuration : 'x86' in ndk abiFilters cannot be present when splits abi filters are set : armeabi-v7a"
+            )
         }
     }
 
@@ -110,17 +108,19 @@ class AbiRelatedDslUsageTest {
                 "}\n")
 
         // Query the model to get the incorrect ABI target.
-        val container = project.model()
+        val result = project.modelV2()
             .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
             .ignoreSyncIssues()
-            .fetchAndroidProjects()
+            .fetchModels()
 
-        val dslIssue = assertThat(container).rootBuild().onlyProject().hasIssue(
-                SyncIssue.SEVERITY_WARNING,
-                SyncIssue.TYPE_GENERIC)
+        val rootBuild = result.container.getProject(":")
+        val issues = rootBuild.issues?.syncIssues ?: throw RuntimeException("Missing issues model")
 
-        assertThat(dslIssue.message).contains("x86")
-        assertThat(dslIssue.message).contains("mips")
+        issues.checkSingleIssue(
+            type = com.android.builder.model.v2.ide.SyncIssue.TYPE_GENERIC,
+            severity = com.android.builder.model.v2.ide.SyncIssue.SEVERITY_WARNING,
+            message = "Cannot build selected target ABI: mips, supported ABIs are: x86"
+        )
     }
 
     @Test
@@ -149,17 +149,18 @@ class AbiRelatedDslUsageTest {
                 "}\n")
 
         // Query the model to get the incorrect ABI target.
-        val container = project.model()
+        val result = project.modelV2()
             .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
             .ignoreSyncIssues()
-            .fetchAndroidProjects()
+            .fetchModels()
 
-        val dslIssue = assertThat(container).rootBuild().onlyProject().hasIssue(
-                SyncIssue.SEVERITY_WARNING,
-                SyncIssue.TYPE_GENERIC)
+        val rootBuild = result.container.getProject(":")
+        val issues = rootBuild.issues?.syncIssues ?: throw RuntimeException("Missing issues model")
 
-        assertThat(dslIssue.message).contains("x86")
-        assertThat(dslIssue.message).contains("armeabi-v7a")
+        issues.checkSingleIssue(
+            type = com.android.builder.model.v2.ide.SyncIssue.TYPE_GENERIC,
+            severity = com.android.builder.model.v2.ide.SyncIssue.SEVERITY_WARNING,
+            message = "Cannot build selected target ABI: x86, supported ABIs are: FilterConfiguration(filterType=ABI, identifier=armeabi-v7a)"
+        )
     }
 }
-

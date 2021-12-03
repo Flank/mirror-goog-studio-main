@@ -54,7 +54,7 @@ class ProfileContentTest {
         val capturer = ProfileCapturer(project)
 
         val getModel = Iterables.getOnlyElement(
-            capturer.capture { project.model().fetchAndroidProjects() })
+            capturer.capture { project.modelV2().fetchModels() })
 
         val cleanBuild = Iterables.getOnlyElement(
             capturer.capture { project.execute("assembleRelease") })
