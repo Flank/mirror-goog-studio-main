@@ -40,6 +40,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
+import com.android.build.gradle.integration.common.utils.SigningHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -122,44 +123,6 @@ public class SigningTest {
         Files.write(keystore.toPath(), keystoreBytes);
     }
 
-    @NonNull
-    public static ApkVerifier.Result assertApkSignaturesVerify(@NonNull Apk apk, int minSdkVersion)
-            throws Exception {
-        ApkVerifier.Builder builder =
-                new ApkVerifier.Builder(apk.getFile().toFile())
-                        .setMinCheckedPlatformVersion(minSdkVersion);
-        File v4SignatureFile = new File(apk.getFile().toFile().getAbsolutePath() + ".idsig");
-        if (v4SignatureFile.exists()) {
-            builder.setV4SignatureFile(v4SignatureFile);
-        }
-        ApkVerifier.Result result = builder.build().verify();
-        if (result.isVerified()) {
-            return result;
-        }
-
-        List<IssueWithParams> errors = new ArrayList<>(result.getErrors());
-        for (ApkVerifier.Result.V1SchemeSignerInfo signer : result.getV1SchemeSigners()) {
-            errors.addAll(signer.getErrors());
-        }
-        for (ApkVerifier.Result.V2SchemeSignerInfo signer : result.getV2SchemeSigners()) {
-            errors.addAll(signer.getErrors());
-        }
-        throw new AssertionError(
-                "APK signatures failed to verify. " + errors.size() + " error(s): " + errors);
-    }
-
-    private static void assertApkSignaturesDoNotVerify(Apk apk, int minSdkVersion)
-            throws Exception {
-        ApkVerifier.Result result =
-                new ApkVerifier.Builder(apk.getFile().toFile())
-                        .setMinCheckedPlatformVersion(minSdkVersion)
-                        .build()
-                        .verify();
-        if (result.isVerified()) {
-            fail("APK signatures unexpectedly verified");
-        }
-    }
-
     @Before
     public void setUp() throws Exception {
         keystore = project.file("the.keystore");
@@ -230,7 +193,8 @@ public class SigningTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        ApkVerifier.Result verificationResult =
+                SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
 
         // Check that signing config is not written to disk when passed from the build script (bug
@@ -258,7 +222,7 @@ public class SigningTest {
         // Check for signing file inside the archive.
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        ApkVerifier.Result verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
 
         // Check that signing config is not written to disk when passed from the IDE (bug 137210434)
@@ -400,7 +364,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        ApkVerifier.Result verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
         assertTrue(verificationResult.isVerifiedUsingV2Scheme());
 
@@ -416,7 +380,7 @@ public class SigningTest {
         assertThat(apk).doesNotContain("META-INF/" + certEntryName);
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).doesNotContainApkSigningBlock();
-        assertApkSignaturesDoNotVerify(apk, minSdkVersion);
+        SigningHelper.assertApkSignaturesDoNotVerify(apk, minSdkVersion);
 
         // Specified: v1SigningEnabled true, v2SigningEnabled false
         TestFileUtils.searchAndReplace(
@@ -428,7 +392,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).doesNotContainApkSigningBlock();
-        verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
         assertFalse(verificationResult.isVerifiedUsingV2Scheme());
 
@@ -445,8 +409,8 @@ public class SigningTest {
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
         // API Level 24 is the lowest level at which APKs don't have to be signed with v1 scheme
-        assertApkSignaturesDoNotVerify(apk, Math.min(23, minSdkVersion));
-        verificationResult = assertApkSignaturesVerify(apk, Math.max(24, minSdkVersion));
+        SigningHelper.assertApkSignaturesDoNotVerify(apk, Math.min(23, minSdkVersion));
+        verificationResult = SigningHelper.assertApkSignaturesVerify(apk, Math.max(24, minSdkVersion));
         assertFalse(verificationResult.isVerifiedUsingV1Scheme());
         assertTrue(verificationResult.isVerifiedUsingV2Scheme());
 
@@ -460,7 +424,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
-        verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
         assertTrue(verificationResult.isVerifiedUsingV2Scheme());
     }
@@ -482,7 +446,7 @@ public class SigningTest {
 
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        ApkVerifier.Result verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
         assertFalse(verificationResult.isVerifiedUsingV2Scheme());
     }
@@ -504,7 +468,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).doesNotContainApkSigningBlock();
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        ApkVerifier.Result verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
         assertFalse(verificationResult.isVerifiedUsingV2Scheme());
     }
@@ -528,9 +492,9 @@ public class SigningTest {
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
         // API Level 24 is the lowest level at which APKs don't have to be signed with v1 scheme
-        assertApkSignaturesDoNotVerify(apk, 23);
+        SigningHelper.assertApkSignaturesDoNotVerify(apk, 23);
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 24));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 24));
         assertFalse(verificationResult.isVerifiedUsingV1Scheme());
         assertTrue(verificationResult.isVerifiedUsingV2Scheme());
     }
@@ -563,7 +527,7 @@ public class SigningTest {
         assertThat(apk).containsApkSigningBlock();
         // API Level 28 is the lowest level that supports v3 signing
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
@@ -590,7 +554,7 @@ public class SigningTest {
         assertThat(apk).containsApkSigningBlock();
         // API Level 28 is the lowest level that supports v4 signing
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isFalse();
@@ -618,7 +582,7 @@ public class SigningTest {
         assertThat(apk).containsApkSigningBlock();
         // API Level 28 is the lowest level that supports v4 signing
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
@@ -665,7 +629,7 @@ public class SigningTest {
         assertThat(apk).doesNotContain("META-INF/" + certEntryName);
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, 24);
+        ApkVerifier.Result verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 24);
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
@@ -701,7 +665,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 23));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 23));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
@@ -740,7 +704,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 23));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 23));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
@@ -762,7 +726,7 @@ public class SigningTest {
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
         ApkVerifier.Result verificationResult =
-                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 24));
+                SigningHelper.assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 24));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
     }
@@ -781,7 +745,7 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).doesNotContainApkSigningBlock();
-        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        ApkVerifier.Result verificationResult = SigningHelper.assertApkSignaturesVerify(apk, minSdkVersion);
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
     }

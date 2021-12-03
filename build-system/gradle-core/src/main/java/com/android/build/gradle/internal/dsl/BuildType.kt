@@ -26,7 +26,9 @@ import com.android.build.api.dsl.TestBuildType
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.IssueReporter
@@ -125,6 +127,9 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
     private var _postProcessingConfiguration: PostProcessingConfiguration? = null
     private var postProcessingDslMethodUsed: String? = null
     private var _shrinkResources = false
+    private val profilingMode = ProfilingMode.getProfilingModeType(
+        dslServices.projectOptions[StringOption.PROFILING_MODE]
+    )
 
     /*
      * (Non javadoc): Whether png crunching should be enabled if not explicitly overridden.
@@ -164,7 +169,8 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
      */
     fun init(debugSigningConfig: SigningConfig?) {
         init()
-        if (BuilderConstants.DEBUG == name) {
+        val isProfileable = profilingMode == ProfilingMode.PROFILEABLE
+        if (BuilderConstants.DEBUG == name || isProfileable) {
             assert(debugSigningConfig != null)
             setSigningConfig(debugSigningConfig)
         }

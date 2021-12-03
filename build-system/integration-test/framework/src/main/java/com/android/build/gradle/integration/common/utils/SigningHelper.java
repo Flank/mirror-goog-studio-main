@@ -20,9 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
 import com.android.apksig.ApkVerifier.IssueWithParams;
 import com.android.testutils.apk.Apk;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.fail;
 
 public class SigningHelper {
 
@@ -33,18 +37,55 @@ public class SigningHelper {
             return;
         }
 
-        List<IssueWithParams> errors = new ArrayList<>();
-        errors.addAll(result.getErrors());
+        List<IssueWithParams> errors = new ArrayList<>(result.getErrors());
         result.getV1SchemeSigners().forEach(signer -> errors.addAll(signer.getErrors()));
         result.getV2SchemeSigners().forEach(signer -> errors.addAll(signer.getErrors()));
         throw new AssertionError(
                 "APK signatures failed to verify for "
-                        + apk.toString()
+                        + apk
                         + ".\n    "
                         + errors.size()
                         + " error(s): "
                         + errors.stream()
                                 .map(IssueWithParams::toString)
                                 .collect(Collectors.joining(" ")));
+    }
+
+    @NonNull
+    public static ApkVerifier.Result assertApkSignaturesVerify(@NonNull Apk apk, int minSdkVersion)
+            throws Exception {
+        ApkVerifier.Builder builder =
+                new ApkVerifier.Builder(apk.getFile().toFile())
+                        .setMinCheckedPlatformVersion(minSdkVersion);
+        File v4SignatureFile = new File(apk.getFile().toFile().getAbsolutePath() + ".idsig");
+        if (v4SignatureFile.exists()) {
+            builder.setV4SignatureFile(v4SignatureFile);
+        }
+        ApkVerifier.Result result = builder.build().verify();
+        if (result.isVerified()) {
+            return result;
+        }
+
+        List<IssueWithParams> errors = new ArrayList<>(result.getErrors());
+        for (ApkVerifier.Result.V1SchemeSignerInfo signer : result.getV1SchemeSigners()) {
+            errors.addAll(signer.getErrors());
+        }
+        for (ApkVerifier.Result.V2SchemeSignerInfo signer : result.getV2SchemeSigners()) {
+            errors.addAll(signer.getErrors());
+        }
+        throw new AssertionError(
+                "APK signatures failed to verify. " + errors.size() + " error(s): " + errors);
+    }
+
+    public static void assertApkSignaturesDoNotVerify(Apk apk, int minSdkVersion)
+            throws Exception {
+        ApkVerifier.Result result =
+                new ApkVerifier.Builder(apk.getFile().toFile())
+                        .setMinCheckedPlatformVersion(minSdkVersion)
+                        .build()
+                        .verify();
+        if (result.isVerified()) {
+            fail("APK signatures unexpectedly verified");
+        }
     }
 }
