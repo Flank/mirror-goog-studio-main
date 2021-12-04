@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.builder.model.v2.ModelSyncFile
+import com.android.ide.model.sync.AppIdListSync
 import com.android.ide.model.sync.Variant
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -31,7 +33,7 @@ class ModelSyncFilesTest {
 
     @Test
     fun testApplicationModel() {
-        val variantSyncFileModel = getAppSyncModel()
+        val variantSyncFileModel = getVariantSyncModel()
         Truth.assertThat(variantSyncFileModel.variantCase)
             .isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
         Truth.assertThat(variantSyncFileModel.applicationVariantModel).isNotNull()
@@ -41,6 +43,103 @@ class ModelSyncFilesTest {
 
     @Test
     fun testCustomizedApplicationIdInModel() {
+        addCustomizationToBuildFile()
+        val variantSyncFileModel = getVariantSyncModel()
+        Truth.assertThat(variantSyncFileModel.variantCase)
+            .isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
+        Truth.assertThat(variantSyncFileModel.applicationVariantModel).isNotNull()
+        Truth.assertThat(variantSyncFileModel.applicationVariantModel.applicationId)
+            .isEqualTo("set.from.task.debugAppIdProducerTask")
+    }
+
+    @Test
+    fun testAppIdListModel() {
+        val listOfAppIds = getListOfAppIdsModel()
+        Truth.assertThat(listOfAppIds?.appIdsList?.map {
+            it.name to it.applicationId
+        }).containsExactly(
+            "debug" to "com.example.helloworld",
+            "release" to "com.example.helloworld",
+        )
+    }
+
+    @Test
+    fun testAppIdListModelWithCustomizedAppId() {
+        addCustomizationToBuildFile()
+        val listOfAppIds = getListOfAppIdsModel()
+        Truth.assertThat(listOfAppIds?.appIdsList?.map {
+            it.name to it.applicationId
+        }).containsExactly(
+            "debug" to "set.from.task.debugAppIdProducerTask",
+            "release" to "com.example.helloworld",
+        )
+    }
+
+    @Test
+    fun testAppIdListWithAddedFlavors() {
+        project.buildFile.appendText(
+            """
+            android {
+                flavorDimensions "version"
+                productFlavors {
+                    demo {
+                        dimension "version"
+                        applicationIdSuffix ".demo"
+                    }
+                    full {
+                        dimension "version"
+                        applicationIdSuffix ".full"
+                    }
+                }
+            }
+            """.trimIndent())
+        val listOfAppIds = getListOfAppIdsModel()
+        Truth.assertThat(listOfAppIds?.appIdsList?.map {
+            it.name to it.applicationId
+        }).containsExactly(
+            "demoDebug" to "com.example.helloworld.demo",
+            "fullDebug" to "com.example.helloworld.full",
+            "demoRelease" to "com.example.helloworld.demo",
+            "fullRelease" to "com.example.helloworld.full",
+        )
+    }
+
+    private fun getListOfAppIdsModel(): AppIdListSync? {
+        val modelSyncFiles = project.modelV2()
+            .fetchModels()
+            .container
+            .getProject()
+            .androidProject
+            ?.modelSyncFiles
+
+        Truth.assertThat(modelSyncFiles).hasSize(1)
+        return modelSyncFiles?.single()?.let {
+            Truth.assertThat(it.modelSyncType).isEqualTo(ModelSyncFile.ModelSyncType.APP_ID_LIST)
+            val result = project.executor().run(it.taskName)
+            Truth.assertThat(result.failedTasks).isEmpty()
+            Truth.assertThat(it.syncFile.absoluteFile.exists()).isTrue()
+            FileInputStream(it.syncFile.absoluteFile).use {
+                AppIdListSync.parseFrom(it)
+            }
+        }
+    }
+
+    private fun getVariantSyncModel(): Variant {
+        val variant = getAppVariant()
+        Truth.assertThat(variant.mainArtifact.modelSyncFiles.size).isEqualTo(1)
+        val appModelSync = variant.mainArtifact.modelSyncFiles.first()
+        return appModelSync.syncFile.let { appModelSyncFile ->
+            appModelSyncFile.delete()
+            val result = project.executor().run(appModelSync.taskName)
+            Truth.assertThat(result.failedTasks).isEmpty()
+            Truth.assertThat(appModelSyncFile.exists()).isTrue()
+            FileInputStream(appModelSyncFile).use {
+                Variant.parseFrom(it)
+            }
+        }
+    }
+
+    private fun addCustomizationToBuildFile() {
         project.buildFile.appendText("""
         abstract class ApplicationIdProducerTask extends DefaultTask {
 
@@ -70,29 +169,7 @@ class ModelSyncFilesTest {
                         task.getOutputFile().map { it.getAsFile().text }
                 })
             }
-        }
-        """.trimIndent())
-        val variantSyncFileModel = getAppSyncModel()
-        Truth.assertThat(variantSyncFileModel.variantCase)
-            .isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
-        Truth.assertThat(variantSyncFileModel.applicationVariantModel).isNotNull()
-        Truth.assertThat(variantSyncFileModel.applicationVariantModel.applicationId)
-            .isEqualTo("set.from.task.debugAppIdProducerTask")
-    }
-
-    private fun getAppSyncModel(): Variant {
-        val variant = getAppVariant()
-        Truth.assertThat(variant.mainArtifact.modelSyncFiles.size).isEqualTo(1)
-        val appModelSync = variant.mainArtifact.modelSyncFiles.first()
-        return appModelSync.syncFile.let { appModelSyncFile ->
-            appModelSyncFile.delete()
-            val result = project.executor().run(appModelSync.taskName)
-            Truth.assertThat(result.failedTasks).isEmpty()
-            Truth.assertThat(appModelSyncFile.exists()).isTrue()
-            FileInputStream(appModelSyncFile).use {
-                Variant.parseFrom(it)
-            }
-        }
+        }""")
     }
 
     private fun getAppVariant() =

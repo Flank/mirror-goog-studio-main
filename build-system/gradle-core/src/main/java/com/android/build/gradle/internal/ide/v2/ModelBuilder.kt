@@ -73,6 +73,7 @@ import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
+import com.android.build.gradle.tasks.sync.AppIdListTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
@@ -83,6 +84,7 @@ import com.android.builder.model.v2.ide.BasicArtifact
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
+import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
@@ -361,6 +363,18 @@ class ModelBuilder<
             createVariant(it, instantAppResultMap)
         }
 
+        val modelSyncFiles = if (variantModel.projectType == ProjectType.APPLICATION) {
+            listOf(
+                ModelSyncFileImpl(
+                    ModelSyncFile.ModelSyncType.APP_ID_LIST,
+                    AppIdListTask.getTaskName(),
+                    variantModel.globalArtifacts.get(InternalArtifactType.APP_ID_LIST_MODEL).get().asFile
+                )
+            )
+        } else {
+            listOf()
+        }
+
         return AndroidProjectImpl(
             namespace = namespace ?: "",
             androidTestNamespace = androidTestNamespace,
@@ -377,6 +391,7 @@ class ModelBuilder<
 
             flags = getFlags(),
             lintChecksJars = getLocalCustomLintChecksForModel(project, variantModel.syncIssueReporter),
+            modelSyncFiles = modelSyncFiles,
         )
     }
     /**

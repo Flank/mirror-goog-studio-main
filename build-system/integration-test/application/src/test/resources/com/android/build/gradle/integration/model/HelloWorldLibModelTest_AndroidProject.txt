@@ -159,4 +159,5 @@
       * "TRANSITIVE_R_CLASS -> true"
       * "UNIFIED_TEST_PLATFORM -> true"
    - lintChecksJars        = []
+   - modelSyncFiles        = []
 < AndroidProject

@@ -1,0 +1,23 @@
+syntax = "proto3";
+option java_package = "com.android.ide.model.sync";
+option java_multiple_files = true;
+
+//
+// Messages for Module level sync types.
+//
+
+//
+// List of Application IDs for a module.
+//
+message AppIdListSync {
+    // list of application for each variant.
+    repeated AppIdSync appIds= 1;
+}
+
+//
+// Application ID for a variant.
+//
+message AppIdSync {
+    string name = 1;
+    string applicationId = 2;
+}

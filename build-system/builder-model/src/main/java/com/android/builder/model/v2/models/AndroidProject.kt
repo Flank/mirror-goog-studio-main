@@ -16,6 +16,7 @@
 package com.android.builder.model.v2.models
 
 import com.android.builder.model.v2.AndroidModel
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.ProjectType
@@ -109,4 +110,12 @@ interface AndroidProject: AndroidModel {
      * This is the resolution of the `lintCheck` configuration.
      */
     val lintChecksJars: List<File>
+
+    /**
+     * Returns all the [ModelSyncFile] for this project.
+     *
+     * @return a list of [ModelSyncFile]
+     * @since 7.3
+     */
+    val modelSyncFiles: Collection<ModelSyncFile>
 }

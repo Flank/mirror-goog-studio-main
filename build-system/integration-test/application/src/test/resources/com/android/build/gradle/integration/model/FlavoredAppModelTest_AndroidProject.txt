@@ -111,4 +111,7 @@
       * "TRANSITIVE_R_CLASS -> true"
       * "UNIFIED_TEST_PLATFORM -> true"
    - lintChecksJars        = []
+   - modelSyncFiles:
+      - APP_ID_LIST:
+         - syncFile = {PROJECT}/build/intermediates/app_id_list_model/global/app_id_list.pb{!}
 < AndroidProject

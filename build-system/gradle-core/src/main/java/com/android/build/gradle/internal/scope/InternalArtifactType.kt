@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
@@ -574,6 +573,7 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // Sync dynamic properties file artifacts
     object VARIANT_MODEL: InternalArtifactType<RegularFile>(FILE)
+    object APP_ID_LIST_MODEL: InternalArtifactType<RegularFile>(FILE)
 
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()

@@ -326,6 +326,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         for (testComponent in testComponents) {
             createTasksForTest(testComponent)
         }
+        createTopLevelTasks(variantType, variantModel)
+    }
+
+    open fun createTopLevelTasks(variantType: VariantType, variantModel: VariantModel) {
         lintTaskManager.createLintTasks(
             variantType,
             variantModel,
@@ -337,7 +341,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Create C/C++ configuration, build, and clean tasks
         val androidLocationBuildService: Provider<AndroidLocationsBuildService> =
-                getBuildService(project.gradle.sharedServices)
+            getBuildService(project.gradle.sharedServices)
         createCxxTasks(
             androidLocationBuildService.get(),
             getBuildService<SdkComponentsBuildService>(globalConfig.services.buildServiceRegistry).get(),
