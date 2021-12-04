@@ -68,12 +68,14 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AnchorTaskNames
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.dexing.D8DesugaredMethodsGenerator.generate
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ModelSyncFile
@@ -527,15 +529,15 @@ class ModelBuilder<
 
         return VariantDependenciesImpl(
             name = variantName,
-            mainArtifact = createDependencies(variant, buildMapping, libraryService,),
+            mainArtifact = createDependencies(variant, buildMapping, libraryService),
             androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
-                createDependencies(it, buildMapping, libraryService,)
+                createDependencies(it, buildMapping, libraryService)
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
-                createDependencies(it, buildMapping, libraryService,)
+                createDependencies(it, buildMapping, libraryService)
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
-                createDependencies(it, buildMapping, libraryService,)
+                createDependencies(it, buildMapping, libraryService)
             },
             libraryService.getAllLibraries().associateBy { it.key }
         )
@@ -595,7 +597,6 @@ class ModelBuilder<
             },
             testedTargetVariant = getTestTargetVariant(variant),
             isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
-            desugaredMethods = listOf()
         )
     }
 

@@ -64,10 +64,4 @@ interface Variant: AndroidModel {
      * Only application modules and dynamic feature modules will set this property.
      */
     val isInstantAppCompatible: Boolean
-
-    /**
-     * The list of desugared methods, including =backported methods handled by D8 and methods
-     * provided by core library desugaring.
-     */
-    val desugaredMethods: List<String>
 }

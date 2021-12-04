@@ -9,7 +9,6 @@
          - name                   = "proPlayDebug"
          - displayName            = "proPlayDebug"
          - isInstantAppCompatible = false
-         - desugaredMethods       = []
          > mainArtifact:
             - compileTaskName               = "compileProPlayDebugSources"
             - assembleTaskName              = "assembleProPlayDebug"

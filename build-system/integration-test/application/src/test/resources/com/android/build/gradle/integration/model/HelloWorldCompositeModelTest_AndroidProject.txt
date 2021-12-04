@@ -9,7 +9,6 @@
          - name                   = "debug"
          - displayName            = "debug"
          - isInstantAppCompatible = false
-         - desugaredMethods       = []
          > mainArtifact:
             - compileTaskName               = "compileDebugSources"
             - assembleTaskName              = "assembleDebug"
@@ -96,7 +95,6 @@
          - name                   = "release"
          - displayName            = "release"
          - isInstantAppCompatible = false
-         - desugaredMethods       = []
          > mainArtifact:
             - compileTaskName               = "compileReleaseSources"
             - assembleTaskName              = "assembleRelease"

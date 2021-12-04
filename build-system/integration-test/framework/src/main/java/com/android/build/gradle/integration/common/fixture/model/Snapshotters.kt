@@ -408,7 +408,6 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
     item("name", Variant::name)
     item("displayName", Variant::name)
     item("isInstantAppCompatible", Variant::isInstantAppCompatible)
-    list("desugaredMethods", Variant::desugaredMethods)
     dataObject("mainArtifact", Variant::mainArtifact) {
         snapshotAndroidArtifact()
     }

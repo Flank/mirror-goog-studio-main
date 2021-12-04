@@ -34,7 +34,6 @@ data class VariantImpl(
     override val testFixturesArtifact: AndroidArtifact?,
     override val testedTargetVariant: TestedTargetVariant?,
     override val isInstantAppCompatible: Boolean,
-    override val desugaredMethods: List<String>
 ) : Variant, Serializable {
     companion object {
         @JvmStatic
