@@ -1291,6 +1291,7 @@ allprojects { proj ->
     }
 
     /** Fluent method to get the model.  */
+    @Deprecated("Use modelV2()")
     fun model(): ModelBuilder {
         return applyOptions(ModelBuilder(this, projectConnection))
     }

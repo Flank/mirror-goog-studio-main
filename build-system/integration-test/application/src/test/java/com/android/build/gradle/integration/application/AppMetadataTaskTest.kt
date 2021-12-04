@@ -21,11 +21,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.utils.getOutputByName
+import com.android.build.gradle.integration.common.utils.getBundleLocation
+import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.build.gradle.internal.tasks.AppMetadataTask
 import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_ENTRY_PATH
-import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.Zip
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -164,8 +164,8 @@ class AppMetadataTaskTest {
     }
 
     private fun GradleTestProject.locateBundleFileViaModel() =
-        model().fetchContainer(AppBundleProjectBuildOutput::class.java).rootBuildModelMap[":app"]
-            ?.getOutputByName("debug")
-            ?.bundleFile
+        modelV2().fetchModels().container.getProject(":app").androidProject
+            ?.getDebugVariant()
+            ?.getBundleLocation()
             ?: fail("Failed to find app bundle file.")
 }

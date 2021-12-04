@@ -31,84 +31,9 @@ public class BasicMultiFlavorTest {
             GradleTestProject.builder().fromTestProject("basicMultiFlavors").create();
 
     @Test
-    public void checkSourceProviders() throws IOException {
-        ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
-        AndroidProject model = modelContainer.getOnlyModel();
-        File projectDir = project.getProjectDir();
-        AndroidProjectUtils.testDefaultSourceSets(model, projectDir);
-
-        // test the source provider for the flavor
-        Collection<ProductFlavorContainer> productFlavors = model.getProductFlavors();
-        assertThat(productFlavors).hasSize(4);
-
-        for (ProductFlavorContainer pfContainer : productFlavors) {
-            String name = pfContainer.getProductFlavor().getName();
-            new SourceProviderHelper(
-                            model.getName(), projectDir, name, pfContainer.getSourceProvider())
-                    .test();
-
-            // Unit tests and android tests.
-            assertThat(pfContainer.getExtraSourceProviders()).hasSize(2);
-            SourceProviderContainer container =
-                    SourceSetContainerUtils.getExtraSourceProviderContainer(
-                            pfContainer, ARTIFACT_ANDROID_TEST);
-
-            new SourceProviderHelper(
-                            model.getName(),
-                            projectDir,
-                            StringHelper.appendCapitalized(VariantType.ANDROID_TEST_PREFIX, name),
-                            container.getSourceProvider())
-                    .test();
-        }
-
-        // test the source provider for the artifacts
-        for (Variant variant : model.getVariants()) {
-            AndroidArtifact artifact = variant.getMainArtifact();
-            assertThat(artifact.getVariantSourceProvider()).isNotNull();
-            assertThat(artifact.getMultiFlavorSourceProvider()).isNotNull();
-        }
-
-    }
-
-    @Test
-    public void checkResValueAndManifestPlaceholders() throws IOException, InterruptedException {
-        addResValuesAndPlaceholders();
-        ModelContainer<AndroidProject> model =
-                project.executeAndReturnModel("assembleFreeBetaDebug");
-
-        Variant variant =
-                AndroidProjectUtils.findVariantByName(model.getOnlyModel(), "freeBetaDebug");
-
-        assertThat(variant.getMergedFlavor().getResValues().get("string/VALUE_DEBUG").getValue())
-                .isEqualTo("10"); // Value from "beta".
-
-        assertThat(variant.getMergedFlavor().getManifestPlaceholders().get("holder"))
-                .isEqualTo("free");
-    }
-
-    @Test
-    public void checkResourcesResolution()
-            throws IOException, InterruptedException, ProcessException {
+    public void checkResourcesResolution() {
         project.execute("assembleFreeBetaDebug");
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta"))
                 .containsResource("drawable/free.png");
-    }
-
-    private void addResValuesAndPlaceholders() throws IOException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "    productFlavors {\n"
-                        + "        free {\n"
-                        + "            resValue \"string\", \"VALUE_DEBUG\",   \"10\"\n"
-                        + "            manifestPlaceholders = [\"holder\":\"free\"]\n"
-                        + "        }\n"
-                        + "        beta {\n"
-                        + "            resValue \"string\", \"VALUE_DEBUG\",   \"13\"\n"
-                        + "            manifestPlaceholders = [\"holder\":\"beta\"]\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
     }
 }

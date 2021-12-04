@@ -32,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.getUnitTestArtifact
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.base.Charsets
 import com.google.common.io.Files
+import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -111,27 +112,28 @@ class AnnotationProcessorTest {
         assertThat(File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
             .exists()
 
-        val model = project.model().fetchAndroidProjects().onlyModelMap[":app"]
-        val debugVariant = (model)!!.getDebugVariant()
+        val model = project.modelV2().fetchModels().container.getProject(":app")
+        val debugVariant = model.androidProject!!.getDebugVariant()
 
-        assertThat(debugVariant.mainArtifact.generatedSourceFolders)
-            .contains(aptOutputFolder)
+        assertThat(debugVariant.mainArtifact.generatedSourceFolders).contains(aptOutputFolder)
 
         // Ensure that test sources also have their generated sources files sent to the IDE. This
         // specifically tests for the issue described in
         // https://issuetracker.google.com/37121918.
         val testAptOutputFolder = project.getSubproject(":app")
             .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugUnitTest/out")
-        val testArtifact = debugVariant.getUnitTestArtifact()
-        assertThat(testArtifact.generatedSourceFolders).contains(testAptOutputFolder)
+        val testArtifact = debugVariant.unitTestArtifact
+        Truth.assertWithMessage("unit test artifact").that(testArtifact).isNotNull()
+        assertThat(testArtifact!!.generatedSourceFolders).contains(testAptOutputFolder)
 
         // Ensure that test projects also have their generated sources files sent to the IDE. This
         // specifically tests for the issue described in
         // https://issuetracker.google.com/37121918.
         val androidTestAptOutputFolder = project.getSubproject(":app")
             .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugAndroidTest/out")
-        val androidTest = debugVariant.getAndroidTestArtifact()
-        assertThat(androidTest.generatedSourceFolders).contains(androidTestAptOutputFolder)
+        val androidTest = debugVariant.androidTestArtifact
+        Truth.assertWithMessage("android test artifact").that(androidTest).isNotNull()
+        assertThat(androidTest!!.generatedSourceFolders).contains(androidTestAptOutputFolder)
 
         // check incrementality.
         val result = project.executor().run("assembleDebug")

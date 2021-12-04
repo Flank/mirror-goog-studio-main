@@ -116,9 +116,4 @@ buildscript {
                 )
         }
     }
-
-    @Test
-    fun testFetchingAndroidModel() {
-        app.model().fetchAndroidProjects()
-    }
 }

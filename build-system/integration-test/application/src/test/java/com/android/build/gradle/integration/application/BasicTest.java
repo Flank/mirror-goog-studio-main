@@ -76,29 +76,9 @@ public class BasicTest {
                                     + "=false")
                     .create();
 
-    public static AndroidProject model;
-
-    @BeforeClass
-    public static void getModel() throws Exception {
-        // basic project overwrites buildConfigField which emits a sync warning
-        project.execute("clean", "assembleDebug", "assembleRelease");
-        ModelContainer<AndroidProject> container =
-                project.model().ignoreSyncIssues().fetchAndroidProjects();
-        model = container.getOnlyModel();
-        container
-                .getOnlyModelSyncIssues()
-                .forEach(
-                        issue -> {
-                            assertThat(issue.getSeverity()).isEqualTo(SyncIssue.SEVERITY_WARNING);
-                            assertThat(issue.getMessage())
-                                    .containsMatch(Pattern.compile(".*value is being replaced.*"));
-                        });
-    }
-
-    @AfterClass
+   @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
     }
 
     @Test
@@ -110,119 +90,8 @@ public class BasicTest {
     }
 
     @Test
-    public void basicModel() {
-        assertNotEquals(
-                "Library Project",
-                model.getProjectType(),
-                AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
-        assertEquals("Project Type", AndroidProjectTypes.PROJECT_TYPE_APP, model.getProjectType());
-
-        Truth.assertWithMessage("Namespace")
-                .that(model.getNamespace())
-                .isEqualTo("com.android.tests.basic");
-        Truth.assertWithMessage("AndroidTestNamespace")
-                .that(model.getAndroidTestNamespace())
-                .isEqualTo("com.android.tests.basic.debug.test");
-
-        assertEquals(
-                "Compile Target", GradleTestProject.getCompileSdkHash(), model.getCompileTarget());
-        assertFalse("Non empty bootclasspath", model.getBootClasspath().isEmpty());
-
-        assertNotNull("aaptOptions not null", model.getAaptOptions());
-        assertEquals(
-                "aaptOptions namespacing",
-                AaptOptions.Namespacing.DISABLED,
-                model.getAaptOptions().getNamespacing());
-
-        // Since source and target compatibility are not explicitly set in the build.gradle,
-        // the default value depends on the JDK used.
-        JavaVersion expected = JavaVersion.VERSION_1_8;
-
-        JavaCompileOptions javaCompileOptions = model.getJavaCompileOptions();
-        assertEquals(
-                expected.toString(),
-                javaCompileOptions.getSourceCompatibility());
-        assertEquals(
-                expected.toString(),
-                javaCompileOptions.getTargetCompatibility());
-        assertEquals("UTF-8", javaCompileOptions.getEncoding());
-    }
-
-    @Test
-    public void sourceProvidersModel() {
-        AndroidProjectUtils.testDefaultSourceSets(model, project.getProjectDir());
-
-        // test the source provider for the artifacts
-        for (Variant variant : model.getVariants()) {
-            AndroidArtifact artifact = variant.getMainArtifact();
-            assertNull(artifact.getVariantSourceProvider());
-            assertNull(artifact.getMultiFlavorSourceProvider());
-        }
-    }
-
-    @Test
-    public void checkDebugAndReleaseOutputHaveDifferentNames() {
-        Truth.assertThat(model.getVariantsBuildInformation()).named("variant count").hasSize(2);
-
-        // debug variant
-        VariantBuildInformation debugVariant =
-                AndroidProjectUtils.getVariantBuildInformationByName(model, BuilderConstants.DEBUG);
-
-        // release variant
-        VariantBuildInformation releaseVariant =
-                AndroidProjectUtils.getVariantBuildInformationByName(
-                        model, BuilderConstants.RELEASE);
-
-        String debugFile = ProjectBuildOutputUtils.getSingleOutputFile(debugVariant);
-        String releaseFile = ProjectBuildOutputUtils.getSingleOutputFile(releaseVariant);
-
-        Assert.assertFalse("debug: $debugFile / release: $releaseFile", debugFile == releaseFile);
-    }
-
-    @Test
     public void weDontFailOnLicenceDotTxtWhenPackagingDependencies() throws Exception {
         project.execute("assembleAndroidTest");
-    }
-
-    @Test
-    public void testBuildOutputModel() throws Exception {
-        project.execute("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
-        Map<String, AndroidProject> multi =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelMap();
-
-        AndroidProject mainModule = multi.get(":");
-        assertThat(mainModule.getVariantsBuildInformation()).hasSize(2);
-        assertThat(
-                        mainModule.getVariantsBuildInformation().stream()
-                                .map(VariantBuildInformation::getVariantName)
-                                .collect(Collectors.toList()))
-                .containsExactly("debug", "release");
-
-        for (VariantBuildInformation variantBuildOutput :
-                mainModule.getVariantsBuildInformation()) {
-            assertThat(variantBuildOutput.getAssembleTaskName()).contains("assemble");
-            assertThat(variantBuildOutput.getAssembleTaskOutputListingFile()).isNotNull();
-            File listingFile = new File(variantBuildOutput.getAssembleTaskOutputListingFile());
-            BuiltArtifactsImpl builtArtifacts = BuiltArtifactsLoaderImpl.loadFromFile(listingFile);
-
-            assertThat(builtArtifacts).isNotNull();
-            assertThat(builtArtifacts.getElements()).hasSize(1);
-            BuiltArtifactImpl built = builtArtifacts.getElements().iterator().next();
-            assertThat(new File(built.getOutputFile()).exists()).isTrue();
-            assertThat(built.getVariantOutputConfiguration().getFilters()).isEmpty();
-            assertThat(built.getVariantOutputConfiguration().getOutputType())
-                    .isEqualTo(VariantOutputConfiguration.OutputType.SINGLE);
-
-            // test redirect file presence.
-            File redirectFile =
-                    FileUtils.join(
-                            ArtifactTypeUtil.getOutputDir(
-                                    InternalArtifactType.APK_IDE_REDIRECT_FILE.INSTANCE,
-                                    project.getBuildDir()),
-                            variantBuildOutput.getVariantName(),
-                            ListingFileRedirect.REDIRECT_FILE_NAME);
-            assertThat(redirectFile.exists()).isTrue();
-        }
     }
 
     @Test

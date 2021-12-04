@@ -25,17 +25,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class AndroidComponentsFilteringTest(private val useModelV2: Boolean)
+class AndroidComponentsFilteringTest
     : AbstractReturnGivenBuildResultTest<String,
         AndroidComponentsFilteringTest.VariantBuilder,
         List<AndroidComponentsFilteringTest.VariantInfo>>() {
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "useModelV2_{0}")
-        fun useModelV2() = arrayOf(true, false)
-    }
 
     @get:Rule
     val project =
@@ -87,10 +80,6 @@ class AndroidComponentsFilteringTest(private val useModelV2: Boolean)
 
     @Test
     fun `before-test-fixtures filtering via new api using buildtype callback`() {
-        // TestFixtures feature is not supported in model v1
-        if (!useModelV2) {
-            return
-        }
         given {
             """
                 |    beforeVariants(selector().withBuildType("debug")) {
@@ -204,10 +193,6 @@ class AndroidComponentsFilteringTest(private val useModelV2: Boolean)
 
     @Test
     fun `before-test-fixtures filtering via new api using buildtype and flavor callback`() {
-        // TestFixtures feature is not supported in model v1
-        if (!useModelV2) {
-            return
-        }
         android {
             """
                 |    flavorDimensions "one"
@@ -286,22 +271,13 @@ class AndroidComponentsFilteringTest(private val useModelV2: Boolean)
                 |}
             """.trimMargin()
         )
-        if (useModelV2) {
-            return project.modelV2().fetchModels().container.getProject().androidProject!!.variants.map {
-                VariantInfo(
-                    it.name,
-                    unitTest = it.unitTestArtifact != null,
-                    androidTest = it.androidTestArtifact != null,
-                    testFixtures = it.testFixturesArtifact != null,
-                )
-            }
-        } else {
-            return project.model().fetchAndroidProjects().onlyModel.variants.map {
-                VariantInfo(
-                    it.name,
-                    unitTest = it.extraJavaArtifacts.any { it.name == AndroidProject.ARTIFACT_UNIT_TEST },
-                    androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST })
-            }
+        return project.modelV2().fetchModels().container.getProject().androidProject!!.variants.map {
+            VariantInfo(
+                it.name,
+                unitTest = it.unitTestArtifact != null,
+                androidTest = it.androidTestArtifact != null,
+                testFixtures = it.testFixturesArtifact != null,
+            )
         }
     }
 

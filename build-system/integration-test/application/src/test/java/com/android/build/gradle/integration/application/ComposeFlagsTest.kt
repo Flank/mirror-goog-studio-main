@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.builder.model.AndroidGradlePluginProjectFlags
+import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -68,18 +68,36 @@ android {
     @Test
     fun verifyFlagInModel() {
         assertNotNull(project)
-        val withModel = project.model().fetchAndroidProjects().onlyModelMap[":with"]
+        val modelContainer = project.modelV2().fetchModels().container
+
+        val withModel = modelContainer.getProject(":with")
         assertNotNull(withModel)
-        assertThat(withModel.flags.booleanFlagMap[
-                AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE]).isTrue()
-        val withoutModel = project.model().fetchAndroidProjects().onlyModelMap[":without"]
+        val withAndroidProject = withModel.androidProject
+        assertNotNull(withAndroidProject)
+        assertThat(
+            AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE.getValue(
+                withAndroidProject.flags
+            )
+        ).isTrue()
+
+        val withoutModel = modelContainer.getProject(":without")
         assertNotNull(withoutModel)
-        assertThat(withoutModel.flags.booleanFlagMap[
-                AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE]).isFalse()
-        val explicitWithoutModel =
-            project.model().fetchAndroidProjects().onlyModelMap[":explicitWithout"]
+        val withoutAndroidProject = withoutModel.androidProject
+        assertNotNull(withoutAndroidProject)
+        assertThat(
+            AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE.getValue(
+                withoutAndroidProject.flags
+            )
+        ).isFalse()
+
+        val explicitWithoutModel = modelContainer.getProject((":explicitWithout"))
         assertNotNull(explicitWithoutModel)
-        assertThat(explicitWithoutModel.flags.booleanFlagMap[
-                AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE]).isFalse()
+        val explicitWithoutAndroidProject = explicitWithoutModel.androidProject
+        assertNotNull(explicitWithoutAndroidProject)
+        assertThat(
+            AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE.getValue(
+                explicitWithoutAndroidProject.flags
+            )
+        ).isFalse()
     }
 }

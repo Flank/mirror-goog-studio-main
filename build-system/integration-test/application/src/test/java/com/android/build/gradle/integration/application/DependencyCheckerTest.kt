@@ -67,7 +67,6 @@ class DependencyCheckerTest {
         }
 
         // Assert no exceptions while fetching the models
-        val models = app.model().fetchAndroidProjects()
-        assertThat(models).isNotNull()
+        val models = app.modelV2().fetchModels()
     }
 }
