@@ -86,8 +86,16 @@ public class StringAuthLeakDetector extends Detector implements SourceCodeScanne
                 Matcher matcher = AUTH_REGEXP.matcher(str);
                 if (matcher.find()) {
                     String password = matcher.group(3);
-                    if (password == null || (password.startsWith("%") && password.endsWith("s"))) {
+                    if (password == null) {
                         return;
+                    }
+                    if (password.startsWith("%") && password.endsWith("s")) {
+                        // Make sure it really looks like a formatting string and isn't actually a
+                        // password that happens to start with % and end with s
+                        Matcher format = StringFormatDetector.FORMAT.matcher(password);
+                        if (format.matches()) {
+                            return;
+                        }
                     }
                     Location location =
                             context.getRangeLocation(
