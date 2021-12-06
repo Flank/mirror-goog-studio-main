@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -63,18 +64,31 @@ public final class ApiTester {
             String errorMessage,
             URL expectedFileUrl,
             Flag... flag) {
+        this(titleLine, classes, filter, errorMessage, expectedFileUrl, content -> content, flag);
+    }
+
+    public ApiTester(
+            String titleLine,
+            Collection<ClassPath.ClassInfo> classes,
+            @NonNull Filter filter,
+            String errorMessage,
+            URL expectedFileUrl,
+            Function1<List<String>, Collection<String>> transformFinalFileContent,
+            Flag... flag) {
         this.titleLine = titleLine;
         this.classes = classes;
         this.filter = filter;
         this.errorMessage = errorMessage;
         this.expectedFileUrl = expectedFileUrl;
+        this.transformFinalFileContent = transformFinalFileContent;
         this.flags = ImmutableSet.copyOf(flag);
     }
 
     public enum Filter {
         ALL,
         STABLE_ONLY,
-        INCUBATING_ONLY
+        INCUBATING_ONLY,
+        DEPRECATED_ONLY
     }
 
     public enum Flag {
@@ -87,25 +101,30 @@ public final class ApiTester {
     private final Filter filter;
     private final String errorMessage;
     private final URL expectedFileUrl;
+    private final Function1<List<String>, Collection<String>> transformFinalFileContent;
     private final Set<Flag> flags;
 
-    private boolean classFilter(boolean incubatingClass) {
-        return memberFilter(incubatingClass, false);
+    private boolean classFilter(boolean incubatingClass, boolean deprecatedClass) {
+        return memberFilter(incubatingClass, deprecatedClass);
     }
 
-    private boolean memberFilter(boolean incubatingClass, boolean incubatingMember) {
+    private boolean memberFilter(boolean incubating, boolean deprecated) {
         switch (filter) {
             case ALL:
                 return true;
             case STABLE_ONLY:
-                return !incubatingClass && !incubatingMember;
+                return !incubating;
             case INCUBATING_ONLY:
-                return incubatingClass || incubatingMember;
+                return incubating;
+            case DEPRECATED_ONLY:
+                return deprecated;
         }
         throw new IllegalStateException(filter.toString());
     }
 
     private static final String INCUBATING_ANNOTATION = "@org.gradle.api.Incubating()";
+    private static final String JAVA_DEPRECATED_ANNOTATION = "@java.lang.Deprecated";
+    private static final String KOTLIN_DEPRECATED_ANNOTATION = "@kotlin.Deprecated";
 
     public void checkApiElements() throws IOException {
         checkApiElements(clazz -> getApiElements(clazz).collect(Collectors.toList()));
@@ -114,7 +133,8 @@ public final class ApiTester {
     public void checkApiElements(@NonNull Function1<Class<?>, Collection<String>> transform)
             throws IOException {
 
-        List<String> apiElements = getApiElements(transform);
+        Collection<String> apiElements =
+                transformFinalFileContent.invoke(getApiElements(transform));
 
         List<String> expectedApiElements =
                 Splitter.on("\n")
@@ -140,7 +160,7 @@ public final class ApiTester {
             throws IOException {
         Path dir = TestUtils.resolveWorkspacePath(dirPath);
         Path file = dir.resolve(StringsKt.substringAfterLast(expectedFileUrl.getFile(), '/', "?"));
-        List<String> content = getApiElements(transform);
+        Collection<String> content = transformFinalFileContent.invoke(getApiElements(transform));
         List<String> previous = Files.readAllLines(file);
         Files.write(file, content, StandardCharsets.UTF_8);
         if (!previous.equals(content)) {
@@ -189,6 +209,43 @@ public final class ApiTester {
         }
 
         boolean incubatingClass = isIncubating(klass);
+        boolean deprecatedClass = isDeprecated(klass);
+
+        Set<String> deprecatedKotlinProperties = new HashSet<>();
+
+        Arrays.stream(klass.getClasses())
+                .filter(it -> it.getName().equals(klass.getName() + "$DefaultImpls"))
+                .findFirst()
+                .ifPresent(
+                        clazz ->
+                                Arrays.stream(clazz.getDeclaredMethods())
+                                        .filter(
+                                                method ->
+                                                        method.getName().endsWith("$annotations")
+                                                                && isDeprecated(
+                                                                        Invokable.from(method)))
+                                        .forEach(
+                                                deprecatedMethod -> {
+                                                    String propertyName =
+                                                            StringsKt.removeSuffix(
+                                                                    deprecatedMethod.getName(),
+                                                                    "$annotations");
+                                                    if (propertyName.startsWith("get")) {
+                                                        propertyName =
+                                                                StringsKt.removePrefix(
+                                                                        propertyName, "get");
+                                                    } else if (propertyName.startsWith("is")) {
+                                                        propertyName =
+                                                                StringsKt.removePrefix(
+                                                                        propertyName, "is");
+                                                    } else {
+                                                        throw new RuntimeException(
+                                                                "unexpected name "
+                                                                        + deprecatedMethod
+                                                                                .getName());
+                                                    }
+                                                    deprecatedKotlinProperties.add(propertyName);
+                                                }));
 
         for (Field field : klass.getDeclaredFields()) {
             if (!Modifier.isStatic(field.getModifiers())
@@ -212,7 +269,8 @@ public final class ApiTester {
                                 .filter(
                                         invokable ->
                                                 memberFilter(
-                                                        incubatingClass, isIncubating(invokable)))
+                                                        incubatingClass || isIncubating(invokable),
+                                                        deprecatedClass || isDeprecated(invokable)))
                                 .map(ApiTester::getApiElement)
                                 .filter(Objects::nonNull),
                         // Methods:
@@ -222,7 +280,12 @@ public final class ApiTester {
                                 .filter(
                                         invokable ->
                                                 memberFilter(
-                                                        incubatingClass, isIncubating(invokable)))
+                                                        incubatingClass || isIncubating(invokable),
+                                                        deprecatedClass
+                                                                || isDeprecated(invokable)
+                                                                || isDeprecatedKotlinProperty(
+                                                                        deprecatedKotlinProperties,
+                                                                        invokable)))
                                 .map(ApiTester::getApiElement)
                                 .filter(Objects::nonNull),
                         // Fields:
@@ -236,7 +299,7 @@ public final class ApiTester {
                         // Finally, all inner classes:
                         Stream.of(klass.getDeclaredClasses()).flatMap(this::getApiElements));
 
-        if (classFilter(incubatingClass)) {
+        if (classFilter(incubatingClass, deprecatedClass)) {
             streams = Stream.concat(streams, Stream.of(Stream.of(getApiElement(klass))));
         }
 
@@ -275,6 +338,29 @@ public final class ApiTester {
         Annotation[] annotations = element.getAnnotations();
         for (Annotation annotation : annotations) {
             if (annotation.toString().equals(INCUBATING_ANNOTATION)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isDeprecatedKotlinProperty(
+            @NonNull Set<String> deprecatedKotlinProperties, @NonNull Invokable element) {
+        if (element.getName().startsWith("get") || element.getName().startsWith("set")) {
+            return deprecatedKotlinProperties.contains(element.getName().substring(3));
+        } else if (element.getName().startsWith("is")) {
+            return deprecatedKotlinProperties.contains(element.getName().substring(2));
+        }
+
+        return false;
+    }
+
+    private static boolean isDeprecated(@NonNull AnnotatedElement element) {
+        Annotation[] annotations = element.getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (annotation.toString().startsWith(JAVA_DEPRECATED_ANNOTATION)
+                    || annotation.toString().startsWith(KOTLIN_DEPRECATED_ANNOTATION)) {
                 return true;
             }
         }
