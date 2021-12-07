@@ -14,66 +14,35 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.model.CoreNdkBuildOptions;
-import com.android.build.gradle.internal.services.DslServices;
-import java.io.File;
-import javax.inject.Inject;
+import com.android.build.gradle.internal.model.CoreNdkBuildOptions
+import com.android.build.gradle.internal.services.DslServices
+import java.io.File
+import javax.inject.Inject
 
 /** See {@link com.android.build.api.dsl.NdkBuild} */
-public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild {
-    @NonNull private final DslServices dslServices;
+class NdkBuildOptions @Inject constructor(private val dslServices: DslServices)
+    : CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild {
 
-    @Nullable
-    private File path;
+    override var path: File? = null
+    override var buildStagingDirectory: File? = null
 
-    @Nullable private File buildStagingDirectory;
-
-    @Inject
-    public NdkBuildOptions(@NonNull DslServices dslServices) {
-        this.dslServices = dslServices;
+    override fun path(any: Any) {
+        this.path = dslServices.file(any)
     }
 
-    @Nullable
-    @Override
-    public File getPath() {
-        return this.path;
+    fun setPath(path: Any) {
+        path(path)
     }
 
-    public void setPath(@NonNull Object path) {
-        this.path = dslServices.file(path);
+    override fun buildStagingDirectory(any: Any) {
+        this.buildStagingDirectory = dslServices.file(any)
     }
 
-    @Override
-    public void setPath(@NonNull File path) {
-        this.path = path;
-    }
-
-    @Override
-    public void path(@NonNull Object path) {
-        this.path = dslServices.file(path);
-    }
-
-    @Nullable
-    @Override
-    public File getBuildStagingDirectory() {
-        return buildStagingDirectory;
-    }
-
-    @Override
-    public void setBuildStagingDirectory(@Nullable File buildStagingDirectory) {
-        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
-    }
-
-    public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
-    }
-
-    @Override
-    public void buildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
+    fun setBuildStagingDirectory(buildStagingDirectory: Any?) {
+        this.buildStagingDirectory = buildStagingDirectory?.let {
+            dslServices.file(buildStagingDirectory)
+        }
     }
 }
