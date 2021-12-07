@@ -1145,15 +1145,9 @@ com.android.build.gradle.internal.dsl.BundleOptionsTexture.<init>: com.android.b
 com.android.build.gradle.internal.dsl.CmakeOptions implements com.android.build.gradle.internal.model.CoreCmakeOptions, com.android.build.api.dsl.Cmake
 com.android.build.gradle.internal.dsl.CmakeOptions.<init>: com.android.build.gradle.internal.dsl.CmakeOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.CmakeOptions.buildStagingDirectory: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.CmakeOptions.getBuildStagingDirectory: java.io.File ()
-com.android.build.gradle.internal.dsl.CmakeOptions.getPath: java.io.File ()
-com.android.build.gradle.internal.dsl.CmakeOptions.getVersion: java.lang.String ()
 com.android.build.gradle.internal.dsl.CmakeOptions.path: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.CmakeOptions.setBuildStagingDirectory: void (java.io.File)
 com.android.build.gradle.internal.dsl.CmakeOptions.setBuildStagingDirectory: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.CmakeOptions.setPath: void (java.io.File)
 com.android.build.gradle.internal.dsl.CmakeOptions.setPath: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.CmakeOptions.setVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.CoreBuildType implements com.android.builder.model.BuildType
 com.android.build.gradle.internal.dsl.CoreBuildType.getExternalNativeBuildOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions ()
 com.android.build.gradle.internal.dsl.CoreBuildType.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()
@@ -1370,17 +1364,11 @@ com.android.build.gradle.internal.dsl.EmulatorSnapshots.setEnableForTestFailures
 com.android.build.gradle.internal.dsl.EmulatorSnapshots.setMaxSnapshots: void (int)
 com.android.build.gradle.internal.dsl.EmulatorSnapshots.setMaxSnapshotsForTestFailures: void (int)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild implements com.android.build.gradle.internal.model.CoreExternalNativeBuild, com.android.build.api.dsl.ExternalNativeBuild
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuild (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.ExternalNativeBuild.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: com.android.build.gradle.internal.dsl.CmakeOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.CmakeOptions>)
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Cmake, kotlin.Unit>)
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.dsl.CmakeOptions ()
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.model.CoreCmakeOptions ()
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuild ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.gradle.internal.dsl.NdkBuildOptions ()
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.gradle.internal.model.CoreNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.ndkBuild: com.android.build.gradle.internal.dsl.NdkBuildOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.NdkBuildOptions>)
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.NdkBuild, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions implements com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions, com.android.build.api.dsl.ExternalNativeBuildOptions
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions (com.android.build.gradle.internal.services.DslServices)
@@ -1616,12 +1604,8 @@ com.android.build.gradle.internal.dsl.ModulePropertyKeys.values: com.android.bui
 com.android.build.gradle.internal.dsl.NdkBuildOptions implements com.android.build.gradle.internal.model.CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild
 com.android.build.gradle.internal.dsl.NdkBuildOptions.<init>: com.android.build.gradle.internal.dsl.NdkBuildOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.buildStagingDirectory: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.NdkBuildOptions.getBuildStagingDirectory: java.io.File ()
-com.android.build.gradle.internal.dsl.NdkBuildOptions.getPath: java.io.File ()
 com.android.build.gradle.internal.dsl.NdkBuildOptions.path: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.NdkBuildOptions.setBuildStagingDirectory: void (java.io.File)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setBuildStagingDirectory: void (java.lang.Object)
-com.android.build.gradle.internal.dsl.NdkBuildOptions.setPath: void (java.io.File)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setPath: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.NdkOptions implements com.android.build.gradle.internal.dsl.CoreNdkOptions, java.io.Serializable, com.android.build.api.dsl.Ndk
 com.android.build.gradle.internal.dsl.NdkOptions$DebugSymbolLevel extends java.lang.Enum

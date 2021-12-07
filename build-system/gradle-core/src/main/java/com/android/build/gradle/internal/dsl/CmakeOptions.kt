@@ -18,16 +18,11 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.model.CoreCmakeOptions
 import com.android.build.gradle.internal.services.DslServices
-import java.io.File
 import javax.inject.Inject
 
 /** See {@link com.android.build.api.dsl.Cmake} */
-class CmakeOptions @Inject constructor(private val dslServices: DslServices)
+abstract class CmakeOptions @Inject constructor(private val dslServices: DslServices)
     : CoreCmakeOptions, com.android.build.api.dsl.Cmake {
-
-    override var path: File? = null
-    override var version: String? = null
-    override var buildStagingDirectory: File? = null
 
     override fun path(path: Any?) {
         this.path = path?.let {

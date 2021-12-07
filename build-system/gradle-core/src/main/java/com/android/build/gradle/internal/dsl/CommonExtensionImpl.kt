@@ -297,17 +297,6 @@ abstract class CommonExtensionImpl<
         action.invoke(defaultConfig)
     }
 
-    override val externalNativeBuild: ExternalNativeBuild =
-        dslServices.newInstance(ExternalNativeBuild::class.java, dslServices)
-
-    override fun externalNativeBuild(action: com.android.build.api.dsl.ExternalNativeBuild.() -> Unit) {
-        action.invoke(externalNativeBuild)
-    }
-
-    override fun externalNativeBuild(action: Action<ExternalNativeBuild>) {
-        action.execute(externalNativeBuild)
-    }
-
     override val testCoverage: TestCoverage  = dslServices.newInstance(JacocoOptions::class.java)
 
     override fun testCoverage(action: TestCoverage.() -> Unit) {

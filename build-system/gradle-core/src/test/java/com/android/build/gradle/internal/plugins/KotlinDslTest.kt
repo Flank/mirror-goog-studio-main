@@ -301,12 +301,16 @@ class KotlinDslTest {
             assertThat(path).isNull()
             path = File("path1")
             assertThatPath(path).endsWith("path1")
+            path("path2")
+            assertThatPath(path).endsWith("path2")
             setPath("path3")
             assertThatPath(path).endsWith("path3")
 
             assertThat(buildStagingDirectory).isNull()
             buildStagingDirectory = File("buildStagingDirectory1")
             assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory1")
+            buildStagingDirectory("buildStagingDirectory2")
+            assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory2")
             setBuildStagingDirectory("buildStagingDirectory3")
             assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory3")
 

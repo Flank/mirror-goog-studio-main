@@ -18,15 +18,11 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.model.CoreNdkBuildOptions
 import com.android.build.gradle.internal.services.DslServices
-import java.io.File
 import javax.inject.Inject
 
 /** See {@link com.android.build.api.dsl.NdkBuild} */
-class NdkBuildOptions @Inject constructor(private val dslServices: DslServices)
+abstract class NdkBuildOptions @Inject constructor(private val dslServices: DslServices)
     : CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild {
-
-    override var path: File? = null
-    override var buildStagingDirectory: File? = null
 
     override fun path(any: Any) {
         this.path = dslServices.file(any)

@@ -15,26 +15,14 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.Cmake
 import com.android.build.api.dsl.ExternalNativeBuild
-import com.android.build.api.dsl.NdkBuild
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import org.gradle.api.Action
-import javax.inject.Inject
 
 /** See [com.android.build.api.dsl.ExternalNativeBuild]  */
-open class ExternalNativeBuild @Inject constructor(dslServices: DslServices) :
-    CoreExternalNativeBuild,
-    ExternalNativeBuild {
-    override val ndkBuild: NdkBuildOptions =
-        dslServices.newInstance(
-            NdkBuildOptions::class.java, dslServices
-        )
-    override val cmake: CmakeOptions  =
-        dslServices.newInstance(
-            CmakeOptions::class.java, dslServices
-        )
+abstract class ExternalNativeBuild: CoreExternalNativeBuild, ExternalNativeBuild {
+    abstract override val ndkBuild: NdkBuildOptions
+    abstract override val cmake: CmakeOptions
 
     /* Not directly in interface as having a non-void return type is unconventional */
     fun ndkBuild(action: Action<NdkBuildOptions>): NdkBuildOptions {
@@ -42,17 +30,9 @@ open class ExternalNativeBuild @Inject constructor(dslServices: DslServices) :
         return ndkBuild
     }
 
-    override fun ndkBuild(action: NdkBuild.() -> Unit) {
-        action.invoke(ndkBuild)
-    }
-
     /* Not directly in interface as having a non-void return type is unconventional */
     fun cmake(action: Action<CmakeOptions>): CmakeOptions {
         action.execute(cmake)
         return cmake
-    }
-
-    override fun cmake(action: Cmake.() -> Unit) {
-        action.invoke(cmake)
     }
 }
