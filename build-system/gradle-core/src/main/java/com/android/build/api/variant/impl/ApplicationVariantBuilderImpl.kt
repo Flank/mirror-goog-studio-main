@@ -22,7 +22,7 @@ import com.android.build.api.variant.DependenciesInfoBuilder
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
@@ -30,12 +30,12 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
     globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
-    variantApiServices: VariantApiServices
+    variantBuilderServices: VariantBuilderServices
 ) : VariantBuilderImpl(
     globalVariantBuilderConfig,
     variantDslInfo,
     componentIdentity,
-    variantApiServices
+    variantBuilderServices
 ), ApplicationVariantBuilder {
 
     override val debuggable: Boolean
@@ -53,9 +53,9 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
 
     // only instantiate this if this is needed. This allows non-built variant to not do too much work.
     override val dependenciesInfo: DependenciesInfoBuilder by lazy {
-        variantApiServices.newInstance(
+        variantBuilderServices.newInstance(
             DependenciesInfoBuilderImpl::class.java,
-            variantApiServices,
+            variantBuilderServices,
             globalVariantBuilderConfig.dependenciesInfo
         )
     }

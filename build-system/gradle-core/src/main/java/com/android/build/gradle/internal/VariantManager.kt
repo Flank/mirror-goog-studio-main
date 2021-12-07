@@ -40,7 +40,6 @@ import com.android.build.api.variant.impl.HasTestFixtures
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.TestedAndroidConfig
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
@@ -51,7 +50,6 @@ import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.ge
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -69,8 +67,8 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.TaskCreationServicesImpl
-import com.android.build.gradle.internal.services.VariantApiServices
-import com.android.build.gradle.internal.services.VariantApiServicesImpl
+import com.android.build.gradle.internal.services.VariantBuilderServices
+import com.android.build.gradle.internal.services.VariantBuilderServicesImpl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -127,7 +125,7 @@ class VariantManager<
     private val projectServices: ProjectServices
 ) {
 
-    private val variantApiServices: VariantApiServices
+    private val variantBuilderServices: VariantBuilderServices
     private val variantPropertiesApiServices: VariantPropertiesApiServicesImpl
     private val taskCreationServices: TaskCreationServices
     private val variantFilter: VariantFilter
@@ -245,7 +243,7 @@ class VariantManager<
         // FIXME we should lock the variant API properties after all the beforeVariants, and
         // before any onVariants to avoid cross access between the two.
         // This means changing the way to run beforeVariants vs onVariants.
-        variantApiServices.lockValues()
+        variantBuilderServices.lockValues()
     }
 
     private val testBuildTypeData: BuildTypeData<BuildType>?
@@ -315,7 +313,7 @@ class VariantManager<
         // create the Variant object so that we can run the action which may interrupt the creation
         // (in case of enabled = false)
         val variantBuilder = variantFactory.createVariantBuilder(
-            globalConfig, componentIdentity, variantDslInfo, variantApiServices,
+            globalConfig, componentIdentity, variantDslInfo, variantBuilderServices,
         )
 
         // now that we have the variant, create the analytics object,
@@ -1140,7 +1138,7 @@ class VariantManager<
     init {
         signingOverride = createSigningOverride()
         variantFilter = VariantFilter(ReadOnlyObjectProvider())
-        variantApiServices = VariantApiServicesImpl(projectServices)
+        variantBuilderServices = VariantBuilderServicesImpl(projectServices)
         variantPropertiesApiServices = VariantPropertiesApiServicesImpl(
             projectServices,
             // detects whether we are running the plugin under unit test mode

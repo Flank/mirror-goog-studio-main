@@ -17,13 +17,12 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariantBuilder
-import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.DynamicFeatureVariantBuilder
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
@@ -31,12 +30,12 @@ open class DynamicFeatureVariantBuilderImpl @Inject constructor(
     globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
-    variantApiServices: VariantApiServices
+    variantBuilderServices: VariantBuilderServices
 ) : VariantBuilderImpl(
     globalVariantBuilderConfig,
     variantDslInfo,
     componentIdentity,
-    variantApiServices
+    variantBuilderServices
 ), DynamicFeatureVariantBuilder {
 
     override var androidTestEnabled: Boolean

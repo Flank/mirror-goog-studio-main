@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesIm
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
@@ -51,7 +51,7 @@ internal class DynamicFeatureVariantFactory(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
-        variantApiServices: VariantApiServices
+        variantBuilderServices: VariantBuilderServices
     ): DynamicFeatureVariantBuilderImpl {
         return projectServices
             .objectFactory
@@ -60,7 +60,7 @@ internal class DynamicFeatureVariantFactory(
                 globalVariantBuilderConfig,
                 variantDslInfo,
                 componentIdentity,
-                variantApiServices
+                variantBuilderServices
             )
     }
 

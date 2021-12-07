@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.services.VariantApiServices.Value
+import com.android.build.gradle.internal.services.VariantBuilderServices.Value
 
-class VariantApiServicesImpl(
+class VariantBuilderServicesImpl(
     projectServices: ProjectServices
 ): BaseServicesImpl(projectServices),
-    VariantApiServices {
+    VariantBuilderServices {
 
     override fun lockValues() {
         disallowSet = true

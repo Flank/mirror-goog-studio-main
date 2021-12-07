@@ -20,7 +20,7 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.junit.Before
@@ -42,7 +42,7 @@ internal class VariantBuilderImplTest {
     @Mock
     lateinit var componentIdentity: ComponentIdentity
     @Mock
-    lateinit var variantApiServices: VariantApiServices
+    lateinit var variantBuilderServices: VariantBuilderServices
     @Mock
     lateinit var globalVariantBuilderConfig: GlobalVariantBuilderConfig
 
@@ -51,7 +51,7 @@ internal class VariantBuilderImplTest {
             globalVariantBuilderConfig,
             variantDslInfo,
             componentIdentity,
-            variantApiServices
+            variantBuilderServices
         ) {
             override fun <T : VariantBuilder> createUserVisibleVariantObject(
                 projectServices: ProjectServices,

@@ -17,14 +17,14 @@
 package com.android.build.gradle.internal.services
 
 /**
- * Services for the Variant API objects.
+ * Services for the [com.android.build.api.variant.VariantBuilder] API objects.
  *
  * This contains whatever is needed by all the variant objects.
  *
  * This is meant to be used only by the variant api objects. Other stages of the plugin
  * will use different services objects.
  */
-interface VariantApiServices:
+interface VariantBuilderServices:
     BaseServices {
 
     /**

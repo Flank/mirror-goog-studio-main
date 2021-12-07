@@ -22,20 +22,20 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 abstract class VariantBuilderImpl(
     globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
-    variantApiServices: VariantApiServices
+    variantBuilderServices: VariantBuilderServices
 ) :
     ComponentBuilderImpl(
         globalVariantBuilderConfig,
         variantDslInfo,
         componentIdentity,
-        variantApiServices
+        variantBuilderServices
     ),
     VariantBuilder {
 

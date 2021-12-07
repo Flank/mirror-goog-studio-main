@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesIm
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantBuilderServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.options.ProjectOptions;
@@ -80,7 +80,7 @@ public class TestVariantFactory
             @NonNull GlobalVariantBuilderConfig globalVariantBuilderConfig,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantApiServices variantApiServices) {
+            @NonNull VariantBuilderServices variantBuilderServices) {
         return projectServices
                 .getObjectFactory()
                 .newInstance(
@@ -88,7 +88,7 @@ public class TestVariantFactory
                         globalVariantBuilderConfig,
                         variantDslInfo,
                         componentIdentity,
-                        variantApiServices);
+                        variantBuilderServices);
     }
 
     @NonNull

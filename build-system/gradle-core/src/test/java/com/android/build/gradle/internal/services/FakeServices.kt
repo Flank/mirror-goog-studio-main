@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeLogger
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.fixtures.ProjectFactory
@@ -34,12 +33,10 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.TestUtils
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.Project
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
-import org.gradle.api.services.BuildServiceRegistry
 import java.io.File
 
 @JvmOverloads
@@ -80,7 +77,7 @@ fun createDslServices(
 @JvmOverloads
 fun createVariantApiServices(
     projectServices: ProjectServices = createProjectServices()
-): VariantApiServices = VariantApiServicesImpl(projectServices)
+): VariantBuilderServices = VariantBuilderServicesImpl(projectServices)
 
 @JvmOverloads
 fun createVariantPropertiesApiServices(

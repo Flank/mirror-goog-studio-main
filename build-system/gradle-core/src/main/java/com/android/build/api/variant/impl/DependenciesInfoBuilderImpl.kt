@@ -18,15 +18,15 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.DependenciesInfoBuilder
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantBuilderServices
 import javax.inject.Inject
 
 open class DependenciesInfoBuilderImpl @Inject constructor(
-        variantApiServices: VariantApiServices,
-        dslDependencyInfo: DependenciesInfo
+    variantBuilderServices: VariantBuilderServices,
+    dslDependencyInfo: DependenciesInfo
 ): DependenciesInfoBuilder {
-    private val includeInApkValue = variantApiServices.valueOf(dslDependencyInfo.includeInApk)
-    private val includeInBundleValue = variantApiServices.valueOf(dslDependencyInfo.includeInBundle)
+    private val includeInApkValue = variantBuilderServices.valueOf(dslDependencyInfo.includeInApk)
+    private val includeInBundleValue = variantBuilderServices.valueOf(dslDependencyInfo.includeInBundle)
 
     override var includedInApk: Boolean
         set(value) = includeInApkValue.set(value)
