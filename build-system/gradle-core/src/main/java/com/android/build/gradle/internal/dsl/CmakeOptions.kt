@@ -14,80 +14,38 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.model.CoreCmakeOptions;
-import com.android.build.gradle.internal.services.DslServices;
-import java.io.File;
-import javax.inject.Inject;
+import com.android.build.gradle.internal.model.CoreCmakeOptions
+import com.android.build.gradle.internal.services.DslServices
+import java.io.File
+import javax.inject.Inject
 
 /** See {@link com.android.build.api.dsl.Cmake} */
-public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl.Cmake {
-    @NonNull private final DslServices dslServices;
+class CmakeOptions @Inject constructor(private val dslServices: DslServices)
+    : CoreCmakeOptions, com.android.build.api.dsl.Cmake {
 
-    @Nullable
-    private File path;
+    override var path: File? = null
+    override var version: String? = null
+    override var buildStagingDirectory: File? = null
 
-    @Nullable private File buildStagingDirectory;
-
-    // CMake version to use. If it's null, it'll default to the CMake shipped with the SDK
-    @Nullable private String version;
-
-    @Inject
-    public CmakeOptions(@NonNull DslServices dslServices) {
-        this.dslServices = dslServices;
+    override fun path(path: Any?) {
+        this.path = path?.let {
+            dslServices.file(path)
+        }
     }
 
-    @Nullable
-    @Override
-    public File getPath() {
-        return this.path;
+    fun setPath(path: Any?) {
+        path(path)
     }
 
-    @Override
-    public void setPath(@Nullable File path) {
-        this.path = path;
+    override fun buildStagingDirectory(buildStagingDirectory: Any?) {
+        this.buildStagingDirectory = buildStagingDirectory?.let {
+            dslServices.file(buildStagingDirectory)
+        }
     }
 
-    @Override
-    public void path(@Nullable Object path) {
-        this.path = dslServices.file(path);
-    }
-
-    public void setPath(@Nullable Object path) {
-        this.path = dslServices.file(path);
-    }
-
-    @Nullable
-    @Override
-    public File getBuildStagingDirectory() {
-        return buildStagingDirectory;
-    }
-
-    @Override
-    public void setBuildStagingDirectory(@Nullable File buildStagingDirectory) {
-        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
-    }
-
-    @Override
-    public void buildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
-    }
-
-    public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
-    }
-
-    @Nullable
-    @Override
-    public String getVersion() {
-        return version;
-    }
-
-    @Override
-    public void setVersion(@Nullable String version) {
-        this.version = version;
+    fun setBuildStagingDirectory(buildStagingDirectory: Any?) {
+        buildStagingDirectory(buildStagingDirectory)
     }
 }
