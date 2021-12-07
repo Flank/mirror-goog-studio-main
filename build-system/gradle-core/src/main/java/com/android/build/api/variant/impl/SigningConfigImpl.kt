@@ -17,7 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.SigningConfig
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.signing.SigningConfigVersions
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -25,7 +25,7 @@ import java.util.concurrent.Callable
 
 class SigningConfigImpl(
     signingConfig: com.android.build.gradle.internal.dsl.SigningConfig?,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     minSdk: Int,
     targetApi: Int?
 ) : SigningConfig {
@@ -40,7 +40,7 @@ class SigningConfigImpl(
     }
 
     override val enableV4Signing =
-        variantPropertiesApiServices.propertyOf(
+        variantServices.propertyOf(
             Boolean::class.java,
             Callable {
                 when {
@@ -53,7 +53,7 @@ class SigningConfigImpl(
         )
 
     override val enableV3Signing =
-        variantPropertiesApiServices.propertyOf(
+        variantServices.propertyOf(
             Boolean::class.java,
             Callable {
                 when {
@@ -66,7 +66,7 @@ class SigningConfigImpl(
         )
 
     override val enableV2Signing =
-        variantPropertiesApiServices.propertyOf(
+        variantServices.propertyOf(
             Boolean::class.java,
             Callable {
                 val enableV2Signing = dslSigningConfig?.enableV2Signing
@@ -86,7 +86,7 @@ class SigningConfigImpl(
         )
 
     override val enableV1Signing =
-        variantPropertiesApiServices.propertyOf(
+        variantServices.propertyOf(
             Boolean::class.java,
             Callable {
                 val enableV1Signing = dslSigningConfig?.enableV1Signing
@@ -110,19 +110,19 @@ class SigningConfigImpl(
     // Internal APIs
     //------------------------------------------------------
     val storeFile: Provider<File?> =
-        variantPropertiesApiServices.provider { dslSigningConfig?.storeFile }
+        variantServices.provider { dslSigningConfig?.storeFile }
 
     val storePassword: Provider<String?> =
-        variantPropertiesApiServices.provider { dslSigningConfig?.storePassword }
+        variantServices.provider { dslSigningConfig?.storePassword }
 
     val keyAlias: Provider<String?> =
-        variantPropertiesApiServices.provider { dslSigningConfig?.keyAlias }
+        variantServices.provider { dslSigningConfig?.keyAlias }
 
     val keyPassword: Provider<String?> =
-        variantPropertiesApiServices.provider { dslSigningConfig?.keyPassword }
+        variantServices.provider { dslSigningConfig?.keyPassword }
 
     val storeType: Provider<String?> =
-        variantPropertiesApiServices.provider { dslSigningConfig?.storeType }
+        variantServices.provider { dslSigningConfig?.storeType }
 
     fun isSigningReady(): Boolean {
         return storeFile.isPresent &&

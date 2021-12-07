@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.utils.appendCapitalized
 import com.android.utils.capitalizeAndAppend
 
@@ -33,7 +33,7 @@ class TestFixturesVariantData(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    services: VariantPropertiesApiServices,
+    services: VariantServices,
     taskContainer: MutableTaskContainer
 ): BaseVariantData(
     componentIdentity,

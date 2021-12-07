@@ -46,8 +46,8 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl;
+import com.android.build.gradle.internal.services.VariantServices;
+import com.android.build.gradle.internal.services.VariantServicesImpl;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
@@ -65,13 +65,11 @@ public abstract class BaseVariantFactory<
 
     @NonNull protected final ProjectServices projectServices;
 
-    @Deprecated @NonNull
-    private final VariantPropertiesApiServices servicesForOldVariantObjectsOnly;
+    @Deprecated @NonNull private final VariantServices servicesForOldVariantObjectsOnly;
 
     public BaseVariantFactory(@NonNull ProjectServices projectServices) {
         this.projectServices = projectServices;
-        servicesForOldVariantObjectsOnly =
-                new VariantPropertiesApiServicesImpl(projectServices, false);
+        servicesForOldVariantObjectsOnly = new VariantServicesImpl(projectServices, false);
     }
 
     @NonNull
@@ -88,7 +86,7 @@ public abstract class BaseVariantFactory<
             @NonNull TestFixturesVariantData variantData,
             @NonNull VariantImpl mainVariant,
             @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
             @NonNull GlobalTaskCreationConfig globalConfig) {
         TestFixturesImpl testFixturesComponent =
@@ -107,7 +105,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 mainVariant,
                                 transformManager,
-                                variantPropertiesApiServices,
+                                variantServices,
                                 taskCreationServices,
                                 globalConfig);
         // create default output
@@ -136,7 +134,7 @@ public abstract class BaseVariantFactory<
             @NonNull TestVariantData variantData,
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
             @NonNull GlobalTaskCreationConfig globalConfig) {
         UnitTestImpl unitTestProperties =
@@ -155,7 +153,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 testedVariant,
                                 transformManager,
-                                variantPropertiesApiServices,
+                                variantServices,
                                 taskCreationServices,
                                 globalConfig);
 
@@ -179,7 +177,7 @@ public abstract class BaseVariantFactory<
             @NonNull TestVariantData variantData,
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
             @NonNull GlobalTaskCreationConfig globalConfig) {
         AndroidTestImpl androidTestProperties =
@@ -198,7 +196,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 testedVariant,
                                 transformManager,
-                                variantPropertiesApiServices,
+                                variantServices,
                                 taskCreationServices,
                                 globalConfig);
 

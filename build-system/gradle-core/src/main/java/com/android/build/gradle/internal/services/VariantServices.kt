@@ -32,20 +32,20 @@ import java.io.File
 import java.util.concurrent.Callable
 
 /**
- * Services for the VariantProperties API objects.
+ * Services for the [com.android.build.api.variant.Variant] API objects.
  *
  * This contains whatever is needed by all the variant properties objects.
  *
  * This is meant to be used only by the variant properties api objects. Other stages of the plugin
  * will use different services objects.
  */
-interface VariantPropertiesApiServices : BaseServices {
+interface VariantServices : BaseServices {
 
     /**
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantServices.newPropertyBackingDeprecatedApi]
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).
@@ -59,7 +59,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantServices.newPropertyBackingDeprecatedApi]
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).
@@ -73,7 +73,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantServices.newPropertyBackingDeprecatedApi]
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).
@@ -87,7 +87,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantServices.newPropertyBackingDeprecatedApi]
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).
@@ -101,7 +101,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * Creates a new nullable property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantServices.newPropertyBackingDeprecatedApi]
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).
@@ -115,7 +115,7 @@ interface VariantPropertiesApiServices : BaseServices {
      * Creates a new nullable property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantServices.newPropertyBackingDeprecatedApi]
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
      * unsafe reads (which will also finalize the value on read).

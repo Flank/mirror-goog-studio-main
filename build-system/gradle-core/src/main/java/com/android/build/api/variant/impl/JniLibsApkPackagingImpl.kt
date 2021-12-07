@@ -18,23 +18,23 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.JniLibsApkPackaging
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.sdklib.AndroidVersion.VersionCodes.M
 
 class JniLibsApkPackagingImpl(
     dslPackagingOptions: PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     minSdk: Int
-) : JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices),
+) : JniLibsPackagingImpl(dslPackagingOptions, variantServices),
     JniLibsApkPackaging {
 
     override val useLegacyPackaging =
-        variantPropertiesApiServices.provider {
+        variantServices.provider {
             dslPackagingOptions.jniLibs.useLegacyPackaging ?: (minSdk < M)
         }
 
     override val useLegacyPackagingFromBundle =
-        variantPropertiesApiServices.provider {
+        variantServices.provider {
             dslPackagingOptions.jniLibs.useLegacyPackaging ?: false
         }
 }

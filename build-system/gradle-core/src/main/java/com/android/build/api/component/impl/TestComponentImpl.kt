@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -49,7 +49,7 @@ abstract class TestComponentImpl @Inject constructor(
     variantData: BaseVariantData,
     val testedVariant: VariantImpl,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig,
 ) : ComponentImpl(
@@ -63,7 +63,7 @@ abstract class TestComponentImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantPropertiesApiServices,
+    variantServices,
     taskCreationServices,
     global
 ), TestComponent, TestComponentCreationConfig {

@@ -21,7 +21,7 @@ import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.file.Directory
 import java.io.File
 
@@ -32,15 +32,15 @@ import java.io.File
  * [SourceType]. These are all the basic folders set for main. buildTypes and flavors including
  * those set through the DSL settings.
  * @param projectDirectory the project's folder as a [Directory]
- * @param variantServices the variant's [VariantPropertiesApiServices]
+ * @param variantServices the variant's [VariantServices]
  * @param variantSourceSet optional variant specific [DefaultAndroidSourceSet] if there is one, null
  * otherwise (if the application does not have product flavor, there won't be one).
  */
 class SourcesImpl(
-        private val defaultSourceProvider: (SourceType) -> List<DirectoryEntry>,
-        private val projectDirectory: Directory,
-        private val variantServices: VariantPropertiesApiServices,
-        private val variantSourceSet: DefaultAndroidSourceSet?,
+    private val defaultSourceProvider: (SourceType) -> List<DirectoryEntry>,
+    private val projectDirectory: Directory,
+    private val variantServices: VariantServices,
+    private val variantSourceSet: DefaultAndroidSourceSet?,
 ): Sources {
 
     override val java: SourceDirectoriesImpl =
@@ -85,7 +85,7 @@ class SourcesImpl(
     override fun getByName(name: String): SourceDirectories = extras.maybeCreate(name)
 
     class SourceProviderFactory(
-        private val variantServices: VariantPropertiesApiServices,
+        private val variantServices: VariantServices,
         private val projectDirectory: Directory,
     ): NamedDomainObjectFactory<SourceDirectoriesImpl> {
 

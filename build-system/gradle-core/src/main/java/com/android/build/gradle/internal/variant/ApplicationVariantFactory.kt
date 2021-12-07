@@ -41,7 +41,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -93,7 +93,7 @@ class ApplicationVariantFactory(
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
+        variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
         ): ApplicationVariantImpl {
@@ -112,7 +112,7 @@ class ApplicationVariantFactory(
                 variantData,
                 variantBuilder.dependenciesInfo,
                 transformManager,
-                variantPropertiesApiServices,
+                variantServices,
                 taskCreationServices,
                 globalConfig,
             )

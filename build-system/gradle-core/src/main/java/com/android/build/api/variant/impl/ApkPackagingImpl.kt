@@ -17,22 +17,20 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.DexPackagingOptions
-import com.android.build.api.variant.JniLibsApkPackaging
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 
 class ApkPackagingImpl(
     dslPackagingOptions: com.android.build.api.dsl.PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     minSdk: Int
-) : PackagingImpl(dslPackagingOptions, variantPropertiesApiServices), ApkPackaging {
+) : PackagingImpl(dslPackagingOptions, variantServices), ApkPackaging {
 
     override val dex =
-        DexPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
+        DexPackagingOptionsImpl(dslPackagingOptions, variantServices, minSdk)
 
     override val jniLibs =
-        JniLibsApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
+        JniLibsApkPackagingImpl(dslPackagingOptions, variantServices, minSdk)
 
     override val resources =
-        ResourcesApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
+        ResourcesApkPackagingImpl(dslPackagingOptions, variantServices)
 }

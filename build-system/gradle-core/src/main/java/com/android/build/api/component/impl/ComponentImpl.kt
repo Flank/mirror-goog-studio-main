@@ -67,7 +67,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -105,7 +105,7 @@ abstract class ComponentImpl(
     override val variantScope: VariantScope,
     override val variantData: BaseVariantData,
     override val transformManager: TransformManager,
-    protected val internalServices: VariantPropertiesApiServices,
+    protected val internalServices: VariantServices,
     final override val services: TaskCreationServices,
     final override val global: GlobalTaskCreationConfig,
 ): Component, ComponentCreationConfig, ComponentIdentity by componentIdentity {

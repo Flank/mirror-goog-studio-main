@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.build.gradle.api.AnnotationProcessorOptions
 import com.android.build.gradle.internal.fixtures.FakeListProperty
 import com.android.build.gradle.internal.fixtures.FakeMapProperty
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.google.common.truth.Truth
 import org.gradle.process.CommandLineArgumentProvider
 import org.junit.Rule
@@ -40,7 +40,7 @@ internal class AnnotationProcessorImplTest {
     lateinit var annotationProcessorOptions: AnnotationProcessorOptions
 
     @Mock
-    lateinit var internalServices: VariantPropertiesApiServices
+    lateinit var internalServices: VariantServices
 
     private fun initMocks(
         classNames: List<String>,

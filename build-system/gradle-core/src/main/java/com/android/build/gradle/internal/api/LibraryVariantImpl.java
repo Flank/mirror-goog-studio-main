@@ -24,7 +24,7 @@ import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import javax.inject.Inject;
@@ -52,7 +52,7 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     public LibraryVariantImpl(
             @NonNull LibraryVariantData variantData,
             @NonNull ComponentImpl component,
-            @NonNull VariantPropertiesApiServices services,
+            @NonNull VariantServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         super(component, services, readOnlyObjectProvider, outputs);

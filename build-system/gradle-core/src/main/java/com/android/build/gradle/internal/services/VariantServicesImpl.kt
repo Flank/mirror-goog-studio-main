@@ -32,11 +32,11 @@ import org.gradle.api.provider.SetProperty
 import java.io.File
 import java.util.concurrent.Callable
 
-class VariantPropertiesApiServicesImpl(
+class VariantServicesImpl(
     projectServices: ProjectServices,
     private val forUnitTesting: Boolean = false,
 ): BaseServicesImpl(projectServices),
-    VariantPropertiesApiServices {
+    VariantServices {
     // list of properties to lock when [.lockProperties] is called.
     private val properties = mutableListOf<HasConfigurableValue>()
     // whether the properties have been locked already

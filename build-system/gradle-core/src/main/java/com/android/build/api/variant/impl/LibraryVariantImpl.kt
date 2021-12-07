@@ -24,7 +24,6 @@ import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
-import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.LibraryVariant
@@ -41,7 +40,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -62,7 +61,7 @@ open class  LibraryVariantImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    internalServices: VariantPropertiesApiServices,
+    internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     globalTaskCreationConfig: GlobalTaskCreationConfig,
 ) : VariantImpl(

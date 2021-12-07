@@ -43,7 +43,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.BuilderConstants
@@ -86,7 +86,7 @@ class LibraryVariantFactory(
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
+        variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
         ): LibraryVariantImpl {
@@ -104,7 +104,7 @@ class LibraryVariantFactory(
                         variantScope,
                         variantData,
                         transformManager,
-                        variantPropertiesApiServices,
+                        variantServices,
                         taskCreationServices,
                         globalConfig,
                 )
@@ -161,7 +161,7 @@ class LibraryVariantFactory(
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        services: VariantPropertiesApiServices,
+        services: VariantServices,
         taskContainer: MutableTaskContainer
     ): BaseVariantData {
         return LibraryVariantData(

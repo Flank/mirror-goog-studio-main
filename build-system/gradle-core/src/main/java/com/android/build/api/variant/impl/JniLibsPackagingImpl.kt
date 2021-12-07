@@ -19,15 +19,15 @@ package com.android.build.api.variant.impl
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.gradle.internal.packaging.defaultExcludes
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 
 open class JniLibsPackagingImpl(
     dslPackagingOptions: PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices
+    variantServices: VariantServices
 ) : JniLibsPackaging {
 
     override val excludes =
-        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+        variantServices.setPropertyOf(String::class.java) {
             // subtract defaultExcludes because its patterns are specific to java resources.
             dslPackagingOptions.excludes
                 .minus(defaultExcludes)
@@ -35,12 +35,12 @@ open class JniLibsPackagingImpl(
         }
 
     override val pickFirsts =
-        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+        variantServices.setPropertyOf(String::class.java) {
             dslPackagingOptions.pickFirsts.union(dslPackagingOptions.jniLibs.pickFirsts)
         }
 
     override val keepDebugSymbols =
-        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+        variantServices.setPropertyOf(String::class.java) {
             dslPackagingOptions.doNotStrip.union(dslPackagingOptions.jniLibs.keepDebugSymbols)
         }
 }

@@ -18,45 +18,45 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 
 class ExternalCmakeImpl(
-        mergedExternalNativeCmakeOptions: CoreExternalNativeCmakeOptions,
-        variantPropertiesApiServices: VariantPropertiesApiServices
+    mergedExternalNativeCmakeOptions: CoreExternalNativeCmakeOptions,
+    variantServices: VariantServices
 ): ExternalNativeBuild {
 
     override val abiFilters: SetProperty<String> =
-            variantPropertiesApiServices.setPropertyOf(
+            variantServices.setPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeCmakeOptions.abiFilters,
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val arguments: ListProperty<String> =
-            variantPropertiesApiServices.listPropertyOf(
+            variantServices.listPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeCmakeOptions.arguments,
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cFlags: ListProperty<String> =
-            variantPropertiesApiServices.listPropertyOf(
+            variantServices.listPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeCmakeOptions.getcFlags(),
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cppFlags: ListProperty<String> =
-            variantPropertiesApiServices.listPropertyOf(
+            variantServices.listPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeCmakeOptions.cppFlags,
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val targets: SetProperty<String> =
-            variantPropertiesApiServices.setPropertyOf(
+            variantServices.setPropertyOf(
                 String::class.java,
                 mergedExternalNativeCmakeOptions.targets,
                 disallowUnsafeRead = false, // see b/193722661

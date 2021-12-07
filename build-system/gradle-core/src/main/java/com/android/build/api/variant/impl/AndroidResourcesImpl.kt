@@ -17,7 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.AndroidResources
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.provider.ListProperty
 
 class AndroidResourcesImpl(
@@ -28,18 +28,18 @@ class AndroidResourcesImpl(
 
 internal fun initializeAaptOptionsFromDsl(
     dslAndroidResources: com.android.build.api.dsl.AndroidResources,
-    variantPropertiesApiServices: VariantPropertiesApiServices
+    variantServices: VariantServices
 ) : AndroidResources {
     return AndroidResourcesImpl(
-        ignoreAssetsPatterns = variantPropertiesApiServices.listPropertyOf(
+        ignoreAssetsPatterns = variantServices.listPropertyOf(
             String::class.java,
             dslAndroidResources.ignoreAssetsPattern?.split(':') ?: listOf()
         ),
-        aaptAdditionalParameters = variantPropertiesApiServices.listPropertyOf(
+        aaptAdditionalParameters = variantServices.listPropertyOf(
             String::class.java,
             dslAndroidResources.additionalParameters
         ),
-        noCompress = variantPropertiesApiServices.listPropertyOf(
+        noCompress = variantServices.listPropertyOf(
             String::class.java,
             dslAndroidResources.noCompress
         )

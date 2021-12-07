@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.utils.createPublishingInfoForApp
 import com.android.build.gradle.internal.utils.createPublishingInfoForLibrary
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -61,7 +61,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val signingConfigOverride: SigningConfig?,
     private val manifestDataProvider: ManifestDataProvider,
     private val dslServices: DslServices,
-    private val variantPropertiesApiServices: VariantPropertiesApiServices,
+    private val variantServices: VariantServices,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
     private val oldExtension: BaseExtension,
     private val extension: CommonExtensionT,
@@ -85,7 +85,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             signingConfigOverride: SigningConfig? = null,
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
+            variantServices: VariantServices,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
             oldExtension: BaseExtension,
             extension: CommonExtensionT,
@@ -103,7 +103,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 signingConfigOverride,
                 manifestDataProvider,
                 dslServices,
-                variantPropertiesApiServices,
+                variantServices,
                 nativeBuildSystem,
                 oldExtension,
                 extension,
@@ -338,7 +338,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             productionVariant,
             manifestDataProvider,
             dslServices,
-            variantPropertiesApiServices,
+            variantServices,
             buildDirectory,
             nativeBuildSystem,
             publishingInfo,

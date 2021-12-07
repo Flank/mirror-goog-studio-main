@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
@@ -108,7 +108,7 @@ open class VariantDslInfoImpl internal constructor(
     val dataProvider: ManifestDataProvider,
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
-    private val services: VariantPropertiesApiServices,
+    private val services: VariantServices,
     private val buildDirectory: DirectoryProperty,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
     override val publishInfo: VariantPublishingInfo?,

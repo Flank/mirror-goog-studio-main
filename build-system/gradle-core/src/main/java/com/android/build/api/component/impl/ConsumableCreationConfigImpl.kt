@@ -21,7 +21,7 @@ import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 
@@ -122,7 +122,7 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
      open val minSdkVersionForDexing: AndroidVersion
         get() = config.minSdkVersion
 
-    fun renderscript(internalServices: VariantPropertiesApiServices): Renderscript? {
+    fun renderscript(internalServices: VariantServices): Renderscript? {
         return if (config.buildFeatures.renderScript) {
             internalServices.newInstance(Renderscript::class.java).also {
                 it.supportModeEnabled.set(variantDslInfo.renderscriptSupportModeEnabled)

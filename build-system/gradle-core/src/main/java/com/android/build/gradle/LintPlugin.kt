@@ -20,7 +20,6 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule
 import com.android.build.gradle.internal.dsl.LintImpl
@@ -56,7 +55,6 @@ import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.TaskCreationServicesImpl
-import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions

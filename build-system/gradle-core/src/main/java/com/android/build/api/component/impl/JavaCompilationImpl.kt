@@ -19,12 +19,12 @@ package com.android.build.api.component.impl
 import com.android.build.api.variant.AnnotationProcessor
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.gradle.api.JavaCompileOptions
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 
 class JavaCompilationImpl(
     javaCompileOptions: JavaCompileOptions,
     dataBindingEnabled: Boolean,
-    internalServices: VariantPropertiesApiServices,
+    internalServices: VariantServices,
 ): JavaCompilation {
 
     override val annotationProcessor: AnnotationProcessor =

@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
@@ -78,7 +78,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
+        variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
     ): VariantT
@@ -95,7 +95,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         variantData: TestFixturesVariantData,
         mainVariant: VariantImpl,
         transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
+        variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig
     ): TestFixturesImpl
@@ -112,7 +112,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         variantData: TestVariantData,
         testedVariantProperties: VariantImpl,
         transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
+        variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
     ): UnitTestImpl
@@ -129,7 +129,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         variantData: TestVariantData,
         testedVariantProperties: VariantImpl,
         transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
+        variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
     ): AndroidTestImpl
@@ -141,7 +141,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        services: VariantPropertiesApiServices,
+        services: VariantServices,
         taskContainer: MutableTaskContainer
     ): BaseVariantData
 

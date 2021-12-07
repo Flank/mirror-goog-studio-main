@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.manifest.LazyManifestParser;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.internal.services.ProjectServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.variant.DimensionCombinationImpl;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -61,7 +61,7 @@ public class VariantDslInfoTest {
     private ProductFlavor flavorConfig;
     private BuildType buildType;
     private DslServices dslServices;
-    private VariantPropertiesApiServices variantPropertiesApiServices;
+    private VariantServices variantServices;
 
     @Test
     public void testSigningBuildTypeOverride() {
@@ -297,7 +297,7 @@ public class VariantDslInfoTest {
                         signingOverride,
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
-                        variantPropertiesApiServices,
+                        variantServices,
                         null, /* BuildType */
                         Mockito.mock(BaseExtension.class),
                         Mockito.mock(CommonExtension.class),
@@ -350,8 +350,7 @@ public class VariantDslInfoTest {
                         projectOptions,
                         it -> new File(it.toString()));
         dslServices = FakeServices.createDslServices(projectServices);
-        variantPropertiesApiServices =
-                FakeServices.createVariantPropertiesApiServices(projectServices);
+        variantServices = FakeServices.createVariantPropertiesApiServices(projectServices);
 
         defaultConfig = dslServices.newDecoratedInstance(DefaultConfig.class, "main", dslServices);
         defaultConfig.applicationId("com.foo");

@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -58,7 +58,7 @@ open class ApplicationVariantImpl @Inject constructor(
     variantData: BaseVariantData,
     dependenciesInfoBuilder: DependenciesInfoBuilder,
     transformManager: TransformManager,
-    internalServices: VariantPropertiesApiServices,
+    internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     globalTaskCreationConfig: GlobalTaskCreationConfig,
 ) : VariantImpl(

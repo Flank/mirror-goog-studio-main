@@ -27,7 +27,6 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasTestFixturesBuilder
 import com.android.build.api.variant.TestFixtures
@@ -70,7 +69,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.android.build.gradle.internal.services.VariantBuilderServicesImpl
-import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
+import com.android.build.gradle.internal.services.VariantServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl.Companion.toExecutionEnum
@@ -127,7 +126,7 @@ class VariantManager<
 ) {
 
     private val variantBuilderServices: VariantBuilderServices
-    private val variantPropertiesApiServices: VariantPropertiesApiServicesImpl
+    private val variantPropertiesApiServices: VariantServicesImpl
     private val taskCreationServices: TaskCreationServices
     private val variantFilter: VariantFilter
     private val variants: MutableList<ComponentInfo<VariantBuilderT, VariantT>> =
@@ -1140,7 +1139,7 @@ class VariantManager<
         signingOverride = createSigningOverride()
         variantFilter = VariantFilter(ReadOnlyObjectProvider())
         variantBuilderServices = VariantBuilderServicesImpl(projectServices)
-        variantPropertiesApiServices = VariantPropertiesApiServicesImpl(
+        variantPropertiesApiServices = VariantServicesImpl(
             projectServices,
             // detects whether we are running the plugin under unit test mode
             forUnitTesting = project.hasProperty("_agp_internal_test_mode_")
