@@ -816,6 +816,7 @@ open class LintCliClient : LintClient {
         driver.checkDependencies = flags.isCheckDependencies
         driver.allowSuppress = flags.allowSuppress
         driver.allowBaselineSuppress = flags.allowBaselineSuppress
+        driver.skipAnnotations = flags.skipAnnotations
         val baselineFile = flags.baselineFile
         if (baselineFile != null) {
             val baseline = LintBaseline(this, baselineFile)

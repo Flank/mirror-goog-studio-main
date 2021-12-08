@@ -295,6 +295,7 @@ class GradleModelMocker @JvmOverloads constructor(
         to.isCheckTestSources = flags.isCheckTestSources
         to.isCheckDependencies = flags.isCheckDependencies
         to.isCheckGeneratedSources = flags.isCheckGeneratedSources
+        to.skipAnnotations = flags.skipAnnotations
         to.isShowEverything = flags.isShowEverything
         to.lintConfig = flags.lintConfig
         to.isExplainIssues = flags.isExplainIssues

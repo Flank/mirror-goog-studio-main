@@ -21,7 +21,6 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.asCall
@@ -116,6 +115,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  * processed such that they can do pre- and post-processing.
  */
 internal class UElementVisitor constructor(
+    driver: LintDriver,
     private val parser: UastParser,
     detectors: List<Detector>
 ) {
@@ -224,7 +224,7 @@ internal class UElementVisitor constructor(
 
         val relevantAnnotations: Set<String>?
         if (annotationScanners != null) {
-            annotationHandler = AnnotationHandler(annotationScanners)
+            annotationHandler = AnnotationHandler(driver, annotationScanners)
             relevantAnnotations = annotationHandler.relevantAnnotations
         } else {
             annotationHandler = null
@@ -237,20 +237,14 @@ internal class UElementVisitor constructor(
         try {
             val uastParser = context.uastParser
 
-            val uFile = uastParser.parse(context) ?: run {
-                context.client.log(
-                    Severity.WARNING, null,
-                    "Lint could not build AST for ${context.file}; ignoring file"
-                )
-                return
-            }
+            val uFile = uastParser.parse(context) ?: return
 
             // (Immediate return if null: No need to log this; the parser should be reporting
             // a full warning (such as IssueRegistry#PARSER_ERROR) with details, location, etc.)
 
             val client = context.client
             try {
-                context.setJavaFile(uFile.psi) // needed for getLocation
+                context.setJavaFile(uFile.sourcePsi) // needed for getLocation
                 context.uastFile = uFile
 
                 client.runReadAction(

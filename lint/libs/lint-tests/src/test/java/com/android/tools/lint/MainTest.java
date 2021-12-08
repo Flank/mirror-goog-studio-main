@@ -963,6 +963,96 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {"--check", "HardcodedText", project.getPath()});
     }
 
+    public void testSkipAnnotated() throws Exception {
+        // Tests --skip-annotated
+
+        // This test tests 2 scenarios:
+        // (1) we don't run lint checks inside a class that was annotated @Generated (where the
+        // Generated
+        //     annotation is configured via the --skip-annotated command line flag)
+        // (2) Even from a non-annotated file, for a call from there into a @Generated class, we
+        // don't
+        //     process any annotations from that @Generated class.
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "class Test {\n"
+                                        + "    @androidx.annotation.VisibleForTesting\n"
+                                        + "    public static void hidden() { }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "@javax.annotation.processing.Generated\n"
+                                        + "class TestGenerated {\n"
+                                        + "    @androidx.annotation.VisibleForTesting\n"
+                                        + "    public static void hidden() { }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "class Test2 {\n"
+                                        + "    public static void test1() { Test.hidden(); } // WARN 1\n"
+                                        + "    public static void test2() { TestGenerated.hidden(); } // OK 1\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "@javax.annotation.processing.Generated\n"
+                                        + "class Test3 {\n"
+                                        + "    public static void test1() { Test.hidden(); } // OK 2\n"
+                                        + "    public static void test2() { TestGenerated.hidden(); } // OK 3\n"
+                                        + "}"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "import javax.annotation.processing.Generated\n"
+                                        + "@Generated\n"
+                                        + "fun test() { Test.hidden(); TestGenerated.hidden() } // OK 4\n"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "import javax.annotation.processing.Generated\n"
+                                        + "@Generated\n"
+                                        + "class Test4 {\n"
+                                        + "    fun test() { Test.hidden(); TestGenerated.hidden() } // OK 5\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "@file:Generated(\"something\")\n"
+                                        + "package test.pkg\n"
+                                        + "import javax.annotation.processing.Generated\n"
+                                        + "class Test5 {\n"
+                                        + "    fun test() { Test.hidden(); TestGenerated.hidden() } // OK 6\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR);
+        checkDriver(
+                ""
+                        + "src/test/pkg/Test2.java:3: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]\n"
+                        + "    public static void test1() { Test.hidden(); } // WARN 1\n"
+                        + "                                      ~~~~~~\n"
+                        + "0 errors, 1 warnings",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "--check",
+                    "VisibleForTests",
+                    "--skip-annotated",
+                    "a.b.c,javax.annotation.processing.Generated,d.e.f",
+                    "--ignore",
+                    "LintError",
+                    project.getPath()
+                });
+    }
+
     public void testFatalOnly() throws Exception {
         // This is a lint infrastructure test to make sure we correctly include issues
         // with fatal only

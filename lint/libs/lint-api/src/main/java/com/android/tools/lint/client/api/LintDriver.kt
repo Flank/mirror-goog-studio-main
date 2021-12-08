@@ -366,6 +366,9 @@ class LintDriver(
     var mode: DriverMode = DriverMode.GLOBAL
         private set
 
+    /** Annotation names marking classes to skip during analysis */
+    var skipAnnotations: List<String>? = null
+
     /**
      * Returns the project containing a given file, or null if not
      * found. This searches only among the currently checked project
@@ -1478,7 +1481,7 @@ class LintDriver(
                     // Gradle Kotlin Script? Use Java parsing mechanism.
                     val uFile = context.uastParser.parse(context)
                     if (uFile != null) {
-                        context.setJavaFile(uFile.psi) // needed for getLocation
+                        context.setJavaFile(uFile.sourcePsi) // needed for getLocation
                         context.uastFile = uFile
                         fireEvent(EventType.SCANNING_FILE, context)
 
@@ -2037,7 +2040,7 @@ class LintDriver(
         val testContexts = sourceList.testContexts
         val testFixturesContexts = sourceList.testFixturesContexts
         val generatedContexts = sourceList.generatedContexts
-        val uElementVisitor = UElementVisitor(parser, uastScanners)
+        val uElementVisitor = UElementVisitor(this, parser, uastScanners)
 
         if (visitUastDetectors(srcContexts, uElementVisitor)) {
             return
@@ -2064,7 +2067,7 @@ class LintDriver(
             else
                 filterTestScanners(uastScanners)
             if (testScanners.isNotEmpty()) {
-                val uTestVisitor = UElementVisitor(parser, testScanners)
+                val uTestVisitor = UElementVisitor(this, parser, testScanners)
                 if (visitUastDetectors(testContexts, uTestVisitor)) {
                     return
                 }

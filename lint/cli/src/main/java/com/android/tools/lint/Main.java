@@ -184,6 +184,7 @@ public class Main {
     private static final String ARG_ANALYZE_ONLY = "--analyze-only";
     private static final String ARG_REPORT_ONLY = "--report-only";
     private static final String ARG_CACHE_DIR = "--cache-dir";
+    private static final String ARG_SKIP_ANNOTATED = "--skip-annotated";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
@@ -1241,6 +1242,15 @@ public class Main {
                     }
                     libraries.add(input);
                 }
+            } else if (arg.equals(ARG_SKIP_ANNOTATED)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing annotation name");
+                    return ERRNO_INVALID_ARGS;
+                }
+                String paths = args[++index];
+                for (String annotation : paths.split(",")) {
+                    flags.addSkipAnnotation(annotation);
+                }
             } else if (arg.equals(ARG_BUILD_API)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing compileSdkVersion");
@@ -2037,11 +2047,12 @@ public class Main {
         String command = "lint";
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
-        out.println("Flags:\n");
 
         printUsage(
                 out,
                 new String[] {
+                    "",
+                    "General:",
                     ARG_HELP,
                     "This message.",
                     ARG_HELP + " <topic>",
@@ -2126,6 +2137,9 @@ public class Main {
                     "Opposite of "
                             + ARG_ALLOW_SUPPRESS
                             + ": do not allow suppressing restricted issues",
+                    ARG_SKIP_ANNOTATED,
+                    "Comma separated list of annotations (by fully qualified name) which indicate that "
+                            + "lint should ignore this compilation unit (only allowed on top level classes and files)",
                     "",
                     "\nOutput Options:",
                     ARG_QUIET,

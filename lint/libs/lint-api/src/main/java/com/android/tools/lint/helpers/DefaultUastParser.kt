@@ -35,6 +35,7 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiPlainTextFile
@@ -42,9 +43,12 @@ import com.intellij.psi.impl.light.LightElement
 import com.intellij.psi.impl.source.tree.TreeElement
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
+import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
@@ -169,8 +173,50 @@ open class DefaultUastParser(
             return null
         }
 
+        val skipAnnotations = context.driver.skipAnnotations
+        if (skipAnnotations != null && isAnnotatedWithSkipAnnotation(psiFile, skipAnnotations)) {
+            return null
+        }
+
         return UastFacade.convertElementWithParent(psiFile, UFile::class.java) as? UFile
             ?: return null
+    }
+
+    /**
+     * Checks whether this [psiFile] is annotated with any of the skip
+     * annotations. We do this at the PSI level instead of via UAST
+     * because these annotations are typically used to avoid processing
+     * large and costly generated classes, so it's worthwhile skipping
+     * the UAST conversion.
+     */
+    private fun isAnnotatedWithSkipAnnotation(psiFile: PsiFile, skipAnnotations: List<String>): Boolean {
+        if (psiFile is PsiJavaFile) {
+            val topLevel = psiFile.classes.firstOrNull() ?: return false
+            //noinspection ExternalAnnotations
+            return topLevel.annotations.any { skipAnnotations.contains(it.qualifiedName) }
+        } else if (psiFile is KtFile) {
+            return containsAnnotation(skipAnnotations, psiFile.annotationEntries) ||
+                containsAnnotation(skipAnnotations, psiFile.declarations.firstOrNull()?.annotationEntries ?: emptyList())
+        }
+        return false
+    }
+
+    /**
+     * Returns true if any of the given Kotlin [annotations] are any of
+     * the fully qualified [names]
+     */
+    private fun containsAnnotation(names: List<String>, annotations: List<KtAnnotationEntry>): Boolean {
+        for (annotation in annotations) {
+            if (names.any { it.endsWith(annotation.shortName?.identifier ?: "?") }) {
+                val uAnnotation = UastFacade.convertElement(annotation, null, UAnnotation::class.java) as? UAnnotation
+                    ?: continue
+                if (names.contains(uAnnotation.qualifiedName)) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     /**

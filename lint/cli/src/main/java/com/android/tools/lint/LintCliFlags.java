@@ -27,6 +27,7 @@ import com.android.tools.lint.model.LintModelSeverity;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +49,7 @@ public class LintCliFlags {
     private Set<Category> enabledCategories = null;
     private Set<Category> checkCategories = null;
     private Map<String, LintModelSeverity> severities;
+    private List<String> skipAnnotated = null;
     private boolean setExitCode;
     private boolean fullPath;
     private boolean showLines = true;
@@ -799,5 +801,37 @@ public class LintCliFlags {
     /** If true, continue normally even after a baseline file has been created. */
     public void setContinueAfterBaselineCreated(boolean continueAfterBaselineCreated) {
         this.continueAfterBaselineCreated = continueAfterBaselineCreated;
+    }
+
+    /**
+     * Gets a list of (fully qualified) annotation names that indicate that the class should be
+     * skipped in analysis.
+     *
+     * @return the list, or null if nothing has been configured
+     */
+    @Nullable
+    public List<String> getSkipAnnotations() {
+        return skipAnnotated;
+    }
+
+    /**
+     * Sets an optional list of annotation names marking code to be skipped during analysis.
+     *
+     * @param skipAnnotated the new list, or null to clear
+     */
+    public void setSkipAnnotations(@Nullable List<String> skipAnnotated) {
+        this.skipAnnotated = skipAnnotated;
+    }
+
+    /**
+     * Adds a new annotation which indicates that a class should be skipped in analysis.
+     *
+     * @param annotation the fully qualified name
+     */
+    public void addSkipAnnotation(@NonNull String annotation) {
+        if (skipAnnotated == null) {
+            skipAnnotated = new ArrayList<>();
+        }
+        skipAnnotated.add(annotation);
     }
 }

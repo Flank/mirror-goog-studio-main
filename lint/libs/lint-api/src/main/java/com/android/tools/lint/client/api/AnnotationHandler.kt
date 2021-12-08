@@ -110,9 +110,15 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  * Looks up annotations on method calls and enforces the various things
  * they express.
  */
-internal class AnnotationHandler(private val scanners: Multimap<String, SourceCodeScanner>) {
+internal class AnnotationHandler(private val driver: LintDriver, private val scanners: Multimap<String, SourceCodeScanner>) {
 
     val relevantAnnotations: Set<String> = HashSet<String>(scanners.keys())
+
+    init {
+        driver.skipAnnotations?.forEach {
+            (relevantAnnotations as MutableSet).add(it)
+        }
+    }
 
     private fun checkContextAnnotations(
         context: JavaContext,
@@ -452,6 +458,16 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val pkg = evaluator.getPackage(containingClass)
         if (pkg != null) {
             list.addAnnotations(evaluator, pkg, PACKAGE)
+        }
+
+        if (list.isNotEmpty()) {
+            val skipAnnotations = driver.skipAnnotations
+            if (skipAnnotations != null) {
+                if (list.any { skipAnnotations.contains(it.qualifiedName) }) {
+                    list.clear()
+                    return list
+                }
+            }
         }
 
         return list
