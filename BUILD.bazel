@@ -112,7 +112,6 @@ maven_repository(
         "//tools/adt/idea/project-system-gradle-psd:__pkg__",
         "//tools/base/bazel/test/gradle:__pkg__",
         "//tools/base/build-system:__pkg__",
-        "//tools/base/build-system/integration-test:__subpackages__",
         "//tools/base/gmaven:__pkg__",
     ],
 )
