@@ -1012,7 +1012,7 @@ class GradleModelMocker @JvmOverloads constructor(
             }
             key.startsWith("android.compileSdkVersion ") ||
                 key.startsWith("android.compileSdk ") ||
-                key.startsWith("Android.compileSdkPreview ") -> {
+                key.startsWith("android.compileSdkPreview ") -> {
                 val value = getUnquotedValue(key)
                 updateModule { it.copy(compileTarget = if (Character.isDigit(value[0])) "android-$value" else value) }
             }

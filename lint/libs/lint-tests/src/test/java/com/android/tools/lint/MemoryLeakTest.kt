@@ -17,6 +17,7 @@
 @file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE") // accessing sun.tools.attach APIs
 package com.android.tools.lint
 
+import com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.GradleDetectorTest
@@ -85,11 +86,11 @@ class MemoryLeakTest {
                 apply plugin: 'com.android.application'
 
                 android {
-                    compileSdkVersion 30
+                    compileSdkVersion $HIGHEST_KNOWN_STABLE_API
                     defaultConfig {
                         applicationId "com.gharrma.sampleapp"
                         minSdkVersion 19
-                        targetSdkVersion 30
+                        targetSdkVersion $HIGHEST_KNOWN_STABLE_API
                         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                     }
                 }
