@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
+import org.junit.ComparisonFailure
 
 class TypedefDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = TypedefDetector()
@@ -1573,7 +1574,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
     }
 
     fun testZeroAlias() {
-        lint().files(
+        val task = lint().files(
             java(
                 """
                 package test.pkg;
@@ -1594,14 +1595,32 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect(
-            """
-            src/test/pkg/Test.java:14: Error: Must be one or more of: PendingIntent.FLAG_ONE_SHOT, PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_CANCEL_CURRENT, PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_IMMUTABLE, Intent.FILL_IN_ACTION, Intent.FILL_IN_DATA, Intent.FILL_IN_CATEGORIES, Intent.FILL_IN_COMPONENT, Intent.FILL_IN_PACKAGE, Intent.FILL_IN_SOURCE_BOUNDS, Intent.FILL_IN_SELECTOR, Intent.FILL_IN_CLIP_DATA [WrongConstant]
-                            Test.UNRELATED, null);
-                            ~~~~~~~~~~~~~~
-            1 errors, 0 warnings
-            """
-        )
+        ).run()
+
+        try {
+            // Correct string as of API level 31. When lint runs from Bazel, it's still picking up API level 30 (because
+            // //prebuilts/studio/sdk:platforms/latest still points to android-30), but when running from Studio, since
+            // the prebuilts folder actually contains android-31, and the test doesn't specify a compileSdkVersion, it
+            // will pick the latest, and in android-31 there is one more allowed constant.
+            task.expect(
+                """
+                src/test/pkg/Test.java:14: Error: Must be one or more of: PendingIntent.FLAG_ONE_SHOT, PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_CANCEL_CURRENT, PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_IMMUTABLE, PendingIntent.FLAG_MUTABLE, Intent.FILL_IN_ACTION, Intent.FILL_IN_DATA, Intent.FILL_IN_CATEGORIES, Intent.FILL_IN_COMPONENT, Intent.FILL_IN_PACKAGE, Intent.FILL_IN_SOURCE_BOUNDS, Intent.FILL_IN_SELECTOR, Intent.FILL_IN_CLIP_DATA [WrongConstant]
+                                Test.UNRELATED, null);
+                                ~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+        } catch (failure: ComparisonFailure) {
+            // This can be deleted once we're using android-31 everywhere.
+            task.expect(
+                """
+                src/test/pkg/Test.java:14: Error: Must be one or more of: PendingIntent.FLAG_ONE_SHOT, PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_CANCEL_CURRENT, PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_IMMUTABLE, Intent.FILL_IN_ACTION, Intent.FILL_IN_DATA, Intent.FILL_IN_CATEGORIES, Intent.FILL_IN_COMPONENT, Intent.FILL_IN_PACKAGE, Intent.FILL_IN_SOURCE_BOUNDS, Intent.FILL_IN_SELECTOR, Intent.FILL_IN_CLIP_DATA [WrongConstant]
+                                Test.UNRELATED, null);
+                                ~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+        }
     }
 
     fun test73783847() {
