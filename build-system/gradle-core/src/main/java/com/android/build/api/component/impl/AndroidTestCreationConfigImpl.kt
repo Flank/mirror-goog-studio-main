@@ -19,6 +19,6 @@ import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 
 class AndroidTestCreationConfigImpl(
-    override val config: AndroidTestCreationConfig,
+    config: AndroidTestCreationConfig,
     variantDslInfo: VariantDslInfo
-) : ApkCreationConfigImpl(config, variantDslInfo)
+) : ApkCreationConfigImpl<AndroidTestCreationConfig>(config, variantDslInfo)

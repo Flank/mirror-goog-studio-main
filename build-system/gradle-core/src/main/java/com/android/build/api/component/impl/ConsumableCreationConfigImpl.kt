@@ -45,8 +45,8 @@ import com.android.builder.errors.IssueReporter
  * @param globalScope pointer to the global scope to access project wide options.
  * @param variantDslInfo variant configuration coming from the DSL.
  */
-open class ConsumableCreationConfigImpl(
-        open val config: ConsumableCreationConfig,
+open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
+        val config: T,
         val variantDslInfo: VariantDslInfo) {
 
     val dexingType: DexingType
