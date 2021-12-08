@@ -71,7 +71,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":generateDebugResources" to UP_TO_DATE,
         ":generateDebugResValues" to FROM_CACHE,
         ":javaPreCompileDebug" to FROM_CACHE,
-        ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
+        ":mergeDebugResources" to FROM_CACHE,
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
         ":processDebugMainManifest" to FROM_CACHE,
@@ -183,6 +183,8 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         // Some tasks are no longer cacheable
         val updatedExpectedTaskStates = expectedTaskStates.toMutableMap()
         updatedExpectedTaskStates[":dataBindingGenBaseClassesDebug"] = DID_WORK
+        updatedExpectedTaskStates[":mergeDebugResources"] = DID_WORK
+
         if (withKotlin) {
             updatedExpectedTaskStates[":kaptDebugKotlin"] = DID_WORK
         } else {

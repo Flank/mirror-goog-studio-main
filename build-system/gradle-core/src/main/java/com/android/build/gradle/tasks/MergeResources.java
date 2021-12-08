@@ -195,10 +195,6 @@ public abstract class MergeResources extends NewIncrementalTask {
     @Nested
     public abstract Aapt2Input getAapt2();
 
-    // TODO(141301405): when we compile resources AAPT2 stores the absolute path of the raw
-    // resource in the proto (.flat) file, so we need to mark those inputs with absolute
-    // path sensitivity (e.g. big merge in app). Otherwise just using the relative path
-    // sensitivity is enough (e.g. merges in libraries).
     @Classpath
     @InputFiles
     @Incremental
@@ -209,6 +205,12 @@ public abstract class MergeResources extends NewIncrementalTask {
     @IgnoreEmptyDirectories
     @Incremental
     public abstract ConfigurableFileCollection getRawLocalResourcesProcessRes();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @IgnoreEmptyDirectories
+    @Incremental
+    public abstract ConfigurableFileCollection getRawLocalResourcesProcessResRelative();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -410,9 +412,13 @@ public abstract class MergeResources extends NewIncrementalTask {
         ResourcePreprocessor preprocessor = getPreprocessor();
         File incrementalFolder = getIncrementalFolder().get().getAsFile();
 
+        ConfigurableFileCollection rawLocalResourcesProcessRes =
+                getRelativePathsEnabled().get()
+                        ? getRawLocalResourcesProcessResRelative()
+                        : getRawLocalResourcesProcessRes();
         ConfigurableFileCollection rawLocalResources =
                 processResources
-                        ? getRawLocalResourcesProcessRes()
+                        ? rawLocalResourcesProcessRes
                         : getRawLocalResourcesNoProcessRes();
         Iterable<FileChange> rawResourceChanges = changedInputs.getFileChanges(rawLocalResources);
         Iterable<FileChange> libraryResourceChanges =
@@ -1087,12 +1093,20 @@ public abstract class MergeResources extends NewIncrementalTask {
             task.dependsOn(creationConfig.getTaskContainer().getResourceGenTask());
 
             if (processResources) {
-                task.getRawLocalResourcesProcessRes()
-                        .setFrom(task.getSourceSetInputs().getResourceSourceSets());
+                if (creationConfig.getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP)) {
+                    task.getRawLocalResourcesProcessResRelative()
+                            .setFrom(task.getSourceSetInputs().getResourceSourceSets());
+                } else {
+                    task.getRawLocalResourcesProcessRes()
+                            .setFrom(task.getSourceSetInputs().getResourceSourceSets());
+                }
             } else {
                 task.getRawLocalResourcesNoProcessRes()
                         .setFrom(task.getSourceSetInputs().getResourceSourceSets());
             }
+
             task.getRawLocalResourcesProcessRes().disallowChanges();
             task.getRawLocalResourcesNoProcessRes().disallowChanges();
 
@@ -1137,9 +1151,13 @@ public abstract class MergeResources extends NewIncrementalTask {
             // resource sets that are outside of the root project directory, so we need to collect
             // the latter set.
             File rootProjectDir = task.getProject().getRootDir();
+            ConfigurableFileCollection rawLocalResourcesProcessRes =
+                    task.getRelativePathsEnabled().get()
+                            ? task.getRawLocalResourcesProcessResRelative()
+                            : task.getRawLocalResourcesProcessRes();
             ConfigurableFileCollection resourceSourceSets =
                     task.processResources
-                            ? task.getRawLocalResourcesProcessRes()
+                            ? rawLocalResourcesProcessRes
                             : task.getRawLocalResourcesNoProcessRes();
 
             for (File resDir : resourceSourceSets.getFiles()) {

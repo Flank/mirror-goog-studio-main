@@ -100,8 +100,7 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "lintVitalReport", "", listOf("Release")),
             /* b/181142260 */
             TaskInfo(DID_WORK, "merge", "JavaResource", listOf("Debug", "Release")),
-            /* Bug 141301405 */
-            TaskInfo(DID_WORK, "merge", "Resources", listOf("Debug", "Release")),
+            TaskInfo(FROM_CACHE, "merge", "Resources", listOf("Debug", "Release")),
             /* Bug 74595859 */
             TaskInfo(DID_WORK, "package", "", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "merge", "ArtProfile", listOf("Release")),

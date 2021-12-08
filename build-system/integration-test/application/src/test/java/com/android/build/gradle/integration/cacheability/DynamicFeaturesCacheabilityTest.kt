@@ -132,8 +132,13 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:processManifestDebugForFeature",
                 ).plus(
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                            setOf(":feature1:processDebugResources",
-                                    ":feature2:processDebugResources")
+                            setOf(
+                                ":feature1:processDebugResources",
+                                ":feature2:processDebugResources",
+                                ":app:mergeDebugResources",
+                                ":feature1:mergeDebugResources",
+                                ":feature2:mergeDebugResources",
+                            )
                         } else {
                             emptySet()
                         }
@@ -164,7 +169,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:generateDebugLintModel", // intentionally not cacheable
                     ":app:lintDebug", // intentionally not cacheable
                     ":app:lintReportDebug", // intentionally not cacheable
-                    ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:preDebugBuild", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppPreBuildTask]*/
@@ -181,7 +185,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:extractProguardFiles", // intentionally not cacheable
                     ":feature1:featureDebugWriter",
                     ":feature1:generateDebugLintModel", // intentionally not cacheable
-                    ":feature1:mergeDebugResources",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
                     ":feature1:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
@@ -193,22 +196,26 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:extractProguardFiles", // intentionally not cacheable
                     ":feature2:featureDebugWriter",
                     ":feature2:generateDebugLintModel", // intentionally not cacheable
-                    ":feature2:mergeDebugResources",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:packageDebug",
                     ":feature2:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
 
                 ).plus(
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                            setOf(":app:mapDebugSourceSetPaths",
-                                    ":feature1:mapDebugSourceSetPaths",
-                                    ":feature2:mapDebugSourceSetPaths"
+                            setOf(
+                                ":app:mapDebugSourceSetPaths",
+                                ":feature1:mapDebugSourceSetPaths",
+                                ":feature2:mapDebugSourceSetPaths"
                             )
                         } else {
                             setOf(
-                                    ":app:processDebugResources",
-                                    ":feature1:processDebugResources",
-                                    ":feature2:processDebugResources")
+                                ":app:processDebugResources",
+                                ":feature1:processDebugResources",
+                                ":feature2:processDebugResources",
+                                ":app:mergeDebugResources",
+                                ":feature1:mergeDebugResources",
+                                ":feature2:mergeDebugResources"
+                            )
                         }
                 ),
                 SKIPPED to setOf(
