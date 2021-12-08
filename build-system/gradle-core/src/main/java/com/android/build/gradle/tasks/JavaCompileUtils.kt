@@ -40,6 +40,7 @@ import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -304,6 +305,6 @@ private fun checkSdkCompatibility(compileSdkVersion: String, issueReporter: Issu
     }
 }
 
-class JdkImageInput(@get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) val jdkImage: FileCollection) : CommandLineArgumentProvider {
+class JdkImageInput(@get:Classpath val jdkImage: FileCollection) : CommandLineArgumentProvider {
     override fun asArguments() = listOf("--system", jdkImage.singleFile.resolve(JDK_IMAGE_OUTPUT_DIR).absolutePath)
 }
