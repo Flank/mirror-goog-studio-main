@@ -54,8 +54,6 @@ interface NdkBuild {
      *
      * since 2.2.0
      */
-    @get:Incubating
-    @set:Incubating
     var path: File?
 
     /**
@@ -80,7 +78,6 @@ interface NdkBuild {
      *
      * since 4.0.0
      */
-    @Incubating
     fun path(any: Any)
 
     /**
@@ -112,8 +109,6 @@ interface NdkBuild {
      *
      * since 3.0.0
      */
-    @get:Incubating
-    @set:Incubating
     var buildStagingDirectory: File?
 
     /**
@@ -145,6 +140,5 @@ interface NdkBuild {
      *
      * since 4.0.0
      */
-    @Incubating
     fun buildStagingDirectory(any: Any)
 }

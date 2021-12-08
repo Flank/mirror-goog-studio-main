@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-84f885356bcb08817f3f983ea7c490935b0a6891dbd56ab69cef53472d6f2cd0
+00e2728ca8f00d5a0ef700350f4c43488b9bfd68090507d36c6c4fbee282ab60
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -145,6 +145,14 @@ com.android.build.api.dsl.BundleDensity
 com.android.build.api.dsl.BundleLanguage
 com.android.build.api.dsl.BundleTexture
 com.android.build.api.dsl.Cmake
+com.android.build.api.dsl.Cmake.buildStagingDirectory: void (java.lang.Object)
+com.android.build.api.dsl.Cmake.getBuildStagingDirectory: java.io.File ()
+com.android.build.api.dsl.Cmake.getPath: java.io.File ()
+com.android.build.api.dsl.Cmake.getVersion: java.lang.String ()
+com.android.build.api.dsl.Cmake.path: void (java.lang.Object)
+com.android.build.api.dsl.Cmake.setBuildStagingDirectory: void (java.io.File)
+com.android.build.api.dsl.Cmake.setPath: void (java.io.File)
+com.android.build.api.dsl.Cmake.setVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension$DefaultImpls
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
@@ -223,6 +231,12 @@ com.android.build.api.dsl.MultipleVariants.allVariants: void ()
 com.android.build.api.dsl.MultipleVariants.includeBuildTypeValues: void (java.lang.String[])
 com.android.build.api.dsl.MultipleVariants.includeFlavorDimensionAndValues: void (java.lang.String, java.lang.String[])
 com.android.build.api.dsl.NdkBuild
+com.android.build.api.dsl.NdkBuild.buildStagingDirectory: void (java.lang.Object)
+com.android.build.api.dsl.NdkBuild.getBuildStagingDirectory: java.io.File ()
+com.android.build.api.dsl.NdkBuild.getPath: java.io.File ()
+com.android.build.api.dsl.NdkBuild.path: void (java.lang.Object)
+com.android.build.api.dsl.NdkBuild.setBuildStagingDirectory: void (java.io.File)
+com.android.build.api.dsl.NdkBuild.setPath: void (java.io.File)
 com.android.build.api.dsl.PackagingOptions$DefaultImpls
 com.android.build.api.dsl.PostProcessing$DefaultImpls
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware, com.android.build.api.dsl.HasInitWith
