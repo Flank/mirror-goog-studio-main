@@ -33,13 +33,18 @@ import com.android.tools.lint.client.api.JarFileIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
+import com.android.tools.lint.detector.api.BooleanOption;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.FileOption;
+import com.android.tools.lint.detector.api.FloatOption;
+import com.android.tools.lint.detector.api.IntOption;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintModelModuleProject;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Option;
 import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -60,6 +65,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -126,6 +132,7 @@ public class TestLintTask {
     File tempDir;
     TestFile baseline;
     File baselineFile;
+    Map<String, String> configuredOptions = null;
     TestFile overrideConfig;
     File overrideConfigFile;
     Set<Desugaring> desugaring;
@@ -658,6 +665,82 @@ public class TestLintTask {
         ensurePreRun();
         optionSetter = setter;
         return this;
+    }
+
+    /**
+     * Configures the issue [Option] of the given [key] with the given string [value]
+     *
+     * @param key the option id
+     * @param value the option value as a string
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOption(@NonNull String key, @NonNull String value) {
+        ensurePreRun();
+        if (configuredOptions == null) {
+            configuredOptions = new LinkedHashMap<>();
+        }
+        configuredOptions.put(key, value);
+        return this;
+    }
+
+    /**
+     * Configures the given [option] with the given string [value]
+     *
+     * @param option the option to configure
+     * @param value the option value as a string
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOption(@NonNull Option option, @NonNull String value) {
+        ensurePreRun();
+        return configureOption(option.getName(), value);
+    }
+
+    /**
+     * Configures the given [option] with the given [value]
+     *
+     * @param option the option to configure
+     * @param value the option value
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOption(@NonNull BooleanOption option, boolean value) {
+        ensurePreRun();
+        return configureOption(option.getName(), Boolean.toString(value));
+    }
+
+    /**
+     * Configures the given [option] with the given [value]
+     *
+     * @param option the option to configure
+     * @param value the option value
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOption(@NonNull IntOption option, int value) {
+        ensurePreRun();
+        return configureOption(option.getName(), Integer.toString(value));
+    }
+
+    /**
+     * Configures the given [option] with the given [value]
+     *
+     * @param option the option to configure
+     * @param value the option value
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOption(@NonNull FloatOption option, float value) {
+        ensurePreRun();
+        return configureOption(option.getName(), Float.toString(value));
+    }
+
+    /**
+     * Configures the given [option] with the given [value]
+     *
+     * @param option the option to configure
+     * @param value the option value
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOption(@NonNull FileOption option, File value) {
+        ensurePreRun();
+        return configureOption(option.getName(), LintTestUtils.portablePath(value.getPath()));
     }
 
     /**

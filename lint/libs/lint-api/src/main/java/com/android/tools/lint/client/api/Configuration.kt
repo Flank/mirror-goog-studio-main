@@ -22,6 +22,7 @@ import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Option
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
@@ -209,6 +210,20 @@ abstract class Configuration(
             return it
         }
         return parent?.getOption(issue, name, default) ?: default
+    }
+
+    /**
+     * Returns the value for the given [option], or null if it has not
+     * been configured.
+     */
+    open fun getOption(option: Option): Any? {
+        // Using null as the default here: if not defined in the override
+        // configuration, we don't want to just return the default, we want
+        // to proceed with the non-override configurations
+        overrides?.getOption(option)?.let {
+            return it
+        }
+        return parent?.getOption(option)
     }
 
     /**
