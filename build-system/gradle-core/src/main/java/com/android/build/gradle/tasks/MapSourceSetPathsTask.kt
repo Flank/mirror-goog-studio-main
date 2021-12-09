@@ -8,6 +8,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
@@ -42,24 +43,22 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
     @get:Input
     @get:Optional
     val generatedResDir: Provider<String>
-        get() = sourceSetInputs.generatedResDir.map { it.asFile.absolutePath }
+        get() = sourceSetInputs.generatedResDir.getLocationOnlyFilepathProvider()
 
     @get:Input
     @get:Optional
     val mergeResourcesOutputDir: Provider<String>
-        get() = sourceSetInputs.mergeResourcesOutputDir.map {
-            it.asFile.absolutePath
-        }
+        get() = sourceSetInputs.mergeResourcesOutputDir.getLocationOnlyFilepathProvider()
 
     @get:Input
     @get:Optional
     val renderscriptResOutputDir: Provider<String>
-        get() = sourceSetInputs.renderscriptResOutputDir.map { it.asFile.absolutePath }
+        get() = sourceSetInputs.renderscriptResOutputDir.getLocationOnlyFilepathProvider()
 
     @get:Input
     @get:Optional
     val incrementalMergeDir: Provider<String>
-        get() = sourceSetInputs.incrementalMergedDir.map { it.asFile.absolutePath }
+        get() = sourceSetInputs.incrementalMergedDir.getLocationOnlyFilepathProvider()
 
     @get:Input
     val localResources: MapProperty<String, FileCollection>
@@ -87,6 +86,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             projectPath = projectPath.get(),
             output = filepathMappingFile.get().asFile
         )
+    }
+
+    private fun DirectoryProperty.getLocationOnlyFilepathProvider() : Provider<String> {
+        return this.locationOnly.map { it.asFile.absolutePath }
     }
 
     internal class CreateAction(
