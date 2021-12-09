@@ -58,6 +58,7 @@ fun assertRunnerConfigProto(
     testCoverageConfig: String = "",
     additionalTestOutputConfig: String = "",
     shardingConfig: String = "",
+    emulatorGpuFlag: String = "auto-no-window",
     uninstallIncompatibleApks: Boolean = false,
 ) {
     val deviceProviderProto = if (useGradleManagedDeviceProvider) { """
@@ -87,6 +88,7 @@ fun assertRunnerConfigProto(
                 }
               }
               gradle_dsl_device_name: "deviceName"
+              emulator_gpu: "$emulatorGpuFlag"
             }
             adb_server_port: 5037
           }

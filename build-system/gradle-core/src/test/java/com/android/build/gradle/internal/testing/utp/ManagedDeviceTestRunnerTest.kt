@@ -96,6 +96,7 @@ class ManagedDeviceTestRunnerTest {
                 any(),
                 any(),
                 any(),
+                any(),
                 nullable(ShardConfig::class.java))).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
@@ -131,6 +132,7 @@ class ManagedDeviceTestRunnerTest {
             mockRetentionConfig,
             useOrchestrator = false,
             numShards,
+            "auto-no-window",
             Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, resultsDir, _ ->
             utpInvocationCount++

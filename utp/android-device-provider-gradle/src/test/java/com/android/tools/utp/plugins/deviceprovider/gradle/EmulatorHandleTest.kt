@@ -42,6 +42,7 @@ import org.mockito.MockitoAnnotations
 class EmulatorHandleTest {
     private companion object {
         const val emulatorPath = "/path/to/emulator"
+	const val emulatorGpuFlag = "auto-no-window"
         const val avdName = "dev29_aosp_x86_Pixel_2"
         const val avdId = "someUniqueIdHere"
         const val avdFolder = "/path/to/gradle/avd"
@@ -61,7 +62,7 @@ class EmulatorHandleTest {
         `when`(subprocessComponent.subprocess()).thenReturn(subprocess)
 
         emulatorHandle = EmulatorHandleImpl(subprocessComponent)
-        emulatorHandle.configure(emulatorPath)
+        emulatorHandle.configure(emulatorPath, emulatorGpuFlag)
     }
 
     @Test

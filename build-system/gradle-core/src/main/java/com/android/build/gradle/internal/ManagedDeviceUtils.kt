@@ -19,6 +19,8 @@ package com.android.build.gradle.internal
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.CpuArchitecture
 import com.android.utils.osArchitecture
@@ -86,3 +88,6 @@ fun computeAbiFromArchitecture(require64Bit: Boolean, apiLevel: Int, vendor: Str
         else -> "x86_64"
     }
 }
+
+fun computeManagedDeviceEmulatorMode(projectOptions: ProjectOptions) =
+    projectOptions[StringOption.GRADLE_MANAGED_DEVICE_EMULATOR_GPU_MODE] ?: "auto-no-window"

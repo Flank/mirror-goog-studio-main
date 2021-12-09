@@ -113,7 +113,11 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         enableDisplay = customConfig.managedDevice.enableDisplay
         adbServerPort = customConfig.adbServerPort
         adbManager.configure(androidSdk.adbPath)
-        emulatorHandle.configure(PathProto.Path.parseFrom(customConfig.managedDevice.emulatorPath.value).path)
+        emulatorHandle.configure(
+                PathProto.Path.parseFrom(
+                        customConfig.managedDevice.emulatorPath.value
+                ).path,
+                customConfig.managedDevice.emulatorGpu)
     }
 
     private fun makeDevice(): AndroidDevice {
@@ -121,7 +125,7 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
                 avdName,
                 avdFolder,
                 avdId,
-                enableDisplay
+                enableDisplay,
         )
 
         val targetSerial = findSerial()

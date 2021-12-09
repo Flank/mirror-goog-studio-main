@@ -29,7 +29,6 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
     private companion object {
         private const val EMULATOR_NO_WINDOW = "-no-window"
         private const val EMULATOR_GPU = "-gpu"
-        private const val EMULATOR_GPU_AUTO_NO_WINDOW = "auto-no-window"
         private const val EMULATOR_NO_AUDIO = "-no-audio"
         private const val EMULATOR_NO_BOOT_ANIM = "-no-boot-anim"
         private const val EMULATOR_READ_ONLY = "-read-only"
@@ -37,10 +36,13 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
 
     private lateinit var emulatorPath: String
 
+    private lateinit var emulatorGpuFlag: String
+
     private lateinit var processHandle: Handle
 
-    override fun configure(emulatorPath: String) {
+    override fun configure(emulatorPath: String, emulatorGpuFlag: String) {
         this.emulatorPath = emulatorPath
+    this.emulatorGpuFlag = emulatorGpuFlag
     }
 
     override fun isAlive() =
@@ -63,7 +65,7 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
             args.add(EMULATOR_NO_AUDIO)
         }
         args.add(EMULATOR_GPU)
-        args.add(EMULATOR_GPU_AUTO_NO_WINDOW)
+        args.add(emulatorGpuFlag)
         args.add(EMULATOR_READ_ONLY)
         args.add(EMULATOR_NO_BOOT_ANIM)
         args.add("-id")

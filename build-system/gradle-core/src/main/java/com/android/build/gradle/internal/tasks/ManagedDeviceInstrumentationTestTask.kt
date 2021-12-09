@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
+import com.android.build.gradle.internal.computeManagedDeviceEmulatorMode
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -113,6 +114,9 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         @get: Internal
         abstract val utpLoggingLevel: Property<Level>
 
+        @get: Input
+        abstract val emulatorGpuFlag: Property<String>
+
         fun createTestRunner(workerExecutor: WorkerExecutor): ManagedDeviceTestRunner {
 
             Preconditions.checkArgument(
@@ -132,6 +136,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 retentionConfig.get(),
                 useOrchestrator,
                 testShardsSize.getOrNull(),
+                emulatorGpuFlag.get(),
                 utpLoggingLevel.get()
             )
         }
@@ -403,6 +408,10 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 task.testRunnerFactory.utpDependencies
                         .resolveDependencies(task.project.configurations)
             }
+
+            task.testRunnerFactory.emulatorGpuFlag.setDisallowChanges(
+                computeManagedDeviceEmulatorMode(creationConfig.services.projectOptions)
+            )
 
             val infoLoggingEnabled =
                 Logging.getLogger(ManagedDeviceInstrumentationTestTask::class.java).isInfoEnabled()

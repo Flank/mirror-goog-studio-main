@@ -135,7 +135,7 @@ class AvdManager(
         )
     }
 
-    fun loadSnapshotIfNeeded(deviceName: String) {
+    fun loadSnapshotIfNeeded(deviceName: String, emulatorGpuFlag: String) {
         val lock = avdLocks.computeIfAbsent(deviceName) {
             Any()
         }
@@ -147,6 +147,7 @@ class AvdManager(
                     deviceName,
                     emulatorExecutable,
                     avdFolder,
+                    emulatorGpuFlag,
                     logger
                 )
             ) {
@@ -162,6 +163,7 @@ class AvdManager(
                 emulatorExecutable,
                 adbExecutable,
                 avdFolder,
+                emulatorGpuFlag,
                 logger
             )
 
@@ -169,6 +171,7 @@ class AvdManager(
                     deviceName,
                     emulatorExecutable,
                     avdFolder,
+                    emulatorGpuFlag,
                     logger
                 )
             ) {

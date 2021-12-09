@@ -33,6 +33,7 @@ class ManagedDeviceTestRunner(
     private val retentionConfig: RetentionConfig,
     private val useOrchestrator: Boolean,
     private val numShards: Int?,
+    private val emulatorGpuFlag: String,
     private val utpLoggingLevel: Level = Level.WARNING,
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
@@ -98,6 +99,7 @@ class ManagedDeviceTestRunner(
                         additionalTestOutputDir,
                         useOrchestrator,
                         resultListenerServerMetadata,
+                        emulatorGpuFlag,
                         shardConfig
                     )
                 }
