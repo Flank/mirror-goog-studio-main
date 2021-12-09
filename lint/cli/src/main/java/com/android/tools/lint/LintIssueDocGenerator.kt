@@ -2156,7 +2156,8 @@ class LintIssueDocGenerator constructor(
                     "Do not include hyperlinks to detector source code",
                     ARG_NO_SEVERITY,
                     "Do not include the red, orange or green informational boxes showing the severity of each issue",
-                )
+                ),
+                false
             )
         }
 

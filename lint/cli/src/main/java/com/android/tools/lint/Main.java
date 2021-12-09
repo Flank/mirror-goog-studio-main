@@ -2044,6 +2044,10 @@ public class Main {
     }
 
     private static void printUsage(PrintStream out) {
+        printUsage(out, false);
+    }
+
+    static void printUsage(PrintStream out, boolean markdown) {
         String command = "lint";
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
@@ -2056,7 +2060,7 @@ public class Main {
                     ARG_HELP,
                     "This message.",
                     ARG_HELP + " <topic>",
-                    "Help on the given topic, such as \"suppress\".",
+                    "Help on the given topic, such as “suppress”.",
                     ARG_LIST_IDS,
                     "List the available issue id's and exit.",
                     ARG_VERSION,
@@ -2077,6 +2081,11 @@ public class Main {
                     "Apply suggestions to the source code (for safe fixes)",
                     ARG_ABORT_IF_SUGGESTIONS_APPLIED,
                     "Set the exit code to an error if any fixes are applied",
+                    "[directories]",
+                    "You can also pass in directories for files to be analyzed. This "
+                            + "was common many years ago when project metadata tended to be stored "
+                            + "in simple `.classpath` files from Eclipse; these days, you typically "
+                            + "will pass it a `--lint-model` or `--project` description instead.",
                     "",
                     "\nEnabled Checks:",
                     ARG_DISABLE + " <list>",
@@ -2222,11 +2231,11 @@ public class Main {
                     ARG_DESCRIBE_FIXES + " <file>",
                     "Describes all the quickfixes in an XML file expressed as document edits -- insert, replace, delete",
                     ARG_CLIENT_ID,
-                    "Sets the id of the client, such as \"gradle\"",
+                    "Sets the id of the client, such as “gradle”",
                     ARG_CLIENT_NAME,
-                    "Sets the display name of the client, such as \"Android Gradle Plugin\"",
+                    "Sets the display name of the client, such as “Android Gradle Plugin”",
                     ARG_CLIENT_VERSION,
-                    "Sets the version of the client, such as 7.1.0-alpha01",
+                    "Sets the version of the client, such as “7.1.0-alpha01”",
                     "",
                     "\nExit Status:",
                     Integer.toString(ERRNO_SUCCESS),
@@ -2245,13 +2254,11 @@ public class Main {
                     "A new baseline file was created.",
                     Integer.toString(ERRNO_APPLIED_SUGGESTIONS),
                     "Quickfixes were applied.",
-                });
+                },
+                markdown);
     }
 
-    static void printUsage(PrintStream out, String[] args) {
-        // Used to emit Markdeep usage docs to update lint/docs/usage/flags.md.html
-        boolean md = false;
-
+    static void printUsage(PrintStream out, String[] args, boolean md) {
         int argWidth = 0;
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
@@ -2268,25 +2275,30 @@ public class Main {
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
             String description = args[i + 1];
-            //noinspection ConstantConditions
             if (md) {
                 if (arg.isEmpty()) {
                     out.print("## ");
                     out.println(StringsKt.removeSuffix(description.trim(), ":"));
                     out.println();
                 } else {
-                    out.print("`");
+                    boolean italics = arg.startsWith("[") && arg.endsWith("]");
+                    char decoration = italics ? '*' : '`';
+                    if (italics) {
+                        arg = arg.substring(1, arg.length() - 1);
+                    }
+                    out.print(decoration);
                     int index = arg.indexOf(' ');
                     if (index != -1) {
                         out.print(arg.substring(0, index));
-                        out.print("` ");
+                        out.print(decoration);
+                        out.print(' ');
                         String remainder = arg.substring(index + 1);
                         // Switch from say <list> to *list*
                         remainder = remainder.replace('<', '*').replace('>', '*');
                         out.print(remainder);
                     } else {
                         out.print(arg);
-                        out.print('`');
+                        out.print(decoration);
                     }
                     out.println();
                     out.print(wrap(": " + description, 70, "  "));

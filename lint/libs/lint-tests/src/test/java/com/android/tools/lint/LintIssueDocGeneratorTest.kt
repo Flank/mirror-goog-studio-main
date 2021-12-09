@@ -19,6 +19,7 @@ package com.android.tools.lint
 import com.android.testutils.TestUtils
 import com.android.tools.lint.client.api.LintClient
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -1011,5 +1012,53 @@ class LintIssueDocGeneratorTest {
             """.trimIndent(),
             text
         )
+    }
+
+    @Test
+    fun testUsageUpToDate() {
+        val root = TestUtils.getWorkspaceRoot().toFile() ?: findSourceTree()
+        val relativePath = "tools/base/lint/docs/usage/flags.md.html"
+        val flags = File(root, relativePath)
+        if (!flags.isFile) {
+            // Not yet working from Bazel context; run in IDE to check
+            return
+        }
+        val fileContents = flags.readText()
+        val start = fileContents.indexOf("## ")
+        val end = fileContents.lastIndexOf("<!-- Markdeep")
+        val outputStream = ByteArrayOutputStream()
+        Main.printUsage(PrintStream(outputStream), true)
+        val usage = String(outputStream.toByteArray(), Charsets.UTF_8)
+        val newContents = fileContents.substring(0, start) + usage.substring(usage.indexOf("## ")) + fileContents.substring(end)
+        if (fileContents != newContents && findSourceTree() != null) {
+            flags.writeText(newContents)
+            fail("Command line flags changed. Updated $flags document.")
+        }
+        assertEquals(
+            "$relativePath needs to be updated to reflect changes to the lint command line flags.\n" +
+                "***If you set the environment variable $ADT_SOURCE_TREE (or set it as a system property " +
+                "in the test run config) this test can automatically create/edit the files for you!***",
+            fileContents, newContents
+        )
+    }
+
+    companion object {
+        private const val ADT_SOURCE_TREE = "ADT_SOURCE_TREE"
+
+        private fun findSourceTree(): File? {
+            val sourceTree = System.getenv(ADT_SOURCE_TREE)
+                ?: System.getProperty(ADT_SOURCE_TREE)
+                // Tip: you can temporarily set your own path here:
+                // ?: "/your/path"
+                ?: return null
+
+            return if (sourceTree.isNotBlank()) {
+                File(sourceTree).apply {
+                    if (!File(this, ".repo").isDirectory) {
+                        fail("Invalid directory $this: should be pointing to the root of a tools checkout directory")
+                    }
+                }
+            } else null
+        }
     }
 }
