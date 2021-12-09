@@ -26,7 +26,7 @@ class DexParameters(
     val debuggable: Boolean,
     val dexPerClass: Boolean,
     val withDesugaring: Boolean,
-    val bootclasspath: ClassFileProviderFactory,
+    val desugarBootclasspath: ClassFileProviderFactory,
     val desugarClasspath: ClassFileProviderFactory,
     val coreLibDesugarConfig: String?,
     val coreLibDesugarOutputKeepRuleFile: File?,

@@ -576,9 +576,14 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     task.dexParams.desugarClasspath.from(externalLibraryClasses)
                 }
             }
-
-            task.dexParams.desugarBootclasspath
-                    .from(creationConfig.global.filteredBootClasspath)
+            // Set bootclasspath only for two cases:
+            // 1. language desugaring with D8 and minSdkVersionForDexing < 24
+            // 2. library desugaring enabled(required for API conversion)
+            val libraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled
+            if (languageDesugaringNeeded || libraryDesugaring) {
+                task.dexParams.desugarBootclasspath
+                        .from(creationConfig.global.filteredBootClasspath)
+            }
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
             task.dexParams.debuggable.setDisallowChanges(
@@ -593,7 +598,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                         ?: DEFAULT_NUM_BUCKETS
                 }
             )
-            if (creationConfig.isCoreLibraryDesugaringEnabled) {
+            if (libraryDesugaring) {
                 task.dexParams.coreLibDesugarConfig.set(getDesugarLibConfig(task.project))
             }
 

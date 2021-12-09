@@ -23,7 +23,6 @@ import com.android.builder.core.StandardOutErrMessageReceiver;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -74,10 +73,7 @@ public final class DexArchiveTestUtil {
                                     isDebuggable, // debuggable
                                     true, // dexPerClass
                                     true, // withDesugaring
-                                    new ClassFileProviderFactory(
-                                            Collections.singletonList(
-                                                    TestUtils.resolvePlatformPath(
-                                                            "android.jar"))), // bootcp
+                                    new ClassFileProviderFactory(Collections.emptyList()), // bootcp
                                     new ClassFileProviderFactory(Collections.emptyList()), // cp
                                     null, // coreLibDesugarConfig
                                     null, // coreLibDesugarOutputKeepRuleFile

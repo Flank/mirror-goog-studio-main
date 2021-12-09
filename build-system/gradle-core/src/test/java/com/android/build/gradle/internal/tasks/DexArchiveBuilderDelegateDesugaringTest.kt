@@ -385,6 +385,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
         )
 
         getDelegate(
+            includeAndroidJar = true,
             projectClasses = setOf(app.toFile()),
             projectOutput = out.toFile(),
             externalLibClasses = setOf(lib1.toFile(), lib2.toFile())
@@ -409,6 +410,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
 
         val inputJarHashes = tmpDir.newFile()
         getDelegate(
+            includeAndroidJar = true,
             projectClasses = setOf(lib1.toFile(), lib2.toFile()),
             projectOutput = out.toFile(),
             inputJarHashes = inputJarHashes
@@ -420,6 +422,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
         // Changed lib2.jar should trigger re-processing of lib1.jar.
         getDelegate(
             isIncremental = true,
+            includeAndroidJar = true,
             projectClasses = setOf(lib1.toFile(), lib2.toFile()),
             projectChanges = setOf(
                 FakeFileChange(
@@ -443,6 +446,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
     private fun getDelegate(
         minSdkVersion: Int = 15,
         isDebuggable: Boolean = true,
+        includeAndroidJar: Boolean = false,
         isIncremental: Boolean = false,
         projectClasses: Set<File> = emptySet(),
         projectChanges: Set<FileChange> = emptySet(),
@@ -453,7 +457,11 @@ class DexArchiveBuilderDelegateDesugaringTest {
         libConfiguration: String? = null
     ): DexArchiveBuilderTaskDelegate {
 
-        val bootClasspath = setOf(TestUtils.resolvePlatformPath("android.jar").toFile())
+        val bootClasspath = if (includeAndroidJar) {
+            setOf(TestUtils.resolvePlatformPath("android.jar").toFile())
+        } else {
+            emptySet()
+        }
 
         @Suppress("UnstableApiUsage")
         return DexArchiveBuilderTaskDelegate(

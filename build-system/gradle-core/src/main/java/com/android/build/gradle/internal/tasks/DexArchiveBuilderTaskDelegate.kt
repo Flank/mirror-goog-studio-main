@@ -159,7 +159,8 @@ class DexArchiveBuilderTaskDelegate(
         try {
             Closer.create().use { closer ->
                 val classpath = getClasspath(dexParams.withDesugaring)
-                val bootclasspath = dexParams.desugarBootclasspath.map { it.toPath() }
+                val bootclasspath =
+                    getBootClasspath(dexParams.desugarBootclasspath, dexParams.withDesugaring)
 
                 val bootClasspathProvider = ClassFileProviderFactory(bootclasspath)
                 closer.register(bootClasspathProvider)
@@ -440,6 +441,16 @@ class DexArchiveBuilderTaskDelegate(
             list.addAll(mixedScopeClasses.map { it.toPath() })
             list.addAll(dexParams.desugarClasspath.map { it.toPath() })
         }
+    }
+
+    private fun getBootClasspath(
+        androidJarClasspath: List<File>,
+        withDesugaring: Boolean
+    ): List<Path> {
+        if (!withDesugaring) {
+            return emptyList()
+        }
+        return androidJarClasspath.map { it.toPath() }
     }
 
     private fun getKeepRulesOutputForJar(input: File, outputDir: File, bucketId: Int): File {

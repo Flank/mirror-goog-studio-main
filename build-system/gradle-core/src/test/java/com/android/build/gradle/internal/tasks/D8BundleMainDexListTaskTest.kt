@@ -191,8 +191,7 @@ class D8BundleMainDexListTaskTest {
                 debuggable = true,
                 dexPerClass = true,
                 withDesugaring = false,
-                bootclasspath = ClassFileProviderFactory(
-                        listOf(TestUtils.resolvePlatformPath("android.jar"))),
+                desugarBootclasspath = ClassFileProviderFactory(emptyList()),
                 desugarClasspath = ClassFileProviderFactory(emptyList()),
                 coreLibDesugarConfig = null,
                 coreLibDesugarOutputKeepRuleFile = null,

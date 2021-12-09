@@ -269,7 +269,7 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
                     debuggable = parameters.debuggable.get(),
                     dexPerClass = provideIncrementalSupport,
                     withDesugaring = parameters.enableDesugaring.get(),
-                    bootclasspath = ClassFileProviderFactory(
+                    desugarBootclasspath = ClassFileProviderFactory(
                         parameters.bootClasspath.files.map(File::toPath)
                     )
                         .also { closer.register(it) },
@@ -370,7 +370,10 @@ data class DexingArtifactConfiguration(
                 parameters.minSdkVersion.set(minSdk)
                 parameters.debuggable.set(isDebuggable)
                 parameters.enableDesugaring.set(enableDesugaring)
-                parameters.bootClasspath.from(bootClasspath)
+                // bootclasspath is required by d8 to do API conversion for library desugaring
+                if (needsClasspath || enableCoreLibraryDesugaring) {
+                    parameters.bootClasspath.from(bootClasspath)
+                }
                 parameters.errorFormat.set(errorFormat)
                 if (enableCoreLibraryDesugaring) {
                     parameters.libConfiguration.set(libConfiguration)
