@@ -16,15 +16,12 @@ def main():
   if sys.platform.startswith('linux'):
     platform = 'linux-x86_64'
     jdk_subdir = 'linux'
-    config = 'linux'
   elif sys.platform == 'darwin':
     platform = 'darwin-x86_64'
     jdk_subdir = os.path.join('mac', 'Contents', 'Home')
-    config = 'darwin'
   elif sys.platform == 'win32':
     platform = 'windows-x86_64'
     jdk_subdir = 'win64'
-    config = 'windows'
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
@@ -86,7 +83,7 @@ def main():
 
   bazelrc_arg = '--bazelrc=%s' % os.path.join(workspace, 'tools',
                                               'base', 'bazel',
-                                              config + '.bazelrc')
+                                              'common.bazelrc')
   sys.exit(subprocess.call([bazel, bazelrc_arg] + args, env=env))
 
 

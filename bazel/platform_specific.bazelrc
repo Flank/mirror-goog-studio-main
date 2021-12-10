@@ -1,0 +1,37 @@
+#
+# Linux
+#
+common:linux --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/linux/ndk/20.1.5948944
+
+build:linux --host_platform=//tools/base/bazel/platforms:linux
+build:linux --platforms=//tools/base/bazel/platforms:linux
+# Block network by default on linux
+build:linux --nosandbox_default_allow_network
+build:linux --dynamic_local_strategy=worker,sandboxed,local
+
+#
+# Windows
+#
+common:windows --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/windows/ndk/20.1.5948944
+
+build:windows --host_platform=//tools/base/bazel/platforms:windows
+build:windows --platforms=//tools/base/bazel/platforms:windows
+# Runfiles is off by default for Windows, enable it.
+build:windows --enable_runfiles
+# Static link native artifacts
+build:windows --features=static_link_msvcrt
+# Windows only supports worker,local strategies, sandboxed not supported.
+build:windows --dynamic_local_strategy=worker,local
+
+#
+# Mac
+#
+common:macos --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/darwin/ndk/20.1.5948944
+
+build:macos --host_platform=//tools/base/bazel/platforms:macos
+build:macos --platforms=//tools/base/bazel/platforms:macos
+build:macos --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
+build:macos --host_linkopt="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
+build:macos --host_linkopt="-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+build:macos --linkopt="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
+build:macos --linkopt="-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
