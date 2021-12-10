@@ -369,20 +369,20 @@ class AnalyticsResourceManager constructor(
         }
     }
 
-    private fun maybeGetJarName(pluginClass: Class<*>): String? {
-        val entryUrl = pluginClass.getResource(pluginClass.simpleName + ".class") ?:
+    private fun maybeGetJarName(pluginClass: Class<*>): String? =
+        pluginJarNamesMap.getOrPut(pluginClass.name) {
             // the plugin could be instrumented into a dynamic class, try to get the enclosing class
             // if possible
-            pluginClass.simpleName.substringBefore('$', "")
-                .ifEmpty { null }?.let { enclosingClass ->
-                    pluginClass.getResource("$enclosingClass.class")
+            val entryUrl =
+                pluginClass.simpleName.substringBefore('$', pluginClass.simpleName).let {
+                    pluginClass.getResource("$it.class")
                 }
 
-        return entryUrl?.let {
-            it.path.substringBefore(".jar!", "")
-                .substringAfterLast('/', "").ifEmpty { null }
+            entryUrl?.let {
+                it.path.substringBefore(".jar!", "")
+                    .substringAfterLast('/', "").ifEmpty { null }
+            }
         }
-    }
 
     fun recordTaskNames(graph: TaskExecutionGraph) {
         for (task in graph.allTasks) {
@@ -527,3 +527,5 @@ const val NO_VARIANT_SPECIFIED = 0L
 
 const val PROFILE_DIRECTORY = "android-profile"
 const val PROPERTY_VARIANT_NAME_KEY = "AGP_VARIANT_NAME"
+
+private val pluginJarNamesMap = mutableMapOf<String, String?>()
