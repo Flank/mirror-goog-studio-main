@@ -1559,9 +1559,15 @@ open class LintCliClient : LintClient {
         }
     }
 
+    fun readStamp(): String? {
+        val stamp = LintCliClient.javaClass.getResourceAsStream("/resources/stamp.txt")
+        return stamp?.readBytes()?.toString(Charsets.UTF_8)?.trim()
+    }
+
     override fun getClientRevision(): String {
         val plugin = Version.ANDROID_GRADLE_PLUGIN_VERSION
-        return plugin ?: "unknown"
+        val stamp = readStamp()?.let{ " [$it] "} ?: ""
+        return (plugin ?: "unknown") + stamp
     }
 
     fun haveErrors(): Boolean {

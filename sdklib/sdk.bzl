@@ -7,14 +7,25 @@ load("//tools/base/bazel/sdk:sdk_utils.bzl", "calculate_jar_name_for_sdk_package
 platforms = ["win", "linux", "mac"]
 
 def _generate_classpath_jar_impl(ctx):
+    stamp = ctx.actions.declare_file(ctx.label.name + ".stamp.txt")
+    ctx.actions.run(
+        inputs = [ctx.info_file],
+        outputs = [stamp],
+        executable = ctx.executable._status_reader,
+        arguments = ["--src", ctx.info_file.path, "--dst", stamp.path, "--key", "BUILD_EMBED_LABEL"],
+        progress_message = "Extracting label...",
+        mnemonic = "status",
+    )
+
     runtime_jars = depset(transitive = [java_lib[JavaInfo].transitive_runtime_jars for java_lib in [ctx.attr.java_binary]])
     jars = [calculate_jar_name_for_sdk_package(jar.short_path) for jar in runtime_jars.to_list()]
     mffile = ctx.actions.declare_file(ctx.attr.java_binary.label.name + "-manifest")
     ctx.actions.write(output = mffile, content = "Class-Path: \n " + " \n ".join(jars) + " \n")
     arguments = ["c", ctx.outputs.classpath_jar.path, "META-INF/MANIFEST.MF=" + mffile.path]
+    arguments += ["resources/stamp.txt=" + stamp.path]
     outputs = [ctx.outputs.classpath_jar]
     ctx.actions.run(
-        inputs = [mffile],
+        inputs = [mffile, stamp],
         outputs = outputs,
         arguments = arguments,
         executable = ctx.executable._zipper,
@@ -25,6 +36,11 @@ generate_classpath_jar = rule(
     attrs = {
         "java_binary": attr.label(allow_single_file = True, mandatory = True),
         "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable = True),
+        "_status_reader": attr.label(
+            default = Label("//tools/base/bazel:status_reader"),
+            cfg = "host",
+            executable = True,
+        ),
         "classpath_jar": attr.output(),
     },
 )
