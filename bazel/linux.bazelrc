@@ -9,16 +9,5 @@ build:remote --jobs=250
 build --host_platform=//tools/base/bazel/platforms:linux
 build --platforms=//tools/base/bazel/platforms:linux
 
-build:release --copt=-fdata-sections
-build:release --cxxopt=-fdata-sections
-build:release --copt=-fno-exceptions
-build:release --cxxopt=-fno-exceptions
-build:release --copt=-ffunction-sections
-build:release --cxxopt=-ffunction-sections
-# Disable Clang diagnostics for release builds, to reduce the amount of noise
-# in the output in continuous builds and --config=remote runs.
-build:release --copt=-w
-
-
 #Block network by default on linux
 build --nosandbox_default_allow_network

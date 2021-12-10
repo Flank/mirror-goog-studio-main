@@ -119,6 +119,7 @@ cc_toolchain_config(
         "-DNDEBUG",
         "-ffunction-sections",
         "-fdata-sections",
+        "-fno-exceptions",
     ],
     opt_link_flags = ["-Wl,--gc-sections"],
     target_libc = "local",
@@ -191,6 +192,7 @@ cc_toolchain_config(
         "-DNDEBUG",
         "-ffunction-sections",
         "-fdata-sections",
+        "-fno-exceptions",
     ],
     opt_link_flags = [],  # ?
     target_libc = "macosx",

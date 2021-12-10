@@ -86,9 +86,14 @@ build --fat_apk_cpu=x86,x86_64,armeabi-v7a,arm64-v8a
 build:nice --worker_max_instances=1
 build:nice --jobs=HOST_CPUS*.5
 
+# Optimize c/c++ compilation.
+# See tools/base/bazel/toolchains/clang.BUILD for flags added in opt mode
 build:release -c opt
 build:release --strip=always
 build:release --define release=true
+# Disable Clang diagnostics for release builds, to reduce the amount of noise
+# # in the output in continuous builds and --config=remote runs.
+build:release --copt=-w
 
 ## Base RBE configuration
 build:_remote_base --bes_timeout=60s
