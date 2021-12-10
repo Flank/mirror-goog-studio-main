@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-124eab21e1c5317fce131e728f930c4b90048900150ab953d1f7fb07b61f4c73
+c0018b0812b6b0befbac23f88e2b37261417c4c27cdff0946f4f3e2be9c01171
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -187,6 +187,16 @@ com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
+com.android.build.api.dsl.CompileOptions.getEncoding: java.lang.String ()
+com.android.build.api.dsl.CompileOptions.getSourceCompatibility: org.gradle.api.JavaVersion ()
+com.android.build.api.dsl.CompileOptions.getTargetCompatibility: org.gradle.api.JavaVersion ()
+com.android.build.api.dsl.CompileOptions.isCoreLibraryDesugaringEnabled: boolean ()
+com.android.build.api.dsl.CompileOptions.setCoreLibraryDesugaringEnabled: void (boolean)
+com.android.build.api.dsl.CompileOptions.setEncoding: void (java.lang.String)
+com.android.build.api.dsl.CompileOptions.setSourceCompatibility: void (org.gradle.api.JavaVersion)
+com.android.build.api.dsl.CompileOptions.setTargetCompatibility: void (org.gradle.api.JavaVersion)
+com.android.build.api.dsl.CompileOptions.sourceCompatibility: void (java.lang.Object)
+com.android.build.api.dsl.CompileOptions.targetCompatibility: void (java.lang.Object)
 com.android.build.api.dsl.ComposeOptions$DefaultImpls
 com.android.build.api.dsl.DataBinding
 com.android.build.api.dsl.DataBinding.getAddDefaultAdapters: boolean ()

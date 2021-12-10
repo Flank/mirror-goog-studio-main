@@ -16,7 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
 import org.gradle.api.JavaVersion
 
 /**
@@ -34,8 +33,6 @@ interface CompileOptions {
      * - `JavaVersion.Version_1_6`
      * - `"Version_1_6"`
      */
-    @get:Incubating
-    @set:Incubating
     var sourceCompatibility: JavaVersion
 
     /**
@@ -49,7 +46,6 @@ interface CompileOptions {
      * - `JavaVersion.Version_1_6`
      * - `"Version_1_6"`
      */
-    @Incubating
     fun sourceCompatibility(sourceCompatibility: Any)
 
     /**
@@ -63,8 +59,6 @@ interface CompileOptions {
      * - `JavaVersion.Version_1_6`
      * - `"Version_1_6"`
      */
-    @get:Incubating
-    @set:Incubating
     var targetCompatibility: JavaVersion
 
     /**
@@ -78,16 +72,11 @@ interface CompileOptions {
      * - `JavaVersion.Version_1_6`
      * - `"Version_1_6"`
      */
-    @Incubating
     fun targetCompatibility(targetCompatibility: Any)
 
     /** Java source files encoding. */
-    @get:Incubating
-    @set:Incubating
     var encoding: String
 
     /** Whether core library desugaring is enabled. */
-    @get:Incubating
-    @set:Incubating
     var isCoreLibraryDesugaringEnabled: Boolean
 }
