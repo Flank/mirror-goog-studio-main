@@ -29,7 +29,6 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_USAGE;
 import static com.android.tools.lint.detector.api.Lint.endsWith;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -239,6 +238,7 @@ public class Main {
         @NonNull List<File> files = new ArrayList<>();
         @NonNull LintDriver.DriverMode mode = LintDriver.DriverMode.GLOBAL;
         @Nullable PathVariables pathVariables = null;
+        @Nullable List<String> desugaredMethodsPaths = null;
     }
 
     /**
@@ -1467,12 +1467,10 @@ public class Main {
                     return ERRNO_INVALID_ARGS;
                 }
                 String path = args[++index];
-                File input = getInArgumentPath(path);
-                if (!input.isFile()) {
-                    System.err.println("Desugared methods file " + input + " does not exist.");
-                    return ERRNO_INVALID_ARGS;
+                if (argumentState.desugaredMethodsPaths == null) {
+                    argumentState.desugaredMethodsPaths = new ArrayList<>();
                 }
-                DesugaredMethodLookup.Companion.setDesugaredMethods(FilesKt.readText(input, UTF_8));
+                argumentState.desugaredMethodsPaths.add(path);
             } else if (arg.equals(ARG_PRINT_INTERNAL_ERROR_STACKTRACE)) {
                 flags.setPrintInternalErrorStackTrace(true);
             } else if (arg.equals(ARG_ANALYZE_ONLY)) {
@@ -1530,6 +1528,15 @@ public class Main {
 
             // Sync the first lint model's lint options.
             SyncOptions.syncTo(modules.get(0), flags);
+        }
+
+        List<String> paths = argumentState.desugaredMethodsPaths;
+        if (paths != null) {
+            String firstError = DesugaredMethodLookup.Companion.setDesugaredMethods(paths);
+            if (firstError != null) {
+                System.err.println("Failed to process --Xdesugared-methods: " + firstError);
+                return ERRNO_INVALID_ARGS;
+            }
         }
 
         if (files.isEmpty() && modules.isEmpty() && flags.getProjectDescriptorOverride() == null) {

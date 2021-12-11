@@ -15,9 +15,15 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFiles
+import com.android.utils.SdkUtils
+import com.android.utils.SdkUtils.fileToUrl
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 import kotlin.test.assertNotEquals
 
 class DesugaredMethodLookupTest {
@@ -48,14 +54,16 @@ class DesugaredMethodLookupTest {
 
     @Test
     fun testFile() {
-        val desc =
+        val desc1 =
             "" +
                 "abc/def/GHI\$JKL#abc(III)Z\n" +
-                "def/gh/IJ\n" +
+                "def/gh/IJ\n"
+        val desc2 =
+            "" +
                 "g/hijk/l/MN#op\n" +
                 "hij/kl/mn/O#pQr()Z\n"
-        try {
-            DesugaredMethodLookup.setDesugaredMethods(desc)
+
+        fun check() {
             assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()"))
             assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)"))
             assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)"))
@@ -68,8 +76,56 @@ class DesugaredMethodLookupTest {
             // Match methods where the descriptor just lists the class and method names
             assertTrue(DesugaredMethodLookup.isDesugared("g/hijk/l/MN", "op", "()"))
             assertFalse(DesugaredMethodLookup.isDesugared("g/hijk/l/MN", "wrongname", "()"))
+        }
+
+        // Test single plain file
+        val file1 = File.createTempFile("desc1", ".txt")
+        val file2 = File.createTempFile("desc2", ".txt")
+        file1.writeText(desc1 + desc2)
+        try {
+            assertNull(DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path)))
+            check()
         } finally {
             DesugaredMethodLookup.reset()
         }
+
+        // Test 2 files
+        file1.writeText(desc1)
+        file2.writeText(desc2)
+        try {
+            // Reverse order to test our sorting as well
+            assertNull(DesugaredMethodLookup.setDesugaredMethods(listOf(file2.path, file1.path)))
+            check()
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+
+        // Test file URL paths
+        file1.writeText(desc1 + desc2)
+        try {
+            assertNull(DesugaredMethodLookup.setDesugaredMethods(listOf(SdkUtils.fileToUrl(file1).toExternalForm())))
+            check()
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+
+        // Test JAR URL
+        val source = TestFiles.source("foo/bar/baz.txt", desc1 + desc2)
+        val jar = TestFiles.jar("myjar.jar", source)
+        val jarFile = jar.createFile(file1.parentFile)
+        jarFile.deleteOnExit()
+
+        try {
+            val jarPath = "jar:" + fileToUrl(jarFile).toExternalForm() + "!/foo/bar/baz.txt"
+            assertNull(DesugaredMethodLookup.setDesugaredMethods(listOf(jarPath)))
+            check()
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+
+        // Test error handling
+        file1.delete()
+        val missingFile = file1.path
+        assertEquals(missingFile, DesugaredMethodLookup.setDesugaredMethods(listOf(missingFile)))
     }
 }

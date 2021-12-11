@@ -15,8 +15,12 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.detector.api.assertionsEnabled
+import com.android.utils.SdkUtils
 import com.google.common.annotations.VisibleForTesting
+import java.io.File
+import java.io.IOException
+import java.net.JarURLConnection
+import java.net.URL
 import java.util.Arrays
 
 /**
@@ -83,23 +87,51 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
 
         /**
          * Sets the set of back-ported methods to be used for analysis
-         * to the exact given list
+         * to the descriptors from the given [paths]. Returns null if
+         * everything is okay, and otherwise returns the first path that
+         * could not be processed (e.g. file doesn't exist, insufficient
+         * permissions, etc.)
          */
-        fun setDesugaredMethods(fileContents: String) {
-            val descriptors = fileContents.split('\n').toTypedArray()
-            if (assertionsEnabled()) {
-                // The file is required to be sorted (since it will be
-                // used for binary search). Let's make sure it is. (This
-                // is a file controlled by us (Android tools via R8 and
-                // AGP) which is why we can make this a requirement
-                // rather than explicitly sorting.)
-                var prev = ""
-                for (s in descriptors) {
-                    assert(s.isEmpty() || s > prev)
-                    prev = s
+        fun setDesugaredMethods(paths: List<String>): String? {
+            val lines = ArrayList<String>(1024)
+            for (path in paths) {
+                try {
+                    if (path.startsWith("jar:")) {
+                        val url = URL(path)
+                        val connection = url.openConnection() as JarURLConnection
+                        connection.jarFile.use { jarFile ->
+                            jarFile.getInputStream(connection.jarEntry).bufferedReader().forEachLine {
+                                if (it.isNotBlank()) {
+                                    lines.add(it)
+                                }
+                            }
+                        }
+                    } else {
+                        val file = if (path.startsWith("file:")) {
+                            SdkUtils.urlToFile(URL(path))
+                        } else {
+                            File(path)
+                        }
+                        if (!file.isFile) {
+                            return path
+                        }
+                        file.forEachLine {
+                            if (it.isNotBlank()) {
+                                lines.add(it)
+                            }
+                        }
+                    }
+                } catch (throwable: IOException) {
+                    return path
                 }
             }
-            lookup = DesugaredMethodLookup(descriptors)
+            lines.sort()
+
+            // make sure the files aren't Windows line separator encoded or that the line sequence methods handles it gracefully
+            assert(lines.isNotEmpty() && !lines[0].endsWith('\r'))
+
+            lookup = DesugaredMethodLookup(lines.toTypedArray())
+            return null
         }
 
         /**
