@@ -327,6 +327,7 @@ com.android.build.api.dsl.EmulatorSnapshots.retainAll: void ()
 com.android.build.api.dsl.EmulatorSnapshots.setCompressSnapshots: void (boolean)
 com.android.build.api.dsl.EmulatorSnapshots.setEnableForTestFailures: void (boolean)
 com.android.build.api.dsl.EmulatorSnapshots.setMaxSnapshotsForTestFailures: void (int)
+com.android.build.api.dsl.ExternalNativeBuild.getExperimentalProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.api.dsl.ExternalNativeBuildOptions
 com.android.build.api.dsl.ExternalNativeBuildOptions.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.api.dsl.ExternalNativeCmakeOptions ()
