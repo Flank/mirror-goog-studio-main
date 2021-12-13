@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-00e2728ca8f00d5a0ef700350f4c43488b9bfd68090507d36c6c4fbee282ab60
+124eab21e1c5317fce131e728f930c4b90048900150ab953d1f7fb07b61f4c73
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -189,6 +189,16 @@ com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functio
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.ComposeOptions$DefaultImpls
 com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.DataBinding.getAddDefaultAdapters: boolean ()
+com.android.build.api.dsl.DataBinding.getAddKtx: java.lang.Boolean ()
+com.android.build.api.dsl.DataBinding.getVersion: java.lang.String ()
+com.android.build.api.dsl.DataBinding.isEnabled: boolean ()
+com.android.build.api.dsl.DataBinding.isEnabledForTests: boolean ()
+com.android.build.api.dsl.DataBinding.setAddDefaultAdapters: void (boolean)
+com.android.build.api.dsl.DataBinding.setAddKtx: void (java.lang.Boolean)
+com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
+com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
+com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
 com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.DependenciesInfo
