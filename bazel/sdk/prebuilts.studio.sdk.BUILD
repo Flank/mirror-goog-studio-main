@@ -216,6 +216,11 @@ java_import(
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
+    name = "platforms/android-32",
+    visibility = ["//visibility:private"],
+)
+
+platform_filegroup(
     name = "platforms/android-31",
     visibility = [
         # Temporarily added to support 1.1.0-beta01. Remove as part of b/203422822
