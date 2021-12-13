@@ -49,15 +49,4 @@ abstract class ApplicationExtensionImpl @Inject constructor(
 
     override val buildFeatures: ApplicationBuildFeatures =
         dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java)
-
-    override val dependenciesInfo: DependenciesInfo =
-        dslServices.newInstance(DependenciesInfoImpl::class.java)
-
-    override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
-        action.invoke(dependenciesInfo)
-    }
-
-    override fun dependenciesInfo(action: Action<DependenciesInfo>) {
-        action.execute(dependenciesInfo)
-    }
 }

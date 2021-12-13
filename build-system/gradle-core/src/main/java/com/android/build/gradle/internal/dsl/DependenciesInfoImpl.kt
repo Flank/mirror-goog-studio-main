@@ -18,13 +18,17 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DependenciesInfo
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 
 /**
  * DSL options for specifying whether to include SDK dependency information in APKs and Bundles.
  */
-open class DependenciesInfoImpl : DependenciesInfo {
+abstract class DependenciesInfoImpl @WithLazyInitialization("lazyInit") constructor()
+    : DependenciesInfo {
 
-  override var includeInApk: Boolean = true
-
-  override var includeInBundle: Boolean = true
+    @Suppress("unused") // call injected in the constructor by the dsl decorator
+    protected fun lazyInit() {
+        includeInApk = true
+        includeInBundle = true
+    }
 }

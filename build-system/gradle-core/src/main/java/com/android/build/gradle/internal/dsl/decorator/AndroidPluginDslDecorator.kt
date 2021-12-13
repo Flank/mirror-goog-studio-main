@@ -34,6 +34,7 @@ import com.android.build.api.dsl.LibraryPublishing
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DensitySplit
+import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.dsl.DexPackagingOptions
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.dsl.JavaCompileOptions
@@ -63,6 +64,7 @@ import com.android.build.gradle.internal.dsl.BundleOptionsTexture
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
+import com.android.build.gradle.internal.dsl.DependenciesInfoImpl
 import com.android.build.gradle.internal.dsl.DexPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild as ExternalNativeBuildImpl
 import com.android.build.gradle.internal.dsl.LintImpl
@@ -107,6 +109,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(DataBinding::class.java, DataBindingOptions::class.java),
     SupportedPropertyType.Block(DensitySplit::class.java, DensitySplitOptions::class.java),
     SupportedPropertyType.Block(DexPackagingOptions::class.java, DexPackagingOptionsImpl::class.java),
+    SupportedPropertyType.Block(DependenciesInfo::class.java, DependenciesInfoImpl::class.java),
     SupportedPropertyType.Block(ExternalNativeBuild::class.java, ExternalNativeBuildImpl::class.java),
     SupportedPropertyType.Block(JavaCompileOptions::class.java, JavaCompileOptionsImpl::class.java),
     SupportedPropertyType.Block(JniLibsPackagingOptions::class.java, JniLibsPackagingOptionsImpl::class.java),
