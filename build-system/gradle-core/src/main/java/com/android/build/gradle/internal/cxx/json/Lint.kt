@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.json
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder.Companion.BUILD_TARGETS_PLACEHOLDER
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_FILE_DID_NOT_EXIST
@@ -51,6 +52,11 @@ fun NativeBuildConfigValueMini.lint(json : File) {
             errorln(
                 BUILD_TARGET_COMMAND_COMPONENTS_DID_NOT_EXIST,
                 "expected buildTargetsCommandComponents command '${buildCommand[0]}' to exist")
+        } else if (hasTopLevelBuildCommand && buildCommand.last() != BUILD_TARGETS_PLACEHOLDER) {
+            errorln(
+                BUILD_TARGET_COMMAND_COMPONENTS_DID_NOT_EXIST,
+                "expected buildTargetsCommandComponents command " +
+                        "'${buildCommand.joinToString(" ")}' to have $BUILD_TARGETS_PLACEHOLDER at the end")
         }
 
         for((name, library) in libraries) {

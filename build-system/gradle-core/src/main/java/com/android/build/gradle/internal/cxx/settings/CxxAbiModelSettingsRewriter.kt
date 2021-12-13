@@ -403,7 +403,6 @@ private fun CxxProjectModel.rewrite(rewrite : (property: KProperty1<*, *>, value
 // Rewriter for CxxCmakeModuleModel
 private fun CxxCmakeModuleModel.rewrite(rewrite : (property: KProperty1<*, *>, String: String) -> String) = copy(
         cmakeExe = rewrite.fileOrNull(CxxCmakeModuleModel::cmakeExe, cmakeExe),
-        ninjaExe = rewrite.fileOrNull(CxxCmakeModuleModel::ninjaExe, ninjaExe)
 )
 
 // Rewriter for CxxModuleModel
@@ -415,6 +414,7 @@ private fun CxxModuleModel.rewrite(rewrite : (property: KProperty1<*, *>, value:
         intermediatesFolder = rewrite(CxxModuleModel::intermediatesFolder, intermediatesFolder.path).toFile(),
         moduleRootFolder = rewrite(CxxModuleModel::moduleRootFolder, moduleRootFolder.path).toFile(),
         ndkFolder = rewrite(CxxModuleModel::ndkFolder, ndkFolder.path).toFile(),
+        ninjaExe = rewrite.fileOrNull(CxxModuleModel::ninjaExe, ninjaExe)
 )
 
 // Rewriter for CxxVariantModel
@@ -448,7 +448,7 @@ private fun String.toFile() : File = File(this)
  * Rewrite a String?. Use isBlank() to transmit null.
  */
 private fun ((KProperty1<*, *>, String) -> String).stringOrNull(property: KProperty1<*, *>, string : String?) : String? {
-    val result = this(property, string ?: "")
+    val result = invoke(property, string ?: "")
     if (result.isBlank()) return null
     return result
 }
@@ -457,7 +457,7 @@ private fun ((KProperty1<*, *>, String) -> String).stringOrNull(property: KPrope
  * Rewrite a File?. Use isBlank() to transmit null.
  */
 private fun ((KProperty1<*, *>, String) -> String).fileOrNull(property: KProperty1<*, *>, file : File?) : File? {
-    val result = this(property, file?.path ?: "")
+    val result = invoke(property, file?.path ?: "")
     if (result.isBlank()) return null
     return result.toFile()
 }
@@ -474,7 +474,7 @@ private fun ((KProperty1<*, *>, String) -> String).booleanOrNull(
         true -> "1"
         false -> "0"
     }
-    val result = this(property, value)
+    val result = invoke(property, value)
     if (result.isBlank()) return null
     return isCmakeConstantTruthy(result)
 }

@@ -50,14 +50,24 @@ open class PassThroughDeduplicatingLoggingEnvironment : ThreadLoggingEnvironment
     fun hadErrors() = messages.any { it.level == ERROR }
 
     /**
-     * The errors that have been seen so far.
+     * The error messages that been seen so far.
      */
-    val errors get() = messages.filter { it.level == ERROR }.map { it.text() }
+    val errorMessages get() = messages.filter { it.level == ERROR }
+
+    /**
+     * The text errors that have been seen so far.
+     */
+    val errors get() = errorMessages.map { it.text() }
+
+    /**
+     * The warning messages that been seen so far.
+     */
+    val warningMessages get() = messages.filter { it.level == WARN }
 
     /**
      * The warnings that have been seen so far.
      */
-    val warnings get() = messages.filter { it.level == WARN }.map { it.text() }
+    val warnings get() = warningMessages.map { it.text() }
 
     /**
      * The lifecycle messages that have been seen so far.
