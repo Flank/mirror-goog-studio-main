@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-package com.android.builder.model;
+package com.android.builder.model
 
 /**
  * Options for data binding
  */
-public interface DataBindingOptions {
+interface DataBindingOptions {
 
     /**
      * The version of data binding to use.
      */
-    String getVersion();
+    val version: String?
 
     /**
      * Whether to enable data binding.
      *
      * @deprecated use android.features.databinding
      */
-    @Deprecated
-    boolean isEnabled();
+    @Deprecated("use android.features.databinding")
+    val isEnabled: Boolean
 
     /** Whether to add the default data binding adapters. */
-    boolean getAddDefaultAdapters();
+    val addDefaultAdapters: Boolean
     /**
      * Whether we want tests to be able to use data binding as well.
      * <p>
@@ -47,5 +47,5 @@ public interface DataBindingOptions {
      * when the application class is overwritten by the test class. It also makes it easier to run
      * proguarded tests.
      */
-    boolean isEnabledForTests();
+    val isEnabledForTests: Boolean
 }

@@ -3014,7 +3014,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     project.dependencies.add("testAnnotationProcessor", dataBindingArtifact)
                 }
             }
-            if ((dataBindingOptions as DataBindingOptions).getAddDefaultAdapters()) {
+            if ((dataBindingOptions as DataBindingOptions).addDefaultAdapters) {
                 val libArtifact =
                         if (useAndroidX)
                             SdkConstants.ANDROIDX_DATA_BINDING_LIB_ARTIFACT

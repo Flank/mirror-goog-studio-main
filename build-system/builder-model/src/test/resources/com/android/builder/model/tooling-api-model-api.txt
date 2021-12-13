@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-88a020d29b49bad5db640c52e34953f85f0e86430d23c6d5c39f20b4922b5d3a
+fe619f1b82a30a8fdc4ac6cabf242ff0c2d1955caf725da3cbe49cadc5b87842
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -177,6 +177,7 @@ com.android.builder.model.CodeShrinker extends java.lang.Enum
 com.android.builder.model.CodeShrinker.valueOf: com.android.builder.model.CodeShrinker (java.lang.String)
 com.android.builder.model.CodeShrinker.values: com.android.builder.model.CodeShrinker[] ()
 com.android.builder.model.DataBindingOptions
+com.android.builder.model.DataBindingOptions$DefaultImpls
 com.android.builder.model.DataBindingOptions.getAddDefaultAdapters: boolean ()
 com.android.builder.model.DataBindingOptions.getVersion: java.lang.String ()
 com.android.builder.model.DataBindingOptions.isEnabled: boolean ()
