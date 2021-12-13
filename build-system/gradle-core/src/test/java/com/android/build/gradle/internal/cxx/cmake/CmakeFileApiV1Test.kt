@@ -59,11 +59,13 @@ class CmakeFileApiV1Test {
         return result
     }
 
+    private fun createNinjaCommand(arg : String) : List<String> = listOf("ninja", arg)
+
     @Test
     fun assembler() {
         val replyFolder = prepareReplyFolder("assembler")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
-        readCmakeFileApiReply(replyFolder) {
+        readCmakeFileApiReply(replyFolder, ::createNinjaCommand) {
             sources.add(it)
         }
         assertThat(sources.map { File(it.sourcePath).extension }.toSortedSet())
@@ -75,7 +77,7 @@ class CmakeFileApiV1Test {
         val replyFolder = prepareReplyFolder("prefab-publish")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
         val config =
-                readCmakeFileApiReply(replyFolder) {
+                readCmakeFileApiReply(replyFolder, ::createNinjaCommand) {
                     sources.add(it)
                 }
         val library =
@@ -91,7 +93,7 @@ class CmakeFileApiV1Test {
         val replyFolder = prepareReplyFolder("prefab")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
         val config =
-                readCmakeFileApiReply(replyFolder) {
+                readCmakeFileApiReply(replyFolder, ::createNinjaCommand) {
                     sources.add(it)
                 }
         val runtimeFiles = config.libraries!!.values
@@ -114,7 +116,7 @@ class CmakeFileApiV1Test {
         val replyFolder = prepareReplyFolder("simple")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
         val config =
-                readCmakeFileApiReply(replyFolder) {
+                readCmakeFileApiReply(replyFolder, ::createNinjaCommand) {
                     sources.add(it)
                 }
 
@@ -173,7 +175,7 @@ class CmakeFileApiV1Test {
         val replyFolder = prepareReplyFolder("dolphin")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
         val config =
-                readCmakeFileApiReply(replyFolder) {
+                readCmakeFileApiReply(replyFolder, ::createNinjaCommand) {
                     sources.add(it)
                 }
 
@@ -332,7 +334,7 @@ class CmakeFileApiV1Test {
         val replyFolder = prepareReplyFolder("runtimefiles")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
         val config =
-                readCmakeFileApiReply(replyFolder) {
+                readCmakeFileApiReply(replyFolder, ::createNinjaCommand) {
                     sources.add(it)
                 }
         val content = config.libraries!!.values
@@ -361,7 +363,7 @@ class CmakeFileApiV1Test {
             androidGradleBuildJsonFile = androidGradleBuildJsonFile,
             compileCommandsJsonFile = compileCommandsJson,
             compileCommandsJsonBinFile = compileCommandsJsonBin,
-            buildTargetsCommand = listOf()
+            createNinjaCommand = ::createNinjaCommand
         )
         streamCompileCommands(compileCommandsJsonBin) {
         }
@@ -381,7 +383,7 @@ class CmakeFileApiV1Test {
             androidGradleBuildJsonFile = androidGradleBuildJsonFile,
             compileCommandsJsonFile = compileCommandsJson,
             compileCommandsJsonBinFile = compileCommandsJsonBin,
-            buildTargetsCommand = listOf()
+            createNinjaCommand = ::createNinjaCommand
         )
         streamCompileCommands(compileCommandsJsonBin) {
         }
@@ -401,7 +403,7 @@ class CmakeFileApiV1Test {
             androidGradleBuildJsonFile = androidGradleBuildJsonFile,
             compileCommandsJsonFile = compileCommandsJson,
             compileCommandsJsonBinFile = compileCommandsJsonBin,
-            buildTargetsCommand = listOf()
+            createNinjaCommand = ::createNinjaCommand
         )
         streamCompileCommands(compileCommandsJsonBin) {
         }
@@ -410,7 +412,7 @@ class CmakeFileApiV1Test {
     @Test
     fun `bug 187134648 OBJECT-library`() {
         val replyFolder = prepareReplyFolder("multiple-object-library")
-        val result = readCmakeFileApiReply(replyFolder) { }
+        val result = readCmakeFileApiReply(replyFolder, ::createNinjaCommand) { }
         assertThat(
             result
                 .libraries!!
@@ -421,7 +423,7 @@ class CmakeFileApiV1Test {
     @Test
     fun `bug 198756433 multiple object file in same target`() {
         val replyFolder = prepareReplyFolder("multiple-object-library-2")
-        val result = readCmakeFileApiReply(replyFolder) { }
+        val result = readCmakeFileApiReply(replyFolder, ::createNinjaCommand) { }
         assertThat(
             result
                 .libraries!!
@@ -433,7 +435,7 @@ class CmakeFileApiV1Test {
     @Test
     fun `bug 200065980 runtime file was not 'so'`() {
         val replyFolder = prepareReplyFolder("b200065980")
-        val result = readCmakeFileApiReply(replyFolder) { }
+        val result = readCmakeFileApiReply(replyFolder, ::createNinjaCommand) { }
         assertThat(result
             .libraries!!.getValue("alpha::@6890427a1f51a3e7e1df")
             .runtimeFiles!!.size)

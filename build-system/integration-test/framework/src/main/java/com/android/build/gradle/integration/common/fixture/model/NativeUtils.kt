@@ -40,7 +40,6 @@ import java.util.*
 import com.android.build.gradle.internal.cxx.string.StringDecoder
 import com.android.testutils.TestUtils
 import com.android.testutils.diff.UnifiedDiff
-import com.android.utils.SdkUtils
 import com.google.common.base.Splitter
 import org.gradle.tooling.GradleConnector
 import java.io.BufferedInputStream
@@ -131,17 +130,26 @@ private fun CxxAbiModel.goldenConfigurationFlags() : String {
             .trim()
             .lines()
             .map { line ->
-                if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
-                    val cmake = variant.module.cmake!!
-                    line
-                        .replace(cmake.cmakeExe!!.slash(), "{CMAKE}")
-                        .replace(cmake.ninjaExe!!.slash(), "{NINJA}")
-                        .replace("-GNinja", "-G{Generator}")
-                        .replace("-GAndroid Gradle - Ninja", "-G{Generator}")
-                } else line
+                when(variant.module.buildSystem) {
+                    NativeBuildSystem.CMAKE -> {
+                        val cmake = variant.module.cmake!!
+                        line
+                            .replace(cmake.cmakeExe!!.slash(), "{CMAKE}")
+                            .replace(variant.module.ninjaExe!!.slash(), "{NINJA}")
+                            .replace("-GNinja", "-G{Generator}")
+                            .replace("-GAndroid Gradle - Ninja", "-G{Generator}")
+                    }
+                    NativeBuildSystem.NINJA -> {
+                        line
+                            .replace(variant.module.ninjaExe!!.slash(), "{NINJA}")
+                            .replace("-GNinja", "-G{Generator}")
+                            .replace("-GAndroid Gradle - Ninja", "-G{Generator}")
+                    }
+                    else -> line
+                }
             }
             .filter { !it.startsWith(" ") }
-            .filter { !it.isBlank() }
+            .filter { it.isNotBlank() }
             .filter { !it.startsWith("jvmArgs") }
             .filter { !it.startsWith("arguments") }
             .filter { !it.startsWith("Executable :") }

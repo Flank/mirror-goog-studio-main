@@ -404,4 +404,17 @@ val CxxAbiModel.platformCode
                 ?.first
     } ?: ""
 
+/**
+ * Construct a ninja command-line with [args] at the end.
+ */
+fun CxxAbiModel.createNinjaCommand(vararg args: String) : List<String> {
+    val command = mutableListOf<String>()
+    command.add(variant.module.ninjaExe!!.absolutePath)
+    command.addAll(getBuildCommandArguments())
+    command.add("-C")
+    command.add(cxxBuildFolder.absolutePath)
+    command.addAll(args.asList())
+    return command
+}
+
 

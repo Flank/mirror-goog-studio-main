@@ -27,8 +27,8 @@ import com.android.build.gradle.external.cmake.server.Target
 import com.android.build.gradle.external.cmake.server.findRuntimeFiles
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
+import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder.Companion.BUILD_TARGETS_PLACEHOLDER
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
-import com.android.build.gradle.internal.cxx.cmake.parseLinkLibraries
 import com.android.build.gradle.internal.cxx.configure.convertCMakeToCompileCommandsBin
 import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
@@ -43,13 +43,12 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.cmakeServerLogFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
-import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.createNinjaCommand
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.annotations.VisibleForTesting
@@ -59,12 +58,9 @@ import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBui
 import org.gradle.process.ExecOperations
 import java.io.BufferedWriter
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.PrintWriter
 import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
-import java.util.*
 
 /**
  * This strategy uses the Vanilla-CMake that supports Cmake server version 1.0 to configure the
@@ -294,14 +290,11 @@ internal class CmakeServerExternalNativeJsonGenerator(
         nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(cmakeServer))
         assert(nativeBuildConfigValue.cleanCommandsComponents != null)
         nativeBuildConfigValue.cleanCommandsComponents!!.add(
-            CmakeUtils.getCleanCommand(cmake.cmakeExe!!, abi.cxxBuildFolder)
+            abi.createNinjaCommand("clean")
         )
         assert(nativeBuildConfigValue.buildTargetsCommandComponents != null)
-        nativeBuildConfigValue.buildTargetsCommandComponents = CmakeUtils.getBuildTargetsCommand(
-            cmake.cmakeExe!!,
-            abi.cxxBuildFolder,
-            abi.getBuildCommandArguments()
-        )
+        nativeBuildConfigValue.buildTargetsCommandComponents =
+            abi.createNinjaCommand(BUILD_TARGETS_PLACEHOLDER)
         val codeModel = cmakeServer.codemodel()
         if (!ServerUtils.isCodeModelValid(codeModel)) {
             throw RuntimeException(
@@ -336,23 +329,6 @@ internal class CmakeServerExternalNativeJsonGenerator(
             }
         }
         return nativeBuildConfigValue
-    }
-
-    @VisibleForTesting
-    @Throws(FileNotFoundException::class)
-    private fun getNativeLibraryValue(
-      abi: CxxAbiModel,
-      target: Target,
-      additionalProjectFilesIndexWriter: BufferedWriter,
-    ): NativeLibraryValue {
-        return getNativeLibraryValue(
-          cmake.cmakeExe!!,
-          abi.cxxBuildFolder,
-          abi.variant.isDebuggableEnabled,
-          abi.abi.tag,
-          target,
-          additionalProjectFilesIndexWriter
-        )
     }
 
     /**
@@ -454,21 +430,16 @@ internal class CmakeServerExternalNativeJsonGenerator(
             return cmakeServer.compute()
         }
 
-        @VisibleForTesting
-        fun getNativeLibraryValue(
-          cmakeExecutable: File,
-          outputFolder: File,
-          isDebuggable: Boolean,
-          abi: String,
-          target: Target,
-          additionalProjectFilesIndexWriter: BufferedWriter,
+        private fun getNativeLibraryValue(
+            abi: CxxAbiModel,
+            target: Target,
+            additionalProjectFilesIndexWriter: BufferedWriter,
         ): NativeLibraryValue {
             val nativeLibraryValue = NativeLibraryValue()
-            nativeLibraryValue.abi = abi
-            nativeLibraryValue.buildCommandComponents =
-                CmakeUtils.getBuildCommand(cmakeExecutable, outputFolder, target.name)
+            nativeLibraryValue.abi = abi.abi.tag
+            nativeLibraryValue.buildCommandComponents = abi.createNinjaCommand(target.name)
             nativeLibraryValue.artifactName = target.name
-            nativeLibraryValue.buildType = if (isDebuggable) "debug" else "release"
+            nativeLibraryValue.buildType = if (abi.variant.isDebuggableEnabled) "debug" else "release"
             // If the target type is an OBJECT_LIBRARY, it does not build any output that we care.
             if ("OBJECT_LIBRARY" != target.type // artifacts of an object library could be null. See example in b/144938511
               && target.artifacts != null && target.artifacts.isNotEmpty()

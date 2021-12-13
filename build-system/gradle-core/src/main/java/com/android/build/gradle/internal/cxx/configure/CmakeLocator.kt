@@ -152,7 +152,7 @@ const val OFF_STAGE_CMAKE_VERSION = "3.10.2"
  * @return list of folders (as Files) retrieved from PATH environment variable and from Sdk
  * cmake folder.
  */
-private fun getEnvironmentPaths(): List<File> {
+fun getEnvironmentPaths(): List<File> {
     val envPath = System.getenv("PATH") ?: ""
     val pathSeparator = System.getProperty("path.separator").toRegex()
     return envPath
@@ -166,7 +166,7 @@ private fun getEnvironmentPaths(): List<File> {
 /**
  * @return list of folders (as Files) for CMakes in the SDK.
  */
-private fun getSdkCmakeFolders(sdkRoot : File?) : List<File> {
+fun getSdkCmakeFolders(sdkRoot : File?) : List<File> {
     return (sdkRoot
             ?.resolve("cmake")
             ?.listFiles()

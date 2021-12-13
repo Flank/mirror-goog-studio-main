@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.NinjaLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -61,6 +62,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.SetProperty
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
@@ -207,6 +209,10 @@ open class BasicModuleModelMock {
     val minSdkVersion = AndroidVersionImpl(19)
     val cmakeFinder = mock(
         CmakeLocator::class.java,
+        throwUnmocked
+    )
+    val ninjaFinder = mock(
+        NinjaLocator::class.java,
         throwUnmocked
     )
 
@@ -394,6 +400,10 @@ open class BasicModuleModelMock {
         doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
             .findCmakePath(any(), any(), any(), any(), any())
+
+        doReturn(cmakeDir.parentFile.resolve("ninja.exe")).`when`(ninjaFinder)
+            .findNinjaPath(any(), any())
+
 
         doReturn(null).`when`(gradle).parent
 

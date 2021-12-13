@@ -47,7 +47,8 @@ class LookupSettingFromModelKtTest {
                 it.sdkComponents,
                 it.androidLocationProvider,
                 it.configurationParameters,
-                it.cmakeFinder)
+                it.cmakeFinder,
+                it.ninjaFinder)
             val variant = createCxxVariantModel(
                 it.configurationParameters,
                 module)
