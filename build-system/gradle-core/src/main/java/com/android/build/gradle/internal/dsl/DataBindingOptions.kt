@@ -14,120 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.dsl.ApplicationBuildFeatures;
-import com.android.build.api.dsl.BuildFeatures;
-import com.android.build.api.dsl.DynamicFeatureBuildFeatures;
-import com.android.build.api.dsl.LibraryBuildFeatures;
-import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.options.BooleanOption;
-
-import java.util.function.Supplier;
-import javax.inject.Inject;
+import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.DynamicFeatureBuildFeatures
+import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.BooleanOption
+import java.util.function.Supplier
+import javax.inject.Inject
 
 /** DSL object for configuring databinding options. */
-public class DataBindingOptions
-        implements com.android.builder.model.DataBindingOptions,
-                com.android.build.api.dsl.DataBinding {
-    @NonNull private final Supplier<BuildFeatures> featuresProvider;
-    @NonNull private final DslServices dslServices;
-    private String version;
-    private boolean addDefaultAdapters = true;
-    private Boolean addKtx = null;
-    private boolean enabledForTests = false;
+open class DataBindingOptions @Inject constructor(
+    private val featuresProvider: Supplier<BuildFeatures>,
+    private val dslServices: DslServices
+) : com.android.builder.model.DataBindingOptions, com.android.build.api.dsl.DataBinding {
 
-    @Inject
-    public DataBindingOptions(
-            @NonNull Supplier<BuildFeatures> featuresProvider, @NonNull DslServices dslServices) {
-        this.featuresProvider = featuresProvider;
-        this.dslServices = dslServices;
-    }
-
-    /**
-     * The version of data binding to use.
-     */
-    @Override
-    public String getVersion() {
-        return version;
-    }
-
-    @Override
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-
-    /** Whether to enable data binding. */
-    @Override
-    public boolean isEnabled() {
-        final BuildFeatures buildFeatures = featuresProvider.get();
-        Boolean bool = false;
-        if (buildFeatures instanceof ApplicationBuildFeatures) {
-            bool = ((ApplicationBuildFeatures) buildFeatures).getDataBinding();
-        } else if (buildFeatures instanceof LibraryBuildFeatures) {
-            bool = ((LibraryBuildFeatures) buildFeatures).getDataBinding();
-        } else if (buildFeatures instanceof DynamicFeatureBuildFeatures) {
-            bool = ((DynamicFeatureBuildFeatures) buildFeatures).getDataBinding();
+    override var version: String? = null
+    override var isEnabled: Boolean
+        get() {
+            return when (val buildFeatures = featuresProvider.get()) {
+                is ApplicationBuildFeatures -> buildFeatures.dataBinding
+                is LibraryBuildFeatures -> buildFeatures.dataBinding
+                is DynamicFeatureBuildFeatures -> buildFeatures.dataBinding
+                else -> false
+            } ?: dslServices.projectOptions.get(BooleanOption.BUILD_FEATURE_DATABINDING)
         }
-
-        if (bool != null) {
-            return bool;
+        set(value) {
+            when (val buildFeatures = featuresProvider.get()) {
+                is ApplicationBuildFeatures -> buildFeatures.dataBinding = value
+                is LibraryBuildFeatures -> buildFeatures.dataBinding = value
+                is DynamicFeatureBuildFeatures -> buildFeatures.dataBinding = value
+                else -> dslServices.logger
+                    .warn("dataBinding.setEnabled has no impact on this sub-project type")
+            }
         }
-        return dslServices.getProjectOptions().get(BooleanOption.BUILD_FEATURE_DATABINDING);
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        final BuildFeatures buildFeatures = featuresProvider.get();
-        if (buildFeatures instanceof ApplicationBuildFeatures) {
-            ((ApplicationBuildFeatures) buildFeatures).setDataBinding(enabled);
-        } else if (buildFeatures instanceof LibraryBuildFeatures) {
-            ((LibraryBuildFeatures) buildFeatures).setDataBinding(enabled);
-        } else if (buildFeatures instanceof DynamicFeatureBuildFeatures) {
-            ((DynamicFeatureBuildFeatures) buildFeatures).setDataBinding(enabled);
-        } else {
-            dslServices
-                    .getLogger()
-                    .warn("dataBinding.setEnabled has no impact on this sub-project type");
-        }
-    }
-
-    /** Whether to add the default data binding adapters. */
-    @Override
-    public boolean getAddDefaultAdapters() {
-        return addDefaultAdapters;
-    }
-
-    @Override
-    public void setAddDefaultAdapters(boolean addDefaultAdapters) {
-        this.addDefaultAdapters = addDefaultAdapters;
-    }
-
-    /** Whether to add the data binding KTX features. */
-    @Override
-    @Nullable
-    public Boolean getAddKtx() {
-        return addKtx;
-    }
-
-    @Override
-    public void setAddKtx(@Nullable Boolean addKtx) {
-        this.addKtx = addKtx;
-    }
-
-    /**
-     * Whether to run data binding code generation for test projects
-     */
-    @Override
-    public boolean isEnabledForTests() {
-        return enabledForTests;
-    }
-
-    @Override
-    public void setEnabledForTests(boolean enabledForTests) {
-        this.enabledForTests = enabledForTests;
-    }
+    override var addDefaultAdapters = true
+    override var isEnabledForTests = false
+    override var addKtx: Boolean? = null
 }
