@@ -275,7 +275,7 @@ abstract class CommonExtensionImpl<
     }
 
     override val dataBinding: DataBindingOptions =
-        dslServices.newInstance(
+        dslServices.newDecoratedInstance(
             DataBindingOptions::class.java,
             Supplier { buildFeatures },
             dslServices

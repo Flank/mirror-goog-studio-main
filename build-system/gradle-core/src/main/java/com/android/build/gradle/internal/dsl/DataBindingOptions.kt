@@ -20,18 +20,17 @@ import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.BooleanOption
 import java.util.function.Supplier
 import javax.inject.Inject
 
 /** DSL object for configuring databinding options. */
-open class DataBindingOptions @Inject constructor(
+abstract class DataBindingOptions @Inject @WithLazyInitialization("lateInit") constructor(
     private val featuresProvider: Supplier<BuildFeatures>,
     private val dslServices: DslServices
 ) : com.android.builder.model.DataBindingOptions, com.android.build.api.dsl.DataBinding {
-
-    override var version: String? = null
     override var isEnabled: Boolean
         get() {
             return when (val buildFeatures = featuresProvider.get()) {
@@ -50,7 +49,9 @@ open class DataBindingOptions @Inject constructor(
                     .warn("dataBinding.setEnabled has no impact on this sub-project type")
             }
         }
-    override var addDefaultAdapters = true
-    override var isEnabledForTests = false
-    override var addKtx: Boolean? = null
+
+    @Suppress("unused") // call injected in the constructor by the dsl decorator
+    protected fun lateInit() {
+        addDefaultAdapters = true
+    }
 }
