@@ -29,6 +29,7 @@
          - shadersDirectories:
             * {PROJECT}/src/main/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < sourceProvider
       > androidTestSourceProvider:
          - name                = "androidTest"
@@ -53,6 +54,7 @@
          - shadersDirectories:
             * {PROJECT}/src/androidTest/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < androidTestSourceProvider
       > unitTestSourceProvider:
          - name                = "test"
@@ -77,6 +79,7 @@
          - shadersDirectories:
             * {PROJECT}/src/test/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < unitTestSourceProvider
       - testFixturesSourceProvider = (null)
    < defaultConfig
@@ -105,6 +108,7 @@
             - shadersDirectories:
                * {PROJECT}/src/debug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < sourceProvider
          > androidTestSourceProvider:
             - name                = "androidTestDebug"
@@ -129,6 +133,7 @@
             - shadersDirectories:
                * {PROJECT}/src/androidTestDebug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < androidTestSourceProvider
          > unitTestSourceProvider:
             - name                = "testDebug"
@@ -153,6 +158,7 @@
             - shadersDirectories:
                * {PROJECT}/src/testDebug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < unitTestSourceProvider
          - testFixturesSourceProvider = (null)
       < debug
@@ -182,6 +188,7 @@
             - shadersDirectories:
                * {PROJECT}/src/pro/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < sourceProvider
          > androidTestSourceProvider:
             - name                = "androidTestPro"
@@ -206,6 +213,7 @@
             - shadersDirectories:
                * {PROJECT}/src/androidTestPro/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < androidTestSourceProvider
          > unitTestSourceProvider:
             - name                = "testPro"
@@ -230,6 +238,7 @@
             - shadersDirectories:
                * {PROJECT}/src/testPro/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < unitTestSourceProvider
          - testFixturesSourceProvider = (null)
       < pro
@@ -264,6 +273,7 @@
                - shadersDirectories:
                   * {PROJECT}/src/proDebug/shaders{!}
                - mlModelsDirectories = (null)
+               - custom              = []
             < variantSourceProvider
             - multiFlavorSourceProvider = (null)
          < mainArtifact
@@ -291,6 +301,7 @@
                - shadersDirectories:
                   * {PROJECT}/src/androidTestProDebug/shaders{!}
                - mlModelsDirectories = (null)
+               - custom              = []
             < variantSourceProvider
             - multiFlavorSourceProvider = (null)
          < androidTestArtifact
@@ -318,6 +329,7 @@
                - shadersDirectories:
                   * {PROJECT}/src/testProDebug/shaders{!}
                - mlModelsDirectories = (null)
+               - custom              = []
             < variantSourceProvider
             - multiFlavorSourceProvider = (null)
          < unitTestArtifact

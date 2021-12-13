@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.fixture.model
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ClassField
@@ -383,6 +384,15 @@ private fun ModelSnapshotter<SourceProvider>.snapshotSourceProvider() {
     valueList("jniLibsDirectories", SourceProvider::jniLibsDirectories) { it?.sorted() }
     valueList("shadersDirectories", SourceProvider::shadersDirectories) { it?.sorted() }
     valueList("mlModelsDirectories", SourceProvider::mlModelsDirectories) { it?.sorted() }
+    convertedObjectList(name = "custom",
+        propertyAction = SourceProvider::customDirectories,
+        nameAction = { sourceTypeName },
+        objectAction = { this },
+        sortAction = { collection -> collection?.sortedBy { it.sourceTypeName } }
+    ) {
+        item("sourceTypeName", CustomSourceDirectory::sourceTypeName)
+        item("directory", CustomSourceDirectory::directory)
+    }
 }
 
 private fun ModelSnapshotter<BasicVariant>.snapshotBasicVariant() {

@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.builder.model.v2
+package com.android.build.gradle.internal.ide
 
+import com.android.builder.model.v2.CustomSourceDirectory
 import java.io.File
+import java.io.Serializable
 
-interface CustomSourceDirectory {
-    /**
-     * Source name as represented by the user. It must be unique for the project.
-     */
-    val sourceTypeName: String
-
-    /**
-     * the single source folder for the source type.
-     */
-    val directory: File
-}
+class CustomSourceDirectoryImpl(
+    override val sourceTypeName: String,
+    override val directory: File,
+) : CustomSourceDirectory, Serializable

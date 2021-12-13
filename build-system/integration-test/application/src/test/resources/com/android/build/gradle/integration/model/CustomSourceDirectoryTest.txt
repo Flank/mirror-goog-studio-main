@@ -1,0 +1,50 @@
+> BasicAndroidProject:
+   > defaultConfig:
+      - sourceProvider:
+         - custom:
+            - toml{ADDED}:
+               - sourceTypeName = "toml"
+               - directory      = {PROJECT}/src/main/toml{!}
+      - androidTestSourceProvider:
+         - custom:
+            - toml{ADDED}:
+               - sourceTypeName = "toml"
+               - directory      = {PROJECT}/src/androidTest/toml{!}
+      - unitTestSourceProvider:
+         - custom:
+            - toml{ADDED}:
+               - sourceTypeName = "toml"
+               - directory      = {PROJECT}/src/test/toml{!}
+   < defaultConfig
+   > buildTypes:
+      > debug:
+         - sourceProvider:
+            - custom:
+               - toml{ADDED}:
+                  - sourceTypeName = "toml"
+                  - directory      = {PROJECT}/src/debug/toml{!}
+         - androidTestSourceProvider:
+            - custom:
+               - toml{ADDED}:
+                  - sourceTypeName = "toml"
+                  - directory      = {PROJECT}/src/androidTestDebug/toml{!}
+         - unitTestSourceProvider:
+            - custom:
+               - toml{ADDED}:
+                  - sourceTypeName = "toml"
+                  - directory      = {PROJECT}/src/testDebug/toml{!}
+      < debug
+      > release:
+         - sourceProvider:
+            - custom:
+               - toml{ADDED}:
+                  - sourceTypeName = "toml"
+                  - directory      = {PROJECT}/src/release/toml{!}
+         - unitTestSourceProvider:
+            - custom:
+               - toml{ADDED}:
+                  - sourceTypeName = "toml"
+                  - directory      = {PROJECT}/src/testRelease/toml{!}
+      < release
+   < buildTypes
+< BasicAndroidProject
