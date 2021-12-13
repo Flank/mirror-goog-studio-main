@@ -300,10 +300,6 @@ com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
-com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
-com.android.build.api.dsl.DependenciesInfo.getIncludeInBundle: boolean ()
-com.android.build.api.dsl.DependenciesInfo.setIncludeInApk: void (boolean)
-com.android.build.api.dsl.DependenciesInfo.setIncludeInBundle: void (boolean)
 com.android.build.api.dsl.Device implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup.getTargetDevices: org.gradle.api.DomainObjectSet<com.android.build.api.dsl.Device> ()
