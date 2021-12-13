@@ -77,7 +77,7 @@ interface VariantBuilder: ComponentBuilder {
      * Set to `true` if the variant's has any unit tests, false otherwise. Value is [Boolean#True]
      * by default.
      */
-    @get:Deprecated("Use enableUnitTest", replaceWith=ReplaceWith("enableUnitTest"))
+    @Deprecated("Use enableUnitTest", replaceWith=ReplaceWith("enableUnitTest"))
     var unitTestEnabled: Boolean
 
     /**
