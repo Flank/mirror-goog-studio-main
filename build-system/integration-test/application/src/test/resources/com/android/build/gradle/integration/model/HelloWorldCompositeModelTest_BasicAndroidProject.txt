@@ -29,6 +29,7 @@
          - shadersDirectories:
             * {INCLUDED_BUILD(other-build)}/lib/src/main/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < sourceProvider
       > androidTestSourceProvider:
          - name                = "androidTest"
@@ -53,6 +54,7 @@
          - shadersDirectories:
             * {INCLUDED_BUILD(other-build)}/lib/src/androidTest/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < androidTestSourceProvider
       > unitTestSourceProvider:
          - name                = "test"
@@ -77,6 +79,7 @@
          - shadersDirectories:
             * {INCLUDED_BUILD(other-build)}/lib/src/test/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < unitTestSourceProvider
       - testFixturesSourceProvider = (null)
    < defaultConfig
@@ -105,6 +108,7 @@
             - shadersDirectories:
                * {INCLUDED_BUILD(other-build)}/lib/src/debug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < sourceProvider
          > androidTestSourceProvider:
             - name                = "androidTestDebug"
@@ -129,6 +133,7 @@
             - shadersDirectories:
                * {INCLUDED_BUILD(other-build)}/lib/src/androidTestDebug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < androidTestSourceProvider
          > unitTestSourceProvider:
             - name                = "testDebug"
@@ -153,6 +158,7 @@
             - shadersDirectories:
                * {INCLUDED_BUILD(other-build)}/lib/src/testDebug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < unitTestSourceProvider
          - testFixturesSourceProvider = (null)
       < debug
@@ -180,6 +186,7 @@
             - shadersDirectories:
                * {INCLUDED_BUILD(other-build)}/lib/src/release/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < sourceProvider
          - androidTestSourceProvider  = (null)
          > unitTestSourceProvider:
@@ -205,6 +212,7 @@
             - shadersDirectories:
                * {INCLUDED_BUILD(other-build)}/lib/src/testRelease/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < unitTestSourceProvider
          - testFixturesSourceProvider = (null)
       < release

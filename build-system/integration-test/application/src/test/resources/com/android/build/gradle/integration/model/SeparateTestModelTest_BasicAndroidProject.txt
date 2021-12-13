@@ -29,6 +29,7 @@
          - shadersDirectories:
             * {PROJECT}/test/src/main/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < sourceProvider
       - androidTestSourceProvider  = (null)
       - unitTestSourceProvider     = (null)
@@ -59,6 +60,7 @@
             - shadersDirectories:
                * {PROJECT}/test/src/debug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < sourceProvider
          - androidTestSourceProvider  = (null)
          - unitTestSourceProvider     = (null)

@@ -23,6 +23,7 @@
          - shadersDirectories:
             * {PROJECT}/src/testFixtures/shaders{!}
          - mlModelsDirectories = (null)
+         - custom              = []
       < testFixturesSourceProvider{ADDED}
    < defaultConfig
    > buildTypes:
@@ -50,6 +51,7 @@
             - shadersDirectories:
                * {PROJECT}/src/testFixturesDebug/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < testFixturesSourceProvider{ADDED}
       < debug
       > release:
@@ -76,6 +78,7 @@
             - shadersDirectories:
                * {PROJECT}/src/testFixturesRelease/shaders{!}
             - mlModelsDirectories = (null)
+            - custom              = []
          < testFixturesSourceProvider{ADDED}
       < release
    < buildTypes

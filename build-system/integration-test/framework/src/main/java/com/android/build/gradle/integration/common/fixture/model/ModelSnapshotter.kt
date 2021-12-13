@@ -56,14 +56,13 @@ internal fun <ModelT> snapshotModel(
     )
 
     val finalContainer = if (referenceProject != null) {
-        projectSnapshotContainer.subtract(
-            getSnapshotContainer(
-                modelName,
-                modelAction,
-                referenceProject,
-                action
-            )
+        val reference = getSnapshotContainer(
+            modelName,
+            modelAction,
+            referenceProject,
+            action
         )
+        projectSnapshotContainer.subtract(reference)
     } else {
         projectSnapshotContainer
     }
