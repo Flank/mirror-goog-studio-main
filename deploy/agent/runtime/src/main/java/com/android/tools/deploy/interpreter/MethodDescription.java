@@ -16,7 +16,6 @@
 
 package com.android.tools.deploy.interpreter;
 
-import static com.android.deploy.asm.Opcodes.INVOKESTATIC;
 
 import com.android.annotations.NonNull;
 import com.android.deploy.asm.tree.MethodInsnNode;
@@ -25,23 +24,18 @@ public class MethodDescription {
     private final String ownerInternalName;
     private final String name;
     private final String desc;
-    private final boolean isStatic;
 
-    public static final MethodDescription EMPTY = new MethodDescription("", "", "", false);
+    public static final MethodDescription EMPTY = new MethodDescription("", "", "");
 
     private MethodDescription(
-            @NonNull String ownerInternalName,
-            @NonNull String name,
-            @NonNull String desc,
-            boolean isStatic) {
+            @NonNull String ownerInternalName, @NonNull String name, @NonNull String desc) {
         this.ownerInternalName = ownerInternalName;
         this.name = name;
         this.desc = desc;
-        this.isStatic = isStatic;
     }
 
     public MethodDescription(@NonNull MethodInsnNode insn) {
-        this(insn.owner, insn.name, insn.desc, insn.getOpcode() == INVOKESTATIC);
+        this(insn.owner, insn.name, insn.desc);
     }
 
     @NonNull
@@ -57,11 +51,6 @@ public class MethodDescription {
     @NonNull
     public String getDesc() {
         return desc;
-    }
-
-    @NonNull
-    public boolean isStatic() {
-        return isStatic;
     }
 
     public boolean isConstructor() {
