@@ -270,8 +270,7 @@ class AndroidEval implements Eval {
     public Value invokeMethod(
             @NonNull Value target,
             MethodDescription methodDesc,
-            @NonNull List<? extends Value> args,
-            boolean invokeSpecial) {
+            @NonNull List<? extends Value> args) {
         String owner = methodDesc.getOwnerInternalName();
         String name = methodDesc.getName();
         String description = methodDesc.getDesc();

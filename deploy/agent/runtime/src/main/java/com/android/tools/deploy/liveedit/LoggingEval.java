@@ -94,10 +94,9 @@ class LoggingEval implements Eval {
     public Value invokeMethod(
             @NonNull Value target,
             MethodDescription methodDesc,
-            @NonNull List<? extends Value> args,
-            boolean invokeSpecial) {
+            @NonNull List<? extends Value> args) {
         Log.v("live.deploy", "invokeMethod: " + methodDesc);
-        return receiver.invokeMethod(target, methodDesc, args, invokeSpecial);
+        return receiver.invokeMethod(target, methodDesc, args);
     }
 
     @NonNull

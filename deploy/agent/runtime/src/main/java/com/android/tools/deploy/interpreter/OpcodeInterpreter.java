@@ -690,11 +690,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
                 return eval.invokeSpecial(values.get(0), method, values.subList(1, values.size()));
             case INVOKEVIRTUAL:
             case INVOKEINTERFACE:
-                return eval.invokeMethod(
-                        values.get(0),
-                        method,
-                        values.subList(1, values.size()),
-                        insn.getOpcode() == INVOKESPECIAL);
+                return eval.invokeMethod(values.get(0), method, values.subList(1, values.size()));
             case INVOKESTATIC:
                 return eval.invokeStaticMethod(method, values);
             case INVOKEDYNAMIC:

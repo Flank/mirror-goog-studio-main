@@ -124,10 +124,7 @@ class ProxyClassEval extends AndroidEval {
     @NonNull
     @Override
     public Value invokeMethod(
-            @NonNull Value target,
-            MethodDescription method,
-            @NonNull List<? extends Value> args,
-            boolean invokeSpecial) {
+            @NonNull Value target, MethodDescription method, @NonNull List<? extends Value> args) {
         final String methodName = method.getName();
         final String methodDesc = method.getDesc();
 
@@ -137,7 +134,7 @@ class ProxyClassEval extends AndroidEval {
             return makeValue(result, Type.getReturnType(methodDesc));
         }
 
-        return super.invokeMethod(target, method, args, invokeSpecial);
+        return super.invokeMethod(target, method, args);
     }
 
     @NonNull

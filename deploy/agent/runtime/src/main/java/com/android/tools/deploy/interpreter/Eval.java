@@ -65,8 +65,7 @@ public interface Eval {
     Value invokeMethod(
             @NonNull Value instance,
             @NonNull MethodDescription methodDesc,
-            @NonNull List<? extends Value> arguments,
-            boolean invokeSpecial);
+            @NonNull List<? extends Value> arguments);
 
     @NonNull
     Value invokeSpecial(
