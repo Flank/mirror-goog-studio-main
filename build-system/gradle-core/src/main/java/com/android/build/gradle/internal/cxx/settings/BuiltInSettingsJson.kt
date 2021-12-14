@@ -60,9 +60,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_STL_LIBRARY_FILE
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_STL_TYPE
-import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
-import com.android.build.gradle.tasks.NativeBuildSystem.CUSTOM
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.utils.FileUtils.join
 

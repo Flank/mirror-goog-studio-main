@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -295,7 +296,7 @@ fun CxxModuleModel.determineUsedStl(arguments: List<String>): Stl {
  */
 val CxxModuleModel.buildSystemTag : String get() = when (buildSystem) {
     CMAKE -> "cmake"
-    NativeBuildSystem.CUSTOM -> "custom"
+    NINJA -> "ninja"
     NDK_BUILD -> "ndkBuild"
 }
 
@@ -304,7 +305,7 @@ val CxxModuleModel.buildSystemTag : String get() = when (buildSystem) {
  */
 val CxxModuleModel.buildSystemNameForTasks : String get() = when (buildSystem) {
     CMAKE -> "CMake"
-    NativeBuildSystem.CUSTOM -> "Custom"
+    NINJA -> "Ninja"
     NDK_BUILD -> "NdkBuild"
 }
 
