@@ -187,6 +187,17 @@ public class TestUtils {
                 "File \"" + relativePath + "\" not found at \"" + getWorkspaceRoot() + "\"");
     }
 
+    /**
+     * Given a relative path to a file or directory from the base of the current workspace, returns
+     * the absolute path.
+     *
+     * This method don't check if the file actually exists
+     */
+    @NonNull
+    public static Path resolveWorkspacePathUnchecked(@NonNull String relativePath) {
+        return getWorkspaceRoot().resolve(relativePath);
+    }
+
     /** Returns true if the file exists in the workspace. */
     public static boolean workspaceFileExists(@NonNull String path) {
         return Files.exists(getWorkspaceRoot().resolve(path));
