@@ -27,7 +27,7 @@ public class MethodDescription {
 
     public static final MethodDescription EMPTY = new MethodDescription("", "", "");
 
-    private MethodDescription(
+    public MethodDescription(
             @NonNull String ownerInternalName, @NonNull String name, @NonNull String desc) {
         this.ownerInternalName = ownerInternalName;
         this.name = name;
