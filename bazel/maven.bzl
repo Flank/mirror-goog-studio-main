@@ -484,14 +484,34 @@ def _maven_library_impl(ctx):
         deps = pom_deps,
         exports = pom_exports,
     )
+    outputs = [ctx.outputs.pom]
 
     repo_files = [(coordinates.repo_path + "/" + n, f.files.to_list()[0]) for f, n in ctx.attr.files.items()]
-
     repo_files.append((coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom))
+
+    maven_jar = None
     if ctx.attr.library:
-        repo_files.append((coordinates.repo_path + "/" + basename + ".jar", ctx.file.library))
+        maven_jar_name = ctx.attr.jar_name if ctx.attr.jar_name else "%s.jar" % ctx.attr.name
+        maven_jar = ctx.actions.declare_file(maven_jar_name)
+
+        library_java_info = ctx.attr.library[JavaInfo]
+        bundled_jars = []
+        bundled_jars.extend(library_java_info.outputs.jars)
         source_jars = []
-        source_jars += ctx.attr.library[JavaInfo].source_jars
+        source_jars.extend(library_java_info.source_jars)
+        for dep in ctx.attr.bundled_deps:
+            bundled_jars.extend(dep[JavaInfo].outputs.jars)
+            source_jars.extend(dep[JavaInfo].source_jars)
+
+        run_singlejar(
+            ctx = ctx,
+            jars = [java_out.class_jar for java_out in bundled_jars],
+            manifest_lines = ctx.attr.manifest_lines,
+            out = maven_jar,
+        )
+        outputs.append(maven_jar)
+        repo_files.append((coordinates.repo_path + "/" + basename + ".jar", maven_jar))
+
         if ctx.attr.notice:
             notice_jar = ctx.actions.declare_file(ctx.label.name + ".notice.jar")
             ctx.actions.run(
@@ -502,7 +522,7 @@ def _maven_library_impl(ctx):
                 progress_message = "Creating notice jar",
                 mnemonic = "zipper",
             )
-            source_jars += [notice_jar]
+            source_jars.append(notice_jar)
 
         if source_jars:
             source_jar = ctx.actions.declare_file(ctx.label.name + ".src.jar")
@@ -511,27 +531,39 @@ def _maven_library_impl(ctx):
                 jars = source_jars,
                 out = source_jar,
             )
+            outputs.append(source_jar)
             repo_files.append((coordinates.repo_path + "/" + basename + "-sources.jar", source_jar))
 
     transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
-
-    default_files = [ctx.attr.library[DefaultInfo].files] if ctx.attr.library else []
     providers = [
-        DefaultInfo(files = depset(direct = [ctx.outputs.pom], transitive = default_files)),
+        DefaultInfo(files = depset(outputs)),
         MavenInfo(pom = ctx.outputs.pom, files = repo_files, transitive = transitive),
     ]
-    if ctx.attr.library:
-        providers += [ctx.attr.library[JavaInfo]]
+    if maven_jar:
+        providers.append(
+            JavaInfo(
+                output_jar = maven_jar,
+                compile_jar = maven_jar,
+                exports = [export[JavaInfo] for export in ctx.attr.exports],
+                deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.neverlink_deps],
+            ),
+        )
     return providers
 
 _maven_library = rule(
     attrs = {
         "notice": attr.label(allow_single_file = True),
-        "library": attr.label(providers = [JavaInfo], allow_single_file = True),
+        "jar_name": attr.string(),
+        "library": attr.label(providers = [JavaInfo]),
+        "neverlink_deps": attr.label_list(providers = [JavaInfo]),
         "files": attr.label_keyed_string_dict(allow_files = True),
         "coordinates": attr.string(),
         "description": attr.string(),
+        "manifest_lines": attr.string_list(),
         "pom_name": attr.string(),
+        "bundled_deps": attr.label_list(
+            providers = [JavaInfo],
+        ),
         "template_pom": attr.label(
             default = Label("//tools/base/bazel:maven/android.pom"),
             allow_single_file = True,
@@ -602,6 +634,7 @@ def maven_library(
         friends: The list of kotlin-friends.
         notice: An optional notice file to be included in the jar.
         coordinates: The maven coordinates of this artifact.
+        jar_name: Optional name for the output jar, otherwise {name}.jar is used.
         exclusions: Files to exclude from the generated pom file.
         lint_*: Lint configuration arguments
         module_name: The kotlin module name.
@@ -613,13 +646,11 @@ def maven_library(
 
     kotlin_library(
         name = name + ".lib",
-        jar_name = jar_name if jar_name else name + ".jar",
         srcs = srcs,
         compress_resources = is_release(),
         data = data,
-        deps = deps + neverlink_deps,
+        deps = deps + bundled_deps + neverlink_deps,
         exports = exports,
-        bundled_deps = bundled_deps,
         friends = friends,
         notice = notice,
         module_name = module_name,
@@ -628,19 +659,22 @@ def maven_library(
         runtime_deps = runtime_deps,
         stdlib = None,  # Maven libraries use the stdlib in different scopes and versions.
         plugins = plugins,
-        manifest_lines = manifest_lines,
         **kwargs
     )
 
     _maven_library(
         name = name,
+        jar_name = jar_name,
         notice = notice,
         deps = deps,
+        bundled_deps = bundled_deps,
         exports = exports,
         coordinates = coordinates,
         description = description,
         pom_name = pom_name,
+        manifest_lines = manifest_lines,
         library = ":" + name + ".lib",
+        neverlink_deps = neverlink_deps,
         **kwargs
     )
 
