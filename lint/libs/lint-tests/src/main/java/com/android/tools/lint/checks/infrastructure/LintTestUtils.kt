@@ -20,9 +20,15 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
+import com.android.SdkConstants.DOT_XML
+import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.SdkConstants.currentPlatform
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
 import com.android.tools.lint.LintCliClient
+import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintRequest
@@ -36,6 +42,7 @@ import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.fail
 import org.junit.rules.TemporaryFolder
@@ -45,6 +52,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.EnumSet
 import kotlin.math.max
+import kotlin.math.min
 
 // Misc utilities to help writing lint tests
 
@@ -424,4 +432,138 @@ private fun isLikelyPathSeparator(s: String, index: Int): Boolean {
     }
 
     return true
+}
+
+/**
+ * Runs lint on a tree of sources. This will recursively look for Java
+ * and Kotlin files (configurable via the [accept] parameter, and
+ * optionally filtered out via the [ignore] parameter which omits dot
+ * directories and paths mentioning "test" by default), batch them into
+ * groups of at most [bucketSize] files, and then run lint on those
+ * files (where the lint task which configures the issues to analyze etc
+ * is constructed via the [lintFactory] lambda parameter), and finally
+ * asserts that the output is as [expected].
+ *
+ * This is used to search larger project trees for false positives,
+ * where you don't have some easy other way to run your lint check on
+ * those project trees.
+ *
+ * For example, to run lint on a new check called `MyDetector` in the
+ * directory tree `/my/src` to see what it finds, from `MyDetectorTest`
+ * I can use
+ *
+ * ```
+ * runOnSources(
+ *    dir = File("/my/src"),
+ *    lintFactory = { TestLintTask.lint().allowMissingSdk().issues(MyDetector.ISSUE) },
+ * )
+ * ```
+ *
+ * (Consider passing `verbose = true` too to get progress printed along
+ * the way if it's a large source tree.)
+ */
+@Suppress("LintDocExample")
+fun runOnSources(
+    dir: File,
+    lintFactory: () -> TestLintTask,
+    expected: String = "",
+    accept: (File) -> Boolean = {
+        it.path.endsWith(DOT_KT) || it.path.endsWith(DOT_JAVA) &&
+            !it.path.endsWith("module-info.java") && !it.endsWith("package-info.java")
+    },
+    ignore: (File) -> Boolean = {
+        val path = it.path.portablePath()
+        path.contains("/.") || path.contains("/test")
+    },
+    bucketSize: Int = 500,
+    absolutePaths: Boolean = currentPlatform() != PLATFORM_WINDOWS,
+    testModes: List<TestMode> = listOf(TestMode.DEFAULT),
+    verbose: Boolean = false
+) {
+    val seen = HashSet<String>()
+    val root = dir.canonicalFile
+    val sourceFiles = root.walkTopDown().filter { !ignore(it) && accept(it) }.sortedBy { it.path }.toList()
+    val sb = StringBuilder()
+    val buckets = sourceFiles.size / bucketSize
+    for (i in 0..buckets) {
+        val from = i * bucketSize
+        val to = min(sourceFiles.size, (i + 1) * bucketSize)
+        val files = sourceFiles.subList(from, to).mapNotNull {
+            val source = it.readText()
+            val path = it.path
+            var keep = true
+            if (path.endsWith(DOT_KT) || path.endsWith(DOT_JAVA)) {
+                try {
+                    val className = ClassName(source, path.substring(path.lastIndexOf('.')))
+                    if (className.className != null) {
+                        val key = className.packageName + className.className
+                        if (!seen.add(key)) {
+                            keep = false
+                        }
+                    }
+                } catch (e: Throwable) {
+                    keep = false
+                }
+            }
+            if (keep) {
+                val srcPath = if (absolutePaths)
+                    "src/$path"
+                else
+                    path.removePrefix(root.path).removePrefix(File.separator).portablePath()
+
+                if (srcPath.endsWith(DOT_KT))
+                    kotlin(srcPath, source)
+                else if (srcPath.endsWith(DOT_JAVA))
+                    java(srcPath, source)
+                else if (srcPath.endsWith(DOT_XML))
+                    xml(srcPath, source)
+                else
+                    null
+            } else {
+                null
+            }
+        }
+        if (files.isEmpty()) {
+            break
+        }
+
+        var result: TestLintResult? = null
+        try {
+            if (verbose) {
+                println(
+                    "Analyzing ${files.size} files, first file is ${files[0].targetRelativePath.removePrefix("src/")}, " +
+                        "last is ${files[files.size - 1].targetRelativePath.removePrefix("src/")}"
+                )
+            }
+            result = lintFactory()
+                .files(*(files.toTypedArray()))
+                .testModes(*testModes.toTypedArray())
+                .allowCompilationErrors()
+                .allowAbsolutePathsInMessages(absolutePaths)
+                .run()
+
+            result.expect("", transformer = { report ->
+                if (report != "No warnings.") {
+                    val cleaned = if (absolutePaths) {
+                        report.removePrefix("src").replace("\nsrc", "\n")
+                    } else {
+                        report.replace(root.path, "").replace(root.path.portablePath(), "")
+                    }
+                    sb.append(cleaned).append("\n")
+                    if (verbose) {
+                        println("Partial:\n$cleaned\n")
+                    }
+                }
+                "" // such that we pass and continue
+            })
+        } catch (ignore: Throwable) {
+            // Gracefully handle parsing errors in some batches
+            if (verbose) {
+                ignore.printStackTrace()
+            }
+            result?.cleanup()
+        }
+    }
+    val actual = sb.toString().trim()
+    assertEquals(expected, actual)
 }

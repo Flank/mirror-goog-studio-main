@@ -196,7 +196,9 @@ class ProjectDescription : Comparable<ProjectDescription> {
             }
             val added = targets.add(file.targetRelativePath)
             if (!added) {
-                if (file.targetRelativePath.endsWith("/test.kt") && ClassName(file.contents, DOT_KT).className == null) {
+                if ((file.targetRelativePath.endsWith("/test.kt") || file.targetRelativePath == "test.kt") &&
+                    ClassName(file.contents, DOT_KT).className == null
+                ) {
                     // Just a default name assigned to a Kotlin compilation unit with no class: pick a new unique name
                     var next = 2
                     val base = file.targetRelativePath.substring(0, file.targetRelativePath.length - 7)

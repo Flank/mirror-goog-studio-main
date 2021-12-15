@@ -892,7 +892,7 @@ class TestLintResult internal constructor(
         return this
     }
 
-    private fun cleanup() {
+    fun cleanup() {
         for (state in states.values) {
             state.client.disposeProjects(emptyList())
         }
