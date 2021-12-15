@@ -93,16 +93,27 @@ if [[ $lsb_release == "crostini" ]]; then
     echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${test_invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
   fi
 
-  readonly bazel_status_emu=0
-
   readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
-  readonly bin_dir="$("${script_dir}"/../bazel info ${config_options} bazel-bin)"
+  readonly bin_dir="$("${script_dir}"/../bazel info bazel-bin)"
 
   # Generate the perfgate zip from the test bes
   # Copy it as part of build artifacts under dist_dir
   ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -perfzip "${dist_dir}/perfgate_data.zip"
+
+  if [[ -d "${dist_dir}" ]]; then
+    readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs)"
+    readonly bazel_status=$?
+    if [[ ! -z "$testlogs_dir" ]]; then
+      mkdir "${dist_dir}"/testlogs
+      (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
+      echo "Remove any empty file in testlogs"
+      find  "${dist_dir}"/testlogs/ -size  0 -print0 |xargs -0 rm --
+    else
+      exit $bazel_status
+    fi
+  fi
 
 else #Executes normally on linux as before
   config_options="--config=remote"
@@ -137,24 +148,24 @@ else #Executes normally on linux as before
   if [[ -d "${dist_dir}" ]]; then
     echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
   fi
-fi
 
-if [[ -d "${dist_dir}" ]]; then
-  readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
-  readonly bazel_status=$?
-  if [[ ! -z "$testlogs_dir" ]]; then
-    mkdir "${dist_dir}"/testlogs
-    (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
-    echo "Remove any empty file in testlogs"
-    find  "${dist_dir}"/testlogs/ -size  0 -print0 |xargs -0 rm --
-  else
-    exit $bazel_status
+  if [[ -d "${dist_dir}" ]]; then
+    readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
+    readonly bazel_status=$?
+    if [[ ! -z "$testlogs_dir" ]]; then
+      mkdir "${dist_dir}"/testlogs
+      (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
+      echo "Remove any empty file in testlogs"
+      find  "${dist_dir}"/testlogs/ -size  0 -print0 |xargs -0 rm --
+    else
+      exit $bazel_status
+    fi
   fi
 fi
 
 # See http://docs.bazel.build/versions/master/guide.html#what-exit-code-will-i-get
 # Exit with status 0 if all of the above tests' exit codes is 0, 3, or 4.
-for test_exit_code in "${bazel_status_no_emu}" "${bazel_status_emu}"; do
+for test_exit_code in "${bazel_status_no_emu}"; do
   case $test_exit_code in
     [034])
       # Exit code 0: successful test run
