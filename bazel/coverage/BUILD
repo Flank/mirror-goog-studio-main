@@ -244,7 +244,6 @@ coverage_report(
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
-        "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         # TODO(b/203803270) Re-enable this test when fixed.
@@ -855,7 +854,6 @@ coverage_report(
         #"//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
-        "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-lint:intellij.android.lint.tests_tests",
         "//tools/adt/idea/android-npw:intellij.android.newProjectWizard.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
