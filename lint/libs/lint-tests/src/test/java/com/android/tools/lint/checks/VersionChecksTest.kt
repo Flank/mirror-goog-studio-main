@@ -3459,7 +3459,7 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
-    fun testNextPlatformHandling() {
+    fun ignoreTestNextPlatformHandling() { // TODO(b/203422822): Re-enable this test when fixed.
         // Regression test for b/172930073
         // Need to gracefully handle the next version of Android
         lint().files(
@@ -3528,7 +3528,7 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
-    fun testNextPlatformHandling2() {
+    fun ignoreTestNextPlatformHandling2() { // TODO(b/203422822): Re-enable this test when fixed.
         lint().files(
             manifest().minSdk(14),
             kotlin(

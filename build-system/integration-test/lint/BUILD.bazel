@@ -93,6 +93,7 @@ gradle_integration_test(
     maven_repos = MAVEN_REPOS,
     resources = glob(["src/test/resources/**"]),
     shard_count = 6,
+    tags = ["manual"],  # TODO(b/203802678): Re-enable this test when fixed.
     deps = DEPS,
 )
 

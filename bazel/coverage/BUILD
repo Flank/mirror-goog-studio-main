@@ -77,7 +77,8 @@ coverage_report(
         "tools/base/usb-devices",
     ],
     tests = [
-        "//tools/base/build-system/integration-test/application:automatic-tests",  # 8 shard 2 exec
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/application:automatic-tests",  # 8 shard 2 exec
         "//tools/base/lint/libs/lint-tests:tests.test",  # 1 shard 1 exec
     ],
 )
@@ -132,7 +133,8 @@ coverage_report(
         "tools/vendor/google/android-apk",
     ],
     tests = [
-        "//tools/vendor/google/android-apk:android-apk.tests_tests",
+        # TODO(b/203422822) Re-enable this test when fixed.
+        #"//tools/vendor/google/android-apk:android-apk.tests_tests",
     ],
 )
 
@@ -245,7 +247,8 @@ coverage_report(
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        # TODO(b/203803270) Re-enable this test when fixed.
+        #"//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib:intellij.android.layoutlib.tests_tests",
@@ -294,7 +297,8 @@ coverage_report(
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        # TODO(b/203803270) Re-enable this test when fixed.
+        #"//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib:intellij.android.layoutlib.tests_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
@@ -324,7 +328,8 @@ coverage_report(
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
     ],
     tests = [
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        # TODO(b/203803270) Re-enable this test when fixed.
+        #"//tools/adt/idea/designer:intellij.android.designer.tests_tests",
     ],
 )
 
@@ -443,7 +448,8 @@ coverage_report(
         "tools/adt/idea/nav/editor/src/com/android/tools/idea/naveditor",
     ],
     tests = [
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        # TODO(b/203803270) Re-enable this test when fixed.
+        #"//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
     ],
 )
@@ -613,7 +619,8 @@ coverage_report(
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual",
     ],
     tests = [
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        # TODO(b/203803270) Re-enable this test when fixed.
+        #"//tools/adt/idea/designer:intellij.android.designer.tests_tests",
     ],
 )
 
@@ -661,7 +668,8 @@ coverage_report(
     tests = [
         "//tools/adt/idea/utp:utp_tests",
         "//tools/base/build-system/gradle-core:tests.test",
-        "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/connected:UtpConnectedTest",
         "//tools/base/utp/android-device-provider-ddmlib:tests.test",
         "//tools/base/utp/android-device-provider-gradle:tests.test",
         "//tools/base/utp/android-test-plugin-host-additional-test-output:tests.test",
@@ -687,7 +695,8 @@ coverage_report(
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-test-retention:intellij.android.testRetention.tests_tests",
         "//tools/base/build-system/gradle-core:tests.test",
-        "//tools/base/build-system/integration-test/connected:FailureRetentionConnectedTest",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/connected:FailureRetentionConnectedTest",
         "//tools/base/utp/android-test-plugin-host-retention:tests.test",
     ],
 )
@@ -875,7 +884,8 @@ coverage_report(
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
         "//tools/adt/idea/debuggers:intellij.android.debuggers.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        # TODO(b/203803270) Re-enable this test when fixed.
+        #"//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
         "//tools/adt/idea/device-explorer:intellij.android.device-explorer.tests_tests",
         "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
@@ -936,23 +946,30 @@ coverage_report(
         "//tools/base/build-system/builder-test-api:tools.builder-test-api_tests",
         "//tools/base/build-system/gradle-core:tests.test",
         "//tools/base/build-system/profile:tests.test",
-        "//tools/base/build-system/integration-test/application:automatic-tests",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/application:automatic-tests",
         "//tools/base/build-system/integration-test/application:coupled_tests",
         "//tools/base/build-system/integration-test/application:dependencies-tests",
         "//tools/base/build-system/integration-test/application:library-tests",
         "//tools/base/build-system/integration-test/application:mlkit-tests",
-        "//tools/base/build-system/integration-test/application:packaging-tests",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/application:packaging-tests",
         "//tools/base/build-system/integration-test/application:resources-tests",
         "//tools/base/build-system/integration-test/application:testing-tests",
         "//tools/base/build-system/integration-test/application:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:GradleVersionCheckTest",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
-        "//tools/base/build-system/integration-test/connected:FailureRetentionConnectedTest",
-        "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
-        "//tools/base/build-system/integration-test/databinding:tests",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/connected:FailureRetentionConnectedTest",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/connected:UtpConnectedTest",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
-        "//tools/base/build-system/integration-test/lint:tests",
+        # TODO(b/203802678) Re-enable this test when fixed.
+        #"//tools/base/build-system/integration-test/lint:tests",
         "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
         "//tools/base/build-system/integration-test/native:CmakeGradleTargetsTest",
         "//tools/base/build-system/integration-test/native:InjectedAbiSplitTest",
@@ -1022,7 +1039,8 @@ coverage_report(
         "//tools/data-binding:studio.compilerCommon_tests",
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
-        "//tools/vendor/google/android-apk:android-apk.tests_tests",
+        # TODO(b/203422822) Re-enable this test when fixed.
+        #"//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
     ],
 )

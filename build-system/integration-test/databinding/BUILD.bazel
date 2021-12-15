@@ -78,6 +78,7 @@ coverage_java_test(
         "block-network",
         "cpu:3",
         "gradle_integration",
+        "manual",  # TODO(b/203802678): Re-enable this test when fixed.
         "no_test_mac",  # b/69151132 Time out frequently when run on mac.
         "slow",
     ],

@@ -16,6 +16,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,6 +28,7 @@ class KotlinTestCompilationTest {
             .create()
 
     /** Regression test for b/150500779. */
+    @Ignore("203802678")
     @Test
     fun testAccessingInternalMembersForApp() {
         project.getSubproject("app").mainSrcDir.resolve("com/app/Data.kt").also {
@@ -75,6 +77,7 @@ class KotlinTestCompilationTest {
     }
 
     /** Regression test for b/150500779. */
+    @Ignore("203802678")
     @Test
     fun testAccessingInternalMembersForLibrary() {
         project.getSubproject("library").mainSrcDir.resolve("com/app/Data.kt").also {
