@@ -37,8 +37,6 @@ class ProxyClassEval extends AndroidEval {
     @NonNull
     @Override
     public Value getField(@NonNull Value target, FieldDescription field) {
-        String className = field.getOwnerInternalName();
-
         if (target.obj() instanceof ProxyClass) {
             Log.v("live.deploy.lambda", "getField: " + field);
             ProxyClassHandler handler =
@@ -51,8 +49,6 @@ class ProxyClassEval extends AndroidEval {
 
     @Override
     public void setField(@NonNull Value target, FieldDescription field, Value value) {
-        String className = field.getOwnerInternalName();
-
         if (target.obj() instanceof ProxyClass) {
             Log.v("live.deploy.lambda", "setField: " + field);
             ProxyClassHandler handler =
