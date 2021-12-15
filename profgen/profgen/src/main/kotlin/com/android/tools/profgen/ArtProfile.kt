@@ -16,8 +16,10 @@
 
 package com.android.tools.profgen
 
-import java.io.*
-import java.util.*
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.PrintStream
 
 internal val MAGIC = byteArrayOf('p', 'r', 'o', '\u0000')
 
@@ -63,30 +65,75 @@ class ArtProfile internal constructor(
         return result
     }
 
-    operator fun plus(other: ArtProfile): ArtProfile {
-        val values = mutableMapOf<String, DexFileData>()
+    internal fun addMetadata(other: ArtProfile, version: MetadataVersion): ArtProfile {
+        val keys = mutableSetOf<String>()
         val files = mutableMapOf<String, DexFile>()
+        val outFiles = mutableMapOf<String, DexFile>()
+        val outValues = mutableMapOf<String, DexFileData>()
         for ((file, value) in profileData) {
             val key = extractKey(file.name)
+            keys += key
             files[key] = file
-            values[key] = value
+            outValues[key] = value
         }
         for ((file, value) in other.profileData) {
             val key = extractKey(file.name)
-            files.putIfAbsent(key, file)
-            values[key] = value + values[key]
+            keys += key
+            val source = files[key]
+            outFiles += if (source != null) {
+                key to source.addMedata(file, version)
+            } else {
+                key to file
+            }
+            outValues[key] = value + outValues[key]
         }
-        return ArtProfile(
-                values.map { (key, value) ->
-                    val file = files[key]
-                    if (file == null) null
-                    else
-                        file to value
+        // Create new profile
+        val combinedMap = mutableMapOf<DexFile, DexFileData>()
+        for (key in keys) {
+            val file = outFiles[key]
+            val value = outValues[key]
+            if (file != null && value != null) {
+                combinedMap += (file to value)
+            }
+        }
+        return ArtProfile(combinedMap, apkName)
+    }
+
+    private fun DexFile.addMedata(other: DexFile, version: MetadataVersion): DexFile {
+        return when (version) {
+            MetadataVersion.V_001 -> this
+            MetadataVersion.V_002 -> {
+                // Merge headers by swapping empty spans only for V002
+                // Otherwise fall back to the original profile and treat it as the source of truth.
+
+                // Ensure it's the same DexFile
+                if (name == other.name) {
+                    DexFile(
+                        header = this.header.addMedata(other.header),
+                        name = name,
+                        dexChecksum = dexChecksum
+                    )
+                } else {
+                    this
                 }
-                        .filterNotNull()
-                        .toMap(),
-                apkName
+            }
+        }
+    }
+
+    private fun DexHeader.addMedata(other: DexHeader): DexHeader {
+        return DexHeader(
+            nonEmptySpan(stringIds, other.stringIds),
+            nonEmptySpan(typeIds, other.typeIds),
+            nonEmptySpan(prototypeIds, other.prototypeIds),
+            nonEmptySpan(methodIds, other.methodIds),
+            nonEmptySpan(classDefs, other.classDefs),
+            nonEmptySpan(data, other.data)
         )
+    }
+
+    private fun nonEmptySpan(first: Span, second: Span): Span {
+        if (first != Span.Empty) return first
+        return second
     }
 }
 

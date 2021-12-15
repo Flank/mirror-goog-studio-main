@@ -1,12 +1,14 @@
 package com.android.tools.profgen
 
 import com.google.common.truth.Truth.assertThat
-import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.util.zip.CRC32
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.Test
 
 class ArtProfileTests {
     @Test
@@ -61,7 +63,7 @@ class ArtProfileTests {
         val desN = ArtProfile(fileN)!!
         val desMN = ArtProfile(fileMN)!!
 
-        val combined = desP + desMN
+        val combined = desP.addMetadata(desMN, MetadataVersion.V_001)
 
         val osCP = ByteArrayOutputStream()
         combined.save(osCP, ArtProfileSerializer.V0_1_0_P)
@@ -113,6 +115,62 @@ class ArtProfileTests {
                 checkClassIds = true,
                 checkMethodCounts = false,
         )
+    }
+
+    @Test
+    fun testSerializationDeserializationForMetadata_0_0_2() {
+        val obf = ObfuscationMap(testData("jetnews/mapping.txt"))
+        val hrp = strictHumanReadableProfile("baseline-prof-all-compose.txt")
+        val apk = Apk(testData("jetnews/app-release.apk"))
+        val prof = ArtProfile(hrp, obf, apk)
+        assertSerializationIntegrity(
+            prof,
+            ArtProfileSerializer.METADATA_0_0_2,
+            checkTypeIds = false,
+            checkClassIds = true,
+            checkMethodCounts = false,
+        )
+    }
+
+    @Test
+    fun testTranscodeFromPtoS() {
+        val hrp = strictHumanReadableProfile("baseline-prof-all-compose.txt")
+        val apk = Apk(testData("jetcaster/app-release.apk"))
+        val prof = ArtProfile(hrp, ObfuscationMap.Empty, apk)
+        val golden = testData("jetcaster/baseline-multidex-s.prof").readBytes()
+        // Serialize
+        val outP = ByteArrayOutputStream()
+        outP.use {
+            prof.save(outP, ArtProfileSerializer.V0_1_0_P)
+        }
+        val outM2 = ByteArrayOutputStream()
+        outM2.use {
+            prof.save(outM2, ArtProfileSerializer.METADATA_0_0_2)
+        }
+        // Reconstruct
+        val baselineP = ArtProfile(outP.toByteArray().inputStream())
+        val metadataM2 = ArtProfile(outM2.toByteArray().inputStream())
+        assertNotNull(baselineP)
+        assertNotNull(metadataM2)
+        val merged = baselineP.addMetadata(metadataM2, MetadataVersion.V_002)
+        assertEquals(prof.typeIdCount, merged.typeIdCount)
+        assertEquals(prof.methodCount, merged.methodCount)
+        // Serialize to S
+        val outS = ByteArrayOutputStream()
+        outS.use {
+            merged.save(outS, ArtProfileSerializer.V0_1_5_S)
+        }
+        val baselineContents = outS.toByteArray()
+        val baselineS = ArtProfile(baselineContents.inputStream())
+        assertNotNull(baselineS)
+        // All dex files should have `typeId`s after the merge
+        val emptyTypeIds = baselineS.profileData.any { (file, _) ->
+            file.header.typeIds == Span.Empty
+        }
+        assertFalse(emptyTypeIds)
+        assertTrue {
+            golden.contentEquals(baselineContents)
+        }
     }
 
     @Test
