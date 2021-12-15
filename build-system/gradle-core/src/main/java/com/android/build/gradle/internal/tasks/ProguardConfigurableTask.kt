@@ -340,13 +340,6 @@ abstract class ProguardConfigurableTask(
                     applyProguardConfigForNonTest(task, creationConfig)
             }
 
-            // To set up a dependency on the producer task, the actual proguard files are computed
-            // through variantScope
-            task.configurationFiles.from(
-                creationConfig.global.globalArtifacts.get(
-                    InternalArtifactType.DEFAULT_PROGUARD_FILES)
-            )
-
             if (inputProguardMapping != null) {
                 task.dependsOn(inputProguardMapping)
             }
