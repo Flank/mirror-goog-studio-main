@@ -179,7 +179,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 5: Set required=\"false\":\n"
+                                + "Autofix for AndroidManifest.xml line 6: Set required=\"false\":\n"
                                 + "@@ -8 +8\n"
                                 + "-         android:required=\"true\" />\n"
                                 + "+         android:required=\"false\" />\n");

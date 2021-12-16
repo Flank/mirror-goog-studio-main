@@ -70,7 +70,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(value)
         }
 
-        artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+        artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
         assertThat(initialized.get()).isFalse()
 
         assertValues(artifact.getCurrent(), listOf(value))
@@ -89,7 +89,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             producer.configure {
                 it.getOutputFile().set(value)
             }
-            artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+            artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
             listOfValues.add(value)
         }
         assertValues(artifact.get(), listOfValues)
@@ -106,7 +106,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             producer.configure {
                 it.getOutputFile().set(value)
             }
-            artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+            artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
             listOfValues.add(value)
         }
         artifact.disallowChanges()
@@ -116,7 +116,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
         producer.configure {
             it.getOutputFile().set(value)
         }
-        artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+        artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
     }
 
     @Test
@@ -132,7 +132,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             producer.configure {
                 it.getOutputFile().set(value)
             }
-            artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+            artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
         }
         artifact.disallowChanges()
         assertThat(final.get().size).isEqualTo(3)
@@ -160,7 +160,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             producer.configure {
                 it.getOutputFile().set(value)
             }
-            artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+            artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
         }
         val currentValues = artifact.getCurrent()
 
@@ -171,7 +171,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             producer.configure {
                 it.getOutputFile().set(value)
             }
-            artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+            artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
         }
         assertThat(currentValues.get().size).isEqualTo(5)
 
@@ -201,14 +201,14 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             initialProducerConfigured,
             listOfValues
         )
-        artifact.setInitialProvider(producer.flatMap { it.getOutputFiles() })
+        artifact.addInitialProvider(listOf(producer), producer.flatMap { it.getOutputFiles() })
 
         // and now replace all in by one task.
         val secondProducer= allocateCombiningProducers(
             multipleProducerAllocator,
             "secondProducer",
             values = listOfValues)
-        artifact.replace(secondProducer.flatMap { it.getOutputFiles() })
+        artifact.replace(secondProducer, secondProducer.flatMap { it.getOutputFiles() })
 
         assertValues(artifact.get(), listOfValues)
         // make sure the initial provider is not configured since it's replaced.
@@ -229,7 +229,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             initialProviders
         )
 
-        artifact.setInitialProvider(producer.flatMap { it.getOutputFiles() })
+        artifact.addInitialProvider(listOf(producer), producer.flatMap { it.getOutputFiles() })
         // test current
         var currentArtifactValues = artifact.getCurrent()
         assertThat(currentArtifactValues.get().size).isEqualTo(3)
@@ -241,7 +241,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(addedValue)
             initialProviders.add(addedValue)
         }
-        artifact.addInitialProvider(addedProducer.flatMap { it.getOutputFile() })
+        artifact.addInitialProvider(addedProducer, addedProducer.flatMap { it.getOutputFile() })
 
         // test current
         currentArtifactValues = artifact.getCurrent()
@@ -256,7 +256,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
             it.getOutputFiles().add(replacingValue)
         }
 
-        artifact.replace(replacingProducer.flatMap { it.getOutputFiles() })
+        artifact.replace(replacingProducer, replacingProducer.flatMap { it.getOutputFiles() })
         // from now on, only one provider remain, which is "replacingValue"
 
         // test current
@@ -282,7 +282,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
                 it.getOutputFile().set(value)
                 initialProducersInitialized.set(true)
             }
-            artifact.addInitialProvider(producer.flatMap { it.getOutputFile() })
+            artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
         }
 
         val value = allocateValue("transformed")
@@ -290,7 +290,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
         transformer.configure {
             it.getOutputFiles().add(value)
         }
-        artifact.transform(transformer.flatMap { it.getOutputFiles() })
+        artifact.transform(transformer, transformer.flatMap { it.getOutputFiles() })
 
         assertValues(artifact.get(), listOf(value))
         // none of the initial providers should be involved.

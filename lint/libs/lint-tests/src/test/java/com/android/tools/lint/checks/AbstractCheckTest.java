@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.SdkConstants.currentPlatform;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
@@ -500,4 +503,8 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
 
     public static TestFile SUPPORT_ANNOTATIONS_JAR =
             base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
+
+    public static boolean isWindows() {
+        return currentPlatform() == PLATFORM_WINDOWS;
+    }
 }

@@ -110,17 +110,17 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
             .robot(true)
             .expectFixDiffs(
                 """
-                Fix for AndroidManifest.xml line 5: Replace with <data android:scheme="https"/>...:
+                Autofix for AndroidManifest.xml line 5: Replace with <data android:scheme="https"/>...:
                 @@ -5 +5
                 -             <data android:scheme="https" android:host="example.com"/>
                 +             <data android:scheme="https"/>
                 +             <data android:host="example.com"/>
-                Fix for AndroidManifest.xml line 6: Replace with <data android:scheme="http"/>...:
+                Autofix for AndroidManifest.xml line 6: Replace with <data android:scheme="http"/>...:
                 @@ -6 +6
                 -             <data android:scheme="http" android:host="example.org"/>
                 +             <data android:scheme="http"/>
                 +             <data android:host="example.org"/>
-                Fix for AndroidManifest.xml line 12: Replace with <data android:scheme="https"/>...:
+                Autofix for AndroidManifest.xml line 12: Replace with <data android:scheme="https"/>...:
                 @@ -12 +12
                 -             <data
                 -                 android:host="example.com"
@@ -130,12 +130,12 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
                 +             <data android:scheme="https"/>
                 +             <data android:host="example.com"/>
                 +             <data android:path="/path"/>
-                Fix for AndroidManifest.xml line 24: Replace with <data android:host="example.com" android:port="41"/>...:
+                Autofix for AndroidManifest.xml line 24: Replace with <data android:host="example.com" android:port="41"/>...:
                 @@ -24 +24
                 -             <data android:host="example.com" android:port="41" android:path="/sub"/>
                 +             <data android:host="example.com" android:port="41"/>
                 +             <data android:path="/sub"/>
-                Fix for AndroidManifest.xml line 30: Replace with <data android:host="example.com"/>...:
+                Autofix for AndroidManifest.xml line 30: Replace with <data android:host="example.com"/>...:
                 @@ -30 +30
                 -             <data android:host="example.com" android:mimeType="image/jpeg"/>
                 +             <data android:host="example.com"/>

@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibrary
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
+import com.android.builder.core.ToolsRevisionUtils
 import com.android.utils.FileUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
@@ -101,10 +102,26 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("""
-                    Dependency ':lib' requires 'compileSdkVersion' to be set to 28 or higher.
-                    Compilation target for module ':app' is 'android-24'
+                .isEqualTo(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  Dependency ':lib' requires libraries and applications that
+                              depend on it to compile against version 28 or later of the
+                              Android APIs.
+
+                              :app is currently compiled against android-24.
+
+                              Recommended action: Update this project to use a newer compileSdkVersion
+                              of at least 28, for example ${ToolsRevisionUtils.MAX_RECOMMENDED_COMPILE_SDK_VERSION.apiLevel}.
+
+                              Note that updating a library or application's compileSdkVersion (which
+                              allows newer APIs to be used) can be done separately from updating
+                              targetSdkVersion (which opts the app in to new runtime behavior) and
+                              minSdkVersion (which determines which devices the app can be installed
+                              on).
                 """.trimIndent())
+
         }
     }
 
@@ -164,9 +181,24 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("""
-                    Dependency 'library.aar' requires 'compileSdkVersion' to be set to 28 or higher.
-                    Compilation target for module ':app' is 'android-24'
+                .isEqualTo(
+                    """
+                    An issue was found when checking AAR metadata:
+
+                      1.  Dependency 'library.aar' requires libraries and applications that
+                          depend on it to compile against version 28 or later of the
+                          Android APIs.
+
+                          :app is currently compiled against android-24.
+
+                          Recommended action: Update this project to use a newer compileSdkVersion
+                          of at least 28, for example ${ToolsRevisionUtils.MAX_RECOMMENDED_COMPILE_SDK_VERSION.apiLevel}.
+
+                          Note that updating a library or application's compileSdkVersion (which
+                          allows newer APIs to be used) can be done separately from updating
+                          targetSdkVersion (which opts the app in to new runtime behavior) and
+                          minSdkVersion (which determines which devices the app can be installed
+                          on).
                 """.trimIndent())
         }
     }
@@ -198,8 +230,16 @@ class CheckAarMetadataTaskTest {
             project.executor().run(":app:assembleDebug")
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("Please upgrade to a newer version of the Android Gradle Plugin.")
+            assertThat(Throwables.getRootCause(e).message).startsWith("""
+                An issue was found when checking AAR metadata:
+
+                  1.  The aarFormatVersion (99999) specified in a dependency's AAR metadata
+                      (META-INF/com/android/build/gradle/aar-metadata.properties)
+                      is not compatible with this version of the Android Gradle plugin.
+                      Please upgrade to a newer version of the Android Gradle plugin.
+                      Dependency: library.aar.
+                      AAR metadata file:
+            """.trimIndent())
         }
     }
 
@@ -246,8 +286,16 @@ class CheckAarMetadataTaskTest {
             project.executor().run(":app:assembleDebug")
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("Please upgrade to a newer version of the Android Gradle Plugin.")
+            assertThat(Throwables.getRootCause(e).message).startsWith("""
+                An issue was found when checking AAR metadata:
+
+                  1.  The aarMetadataVersion (99999) specified in a dependency's AAR metadata
+                      (META-INF/com/android/build/gradle/aar-metadata.properties)
+                      is not compatible with this version of the Android Gradle plugin.
+                      Please upgrade to a newer version of the Android Gradle plugin.
+                      Dependency: library.aar.
+                      AAR metadata file:
+                """.trimIndent())
         }
     }
 
@@ -264,7 +312,7 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("requires an Android Gradle Plugin version of 99999.0.0 or higher.")
+                .contains("requires Android Gradle plugin 99999.0.0 or higher.")
         }
     }
 

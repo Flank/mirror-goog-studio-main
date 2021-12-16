@@ -19,6 +19,8 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_KOTLIN_MODULE
+import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.SdkConstants.currentPlatform
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Companion.populateProjectDirectory
 import com.android.tools.lint.checks.infrastructure.TestMode.TestModeContext
 import com.android.tools.lint.client.api.Configuration
@@ -152,7 +154,17 @@ class TestLintRunner(private val task: TestLintTask) {
                 results[defaultType] = state
                 TestLintResult(this, results, defaultType)
             } finally {
-                TestFile.deleteFilesRecursively(tempDir)
+                // Delete all the test files -- except .jar files, since these may
+                // still be referenced from the UAST/PSI environment and therefore
+                // locked on Windows. (We'll get a second chance to delete these
+                // later, in TestLintResult#cleanup.)
+                if (currentPlatform() == PLATFORM_WINDOWS) {
+                    tempDir.walkBottomUp().fold(true) { result, it ->
+                        !it.path.endsWith(DOT_JAR) && (it.delete() || !it.exists()) && result
+                    }
+                } else {
+                    tempDir.deleteRecursively()
+                }
             }
         }
     }
@@ -519,7 +531,7 @@ class TestLintRunner(private val task: TestLintTask) {
         } finally {
             lintClient.setLintTask(task)
             if (!keepFiles) {
-                TestFile.deleteFilesRecursively(rootDir)
+                rootDir.deleteRecursively()
             }
         }
     }

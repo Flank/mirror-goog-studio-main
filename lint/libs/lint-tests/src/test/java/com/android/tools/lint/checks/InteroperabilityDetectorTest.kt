@@ -188,28 +188,28 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).issues(PLATFORM_NULLNESS).run().expect(
             """
-            src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Object error1(Integer error2, int[] error3) { return null; }
                        ~~~~~~
-            src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Object error1(Integer error2, int[] error3) { return null; }
                                      ~~~~~~~
-            src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Object error1(Integer error2, int[] error3) { return null; }
                                                      ~~~~~
-            src/test/pkg/Test.java:14: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:14: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Float error4;
                        ~~~~~
-            src/test/pkg/Test.java:16: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:16: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Float error5;
                        ~~~~~
-            src/test/pkg/Test.java:18: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:18: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Object error6() { return null; }
                        ~~~~~~
-            src/test/pkg/Test.java:19: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:19: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 protected Float error7;
                           ~~~~~
-            src/test/pkg/Test.java:34: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/Test.java:34: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public Float error8;
                        ~~~~~
             0 errors, 8 warnings
@@ -861,7 +861,7 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).issues(PLATFORM_NULLNESS).run().expect(
             """
-            src/test/pkg/NullnessTest.java:7: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/NullnessTest.java:7: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public String MY_CONSTANT3 = "constant"; // Unknown
                        ~~~~~~
             0 errors, 1 warnings
@@ -933,10 +933,10 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
         } else {
             result.expect(
                 """
-                src/test/pkg/DeprecatedNullnessTest.java:6: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                src/test/pkg/DeprecatedNullnessTest.java:6: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                     public Object error1() { return null; }
                            ~~~~~~
-                src/test/pkg/DeprecatedNullnessTest.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                src/test/pkg/DeprecatedNullnessTest.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                         public void error2(Integer error2) { return null; }
                                            ~~~~~~~
                 0 errors, 2 warnings
@@ -1068,7 +1068,7 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-            src/test/pkg/MyClass.java:15: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+            src/test/pkg/MyClass.java:15: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://developer.android.com/kotlin/interop#nullability_annotations [UnknownNullness]
                 public static String platform() { // ERROR 1
                               ~~~~~~
             src/test/pkg/test.kt:6: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
@@ -1103,6 +1103,64 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
+        ).run().expectClean()
+    }
+
+    fun testOverridePlatform() {
+        // Regression test for 206454502: UnknownNullness check shouldn't trigger on overrides of un-annotated platform APIs
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.util.AttributeSet;
+                import android.view.View;
+                import android.view.ViewGroup;
+
+                public abstract class MyView extends ViewGroup {
+                    public MyView() {
+                        super(null);
+                    }
+
+                    @Override
+                    public void addView(View child) {
+                        if (getChildCount() > 0) {
+                            throw new IllegalStateException("ScrollView can host only one direct child");
+                        }
+
+                        super.addView(child);
+                    }
+
+                    public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
+                        throw new RuntimeException("Stub!");
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import android.util.AttributeSet;
+                import android.view.View;
+                import android.view.ViewGroup;
+
+                public abstract class MyIndirectView extends MyView {
+                    @Override
+                    public void addView(View child) {
+                        if (getChildCount() > 0) {
+                            throw new IllegalStateException("ScrollView can host only one direct child");
+                        }
+
+                        super.addView(child);
+                    }
+
+                    public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
+                        throw new RuntimeException("Stub!");
+                    }
+                }
+                """
+            ).indented()
         ).run().expectClean()
     }
 }

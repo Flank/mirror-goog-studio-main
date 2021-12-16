@@ -167,7 +167,7 @@ class NoOpDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         method: PsiMethod
     ): Boolean {
-        return context.evaluator.findAnnotation(
+        return context.evaluator.getAnnotation(
             method,
             CHECK_RESULT_ANNOTATION.oldName(),
             CHECK_RESULT_ANNOTATION.newName()

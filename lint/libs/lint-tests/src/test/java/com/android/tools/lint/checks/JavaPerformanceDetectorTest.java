@@ -316,31 +316,31 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 36: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 36: Replace with valueOf():\n"
                                 + "@@ -36 +36\n"
                                 + "-         Integer i = new Integer(5);\n"
                                 + "+         Integer i = Integer.valueOf(5);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 137: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 137: Replace with valueOf():\n"
                                 + "@@ -137 +137\n"
                                 + "-         Integer i1 = new Integer(42);\n"
                                 + "+         Integer i1 = Integer.valueOf(42);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 138: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 138: Replace with valueOf():\n"
                                 + "@@ -138 +138\n"
                                 + "-         Long l1 = new Long(42L);\n"
                                 + "+         Long l1 = Long.valueOf(42L);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 139: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 139: Replace with valueOf():\n"
                                 + "@@ -139 +139\n"
                                 + "-         Boolean b1 = new Boolean(true);\n"
                                 + "+         Boolean b1 = Boolean.valueOf(true);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 140: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 140: Replace with valueOf():\n"
                                 + "@@ -140 +140\n"
                                 + "-         Character c1 = new Character('c');\n"
                                 + "+         Character c1 = Character.valueOf('c');\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 141: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 141: Replace with valueOf():\n"
                                 + "@@ -141 +141\n"
                                 + "-         Float f1 = new Float(1.0f);\n"
                                 + "+         Float f1 = Float.valueOf(1.0f);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 142: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/JavaPerformanceTest.java line 142: Replace with valueOf():\n"
                                 + "@@ -142 +142\n"
                                 + "-         Double d1 = new Double(1.0);\n"
                                 + "+         Double d1 = Double.valueOf(1.0);");
@@ -756,7 +756,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                 + "0 errors, 1 warnings")
                 .expectFixDiffs(
                         ""
-                                + "Fix for src/test/pkg/play/test.kt line 6: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/play/test.kt line 6: Replace with valueOf():\n"
                                 + "@@ -6 +6\n"
                                 + "-     Integer(\n"
                                 + "+     Integer.valueOf(");
@@ -810,11 +810,11 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                 + "0 errors, 6 warnings")
                 .expectFixDiffs(
                         ""
-                                + "Fix for src/test/pkg/foo.kt line 4: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/foo.kt line 4: Replace with valueOf():\n"
                                 + "@@ -4 +4\n"
                                 + "-     val i1 = Integer(42);\n"
                                 + "+     val i1 = Integer.valueOf(42);\n"
-                                + "Fix for src/test/pkg/foo.kt line 7: Replace with valueOf():\n"
+                                + "Autofix for src/test/pkg/foo.kt line 7: Replace with valueOf():\n"
                                 + "@@ -7 +7\n"
                                 + "-     val c1 = Character('c');\n"
                                 + "+     val c1 = Character.valueOf('c');");

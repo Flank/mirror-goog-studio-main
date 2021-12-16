@@ -667,6 +667,7 @@ open class LintXmlConfiguration protected constructor(
 
         // or inherited?
         return parent?.getDefinedSeverity(issue, source, visibleDefault)
+            ?: super.getDefinedSeverity(issue, source, visibleDefault)
     }
 
     private fun ensureInitialized() {

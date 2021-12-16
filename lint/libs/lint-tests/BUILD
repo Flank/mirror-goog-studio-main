@@ -56,7 +56,6 @@ kotlin_test(
     lint_baseline = "lint_baseline.xml",
     shard_count = 2,
     tags = [
-        "no_test_windows",  # b/73306170
         "slow",
     ],
     test_class = "com.android.testutils.JarTestSuite",

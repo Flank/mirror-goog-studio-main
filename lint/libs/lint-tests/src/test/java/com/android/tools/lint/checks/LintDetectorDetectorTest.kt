@@ -38,6 +38,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.checks.infrastructure.findFromRuntimeClassPath
 import org.junit.Test
 import java.io.File
 
@@ -478,11 +479,11 @@ class LintDetectorDetectorTest {
             )
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/MyJavaLintDetector.java line 70: Surround with backtics:
+                Autofix for src/test/pkg/MyJavaLintDetector.java line 70: Surround with backtics:
                 @@ -70 +70
                 -             "Wrong use of LinearLayout.");
                 +             "Wrong use of `LinearLayout`.");
-                Fix for src/test/pkg/MyJavaLintDetector.java line 70: Remove period:
+                Autofix for src/test/pkg/MyJavaLintDetector.java line 70: Remove period:
                 @@ -70 +70
                 -             "Wrong use of LinearLayout.");
                 +             "Wrong use of LinearLayout");
@@ -490,15 +491,15 @@ class LintDetectorDetectorTest {
                 @@ -74 +74
                 -             "This is teh typo");
                 +             "This is the typo");
-                Fix for src/test/pkg/MyKotlinLintDetector.kt line 47: Surround with backtics:
+                Autofix for src/test/pkg/MyKotlinLintDetector.kt line 47: Surround with backtics:
                 @@ -47 +47
                 -                     |Instead you should call foo().bar().baz() here.
                 +                     |Instead you should call `foo().bar().baz()` here.
-                Fix for src/test/pkg/MyKotlinLintDetector.kt line 64: Surround with backtics:
+                Autofix for src/test/pkg/MyKotlinLintDetector.kt line 64: Surround with backtics:
                 @@ -64 +64
                 -                     Here's a call: foo.bar.baz(args).
                 +                     Here's a call: `foo.bar.baz(args)`.
-                Fix for src/test/pkg/MyJavaLintDetector.java line 34: Replace with Scope.JAVA_AND_RESOURCE_FILES:
+                Autofix for src/test/pkg/MyJavaLintDetector.java line 34: Replace with Scope.JAVA_AND_RESOURCE_FILES:
                 @@ -34 +34
                 -                     new Implementation(MyJavaLintDetector.class, EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)))
                 +                     new Implementation(MyJavaLintDetector.class, Scope.JAVA_AND_RESOURCE_FILES))
@@ -534,21 +535,16 @@ class LintDetectorDetectorTest {
         }
 
         val libs = mutableListOf<File>()
-        val classPath: String = System.getProperty("java.class.path")
-        for (path in classPath.split(':')) {
-            val file = File(path)
+        findFromRuntimeClassPath { file ->
             val name = file.name
-            if (name.endsWith(DOT_JAR)) {
-                libs.add(file)
-            } else {
-                val filePath = file.path
-                if (!filePath.endsWith("android.sdktools.base.lint.checks-base") &&
-                    !filePath.endsWith("android.sdktools.base.lint.studio-checks") &&
-                    !filePath.contains("lint-tests")
-                ) {
-                    libs.add(file)
-                }
-            }
+            val path = file.path
+            name.endsWith(DOT_JAR) || (
+                !path.endsWith("android.sdktools.base.lint.checks-base") &&
+                    !path.endsWith("android.sdktools.base.lint.studio-checks") &&
+                    !path.contains("lint-tests")
+                )
+        }.forEach {
+            libs.add(it)
         }
 
         // Symlink to all the jars on the classpath and insert a src/ link

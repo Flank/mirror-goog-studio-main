@@ -276,7 +276,7 @@ class ApplicationTaskManager(
 
             taskFactory.register(AnchorTaskNames.getExtractApksAnchorTaskName(variant)) {
                 it.dependsOn(variant.artifacts.get(
-                    InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE
+                    InternalArtifactType.EXTRACTED_APKS
                 ))
             }
 

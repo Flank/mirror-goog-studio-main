@@ -72,7 +72,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(value)
         }
 
-        artifact.replace(producer.flatMap { it.getOutputFile() })
+        artifact.replace(producer, producer.flatMap { it.getOutputFile() })
         assertThat(initialized.get()).isFalse()
 
         assertThat(artifact.get().isPresent).isTrue()
@@ -94,7 +94,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             firstInitialized.set(true)
             it.getOutputFile().set(outputFile)
         }
-        artifact.replace(firstProducer.flatMap { it.getOutputFile() })
+        artifact.replace(firstProducer, firstProducer.flatMap { it.getOutputFile() })
         assertThat(firstInitialized.get()).isFalse()
 
         val outputFile2 = allocateValue("secondProduced")
@@ -104,7 +104,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(outputFile2)
         }
 
-        artifact.replace(secondProducer.flatMap { it.getOutputFile() })
+        artifact.replace(secondProducer, secondProducer.flatMap { it.getOutputFile() })
         assertThat(secondInitialized.get()).isFalse()
 
         assertThat(artifact.get().isPresent).isTrue()
@@ -128,7 +128,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(outputFile)
         }
 
-        artifact.replace(firstProducer.flatMap { it.getOutputFile() })
+        artifact.replace(firstProducer, firstProducer.flatMap { it.getOutputFile() })
         val currentProducer = artifact.getCurrent()
         assertThat(firstInitialized.get()).isFalse()
 
@@ -139,7 +139,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(outputFile2)
         }
 
-        artifact.replace(secondProducer.flatMap { it.getOutputFile() })
+        artifact.replace(secondProducer, secondProducer.flatMap { it.getOutputFile() })
         val finalProducer= artifact.get()
 
         assertThat(currentProducer.get().asFile.name).isEqualTo("firstProducer")
@@ -155,7 +155,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         finalProducer.configure {
             it.getOutputFile().set(outputFile)
         }
-        artifact.replace(finalProducer.flatMap { it.getOutputFile() })
+        artifact.replace(finalProducer, finalProducer.flatMap { it.getOutputFile() })
         artifact.disallowChanges()
 
         // now try to replace it.
@@ -165,7 +165,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             it.getOutputFile().set(outputFile2)
         }
 
-        artifact.replace(otherProducer.flatMap { it.getOutputFile() })
+        artifact.replace(otherProducer, otherProducer.flatMap { it.getOutputFile() })
     }
 
     @Test
@@ -188,7 +188,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         otherProducer.configure {
             it.getOutputFile().set(outputFile2)
         }
-        artifact.setInitialProvider(otherProducer.flatMap { it.getOutputFile() })
+        artifact.setInitialProvider(otherProducer, otherProducer.flatMap { it.getOutputFile() })
 
         // verify the chaining is correct.
         assertThat(artifact.get().isPresent).isTrue()
@@ -218,7 +218,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
             firstInitialized.set(true)
             it.getOutputFile().set(outputFile)
         }
-        artifact.replace(firstProducer.flatMap { it.getOutputFile() })
+        artifact.replace(firstProducer, firstProducer.flatMap { it.getOutputFile() })
 
         // now sets the initial provider which will happen after we run the variant API hooks.
         // obviously, in AGP, we might not even do that if we realize that the artifact is being
@@ -228,7 +228,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         otherProducer.configure {
             it.getOutputFile().set(outputFile2)
         }
-        artifact.setInitialProvider(otherProducer.flatMap { it.getOutputFile() })
+        artifact.setInitialProvider(otherProducer, otherProducer.flatMap { it.getOutputFile() })
 
         // verify the chaining is correct.
         assertThat(artifact.get().isPresent).isTrue()

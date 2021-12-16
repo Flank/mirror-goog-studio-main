@@ -9,7 +9,6 @@
          - name                   = "debug"
          - displayName            = "debug"
          - isInstantAppCompatible = false
-         - desugaredMethods       = []
          > mainArtifact:
             - compileTaskName               = "compileDebugSources"
             - assembleTaskName              = "assembleDebug"

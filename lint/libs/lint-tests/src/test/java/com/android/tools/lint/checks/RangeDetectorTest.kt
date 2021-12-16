@@ -1199,4 +1199,40 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             """
         )
     }
+
+    fun testDefaultAnnotationUsageSite() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.IntRange
+
+                class Api(@IntRange(from = 10) var foo: Int) {
+                    @IntRange(from = 1, to = 10) var bar: Int = 5
+                    @field:IntRange(from = 1, to = 10) var baz: Int = 5
+                }
+
+                fun test(api: Api) {
+                    api.foo = 0  // WARN 1
+                    api.bar = 0  // WARN 2
+                    api.baz = 0  // OK 1
+                    api.foo = 10 // OK 2
+                    api.bar = 10 // OK 3
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Api.kt:11: Error: Value must be ≥ 10 (was 0) [Range]
+                api.foo = 0  // WARN 1
+                          ~
+            src/test/pkg/Api.kt:12: Error: Value must be ≥ 1 (was 0) [Range]
+                api.bar = 0  // WARN 2
+                          ~
+            2 errors, 0 warnings
+            """
+        )
+    }
 }

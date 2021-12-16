@@ -19,6 +19,8 @@ package com.android.tools.lint.model
 import com.android.testutils.truth.PathSubject
 import com.android.tools.lint.checks.infrastructure.GradleModelMocker
 import com.android.tools.lint.checks.infrastructure.GradleModelMockerTest
+import com.android.tools.lint.checks.infrastructure.dos2unix
+import com.android.tools.lint.checks.infrastructure.portablePath
 import com.android.tools.lint.model.LintModelSerialization.LintModelSerializationFileAdapter
 import com.android.tools.lint.model.LintModelSerialization.TargetFile
 import com.android.utils.XmlUtils
@@ -1116,8 +1118,8 @@ class LintModelSerializationTest {
 
         LintModelSerializationFileAdapter(root, pathVariables).use { adapter ->
             assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
-            assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
-            assertEquals("\$GRADLE/file2", adapter.toPathString(file2, root))
+            assertEquals("\$SDK/file1", adapter.toPathString(file1, root).portablePath())
+            assertEquals("\$GRADLE/file2", adapter.toPathString(file2, root).portablePath())
 
             assertEquals(moduleFile, adapter.fromPathString("module.xml", root))
             assertEquals(file1, adapter.fromPathString("\$SDK/file1", root))
@@ -1414,7 +1416,7 @@ class LintModelSerializationTest {
         expectedXml: Map<String, String>
     ) {
         val path = mocker.projectDir.path
-        fun String.cleanup() = replace(path, "＄ROOT").trim()
+        fun String.cleanup() = replace(path, "＄ROOT").dos2unix().trim()
 
         // Test lint model stuff
         val module = mocker.getLintModule()
@@ -1561,7 +1563,7 @@ class LintModelSerializationTest {
                 assertNoTextNodes(curr as Element)
             } else if (nodeType == Node.TEXT_NODE) {
                 val text = curr.nodeValue
-                if (!text.isBlank()) {
+                if (text.isNotBlank()) {
                     fail("Found unexpected text " + text.trim { it <= ' ' } + " in the document")
                 }
             }
@@ -1574,4 +1576,3 @@ class LintModelSerializationTest {
         return this
     }
 }
-private const val ROOT: String = "\uFF04ROOT"

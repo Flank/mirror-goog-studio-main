@@ -83,8 +83,8 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                     <issue id="SdCardPath" severity="warning" />
                 </lint>
                 """
-            ).indented(), // Trigger src/main/java source sets
-            gradle("")
+            ).indented(),
+            gradle("") // Trigger src/main/java source sets
         ).issues(SdCardDetector.ISSUE).run().expect(
             """
             src/main/kotlin/test/pkg2/subpkg1/MyTest.kt:3: Error: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
@@ -608,6 +608,47 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
                                         val z = java.lang.Integer(42)
                                                 ~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 1 warnings
+                """
+            )
+    }
+
+    fun testWarningsAsErrors() {
+        // Regression test for
+        //   201177846: Lint warningsAsErrors not escalating warning to error
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                class MyTest {
+                    val s: String = "/sdcard/mydir" // ERROR, not warning
+                }
+                """
+            ).indented(),
+            xml(
+                "lint.xml",
+                """
+                <lint>
+
+                </lint>
+                """
+            ).indented(),
+            xml(
+                "lint-override.xml",
+                """
+                <lint>
+                    <issue id="SdCardPath" severity="error" />
+                </lint>
+                """
+            ).indented(),
+            gradle("") // Trigger src/main/java source sets
+        )
+            .useTestConfiguration(false)
+            .issues(SdCardDetector.ISSUE).run().expect(
+                """
+                src/main/kotlin/test/pkg/MyTest.kt:3: Error: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+                    val s: String = "/sdcard/mydir" // ERROR, not warning
+                                     ~~~~~~~~~~~~~
+                1 errors, 0 warnings
                 """
             )
     }

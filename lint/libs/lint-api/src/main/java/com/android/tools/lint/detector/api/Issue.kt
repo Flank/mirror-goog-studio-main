@@ -195,6 +195,25 @@ class Issue private constructor(
     /** Returns any names for this issue; see [setAliases]. */
     fun getAliases(): List<String>? = aliases
 
+    private var options: List<Option> = emptyList()
+
+    /** Sets options associated with this issue. */
+    fun setOptions(options: List<Option>): Issue {
+        // (We're using setter instead of property to allow chaining as part of issue registration.)
+        assert(this.options.isEmpty()) // calling more than once is probably not intentional
+        this.options = options
+        for (option in options) {
+            option.issue = this
+        }
+        return this
+    }
+
+    /**
+     * Returns any options configurable for this issue; see
+     * [setOptions].
+     */
+    fun getOptions(): List<Option> = options
+
     /** A link (a URL string) to more information, or null. */
     val moreInfo: List<String>
         get() {

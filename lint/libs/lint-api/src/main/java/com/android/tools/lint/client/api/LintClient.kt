@@ -1654,7 +1654,7 @@ abstract class LintClient {
     open fun getDisplayPath(
         file: File,
         project: Project? = null,
-        format: TextFormat = TextFormat.RAW
+        format: TextFormat = TextFormat.TEXT
     ): String {
         val base = project?.referenceDir ?: getRootDir()
         if (base != null) {

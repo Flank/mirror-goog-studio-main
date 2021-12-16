@@ -118,7 +118,8 @@ public class ExtractAnnotationsDriverTest {
                         intDefTest,
                         permissionsTest,
                         manifest,
-                        SUPPORT_ANNOTATIONS_JAR);
+                        SUPPORT_ANNOTATIONS_JAR,
+                        androidxIntDefStub);
         File supportLib = new File(project, SUPPORT_JAR_PATH);
 
         File output = temporaryFolder.newFile("annotations.zip");
@@ -153,13 +154,13 @@ public class ExtractAnnotationsDriverTest {
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                         + "      <val name=\"flag\" val=\"true\" />\n"
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest void setStyle(int, int) 0\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
                         + "    </annotation>\n"
                         + "    <annotation name=\"android.support.annotation.IntRange\">\n"
@@ -167,7 +168,7 @@ public class ExtractAnnotationsDriverTest {
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                         + "      <val name=\"flag\" val=\"true\" />\n"
                         + "    </annotation>\n"
@@ -224,7 +225,12 @@ public class ExtractAnnotationsDriverTest {
         Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project =
-                createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
+                createProject(
+                        intDefTest,
+                        permissionsTest,
+                        manifest,
+                        SUPPORT_ANNOTATIONS_JAR,
+                        androidxIntDefStub);
         File supportLib = new File(project, SUPPORT_JAR_PATH);
 
         File output = temporaryFolder.newFile("annotations.zip");
@@ -255,13 +261,13 @@ public class ExtractAnnotationsDriverTest {
                         + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<root>\n"
                         + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                         + "      <val name=\"flag\" val=\"true\" />\n"
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest void setStyle(int, int) 0\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
                         + "    </annotation>\n"
                         + "    <annotation name=\"android.support.annotation.IntRange\">\n"
@@ -269,7 +275,7 @@ public class ExtractAnnotationsDriverTest {
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                         + "      <val name=\"flag\" val=\"true\" />\n"
                         + "    </annotation>\n"
@@ -285,7 +291,12 @@ public class ExtractAnnotationsDriverTest {
         Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project =
-                createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
+                createProject(
+                        intDefTest,
+                        permissionsTest,
+                        manifest,
+                        SUPPORT_ANNOTATIONS_JAR,
+                        androidxIntDefStub);
         File supportLib = new File(project, SUPPORT_JAR_PATH);
 
         File output = temporaryFolder.newFile("annotations.zip");
@@ -317,13 +328,13 @@ public class ExtractAnnotationsDriverTest {
                         + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<root>\n"
                         + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                         + "      <val name=\"flag\" val=\"true\" />\n"
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest void setStyle(int, int) 0\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
                         + "    </annotation>\n"
                         + "    <annotation name=\"android.support.annotation.IntRange\">\n"
@@ -331,7 +342,7 @@ public class ExtractAnnotationsDriverTest {
                         + "    </annotation>\n"
                         + "  </item>\n"
                         + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
-                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "    <annotation name=\"androidx.annotation.IntDef\">\n"
                         + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                         + "      <val name=\"flag\" val=\"true\" />\n"
                         + "    </annotation>\n"
@@ -418,7 +429,12 @@ public class ExtractAnnotationsDriverTest {
         File androidJar = TestUtils.resolvePlatformPath("android.jar").toFile();
 
         File project =
-                createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
+                createProject(
+                        intDefTest,
+                        permissionsTest,
+                        manifest,
+                        SUPPORT_ANNOTATIONS_JAR,
+                        androidxIntDefStub);
         File supportLib = new File(project, SUPPORT_JAR_PATH);
 
         File output = temporaryFolder.newFile("annotations.zip");
@@ -544,7 +560,7 @@ public class ExtractAnnotationsDriverTest {
                             + "package test.pkg;\n"
                             + "\n"
                             + "import android.content.Context;\n"
-                            + "import android.support.annotation.IntDef;\n"
+                            + "import androidx.annotation.IntDef;\n"
                             + "import android.support.annotation.IntRange;\n"
                             + "import android.support.annotation.Keep;\n"
                             + "import android.view.View;\n"
@@ -587,6 +603,24 @@ public class ExtractAnnotationsDriverTest {
                             + "        }\n"
                             + "    }\n"
                             + "}");
+
+    private final TestFile androidxIntDefStub =
+            TestFiles.java(
+                    ""
+                            + "package androidx.annotation;\n"
+                            + "\n"
+                            + "import static java.lang.annotation.ElementType.ANNOTATION_TYPE;\n"
+                            + "import static java.lang.annotation.RetentionPolicy.SOURCE;\n"
+                            + "\n"
+                            + "import java.lang.annotation.Retention;\n"
+                            + "import java.lang.annotation.Target;\n"
+                            + "\n"
+                            + "@Retention(SOURCE)\n"
+                            + "@Target({ANNOTATION_TYPE})\n"
+                            + "public @interface IntDef {\n"
+                            + "    int[] value() default {};\n"
+                            + "    boolean flag() default false;\n"
+                            + "}\n");
 
     private final TestFile longDefTest =
             TestFiles.kotlin(

@@ -43,7 +43,7 @@ import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UReferenceExpression;
-import org.jetbrains.uast.UastContextKt;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastLiteralUtils;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
@@ -173,29 +173,16 @@ public class PermissionFinder {
             if (resolved instanceof PsiField) {
                 PsiField field = (PsiField) resolved;
                 if (mOperation == Operation.ACTION) {
-                    PsiAnnotation annotation =
-                            mContext.getEvaluator()
-                                    .findAnnotation(field, PERMISSION_ANNOTATION.oldName());
-
-                    if (annotation == null) {
-                        annotation =
-                                mContext.getEvaluator()
-                                        .findAnnotation(field, PERMISSION_ANNOTATION.newName());
-
-                        if (annotation == null) {
-                            annotation =
-                                    mContext.getEvaluator()
-                                            .findAnnotation(field, AOSP_PERMISSION_ANNOTATION);
-                        }
-                    }
+                    JavaEvaluator evaluator = mContext.getEvaluator();
+                    UAnnotation annotation =
+                            evaluator.getAnnotation(
+                                    field,
+                                    PERMISSION_ANNOTATION.oldName(),
+                                    PERMISSION_ANNOTATION.newName(),
+                                    AOSP_PERMISSION_ANNOTATION);
 
                     if (annotation != null) {
-                        // return getPermissionRequirement(field, annotation);
-                        UAnnotation uAnnotation =
-                                UastContextKt.toUElement(annotation, UAnnotation.class);
-                        if (uAnnotation != null) {
-                            return getPermissionRequirement(field, uAnnotation);
-                        }
+                        return getPermissionRequirement(field, annotation);
                     }
                 } else if (mOperation == Operation.READ || mOperation == Operation.WRITE) {
                     AndroidxName fqn =
@@ -204,40 +191,37 @@ public class PermissionFinder {
                                     : PERMISSION_ANNOTATION_WRITE;
 
                     JavaEvaluator evaluator = mContext.getEvaluator();
-                    PsiAnnotation annotation =
-                            evaluator.findAnnotation(field, fqn.oldName(), fqn.newName());
+                    UAnnotation annotation =
+                            evaluator.getAnnotation(field, fqn.oldName(), fqn.newName());
                     if (annotation == null) {
                         String s = toPlatformAnnotation(fqn.newName());
-                        annotation = evaluator.findAnnotation(field, s);
+                        annotation = evaluator.getAnnotation(field, s);
                     }
                     if (annotation != null) {
-                        UAnnotation uAnnotation =
-                                UastContextKt.toUElement(annotation, UAnnotation.class);
-                        if (uAnnotation != null) {
-                            List<UNamedExpression> values = uAnnotation.getAttributeValues();
-                            UExpression o =
-                                    values.size() == 1 ? values.get(0).getExpression() : null;
-                            if (o instanceof UCallExpression
-                                    && o.getSourcePsi() instanceof PsiAnnotation) {
-                                PsiAnnotation nestedPsi = (PsiAnnotation) o.getSourcePsi();
-                                UAnnotation nested =
-                                        UastContextKt.toUElement(nestedPsi, UAnnotation.class);
-                                if (nested != null) {
-                                    String qualifiedName = nested.getQualifiedName();
-                                    if (PERMISSION_ANNOTATION.isEquals(qualifiedName)
-                                            || AOSP_PERMISSION_ANNOTATION.equals(qualifiedName)) {
-                                        return getPermissionRequirement(field, nested);
-                                    }
+                        List<UNamedExpression> values = annotation.getAttributeValues();
+                        UExpression o = values.size() == 1 ? values.get(0).getExpression() : null;
+                        if (o instanceof UCallExpression
+                                && o.getSourcePsi() instanceof PsiAnnotation) {
+                            PsiAnnotation nestedPsi = (PsiAnnotation) o.getSourcePsi();
+                            UAnnotation nested =
+                                    (UAnnotation)
+                                            UastFacade.INSTANCE.convertElement(
+                                                    nestedPsi, null, UAnnotation.class);
+                            if (nested != null) {
+                                String qualifiedName = nested.getQualifiedName();
+                                if (PERMISSION_ANNOTATION.isEquals(qualifiedName)
+                                        || AOSP_PERMISSION_ANNOTATION.equals(qualifiedName)) {
+                                    return getPermissionRequirement(field, nested);
                                 }
-                            } else {
-                                // The complex annotations used for read/write cannot be
-                                // expressed in the external annotations format, so they're inlined.
-                                // (See Extractor.AnnotationData#write).
-                                //
-                                // Instead we've inlined the fields of the annotation on the
-                                // outer one:
-                                return getPermissionRequirement(field, uAnnotation);
                             }
+                        } else {
+                            // The complex annotations used for read/write cannot be
+                            // expressed in the external annotations format, so they're inlined.
+                            // (See Extractor.AnnotationData#write).
+                            //
+                            // Instead we've inlined the fields of the annotation on the
+                            // outer one:
+                            return getPermissionRequirement(field, annotation);
                         }
                     }
                 } else {

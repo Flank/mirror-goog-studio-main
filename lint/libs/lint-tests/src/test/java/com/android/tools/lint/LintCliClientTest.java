@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static java.io.File.separator;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
@@ -123,7 +125,9 @@ public class LintCliClientTest extends AbstractCheckTest {
                 .clientFactory(factory)
                 .run()
                 .expect(
-                        "Relative Path found: bin/classes.jar. All paths should be absolute.",
+                        "Relative Path found: bin"
+                                + separator
+                                + "classes.jar. All paths should be absolute.",
                         IllegalArgumentException.class);
 
         projectDir.delete();

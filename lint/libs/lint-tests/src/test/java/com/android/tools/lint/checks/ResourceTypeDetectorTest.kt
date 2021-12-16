@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class ResourceTypeDetectorTest : AbstractCheckTest() {
@@ -2181,6 +2182,128 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     if (testResourceTypeReturnValues(context, true) == R.string.app_name) {
                                                                        ~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testVarAnnotations() {
+        // Regression test for https://issuetracker.google.com/200048369
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.ColorRes
+                import androidx.annotation.StringRes
+
+                class AnnotationTest(@ColorRes var color0: Int = android.R.color.background_dark) {
+                    fun test() {
+                        checkString(color0) // ERROR 1
+                        checkString(color1) // ERROR 2
+                        checkString(color2) // ERROR 3
+                        checkString(color3) // ERROR 4
+                        checkString(string) // OK 1
+                    }
+
+                    companion object {
+                        fun test(@StringRes string: Int) {
+                            val test = AnnotationTest(string) // ERROR 5
+                            test.color0 = string // ERROR 6
+                            test.color2 = string // ERROR 7
+                            test.string = string // OK 2
+                        }
+                    }
+
+                    @ColorRes
+                    val color1: Int = android.R.color.background_dark
+                    @ColorRes
+                    var color2: Int = android.R.color.background_light
+                    @get:ColorRes
+                    var color3: Int = android.R.color.transparent
+                    @StringRes
+                    var string: Int = android.R.string.ok
+
+                    private fun checkString(@StringRes string: Int) { }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).testModes(TestMode.DEFAULT).run().expect(
+            """
+            src/test/pkg/AnnotationTest.kt:8: Error: Expected resource of type string [ResourceType]
+                    checkString(color0) // ERROR 1
+                                ~~~~~~
+            src/test/pkg/AnnotationTest.kt:9: Error: Expected resource of type string [ResourceType]
+                    checkString(color1) // ERROR 2
+                                ~~~~~~
+            src/test/pkg/AnnotationTest.kt:10: Error: Expected resource of type string [ResourceType]
+                    checkString(color2) // ERROR 3
+                                ~~~~~~
+            src/test/pkg/AnnotationTest.kt:11: Error: Expected resource of type string [ResourceType]
+                    checkString(color3) // ERROR 4
+                                ~~~~~~
+            src/test/pkg/AnnotationTest.kt:17: Error: Expected resource of type color [ResourceType]
+                        val test = AnnotationTest(string) // ERROR 5
+                                                  ~~~~~~
+            src/test/pkg/AnnotationTest.kt:18: Error: Expected resource of type color [ResourceType]
+                        test.color0 = string // ERROR 6
+                                      ~~~~~~
+            src/test/pkg/AnnotationTest.kt:19: Error: Expected resource of type color [ResourceType]
+                        test.color2 = string // ERROR 7
+                                      ~~~~~~
+            7 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testVarAnnotations2() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import test.api.Simple;
+                import androidx.annotation.DrawableRes;
+
+                public class JavaTest {
+                    public void test(@DrawableRes int drawable, Simple simple) {
+                        simple.setFoo(drawable);                 // WARN 1
+                        simple.setBar(drawable);                 // WARN 2
+                        Simple simple2 = new Simple(drawable);   // WARN 3
+                        if (simple.getFoo() == drawable) {       // TODO: WARN 4
+                            System.out.println("test");
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.api
+
+                import androidx.annotation.StringRes
+
+                class Simple(
+                    @StringRes
+                    var foo: Int = 0
+                ) {
+                    @StringRes
+                    var bar: Int = 0
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/JavaTest.java:7: Error: Expected resource of type string [ResourceType]
+                    simple.setFoo(drawable);                 // WARN 1
+                                  ~~~~~~~~
+            src/test/pkg/JavaTest.java:8: Error: Expected resource of type string [ResourceType]
+                    simple.setBar(drawable);                 // WARN 2
+                                  ~~~~~~~~
+            src/test/pkg/JavaTest.java:9: Error: Expected resource of type string [ResourceType]
+                    Simple simple2 = new Simple(drawable);   // WARN 3
+                                                ~~~~~~~~
+            3 errors, 0 warnings
             """
         )
     }

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.tools.lint.client.api.UElementHandler
+import com.android.tools.lint.detector.api.BooleanOption
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -86,14 +87,15 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             briefDescription = "No Hard Kotlin Keywords",
 
             explanation = """
-            Do not use Kotlin’s hard keywords as the name of methods or fields.
-            These require the use of backticks to escape when calling from Kotlin.
+            Do not use Kotlin’s hard keywords as the name of methods or fields. \
+            These require the use of backticks to escape when calling from Kotlin. \
             Soft keywords, modifier keywords, and special identifiers are allowed.
 
             For example, Mockito’s `when` function requires backticks when used from Kotlin:
-
-                val callable = Mockito.mock(Callable::class.java)
-                Mockito.\`when\`(callable.call()).thenReturn(/* … */)
+            ```kotlin
+            val callable = Mockito.mock(Callable::class.java)
+            Mockito.\`when\`(callable.call()).thenReturn(/* … */)
+            ```
             """,
             moreInfo = "https://android.github.io/kotlin-guides/interop.html#no-hard-keywords",
             category = Category.INTEROPERABILITY_KOTLIN,
@@ -109,7 +111,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             briefDescription = "Lambda Parameters Last",
 
             explanation = """
-            To improve calling this code from Kotlin,
+            To improve calling this code from Kotlin, \
             parameter types eligible for SAM conversion should be last.
             """,
             moreInfo = "https://android.github.io/kotlin-guides/interop.html#lambda-parameters-last",
@@ -120,29 +122,32 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
+        private val CHECK_DEPRECATED = BooleanOption(
+            "ignore-deprecated",
+            "Whether to ignore classes and members that have been annotated with `@Deprecated`",
+            false,
+            """
+                Normally this lint check will flag all unannotated elements, but by \
+                setting this option to `true` it will skip any deprecated elements.
+                """
+        )
+
         @JvmField
         val PLATFORM_NULLNESS = Issue.create(
             id = "UnknownNullness",
             briefDescription = "Unknown nullness",
 
             explanation = """
-            To improve referencing this code from Kotlin, consider adding
-            explicit nullness information here with either `@NonNull` or `@Nullable`.
-
-            You can set the environment variable
-            ```
-                `ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED=true`
-            ```
-            if you want lint to ignore classes and members that have been annotated with
-            `@Deprecated`.
+                To improve referencing this code from Kotlin, consider adding \
+                explicit nullness information here with either `@NonNull` or `@Nullable`.
             """,
-            moreInfo = "https://android.github.io/kotlin-guides/interop.html#nullability-annotations",
+            moreInfo = "https://developer.android.com/kotlin/interop#nullability_annotations",
             category = Category.INTEROPERABILITY_KOTLIN,
             priority = 6,
             severity = Severity.WARNING,
             enabledByDefault = false,
             implementation = IMPLEMENTATION
-        )
+        ).setOptions(listOf(CHECK_DEPRECATED))
 
         @JvmField
         val KOTLIN_PROPERTY = Issue.create(
@@ -163,7 +168,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         )
 
         private fun isKotlinHardKeyword(keyword: String): Boolean {
-            // From https://github.com/JetBrains/kotlin/blob/master/core/descriptors/src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
+            // From https://github.com/JetBrains/kotlin/blob/master/core/compiler.common/src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
             when (keyword) {
                 "as",
                 "break",
@@ -311,7 +316,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         }
 
         private fun hasNullnessAnnotation(node: PsiModifierListOwner): Boolean {
-            for (annotation in context.evaluator.getAllAnnotations(node, false)) {
+            for (annotation in context.evaluator.getAnnotations(node, false)) {
                 val name = annotation.qualifiedName ?: continue
                 if (isNullableAnnotation(name) || isNonNullAnnotation(name)) {
                     return true
@@ -645,9 +650,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             }
 
             // Skip deprecated members?
-            if (IGNORE_DEPRECATED ||
-                context.configuration.getOptionAsBoolean(PLATFORM_NULLNESS, "ignore-deprecated", false)
-            ) {
+            if (IGNORE_DEPRECATED || CHECK_DEPRECATED.getValue(context.configuration)) {
                 val deprecatedNode =
                     if (node is UParameter) {
                         node.uastParent
@@ -664,6 +667,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         return
                     }
                 }
+            }
+
+            if (overridesUnannotatedPlatformMethod(node)) {
+                return
             }
 
             val location: Location =
@@ -689,7 +696,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             }
             val message = "Unknown nullability; explicitly declare as `@Nullable` or `@NonNull`" +
                 " to improve Kotlin interoperability; see " +
-                "https://android.github.io/kotlin-guides/interop.html#nullability-annotations"
+                "https://developer.android.com/kotlin/interop#nullability_annotations"
             val fix = LintFix.create().alternatives(
                 LintFix.create()
                     .replace()
@@ -711,6 +718,52 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     .build()
             )
             context.report(PLATFORM_NULLNESS, node as UElement, location, message, fix)
+        }
+
+        private fun overridesUnannotatedPlatformMethod(node: UDeclaration): Boolean {
+            if (node is UParameter) {
+                val method = node.getParentOfType(UMethod::class.java)
+                if (method != null && !method.isConstructor) {
+                    val superMethod = method.findRootMethod() ?: return false
+                    val superParameters = superMethod.parameterList.parameters
+                    val parameterIndex = method.uastParameters.indexOf(node)
+                    if (parameterIndex >= 0 && parameterIndex < superParameters.size) {
+                        if (isPlatformMethod(superMethod) && !hasNullnessAnnotation(superParameters[parameterIndex])) {
+                            return true
+                        }
+                    }
+                    return false
+                }
+            } else if (node is UMethod && !node.isConstructor) {
+                val superMethod = node.findRootMethod() ?: return false
+                if (isPlatformMethod(superMethod) && !hasNullnessAnnotation(superMethod)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        private fun UMethod.findRootMethod(): PsiMethod? {
+            var superMethod = javaPsi.findSuperMethods().firstOrNull() ?: return null
+            while (true) {
+                superMethod = superMethod.findSuperMethods().firstOrNull() ?: return superMethod
+            }
+        }
+
+        private fun isPlatformMethod(method: PsiMethod): Boolean {
+            val containingClass = method.containingClass ?: return false
+            val name = containingClass.qualifiedName ?: return false
+            return name.startsWith("android.") || name.startsWith("java.")
+        }
+
+        private fun hasNullnessAnnotation(corresponding: PsiModifierListOwner): Boolean {
+            for (annotation in context.evaluator.getAllAnnotations(corresponding, false)) {
+                val name = annotation.qualifiedName ?: continue
+                if (isNullableAnnotation(name) || isNonNullAnnotation(name)) {
+                    return true
+                }
+            }
+            return false
         }
 
         private fun isEqualsParameter(node: UDeclaration): Boolean {

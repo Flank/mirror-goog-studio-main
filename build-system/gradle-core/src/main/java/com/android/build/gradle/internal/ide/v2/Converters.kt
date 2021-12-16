@@ -200,7 +200,7 @@ internal fun DefaultAndroidSourceSet.convert(
         jniLibsDirectories = jniLibsDirectories,
         shadersDirectories = if (features.shaders) shadersDirectories else null,
         mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
-        customDirectories = emptyList(),
+        customDirectories = customDirectories,
 )
 
 internal fun DefaultAndroidSourceSet.convert(

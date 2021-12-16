@@ -33,6 +33,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
 import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
 import com.android.tools.lint.detector.api.DefaultPosition
@@ -451,7 +452,7 @@ class LintBaselineTest {
         )
         baseline.close()
 
-        var actual = baselineFile.readText().replace(File.separatorChar, '/')
+        var actual = baselineFile.readText().dos2unix()
 
         @Language("XML")
         val expected =
@@ -504,7 +505,7 @@ class LintBaselineTest {
         assertThat(found).isTrue()
         baseline.close()
 
-        actual = baselineFile.readText().replace(File.separatorChar, '/')
+        actual = baselineFile.readText().dos2unix()
         assertThat(actual).isEqualTo(expected)
 
         // Test the skip fix flag
@@ -534,7 +535,7 @@ class LintBaselineTest {
         assertThat(found).isFalse()
         baseline.close()
 
-        actual = baselineFile.readText().replace(File.separatorChar, '/')
+        actual = baselineFile.readText().dos2unix()
 
         // This time we should ONLY get the initial baseline issue back; we should
         // NOT see the new issue, and the fixed issue (the uses sdk error reported in the baseline
@@ -679,7 +680,7 @@ class LintBaselineTest {
 
             </issues>
         """.trimIndent()
-        assertEquals(expected, readBaseline(outputBaseline))
+        assertEquals(expected, readBaseline(outputBaseline).dos2unix()) // b/209433064
     }
 
     @Test
@@ -895,6 +896,8 @@ class LintBaselineTest {
 
     @Test
     fun testUpdateBaselineWithContinue() {
+        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
+
         // Testing two scenarios.
         //   (1) No baseline exists (or is not specified). Ensures that the output baseline
         //       file is written and contains all issues.
@@ -1058,7 +1061,7 @@ class LintBaselineTest {
 
             </issues>
             """.trimIndent()
-            assertEquals(expected, newBaseline)
+            assertEquals(expected, newBaseline.dos2unix()) // b/209433064
         }
     }
 

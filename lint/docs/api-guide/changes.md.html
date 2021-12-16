@@ -7,6 +7,17 @@ Guide.
 
 **7.2**
 
+* There is now a way to register “options” for detectors. These are
+  simple key/value pairs of type string, integer, boolean or file, and
+  users can configure values in `lint.xml` files. This has all been
+  possible since 4.2, but in 7.2 there is now a way to register the
+  names, descriptions and default values of these options, and these
+  will show up in issue explanations, HTML reports, and so on. (In the
+  future we can use this to create an Options UI in the IDE, allow
+  configuration via Gradle DSL, and so on.)
+
+  For more, see the [options chapter](options.md.html).
+
 * A new test mode, `TestMode.CDATA`, checks that tests correctly handle
   XML CDATA sections in `<string>` declarations.
 

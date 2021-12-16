@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.AnalyticsService.Params
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.builder.profile.AnalyticsProfileWriter
 import com.android.builder.profile.NameAnonymizerSerializer
 import com.android.builder.profile.Recorder
+import com.android.tools.analytics.AnalyticsSettings
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -89,6 +91,12 @@ abstract class AnalyticsService :
     }
 
     protected open fun initializeUsageTracker() {
+        // Ensure AnalyticsSettings is initialized in configuration cached build
+        // from a different daemon.
+        AnalyticsSettings.initialize(
+                LoggerWrapper.getLogger(AnalyticsService::class.java),
+                null,
+                GradleAnalyticsEnvironment(provider))
         // Initialize UsageTracker because some tasks(e.g. lint) need to record analytics with
         // UsageTracker.
         AnalyticsProfileWriter().initializeUsageTracker()

@@ -18,15 +18,14 @@ package com.android.builder.model.v2
 
 import java.io.File
 
-class CustomSourceDirectory(
+interface CustomSourceDirectory {
     /**
      * Source name as represented by the user. It must be unique for the project.
      */
-    val sourceTypeName: String,
+    val sourceTypeName: String
 
     /**
      * the single source folder for the source type.
      */
-    val directory: File,
-) {
+    val directory: File
 }

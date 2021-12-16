@@ -257,7 +257,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings\n")
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/drawable/my_vector.xml line 6: Replace with 0.000105:\n"
+                                + "Autofix for res/drawable/my_vector.xml line 7: Replace with 0.000105:\n"
                                 + "@@ -7 +7\n"
                                 + "-     android:pathData=\"m 1.05e-4,2.75448\" />\n"
                                 + "+     android:pathData=\"m 0.000105,2.75448\" />\n");
@@ -332,19 +332,19 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                                 + "4 errors, 0 warnings\n")
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/drawable/my_vector.xml line 8: Replace with -0.89:\n"
+                                + "Autofix for res/drawable/my_vector.xml line 9: Replace with -0.89:\n"
                                 + "@@ -9 +9\n"
                                 + "-         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
                                 + "+         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-0.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
-                                + "Fix for res/drawable/my_vector.xml line 8: Replace with -0.9:\n"
+                                + "Autofix for res/drawable/my_vector.xml line 9: Replace with -0.9:\n"
                                 + "@@ -9 +9\n"
                                 + "-         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
                                 + "+         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-0.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
-                                + "Fix for res/drawable/my_vector.xml line 8: Replace with 0.9:\n"
+                                + "Autofix for res/drawable/my_vector.xml line 9: Replace with 0.9:\n"
                                 + "@@ -9 +9\n"
                                 + "-         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
                                 + "+         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1 0.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
-                                + "Fix for res/drawable/my_vector.xml line 8: Replace with 0.9:\n"
+                                + "Autofix for res/drawable/my_vector.xml line 9: Replace with 0.9:\n"
                                 + "@@ -9 +9\n"
                                 + "-         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
                                 + "+         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 0.9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n");

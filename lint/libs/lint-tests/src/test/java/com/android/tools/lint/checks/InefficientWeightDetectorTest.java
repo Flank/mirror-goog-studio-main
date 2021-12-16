@@ -241,7 +241,7 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/baseline_weights.xml line 1: Set baselineAligned=\"false\":\n"
+                                + "Autofix for res/layout/baseline_weights.xml line 2: Set baselineAligned=\"false\":\n"
                                 + "@@ -5 +5\n"
                                 + "      android:layout_height=\"match_parent\"\n"
                                 + "+     android:baselineAligned=\"false\"\n"

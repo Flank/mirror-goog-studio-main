@@ -241,7 +241,7 @@ class AppCompatCustomViewDetectorTest : AbstractCheckTest() {
             .run()
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/MyButton.java line 6: Extend AppCompat widget instead:
+                Autofix for src/test/pkg/MyButton.java line 7: Extend AppCompat widget instead:
                 @@ -7 +7
                 - public class MyButton extends Button implements Runnable {
                 + public class MyButton extends android.support.v7.widget.AppCompatButton implements Runnable {

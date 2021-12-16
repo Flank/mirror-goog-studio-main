@@ -513,6 +513,40 @@ document.getElementById(id).style.display = 'none';
         val moreInfo = issue.moreInfo
         append("<br/>")
 
+        val options = issue.getOptions()
+        if (options.isNotEmpty()) {
+            append("<br/>\nThis check can be configured via the following options:<br/><br/>\n")
+            append("<div class=\"options\">\n")
+            for (option in options) {
+                append(option.describe(TextFormat.HTML, includeExample = false))
+                append("<br/>\n")
+                append(
+                    "To configure this option, use a `lint.xml` file in the project or source folder using an " +
+                        "<code>&lt;option&gt;</code> block like the following:\n"
+                )
+
+                val name = option.name
+                val defaultValue = option.defaultAsString()
+                val builder = HtmlBuilder()
+                val snippet = "<lint>\n" +
+                    "    <issue id=\"${issue.id}\">\n" +
+                    "        <option name=\"$name\" value=\"${defaultValue ?: "some string"}\" />\n" +
+                    "    </issue>\n" +
+                    "</lint>\n"
+
+                val highlighter = LintSyntaxHighlighter("lint.xml", snippet)
+                highlighter.isPadCaretLine = true
+                highlighter.isDedent = true
+                val start = snippet.indexOf(name) - 1
+                val end = snippet.lastIndexOf(" />")
+                highlighter.generateHtml(builder, start, end, false)
+                val highlighted = builder.html
+                append(highlighted)
+            }
+
+            append("</div>") // options
+        }
+
         // TODO: Skip MoreInfo links already present in the HTML to avoid redundancy.
         val count = moreInfo.size
         if (count > 0) {
@@ -1373,6 +1407,9 @@ $cssSyntaxColors.overview {
    left: -50px;
    padding-top: 20px;
    padding-bottom: 5px;
+}
+.options {
+   padding-left: 16px;
 }
 """
 

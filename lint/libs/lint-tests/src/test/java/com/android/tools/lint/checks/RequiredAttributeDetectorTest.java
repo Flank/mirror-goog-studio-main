@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.infrastructure.LintTestUtils.platformPath;
+
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import java.io.File;
@@ -471,19 +473,13 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                         xml("res/layout/size2.xml", SIZE_XML));
         assertTrue(
                 RequiredAttributeDetector.hasLayoutVariations(
-                        new File(
-                                projectDir,
-                                "res/layout/size.xml".replace('/', File.separatorChar))));
+                        new File(projectDir, platformPath("res/layout/size.xml"))));
         assertTrue(
                 RequiredAttributeDetector.hasLayoutVariations(
-                        new File(
-                                projectDir,
-                                "res/layout-land/size.xml".replace('/', File.separatorChar))));
+                        new File(projectDir, platformPath("res/layout-land/size.xml"))));
         assertFalse(
                 RequiredAttributeDetector.hasLayoutVariations(
-                        new File(
-                                projectDir,
-                                "res/layout/size2.xml".replace('/', File.separatorChar))));
+                        new File(projectDir, platformPath("res/layout/size2.xml"))));
     }
 
     public void testDataBinding() {

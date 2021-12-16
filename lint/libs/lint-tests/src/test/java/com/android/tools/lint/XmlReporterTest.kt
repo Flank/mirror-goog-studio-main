@@ -29,6 +29,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestResultChecker
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.utils.PathUtils
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
@@ -154,6 +155,7 @@ class XmlReporterTest {
 
     @Test
     fun testFullPathsWithDescriptions() {
+        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
         checkFullPaths(
             describeSuggestions = true,
             expected =
@@ -233,7 +235,7 @@ class XmlReporterTest {
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
-                    assertEquals(xmlPrologue + expected.trimIndent() + "\n", xml)
+                    assertEquals(xmlPrologue + expected.trimIndent() + "\n", xml.dos2unix())
                 },
                 fullPaths = true,
                 reportType = if (describeSuggestions) XmlFileType.REPORT_WITH_FIXES else XmlFileType.REPORT

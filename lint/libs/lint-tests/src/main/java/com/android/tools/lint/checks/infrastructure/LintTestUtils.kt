@@ -44,6 +44,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.EnumSet
+import kotlin.math.max
 
 // Misc utilities to help writing lint tests
 
@@ -218,7 +219,7 @@ private fun createTestProjectForFiles(
             project: Project,
             includeProvided: Boolean
         ): List<File> {
-            val kotlinStdlib = if (includeKotlinStdlib) findKotlinStdlibPath().map(::File) else emptyList()
+            val kotlinStdlib = if (includeKotlinStdlib) findKotlinStdlibPath() else emptyList()
             return super.getJavaLibraries(project, includeProvided) + libs + kotlinStdlib
         }
 
@@ -339,4 +340,88 @@ fun List<TestFile>.use(
         dir?.toFile()?.walkBottomUp()?.forEach { it.delete() }
         Disposer.dispose(disposable)
     }
+}
+
+/**
+ * Converts a String produced on Windows (possibly containing CRLF
+ * line separators, containing paths using Windows file and path
+ * separators and so on) to the corresponding Unix style string. Unless
+ * [indiscriminate] is set to true, this method will attempt to be
+ * smart in a few cases such that it understands from context whether
+ * a semicolon (for example) is likely to be used in an XML snippet as
+ * an entity terminator instead of a path separator, whether a \\ is
+ * likely to be used in a path as opposed to a string escape, and so on.
+ */
+@JvmOverloads
+fun String.dos2unix(indiscriminate: Boolean = false): String {
+    if (this.none { it == '\r' || it == '\\' || it == ';' }) return this
+
+    if (indiscriminate) {
+        return this.replace("\r\n", "\n").replace('\\', '/').replace(';', ':')
+    }
+
+    val sb = StringBuilder()
+    for (i in indices) {
+        when (val c = this[i]) {
+            '\r' -> continue
+            '\\' -> sb.append('/')
+            ';' -> if (isLikelyPathSeparator(this, i)) {
+                sb.append(':')
+            } else {
+                sb.append(';')
+            }
+            else -> sb.append(c)
+        }
+    }
+
+    return sb.toString()
+}
+
+/** Converts a /-separated path into a platform specific path. */
+fun String.platformPath(): String {
+    return replace('/', File.separatorChar)
+}
+
+/** Converts a platform specific path into a unix/portable path. */
+fun String.portablePath(): String {
+    return replace(File.separatorChar, '/')
+}
+
+/**
+ * Given the location of a semicolon in a String, guess
+ * whether the semicolon represents a path separator, as in
+ * "src\main\java;src\main\kotlin", as opposed to something else such
+ * as "this is &quot;some text&quot;" or semicolon usage in an error
+ * message text.
+ */
+private fun isLikelyPathSeparator(s: String, index: Int): Boolean {
+    if (index == 0) {
+        return false
+    }
+    // Whitespace surrounding the semicolon tends to indicate text and is definitely
+    // not a path separator
+    if (s[index - 1].isWhitespace()) {
+        return false
+    }
+    if (index < s.length - 1) {
+        val next = s[index + 1]
+        if (next.isWhitespace() || next == '"' ||
+            // background: url(data:image/png:base64,...
+            next == 'b' && s.regionMatches(index + 1, "base64", 0, 6)
+        ) {
+            return false
+        }
+    }
+
+    // Look to see if it's an XML entity like &lt; or &quot;
+    for (j in index - 1 downTo max(0, index - 6)) {
+        val c = s[j]
+        if (c == '&') {
+            return false
+        } else if (!c.isLetterOrDigit() && c != '#') { // entities can look like &quot; or &xA; or &#9029;
+            break
+        }
+    }
+
+    return true
 }

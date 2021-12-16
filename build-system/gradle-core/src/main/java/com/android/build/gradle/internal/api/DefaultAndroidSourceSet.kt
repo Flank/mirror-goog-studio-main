@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.Companio
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_PUBLISH
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_WEAR_APP
+import com.android.build.gradle.internal.ide.CustomSourceDirectoryImpl
 import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
@@ -366,7 +367,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
         ).map {
             // there can be only one directory per source set since we do not allow to have
             // access to the extras field to end users (see below).
-            CustomSourceDirectory(
+            CustomSourceDirectoryImpl(
                 it.key,
                 it.value.flatten().single(),
             )
@@ -388,17 +389,18 @@ open class DefaultAndroidSourceSet @Inject constructor(
     internal val extras: NamedDomainObjectContainer<DefaultAndroidSourceDirectorySet> =
         project.objects.domainObjectContainer(
             DefaultAndroidSourceDirectorySet::class.java,
-            AndroidSourceDirectorySetFactory(project, displayName)
+            AndroidSourceDirectorySetFactory(project, displayName, name)
         )
 
     class AndroidSourceDirectorySetFactory(
         private val project: Project,
+        private val sourceSetDisplayName: String,
         private val sourceSetName: String,
     ): NamedDomainObjectFactory<DefaultAndroidSourceDirectorySet> {
 
         override fun create(name: String): DefaultAndroidSourceDirectorySet {
             return DefaultAndroidSourceDirectorySet(
-                sourceSetName,
+                sourceSetDisplayName,
                 name,
                 project,
                 SourceArtifactType.CUSTOMS).also {

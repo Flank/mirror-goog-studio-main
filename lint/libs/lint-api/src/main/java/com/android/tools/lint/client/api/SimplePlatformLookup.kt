@@ -32,6 +32,8 @@ import com.android.sdklib.OptionalLibrary
 import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
+import java.io.File.separator
+import java.io.File.separatorChar
 import java.io.FileInputStream
 import java.io.FileReader
 import java.io.IOException
@@ -101,10 +103,10 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
     }
 
     /**
-     * Looks up a file for for the platform with the given
+     * Looks up a file for the platform with the given
      * [compileSdkPrefix], or null if the platform is unknown. The
      * specific file to be returned is specified by the given [pathId],
-     * which is one of the path constants defined in [IAndroidTarget]
+     * which is one of the path constants defined in [IAndroidTarget].
      */
     fun getFile(compileSdkPrefix: String, pathId: Int): File? {
         return getTarget(compileSdkPrefix)?.getPath(pathId)?.toFile()
@@ -400,7 +402,7 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
                     }
                 }
                 if (name != null && jar != null) {
-                    val jarPath = File(optional, jar).toPath()
+                    val jarPath = File(optional, jar.replace('/', separatorChar)).toPath()
                     val library = object : OptionalLibrary {
                         override fun getName(): String = name
                         override fun getJar(): Path = jarPath
@@ -448,7 +450,7 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
             return when (pathId) {
                 IAndroidTarget.ANDROID_JAR -> File(location, FN_FRAMEWORK_LIBRARY)
                 IAndroidTarget.DATA -> File(location, FD_DATA)
-                IAndroidTarget.RESOURCES -> File(location, FD_DATA + File.separator + FD_RES)
+                IAndroidTarget.RESOURCES -> File(location, FD_DATA + separator + FD_RES)
                 IAndroidTarget.ATTRIBUTES -> File(location, "data/res/values/attrs.xml")
                 else -> error("Unsupported path id in ${SimplePlatformLookup::class.java.name}")
             }

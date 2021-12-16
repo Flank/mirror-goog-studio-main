@@ -156,6 +156,74 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testAnnotationTarget() {
+        // 207151948: Lint check for accidentally importing java.lang.annotation.Target
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import java.lang.annotation.ElementType
+
+                // Correct: can be used on any element from Kotlin and Java
+                annotation class Annotation1() // OK 1
+
+                // Correct: can be used on parameters only both in Kotlin and Java
+                @Target(AnnotationTarget.VALUE_PARAMETER) // OK 2
+                annotation class Annotation2()
+
+                // Incorrect: can be used on any element (not just parameters) in
+                // Kotlin, and cannot be used on any elements (including parameters) in Java
+                @java.lang.annotation.Target(ElementType.PARAMETER) // ERROR 1
+                annotation class Annotation3()
+
+                // Incorrect: works fine from Kotlin (can be used only on parameters),
+                // but cannot be used on any elements from Java
+                @java.lang.annotation.Target(ElementType.PARAMETER) // ERROR 2
+                @Target(AnnotationTarget.VALUE_PARAMETER)
+                annotation class Annotation4()
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import java.lang.annotation.ElementType;
+                @Target({ElementType.PARAMETER}) // OK 3
+                public @interface Annotation5 { }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import java.lang.annotation.ElementType;
+                @java.lang.annotation.Target({ElementType.PARAMETER}) // OK 4
+                public @interface Annotation6 { }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/Annotation1.kt:14: Error: Use @kotlin.annotation.Target, not @java.lang.annotation.Target here; these targets will be ignored from Kotlin and the annotation will not be allowed on any element types from Java [SupportAnnotationUsage]
+            @java.lang.annotation.Target(ElementType.PARAMETER) // ERROR 1
+                                  ~~~~~~
+            src/test/pkg/Annotation1.kt:19: Error: Do not use @java.lang.annotation.Target here; it will cause the annotation to not be allowed on any element types from Java [SupportAnnotationUsage]
+            @java.lang.annotation.Target(ElementType.PARAMETER) // ERROR 2
+                                  ~~~~~~
+            2 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/Annotation1.kt line 14: Replace with Target:
+            @@ -14 +14
+            - @java.lang.annotation.Target(ElementType.PARAMETER) // ERROR 1
+            + @Target(ElementType.PARAMETER) // ERROR 1
+            Fix for src/test/pkg/Annotation1.kt line 19: Delete:
+            @@ -19 +19
+            - @java.lang.annotation.Target(ElementType.PARAMETER) // ERROR 2
+            +  // ERROR 2
+            """
+        )
+    }
+
     fun testFlagStyle() {
         lint().files(
             java(
@@ -221,23 +289,22 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/IntDefTest.java line 12: Replace with 1L << 44:
+                Autofix for src/test/pkg/IntDefTest.java line 13: Replace with 1L << 44:
                 @@ -13 +13
                 -     public static final long FLAG5 = 0x100000000000L;
                 +     public static final long FLAG5 = 1L << 44;
-                Fix for src/test/pkg/IntDefTest.java line 13: Replace with 1L << 49:
+                Autofix for src/test/pkg/IntDefTest.java line 14: Replace with 1L << 49:
                 @@ -14 +14
                 -     public static final long FLAG6 = 0x0002000000000000L;
                 +     public static final long FLAG6 = 1L << 49;
-                Fix for src/test/pkg/IntDefTest.java line 14: Replace with 1L << 3:
+                Autofix for src/test/pkg/IntDefTest.java line 15: Replace with 1L << 3:
                 @@ -15 +15
                 -     public static final long FLAG7 = 8L;
                 +     public static final long FLAG7 = 1L << 3;
-                Fix for src/test/pkg/IntDefTest.java line 19: Replace with 1 << 4:
+                Autofix for src/test/pkg/IntDefTest.java line 20: Replace with 1 << 4:
                 @@ -20 +20
                 -     public static final int  FLAG12 = 0x10;
                 +     public static final int  FLAG12 = 1 << 4;
-
                 """
             )
     }
@@ -271,7 +338,7 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
             .expectFixDiffs(
                 """
-                Fix for src/test/pkg/DividerFlags.kt line 12: Replace with 1 shl 1:
+                Autofix for src/test/pkg/DividerFlags.kt line 12: Replace with 1 shl 1:
                 @@ -12 +12
                 - const val DIVIDER_BOTTOM: Int = 2
                 @@ -13 +12

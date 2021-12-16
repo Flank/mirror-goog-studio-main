@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 import junit.framework.TestCase;
+import kotlin.io.FilesKt;
 
 /**
  * Base test case for lint tests.
@@ -273,7 +274,7 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
     }
 
     protected static void deleteFile(File dir) {
-        TestFile.deleteFilesRecursively(dir);
+        FilesKt.deleteRecursively(dir);
     }
 
     protected static File makeTestFile(

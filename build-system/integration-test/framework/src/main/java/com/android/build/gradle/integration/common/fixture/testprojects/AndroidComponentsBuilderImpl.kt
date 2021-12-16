@@ -25,6 +25,7 @@ class AndroidComponentsBuilderImpl: AndroidComponentsBuilder {
     }
 
     private val disabledMap = mutableMapOf<String, EnabledState>()
+    private val registeredSourceTypes = mutableListOf<String>()
 
     override fun disableVariant(variantName: String) {
         val state = disabledMap.computeIfAbsent(variantName) {
@@ -50,8 +51,12 @@ class AndroidComponentsBuilderImpl: AndroidComponentsBuilder {
         state.unitTest = false
     }
 
+    override fun registerSourceType(name: String) {
+        registeredSourceTypes += name
+    }
+
     fun writeBuildFile(sb: StringBuilder) {
-        if (disabledMap.isNotEmpty()) {
+        if (disabledMap.isNotEmpty() || registeredSourceTypes.isNotEmpty()) {
             sb.append("androidComponents {\n")
 
             for ((name, state) in disabledMap) {
@@ -69,6 +74,11 @@ class AndroidComponentsBuilderImpl: AndroidComponentsBuilder {
 
                 sb.append("  }\n") // beforeVariants
             }
+
+            for (name in registeredSourceTypes) {
+                sb.append("  registerSourceType(\"$name\")\n")
+            }
+
             sb.append("}\n")
         }
     }

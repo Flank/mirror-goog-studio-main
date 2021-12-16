@@ -119,7 +119,6 @@ import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
-import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSuperExpression
 import com.intellij.psi.PsiType
@@ -1217,12 +1216,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 !context.project.isDesugaring(Desugaring.TYPE_ANNOTATIONS)
             ) {
                 val evaluator = context.evaluator
-                for (
-                    annotation in evaluator.getAllAnnotations(
-                        node as PsiModifierListOwner,
-                        false
-                    )
-                ) {
+                for (annotation in evaluator.getAnnotations(node, false)) {
                     val name = annotation.qualifiedName
                     if ("java.lang.annotation.Repeatable" == name) {
                         val api = 24 // minSdk for repeatable annotations

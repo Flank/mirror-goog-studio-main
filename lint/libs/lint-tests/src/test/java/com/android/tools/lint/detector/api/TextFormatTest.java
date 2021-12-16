@@ -407,6 +407,38 @@ public class TextFormatTest extends TestCase {
         assertEquals("abcd<br/>\nef", RAW.convertTo("ab\\\ncd\nef", HTML));
     }
 
+    public void testConvert() {
+        assertEquals(
+                ""
+                        + "ignore-deprecated (default is false): Whether to ignore classes and members that have been annotated with @Deprecated.\n"
+                        + "\n"
+                        + "Normally this lint check will flag all unannotated elements, but by setting this option to true it will skip any deprecated elements.\n"
+                        + "\n"
+                        + "Example lint.xml:\n"
+                        + "\n"
+                        + "<lint>\n"
+                        + "    <issue id=\"_TestIssue\">\n"
+                        + "        <option name=\"ignore-deprecated\" value=\"false\" />\n"
+                        + "    </issue>\n"
+                        + "</lint>\n",
+                RAW.convertTo(
+                        ""
+                                + "**ignore-deprecated** (default is false): Whether to ignore classes and members that have been annotated with `@Deprecated`.\n"
+                                + "\n"
+                                + "Normally this lint check will flag all unannotated elements, but by setting this option to `true` it will skip any deprecated elements.\n"
+                                + "\n"
+                                + "Example `lint.xml`:\n"
+                                + "\n"
+                                + "```xml\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"_TestIssue\">\n"
+                                + "        <option name=\"ignore-deprecated\" value=\"false\" />\n"
+                                + "    </issue>\n"
+                                + "</lint>\n"
+                                + "```\n",
+                        TEXT));
+    }
+
     public void testConvertFromHtml2() {
         assertEquals(
                 ""

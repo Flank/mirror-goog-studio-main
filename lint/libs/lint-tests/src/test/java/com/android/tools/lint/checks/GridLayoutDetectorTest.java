@@ -119,11 +119,11 @@ public class GridLayoutDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/layout.xml line 8: Update to myns:orientation:\n"
+                                + "Autofix for res/layout/layout.xml line 9: Update to myns:orientation:\n"
                                 + "@@ -10 +10\n"
                                 + "-         android:orientation=\"horizontal\" >\n"
                                 + "+         myns:orientation=\"horizontal\" >\n"
-                                + "Fix for res/layout/layout.xml line 13: Update to myns:layout_row:\n"
+                                + "Autofix for res/layout/layout.xml line 14: Update to myns:layout_row:\n"
                                 + "@@ -15 +15\n"
                                 + "-             android:layout_row=\"2\"\n"
                                 + "@@ -17 +16\n"
@@ -162,7 +162,7 @@ public class GridLayoutDetectorTest extends AbstractCheckTest {
                 .window(2)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/layout.xml line 11: Update to app:layout_row:\n"
+                                + "Autofix for res/layout/layout.xml line 12: Update to app:layout_row:\n"
                                 + "@@ -3 +3\n"
                                 + "  <?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                 + "  <LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

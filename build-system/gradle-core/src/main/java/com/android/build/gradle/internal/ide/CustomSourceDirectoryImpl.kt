@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant.impl
+package com.android.build.gradle.internal.ide
 
-import org.gradle.api.Action
+import com.android.builder.model.v2.CustomSourceDirectory
+import java.io.File
+import java.io.Serializable
 
-open class DelayedActionExecutor<T> {
-
-    private val actions = mutableListOf<Action<in T>>()
-
-    fun registerAction(action: Action<in T>) {
-        actions.add(action)
-    }
-
-    fun executeActions(target: T) {
-        actions.forEach { it.execute(target) }
-    }
-}
+class CustomSourceDirectoryImpl(
+    override val sourceTypeName: String,
+    override val directory: File,
+) : CustomSourceDirectory, Serializable

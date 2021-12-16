@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 import org.intellij.lang.annotations.Language
+import java.io.File.separator
 
 /** Tests for [VectorDrawableCompatDetector] */
 class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
@@ -28,7 +29,7 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
     fun testSrcCompat() {
         val expected =
             """
-            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-app/build.gradle [VectorDrawableCompat]
+            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-app${separator}build.gradle [VectorDrawableCompat]
                 <ImageView app:srcCompat="@drawable/foo" />
                            ~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -117,7 +118,7 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
         // Regression test for https://issuetracker.google.com/187341964
         val expected =
             """
-            src/main/res/layout/main_activity_compat.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-lib/build.gradle [VectorDrawableCompat]
+            src/main/res/layout/main_activity_compat.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-lib${separator}build.gradle [VectorDrawableCompat]
                 <ImageView app:srcCompat="@drawable/foo" />
                            ~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -189,7 +190,7 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
         // The support vector flag should be set in the same library as the icon, not the usage
         val expected =
             """
-            src/main/res/layout/main_activity_compat.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-lib/build.gradle [VectorDrawableCompat]
+            src/main/res/layout/main_activity_compat.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-lib${separator}build.gradle [VectorDrawableCompat]
                 <ImageView app:srcCompat="@drawable/foo" />
                            ~~~~~~~~~~~~~
             1 errors, 0 warnings

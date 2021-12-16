@@ -16,9 +16,9 @@
 
 package com.android.build.api.artifact.impl
 
+import com.android.build.api.artifact.Artifact
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileSystemLocation
-import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.util.concurrent.atomic.AtomicBoolean
@@ -34,9 +34,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param T the artifact type as [FileSystemLocation] subtype for single element artifact
  * or a [List] of the same [FileSystemLocation] subtype for multiple elements artifact.
  */
-internal abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter<T>) {
+internal abstract class ArtifactContainer<T, U>(private val allocator: () -> U) where U: PropertyAdapter<T> {
 
-    // this represent the current provider(s) for the artifact.
+    // this represents the current provider(s) for the artifact.
     internal var current = allocator()
 
     // property that can be used to inject into consumers of the artifact at any time.
@@ -46,10 +46,14 @@ internal abstract class ArtifactContainer<T>(private val allocator: () -> Proper
     private val needInitialProducer = AtomicBoolean(true)
     private val hasCustomTransformers = AtomicBoolean(false)
 
-    /**
-     * Specific hook for AGP providers to register the initial producer of the artifact.
-     */
-    abstract fun setInitialProvider(with: Provider<T>)
+    // although it is not technically necessary to keep a reference on the [TaskProvider] that
+    // is currently registered as the task owning the current provider, it is useful to
+    // automatically set dependencies based on the [InternalArtifactType.finalizingArtifact]
+    // annotation attribute.
+    protected val currentTaskProviders = mutableListOf<TaskProvider<*>>()
+
+
+    //abstract fun setInitialProvider(taskProvider: TaskProvider<*>, with: Provider<T>)
 
     /**
      * If another [org.gradle.api.Task] is replacing the initial providers through the
@@ -65,6 +69,9 @@ internal abstract class ArtifactContainer<T>(private val allocator: () -> Proper
      */
     fun get(): Provider<T> = final.get()
 
+    fun getTaskProviders(): List<TaskProvider<*>> =
+        currentTaskProviders
+
     /**
      * Returns a protected (no changes allowed) version of the current artifact providers.
      *
@@ -75,7 +82,7 @@ internal abstract class ArtifactContainer<T>(private val allocator: () -> Proper
     @VisibleForTesting
     internal fun getCurrent(): Provider<T>  {
         val property = allocator()
-        property.set(current.get())
+        property.from(current)
         property.disallowChanges()
         return property.get()
     }
@@ -83,26 +90,34 @@ internal abstract class ArtifactContainer<T>(private val allocator: () -> Proper
     /**
      * Replace the current producer(s). Previous producers may still be used to produce [with]
      *
+     * @param taskProvider the task provider for the task producing the [with]. Mainly provided for
+     * bookkeeping reasons, not strictly required for wiring.
      * @param with the provider that will be the transformed artifact.
      * @return the current provider for the artifact (which will be transformed)
      */
     @Synchronized
-    open fun transform(with: Provider<T>): Provider<T> {
+    open fun transform(taskProvider: TaskProvider<*>, with: Provider<T>): Provider<T> {
         hasCustomTransformers.set(true)
         val oldCurrent = current
         current = allocator()
         current.set(with)
-        final.set(current.get())
+        currentTaskProviders.clear()
+        currentTaskProviders.add(taskProvider)
+        final.from(current)
         return oldCurrent.get()
     }
 
     /**
      * Replace the current producer(s) for this artifact with a new one.
+     *
+     * @param taskProvider the task provider for the task producing the [with]. Mainly provided for
+     * bookkeeping reasons, not strictly required for wiring.
+     * @param with the provider that will be the transformed artifact.
      */
     @Synchronized
-    open fun replace(with: Provider<T>) {
+    open fun replace(taskProvider: TaskProvider<*>, with: Provider<T>) {
         needInitialProducer.set(false)
-        transform(with)
+        transform(taskProvider, with)
     }
 
     /**
@@ -129,7 +144,7 @@ internal abstract class ArtifactContainer<T>(private val allocator: () -> Proper
  */
 internal class SingleArtifactContainer<T: FileSystemLocation>(
     val allocator: () -> SinglePropertyAdapter<T>
-) : ArtifactContainer<T>(allocator) {
+) : ArtifactContainer<T, SinglePropertyAdapter<T>>(allocator) {
 
     private val agpProducer= allocator()
 
@@ -138,10 +153,28 @@ internal class SingleArtifactContainer<T: FileSystemLocation>(
         final.from(current)
     }
 
-    override fun setInitialProvider(with: Provider<T>) {
+    /**
+     * Specific hook for AGP providers to register the initial producer of the artifact.
+     *
+     * @param taskProvider the task provider for the task producing the [with]. Mainly provided for
+     * bookkeeping reasons, not strictly required for wiring.
+     * @param with the provider that will be the transformed artifact.
+     */
+    fun setInitialProvider(taskProvider: TaskProvider<*>, with: Provider<T>) {
         // TODO: should we make this an assertion.
         if (needInitialProducer().compareAndSet(true, false)) {
             agpProducer.set(with)
+            currentTaskProviders.add(taskProvider)
+        }
+    }
+
+    /**
+     * Copies the provider from another [ArtifactContainer]
+     */
+    fun transferFrom(from: SingleArtifactContainer<T>) {
+        if (needInitialProducer().compareAndSet(true, false)) {
+            agpProducer.set(from.final.get())
+            currentTaskProviders.addAll(from.getTaskProviders())
         }
     }
 
@@ -159,25 +192,43 @@ internal class SingleArtifactContainer<T: FileSystemLocation>(
 internal class MultipleArtifactContainer<T: FileSystemLocation>(
     val allocator: () -> MultiplePropertyAdapter<T>
 ):
-    ArtifactContainer<List<T>>(allocator) {
+    ArtifactContainer<List<T>, MultiplePropertyAdapter<T>>(allocator) {
 
-    // this represent the providers from the AGP.
+    // this represents the providers from the AGP.
     private val agpProducers = allocator()
 
     init {
-        current.set(agpProducers.get())
-        final.set(current.get())
+        current.from(agpProducers)
+        final.from(current)
     }
 
-    override fun setInitialProvider(with: Provider<List<T>>) {
+    fun addInitialProvider(taskProvider: List<TaskProvider<*>>, with: Provider<List<T>>) {
         needInitialProducer().set(false)
         // in theory, we should add those first ?
         agpProducers.addAll(with)
+        currentTaskProviders.addAll(taskProvider)
     }
 
-    fun addInitialProvider(item: Provider<T>) {
+    fun addInitialProvider(from: MultipleArtifactContainer<T>) {
+        needInitialProducer().set(false)
+        agpProducers.addAll(from.final.get())
+        currentTaskProviders.addAll(from.getTaskProviders())
+    }
+
+    fun addInitialProvider(taskProvider: TaskProvider<*>?, item: Provider<T>) {
         needInitialProducer().set(false)
         agpProducers.add(item)
+        taskProvider?.let {
+            currentTaskProviders.add(it)
+        }
+    }
+
+    fun transferFrom(source: ArtifactsImpl, from: Artifact.Single<T>) {
+        needInitialProducer().set(false)
+        source.getArtifactContainer(from).let { artifactContainer ->
+            agpProducers.add(artifactContainer.get())
+            currentTaskProviders.addAll(artifactContainer.getTaskProviders())
+        }
     }
 
     override fun disallowChanges() {

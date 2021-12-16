@@ -216,12 +216,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
         } else {
             var owner: PsiModifierListOwner? = bestMethod
             while (owner != null) {
-                for (
-                    annotation in context.evaluator.getAllAnnotations(
-                        owner,
-                        false
-                    )
-                ) {
+                for (annotation in context.evaluator.getAnnotations(owner, false)) {
                     if (KEEP_ANNOTATION.isEquals(annotation.qualifiedName)) {
                         return
                     }

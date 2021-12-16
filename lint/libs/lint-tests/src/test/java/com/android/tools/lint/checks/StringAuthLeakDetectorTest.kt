@@ -27,17 +27,22 @@ class StringAuthLeakDetectorTest : AbstractCheckTest() {
             java(
                 """
                 public class AuthDemo {
-                  private static final String AUTH_IP = "scheme://user:pwd@127.0.0.1:8000";
-                  private static final String AUTH_NO_LEAK = "scheme://user:%s@www.google.com";
+                  private static final String AUTH_IP = "scheme://user:pwd@127.0.0.1:8000"; // WARN 1
+                  private static final String AUTH_NO_LEAK = "scheme://user:%s@www.google.com"; // OK 1
+                  private static final String LEAK = "http://someuser:%restofmypass@example.com"; // WARN 2
+                  private static final String URL = "http://%-05s@example.com"; // OK 2
                 }
                 """
             ).indented()
         ).run().expect(
             """
             src/AuthDemo.java:2: Warning: Possible credential leak [AuthLeak]
-              private static final String AUTH_IP = "scheme://user:pwd@127.0.0.1:8000";
+              private static final String AUTH_IP = "scheme://user:pwd@127.0.0.1:8000"; // WARN 1
                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
+            src/AuthDemo.java:4: Warning: Possible credential leak [AuthLeak]
+              private static final String LEAK = "http://someuser:%restofmypass@example.com"; // WARN 2
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
             """
         )
     }

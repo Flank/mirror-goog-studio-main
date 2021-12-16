@@ -35,6 +35,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.asJava.elements.KtLightElement
+import org.jetbrains.kotlin.asJava.elements.KtLightField
+import org.jetbrains.kotlin.asJava.elements.KtLightMember
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
 
@@ -97,8 +100,18 @@ class AnnotationInfo(
                 annotationOwner
             }
         if (ownerPsi != null) {
-            val annotatedPsi = (annotated as? UElement)?.sourcePsi ?: annotated
-            return ownerPsi != annotatedPsi && annotatedPsi !is PsiPackage
+            if (ownerPsi == annotated || ownerPsi == (annotated as? UElement)?.sourcePsi ||
+                ownerPsi == (annotated as? KtLightElement<*, *>)?.kotlinOrigin ||
+                ownerPsi is KtLightField && annotated is KtLightMember<*> &&
+                ownerPsi.kotlinOrigin == annotated.lightMemberOrigin?.originalElement
+            ) {
+                return false
+            }
+
+            if (annotated is PsiPackage || (annotated as? UElement)?.sourcePsi is PsiPackage) {
+                return false
+            }
+            return true
         }
         return false
     }
@@ -139,7 +152,19 @@ enum class AnnotationOrigin {
     FILE,
 
     /** The annotation appeared on a package declaration. */
-    PACKAGE
+    PACKAGE,
+
+    /**
+     * The annotation appeared on a Kotlin constructor property or class
+     * body property without specifying a use site. Technically, this
+     * means that it typically applies only to the parameter itself (for
+     * constructor properties), or the backing field itself (for class
+     * properties), and not the getters and setters of the property,
+     * but that's often what developers expect. Lint will also look for
+     * these annotations and include them, and their origin is then set
+     * to [PROPERTY_DEFAULT].
+     */
+    PROPERTY_DEFAULT
 }
 
 /**
@@ -239,5 +264,9 @@ class AnnotationUsageInfo(
             }
         }
         return null
+    }
+
+    override fun toString(): String {
+        return this::class.java.simpleName + "($type for $usage, index=$index in $annotations)"
     }
 }

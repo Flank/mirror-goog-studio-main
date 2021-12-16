@@ -1229,7 +1229,7 @@ open class LintCliClient : LintClient {
             val path = getDisplayPath(project, file)
             TextFormat.TEXT.convertTo(path, format)
         } else {
-            super.getDisplayPath(file, project, format)
+            super.getDisplayPath(file, null, format)
         }
     }
 
@@ -1452,10 +1452,11 @@ open class LintCliClient : LintClient {
         val jdkHome = getJdkHome()
         if (jdkHome != null) {
             val isJre = !isJdkFolder(jdkHome)
-            val roots = JavaSdkUtil.getJdkClassesRoots(jdkHome, isJre)
+            val roots = JavaSdkUtil.getJdkClassesRoots(jdkHome.toPath(), isJre)
             for (root in roots) {
-                if (root.exists()) {
-                    files.add(root)
+                val rootFile = root.toFile()
+                if (rootFile.exists()) {
+                    files.add(rootFile)
                 }
             }
 

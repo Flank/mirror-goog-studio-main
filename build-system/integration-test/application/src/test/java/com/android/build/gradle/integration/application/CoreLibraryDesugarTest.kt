@@ -203,48 +203,8 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testModelFetching() {
-        val model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
+        val model = app.modelV2().fetchModels().container.getProject(":app").androidProject
         Truth.assertThat(model!!.javaCompileOptions.isCoreLibraryDesugaringEnabled).isTrue()
-    }
-
-    @Test
-    fun testModelLintFileFetching() {
-        var model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
-        Truth.assertThat(model!!.variants.first().desugaredMethods)
-            .contains("java/lang/Iterable#forEach(Ljava/util/function/Consumer;)V")
-
-        // variants have different minSdkVersions
-        app.buildFile.appendText("""
-
-            android {
-                flavorDimensions 'sdk'
-                productFlavors {
-                    sdk20 {
-                        minSdkVersion 20
-                    }
-                    sdk21_1 {
-                        minSdkVersion 21
-                    }
-                    sdk21_2 {
-                        minSdkVersion 21
-                    }
-                }
-            }
-        """.trimIndent())
-        model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
-        // make sure two different lint files are extracted as there are two different
-        // minSdkVersion(one is 21+, the other one is less than 21)
-        val desugaredMethods = model!!.variants.map { it.desugaredMethods }.toSet()
-        Truth.assertThat(desugaredMethods).hasSize(2)
-
-        // coreLibraryDesugaring is disabled
-        app.buildFile.appendText("""
-
-            android.compileOptions.coreLibraryDesugaringEnabled = false
-        """.trimIndent())
-        model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
-        Truth.assertThat(model!!.variants.first().desugaredMethods)
-            .doesNotContain("java/lang/Iterable#forEach(Ljava/util/function/Consumer;)V")
     }
 
     @Test
