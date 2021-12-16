@@ -2412,6 +2412,47 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testSingleAnnotationHandling() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.VisibleForTesting
+
+                open class Foo {
+                    @VisibleForTesting
+                    var updateCount = 0
+                        protected set
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                public class Bar extends Foo {
+                    public void test() {
+                        int count = getUpdateCount() + 1;
+                        setUpdateCount(count);
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).testModes(TestMode.DEFAULT).run().expect(
+            """
+            src/test/pkg/Bar.java:5: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    int count = getUpdateCount() + 1;
+                                ~~~~~~~~~~~~~~
+            src/test/pkg/Bar.java:6: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    setUpdateCount(count);
+                    ~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
     private val guavaVisibleForTestingAnnotation: TestFile = java(
         """
         package com.google.common.annotations;
