@@ -104,7 +104,7 @@ abstract class SigningConfigVersionsWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val signingConfig = creationConfig.signingConfig
+            val signingConfig = creationConfig.signingConfigImpl
             if (signingConfig == null) {
                 task.enableV1Signing.setDisallowChanges(false)
                 task.enableV2Signing.setDisallowChanges(false)

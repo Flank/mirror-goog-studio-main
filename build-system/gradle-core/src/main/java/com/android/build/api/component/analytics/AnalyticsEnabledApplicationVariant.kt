@@ -61,17 +61,15 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return delegate.dependenciesInfo
         }
 
-    val userVisibleSigningConfig: AnalyticsEnabledSigningConfig? by lazy {
-        delegate.signingConfig?.let {
-            objectFactory.newInstance(
-                AnalyticsEnabledSigningConfig::class.java,
-                it,
-                stats
-            )
-        }
+    val userVisibleSigningConfig: AnalyticsEnabledSigningConfig by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledSigningConfig::class.java,
+            delegate.signingConfig,
+            stats
+        )
     }
 
-    override val signingConfig: SigningConfig?
+    override val signingConfig: SigningConfig
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SIGNING_CONFIG_VALUE

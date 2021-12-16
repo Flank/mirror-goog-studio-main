@@ -181,7 +181,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             ) ?: emptyList()
         }
 
-    override val signingConfig: SigningConfigImpl? = null
+    override val signingConfigImpl: SigningConfigImpl? = null
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, only present for old variant API.

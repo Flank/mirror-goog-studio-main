@@ -106,7 +106,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             // providers during construction.
             task.signingConfigData.setDisallowChanges(
                 creationConfig.services.provider {
-                    val signingConfig = creationConfig.signingConfig
+                    val signingConfig = creationConfig.signingConfigImpl
                     if (signingConfig != null && !signingConfig.name.isNullOrEmpty()) {
                         SigningConfigData.fromSigningConfig(signingConfig)
                     } else null
@@ -114,7 +114,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             )
             task.storeFilePath.setDisallowChanges(
                 creationConfig.services.provider<String?> {
-                    val signingConfig = creationConfig.signingConfig
+                    val signingConfig = creationConfig.signingConfigImpl
                     if (signingConfig != null && signingConfig.storeFile.isPresent) {
                         signingConfig.storeFile.get()?.path
                     } else null

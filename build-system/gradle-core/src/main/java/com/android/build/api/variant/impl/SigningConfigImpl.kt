@@ -39,6 +39,8 @@ class SigningConfigImpl(
         dslSigningConfig = signingConfig as com.android.build.gradle.internal.dsl.SigningConfig
     }
 
+    fun hasConfig() = dslSigningConfig!=null
+
     override val enableV4Signing =
         variantServices.propertyOf(
             Boolean::class.java,

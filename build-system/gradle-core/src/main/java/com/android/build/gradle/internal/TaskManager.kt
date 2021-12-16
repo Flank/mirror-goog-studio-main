@@ -29,7 +29,6 @@ import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DeviceGroup
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -52,7 +51,6 @@ import com.android.build.gradle.internal.dependency.AndroidXDependencySubstituti
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
@@ -94,8 +92,6 @@ import com.android.build.gradle.internal.scope.getDirectories
 import com.android.build.gradle.internal.scope.getRegularFiles
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
-import com.android.build.gradle.internal.services.BaseServices
-import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
@@ -121,7 +117,6 @@ import com.android.build.gradle.internal.tasks.ExtractProguardFiles
 import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
@@ -159,8 +154,6 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDepen
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
 import com.android.build.gradle.internal.tasks.databinding.KAPT_FIX_KOTLIN_VERSION
 import com.android.build.gradle.internal.tasks.databinding.MergeRFilesForDataBindingTask
-import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
-import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
@@ -232,7 +225,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
-import com.android.repository.Revision
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions
@@ -250,7 +242,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ResolutionStrategy
 import org.gradle.api.component.AdhocComponentWithVariants
@@ -2421,7 +2412,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createPackagingTask(creationConfig: ApkCreationConfig) {
         // ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
         val taskContainer = creationConfig.taskContainer
-        val signedApk = creationConfig.signingConfig?.isSigningReady() ?: false
+        val signedApk = creationConfig.signingConfigImpl?.isSigningReady() ?: false
 
         /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
@@ -2503,7 +2494,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createValidateSigningTask(creationConfig: ApkCreationConfig) {
-        if (creationConfig.signingConfig?.isSigningReady() != true) {
+        if (creationConfig.signingConfigImpl?.isSigningReady() != true) {
             return
         }
 

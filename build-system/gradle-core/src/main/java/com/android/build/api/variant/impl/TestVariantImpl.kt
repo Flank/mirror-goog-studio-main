@@ -180,7 +180,7 @@ open class TestVariantImpl @Inject constructor(
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()
 
-    override val signingConfig: SigningConfigImpl? by lazy {
+    override val signingConfigImpl: SigningConfigImpl? by lazy {
         variantDslInfo.signingConfig?.let {
             SigningConfigImpl(
                 it,
