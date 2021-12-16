@@ -33,7 +33,9 @@ import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.decodeLoggingMessage
+import com.android.build.gradle.internal.cxx.logging.text
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -47,14 +49,23 @@ import org.junit.runners.Parameterized
 class ModuleToModuleDepsTest(
     private val appBuildSystem: BuildSystemConfig,
     private val libBuildSystem: BuildSystemConfig,
-    private val appUsesPrefab: Boolean,
-    private val libUsesPrefabPublish: Boolean,
-    private val libExtension: String
+    appUsesPrefabTag: String,
+    libUsesPrefabPublishTag: String,
+    private val libExtension: String,
+    appStlTag: String,
+    libStlTag: String
 ) {
+    private val appUsesPrefab = appUsesPrefabTag == ""
+    private val libUsesPrefabPublish = libUsesPrefabPublishTag == ""
+    private val appStl = appStlTag.substringAfter(":")
+    private val libStl = libStlTag.substringAfter(":")
+    private val config = "$appBuildSystem:$appStl $libBuildSystem:$libStl:$libExtension"
+
     sealed class BuildSystemConfig {
         abstract val build : String
         data class CMake(val version : String) : BuildSystemConfig() {
             override val build = "CMake"
+            override fun toString() = "cmake$version"
         }
 
         object NdkBuild : BuildSystemConfig() {
@@ -79,15 +90,17 @@ class ModuleToModuleDepsTest(
 
     companion object {
         @Parameterized.Parameters(
-            name = "app={0} lib={1} appUsesPrefab={2} libUsesPrefabPublish={3} libExtension={4}")
+            name = "app.so={0}{2}{5} lib{4}={1}{3}{6}")
         @JvmStatic
         fun data() =
             cartesianOf(
                     arrayOf(NdkBuild, CMake(OFF_STAGE_CMAKE_VERSION), CMake(DEFAULT_CMAKE_VERSION)),
                     arrayOf(NdkBuild, CMake(OFF_STAGE_CMAKE_VERSION), CMake(DEFAULT_CMAKE_VERSION)),
-                    arrayOf(true, false),
-                    arrayOf(true, false),
-                    arrayOf(".a", ".so")
+                    arrayOf("", ":no-prefab"),
+                    arrayOf("", ":no-prefab-publish"),
+                    arrayOf(".a", ".so"),
+                    arrayOf("", ":c++_static", ":c++_shared"),
+                    arrayOf("", ":c++_static", ":c++_shared")
                 )
                 .minimizeUsingTupleCoverage(4)
     }
@@ -95,17 +108,24 @@ class ModuleToModuleDepsTest(
     @Before
     fun setUp() {
         val staticOrShared = if (libExtension == ".a") "STATIC" else "SHARED"
-        val stl = if (libExtension == ".a") "c++_static" else "c++_shared"
         val appStanza = when(appBuildSystem) {
             is CMake -> """
                 android.externalNativeBuild.cmake.path="CMakeLists.txt"
                 android.externalNativeBuild.cmake.version="${appBuildSystem.version}"
-                android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=$stl")
                 """.trimIndent()
             NdkBuild -> """
                 android.externalNativeBuild.ndkBuild.path="Android.mk"
-                android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$stl")
                 """.trimIndent()
+        }
+        val appStlStanza = when {
+            appStl == "" -> ""
+            appBuildSystem is CMake -> """
+                android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=$appStl")
+                """.trimIndent()
+            appBuildSystem is NdkBuild -> """
+                android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$appStl")
+                """.trimIndent()
+            else -> error(appStl)
         }
 
         project.getSubproject(":app").buildFile.appendText(
@@ -117,7 +137,7 @@ class ModuleToModuleDepsTest(
                 ndkPath "${project.ndkPath}"
                 defaultConfig {
                     ndk {
-                        abiFilters "x86"
+                        abiFilters "arm64-v8a"
                     }
                 }
 
@@ -131,17 +151,27 @@ class ModuleToModuleDepsTest(
             }
 
             $appStanza
+            $appStlStanza
             """.trimIndent())
+
         val libStanza = when(libBuildSystem) {
             is CMake -> """
                 android.externalNativeBuild.cmake.path="CMakeLists.txt"
                 android.externalNativeBuild.cmake.version="${libBuildSystem.version}"
-                android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=$stl")
                 """.trimIndent()
             NdkBuild -> """
                 android.externalNativeBuild.ndkBuild.path="Android.mk"
-                android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$stl")
                 """.trimIndent()
+        }
+        val libStlStanza = when {
+            libStl == "" -> ""
+            libBuildSystem is CMake -> """
+                android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=$libStl")
+                """.trimIndent()
+            libBuildSystem == NdkBuild -> """
+                android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$libStl")
+                """.trimIndent()
+            else -> error(libStl)
         }
 
         project.getSubproject(":lib").buildFile.appendText(
@@ -158,6 +188,7 @@ class ModuleToModuleDepsTest(
                 }
             }
             $libStanza
+            $libStlStanza
             """)
 
         val header = project.getSubproject(":lib").buildFile.resolveSibling("src/main/cpp/include/foo.h")
@@ -175,6 +206,7 @@ class ModuleToModuleDepsTest(
                 libCMakeLists.writeText(
                     """
                     cmake_minimum_required(VERSION 3.4.1)
+                    project(ProjectName)
                     file(GLOB_RECURSE SRC src/*.c src/*.cpp src/*.cc src/*.cxx src/*.c++ src/*.C)
                     message("${'$'}{SRC}")
                     set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -205,6 +237,7 @@ class ModuleToModuleDepsTest(
                 appCMakeLists.writeText(
                     """
                     cmake_minimum_required(VERSION 3.4.1)
+                    project(ProjectName)
                     file(GLOB_RECURSE SRC src/*.c src/*.cpp src/*.cc src/*.cxx src/*.c++ src/*.C)
                     message("${'$'}{SRC}")
                     set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -245,7 +278,9 @@ class ModuleToModuleDepsTest(
     /**
      * Returns true if this configuration is expected to fail.
      */
-    private fun expectGradleError() : Boolean {
+    private fun expectGradleConfigureError() : Boolean {
+        if (expectSingleStlViolationError()) return true
+
         // If app side doesn't set android.buildFeatures.prefab=true then we
         // expect a build failure indicating that 'lib' can't be found.
         if (!appUsesPrefab || !libUsesPrefabPublish) {
@@ -270,27 +305,77 @@ class ModuleToModuleDepsTest(
         return false
     }
 
+    /**
+     * Returns true if this configuration is expected to fail at build time.
+     */
+    private fun expectGradleBuildError() : Boolean {
+        // If ndk-build produces no library then it will eventually become a build error
+        return expectNdkBuildProducesNoLibrary()
+    }
+
+    // https://developer.android.com/ndk/guides/cpp-support#one_stl_per_app
+    private fun expectSingleStlViolationError() : Boolean {
+        if (expectErrorCXX1211()) return true
+        if (expectErrorCXX1212()) return true
+        return false
+    }
+
+    /**
+     * These configurations produce
+     *      [CXX1210] Library is a shared library with a statically linked STL and cannot be used
+     *      with any library using the STL
+     */
+    private fun expectErrorCXX1211() : Boolean {
+        if (config == "cmake3.18.1: cmake3.10.2::.so") return true
+        if (config == "cmake3.10.2: cmake3.18.1::.so") return true
+        if (config == "cmake3.10.2: cmake3.10.2:c++_static:.so") return true
+        if (config == "cmake3.10.2:c++_static cmake3.10.2::.so") return true
+        return false
+    }
+
+    /**
+     * These configurations produce
+     *      [CXX1211] User is using a static STL but library requires a shared STL
+     */
+    private fun expectErrorCXX1212() : Boolean {
+        if (config == "cmake3.18.1: ndk-build:c++_shared:.a") return true
+        if (config == "cmake3.10.2:c++_static ndk-build:c++_shared:.so") return true
+        return false
+    }
+
+    /**
+     * When ndk-build is configure to produce .a but has shared STL it will silently produce
+     * no .a file.
+     */
+    private fun expectNdkBuildProducesNoLibrary() : Boolean {
+        return (libBuildSystem == NdkBuild && libStl == "c++_shared" && libExtension == ".a")
+    }
+
     @Test
     fun `app configure`() {
-        var executor = project.executor()
+        println(config) // Print identifier for this configuration
+        val executor = project.executor()
 
         // Expect failure for cases when configuration failure is expected.
-        if (expectGradleError()) {
+        if (expectGradleConfigureError()) {
             executor.expectFailure()
         }
 
-        executor.run(":app:configure${appBuildSystem.build}Debug")
+        executor.run(":app:configure${appBuildSystem.build}Debug[arm64-v8a]")
 
         // Check for expected Gradle error message (if any)
-        if (expectGradleError()) {
+        if (expectGradleConfigureError()) {
             return
         }
 
         // Check that the output is known but does not yet exist on disk.
         val libAbi = project.getSubproject("lib")
-            .recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
+            .recoverExistingCxxAbiModels().single { it.abi == Abi.X86 }
         val libConfig = AndroidBuildGradleJsons.getNativeBuildMiniConfig(libAbi, null)
-        println(libConfig)
+        if (expectNdkBuildProducesNoLibrary()) {
+            assertThat(libConfig.libraries.values).isEmpty()
+            return
+        }
         val libOutput = libConfig.libraries.values.single().output!!
         assertThat(libOutput.toString().endsWith(libExtension))
             .named("$libOutput")
@@ -302,11 +387,47 @@ class ModuleToModuleDepsTest(
 
     @Test
     fun `app build`() {
+        println(config) // Print identifier for this configuration
+
         // There is no point in testing build in the cases where configuration is expected to fail.
         // Those cases will be covered by other tests
-        if (expectGradleError()) return
+        Assume.assumeFalse(expectGradleConfigureError())
 
-        project.executor()
-            .run(":app:build${appBuildSystem.build}Debug")
+        val executor = project.executor()
+
+        // Expect failure for cases when build failure is expected.
+        if (expectGradleBuildError()) {
+            executor.expectFailure()
+        }
+
+        executor.run(":app:build${appBuildSystem.build}Debug[arm64-v8a]")
+    }
+
+    @Test
+    fun `check single STL violation CXX1211`() {
+        Assume.assumeTrue(expectErrorCXX1211()) // Only run the CXX1211 cases
+        val executor = project.executor()
+        executor.expectFailure()
+        executor.run(":app:configure${appBuildSystem.build}Debug[arm64-v8a]")
+        val errors = project.readStructuredLogs(::decodeLoggingMessage)
+            .filter { it.level == LoggingMessage.LoggingLevel.ERROR}
+        val error = errors.map { it.diagnosticCode }.single()
+        assertThat(error)
+            .named(errors.map { it.text() }.single())
+            .isEqualTo(1211)
+    }
+
+    @Test
+    fun `check single STL violation CXX1212`() {
+        Assume.assumeTrue(expectErrorCXX1212()) // Only run the CXX1212 cases
+        val executor = project.executor()
+        executor.expectFailure()
+        executor.run(":app:configure${appBuildSystem.build}Debug[arm64-v8a]")
+        val errors = project.readStructuredLogs(::decodeLoggingMessage)
+            .filter { it.level == LoggingMessage.LoggingLevel.ERROR}
+        val error = errors.map { it.diagnosticCode }.single()
+        assertThat(error)
+            .named(errors.map { it.text() }.single())
+            .isEqualTo(1212)
     }
 }

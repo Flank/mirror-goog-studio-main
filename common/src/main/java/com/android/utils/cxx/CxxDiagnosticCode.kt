@@ -33,6 +33,32 @@ enum class CxxDiagnosticCode(val errorCode: Int) {
     ABI_IS_UNSUPPORTED(1201),
     ABI_HAS_ONLY_32_BIT_SUPPORT(1202),
 
+    // Prefab errors
+    // No compatible library found for //pkg1/lib1.
+    PREFAB_NO_LIBRARY_FOUND(1210),
+    // From Prefab: "Library is a shared library with a statically linked STL and cannot be used
+    //               with any library using the STL"
+    PREFAB_SINGLE_STL_VIOLATION_LIBRARY_IS_SHARED_WITH_STATIC_STL(1211),
+    // From Prefab: "User is using a static STL but library requires a shared STL"
+    PREFAB_SINGLE_STL_VIOLATION_LIBRARY_REQUIRES_SHARED_STL(1212),
+    // From Prefab: "User requested libstdc++ but library requires libc++"
+    PREFAB_MISMATCHED_STL_TYPE(1213),
+    // From Prefab: "User has minSdkVersion 5 but library was built for 28"
+    PREFAB_MISMATCHED_MIN_SDK_VERSION(1214),
+    // From Prefab: "Duplicate module name found (//pkg1/lib1 and //pkg2/lib1). ndk-build does
+    //               not support fully qualified module names."
+    PREFAB_DUPLICATE_MODULE_NAME(1215),
+    // From Prefab: "//pkg1/lib2 contains artifacts for an unsupported platform "windows""
+    PREFAB_UNSUPPORTED_PLATFORM(1216),
+    // From Prefab: "Only schema_version 1 is supported. pkg1 uses version 2."
+    PREFAB_MISMATCHED_SCHEMA(1217),
+    // From Prefab: "Unexpected JSON token at offset 87: Encountered an unknown key 'static'."
+    PREFAB_JSON_FORMAT_PROBLEM(1218),
+    // From Prefab 1.1.3: "Prebuilt directory does not contain lib1.a or lib1.so"
+    PREFAB_PREBUILTS_MISSING(1219),
+    // Prefab failures that would likely indicate a bug in AGP
+    PREFAB_FATAL(1220),
+
     // CMake errors
     CMAKE_IS_MISSING(1300),
     CMAKE_VERSION_IS_INVALID(1301),
