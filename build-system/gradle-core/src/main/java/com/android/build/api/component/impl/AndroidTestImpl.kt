@@ -114,7 +114,10 @@ open class AndroidTestImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val debuggable: Boolean
-        get() = global.profilingMode.isDebuggable ?: variantDslInfo.isDebuggable
+        get() = variantDslInfo.isDebuggable
+
+    override val profileable: Boolean
+        get() = variantDslInfo.isProfileable
 
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.minSdkVersion

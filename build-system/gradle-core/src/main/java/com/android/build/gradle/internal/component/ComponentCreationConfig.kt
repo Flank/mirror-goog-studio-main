@@ -80,6 +80,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val projectClassesAreInstrumented: Boolean
     val dependenciesClassesAreInstrumented: Boolean
     val debuggable: Boolean
+    val profileable: Boolean
     val pseudoLocalesEnabled: Property<Boolean>
     val androidResourcesEnabled: Boolean
 

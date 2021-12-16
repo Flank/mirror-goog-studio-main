@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.utils.createPublishingInfoForApp
 import com.android.build.gradle.internal.utils.createPublishingInfoForLibrary
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
+import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized

@@ -176,6 +176,8 @@ open class TestVariantImpl @Inject constructor(
     override val shouldPackageDesugarLibDex: Boolean = delegate.isCoreLibraryDesugaringEnabled(this)
     override val debuggable: Boolean
         get() = delegate.isDebuggable
+    override val profileable: Boolean
+        get() = delegate.isProfileable
 
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()

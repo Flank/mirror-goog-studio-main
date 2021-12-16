@@ -316,6 +316,8 @@ interface VariantDslInfo {
 
     val isEmbedMicroApp: Boolean
 
+    val isProfileable: Boolean
+
     val isPseudoLocalesEnabled: Boolean
 
     val isCrunchPngs: Boolean?

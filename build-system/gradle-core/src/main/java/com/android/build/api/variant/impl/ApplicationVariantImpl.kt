@@ -166,6 +166,8 @@ open class ApplicationVariantImpl @Inject constructor(
         get() = delegate.isCoreLibraryDesugaringEnabled
     override val debuggable: Boolean
         get() = delegate.isDebuggable
+    override val profileable: Boolean
+        get() = delegate.isProfileable
 
     override val shouldPackageProfilerDependencies: Boolean
         get() = advancedProfilingTransforms.isNotEmpty()
