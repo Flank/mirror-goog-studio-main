@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.cxx.model.objFolder
+import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions.Companion.compileGlob
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -43,7 +43,6 @@ import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
@@ -185,7 +184,13 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
             }
 
             // Check usedRelativePaths and throw an exception or log warning(s) if necessary
-            for (entry in usedRelativePaths) {
+            // Files that have the same content are considered to be the same (and no error or
+            // warning is emitted).
+            val deduplicatedUsedRelativePaths = usedRelativePaths
+                .map { (k, v) -> k to removeDuplicateFiles(v) }
+                .toMap()
+
+            for (entry in deduplicatedUsedRelativePaths) {
                 if (entry.value.size > 1) {
                     val projectFiles =
                         entry.value.filter { parameters.projectNativeLibs.get().contains(it) }
