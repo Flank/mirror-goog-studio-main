@@ -371,7 +371,7 @@ public class AppPluginInternalTest {
         SigningConfigImpl signingConfig;
 
         variant = VariantCheckers.findComponent(components, "flavor1Debug");
-        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
         TestCase.assertNotNull(signingConfig);
         final File file = signingConfig.getStoreFile().get();
         assertNotNull(file);
@@ -384,17 +384,17 @@ public class AppPluginInternalTest {
                                         true) {}));
 
         variant = VariantCheckers.findComponent(components, "flavor1Staging");
-        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
-        TestCase.assertNull(signingConfig);
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
+        TestCase.assertNotNull(signingConfig);
 
         variant = VariantCheckers.findComponent(components, "flavor1Release");
-        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile().get());
 
         variant = VariantCheckers.findComponent(components, "flavor2Debug");
-        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
         TestCase.assertNotNull(signingConfig);
         final File file1 = signingConfig.getStoreFile().get();
         assertNotNull(file1);
@@ -407,16 +407,84 @@ public class AppPluginInternalTest {
                                         true) {}));
 
         variant = VariantCheckers.findComponent(components, "flavor2Staging");
-        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile().get());
 
         variant = VariantCheckers.findComponent(components, "flavor2Release");
-        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile().get());
+    }
+
+    @Test
+    public void testConfigSigningThroughVariantAPI() throws Exception {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "project.android {\n"
+                        + "\n"
+                        + "    signingConfigs {\n"
+                        + "        one {\n"
+                        + "            storeFile project.file('a1')\n"
+                        + "            storePassword 'b1'\n"
+                        + "            keyAlias 'c1'\n"
+                        + "            keyPassword 'd1'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        versionCode 1\n"
+                        + "        versionName '2.0'\n"
+                        + "        minSdkVersion 2\n"
+                        + "        targetSdkVersion 3\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "        }\n"
+                        + "        staging {\n"
+                        + "        }\n"
+                        + "        release {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    flavorDimensions 'foo'\n"
+                        + "    productFlavors {\n"
+                        + "        flavor1 {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "}\n"
+                        + "project.androidComponents {\n"
+                        + "     onVariants(selector().withBuildType(\"staging\"), { variant ->\n"
+                        + "         variant.signingConfig.setConfig(project.android.signingConfigs.one)\n"
+                        + "     })\n"
+                        + "}\n");
+
+        AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
+        plugin.createAndroidTasks();
+
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        ComponentImpl variant;
+        SigningConfigImpl signingConfig;
+
+        variant = VariantCheckers.findComponent(components, "flavor1Staging");
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
+        TestCase.assertNotNull(signingConfig);
+        TestCase.assertEquals(signingConfig.getKeyAlias().get(), "c1");
+        TestCase.assertEquals(signingConfig.getKeyPassword().get(), "d1");
+        TestCase.assertTrue(signingConfig.hasConfig());
+        TestCase.assertTrue(signingConfig.isSigningReady());
+
+        variant = VariantCheckers.findComponent(components, "flavor1Release");
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfigImpl();
+        TestCase.assertNotNull(signingConfig);
+        TestCase.assertFalse(signingConfig.hasConfig());
+        TestCase.assertFalse(signingConfig.isSigningReady());
     }
 
     /**
