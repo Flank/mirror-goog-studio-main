@@ -118,15 +118,17 @@ open class ApplicationVariantImpl @Inject constructor(
         )
     }
 
-    override val signingConfig: SigningConfigImpl? by lazy {
-        variantDslInfo.signingConfig?.let {
-            SigningConfigImpl(
-                it,
-                internalServices,
-                minSdkVersion.apiLevel,
-                internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-            )
-        }
+    override val signingConfigImpl: SigningConfigImpl? by lazy {
+        signingConfig
+    }
+
+    override val signingConfig: SigningConfigImpl by lazy {
+        SigningConfigImpl(
+            variantDslInfo.signingConfig,
+            internalServices,
+            minSdkVersion.apiLevel,
+            internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+        )
     }
 
     override val packaging: ApkPackaging by lazy {

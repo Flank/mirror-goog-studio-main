@@ -580,7 +580,7 @@ class ModelBuilder<
         }
 
         val signingConfig = if (component is ApkCreationConfig)
-            component.signingConfig else null
+            component.signingConfigImpl else null
 
         val minSdkVersion =
                 ApiVersionImpl(component.minSdkVersion.apiLevel, component.minSdkVersion.codename)
@@ -613,7 +613,8 @@ class ModelBuilder<
             ),
 
             signingConfigName = signingConfig?.name,
-            isSigned = signingConfig != null,
+            isSigned = signingConfig?.hasConfig() ?: false,
+
 
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,

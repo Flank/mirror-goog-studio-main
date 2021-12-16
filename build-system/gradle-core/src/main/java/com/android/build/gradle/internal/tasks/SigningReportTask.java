@@ -69,7 +69,7 @@ public class SigningReportTask extends DefaultTask {
             textOutput.println();
 
             // get the data
-            SigningConfigImpl signingConfig = component.getSigningConfig();
+            SigningConfigImpl signingConfig = component.getSigningConfigImpl();
             if (signingConfig == null) {
                 textOutput.withStyle(Identifier).text("Config: ");
                 textOutput.withStyle(Normal).text("none");
