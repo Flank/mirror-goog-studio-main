@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.SdkConstants
+import com.android.build.gradle.internal.cxx.os.exe
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.utils.cxx.CxxDiagnosticCode.NINJA_IS_MISSING
@@ -67,7 +67,6 @@ fun findNinjaPathLogic(
  * given folder. Otherwise, null.
  */
 private fun getNinjaIfPathExists(folder : File) : File? {
-    val exe = if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ".exe" else ""
     val ninjaExe = folder.resolve("ninja$exe")
     return if (ninjaExe.isFile) ninjaExe else null
 }

@@ -16,28 +16,18 @@
 
 package com.android.build.gradle.external.gnumake;
 
-import com.android.annotations.NonNull;
-import com.android.utils.StringHelperWindows;
-import java.util.List;
+import static com.android.build.gradle.internal.cxx.os.OsBehaviorKt.createWindowsBehavior;
+
+import com.android.build.gradle.internal.cxx.os.OsBehavior;
+import org.jetbrains.annotations.NotNull;
 
 /** File conventions for Windows. */
 public class WindowsFileConventions extends AbstractOsFileConventions {
+    private OsBehavior os = createWindowsBehavior();
 
-    @NonNull
+    @NotNull
     @Override
-    public List<String> tokenizeCommandLineToEscaped(@NonNull String commandString) {
-        return StringHelperWindows.tokenizeCommandLineToEscaped(commandString);
-    }
-
-    @NonNull
-    @Override
-    public List<String> tokenizeCommandLineToRaw(@NonNull String commandString) {
-        return StringHelperWindows.tokenizeCommandLineToRaw(commandString);
-    }
-
-    @Override
-    @NonNull
-    public List<String> splitCommandLine(@NonNull String commandString) {
-        return StringHelperWindows.splitCommandLine(commandString);
+    public OsBehavior os() {
+        return os;
     }
 }

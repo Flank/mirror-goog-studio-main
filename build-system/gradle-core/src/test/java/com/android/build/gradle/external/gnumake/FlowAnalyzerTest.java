@@ -30,6 +30,7 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import static com.android.build.gradle.internal.cxx.os.OsBehaviorKt.createOsBehavior;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -45,9 +46,7 @@ public class FlowAnalyzerTest {
     private static void assertFlowAnalysisEquals(
             @NonNull String string, @NonNull FlowAnalysisBuilder expected) {
         ListMultimap<String, List<BuildStepInfo>> io =
-                FlowAnalyzer.analyze(
-                        CommandClassifier.classify(
-                                string, AbstractOsFileConventions.createForCurrentHost()));
+                FlowAnalyzer.analyze(CommandClassifier.classify(string, createOsBehavior()));
 
         assertThat(io).isEqualTo(expected.map);
     }

@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.SdkConstants
 import com.android.SdkConstants.FD_CMAKE
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.external.cmake.CmakeUtils.keepWhileNumbersAndDots
+import com.android.build.gradle.internal.cxx.os.exe
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -194,12 +194,7 @@ private fun getCmakeRevisionFromExecutable(cmakeFolder: File): Revision? {
     if (!cmakeFolder.exists()) {
         return null
     }
-    val cmakeExecutableName = if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-        "cmake.exe"
-    } else {
-        "cmake"
-    }
-    val cmakeExecutable = File(cmakeFolder, cmakeExecutableName)
+    val cmakeExecutable = File(cmakeFolder, "cmake$exe")
     if (!cmakeExecutable.exists()) {
         return null
     }

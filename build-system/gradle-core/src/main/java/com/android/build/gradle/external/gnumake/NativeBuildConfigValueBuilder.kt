@@ -58,14 +58,13 @@ class NativeBuildConfigValueBuilder internal constructor(
     private val androidMk: File,
     private var executionRootPath: File,
     private val compileCommandsJsonBinFile: File,
-    fileConventions: OsFileConventions = AbstractOsFileConventions.createForCurrentHost()
+    private val fileConventions: OsFileConventions = AbstractOsFileConventions.createForCurrentHost()
 ) {
     private val toolChainToCCompiler: MutableMap<String, String> = HashMap()
     private val toolChainToCppCompiler: MutableMap<String, String> = HashMap()
     private val cFileExtensions: MutableSet<String> = HashSet()
     private val cppFileExtensions: MutableSet<String> = HashSet()
     private val outputs: MutableList<Output>
-    private val fileConventions: OsFileConventions
     private var buildTargetsCommand: List<String>? = null
 
     /**
@@ -91,7 +90,7 @@ class NativeBuildConfigValueBuilder internal constructor(
             throw RuntimeException("setCommands should be called once")
         }
         extractWorkingDirectoryFromDryRunOutputIfAvailable(dryRunOutput)
-        val buildSteps = CommandClassifier.classify(dryRunOutput, fileConventions)
+        val buildSteps = CommandClassifier.classify(dryRunOutput, fileConventions.os())
         val outputs = FlowAnalyzer.analyze(buildSteps)
         for ((key, value) in outputs.entries()) {
             this.outputs.add(Output(key, value, buildCommand, cleanCommand, variantName))
@@ -327,6 +326,5 @@ class NativeBuildConfigValueBuilder internal constructor(
 
     init {
         outputs = ArrayList()
-        this.fileConventions = fileConventions
     }
 }

@@ -17,8 +17,8 @@
 package com.android.build.gradle.external.gnumake;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.cxx.os.OsBehavior;
 import java.io.File;
-import java.util.List;
 
 /**
  * The policy for handling filenames and command-lines in the given Gnu Make -nB output.
@@ -31,13 +31,7 @@ import java.util.List;
  */
 public interface OsFileConventions {
     @NonNull
-    List<String> tokenizeCommandLineToEscaped(@NonNull String commandString);
-
-    @NonNull
-    List<String> tokenizeCommandLineToRaw(@NonNull String commandString);
-
-    @NonNull
-    List<String> splitCommandLine(@NonNull String commandString);
+    OsBehavior os();
 
     boolean isPathAbsolute(@NonNull String file);
 

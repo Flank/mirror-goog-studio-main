@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.external.gnumake.AbstractOsFileConventions
-import com.android.build.gradle.external.gnumake.OsFileConventions
 import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeGeneratorName
@@ -26,6 +24,8 @@ import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.Defin
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildAppendProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildJobs
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
+import com.android.build.gradle.internal.cxx.os.OsBehavior
+import com.android.build.gradle.internal.cxx.os.createOsBehavior
 import com.google.common.annotations.VisibleForTesting
 
 /**
@@ -174,11 +174,10 @@ private val cmakeKnownCombinable = listOf("-S", "-B", "-C", "-D", "-U", "-G", "-
  */
 fun parseCmakeCommandLine(
     commandLine : String,
-    hostConventions : OsFileConventions =
-        AbstractOsFileConventions.createForCurrentHost()) : List<CommandLineArgument> {
+    host : OsBehavior = createOsBehavior()) : List<CommandLineArgument> {
     val combinedTokens =
-        hostConventions.tokenizeCommandLineToEscaped(commandLine) zip
-            hostConventions.tokenizeCommandLineToRaw(commandLine)
+        host.tokenizeCommandLineToEscaped(commandLine) zip
+            host.tokenizeCommandLineToRaw(commandLine)
     var prior : Pair<String, String>? = null
     val result = mutableListOf<CommandLineArgument>()
 

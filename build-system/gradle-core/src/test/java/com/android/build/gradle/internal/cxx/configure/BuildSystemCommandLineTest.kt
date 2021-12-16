@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.external.gnumake.PosixFileConventions
-import com.android.build.gradle.external.gnumake.WindowsFileConventions
+import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.SdkConstants.PLATFORM_LINUX
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_NDK
@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.Defin
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildAppendProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildJobs
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
+import com.android.build.gradle.internal.cxx.os.createOsBehavior
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -285,8 +286,8 @@ class BuildSystemCommandLineKtTest {
         // Ideally, this test should cover almost all lines in CMakeCommandLine.kt
         RandomInstanceGenerator().strings(10000).forEach { commandLine ->
             parseCmakeCommandLine(commandLine) // Host conventions
-            val windows = parseCmakeCommandLine(commandLine, WindowsFileConventions())
-            val posix = parseCmakeCommandLine(commandLine, PosixFileConventions())
+            val windows = parseCmakeCommandLine(commandLine, createOsBehavior(PLATFORM_WINDOWS))
+            val posix = parseCmakeCommandLine(commandLine, createOsBehavior(PLATFORM_LINUX))
             windows.onlyKeepUnknownArguments()
             posix.onlyKeepUnknownArguments()
             windows.onlyKeepProperties()

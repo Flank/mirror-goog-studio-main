@@ -16,27 +16,18 @@
 
 package com.android.build.gradle.external.gnumake;
 
-import com.android.annotations.NonNull;
-import com.android.utils.StringHelperPOSIX;
-import java.util.List;
+import static com.android.build.gradle.internal.cxx.os.OsBehaviorKt.createLinuxBehavior;
+
+import com.android.build.gradle.internal.cxx.os.OsBehavior;
+import org.jetbrains.annotations.NotNull;
 
 /** File conventions for Linux. */
 public class PosixFileConventions extends AbstractOsFileConventions {
-    @NonNull
-    @Override
-    public List<String> tokenizeCommandLineToEscaped(@NonNull String commandString) {
-        return StringHelperPOSIX.tokenizeCommandLineToEscaped(commandString);
-    }
+    private OsBehavior os = createLinuxBehavior();
 
-    @NonNull
+    @NotNull
     @Override
-    public List<String> tokenizeCommandLineToRaw(@NonNull String commandString) {
-        return StringHelperPOSIX.tokenizeCommandLineToRaw(commandString);
-    }
-
-    @Override
-    @NonNull
-    public List<String> splitCommandLine(@NonNull String commandString) {
-        return StringHelperPOSIX.splitCommandLine(commandString);
+    public OsBehavior os() {
+        return os;
     }
 }

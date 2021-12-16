@@ -17,6 +17,7 @@ package com.android.build.gradle.external.gnumake;
 
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.cxx.os.OsBehavior;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,14 +33,14 @@ class CommandLineParser {
      * original ndk-build output.
      */
     @NonNull
-    static List<CommandLine> parse(@NonNull String commands, @NonNull OsFileConventions policy) {
+    static List<CommandLine> parse(@NonNull String commands, @NonNull OsBehavior os) {
         String[] lines = commands.split("[\r\n]+");
         List<CommandLine> commandLines = new ArrayList<>();
         for (String line : lines) {
-            List<String> commandList = policy.splitCommandLine(line);
+            List<String> commandList = os.splitCommandLine(line);
             for (String commandString : commandList) {
-                List<String> escapedFlags = policy.tokenizeCommandLineToEscaped(commandString);
-                List<String> rawFlags = policy.tokenizeCommandLineToRaw(commandString);
+                List<String> escapedFlags = os.tokenizeCommandLineToEscaped(commandString);
+                List<String> rawFlags = os.tokenizeCommandLineToRaw(commandString);
                 String command = escapedFlags.get(0);
                 escapedFlags.remove(0);
                 rawFlags.remove(0);

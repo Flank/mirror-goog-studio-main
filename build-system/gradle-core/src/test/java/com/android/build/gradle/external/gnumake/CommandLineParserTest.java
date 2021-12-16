@@ -30,6 +30,8 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import static com.android.build.gradle.internal.cxx.os.OsBehaviorKt.createLinuxBehavior;
+import static com.android.build.gradle.internal.cxx.os.OsBehaviorKt.createWindowsBehavior;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -43,8 +45,8 @@ public class CommandLineParserTest {
 
     private static void assertThatAllShellResultsEquals(
             @NonNull String target, @NonNull CommandLine... expected) {
-        List<CommandLine> win32 = CommandLineParser.parse(target, new WindowsFileConventions());
-        List<CommandLine> bash = CommandLineParser.parse(target, new PosixFileConventions());
+        List<CommandLine> win32 = CommandLineParser.parse(target, createWindowsBehavior());
+        List<CommandLine> bash = CommandLineParser.parse(target, createLinuxBehavior());
 
         // Check that win32 and bash are equal
         assertThat(win32).isEqualTo(bash);
@@ -59,8 +61,8 @@ public class CommandLineParserTest {
             @NonNull String target,
             @NonNull CommandLine expectedWin32,
             @NonNull CommandLine expectedBash) {
-        CommandLine win32 = CommandLineParser.parse(target, new WindowsFileConventions()).get(0);
-        CommandLine bash = CommandLineParser.parse(target, new PosixFileConventions()).get(0);
+        CommandLine win32 = CommandLineParser.parse(target, createWindowsBehavior()).get(0);
+        CommandLine bash = CommandLineParser.parse(target, createLinuxBehavior()).get(0);
 
         assertThat(win32).isEqualTo(expectedWin32);
         assertThat(bash).isEqualTo(expectedBash);

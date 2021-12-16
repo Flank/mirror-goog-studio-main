@@ -30,6 +30,7 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import static com.android.build.gradle.internal.cxx.os.OsBehaviorKt.createOsBehavior;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -40,8 +41,7 @@ public class CommandClassifierTest {
 
     private static String classify(@NonNull String string) {
         List<BuildStepInfo> commandSummaries =
-                CommandClassifier.classify(
-                        string, AbstractOsFileConventions.createForCurrentHost());
+                CommandClassifier.classify(string, createOsBehavior());
         StringBuilder sb = new StringBuilder();
         for (BuildStepInfo buildStepInfo : commandSummaries) {
             sb.append("[");
