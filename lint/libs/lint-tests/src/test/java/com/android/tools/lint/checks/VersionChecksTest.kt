@@ -3459,7 +3459,7 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
-    fun ignoreTestNextPlatformHandling() { // TODO(b/203422822): Re-enable this test when fixed.
+    fun testNextPlatformHandling() {
         // Regression test for b/172930073
         // Need to gracefully handle the next version of Android
         lint().files(
@@ -3473,19 +3473,19 @@ class VersionChecksTest : AbstractCheckTest() {
                 import androidx.core.os.BuildCompat;
                 import androidx.annotation.RequiresApi;
 
-                public class TestS {
+                public class TestZ {
                     public int test() {
-                        if (BuildCompat.isAtLeastS()) {
-                            return ApiSImpl.getChecksums();
+                        if (BuildCompat.isAtLeastZ()) {
+                            return ApiZImpl.getChecksums();
                         }
                         if (BuildCompat.isCurrentDev()) {
-                            return ApiSImpl.getChecksums();
+                            return ApiZImpl.getChecksums();
                         }
                         return 0;
                     }
 
-                    @RequiresApi(Build.VERSION_CODES.S)
-                    private static class ApiSImpl {
+                    @RequiresApi(Build.VERSION_CODES.Z)
+                    private static class ApiZImpl {
                         public static int getChecksums() {
                             return 0;
                         }
@@ -3500,9 +3500,9 @@ class VersionChecksTest : AbstractCheckTest() {
                 import androidx.annotation.ChecksSdkIntAtLeast;
 
                 public class BuildCompat {
-                    @ChecksSdkIntAtLeast(codename = "S")
-                    public static boolean isAtLeastS() {
-                        return Build.VERSION.CODENAME.equals("S");
+                    @ChecksSdkIntAtLeast(codename = "Z")
+                    public static boolean isAtLeastZ() {
+                        return Build.VERSION.CODENAME.equals("Z");
                     }
                     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CUR_DEVELOPMENT)
                     public static boolean isCurrentDev() {
@@ -3528,7 +3528,7 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
-    fun ignoreTestNextPlatformHandling2() { // TODO(b/203422822): Re-enable this test when fixed.
+    fun testNextPlatformHandling2() {
         lint().files(
             manifest().minSdk(14),
             kotlin(
@@ -3537,13 +3537,13 @@ class VersionChecksTest : AbstractCheckTest() {
                 import androidx.annotation.RequiresApi;
                 import androidx.core.os.BuildCompat
 
-                @RequiresApi(Build.VERSION_CODES.S)
-                private fun requiresSFunction() {
+                @RequiresApi(Build.VERSION_CODES.Z)
+                private fun requiresZFunction() {
                 }
 
-                fun testIsAtLeastS() {
-                    if (BuildCompat.isAtLeastS()) {
-                        requiresSFunction();
+                fun testIsAtLeastZ() {
+                    if (BuildCompat.isAtLeastZ()) {
+                        requiresZFunction();
                     }
                 }
                 """
@@ -3555,9 +3555,9 @@ class VersionChecksTest : AbstractCheckTest() {
                 import androidx.annotation.ChecksSdkIntAtLeast;
 
                 public class BuildCompat {
-                    @ChecksSdkIntAtLeast(codename = "S")
-                    public static boolean isAtLeastS() {
-                        return VERSION.CODENAME.equals("S");
+                    @ChecksSdkIntAtLeast(codename = "Z")
+                    public static boolean isAtLeastZ() {
+                        return VERSION.CODENAME.equals("Z");
                     }
                 }
                 """
@@ -3568,7 +3568,7 @@ class VersionChecksTest : AbstractCheckTest() {
 
                 public class Build {
                     public static class VERSION_CODES {
-                        public static final int S = 10000;
+                        public static final int Z = 10000;
                     }
                 }
                 """
