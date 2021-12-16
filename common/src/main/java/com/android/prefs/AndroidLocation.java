@@ -151,7 +151,7 @@ public final class AndroidLocation {
                                     "Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values\n"
                                             + "Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.\n"
                                             + "Current values:\n"
-                                            + "ANDROID_SDK_ROOT: "
+                                            + "ANDROID_PREFS_ROOT: "
                                             + path
                                             + "\n"
                                             + "ANDROID_SDK_HOME: "
