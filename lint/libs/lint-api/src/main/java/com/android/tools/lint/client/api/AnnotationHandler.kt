@@ -672,10 +672,15 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     checkContextAnnotations(context, call, local, method)
                 }
 
-                if (annotations[0].annotated === method) {
-                    // The method annotations should not be passed as "surrounding" the parameter
-                    // annotations; they're considered return value annotations
-                    annotations.removeFirst()
+                // The method annotations should not be passed as "surrounding" the parameter
+                // annotations; they're considered return value annotations
+                while (true) {
+                    val first = annotations.firstOrNull()?.origin
+                    if (first == METHOD) {
+                        annotations.removeFirst()
+                    } else {
+                        break
+                    }
                 }
             }
 
