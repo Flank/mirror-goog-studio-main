@@ -896,8 +896,6 @@ class LintBaselineTest {
 
     @Test
     fun testUpdateBaselineWithContinue() {
-        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
-
         // Testing two scenarios.
         //   (1) No baseline exists (or is not specified). Ensures that the output baseline
         //       file is written and contains all issues.

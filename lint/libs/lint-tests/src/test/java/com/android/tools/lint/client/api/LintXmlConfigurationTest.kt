@@ -15,7 +15,6 @@
  */
 package com.android.tools.lint.client.api
 
-import com.android.SdkConstants
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ActionsXmlDetector
@@ -928,9 +927,6 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     // Tests for a structure that looks like a gradle project with
     // multiple resource folders.
     fun testResourcePathIgnore() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return
-        }
         val configuration = getConfiguration(
             """
             <?xml version="1.0" encoding="UTF-8"?>

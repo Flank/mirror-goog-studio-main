@@ -1173,7 +1173,8 @@ public class TestLintClient extends LintCliClient {
                                     + "\n"
                                     + "in a reported error message; this is discouraged because absolute\n"
                                     + "paths do not play well with baselines, shared HTML reports, remote\n"
-                                    + "caching, etc.");
+                                    + "caching, etc. If you really want this, you can set the property\n"
+                                    + "`lint().allowAbsolutePathsInMessages(true)`.");
                 }
                 offset = matcher.end();
             }

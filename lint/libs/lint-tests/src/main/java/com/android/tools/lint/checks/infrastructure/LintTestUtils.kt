@@ -261,7 +261,7 @@ fun parseFirst(
     vararg testFiles: TestFile = emptyArray(),
 ): Pair<JavaContext, Disposable> {
     val (contexts, disposable) = parse(javaLanguageLevel, kotlinLanguageLevel, library, sdkHome, android, temporaryFolder, *testFiles)
-    val first = contexts.firstOrNull { it.file.path.endsWith(testFiles[0].targetRelativePath) } ?: contexts.first()
+    val first = contexts.firstOrNull { it.file.path.portablePath().endsWith(testFiles[0].targetRelativePath) } ?: contexts.first()
     return Pair(first, disposable)
 }
 
