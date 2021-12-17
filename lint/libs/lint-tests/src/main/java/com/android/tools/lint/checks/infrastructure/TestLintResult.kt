@@ -638,7 +638,7 @@ class TestLintResult internal constructor(
             transformer,
             TestResultChecker { actual ->
                 val s = normalizeOutput(actual.trimIndent())
-                if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                if (s != trimmed && s.dos2unix() == trimmed.dos2unix()) {
                     // Allow Windows file separators to differ
                 } else {
                     assertEquals(trimmed, s)
@@ -676,8 +676,9 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         return checkXmlReport(
-            TestResultChecker { s ->
-                if (s != expected && s.replace('\\', '/') == expected) {
+            TestResultChecker { actual ->
+                val s = normalizeOutput(actual.trimIndent())
+                if (s != expected && s.dos2unix() == expected.dos2unix()) {
                     // Allow Windows file separators to differ
                 } else {
                     assertEquals(expected, s)
@@ -728,7 +729,7 @@ class TestLintResult internal constructor(
             checkers = arrayOf(
                 TestResultChecker { actual ->
                     val s = normalizeOutput(actual.trimIndent())
-                    if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                    if (s != trimmed && s.dos2unix() == trimmed.dos2unix()) {
                         // Allow Windows file separators to differ
                     } else {
                         assertEquals(trimmed, s)
@@ -753,7 +754,7 @@ class TestLintResult internal constructor(
             checkers = arrayOf(
                 TestResultChecker { actual ->
                     val s = normalizeOutput(actual.trimIndent())
-                    if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                    if (s != trimmed && s.dos2unix() == trimmed.dos2unix()) {
                         // Allow Windows file separators to differ
                     } else {
                         assertEquals(trimmed, s)

@@ -1140,10 +1140,6 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testPrintFirstError() throws Exception {
-        if (isWindows()) {
-            return; // b/73709727
-        }
-
         // Regression test for 183625575: Lint tasks doesn't output errors anymore
         File project =
                 getProjectDir(
@@ -1200,7 +1196,9 @@ public class MainTest extends AbstractCheckTest {
                     "SomeUnknownId",
                     project.getPath()
                 },
-                s -> s.replace(html.getPath(), "report.html"),
+                s ->
+                        s.replace(dos2unix(html.getPath()), "report.html")
+                                .replace("file:///", "file://"),
                 null);
     }
 

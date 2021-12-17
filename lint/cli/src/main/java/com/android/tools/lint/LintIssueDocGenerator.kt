@@ -1186,7 +1186,7 @@ class LintIssueDocGenerator constructor(
         sourcePath: Map<String, Map<File, List<File>>>,
         store: (file: File?, url: String?) -> Unit
     ) {
-        val relative = detectorName.replace('.', separatorChar)
+        val relative = detectorName.replace('/', separatorChar)
         val relativeKt = relative + DOT_KT
         val relativeJava = relative + DOT_JAVA
         for ((prefix, path) in sourcePath) {
@@ -1356,7 +1356,7 @@ class LintIssueDocGenerator constructor(
 
         val libs = mutableListOf<File>()
         val classPath: String = System.getProperty("java.class.path")
-        for (path in classPath.split(':')) {
+        for (path in classPath.split(pathSeparator)) {
             val file = File(path)
             val name = file.name
             if (name.endsWith(DOT_JAR)) {
@@ -2118,8 +2118,10 @@ class LintIssueDocGenerator constructor(
 
         fun printUsage(fromLint: Boolean, out: PrintStream = System.out) {
             val command = if (fromLint) "lint --generate-docs" else "lint-issue-docs-generator"
-            out.println("Usage: $command [flags] --output <directory or file>]\n")
-            out.println("Flags:\n")
+            out.println("Usage: $command [flags] --output <directory or file>]")
+            out.println()
+            out.println("Flags:")
+            out.println()
             Main.printUsage(
                 out,
                 arrayOf(
@@ -2182,15 +2184,15 @@ class LintIssueDocGenerator constructor(
                 return when {
                     className == null -> if (DOT_KT == extension)
                         if (packageName != null)
-                            packageName.replace('.', separatorChar) + separatorChar + "test.kt"
+                            packageName.replace('.', '/') + "/test.kt"
                         else
                             "test.kt"
                     else
                         null
                     packageName != null -> packageName.replace(
                         '.',
-                        separatorChar
-                    ) + separatorChar + className + extension
+                        '/'
+                    ) + '/' + className + extension
                     else -> className + extension
                 }
             }

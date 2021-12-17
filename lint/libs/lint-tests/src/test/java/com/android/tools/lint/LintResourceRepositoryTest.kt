@@ -71,8 +71,6 @@ class LintResourceRepositoryTest {
 
     @Test
     fun testRepository() {
-        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
-
         checkRepository(
             xml(
                 "res/values/test.xml",
@@ -203,14 +201,14 @@ class LintResourceRepositoryTest {
                     "  @id/name (value) config=default source=/app/res/values/duplicates.xml;  \n" +
                     "  @layout/activity_main (file) config=default source=/app/res/layout/activity_main.xml;  /app/res/layout/activity_main.xml\n" +
                     "  @plurals/my_plural (value) config=default source=/app/res/values/duplicates.xml;  [one=@string/hello1,few=@string/hello2,other=@string/hello3]\n" +
-                    "  @string/js_dialog_title (value) config=default source=/app/res/values/test.xml;  På siden på \"\${TITLE}\" står der: raw:\"På siden på \\\"<xliff:g id=\"TITLE\">%s</xliff:g>\\\" står der:\"\n" +
+                    "  @string/js_dialog_title (value) config=default source=/app/res/values/test.xml;  På siden på \"\${TITLE}\" står der: raw:\"På siden på \\\"<xliff:g id=\"TITLE\">%s</xliff:g>\\\" står der:\"\n".dos2unix() +
                     "  @string/string1 (value) config=default source=/app/res/values/test.xml;  String 1\n" +
                     "  @string/string2 (value) config=default source=/app/res/values/test.xml;  String 2\n" +
                     "  @style/MyStyle (value) config=default source=/app/res/values/duplicates.xml;  parent=ResourceReference{namespace=apk/res/android, type=style, name=Theme.Holo.Light.DarkActionBar} [android:layout_margin,android:layout_marginLeft,android:layout_marginTop,android:layout_marginBottom]\n" +
                     "  @style/MyStyle.Another (value) config=default source=/app/res/values/duplicates.xml;  parent=ResourceReference{namespace=apk/res-auto, type=style, name=MyStyle} [android:layout_margin]\n" +
                     "  @style/Notification.Header (value) config=default source=/app/res/values/styles.xml;  parent=null [paddingTop,paddingBottom,gravity]\n" +
                     "  @styleable/ContentFrame (value) config=default source=/app/res/values/duplicates.xml;  {[][][stateUnspecified=0,stateUnchanged=1][floating=0,atThumb=1,aboveThumb=2]}\n",
-                repository.prettyPrint(root)
+                repository.prettyPrint(root).dos2unix()
             )
 
             fun indexInEscaped(s: String, char: Char, from: Int = 0): Int {

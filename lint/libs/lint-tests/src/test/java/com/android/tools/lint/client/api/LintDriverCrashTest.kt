@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.SdkConstants.CURRENT_PLATFORM
-import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.LintCliFlags
@@ -496,8 +494,8 @@ class LintDriverCrashTest : AbstractCheckTest() {
     }
 
     fun testAbsolutePaths() {
-        if (CURRENT_PLATFORM == PLATFORM_WINDOWS) {
-            // This check does not run on Windows
+        if (isWindows()) {
+            // This check does not run on Windows: the test infrastructure regexp only looks for unix paths
             return
         }
 
@@ -509,6 +507,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 ).indented()
             )
             .issues(AbsPathTestDetector.ABS_PATH_ISSUE)
+            .stripRoot(false)
             .run()
             .expect(
                 """
@@ -516,7 +515,8 @@ class LintDriverCrashTest : AbstractCheckTest() {
                     TESTROOT/default/app/res/drawable/drawable.xml
                 in a reported error message; this is discouraged because absolute
                 paths do not play well with baselines, shared HTML reports, remote
-                caching, etc.
+                caching, etc. If you really want this, you can set the property
+                `lint().allowAbsolutePathsInMessages(true)`.
                 """,
                 java.lang.AssertionError::class.java
             )
@@ -530,6 +530,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 ).indented()
             )
             .issues(AbsPathTestDetector.ABS_PATH_ISSUE)
+            .stripRoot(false)
             .allowAbsolutePathsInMessages(true)
             .run()
             .expectCount(1, Severity.WARNING)

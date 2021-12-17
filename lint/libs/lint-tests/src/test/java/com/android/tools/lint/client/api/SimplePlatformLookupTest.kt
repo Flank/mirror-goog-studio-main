@@ -23,7 +23,6 @@ import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.AndroidSdkHandler
-import com.android.tools.lint.checks.AbstractCheckTest.isWindows
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -56,9 +55,7 @@ class SimplePlatformLookupTest {
 
     private fun checkQueries(sdkFolder: File, checks: (PlatformLookup) -> Unit) {
         checkWithSimple(sdkFolder, checks)
-        if (!isWindows()) {
-            checkWithFull(sdkFolder, checks)
-        }
+        checkWithFull(sdkFolder, checks)
     }
 
     private fun checkWithFull(

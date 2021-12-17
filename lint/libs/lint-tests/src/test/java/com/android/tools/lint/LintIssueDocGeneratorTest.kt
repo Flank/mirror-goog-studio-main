@@ -17,6 +17,7 @@
 package com.android.tools.lint
 
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -26,6 +27,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.File.pathSeparator
 import java.io.PrintStream
 
 class LintIssueDocGeneratorTest {
@@ -35,7 +37,6 @@ class LintIssueDocGeneratorTest {
     @Before
     fun setUp() {
         LintClient.clientName = LintClient.CLIENT_UNIT_TESTS
-        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
     }
 
     @Test
@@ -51,7 +52,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("MissingClass.md.html, SdCardPath.md.html", names)
         val text = files[1].readText()
@@ -187,7 +188,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("BatteryLife.md, SdCardPath.md", names)
         val text = files[0].readText()
@@ -325,7 +326,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals(
             "LambdaLast.md, MissingClass.md, SdCardPath.md, ViewTag.md, categories.md, index.md, severity.md, vendors.md, year.md",
@@ -457,7 +458,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("MissingRegistered.md, SdCardPath.md, ViewTag.md", names)
         val text = files[0].readText()
@@ -571,7 +572,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("MissingClass.md, SdCardPath.md, ViewTag.md", names)
         val text = files[2].readText()
@@ -593,7 +594,7 @@ class LintIssueDocGeneratorTest {
         val bytes = ByteArrayOutputStream()
         val printStream = PrintStream(bytes)
         LintIssueDocGenerator.printUsage(false, printStream)
-        val usage = String(bytes.toByteArray(), Charsets.UTF_8).trim()
+        val usage = String(bytes.toByteArray(), Charsets.UTF_8).trim().replace("\r\n", "\n")
         assertEquals(
             """
             Usage: lint-issue-docs-generator [flags] --output <directory or file>]
@@ -613,7 +614,7 @@ class LintIssueDocGeneratorTest {
                                               issues. This is implied if --lint-jars is
                                               not specified
             --lint-jars <jar-path>            Read the lint issues from the specific path
-                                              (separated by : of custom jar files
+                                              (separated by $pathSeparator of custom jar files
             --issues [issues]                 Limits the issues documented to the specific
                                               (comma-separated) list of issue id's
             --source-url <url-prefix> <path>  Searches for the detector source code under
@@ -719,7 +720,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("SdCardPath.md", names)
         val text = files[0].readText()
@@ -867,7 +868,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("StringFormatMatches.md", names)
         val text = files[0].readText()
@@ -945,7 +946,7 @@ class LintIssueDocGeneratorTest {
                 outputFolder.path
             )
         )
-        val files = outputFolder.listFiles()!!.sorted()
+        val files = outputFolder.listFiles()!!.sortedBy { it.name }
         val names = files.joinToString { it.name }
         assertEquals("UnknownNullness.md.html", names)
         val text = files[0].readText()
@@ -1038,7 +1039,7 @@ class LintIssueDocGeneratorTest {
             "$relativePath needs to be updated to reflect changes to the lint command line flags.\n" +
                 "***If you set the environment variable $ADT_SOURCE_TREE (or set it as a system property " +
                 "in the test run config) this test can automatically create/edit the files for you!***",
-            fileContents, newContents
+            fileContents.dos2unix(), newContents.dos2unix()
         )
     }
 
