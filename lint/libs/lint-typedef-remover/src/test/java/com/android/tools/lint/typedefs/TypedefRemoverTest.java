@@ -90,7 +90,50 @@ public class TypedefRemoverTest {
                                     + "ZQAhAAIABAAAAAEAGQAGAAcAAQAPAAAAAgAIAAEAAQAJAAoAAQAQAAAALwAB"
                                     + "AAEAAAAFKrcADLEAAAACABEAAAAGAAEAAAAFABIAAAAMAAEAAAAFAA0ADgAA"
                                     + "AAEAEwAAAAIABQ==");
+    /** The outer class compiled with -target 11 to include nest member attributes. */
+    public static final byte[] OUTER_CLASS_TARGET_11 =
+            Base64.getDecoder()
+                    .decode(
+                            ""
+                                    + "yv66vgAAADcAGQoAAwAVBwAWBwAXBwAYAQAKSW5uZXJDbGFzcwEADElubmVy"
+                                    + "Q2xhc3NlcwEACENPTlNUQU5UAQABSQEADUNvbnN0YW50VmFsdWUDAAAAAQEA"
+                                    + "Bjxpbml0PgEAAygpVgEABENvZGUBAA9MaW5lTnVtYmVyVGFibGUBABJMb2Nh"
+                                    + "bFZhcmlhYmxlVGFibGUBAAR0aGlzAQAVTHRlc3QvcGtnL091dGVyQ2xhc3M7"
+                                    + "AQAKU291cmNlRmlsZQEAD091dGVyQ2xhc3MuamF2YQEAC05lc3RNZW1iZXJz"
+                                    + "DAALAAwBABN0ZXN0L3BrZy9PdXRlckNsYXNzAQAQamF2YS9sYW5nL09iamVj"
+                                    + "dAEAHnRlc3QvcGtnL091dGVyQ2xhc3MkSW5uZXJDbGFzcwAhAAIAAwAAAAEA"
+                                    + "GQAHAAgAAQAJAAAAAgAKAAEAAQALAAwAAQANAAAALwABAAEAAAAFKrcAAbEA"
+                                    + "AAACAA4AAAAGAAEAAAAFAA8AAAAMAAEAAAAFABAAEQAAAAMAEgAAAAIAEwAU"
+                                    + "AAAABAABAAQABgAAAAoAAQAEAAIABSYJ");
 
+    /**
+     * The expected binary version of the outer class conpiled with "target 11" when the references
+     * to inner class and nest member list has been removed. This is identical to
+     * {@link #REWRITTEN_OUTER_CLASS} except for class file version.
+     */
+    public static final byte[] REWRITTEN_OUTER_CLASS_TARGET_11 =
+            Base64.getDecoder()
+                    .decode(
+                            ""
+                                    + "yv66vgAAADcAFAEAE3Rlc3QvcGtnL091dGVyQ2xhc3MHAAEBABBqYXZhL2xh"
+                                    + "bmcvT2JqZWN0BwADAQAPT3V0ZXJDbGFzcy5qYXZhAQAIQ09OU1RBTlQBAAFJ"
+                                    + "AwAAAAEBAAY8aW5pdD4BAAMoKVYMAAkACgoABAALAQAEdGhpcwEAFUx0ZXN0"
+                                    + "L3BrZy9PdXRlckNsYXNzOwEADUNvbnN0YW50VmFsdWUBAARDb2RlAQAPTGlu"
+                                    + "ZU51bWJlclRhYmxlAQASTG9jYWxWYXJpYWJsZVRhYmxlAQAKU291cmNlRmls"
+                                    + "ZQAhAAIABAAAAAEAGQAGAAcAAQAPAAAAAgAIAAEAAQAJAAoAAQAQAAAALwAB"
+                                    + "AAEAAAAFKrcADLEAAAACABEAAAAGAAEAAAAFABIAAAAMAAEAAAAFAA0ADgAA"
+                                    + "AAEAEwAAAAIABQ==");
+
+    private void checkRewriter(
+            TypedefRemover remover, byte[] clazz, String filter, byte[] expectedClazz) throws IOException {
+        InputStream filtered = remover.filter(filter, new ByteArrayInputStream(clazz));
+
+        assertThat(filtered).isNotNull();
+        byte[] rewritten = ByteStreams.toByteArray(filtered);
+        assertThat(rewritten).isNotEqualTo(clazz);
+        assertThat(rewritten).isEqualTo(expectedClazz);
+
+    }
     @Test
     public void testRecipeFile() throws IOException {
         TypedefRemover remover = new TypedefRemover();
@@ -123,15 +166,8 @@ public class TypedefRemoverTest {
 
         byte[] outerClass = OUTER_CLASS;
 
-        filtered =
-                remover.filter("test/pkg/OuterClass.class", new ByteArrayInputStream(outerClass));
-
-        assertThat(filtered).isNotNull();
-        assertThat(filtered).isNotSameAs(input);
-        byte[] rewritten = ByteStreams.toByteArray(filtered);
-        assertThat(rewritten).isNotEqualTo(outerClass);
-
-        assertThat(rewritten).isEqualTo(REWRITTEN_OUTER_CLASS);
+        checkRewriter(remover, OUTER_CLASS, "test/pkg/OuterClass.class", REWRITTEN_OUTER_CLASS);
+        checkRewriter(remover, OUTER_CLASS_TARGET_11, "test/pkg/OuterClass.class", REWRITTEN_OUTER_CLASS_TARGET_11);
     }
 
     @Test
