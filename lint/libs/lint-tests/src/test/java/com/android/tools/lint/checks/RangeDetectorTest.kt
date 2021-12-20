@@ -606,81 +606,80 @@ src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFI
     }
 
     fun testOverlappingRanges() {
-
         lint().files(
             java(
-                "" +
-                    "\n" +
-                    "package pkg.my.myapplication;\n" +
-                    "\n" +
-                    "import androidx.annotation.IntRange;\n" +
-                    "import androidx.annotation.Size;\n" +
-                    "\n" +
-                    "@SuppressWarnings({\"WeakerAccess\", \"ConstantConditions\", \"UnusedParameters\", \"unused\"})\n" +
-                    "public class X {\n" +
-                    "    public void testSize(\n" +
-                    "            @Size(4) int exactly4,\n" +
-                    "            @Size(2) int exactly2,\n" +
-                    "            @Size(min = 5) int atLeast5,\n" +
-                    "            @Size(max = 5) int atMost5,\n" +
-                    "            @Size(min = 2, max = 5) int between2and5,\n" +
-                    "            @Size(multiple = 3) int triple,\n" +
-                    "            @Size(min = 4, multiple = 3) int tripleFrom4,\n" +
-                    "            @Size(min = 4, multiple = 4) int quadrupleFrom4) {\n" +
-                    "        sizeMin3(/*Size must be at least 3*/exactly2/**/); // ERROR\n" +
-                    "        sizeMin3(exactly4); // OK\n" +
-                    "        sizeMin3(atLeast5); // OK\n" +
-                    "        sizeMin3(/*Size must be at least 3*/atMost5/**/); // ERROR: delta\n" +
-                    "        sizeMin3(/*Size must be at least 3*/between2and5/**/); // ERROR: 2 is not included\n" +
-                    "        sizeMin3(/*Size must be at least 3*/triple/**/); // ERROR\n" +
-                    "        sizeMin3(tripleFrom4); // OK\n" +
-                    "\n" +
-                    "        sizeMin3multiple2(/*Size must be at least 3 and a multiple of 2*/tripleFrom4/**/); // ERROR\n" +
-                    "        sizeMin3multiple2(quadrupleFrom4); // OK\n" +
-                    "\n" +
-                    "        sizeMax10(exactly2);\n" +
-                    "        sizeMax10(exactly4);\n" +
-                    "        sizeMax10(/*Size must be at most 10*/atLeast5/**/); // ERROR: allows numbers outside the max\n" +
-                    "        sizeMax10(between2and5); // OK\n" +
-                    "        sizeMax10(/*Size must be at most 10*/triple/**/); // ERROR: allows numbers outside the max\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    public void testIntRange(\n" +
-                    "            @IntRange(from = 5) int atLeast5,\n" +
-                    "            @IntRange(to = 5) int atMost5,\n" +
-                    "            @IntRange(from = 2, to = 5) int between2and5,\n" +
-                    "            @IntRange(from = 4, to = 6) int between4and6) {\n" +
-                    "        rangeMin3(atLeast5); // OK\n" +
-                    "        rangeMin3(/*Value must be ≥ 3*/atMost5/**/); // ERROR: delta\n" +
-                    "        rangeMin3(/*Value must be ≥ 3*/between2and5/**/); // ERROR: 2 is not included\n" +
-                    "\n" +
-                    "        range3to6(/*Value must be ≥ 3 and ≤ 6*/atLeast5/**/); // ERROR\n" +
-                    "        range3to6(/*Value must be ≥ 3 and ≤ 6*/atMost5/**/); // ERROR\n" +
-                    "        range3to6(/*Value must be ≥ 3 and ≤ 6*/between2and5/**/); // ERROR not overlapping\n" +
-                    "        range3to6(between4and6); // OK\n" +
-                    "\n" +
-                    "        rangeMax10(/*Value must be ≤ 10*/atLeast5/**/); // ERROR: allows numbers outside the max\n" +
-                    "        rangeMax10(between2and5); // OK\n" +
-                    "        rangeMax10(atMost5); // OK\n" +
-                    "    }\n" +
-                    "    public void sizeMin3(@Size(min = 3) int size) {\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    public void sizeMin3multiple2(@Size(min = 3, multiple = 2) int size) {\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    public void sizeMax10(@Size(max = 10) int size) {\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    public void rangeMin3(@IntRange(from = 3) int range) {\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    public void range3to6(@IntRange(from = 3, to = 6) int range) {\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    public void rangeMax10(@IntRange(to = 10) int range) {\n" +
-                    "    }\n" +
-                    "}\n"
+                """
+                package pkg.my.myapplication;
+
+                import androidx.annotation.IntRange;
+                import androidx.annotation.Size;
+
+                @SuppressWarnings({"WeakerAccess", "ConstantConditions", "UnusedParameters", "unused"})
+                public class X {
+                    public void testSize(
+                            @Size(4) int exactly4,
+                            @Size(2) int exactly2,
+                            @Size(min = 5) int atLeast5,
+                            @Size(max = 5) int atMost5,
+                            @Size(min = 2, max = 5) int between2and5,
+                            @Size(multiple = 3) int triple,
+                            @Size(min = 4, multiple = 3) int tripleFrom4,
+                            @Size(min = 4, multiple = 4) int quadrupleFrom4) {
+                        sizeMin3(/*Expected Size ≥ 3 (was 2)*/exactly2/**/); // ERROR
+                        sizeMin3(exactly4); // OK
+                        sizeMin3(atLeast5); // OK
+                        sizeMin3(/*Size must be at least 3, but atMost5 can be less than 3*/atMost5/**/); // ERROR: delta
+                        sizeMin3(/*Size must be at least 3, but between2and5 can be 2*/between2and5/**/); // ERROR: 2 is not included
+                        sizeMin3(/*Size must be at least 3, but triple can be less than 3*/triple/**/); // ERROR
+                        sizeMin3(tripleFrom4); // OK
+
+                        sizeMin3multiple2(/*Size must be at least 3 and a multiple of 2, but tripleFrom4 can be a multiple of 3*/tripleFrom4/**/); // ERROR
+                        sizeMin3multiple2(quadrupleFrom4); // OK
+
+                        sizeMax10(exactly2);
+                        sizeMax10(exactly4);
+                        sizeMax10(/*Size must be at most 10, but atLeast5 can be greater than 10*/atLeast5/**/); // ERROR: allows numbers outside the max
+                        sizeMax10(between2and5); // OK
+                        sizeMax10(/*Size must be at most 10, but triple can be greater than 10*/triple/**/); // ERROR: allows numbers outside the max
+                    }
+
+                    public void testIntRange(
+                            @IntRange(from = 5) int atLeast5,
+                            @IntRange(to = 5) int atMost5,
+                            @IntRange(from = 2, to = 5) int between2and5,
+                            @IntRange(from = 4, to = 6) int between4and6) {
+                        rangeMin3(atLeast5); // OK
+                        rangeMin3(/*Value must be ≥ 3 but atMost5 can be < 3*/atMost5/**/); // ERROR: delta
+                        rangeMin3(/*Value must be ≥ 3 but between2and5 can be 2*/between2and5/**/); // ERROR: 2 is not included
+
+                        range3to6(/*Value must be ≥ 3 and ≤ 6 but atLeast5 can be > 6*/atLeast5/**/); // ERROR
+                        range3to6(/*Value must be ≥ 3 and ≤ 6 but atMost5 can be < 3*/atMost5/**/); // ERROR
+                        range3to6(/*Value must be ≥ 3 and ≤ 6 but between2and5 can be 2*/between2and5/**/); // ERROR not overlapping
+                        range3to6(between4and6); // OK
+
+                        rangeMax10(/*Value must be ≤ 10 but atLeast5 can be > 10*/atLeast5/**/); // ERROR: allows numbers outside the max
+                        rangeMax10(between2and5); // OK
+                        rangeMax10(atMost5); // OK
+                    }
+                    public void sizeMin3(@Size(min = 3) int size) {
+                    }
+
+                    public void sizeMin3multiple2(@Size(min = 3, multiple = 2) int size) {
+                    }
+
+                    public void sizeMax10(@Size(max = 10) int size) {
+                    }
+
+                    public void rangeMin3(@IntRange(from = 3) int range) {
+                    }
+
+                    public void range3to6(@IntRange(from = 3, to = 6) int range) {
+                    }
+
+                    public void rangeMax10(@IntRange(to = 10) int range) {
+                    }
+                }
+                """
             ),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()

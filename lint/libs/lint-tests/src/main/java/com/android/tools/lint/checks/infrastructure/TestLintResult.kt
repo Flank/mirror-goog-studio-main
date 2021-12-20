@@ -111,15 +111,8 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it },
         testMode: TestMode = defaultMode
     ): TestLintResult {
-        // If not expecting an exception, and not allowing any, make sure we
-        // didn't have any exceptions across all states, not just one.
-        // We don't want to require people to check each test mode individually
-        // and we don't need the power to individually expect exceptions separately
-        // for each mode.
-        if (expectedException == null && !task.allowExceptions) {
-            states.asSequence().mapNotNull { it.value.firstThrowable }.firstOrNull()?.let {
-                throw it
-            }
+        if (expectedException == null) {
+            checkPendingErrors()
         }
 
         val actual = transformer.transform(describeOutput(expectedException, testMode))
@@ -145,6 +138,19 @@ class TestLintResult internal constructor(
         return this
     }
 
+    private fun checkPendingErrors() {
+        // If not expecting an exception, and not allowing any, make sure we
+        // didn't have any exceptions across all states, not just one.
+        // We don't want to require people to check each test mode individually
+        // and we don't need the power to individually expect exceptions separately
+        // for each mode.
+        if (!task.allowExceptions) {
+            states.asSequence().mapNotNull { it.value.firstThrowable }.firstOrNull()?.let {
+                throw it
+            }
+        }
+    }
+
     /** Checks that the lint report contains the given [substring] */
     @JvmOverloads
     fun expectContains(
@@ -152,6 +158,7 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it },
         testMode: TestMode = defaultMode
     ): TestLintResult {
+        checkPendingErrors()
         val actual = transformer.transform(describeOutput(null, testMode))
         val expected = normalizeOutput(expectedText)
 
@@ -268,13 +275,7 @@ class TestLintResult internal constructor(
      * @return this
      */
     fun expectInlinedMessages(useRaw: Boolean = false): TestLintResult {
-        if (task.runner.currentTestMode.modifiesSources) {
-            // This result checking method relies on comparing the
-            // test descriptor files to the files on disk; that doesn't
-            // work if the test is modifying the generated source
-            return this
-        }
-
+        checkPendingErrors()
         for (project in task.projects) {
             for (file in project.files) {
                 val plainContents: String?
@@ -419,10 +420,7 @@ class TestLintResult internal constructor(
         @Language("RegExp") regexp: String,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        val throwable = states[defaultMode]?.firstThrowable
-        if (!task.allowExceptions && throwable != null) {
-            throw throwable
-        }
+        checkPendingErrors()
         val output = transformer.transform(describeOutput())
         var pattern = Pattern.compile(regexp, MULTILINE or DOTALL)
         var found = pattern.matcher(output).find()
@@ -497,6 +495,7 @@ class TestLintResult internal constructor(
      */
     @Suppress("MemberVisibilityCanBePrivate") // Also allow calls by 3rd party checks
     fun expectCount(expectedCount: Int, vararg severities: Severity): TestLintResult {
+        checkPendingErrors()
         val state = states[defaultMode]!!
         val throwable = state.firstThrowable
         val incidents = state.incidents
@@ -567,6 +566,7 @@ class TestLintResult internal constructor(
      * @return this
      */
     fun expectFixDiffs(expected: String): TestLintResult {
+        checkPendingErrors()
         for ((mode, result) in states) {
             if (result.skipped) {
                 continue
@@ -798,6 +798,7 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it },
         vararg checkers: TestResultChecker
     ): TestLintResult {
+        checkPendingErrors()
         assertTrue(sequenceOf(xml, html, sarif).count { it } == 1)
         val reporterFactory: (LintCliClient, File) -> Reporter = { client, file ->
             val reporter = when {

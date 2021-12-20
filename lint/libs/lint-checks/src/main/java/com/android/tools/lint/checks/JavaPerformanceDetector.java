@@ -27,7 +27,6 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INTEGER_WRA
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG_WRAPPER;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.tools.lint.detector.api.Lint.isKotlin;
-import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -271,8 +270,11 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                 }
             }
 
+            UElement parent = UastUtils.skipParenthesizedExprUp(node.getUastParent());
             if (mFlagAllocations
-                    && !(skipParentheses(node.getUastParent()) instanceof UThrowExpression)
+                    && !(parent instanceof UThrowExpression)
+                    && !(parent instanceof UQualifiedReferenceExpression
+                            && parent.getUastParent() instanceof UThrowExpression)
                     && mCheckAllocations) {
                 // Make sure we're still inside the method declaration that marked
                 // mInDraw as true, in case we've left it and we're in a static
