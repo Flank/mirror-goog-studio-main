@@ -22,6 +22,7 @@ import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
@@ -47,6 +48,11 @@ class SubtractingArtifactCollection(
     override fun getArtifactFiles() = subtractingArtifactResult.fileCollection.value
 
     override fun getArtifacts() = subtractingArtifactResult.artifactResults.value
+
+    @Suppress("UnstableApiUsage")
+    override fun getResolvedArtifacts(): Provider<MutableSet<ResolvedArtifactResult>> {
+        return objectFactory.setProperty(ResolvedArtifactResult::class.java).map { artifacts }
+    }
 
     override fun getFailures() = mainArtifacts.failures + removedArtifacts.failures
 

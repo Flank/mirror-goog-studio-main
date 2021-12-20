@@ -21,6 +21,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import java.util.function.Consumer
 
 /**
@@ -39,4 +40,7 @@ class FilteredArtifactCollection(private val filteringSpec: FilteringSpec) : Art
     override fun iterator() = artifacts.iterator()
     override fun spliterator() = artifacts.spliterator()
     override fun forEach(action: Consumer<in ResolvedArtifactResult>) = artifacts.forEach(action)
+    @Suppress("UnstableApiUsage")
+    override fun getResolvedArtifacts(): Provider<Set<ResolvedArtifactResult>>
+    = filteringSpec.getResolvedArtifacts()
 }

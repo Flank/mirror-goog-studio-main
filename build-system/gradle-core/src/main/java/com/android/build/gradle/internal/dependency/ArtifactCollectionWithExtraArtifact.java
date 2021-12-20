@@ -176,6 +176,15 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
         return list;
     }
 
+    @NonNull
+    @SuppressWarnings({"UnstableApiUsage"})
+    @Override
+    public Provider<Set<ResolvedArtifactResult>> getResolvedArtifacts() {
+        return parentArtifacts
+                .getResolvedArtifacts()
+                .zip(extraArtifact, (resolvedArtifactResults, files) -> getArtifacts());
+    }
+
     private static final class ExtraResolvedArtifactResult implements ResolvedArtifactResult {
 
         @NonNull private final File artifactFile;

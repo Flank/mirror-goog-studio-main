@@ -20,16 +20,11 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.google.protobuf.ByteString
-import java.io.File
-import java.io.FileOutputStream
-import java.net.URI
-import java.security.MessageDigest
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -38,6 +33,7 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.ArtifactRepository
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -56,21 +52,26 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URI
+import java.security.MessageDigest
 
 /** Task that publishes the app dependencies proto for each app or dynamic feature module. */
 @DisableCachingByDefault
 abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
 
-    private lateinit var runtimeClasspathArtifacts: ArtifactCollection
-
     @get:Internal
-    abstract val runtimeClasspathName: Property<String>
+    abstract val runtimeClasspathArtifacts: Property<ArtifactCollection>
+
+    @Input
+    abstract fun getRootComponent(): Property<ResolvedComponentResult>
 
     // Don't use @Classpath here as @Classpath ignores some of the contents whereas the output of
     // this task contains the hashes of the entire contents.
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    val runtimeClasspathFiles: FileCollection by lazy { runtimeClasspathArtifacts.artifactFiles }
+    val runtimeClasspathFiles: FileCollection by lazy { runtimeClasspathArtifacts.get().artifactFiles }
 
     @get:OutputFile
     abstract val dependencyReport: RegularFileProperty
@@ -96,15 +97,7 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
     }
 
     override fun doTaskAction() {
-        // FIXME: Project usage during taskAction breaks Configuration Caching (b/162074215)
-        //   Blocking issue in Gradle: (https://github.com/gradle/gradle/issues/12871)
-        val runtimeClasspath = project.configurations.getByName(runtimeClasspathName.get())
-
-        // FIXME: stop resolving classpath manually (b/159989590)
-        val artifacts = runtimeClasspath.incoming.artifactView { config ->
-            config.componentFilter { id -> id !is ProjectComponentIdentifier }
-        }.artifacts
-        val componentDigestMap = artifacts.groupBy(
+        val componentDigestMap = runtimeClasspathArtifacts.get().groupBy(
             keySelector = { artifact -> artifact.id.componentIdentifier },
             valueTransform = { artifact -> artifact.file }
         )
@@ -150,8 +143,12 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
 
         // Build the graph representation, partitioning into "Project" and "Library" nodes
         //   and removing all edges (dependencies) that point to Projects
-        val resolutionResult = runtimeClasspath.incoming.resolutionResult
-        val (projectNodes, libraryNodesPartialList) = resolutionResult.allComponents.asSequence()
+
+
+        val allComponents = mutableSetOf<ResolvedComponentResult>()
+        collectAll(getRootComponent().get(), allComponents)
+
+        val (projectNodes, libraryNodesPartialList) = allComponents.asSequence()
             .map { component ->
                 InternalGraphNode(
                     id = component.id,
@@ -249,6 +246,19 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
         FileOutputStream(dependencyReport.get().asFile).use { appDependenciesProto.writeTo(it) }
     }
 
+    private fun collectAll(
+        node: ResolvedComponentResult,
+        allComponents: MutableSet<ResolvedComponentResult>
+    ) {
+        if (allComponents.add(node)) {
+            for (dependency in node.dependencies) {
+                if (dependency is ResolvedDependencyResult) {
+                    collectAll(dependency.selected, allComponents)
+                }
+            }
+        }
+    }
+
     class CreationAction(
         creationConfig: ApkCreationConfig
     ) : VariantTaskCreationAction<PerModuleReportDependenciesTask, ApkCreationConfig>(
@@ -291,15 +301,16 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
             task: PerModuleReportDependenciesTask
         ) {
             super.configure(task)
-            task.runtimeClasspathName.set(creationConfig.variantDependencies.runtimeClasspath.name)
-            task.runtimeClasspathArtifacts =
+            task.runtimeClasspathArtifacts.set(
                 creationConfig.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
                     // Query for JAR instead of PROCESSED_JAR as this task works with unprocessed (a/j)ars
                     AndroidArtifacts.ArtifactType.AAR_OR_JAR
                 )
-
+            )
+            @Suppress("UnstableApiUsage")
+            task.getRootComponent().set(creationConfig.variantDependencies.runtimeClasspath.incoming.resolutionResult.rootComponent)
             task.includeRepositoryInfo
                 .set(creationConfig.services.projectOptions[BooleanOption.INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT])
 
