@@ -813,7 +813,9 @@ open class VariantDslInfoImpl internal constructor(
 
     override val signingConfig: SigningConfig?
         get() {
-            if (variantType.isDynamicFeature) {
+            if (variantType.isDynamicFeature ||
+                testedVariant?.variantType?.isDynamicFeature == true
+            ) {
                 return null
             }
             val dslSigningConfig =
@@ -833,7 +835,7 @@ open class VariantDslInfoImpl internal constructor(
                 it.enableV4Signing = dslSigningConfig?.enableV4Signing
                 return it
             }
-            if (dslSigningConfig == null && isProfileable) {
+            if (dslSigningConfig == null && (isProfileable || isDebuggable)) {
                 return extension.signingConfigs.findByName(BuilderConstants.DEBUG) as SigningConfig?
             }
             return dslSigningConfig as SigningConfig?
@@ -1177,7 +1179,11 @@ open class VariantDslInfoImpl internal constructor(
         }
 
     override val isDebuggable: Boolean
-        get() = (buildTypeObj as? ApplicationBuildType)?.isDebuggable ?: false
+        get() = ProfilingMode.getProfilingModeType(
+            services.projectOptions[StringOption.PROFILING_MODE]
+        ).isDebuggable
+            ?: (buildTypeObj as? ApplicationBuildType)?.isDebuggable
+            ?: false
 
     override val isEmbedMicroApp: Boolean
         get() = (buildTypeObj as? ApplicationBuildType)?.isEmbedMicroApp ?: false
