@@ -150,7 +150,7 @@ class TestLintRunner(private val task: TestLintTask) {
                     TestResultState(
                         createClient(), rootDir, e.message ?: "", emptyList(), e
                     )
-                val defaultType: TestMode = testModes.iterator().next()
+                val defaultType: TestMode = currentTestMode
                 results[defaultType] = state
                 TestLintResult(this, results, defaultType)
             } finally {

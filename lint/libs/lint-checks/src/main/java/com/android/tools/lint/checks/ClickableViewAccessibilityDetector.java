@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.tools.lint.checks.CleanupDetector.MOTION_EVENT_CLS;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
-import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -50,6 +49,7 @@ import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USuperExpression;
 import org.jetbrains.uast.UastFacade;
+import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
@@ -338,7 +338,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
 
         @Override
         public boolean visitSuperExpression(USuperExpression node) {
-            UElement parent = skipParentheses(node.getUastParent());
+            UElement parent = UastUtils.skipParenthesizedExprUp(node.getUastParent());
             if (parent instanceof UReferenceExpression) {
                 PsiElement resolved = ((UReferenceExpression) parent).resolve();
                 if (resolved instanceof PsiMethod
