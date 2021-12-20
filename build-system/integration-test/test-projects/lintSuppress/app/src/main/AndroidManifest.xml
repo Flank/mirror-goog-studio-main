@@ -3,7 +3,7 @@
     package="com.example.android.lint.suppress">
 
     <application android:label="Lint Suppress test">
-        <activity android:name=".MainActivity" >
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
