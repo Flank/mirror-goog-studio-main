@@ -222,12 +222,7 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-31",
-    visibility = [
-        # Temporarily added to support 1.1.0-beta01. Remove as part of b/203422822
-        "//tools/adt/idea/android-templates:__pkg__",
-        "//tools/adt/idea/compose-designer:__pkg__",
-        "//tools/adt/idea/designer-perf-tests:__pkg__",
-    ],
+    visibility = ["//visibility:private"],
 )
 
 platform_filegroup(
