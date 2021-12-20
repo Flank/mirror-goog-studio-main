@@ -2,7 +2,7 @@
     name="debug"
     package="com.example.android.lint.kotlin"
     minSdkVersion="15"
-    targetSdkVersion="30"
+    targetSdkVersion="31"
     debuggable="true"
     mergedManifest="build/intermediates/merged_manifest/debug/AndroidManifest.xml"
     manifestMergeReport="build/outputs/logs/manifest-merger-debug-report.txt"
