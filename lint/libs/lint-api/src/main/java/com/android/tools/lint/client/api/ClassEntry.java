@@ -19,7 +19,7 @@ package com.android.tools.lint.client.api;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_SRCJAR;
-import static org.objectweb.asm.Opcodes.ASM7;
+import static org.objectweb.asm.Opcodes.ASM9;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -190,10 +190,8 @@ class ClassEntry implements Comparable<ClassEntry> {
                         if (entry.getName().endsWith(DOT_CLASS)) {
                             try (InputStream is = jar.getInputStream(entry)) {
                                 byte[] bytes = ByteStreams.toByteArray(is);
-                                if (bytes != null) {
-                                    File file = new File(entry.getName());
-                                    entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
-                                }
+                                File file = new File(entry.getName());
+                                entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
                             } catch (Throwable e) {
                                 client.log(e, null);
                             }
@@ -301,7 +299,7 @@ class ClassEntry implements Comparable<ClassEntry> {
         private final Map<String, String> mMap;
 
         SuperclassVisitor(Map<String, String> map) {
-            super(ASM7);
+            super(ASM9);
             mMap = map;
         }
 

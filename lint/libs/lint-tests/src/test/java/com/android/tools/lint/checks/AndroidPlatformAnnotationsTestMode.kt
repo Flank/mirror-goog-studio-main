@@ -30,7 +30,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes.ASM7
+import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.TypePath
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -154,8 +154,8 @@ internal class AndroidPlatformAnnotationsTestMode : TestMode(
     }
 
     private fun rewriteOuterClass(reader: ClassReader): ByteArray {
-        val classWriter = ClassWriter(ASM7)
-        val classVisitor = object : ClassVisitor(ASM7, classWriter) {
+        val classWriter = ClassWriter(ASM9)
+        val classVisitor = object : ClassVisitor(ASM9, classWriter) {
             override fun visit(
                 version: Int,
                 access: Int,

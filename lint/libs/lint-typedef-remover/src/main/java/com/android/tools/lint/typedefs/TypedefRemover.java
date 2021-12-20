@@ -220,9 +220,9 @@ public class TypedefRemover {
     }
 
     private byte[] rewriteOuterClass(@NonNull ClassReader reader) {
-        ClassWriter classWriter = new ClassWriter(Opcodes.ASM7);
+        ClassWriter classWriter = new ClassWriter(Opcodes.ASM9);
         ClassVisitor classVisitor =
-                new ClassVisitor(Opcodes.ASM7, classWriter) {
+                new ClassVisitor(Opcodes.ASM9, classWriter) {
                     @Override
                     public void visitInnerClass(
                             String name, String outerName, String innerName, int access) {
