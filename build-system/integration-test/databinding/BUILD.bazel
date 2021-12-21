@@ -34,6 +34,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platforms/latest",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system:gradle_plugin_repo",
+    "//tools/base/build-system/integration-test:androidx_test_latest",
     "//tools/base/build-system/integration-test:dagger_prebuilts",
     "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
     "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
@@ -71,14 +72,21 @@ coverage_java_test(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
-        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/gradle_plugin_repo.manifest,tools/base/build-system/integration-test/databinding/prebuilts.manifest,tools/data-binding/data_binding_runtime.zip,tools/base/build-system/integration-test/support_library_latest.manifest,tools/base/build-system/integration-test/dagger_prebuilts.manifest,tools/base/build-system/integration-test/kotlin_gradle_plugin_prebuilts.manifest,tools/base/build-system/integration-test/gradle_kotlin_dsl_prebuilts.manifest",
+        "-Dtest.android.build.gradle.integration.repos=" +
+        "tools/base/build-system/gradle_plugin_repo.manifest," +
+        "tools/base/build-system/integration-test/databinding/prebuilts.manifest," +
+        "tools/data-binding/data_binding_runtime.zip," +
+        "tools/base/build-system/integration-test/support_library_latest.manifest," +
+        "tools/base/build-system/integration-test/androidx_test_latest.manifest," +
+        "tools/base/build-system/integration-test/dagger_prebuilts.manifest," +
+        "tools/base/build-system/integration-test/kotlin_gradle_plugin_prebuilts.manifest," +
+        "tools/base/build-system/integration-test/gradle_kotlin_dsl_prebuilts.manifest",
     ],
     shard_count = 8,
     tags = [
         "block-network",
         "cpu:3",
         "gradle_integration",
-        "manual",  # TODO(b/203802678): Re-enable this test when fixed.
         "no_test_mac",  # b/69151132 Time out frequently when run on mac.
         "slow",
     ],
@@ -112,7 +120,6 @@ maven_repository(
         "@maven//:androidx.lifecycle.lifecycle-viewmodel-ktx_2.2.0",
         "@maven//:androidx.preference.preference_1.0.0",
         "@maven//:androidx.test.espresso.espresso-core_3.1.0",
-        "@maven//:androidx.test.rules_1.1.0",
         "@maven//:com.android.support.appcompat-v7_26.1.0",
         "@maven//:com.android.support.constraint.constraint-layout_1.0.2",
         "@maven//:com.android.support.test.espresso.espresso-core_3.0.1",
