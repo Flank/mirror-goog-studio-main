@@ -136,7 +136,6 @@ public class JarTestSuiteRunner extends Suite {
             throw new RuntimeException(
                     "Must set test.suite.jar to the name of the jar containing JUnit tests");
         }
-        jarSuffix = jarSuffix.toLowerCase(Locale.US);
 
         long start = System.currentTimeMillis();
         TestGroup testGroup = TestGroup.builder()
