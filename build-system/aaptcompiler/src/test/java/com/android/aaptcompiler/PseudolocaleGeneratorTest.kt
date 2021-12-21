@@ -310,4 +310,26 @@ class PseudolocaleGeneratorTest {
     // "world" should be untranslated.
     Truth.assertThat((newString as BasicString).ref.value()).contains("world")
   }
+
+    // Regression test for b/188963894.
+    @Test
+    fun canPseudolocalizeNestedTagWithSpace() {
+        val pool = StringPool()
+        val originalSpans = listOf(
+            Span("b", 0, 4),
+                    Span("i", 0, 10)
+        )
+        val originalText = "hello world"
+        val original = StyledString(pool.makeRef(StyleString(originalText, originalSpans)), listOf())
+
+        val newString = pseudolocalizeStyledString(original, Pseudolocalizer.Method.ACCENT, pool)
+        val spans = newString.spans()
+        Truth.assertThat(spans[0].name.value()).isEqualTo("i")
+        Truth.assertThat(spans[0].firstChar).isEqualTo(1)
+        Truth.assertThat(spans[0].lastChar).isEqualTo("ĥéļļö ŵöŕļð".length)
+
+        Truth.assertThat(spans[1].name.value()).isEqualTo("b")
+        Truth.assertThat(spans[1].firstChar).isEqualTo(1)
+        Truth.assertThat(spans[1].lastChar).isEqualTo("ĥéļļö".length)
+    }
 }
