@@ -33,14 +33,15 @@ class ComposeHelloWorldTest {
             .create()
 
     @Test
-    fun appBuildsSuccessfully() {
+    fun appAndTestsBuildSuccessfully() {
         val executor =
                 project.executor()
                         .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
 
-        executor.run("assembleDebug")
-        // run once again to test configuration caching
-        executor.run("clean", "assembleDebug")
+        val tasks = listOf("clean",  "assembleDebug", "assembleDebugAndroidTest")
+        executor.run(tasks)
+        // don't run once again to test configuration caching (b/186436358)
+        //executor.run(tasks)
     }
 
     @Test
