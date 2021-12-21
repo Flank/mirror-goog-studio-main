@@ -42,11 +42,11 @@ fun graphOf(vararg nodes : Pair<Int, Set<Int>>) : Map<Int, IntArray> {
  *   build libfoo.so : LINK source.o
  *   build foo : phony libfoo.so
  *
- * When called with graph.breadthFirst("foo"), the result is:
+ * When called with graph.breadthFirst("libfoo.so"), the result is:
  *
- *   foo, libfoo.so, source.o, source.cpp
+ *   ibfoo.so, source.o, source.cpp
  *
- * That is, all the targets that produce "libfoo.so" directly or indirectly.
+ * That is, all the targets that contribute to "libfoo.so" directly or indirectly.
  */
 fun Map<Int, IntArray>.breadthFirst(ancestor : Int) : Sequence<Int> = sequence {
     val seen = BitSet(keys.size) // Use Bits because 'seen' is dense.
@@ -93,12 +93,16 @@ fun Map<Int, IntArray>.ancestors(descendants : Set<Int>)
             // Skip if we've seen it before
             if (seen.containsKey(node)) continue
             // Skip if there are any children that have not been visited yet
-            if (children.any { !seen.containsKey(it) }) continue
-            seen[node] = children
+            if (children.any { !seen.containsKey(it) && containsKey(it) }) continue
+            val expanded = children
+                .filter { seen.containsKey(it) }
                 .flatMap { seen.getValue(it).asIterable() }
                 .toSortedSet()
                 .toIntArray()
-            yield(node to seen.getValue(node))
+            seen[node] = expanded
+            if (expanded.isNotEmpty()) {
+                yield(node to expanded)
+            }
             more = true
         }
     }

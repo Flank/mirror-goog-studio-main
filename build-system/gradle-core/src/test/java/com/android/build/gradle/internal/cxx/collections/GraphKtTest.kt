@@ -90,6 +90,21 @@ class GraphKtTest {
                 3 -> 1
                 2 -> 1
             """.trimIndent())
+
+    }
+
+    @Test
+    fun `check ancestors with children that are not all parents`() {
+        // In this graph, '4' is not itself a parent
+        // THat should not prevent '3' from returning as parent of '1'
+        assertThat(graphOf(
+            1 to setOf(2),
+            3 to setOf(1, 4))
+            .renderAncestorsOf(1))
+            .isEqualTo("""
+                1 -> 1
+                3 -> 1
+            """.trimIndent())
     }
 
     private fun Map<Int, IntArray>.renderAncestorsOf(vararg terminals : Int) : String {

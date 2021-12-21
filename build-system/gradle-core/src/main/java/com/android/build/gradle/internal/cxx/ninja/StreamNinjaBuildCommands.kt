@@ -81,11 +81,12 @@ fun streamNinjaBuildCommands(
                     val rule = state.getRule(node.rule)
 
                     val unexpanded = NinjaBuildUnexpandedCommand(
-                        implicitInputs = node.implicitInputs,
-                        explicitInputs = node.explicitInputs,
-                        orderOnlyInputs = node.orderOnlyInputs,
-                        implicitOutputs = node.implicitOutputs,
-                        explicitOutputs = node.explicitOutputs,
+                        ruleName = rule.name,
+                        implicitInputs = node.implicitInputs.map { unescape(it) },
+                        explicitInputs = node.explicitInputs.map { unescape(it) },
+                        orderOnlyInputs = node.orderOnlyInputs.map { unescape(it) },
+                        implicitOutputs = node.implicitOutputs.map { unescape(it) },
+                        explicitOutputs = node.explicitOutputs.map { unescape(it) },
                         unexpandedRuleProperties = rule.properties.map { it.key.toLowerCase() to it.value }.toMap(),
                         getProperty = { s -> state.getPropertyValue(s) }
                     )
@@ -100,10 +101,29 @@ fun streamNinjaBuildCommands(
 }
 
 /**
+ * Unescape a string. Converts $: to :, $$ to $, etc.
+ */
+private fun unescape(value : String) : String {
+    val sb = StringBuilder()
+    StringReader(value).streamUnescapedNinja { token ->
+        when (token) {
+            is Literal -> sb.append(token.value)
+            is Variable -> error("Expected '$value' to have no variables")
+            is Comment -> { }
+            is EscapedColon -> sb.append(":")
+            is EscapedDollar -> sb.append("$")
+            is EscapedSpace -> sb.append(" ")
+        }
+    }
+    return sb.toString()
+}
+
+/**
  * Represents a Ninja 'build' statement along with the 'rule' that applies to it and an [expand]
  * function that can be used to expand property values.
  */
 data class NinjaBuildUnexpandedCommand(
+    val ruleName : String,
     val explicitInputs : List<String>,
     val implicitInputs : List<String>,
     val orderOnlyInputs : List<String>,
@@ -138,11 +158,25 @@ data class NinjaBuildUnexpandedCommand(
     }
 
     /**
-     * The 'command' property is the only property on 'rule' that is required so there's a special
-     * accessor. If the property doesn't exist then "" is returned and the caller is expected to
-     * handle it as an error.
+     * The 'command' property is the only property on 'rule' that is required. If the property
+     * doesn't exist then "" is returned and the caller is expected to handle it as an error.
      */
     val command : String get() = unexpandedRuleProperties["command"] ?: ""
+
+    /**
+     * A generator rule is one that's meant to regenerate the 'build.ninja' file.
+     */
+    val generator : String? get() = unexpandedRuleProperties["generator"]
+
+    /**
+     * Rule's response file.
+     */
+    val rspfile : String? get() = unexpandedRuleProperties["rspfile"]
+
+    /**
+     * Rule's response file content.
+     */
+    val rspfileContent : String? get() = unexpandedRuleProperties["rspfile_content"]
 }
 
 private data class EvaluationState(
