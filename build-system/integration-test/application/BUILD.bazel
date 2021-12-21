@@ -265,6 +265,7 @@ single_gradle_integration_test_per_source(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:androidx_test_latest",
         "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:utp_plugins",
@@ -528,7 +529,8 @@ maven_repository(
         "@maven//:androidx.navigation.navigation-fragment_2.0.0",
         "@maven//:androidx.test.espresso.espresso-core_3.2.0",
         "@maven//:androidx.test.ext.junit_1.1.1",
-        "@maven//:androidx.test.rules_1.1.0",
+        "@maven//:androidx.test.ext.junit_1.1.3-alpha02",
+        "@maven//:androidx.test.rules_1.4.0-alpha06",
         "@maven//:com.android.support.constraint.constraint-layout_1.0.2",
         "@maven//:com.android.support.multidex-instrumentation_1.0.2",
         "@maven//:com.android.support.preference-v7_28.0.0",

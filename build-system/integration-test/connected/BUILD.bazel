@@ -66,6 +66,7 @@ TEST_DATA = [
 TEST_MAVEN_REPOS = [
     "//tools/base/build-system:gradle_plugin_no_databinding_repo",
     "//tools/base/build-system/integration-test:androidx_latest",
+    "//tools/base/build-system/integration-test:androidx_test_latest",
     "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
     "//tools/base/build-system/integration-test:support_library_latest",
     "//tools/base/build-system/integration-test:utp_plugins",
@@ -164,7 +165,6 @@ gradle_connected_test(
     maven_repos = TEST_MAVEN_REPOS + [
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_1_4_32_prebuilts",
     ],
-    tags = ["manual"],  # TODO(b/203802678): Re-enable this test when fixed.
     deps = TEST_DEPS,
 )
 
@@ -183,7 +183,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
     data = TEST_DATA,
     flaky = True,  # b/148626301 flaky emulator connectivity
-    maven_repos = TEST_MAVEN_REPOS + ["//tools/base/build-system/integration-test:androidx_test_latest"],
+    maven_repos = TEST_MAVEN_REPOS,
     resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )
