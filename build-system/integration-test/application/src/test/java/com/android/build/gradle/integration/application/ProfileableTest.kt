@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.SigningHelper
 import com.android.build.gradle.options.StringOption
@@ -69,13 +70,14 @@ class ProfileableTest {
         val app = project.getSubproject(":app")
         app.buildFile.appendText("android.buildTypes.debug.debuggable true\n")
         app.buildFile.appendText("android.buildTypes.debug.profileable true\n")
-        project.executor()
+        val result = project.executor()
             // http://b/149978740
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run("assembleDebug")
         // Ensure profileable is not applied (debuggable dsl option overrides profileable).
         val manifest = ApkSubject.getManifestContent(
-            project.getApkAsFile(GradleTestProject.ApkType.DEBUG).toPath())
+            project.getApkAsFile(GradleTestProject.ApkType.DEBUG).toPath()
+        )
         assertThat(manifest).doesNotContain(
             arrayListOf(
                 "        E: application (line=11)",
@@ -83,6 +85,13 @@ class ProfileableTest {
                 "              A: http://schemas.android.com/apk/res/android:shell(0x01010594)=true"
             )
         )
+        result.stdout.use { out ->
+            ScannerSubject.assertThat(out).contains(
+                ":app build type 'debug' can only have debuggable or profileable enabled.\n" +
+                        "Only one of these options can be used at a time.\n" +
+                        "Recommended action: Only set one of debuggable=true and profileable=true.\n"
+            )
+        }
     }
 
     @Test

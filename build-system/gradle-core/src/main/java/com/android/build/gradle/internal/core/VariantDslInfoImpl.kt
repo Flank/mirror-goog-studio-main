@@ -1193,9 +1193,25 @@ open class VariantDslInfoImpl internal constructor(
             val fromProfilingModeOption = ProfilingMode.getProfilingModeType(
                 services.projectOptions[StringOption.PROFILING_MODE]
             ).isProfileable
-            val fromBuildType = (buildTypeObj as? ApplicationBuildType)?.isProfileable ?: false
-            return (fromProfilingModeOption != null && fromProfilingModeOption)
-                    || (fromBuildType && !isDebuggable)
+            val fromBuildType = (buildTypeObj as? ApplicationBuildType)?.isProfileable
+            return when {
+                fromProfilingModeOption != null -> {
+                    fromProfilingModeOption
+                }
+                fromBuildType == true && isDebuggable -> {
+                    val projectName = services.projectInfo.name
+                    val message =
+                        ":$projectName build type '${buildTypeObj.name}' can only have debuggable or profileable enabled.\n" +
+                                "Only one of these options can be used at a time.\n" +
+                                "Recommended action: Only set one of debuggable=true and profileable=true.\n"
+                    services.issueReporter.reportWarning(IssueReporter.Type.GENERIC, message)
+                    // Disable profileable when profileable and debuggable are both enabled.
+                    false
+                }
+                else -> {
+                    fromBuildType == true
+                }
+            }
         }
 
     override val isPseudoLocalesEnabled: Boolean
