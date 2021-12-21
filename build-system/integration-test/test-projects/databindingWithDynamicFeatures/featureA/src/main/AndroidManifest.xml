@@ -22,7 +22,7 @@
         </dist:module>
 
     <application>
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter android:order="1">
                 <action android:name="android.intent.action.VIEW" />
 
