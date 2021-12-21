@@ -208,6 +208,24 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
+    fun testModelLintFileFetching() {
+        var model = app.modelV2().fetchModels().container.getProject(":app").androidProject
+        var desugarMethodsFile = model!!.variants.first().desugaredMethods
+            .find { it.name.contains("desugar_jdk_libs_configuration") }
+        Truth.assertThat(desugarMethodsFile).isNotNull()
+
+        // coreLibraryDesugaring is disabled
+        app.buildFile.appendText("""
+
+            android.compileOptions.coreLibraryDesugaringEnabled = false
+        """.trimIndent())
+        model = app.modelV2().fetchModels().container.getProject(":app").androidProject
+        desugarMethodsFile = model!!.variants.first().desugaredMethods
+            .find { it.name.contains("desugar_jdk_libs_configuration") }
+        Truth.assertThat(desugarMethodsFile).isNull()
+    }
+
+    @Test
     fun testKeepRulesGenerationFromAppProject() {
         executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)

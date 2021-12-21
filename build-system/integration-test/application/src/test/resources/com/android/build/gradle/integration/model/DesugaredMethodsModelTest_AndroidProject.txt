@@ -1,6 +1,6 @@
 > AndroidProject:
-   - namespace             = "com.android.tests.basic"
-   - androidTestNamespace  = "com.android.tests.basic.debug.test"
+   - namespace             = "pkg.name"
+   - androidTestNamespace  = "pkg.name.test"
    - testFixturesNamespace = (null)
    - resourcePrefix        = (null)
    - dynamicFeatures       = []
@@ -23,11 +23,9 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}
                * {PROJECT}/build/generated/source/buildConfig/debug{!}
             - minSdkVersion:
-               - apiLevel = 16
+               - apiLevel = 24
                - codename = (null)
-            - targetSdkVersionOverride:
-               - apiLevel = 16
-               - codename = (null)
+            - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
@@ -60,11 +58,9 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
                * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
             - minSdkVersion:
-               - apiLevel = 16
+               - apiLevel = 24
                - codename = (null)
-            - targetSdkVersionOverride:
-               - apiLevel = 16
-               - codename = (null)
+            - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
@@ -98,7 +94,7 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
+         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/desugar_jdk_libs_configuration-1.1.5-desugar-lint.txt{F}]
       < debug
       > release:
          - name                   = "release"
@@ -118,11 +114,9 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}
                * {PROJECT}/build/generated/source/buildConfig/release{!}
             - minSdkVersion:
-               - apiLevel = 16
+               - apiLevel = 24
                - codename = (null)
-            - targetSdkVersionOverride:
-               - apiLevel = 16
-               - codename = (null)
+            - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)
@@ -157,14 +151,14 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
+         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/desugar_jdk_libs_configuration-1.1.5-desugar-lint.txt{F}]
       < release
    < variants
    - javaCompileOptions:
       - encoding                       = "UTF-8"
       - sourceCompatibility            = "1.8"
       - targetCompatibility            = "1.8"
-      - isCoreLibraryDesugaringEnabled = false
+      - isCoreLibraryDesugaringEnabled = true
    - viewBindingOptions:
       - isEnabled = false
    - flags:

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.api.dsl.AndroidResources
+import com.android.build.api.dsl.CompileOptions
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -159,6 +160,8 @@ interface AndroidProjectBuilder {
     fun addFile(relativePath: String, content: String)
 
     fun androidResources(action: AndroidResources.() -> Unit)
+
+    fun compileOptions(action: CompileOptions.() -> Unit)
 }
 
 interface AndroidComponentsBuilder {
@@ -278,6 +281,11 @@ interface DependenciesBuilder {
      * @param testFixtures whether the dependency is on the test fixtures of the library.
      */
     fun externalLibrary(coordinate: String, testFixtures: Boolean = false): ExternalDependencyBuilder
+
+    /**
+     * Adds a dependency in the coreLibraryDesugaring scope.
+     */
+    fun coreLibraryDesugaring(dependency: Any)
 }
 
 interface LocalJarBuilder {

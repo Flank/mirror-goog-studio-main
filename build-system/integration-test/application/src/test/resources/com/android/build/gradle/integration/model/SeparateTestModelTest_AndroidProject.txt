@@ -50,6 +50,7 @@
          - testedTargetVariant:
             - targetProjectPath = ":app"
             - targetVariant     = "debug"
+         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
       < debug
    < variants
    - javaCompileOptions:

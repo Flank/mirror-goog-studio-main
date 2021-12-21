@@ -17,8 +17,11 @@
 package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.api.dsl.AndroidResources
+import com.android.build.api.dsl.CompileOptions
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
+import com.google.common.base.Charsets
+import org.gradle.api.JavaVersion
 
 internal class AndroidProjectBuilderImpl(
     internal val subProject: SubProjectBuilderImpl,
@@ -41,6 +44,7 @@ internal class AndroidProjectBuilderImpl(
     private val flavors = ProductFlavorContainerBuilderImpl()
 
     private var androidResources: AndroidResourcesImpl? = null
+    private var compileOptions: CompileOptionsImpl? = null
 
     override fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit) {
         action(buildFeatures)
@@ -66,6 +70,12 @@ internal class AndroidProjectBuilderImpl(
         val res = androidResources ?: AndroidResourcesImpl().also { androidResources = it }
 
         action(res)
+    }
+
+    override fun compileOptions(action: CompileOptions.() -> Unit) {
+        val options = compileOptions ?: CompileOptionsImpl().also { compileOptions = it}
+
+        action(options)
     }
 
     internal fun prepareForWriting() {
@@ -126,6 +136,14 @@ internal class AndroidProjectBuilderImpl(
                 sb.append("    namespaced = true\n")
             }
             sb.append("  }\n") // ANDROID-RESOURCES
+        }
+
+        compileOptions?.let { options ->
+            sb.append("  compileOptions {\n")
+            if (options.isCoreLibraryDesugaringEnabled) {
+                sb.append("    coreLibraryDesugaringEnabled = true")
+            }
+            sb.append("  }\n") // COMPILE-OPTIONS
         }
 
         if (buildTypes.items.isNotEmpty()) {
@@ -265,4 +283,23 @@ internal class AndroidResourcesImpl : AndroidResources {
     }
 
     override var namespaced: Boolean = false
+}
+
+internal class CompileOptionsImpl: CompileOptions {
+
+    override var isCoreLibraryDesugaringEnabled: Boolean = false
+
+    override var encoding: String = Charsets.UTF_8.name()
+
+    override var sourceCompatibility: JavaVersion = JavaVersion.VERSION_1_8
+
+    override var targetCompatibility: JavaVersion = JavaVersion.VERSION_1_8
+
+    override fun sourceCompatibility(sourceCompatibility: Any) {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override fun targetCompatibility(targetCompatibility: Any) {
+        throw RuntimeException("Not yet implemented")
+    }
 }

@@ -447,6 +447,7 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
         item("targetProjectPath", TestedTargetVariant::targetProjectPath)
         item("targetVariant", TestedTargetVariant::targetVariant)
     }
+    list("desugaredMethods", Variant::desugaredMethods)
 }
 
 private fun ModelSnapshotter<BasicArtifact>.snapshotBasicArtifact() {

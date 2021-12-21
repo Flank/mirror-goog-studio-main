@@ -68,6 +68,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AnchorTaskNames
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
@@ -610,6 +611,13 @@ class ModelBuilder<
             },
             testedTargetVariant = getTestTargetVariant(variant),
             isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
+            desugaredMethods = getDesugaredMethods(
+                project,
+                variant.isCoreLibraryDesugaringEnabled,
+                variant.minSdkVersionForDexing,
+                variant.global.compileSdkHashString,
+                variant.global.bootClasspath
+            )
         )
     }
 

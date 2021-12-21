@@ -94,6 +94,7 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
+         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
       < proPlayDebug
    < variants
    - javaCompileOptions:

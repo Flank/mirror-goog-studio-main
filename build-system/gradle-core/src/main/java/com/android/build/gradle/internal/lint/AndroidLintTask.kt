@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.tools.lint.model.LintModelSerialization
 import com.google.common.annotations.VisibleForTesting
@@ -195,6 +196,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Nested
     abstract val environmentVariableInputs: EnvironmentVariableInputs
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val desugarMethodsFiles: ConfigurableFileCollection
+
     @get:OutputFile
     @get:Optional
     abstract val returnValueOutputFile: RegularFileProperty
@@ -346,6 +352,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         arguments.add("--client-id", "gradle")
         arguments.add("--client-name", "AGP")
         arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
+
+        desugarMethodsFiles.forEach {
+            arguments.add("--Xdesugared-methods", "${it.toPath()}")
+        }
 
         return Collections.unmodifiableList(arguments)
     }
@@ -628,6 +638,16 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.lintTool.initialize(creationConfig.services)
             task.lintModelWriterTaskOutputPath.setDisallowChanges(
                 creationConfig.artifacts.getOutputPath(InternalArtifactType.LINT_MODEL).absolutePath
+            )
+            task.desugarMethodsFiles.from(
+                task.project.provider {
+                    getDesugaredMethods(
+                        task.project,
+                        creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
+                        creationConfig.minSdkVersion,
+                        creationConfig.global.compileSdkHashString,
+                        creationConfig.global.bootClasspath)
+                }
             )
             if (autoFix) {
                 task.outputs.upToDateWhen {

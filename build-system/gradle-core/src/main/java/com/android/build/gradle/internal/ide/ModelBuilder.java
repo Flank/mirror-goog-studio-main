@@ -47,7 +47,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -77,7 +76,6 @@ import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.AnchorTaskNames;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
-import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
@@ -90,7 +88,6 @@ import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.dexing.D8DesugaredMethodsGenerator;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.AaptOptions;
@@ -813,9 +810,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 clonedExtraJavaArtifacts,
                 testTargetVariants,
                 inspectManifestForInstantTag(component),
-                component instanceof VariantCreationConfig
-                        ? getDesugaredMethods((VariantCreationConfig) component)
-                        : ImmutableList.of());
+                ImmutableList.of());
     }
 
     private void checkProguardFiles(@NonNull ComponentImpl component) {
@@ -1250,21 +1245,5 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (buildMapping == null) {
             buildMapping = BuildMappingUtils.computeBuildMapping(project.getGradle());
         }
-    }
-
-    @NonNull
-    private List<String> getDesugaredMethods(@NonNull VariantCreationConfig creationConfig) {
-        List<String> desugaredMethodsFromDesugarLib =
-                DesugarLibUtils.getDesugaredMethods(
-                        creationConfig.getServices().getProjectInfo().getProject(),
-                        creationConfig.isCoreLibraryDesugaringEnabled(),
-                        creationConfig.getMinSdkVersion(),
-                        creationConfig.getGlobal().getCompileSdkHashString());
-
-        List<String> desugaredMethodsFromD8 = D8DesugaredMethodsGenerator.INSTANCE.generate();
-
-        List<String> desugaredMethods = new ArrayList<>(desugaredMethodsFromDesugarLib);
-        desugaredMethods.addAll(desugaredMethodsFromD8);
-        return desugaredMethods;
     }
 }
