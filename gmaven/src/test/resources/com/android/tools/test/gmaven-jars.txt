@@ -672,28 +672,20 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/JavaPsiPlugin.xml
   META-INF/LGPL2.1
   META-INF/LICENSE
+  META-INF/LICENSE.txt
   META-INF/MANIFEST.MF
   META-INF/NOTICE
-  META-INF/compiler.version
-  META-INF/jb/
-  META-INF/jb/$$size$$
+  META-INF/NOTICE.txt
+  META-INF/intellij.platform.core.impl.kotlin_module
+  META-INF/intellij.platform.core.kotlin_module
+  META-INF/intellij.platform.extensions.kotlin_module
+  META-INF/intellij.platform.util.kotlin_module
+  META-INF/intellij.platform.util.xmlDom.kotlin_module
   META-INF/maven/
-  META-INF/maven/com.google.guava/
-  META-INF/maven/com.google.j2objc/
-  META-INF/maven/com.google.j2objc/j2objc-annotations/
-  META-INF/maven/com.google.j2objc/j2objc-annotations/pom.properties
-  META-INF/maven/com.google.j2objc/j2objc-annotations/pom.xml
-  META-INF/maven/com.google.protobuf/
-  META-INF/maven/com.google.protobuf/protobuf-java/
-  META-INF/maven/com.google.protobuf/protobuf-java/pom.properties
-  META-INF/maven/com.google.protobuf/protobuf-java/pom.xml
-  META-INF/maven/io.javaslang/
-  META-INF/maven/io.javaslang/javaslang-match/
-  META-INF/maven/io.javaslang/javaslang-match/pom.properties
-  META-INF/maven/io.javaslang/javaslang-match/pom.xml
-  META-INF/maven/io.javaslang/javaslang/
-  META-INF/maven/io.javaslang/javaslang/pom.properties
-  META-INF/maven/io.javaslang/javaslang/pom.xml
+  META-INF/maven/com.fasterxml/
+  META-INF/maven/com.fasterxml/aalto-xml/
+  META-INF/maven/com.fasterxml/aalto-xml/pom.properties
+  META-INF/maven/com.fasterxml/aalto-xml/pom.xml
   META-INF/maven/log4j/
   META-INF/maven/log4j/log4j/
   META-INF/maven/log4j/log4j/pom.properties
@@ -702,109 +694,52 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/maven/one.util/streamex/
   META-INF/maven/one.util/streamex/pom.properties
   META-INF/maven/one.util/streamex/pom.xml
-  META-INF/maven/org.fusesource.hawtjni/
-  META-INF/maven/org.fusesource.hawtjni/hawtjni-runtime/
-  META-INF/maven/org.fusesource.hawtjni/hawtjni-runtime/pom.properties
-  META-INF/maven/org.fusesource.hawtjni/hawtjni-runtime/pom.xml
-  META-INF/maven/org.fusesource.jansi/
-  META-INF/maven/org.fusesource.jansi/jansi-freebsd32/
-  META-INF/maven/org.fusesource.jansi/jansi-freebsd32/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-freebsd32/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-freebsd64/
-  META-INF/maven/org.fusesource.jansi/jansi-freebsd64/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-freebsd64/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-linux32/
-  META-INF/maven/org.fusesource.jansi/jansi-linux32/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-linux32/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-linux64/
-  META-INF/maven/org.fusesource.jansi/jansi-linux64/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-linux64/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-native/
-  META-INF/maven/org.fusesource.jansi/jansi-native/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-native/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-osx/
-  META-INF/maven/org.fusesource.jansi/jansi-osx/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-osx/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-windows32/
-  META-INF/maven/org.fusesource.jansi/jansi-windows32/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-windows32/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi-windows64/
-  META-INF/maven/org.fusesource.jansi/jansi-windows64/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi-windows64/pom.xml
-  META-INF/maven/org.fusesource.jansi/jansi/
-  META-INF/maven/org.fusesource.jansi/jansi/pom.properties
-  META-INF/maven/org.fusesource.jansi/jansi/pom.xml
+  META-INF/maven/org.apache.commons/
+  META-INF/maven/org.apache.commons/commons-compress/
+  META-INF/maven/org.apache.commons/commons-compress/pom.properties
+  META-INF/maven/org.apache.commons/commons-compress/pom.xml
+  META-INF/maven/org.codehaus.woodstox/
+  META-INF/maven/org.codehaus.woodstox/stax2-api/
+  META-INF/maven/org.codehaus.woodstox/stax2-api/pom.properties
+  META-INF/maven/org.codehaus.woodstox/stax2-api/pom.xml
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/pom.properties
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/pom.xml
-  META-INF/maven/org.jetbrains/
-  META-INF/maven/org.jetbrains/annotations/
-  META-INF/maven/org.jetbrains/annotations/pom.properties
-  META-INF/maven/org.jetbrains/annotations/pom.xml
-  META-INF/maven/org.jline/
-  META-INF/maven/org.jline/jline-builtins/
-  META-INF/maven/org.jline/jline-builtins/pom.properties
-  META-INF/maven/org.jline/jline-builtins/pom.xml
-  META-INF/maven/org.jline/jline-reader/
-  META-INF/maven/org.jline/jline-reader/pom.properties
-  META-INF/maven/org.jline/jline-reader/pom.xml
-  META-INF/maven/org.jline/jline-remote-ssh/
-  META-INF/maven/org.jline/jline-remote-ssh/pom.properties
-  META-INF/maven/org.jline/jline-remote-ssh/pom.xml
-  META-INF/maven/org.jline/jline-remote-telnet/
-  META-INF/maven/org.jline/jline-remote-telnet/pom.properties
-  META-INF/maven/org.jline/jline-remote-telnet/pom.xml
-  META-INF/maven/org.jline/jline-terminal-jansi/
-  META-INF/maven/org.jline/jline-terminal-jansi/pom.properties
-  META-INF/maven/org.jline/jline-terminal-jansi/pom.xml
-  META-INF/maven/org.jline/jline-terminal-jna/
-  META-INF/maven/org.jline/jline-terminal-jna/pom.properties
-  META-INF/maven/org.jline/jline-terminal-jna/pom.xml
-  META-INF/maven/org.jline/jline-terminal/
-  META-INF/maven/org.jline/jline-terminal/pom.properties
-  META-INF/maven/org.jline/jline-terminal/pom.xml
-  META-INF/maven/org.jline/jline/
-  META-INF/maven/org.jline/jline/pom.properties
-  META-INF/maven/org.jline/jline/pom.xml
-  META-INF/native/
-  META-INF/native/freebsd32/
-  META-INF/native/freebsd32/libjansi.so
-  META-INF/native/freebsd64/
-  META-INF/native/freebsd64/libjansi.so
-  META-INF/native/linux32/
-  META-INF/native/linux32/libjansi.so
-  META-INF/native/linux64/
-  META-INF/native/linux64/libjansi.so
-  META-INF/native/osx/
-  META-INF/native/osx/libjansi.jnilib
-  META-INF/native/windows32/
-  META-INF/native/windows32/jansi.dll
-  META-INF/native/windows64/
-  META-INF/native/windows64/jansi.dll
   META-INF/services/
-  META-INF/services/javax.annotation.processing.Processor
-  META-INF/services/org.jetbrains.kotlin.builtins.BuiltInsLoader
-  META-INF/services/org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
-  META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-  META-INF/services/org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages$Extension
-  META-INF/services/org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition
-  META-INF/services/org.jetbrains.kotlin.resolve.jvm.jvmSignature.KotlinToJvmSignatureMapper
-  META-INF/services/org.jetbrains.kotlin.util.ModuleVisibilityHelper
-  META-INF/services/org.jline.terminal.spi.JansiSupport
-  META-INF/services/org.jline.terminal.spi.JnaSupport
+  META-INF/services/javax.xml.stream.XMLEventFactory
+  META-INF/services/javax.xml.stream.XMLInputFactory
+  META-INF/services/javax.xml.stream.XMLOutputFactory
+  META-INF/services/org.jetbrains.jps.model.JpsElementFactory
+  META-INF/services/org.jetbrains.jps.model.JpsEncodingConfigurationService
+  META-INF/services/org.jetbrains.jps.model.artifact.JpsArtifactService
+  META-INF/services/org.jetbrains.jps.model.artifact.elements.JpsPackagingElementFactory
+  META-INF/services/org.jetbrains.jps.model.ex.JpsExElementFactory
+  META-INF/services/org.jetbrains.jps.model.fileTypes.FileNameMatcherFactory
+  META-INF/services/org.jetbrains.jps.model.jarRepository.JpsRemoteRepositoryService
+  META-INF/services/org.jetbrains.jps.model.java.JdkVersionDetector
+  META-INF/services/org.jetbrains.jps.model.java.JpsJavaExtensionService
+  META-INF/services/org.jetbrains.jps.service.JpsServiceManager
+  META-INF/services/org.jetbrains.jps.service.SharedThreadPool
+  META-INF/versions/
+  META-INF/versions/9/
+  META-INF/versions/9/one/
+  META-INF/versions/9/one/util/
+  META-INF/versions/9/one/util/streamex/
   NOTICE
-  __packageIndex__
   com/
-  com/google/
-  com/google/common/
-  com/google/gwt/
-  com/google/gwt/dev/
-  com/google/gwt/dev/js/
-  com/google/j2objc/
-  com/google/j2objc/annotations/
-  com/google/thirdparty/
-  com/google/thirdparty/publicsuffix/
+  com/fasterxml/
+  com/fasterxml/aalto/
+  com/fasterxml/aalto/async/
+  com/fasterxml/aalto/dom/
+  com/fasterxml/aalto/evt/
+  com/fasterxml/aalto/impl/
+  com/fasterxml/aalto/in/
+  com/fasterxml/aalto/io/
+  com/fasterxml/aalto/out/
+  com/fasterxml/aalto/sax/
+  com/fasterxml/aalto/stax/
+  com/fasterxml/aalto/util/
   com/intellij/
   com/intellij/codeInsight/
   com/intellij/codeInsight/completion/
@@ -845,7 +780,6 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/ide/lightEdit/
   com/intellij/ide/plugins/
   com/intellij/ide/plugins/cl/
-  com/intellij/ide/plugins/readme.md
   com/intellij/ide/util/
   com/intellij/indentation/
   com/intellij/injected/
@@ -947,6 +881,9 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/openapi/wm/ex/
   com/intellij/patterns/
   com/intellij/patterns/compiler/
+  com/intellij/platform/
+  com/intellij/platform/util/
+  com/intellij/platform/util/plugins/
   com/intellij/pom/
   com/intellij/pom/core/
   com/intellij/pom/core/impl/
@@ -1004,6 +941,7 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/psi/scope/processor/
   com/intellij/psi/scope/util/
   com/intellij/psi/search/
+  com/intellij/psi/search/impl/
   com/intellij/psi/search/searches/
   com/intellij/psi/stub/
   com/intellij/psi/stubs/
@@ -1019,7 +957,6 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/refactoring/rename/
   com/intellij/refactoring/util/
   com/intellij/reference/
-  com/intellij/reference/package.html
   com/intellij/security/
   com/intellij/serialization/
   com/intellij/serviceContainer/
@@ -1029,7 +966,6 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/ui/icons/
   com/intellij/usageView/
   com/intellij/util/
-  com/intellij/util/PlatformIcons.java
   com/intellij/util/cls/
   com/intellij/util/codeInsight/
   com/intellij/util/concurrency/
@@ -1039,10 +975,11 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/util/containers/package.html
   com/intellij/util/diff/
   com/intellij/util/diff/package.html
+  com/intellij/util/download/
+  com/intellij/util/download/impl/
   com/intellij/util/enumeration/
-  com/intellij/util/exception/
-  com/intellij/util/exception/package.html
   com/intellij/util/execution/
+  com/intellij/util/fmap/
   com/intellij/util/graph/
   com/intellij/util/graph/impl/
   com/intellij/util/graph/package.html
@@ -1074,7 +1011,6 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/util/xmlb/
   com/intellij/util/xmlb/annotations/
   com/intellij/util/xmlb/annotations/package.html
-  com/intellij/util/xmlb/annotations/readme.md
   com/intellij/xml/
   com/intellij/xml/util/
   com/sun/
@@ -1181,52 +1117,6 @@ com/android/tools/external/com-intellij/intellij-core
   it/unimi/dsi/fastutil/longs/
   it/unimi/dsi/fastutil/objects/
   it/unimi/dsi/fastutil/shorts/
-  javaslang/
-  javaslang/collection/
-  javaslang/concurrent/
-  javaslang/control/
-  javaslang/match/
-  javaslang/match/annotation/
-  javaslang/match/generator/
-  javaslang/match/model/
-  javax/
-  javax/annotation/
-  javax/annotation/CheckForNull.java
-  javax/annotation/CheckForSigned.java
-  javax/annotation/CheckReturnValue.java
-  javax/annotation/Detainted.java
-  javax/annotation/MatchesPattern.java
-  javax/annotation/Nonnegative.java
-  javax/annotation/Nonnull.java
-  javax/annotation/Nullable.java
-  javax/annotation/OverridingMethodsMustInvokeSuper.java
-  javax/annotation/ParametersAreNonnullByDefault.java
-  javax/annotation/ParametersAreNullableByDefault.java
-  javax/annotation/PropertyKey.java
-  javax/annotation/RegEx.java
-  javax/annotation/Signed.java
-  javax/annotation/Syntax.java
-  javax/annotation/Tainted.java
-  javax/annotation/Untainted.java
-  javax/annotation/WillClose.java
-  javax/annotation/WillCloseWhenClosed.java
-  javax/annotation/WillNotClose.java
-  javax/annotation/concurrent/
-  javax/annotation/concurrent/GuardedBy.java
-  javax/annotation/concurrent/Immutable.java
-  javax/annotation/concurrent/NotThreadSafe.java
-  javax/annotation/concurrent/ThreadSafe.java
-  javax/annotation/meta/
-  javax/annotation/meta/Exclusive.java
-  javax/annotation/meta/Exhaustive.java
-  javax/annotation/meta/TypeQualifier.java
-  javax/annotation/meta/TypeQualifierDefault.java
-  javax/annotation/meta/TypeQualifierNickname.java
-  javax/annotation/meta/TypeQualifierValidator.java
-  javax/annotation/meta/When.java
-  javax/inject/
-  kotlin/
-  kotlinx/
   messages/
   messages/CoreBundle.properties
   messages/CoreDeprecatedMessagesBundle.properties
@@ -1262,6 +1152,36 @@ com/android/tools/external/com-intellij/intellij-core
   one/util/streamex/
   org/
   org/apache/
+  org/apache/commons/
+  org/apache/commons/compress/
+  org/apache/commons/compress/archivers/
+  org/apache/commons/compress/archivers/ar/
+  org/apache/commons/compress/archivers/arj/
+  org/apache/commons/compress/archivers/cpio/
+  org/apache/commons/compress/archivers/dump/
+  org/apache/commons/compress/archivers/examples/
+  org/apache/commons/compress/archivers/jar/
+  org/apache/commons/compress/archivers/sevenz/
+  org/apache/commons/compress/archivers/tar/
+  org/apache/commons/compress/archivers/zip/
+  org/apache/commons/compress/changes/
+  org/apache/commons/compress/compressors/
+  org/apache/commons/compress/compressors/brotli/
+  org/apache/commons/compress/compressors/bzip2/
+  org/apache/commons/compress/compressors/deflate/
+  org/apache/commons/compress/compressors/deflate64/
+  org/apache/commons/compress/compressors/gzip/
+  org/apache/commons/compress/compressors/lz4/
+  org/apache/commons/compress/compressors/lz77support/
+  org/apache/commons/compress/compressors/lzma/
+  org/apache/commons/compress/compressors/lzw/
+  org/apache/commons/compress/compressors/pack200/
+  org/apache/commons/compress/compressors/snappy/
+  org/apache/commons/compress/compressors/xz/
+  org/apache/commons/compress/compressors/z/
+  org/apache/commons/compress/compressors/zstandard/
+  org/apache/commons/compress/parallel/
+  org/apache/commons/compress/utils/
   org/apache/log4j/
   org/apache/log4j/chainsaw/
   org/apache/log4j/config/
@@ -1296,11 +1216,18 @@ com/android/tools/external/com-intellij/intellij-core
   org/apache/oro/text/perl/
   org/apache/oro/text/regex/
   org/apache/oro/util/
-  org/fusesource/
-  org/fusesource/hawtjni/
-  org/fusesource/hawtjni/runtime/
-  org/fusesource/jansi/
-  org/fusesource/jansi/internal/
+  org/codehaus/
+  org/codehaus/stax2/
+  org/codehaus/stax2/evt/
+  org/codehaus/stax2/io/
+  org/codehaus/stax2/osgi/
+  org/codehaus/stax2/ri/
+  org/codehaus/stax2/ri/dom/
+  org/codehaus/stax2/ri/evt/
+  org/codehaus/stax2/ri/typed/
+  org/codehaus/stax2/typed/
+  org/codehaus/stax2/util/
+  org/codehaus/stax2/validation/
   org/intellij/
   org/intellij/lang/
   org/intellij/lang/annotations/
@@ -1324,191 +1251,6 @@ com/android/tools/external/com-intellij/intellij-core
   org/jetbrains/annotations/
   org/jetbrains/concurrency/
   org/jetbrains/ide/
-  org/jetbrains/jps/
-  org/jetbrains/jps/model/
-  org/jetbrains/jps/plugin/
-  org/jetbrains/jps/service/
-  org/jetbrains/jps/service/impl/
-  org/jetbrains/jps/util/
-  org/jetbrains/kotlin/
-  org/jetbrains/org/
-  org/jetbrains/org/objectweb/
-  org/jetbrains/org/objectweb/asm/
-  org/jetbrains/org/objectweb/asm/commons/
-  org/jetbrains/org/objectweb/asm/signature/
-  org/jetbrains/org/objectweb/asm/tree/
-  org/jetbrains/org/objectweb/asm/tree/analysis/
-  org/jetbrains/org/objectweb/asm/util/
-  org/jline/
-  org/jline/builtins/
-  org/jline/builtins/nano-browser-help.txt
-  org/jline/builtins/nano-main-help.txt
-  org/jline/builtins/nano-read-help.txt
-  org/jline/builtins/nano-search-help.txt
-  org/jline/builtins/nano-write-help.txt
-  org/jline/builtins/ssh/
-  org/jline/builtins/telnet/
-  org/jline/keymap/
-  org/jline/reader/
-  org/jline/reader/impl/
-  org/jline/reader/impl/completer/
-  org/jline/reader/impl/history/
-  org/jline/terminal/
-  org/jline/terminal/impl/
-  org/jline/terminal/impl/jansi/
-  org/jline/terminal/impl/jansi/freebsd/
-  org/jline/terminal/impl/jansi/linux/
-  org/jline/terminal/impl/jansi/osx/
-  org/jline/terminal/impl/jansi/solaris/
-  org/jline/terminal/impl/jansi/win/
-  org/jline/terminal/impl/jna/
-  org/jline/terminal/impl/jna/freebsd/
-  org/jline/terminal/impl/jna/linux/
-  org/jline/terminal/impl/jna/osx/
-  org/jline/terminal/impl/jna/solaris/
-  org/jline/terminal/impl/jna/win/
-  org/jline/terminal/spi/
-  org/jline/utils/
-  org/jline/utils/ansi.caps
-  org/jline/utils/capabilities.txt
-  org/jline/utils/dumb.caps
-  org/jline/utils/screen-256color.caps
-  org/jline/utils/screen.caps
-  org/jline/utils/windows.caps
-  org/jline/utils/xterm-256color.caps
-  org/jline/utils/xterm.caps
-  org/picocontainer/
-  org/picocontainer/defaults/
-
-com/android/tools/external/com-intellij/kotlin-compiler
-  META-INF/
-  META-INF/MANIFEST.MF
-  META-INF/backend-common.kotlin_module
-  META-INF/backend.common.jvm.kotlin_module
-  META-INF/backend.js.kotlin_module
-  META-INF/backend.jvm.entrypoint.kotlin_module
-  META-INF/backend.jvm.kotlin_module
-  META-INF/backend.kotlin_module
-  META-INF/backend.wasm.kotlin_module
-  META-INF/cfg.kotlin_module
-  META-INF/checkers.jvm.kotlin_module
-  META-INF/checkers.kotlin_module
-  META-INF/cli-common.kotlin_module
-  META-INF/cli-js.kotlin_module
-  META-INF/cli.kotlin_module
-  META-INF/compiler.common.jvm.kotlin_module
-  META-INF/compiler.common.kotlin_module
-  META-INF/cones.kotlin_module
-  META-INF/config.jvm.kotlin_module
-  META-INF/config.kotlin_module
-  META-INF/container.kotlin_module
-  META-INF/descriptors.jvm.kotlin_module
-  META-INF/descriptors.kotlin_module
-  META-INF/descriptors.runtime.kotlin_module
-  META-INF/deserialization.common.jvm.kotlin_module
-  META-INF/deserialization.common.kotlin_module
-  META-INF/deserialization.kotlin_module
-  META-INF/entrypoint.kotlin_module
-  META-INF/extensions/
-  META-INF/extensions/compiler.xml
-  META-INF/extensions/core.xml
-  META-INF/fir-deserialization.kotlin_module
-  META-INF/fir-serialization.kotlin_module
-  META-INF/fir2ir.kotlin_module
-  META-INF/frontend.common.kotlin_module
-  META-INF/frontend.java.kotlin_module
-  META-INF/frontend.kotlin_module
-  META-INF/frontend.native.kotlin_module
-  META-INF/incremental-compilation-impl.kotlin_module
-  META-INF/intellij.platform.core.impl.kotlin_module
-  META-INF/intellij.platform.core.kotlin_module
-  META-INF/ir.backend.common.kotlin_module
-  META-INF/ir.interpreter.kotlin_module
-  META-INF/ir.psi2ir.kotlin_module
-  META-INF/ir.serialization.common.kotlin_module
-  META-INF/ir.serialization.js.kotlin_module
-  META-INF/ir.serialization.jvm.kotlin_module
-  META-INF/ir.tree.impl.kotlin_module
-  META-INF/ir.tree.kotlin_module
-  META-INF/ir.tree.persistent.kotlin_module
-  META-INF/java.kotlin_module
-  META-INF/javac-wrapper.kotlin_module
-  META-INF/js.ast.kotlin_module
-  META-INF/js.config.kotlin_module
-  META-INF/js.dce.kotlin_module
-  META-INF/js.frontend.kotlin_module
-  META-INF/js.parser.kotlin_module
-  META-INF/js.serializer.kotlin_module
-  META-INF/js.sourcemap.kotlin_module
-  META-INF/js.translator.kotlin_module
-  META-INF/jvm-backend.kotlin_module
-  META-INF/jvm.kotlin_module
-  META-INF/kotlin-build-common.kotlin_module
-  META-INF/kotlin-native-utils.kotlin_module
-  META-INF/kotlin-script-runtime.kotlin_module
-  META-INF/kotlin-scripting-common.kotlin_module
-  META-INF/kotlin-scripting-compiler-impl.kotlin_module
-  META-INF/kotlin-scripting-compiler.kotlin_module
-  META-INF/kotlin-scripting-jvm.kotlin_module
-  META-INF/kotlin-util-io.kotlin_module
-  META-INF/kotlin-util-klib-metadata.kotlin_module
-  META-INF/kotlin-util-klib.kotlin_module
-  META-INF/kotlinx-collections-immutable.kotlin_module
-  META-INF/light-classes.kotlin_module
-  META-INF/light-tree2fir.kotlin_module
-  META-INF/metadata.jvm.kotlin_module
-  META-INF/metadata.kotlin_module
-  META-INF/plugin-api.kotlin_module
-  META-INF/psi.kotlin_module
-  META-INF/psi2fir.kotlin_module
-  META-INF/raw-fir.common.kotlin_module
-  META-INF/resolution.common.jvm.kotlin_module
-  META-INF/resolution.common.kotlin_module
-  META-INF/resolution.kotlin_module
-  META-INF/resolve.kotlin_module
-  META-INF/serialization.kotlin_module
-  META-INF/tree.kotlin_module
-  META-INF/util.kotlin_module
-  META-INF/util.runtime.kotlin_module
-  META-INF/wasm.ir.kotlin_module
-  NOTICE
-  kotlin/
-  kotlin/annotation/
-  kotlin/collections/
-  kotlin/coroutines/
-  kotlin/internal/
-  kotlin/ranges/
-  kotlin/reflect/
-  kotlin/script/
-  kotlin/script/dependencies/
-  kotlin/script/experimental/
-  kotlin/script/experimental/annotations/
-  kotlin/script/experimental/api/
-  kotlin/script/experimental/dependencies/
-  kotlin/script/experimental/host/
-  kotlin/script/experimental/jvm/
-  kotlin/script/experimental/jvm/compat/
-  kotlin/script/experimental/jvm/impl/
-  kotlin/script/experimental/jvm/util/
-  kotlin/script/experimental/location/
-  kotlin/script/experimental/util/
-  kotlin/script/extensions/
-  kotlin/script/templates/
-  kotlin/script/templates/standard/
-  kotlinManifest.properties
-  kotlinx/
-  kotlinx/collections/
-  kotlinx/collections/immutable/
-  kotlinx/collections/immutable/adapters/
-  kotlinx/collections/immutable/implementations/
-  kotlinx/collections/immutable/implementations/immutableList/
-  kotlinx/collections/immutable/implementations/immutableMap/
-  kotlinx/collections/immutable/implementations/immutableSet/
-  kotlinx/collections/immutable/implementations/persistentOrderedMap/
-  kotlinx/collections/immutable/implementations/persistentOrderedSet/
-  kotlinx/collections/immutable/internal/
-  org/
-  org/jetbrains/
   org/jetbrains/jps/
   org/jetbrains/jps/model/
   org/jetbrains/jps/model/artifact/
@@ -1537,15 +1279,207 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/jps/model/module/impl/
   org/jetbrains/jps/model/runConfiguration/
   org/jetbrains/jps/model/serialization/
-  org/jetbrains/jps/model/serialization/artifact/
-  org/jetbrains/jps/model/serialization/facet/
-  org/jetbrains/jps/model/serialization/impl/
-  org/jetbrains/jps/model/serialization/jarRepository/
-  org/jetbrains/jps/model/serialization/java/
-  org/jetbrains/jps/model/serialization/java/compiler/
-  org/jetbrains/jps/model/serialization/library/
-  org/jetbrains/jps/model/serialization/module/
-  org/jetbrains/jps/model/serialization/runConfigurations/
+  org/jetbrains/jps/plugin/
+  org/jetbrains/jps/service/
+  org/jetbrains/jps/service/impl/
+  org/jetbrains/jps/util/
+  org/jetbrains/org/
+  org/jetbrains/org/objectweb/
+  org/jetbrains/org/objectweb/asm/
+  org/jetbrains/org/objectweb/asm/commons/
+  org/jetbrains/org/objectweb/asm/signature/
+  org/jetbrains/org/objectweb/asm/tree/
+  org/jetbrains/org/objectweb/asm/tree/analysis/
+  org/jetbrains/org/objectweb/asm/util/
+  org/picocontainer/
+  org/picocontainer/defaults/
+
+com/android/tools/external/com-intellij/kotlin-compiler
+  META-INF/
+  META-INF/MANIFEST.MF
+  META-INF/backend-common.kotlin_module
+  META-INF/backend.common.jvm.kotlin_module
+  META-INF/backend.jvm.entrypoint.kotlin_module
+  META-INF/backend.jvm.kotlin_module
+  META-INF/backend.jvm.lower.kotlin_module
+  META-INF/backend.kotlin_module
+  META-INF/cfg.kotlin_module
+  META-INF/checkers.jvm.kotlin_module
+  META-INF/checkers.kotlin_module
+  META-INF/cli-common.kotlin_module
+  META-INF/cli-js.kotlin_module
+  META-INF/cli.kotlin_module
+  META-INF/compiler.common.jvm.kotlin_module
+  META-INF/compiler.common.kotlin_module
+  META-INF/compiler.version
+  META-INF/cones.kotlin_module
+  META-INF/config.jvm.kotlin_module
+  META-INF/config.kotlin_module
+  META-INF/container.kotlin_module
+  META-INF/daemon-common.kotlin_module
+  META-INF/descriptors.jvm.kotlin_module
+  META-INF/descriptors.kotlin_module
+  META-INF/descriptors.runtime.kotlin_module
+  META-INF/deserialization.common.jvm.kotlin_module
+  META-INF/deserialization.common.kotlin_module
+  META-INF/deserialization.kotlin_module
+  META-INF/entrypoint.kotlin_module
+  META-INF/extensions/
+  META-INF/extensions/compiler.xml
+  META-INF/fir-deserialization.kotlin_module
+  META-INF/fir-serialization.kotlin_module
+  META-INF/fir2ir.kotlin_module
+  META-INF/frontend.common.kotlin_module
+  META-INF/frontend.java.kotlin_module
+  META-INF/frontend.kotlin_module
+  META-INF/frontend.native.kotlin_module
+  META-INF/ir.backend.common.kotlin_module
+  META-INF/ir.interpreter.kotlin_module
+  META-INF/ir.psi2ir.kotlin_module
+  META-INF/ir.serialization.common.kotlin_module
+  META-INF/ir.serialization.jvm.kotlin_module
+  META-INF/ir.tree.impl.kotlin_module
+  META-INF/ir.tree.kotlin_module
+  META-INF/ir.tree.persistent.kotlin_module
+  META-INF/java.kotlin_module
+  META-INF/js.ast.kotlin_module
+  META-INF/js.config.kotlin_module
+  META-INF/js.frontend.kotlin_module
+  META-INF/js.parser.kotlin_module
+  META-INF/js.serializer.kotlin_module
+  META-INF/js.sourcemap.kotlin_module
+  META-INF/js.translator.kotlin_module
+  META-INF/jvm-backend.kotlin_module
+  META-INF/jvm.kotlin_module
+  META-INF/kotlin-build-common.kotlin_module
+  META-INF/kotlin-compiler-runner.kotlin_module
+  META-INF/kotlin-daemon-client.kotlin_module
+  META-INF/kotlin-native-utils.kotlin_module
+  META-INF/kotlin-script-runtime.kotlin_module
+  META-INF/kotlin-scripting-common.kotlin_module
+  META-INF/kotlin-scripting-compiler-impl.kotlin_module
+  META-INF/kotlin-scripting-compiler.kotlin_module
+  META-INF/kotlin-scripting-jvm.kotlin_module
+  META-INF/kotlin-util-io.kotlin_module
+  META-INF/kotlin-util-klib-metadata.kotlin_module
+  META-INF/kotlin-util-klib.kotlin_module
+  META-INF/light-classes.kotlin_module
+  META-INF/maven/
+  META-INF/maven/com.google.protobuf/
+  META-INF/maven/com.google.protobuf/protobuf-java/
+  META-INF/maven/com.google.protobuf/protobuf-java/pom.properties
+  META-INF/maven/com.google.protobuf/protobuf-java/pom.xml
+  META-INF/maven/io.javaslang/
+  META-INF/maven/io.javaslang/javaslang-match/
+  META-INF/maven/io.javaslang/javaslang-match/pom.properties
+  META-INF/maven/io.javaslang/javaslang-match/pom.xml
+  META-INF/maven/io.javaslang/javaslang/
+  META-INF/maven/io.javaslang/javaslang/pom.properties
+  META-INF/maven/io.javaslang/javaslang/pom.xml
+  META-INF/metadata.jvm.kotlin_module
+  META-INF/metadata.kotlin_module
+  META-INF/plugin-api.kotlin_module
+  META-INF/psi.kotlin_module
+  META-INF/psi2fir.kotlin_module
+  META-INF/raw-fir.common.kotlin_module
+  META-INF/resolution.common.jvm.kotlin_module
+  META-INF/resolution.common.kotlin_module
+  META-INF/resolution.kotlin_module
+  META-INF/resolve.kotlin_module
+  META-INF/serialization.kotlin_module
+  META-INF/services/
+  META-INF/services/javax.annotation.processing.Processor
+  META-INF/services/org.jetbrains.kotlin.builtins.BuiltInsLoader
+  META-INF/services/org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+  META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+  META-INF/services/org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages$Extension
+  META-INF/services/org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition
+  META-INF/services/org.jetbrains.kotlin.resolve.jvm.jvmSignature.KotlinToJvmSignatureMapper
+  META-INF/services/org.jetbrains.kotlin.util.ModuleVisibilityHelper
+  META-INF/tree.kotlin_module
+  META-INF/util.kotlin_module
+  META-INF/util.runtime.kotlin_module
+  META-INF/wasm.ir.kotlin_module
+  NOTICE
+  com/
+  com/google/
+  com/google/gwt/
+  com/google/gwt/dev/
+  com/google/gwt/dev/js/
+  com/google/gwt/dev/js/parserExceptions/
+  com/google/gwt/dev/js/rhino/
+  com/intellij/
+  com/intellij/util/
+  com/intellij/util/io/
+  javaslang/
+  javaslang/collection/
+  javaslang/concurrent/
+  javaslang/control/
+  javaslang/match/
+  javaslang/match/annotation/
+  javaslang/match/generator/
+  javaslang/match/model/
+  kotlin/
+  kotlin/script/
+  kotlin/script/dependencies/
+  kotlin/script/experimental/
+  kotlin/script/experimental/annotations/
+  kotlin/script/experimental/api/
+  kotlin/script/experimental/dependencies/
+  kotlin/script/experimental/host/
+  kotlin/script/experimental/impl/
+  kotlin/script/experimental/jvm/
+  kotlin/script/experimental/jvm/compat/
+  kotlin/script/experimental/jvm/impl/
+  kotlin/script/experimental/jvm/util/
+  kotlin/script/experimental/location/
+  kotlin/script/experimental/util/
+  kotlin/script/extensions/
+  kotlin/script/templates/
+  kotlin/script/templates/standard/
+  kotlinManifest.properties
+  net/
+  net/rubygrapefruit/
+  net/rubygrapefruit/platform/
+  net/rubygrapefruit/platform/freebsd-amd64-libcpp/
+  net/rubygrapefruit/platform/freebsd-amd64-libcpp/libnative-platform-curses.so
+  net/rubygrapefruit/platform/freebsd-amd64-libcpp/libnative-platform.so
+  net/rubygrapefruit/platform/freebsd-amd64-libstdcpp/
+  net/rubygrapefruit/platform/freebsd-amd64-libstdcpp/libnative-platform-curses.so
+  net/rubygrapefruit/platform/freebsd-amd64-libstdcpp/libnative-platform.so
+  net/rubygrapefruit/platform/freebsd-i386-libcpp/
+  net/rubygrapefruit/platform/freebsd-i386-libcpp/libnative-platform-curses.so
+  net/rubygrapefruit/platform/freebsd-i386-libcpp/libnative-platform.so
+  net/rubygrapefruit/platform/freebsd-i386-libstdcpp/
+  net/rubygrapefruit/platform/freebsd-i386-libstdcpp/libnative-platform-curses.so
+  net/rubygrapefruit/platform/freebsd-i386-libstdcpp/libnative-platform.so
+  net/rubygrapefruit/platform/internal/
+  net/rubygrapefruit/platform/internal/jni/
+  net/rubygrapefruit/platform/linux-amd64-ncurses5/
+  net/rubygrapefruit/platform/linux-amd64-ncurses5/libnative-platform-curses.so
+  net/rubygrapefruit/platform/linux-amd64-ncurses6/
+  net/rubygrapefruit/platform/linux-amd64-ncurses6/libnative-platform-curses.so
+  net/rubygrapefruit/platform/linux-amd64/
+  net/rubygrapefruit/platform/linux-amd64/libnative-platform.so
+  net/rubygrapefruit/platform/linux-i386-ncurses5/
+  net/rubygrapefruit/platform/linux-i386-ncurses5/libnative-platform-curses.so
+  net/rubygrapefruit/platform/linux-i386-ncurses6/
+  net/rubygrapefruit/platform/linux-i386-ncurses6/libnative-platform-curses.so
+  net/rubygrapefruit/platform/linux-i386/
+  net/rubygrapefruit/platform/linux-i386/libnative-platform.so
+  net/rubygrapefruit/platform/osx-amd64/
+  net/rubygrapefruit/platform/osx-amd64/libnative-platform-curses.dylib
+  net/rubygrapefruit/platform/osx-amd64/libnative-platform.dylib
+  net/rubygrapefruit/platform/osx-i386/
+  net/rubygrapefruit/platform/osx-i386/libnative-platform-curses.dylib
+  net/rubygrapefruit/platform/osx-i386/libnative-platform.dylib
+  net/rubygrapefruit/platform/windows-amd64/
+  net/rubygrapefruit/platform/windows-amd64/native-platform.dll
+  net/rubygrapefruit/platform/windows-i386/
+  net/rubygrapefruit/platform/windows-i386/native-platform.dll
+  org/
+  org/jetbrains/
+  org/jetbrains/annotations/
   org/jetbrains/kotlin/
   org/jetbrains/kotlin/analyzer/
   org/jetbrains/kotlin/analyzer/common/
@@ -1572,6 +1506,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/backend/common/psi/
   org/jetbrains/kotlin/backend/common/serialization/
   org/jetbrains/kotlin/backend/common/serialization/encodings/
+  org/jetbrains/kotlin/backend/common/serialization/linkerissues/
   org/jetbrains/kotlin/backend/common/serialization/mangle/
   org/jetbrains/kotlin/backend/common/serialization/mangle/descriptor/
   org/jetbrains/kotlin/backend/common/serialization/mangle/ir/
@@ -1580,18 +1515,14 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/backend/common/serialization/proto/
   org/jetbrains/kotlin/backend/common/serialization/signature/
   org/jetbrains/kotlin/backend/jvm/
+  org/jetbrains/kotlin/backend/jvm/caches/
   org/jetbrains/kotlin/backend/jvm/codegen/
-  org/jetbrains/kotlin/backend/jvm/descriptors/
   org/jetbrains/kotlin/backend/jvm/intrinsics/
   org/jetbrains/kotlin/backend/jvm/ir/
   org/jetbrains/kotlin/backend/jvm/lower/
   org/jetbrains/kotlin/backend/jvm/lower/indy/
-  org/jetbrains/kotlin/backend/jvm/lower/inlineclasses/
   org/jetbrains/kotlin/backend/jvm/serialization/
-  org/jetbrains/kotlin/backend/wasm/
-  org/jetbrains/kotlin/backend/wasm/ir2wasm/
-  org/jetbrains/kotlin/backend/wasm/lower/
-  org/jetbrains/kotlin/backend/wasm/utils/
+  org/jetbrains/kotlin/backend/jvm/serialization/proto/
   org/jetbrains/kotlin/build/
   org/jetbrains/kotlin/build/report/
   org/jetbrains/kotlin/build/report/metrics/
@@ -1628,6 +1559,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/cli/js/internal/
   org/jetbrains/kotlin/cli/jvm/
   org/jetbrains/kotlin/cli/jvm/compiler/
+  org/jetbrains/kotlin/cli/jvm/compiler/jarfs/
   org/jetbrains/kotlin/cli/jvm/config/
   org/jetbrains/kotlin/cli/jvm/index/
   org/jetbrains/kotlin/cli/jvm/javac/
@@ -1647,6 +1579,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/codegen/optimization/common/
   org/jetbrains/kotlin/codegen/optimization/fixStack/
   org/jetbrains/kotlin/codegen/optimization/nullCheck/
+  org/jetbrains/kotlin/codegen/optimization/temporaryVals/
   org/jetbrains/kotlin/codegen/optimization/transformer/
   org/jetbrains/kotlin/codegen/pseudoInsns/
   org/jetbrains/kotlin/codegen/range/
@@ -1674,6 +1607,10 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/contracts/parsing/
   org/jetbrains/kotlin/contracts/parsing/effects/
   org/jetbrains/kotlin/coroutines/
+  org/jetbrains/kotlin/daemon/
+  org/jetbrains/kotlin/daemon/client/
+  org/jetbrains/kotlin/daemon/client/impls/
+  org/jetbrains/kotlin/daemon/common/
   org/jetbrains/kotlin/descriptors/
   org/jetbrains/kotlin/descriptors/annotations/
   org/jetbrains/kotlin/descriptors/deserialization/
@@ -1711,6 +1648,8 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/fir/analysis/jvm/
   org/jetbrains/kotlin/fir/analysis/jvm/checkers/
   org/jetbrains/kotlin/fir/analysis/jvm/checkers/declaration/
+  org/jetbrains/kotlin/fir/analysis/jvm/checkers/expression/
+  org/jetbrains/kotlin/fir/analysis/jvm/diagnostics/
   org/jetbrains/kotlin/fir/backend/
   org/jetbrains/kotlin/fir/backend/evaluate/
   org/jetbrains/kotlin/fir/backend/generators/
@@ -1724,8 +1663,10 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/fir/contracts/impl/
   org/jetbrains/kotlin/fir/declarations/
   org/jetbrains/kotlin/fir/declarations/builder/
+  org/jetbrains/kotlin/fir/declarations/comparators/
   org/jetbrains/kotlin/fir/declarations/impl/
   org/jetbrains/kotlin/fir/declarations/synthetic/
+  org/jetbrains/kotlin/fir/declarations/utils/
   org/jetbrains/kotlin/fir/descriptors/
   org/jetbrains/kotlin/fir/deserialization/
   org/jetbrains/kotlin/fir/diagnostics/
@@ -1741,10 +1682,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/fir/java/enhancement/
   org/jetbrains/kotlin/fir/java/scopes/
   org/jetbrains/kotlin/fir/lazy/
-  org/jetbrains/kotlin/fir/lightTree/
-  org/jetbrains/kotlin/fir/lightTree/converter/
-  org/jetbrains/kotlin/fir/lightTree/fir/
-  org/jetbrains/kotlin/fir/lightTree/fir/modifier/
+  org/jetbrains/kotlin/fir/pipeline/
   org/jetbrains/kotlin/fir/references/
   org/jetbrains/kotlin/fir/references/builder/
   org/jetbrains/kotlin/fir/references/impl/
@@ -1773,6 +1711,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/fir/serialization/
   org/jetbrains/kotlin/fir/serialization/constant/
   org/jetbrains/kotlin/fir/session/
+  org/jetbrains/kotlin/fir/session/environment/
   org/jetbrains/kotlin/fir/signaturer/
   org/jetbrains/kotlin/fir/symbols/
   org/jetbrains/kotlin/fir/symbols/impl/
@@ -1794,28 +1733,10 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/incremental/
   org/jetbrains/kotlin/incremental/components/
   org/jetbrains/kotlin/incremental/js/
-  org/jetbrains/kotlin/incremental/multiproject/
-  org/jetbrains/kotlin/incremental/parsing/
-  org/jetbrains/kotlin/incremental/snapshots/
   org/jetbrains/kotlin/incremental/storage/
-  org/jetbrains/kotlin/incremental/util/
   org/jetbrains/kotlin/inline/
   org/jetbrains/kotlin/ir/
   org/jetbrains/kotlin/ir/backend/
-  org/jetbrains/kotlin/ir/backend/js/
-  org/jetbrains/kotlin/ir/backend/js/export/
-  org/jetbrains/kotlin/ir/backend/js/ic/
-  org/jetbrains/kotlin/ir/backend/js/ir/
-  org/jetbrains/kotlin/ir/backend/js/lower/
-  org/jetbrains/kotlin/ir/backend/js/lower/calls/
-  org/jetbrains/kotlin/ir/backend/js/lower/cleanup/
-  org/jetbrains/kotlin/ir/backend/js/lower/coroutines/
-  org/jetbrains/kotlin/ir/backend/js/lower/inline/
-  org/jetbrains/kotlin/ir/backend/js/lower/serialization/
-  org/jetbrains/kotlin/ir/backend/js/lower/serialization/ir/
-  org/jetbrains/kotlin/ir/backend/js/transformers/
-  org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/
-  org/jetbrains/kotlin/ir/backend/js/utils/
   org/jetbrains/kotlin/ir/backend/jvm/
   org/jetbrains/kotlin/ir/backend/jvm/serialization/
   org/jetbrains/kotlin/ir/builders/
@@ -1848,12 +1769,6 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/ir/types/impl/
   org/jetbrains/kotlin/ir/util/
   org/jetbrains/kotlin/ir/visitors/
-  org/jetbrains/kotlin/javac/
-  org/jetbrains/kotlin/javac/components/
-  org/jetbrains/kotlin/javac/resolve/
-  org/jetbrains/kotlin/javac/wrappers/
-  org/jetbrains/kotlin/javac/wrappers/symbols/
-  org/jetbrains/kotlin/javac/wrappers/trees/
   org/jetbrains/kotlin/js/
   org/jetbrains/kotlin/js/analyze/
   org/jetbrains/kotlin/js/analyzer/
@@ -1863,7 +1778,6 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/js/common/
   org/jetbrains/kotlin/js/config/
   org/jetbrains/kotlin/js/coroutine/
-  org/jetbrains/kotlin/js/dce/
   org/jetbrains/kotlin/js/descriptorUtils/
   org/jetbrains/kotlin/js/facade/
   org/jetbrains/kotlin/js/facade/exceptions/
@@ -1903,6 +1817,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/js/translate/utils/jsAstUtils/
   org/jetbrains/kotlin/js/translate/utils/mutator/
   org/jetbrains/kotlin/js/util/
+  org/jetbrains/kotlin/jvm/
   org/jetbrains/kotlin/kapt3/
   org/jetbrains/kotlin/kapt3/diagnostic/
   org/jetbrains/kotlin/kdoc/
@@ -1957,6 +1872,9 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/platform/js/
   org/jetbrains/kotlin/platform/jvm/
   org/jetbrains/kotlin/platform/konan/
+  org/jetbrains/kotlin/preloading/
+  org/jetbrains/kotlin/preloading/instrumentation/
+  org/jetbrains/kotlin/preloading/instrumentation/annotations/
   org/jetbrains/kotlin/progress/
   org/jetbrains/kotlin/progress/experimental/
   org/jetbrains/kotlin/protobuf/
@@ -2068,7 +1986,6 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/types/expressions/typeInfoFactory/
   org/jetbrains/kotlin/types/expressions/unqualifiedSuper/
   org/jetbrains/kotlin/types/model/
-  org/jetbrains/kotlin/types/refinement/
   org/jetbrains/kotlin/types/typeUtil/
   org/jetbrains/kotlin/types/typesApproximation/
   org/jetbrains/kotlin/util/
@@ -2092,10 +2009,16 @@ com/android/tools/external/com-intellij/kotlin-compiler
 com/android/tools/external/org-jetbrains/uast
   META-INF/
   META-INF/MANIFEST.MF
+  META-INF/intellij.java.uast.kotlin_module
   META-INF/intellij.platform.uast.kotlin_module
-  META-INF/kotlin.uast.uast-kotlin-base.kotlin_module
-  META-INF/kotlin.uast.uast-kotlin.kotlin_module
+  META-INF/lint-psi_kotlinUastBaseSrc.kotlin_module
+  META-INF/lint-psi_kotlinUastSrc.kotlin_module
   NOTICE
+  com/
+  com/intellij/
+  com/intellij/patterns/
+  com/intellij/patterns/uast/
+  com/intellij/psi/
   org/
   org/jetbrains/
   org/jetbrains/uast/
@@ -2112,8 +2035,8 @@ com/android/tools/external/org-jetbrains/uast
   org/jetbrains/uast/java/internal/
   org/jetbrains/uast/java/kinds/
   org/jetbrains/uast/kotlin/
+  org/jetbrains/uast/kotlin/analysis/
   org/jetbrains/uast/kotlin/evaluation/
-  org/jetbrains/uast/kotlin/expressions/
   org/jetbrains/uast/kotlin/internal/
   org/jetbrains/uast/kotlin/kinds/
   org/jetbrains/uast/kotlin/psi/

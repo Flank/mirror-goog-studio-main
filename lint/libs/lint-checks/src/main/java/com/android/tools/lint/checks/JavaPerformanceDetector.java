@@ -521,13 +521,15 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
             List<PsiType> types = node.getTypeArguments();
             if (types.size() == 1) {
                 String valueType = types.get(0).getCanonicalText();
-                if (valueType.equals(TYPE_INTEGER_WRAPPER)) {
+                // Note: in Kotlin, non-null Int gets converted into a primitive 'int' type---even
+                // when it is used as a type parameter.
+                if (valueType.equals(TYPE_INTEGER_WRAPPER) || valueType.equals("int")) {
                     mContext.report(
                             USE_SPARSE_ARRAY,
                             node,
                             mContext.getLocation(node),
                             "Use `new SparseIntArray(...)` instead for better performance");
-                } else if (valueType.equals(TYPE_BOOLEAN_WRAPPER)) {
+                } else if (valueType.equals(TYPE_BOOLEAN_WRAPPER) || valueType.equals("boolean")) {
                     mContext.report(
                             USE_SPARSE_ARRAY,
                             node,
