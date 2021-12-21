@@ -108,8 +108,8 @@ public class TypedefRemoverTest {
 
     /**
      * The expected binary version of the outer class conpiled with "target 11" when the references
-     * to inner class and nest member list has been removed. This is identical to
-     * {@link #REWRITTEN_OUTER_CLASS} except for class file version.
+     * to inner class and nest member list has been removed. This is identical to {@link
+     * #REWRITTEN_OUTER_CLASS} except for class file version.
      */
     public static final byte[] REWRITTEN_OUTER_CLASS_TARGET_11 =
             Base64.getDecoder()
@@ -125,15 +125,16 @@ public class TypedefRemoverTest {
                                     + "AAEAEwAAAAIABQ==");
 
     private void checkRewriter(
-            TypedefRemover remover, byte[] clazz, String filter, byte[] expectedClazz) throws IOException {
+            TypedefRemover remover, byte[] clazz, String filter, byte[] expectedClazz)
+            throws IOException {
         InputStream filtered = remover.filter(filter, new ByteArrayInputStream(clazz));
 
         assertThat(filtered).isNotNull();
         byte[] rewritten = ByteStreams.toByteArray(filtered);
         assertThat(rewritten).isNotEqualTo(clazz);
         assertThat(rewritten).isEqualTo(expectedClazz);
-
     }
+
     @Test
     public void testRecipeFile() throws IOException {
         TypedefRemover remover = new TypedefRemover();
