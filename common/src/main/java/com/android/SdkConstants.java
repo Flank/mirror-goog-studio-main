@@ -105,7 +105,7 @@ public final class SdkConstants {
      * The encoding we strive to use for all files we write.
      *
      * <p>When possible, use the APIs which take a {@link java.nio.charset.Charset} and pass in
-     * {@link com.google.common.base.Charsets#UTF_8} instead of using the String encoding method.
+     * {@link java.nio.charset.StandardCharsets#UTF_8} instead of using the String encoding method.
      */
     public static final String UTF_8 = "UTF-8";
 
