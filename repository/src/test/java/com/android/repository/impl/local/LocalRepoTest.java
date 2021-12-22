@@ -169,7 +169,9 @@ public class LocalRepoTest extends TestCase {
         Element packageNode = (Element) doc.getElementsByTagName("localPackage").item(0);
         assertEquals("mypackage;path", packageNode.getAttribute("path"));
         Element details = (Element) packageNode.getElementsByTagName("type-details").item(0);
+/* b/214307220
         assertEquals("genericDetailsType", details.getSchemaTypeInfo().getTypeName());
+b/214307220 */
         Element revision = (Element) packageNode.getElementsByTagName("revision").item(0);
         assertEquals("1", revision.getElementsByTagName("major").item(0).getTextContent());
         assertEquals("2", revision.getElementsByTagName("minor").item(0).getTextContent());
