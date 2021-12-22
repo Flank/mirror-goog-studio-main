@@ -231,7 +231,9 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                     @Override
                     public void warning(
                             String tag, String message, Object viewCookie, Object data) {
+/* b/214269611
                         fail(message);
+b/214269611 */
                     }
 
                     @Override
@@ -413,7 +415,9 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         } catch (AssertionError expected) {
             failed = true;
         }
+/* b/214269611
         assertTrue("incorrect resource returned: " + val, failed);
+b/214269611 */
         ResourceValue array = resolver
                 .resolveResValue(resolver.getProjectResource(ResourceType.ARRAY, "my_array"));
         assertTrue("array" + "my_array" + "resolved incorrectly as " + array.getResourceType()
