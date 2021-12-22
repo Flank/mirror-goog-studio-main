@@ -79,7 +79,12 @@ public class MethodBodyEvaluator {
 
         Type[] argTypes = Type.getArgumentTypes(target.desc);
         for (int i = 0, len = argTypes.length; i < len; i++) {
-            init.setLocal(localIndex++, AndroidEval.makeValue(arguments[i], argTypes[i]));
+            Type type = argTypes[i];
+            init.setLocal(localIndex, AndroidEval.makeValue(arguments[i], type));
+
+            // long and double must take 2 slots instead of one in the local variable array.
+            // This is conveniently given to us by the type size.
+            localIndex += type.getSize();
         }
 
         Eval evaluator = new ProxyClassEval(context);
