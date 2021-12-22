@@ -315,7 +315,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "}\n"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected).expectFixDiffs(
+        ).allowNonAlphabeticalFixOrder(true).run().expect(expected).expectFixDiffs(
             """
             Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_INDEFINITE:
             @@ -27 +27
@@ -1740,7 +1740,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect(
+        ).allowNonAlphabeticalFixOrder(true).run().expect(
             """
             src/test/pkg/ExactAlarmTest.java:7: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
                     alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);

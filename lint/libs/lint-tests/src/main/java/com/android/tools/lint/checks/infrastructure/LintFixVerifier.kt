@@ -195,6 +195,11 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
             } else {
                 listOf(fix)
             }
+
+            if (!task.allowNonAlphabeticalFixOrder) {
+                ensureIdeCompatibleSorting(list)
+            }
+
             for (lintFix in list) {
                 val location = getLocation(incident, lintFix)
                 val project = incident.project
@@ -469,6 +474,67 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
             }
             flatten(fix)
             return flattened
+        }
+
+        fun ensureIdeCompatibleSorting(list: List<LintFix>) {
+            if (list.size <= 2) {
+                return
+            }
+
+            // Skip the first item since we do have a workaround on the IDE side
+            // for marking the first action as extra important and thereby sorting it
+            // to the top
+            val labels = list.map { it.getDisplayName().toString() }
+            val logicalOrder = labels.subList(1, labels.size)
+            val alphabeticalOrder = logicalOrder.sorted()
+            val expected = "${labels[0]}\n${alphabeticalOrder.joinToString("\n")}"
+            val actual = "${labels[0]}\n${logicalOrder.joinToString("\n")}"
+            if (expected != actual) {
+                assertEquals(
+                    // First line deliberately shorted to allow room for the
+                    // prefix "org.junit.ComparisonFailure: "
+                    """
+                    When a quickfix registers multiple
+                    alternatives, these will be shown as options for developers as
+                    intention actions (alt/option+enter) in the IDE.
+
+                    Unfortunately, IntelliJ imposes an **alphabetical** ordering of
+                    intention actions. This means that the intended logical order the fixes
+                    were registered in (perhaps listing the recommended suggestion first)
+                    is not necessarily the order the user will see them.
+
+                    Lint has a partial workaround for this; it can mark **one** action as
+                    having top priority which will cause it to be listed first, so for
+                    lists of up to two items, the order is preserved. However, for 3 or
+                    more, the order for the items after the first one will be alphabetical.
+
+                    This lint test infrastructure check will look up and flag quickfixes
+                    where the logical order differs from this alphabetical order (well, the
+                    alphabetical order *after* the first item, which lint can always list
+                    first).
+
+                    To fix this you have two options:
+
+                    1. If the order really doesn't matter and you're okay with the
+                       alphabetical order, you can either reorder the way you're
+                       registering the alternative fixes, or you can disable this test
+                       validation step by setting `lint.allowNonAlphabeticalFixOrder(true)`.
+
+                     * If the order does matter, your only option is to change the labels
+                       of your quickfixes. You need to pick suitable labels that have your
+                       intended order alphabetically. Ideally you can find natural ways to
+                       express the action, but as a last resort you could prefix your fixes
+                       with numbers, as in "1. Set width" and "2. Set height".)
+
+                       If the fix names are implicit (for example, if you create a string
+                       replacement quick fix using
+                       `fix().replace().text("something").with("something-else"))`, lint
+                       will create a default display name for you), you can set the label
+                       by calling `.name("label here")` on the fix descriptor.
+                    """.trimIndent(),
+                    expected, actual
+                )
+            }
         }
     }
 }

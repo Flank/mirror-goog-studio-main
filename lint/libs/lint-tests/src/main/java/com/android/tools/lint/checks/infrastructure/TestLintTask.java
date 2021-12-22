@@ -148,6 +148,7 @@ public class TestLintTask {
     boolean stripRoot = true;
     boolean includeSelectionMarkers = true;
     boolean allowAbsolutePathsInMessages = false;
+    boolean allowNonAlphabeticalFixOrder = false;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -262,6 +263,18 @@ public class TestLintTask {
      */
     public TestLintTask allowAbsolutePathsInMessages(boolean allowAbsolutePathsInMessages) {
         this.allowAbsolutePathsInMessages = allowAbsolutePathsInMessages;
+        return this;
+    }
+
+    /**
+     * Sets whether lint should allow quickfix registrations of more than 2 fixes where the display
+     * names are not in alphabetical order.
+     *
+     * @param allowNonAlphabeticalFixOrder whether to allow non-alphabetically ordered quick fixes
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowNonAlphabeticalFixOrder(boolean allowNonAlphabeticalFixOrder) {
+        this.allowNonAlphabeticalFixOrder = allowNonAlphabeticalFixOrder;
         return this;
     }
 
