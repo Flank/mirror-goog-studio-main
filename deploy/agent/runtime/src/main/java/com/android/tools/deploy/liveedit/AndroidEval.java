@@ -408,7 +408,8 @@ class AndroidEval implements Eval {
         try {
             Field field = forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
-            field.set(owner.obj(), value.obj());
+            Type expectedType = Type.getType(description.getDesc());
+            field.set(owner.obj(), value.obj(expectedType));
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             throw new InterpreterException(e);
         }
@@ -422,7 +423,8 @@ class AndroidEval implements Eval {
             Class<?> ownerClass = forName(ownerClassName);
             Field field = ownerClass.getDeclaredField(name);
             field.setAccessible(true);
-            field.set(ownerClass, value.obj());
+            Type expectedType = Type.getType(description.getDesc());
+            field.set(ownerClass, value.obj(expectedType));
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             throw new InterpreterException(e);
         }

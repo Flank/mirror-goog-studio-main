@@ -100,4 +100,19 @@ public class FieldAccessTest {
                         .evalStatic(new Object[0]);
         Assert.assertEquals(FieldTestTarget.testObjectFields(), result);
     }
+
+    @org.junit.Test
+    public void testSetBooleanField() throws Exception {
+        byte[] classInput = buildClass(FieldTestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "setBoolean", "()V").evalStatic(new Object[0]);
+    }
+
+    @org.junit.Test
+    public void testSetStaticBooleanField() throws Exception {
+        byte[] classInput = buildClass(FieldTestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "setStaticBoolean", "()V")
+                        .evalStatic(new Object[0]);
+    }
 }
