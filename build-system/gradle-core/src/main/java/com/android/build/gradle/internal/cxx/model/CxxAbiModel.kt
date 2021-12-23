@@ -306,8 +306,8 @@ fun CxxAbiModel.buildIsPrefabCapable(): Boolean = variant.module.project.isPrefa
         && variant.module.ndkVersion.major >= 17
 
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean = buildIsPrefabCapable()
-        && variant.prefabPackageDirectoryListFileCollection != null
-        && !variant.prefabPackageDirectoryListFileCollection.isEmpty
+        && variant.prefabPackages != null
+        && !variant.prefabPackages.isEmpty
 
 /**
  * Call [compute] if logging native configure to lifecycle

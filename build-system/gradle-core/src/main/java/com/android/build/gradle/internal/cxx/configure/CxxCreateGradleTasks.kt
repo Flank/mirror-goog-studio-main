@@ -39,6 +39,7 @@ import com.android.build.gradle.tasks.PrefabPackageConfigurationTask
 import com.android.build.gradle.tasks.PrefabPackageTask
 import com.android.build.gradle.internal.cxx.prefab.prefabConfigurePackageTaskName
 import com.android.build.gradle.internal.cxx.prefab.prefabPackageConfigurationData
+import com.android.build.gradle.internal.cxx.prefab.prefabPackageConfigurationLocation
 import com.android.build.gradle.internal.cxx.prefab.prefabPackageLocation
 import com.android.build.gradle.internal.cxx.prefab.prefabPackageTaskName
 import com.android.build.gradle.internal.cxx.settings.calculateConfigurationArguments
@@ -228,7 +229,7 @@ private fun createPrefabConfigurePackageTask(
         val configurePackageTask = taskFactory.register(
             PrefabPackageConfigurationTask.CreationAction(
                 libraryVariant.prefabConfigurePackageTaskName(),
-                libraryVariant.prefabPackageLocation(),
+                libraryVariant.prefabPackageConfigurationLocation(),
                 modules,
                 configurationModel,
                 libraryVariant))

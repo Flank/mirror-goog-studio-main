@@ -116,6 +116,7 @@ class ModuleToModuleDepsTest(
             NdkBuild -> """
                 android.externalNativeBuild.ndkBuild.path="Android.mk"
                 """.trimIndent()
+            else -> error("$appBuildSystem")
         }
         val appStlStanza = when {
             appStl == "" -> ""
@@ -162,6 +163,7 @@ class ModuleToModuleDepsTest(
             NdkBuild -> """
                 android.externalNativeBuild.ndkBuild.path="Android.mk"
                 """.trimIndent()
+            else -> error("$appBuildSystem")
         }
         val libStlStanza = when {
             libStl == "" -> ""
