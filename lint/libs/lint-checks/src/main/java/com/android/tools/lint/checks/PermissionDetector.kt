@@ -52,9 +52,11 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.utils.XmlUtils
 import com.google.common.collect.Sets
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
+import com.intellij.psi.util.InheritanceUtil
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -377,39 +379,6 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return true
     }
 
-    private fun handlesSecurityException(node: UElement): Boolean {
-        // Ensure that the caller is handling a security exception
-        // First check to see if we're inside a try/catch which catches a SecurityException
-        // (or some wider exception than that). Check for nested try/catches too.
-        var parent = node
-        while (true) {
-            val tryCatch = parent.getParentOfType(UTryExpression::class.java, true)
-            if (tryCatch == null) {
-                break
-            } else {
-                for (catchClause in tryCatch.catchClauses) {
-                    if (containsSecurityException(catchClause.types)) {
-                        return true
-                    }
-                }
-
-                parent = tryCatch
-            }
-        }
-
-        // If not, check to see if the method itself declares that it throws a
-        // SecurityException or something wider.
-        val declaration = parent.getParentOfType(UMethod::class.java, false)
-        if (declaration != null) {
-            val thrownTypes = declaration.throwsList.referencedTypes
-            if (containsSecurityException(listOf<PsiClassType>(*thrownTypes))) {
-                return true
-            }
-        }
-
-        return false
-    }
-
     private fun getLocalPermissions(node: UElement): List<PermissionRequirement> {
         // Accumulate @RequirePermissions available in the local context
         val method = node.getParentOfType(UMethod::class.java, true) ?: return emptyList()
@@ -487,23 +456,12 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
     }
 
-    private fun containsSecurityException(
-        types: List<PsiType>
-    ): Boolean {
-        for (type in types) {
-            if (type is PsiClassType) {
-                val cls = type.resolve()
-                // In earlier versions we checked not just for java.lang.SecurityException but
-                // any super type as well, however that probably hides warnings in cases where
-                // users don't want that; see http://b.android.com/182165
-                // return context.getEvaluator().extendsClass(cls, "java.lang.SecurityException", false);
-                if (cls != null && SECURITY_EXCEPTION == cls.qualifiedName) {
-                    return true
-                }
-            }
-        }
-
-        return false
+    private fun handlesSecurityException(node: UElement): Boolean {
+        // allowSuperClass = false:
+        // In earlier versions we checked not just for java.lang.SecurityException but
+        // any super type as well, however that probably hides warnings in cases where
+        // users don't want that; see http://b.android.com/182165
+        return handlesException(node, null, allowSuperClass = false, SECURITY_EXCEPTION)
     }
 
     private var mPermissions: PermissionHolder? = null
@@ -655,5 +613,59 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
+
+        fun handlesException(node: UElement, exceptionClass: PsiClass?, allowSuperClass: Boolean, exceptionClassName: String): Boolean {
+            // Ensure that the caller is handling a security exception
+            // First check to see if we're inside a try/catch which catches a SecurityException
+            // (or some wider exception than that). Check for nested try/catches too.
+            var parent = node
+            while (true) {
+                val tryCatch = parent.getParentOfType(UTryExpression::class.java, true)
+                if (tryCatch == null) {
+                    break
+                } else {
+                    for (catchClause in tryCatch.catchClauses) {
+                        if (containsException(catchClause.types, exceptionClass, allowSuperClass, exceptionClassName)) {
+                            return true
+                        }
+                    }
+
+                    parent = tryCatch
+                }
+            }
+
+            // If not, check to see if the method itself declares that it throws a
+            // SecurityException or something wider.
+            val declaration = parent.getParentOfType(UMethod::class.java, false)
+            if (declaration != null) {
+                val thrownTypes = declaration.throwsList.referencedTypes
+                if (containsException(listOf<PsiClassType>(*thrownTypes), exceptionClass, allowSuperClass, exceptionClassName)) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        private fun containsException(
+            types: List<PsiType>,
+            exceptionClass: PsiClass?,
+            allowSuperClass: Boolean,
+            exceptionClassName: String?
+        ): Boolean {
+            for (type in types) {
+                if (type is PsiClassType) {
+                    val cls = type.resolve()?.qualifiedName ?: return true // on resolve failures, assume it's handled
+                    if (allowSuperClass && exceptionClass != null) {
+                        return InheritanceUtil.isInheritor(exceptionClass, false, cls)
+
+                    } else if (exceptionClassName == cls) {
+                        return true
+                    }
+                }
+            }
+
+            return false
+        }
     }
 }
