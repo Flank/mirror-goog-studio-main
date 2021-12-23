@@ -194,7 +194,7 @@ class IceboxCallerImplTest {
                     argThat { it.pid == pid.toLong() && it.maxSnapshotNumber == -1 },
                     any())
             verify(mockSnapshotServiceGrpcServer).pullSnapshot(
-                    argThat { it.format == SnapshotPackage.Format.TAR },
+                    argThat { it.format == SnapshotPackage.Format.DIRECTORY },
                     any())
             assertThat(snapshotFile.exists()).isTrue()
         }
