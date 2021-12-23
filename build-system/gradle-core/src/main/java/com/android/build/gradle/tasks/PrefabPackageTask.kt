@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.prefab.PrefabModuleTaskData
-import com.android.build.gradle.internal.cxx.prefab.configurePrefab
 import com.android.build.gradle.internal.cxx.prefab.versionOrError
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
@@ -34,11 +33,10 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.FileOperations
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -91,22 +89,19 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
     @get:Input
     val ndkAbiFilters get() = configurationModel.variant.validAbiList
 
-    @get:InputFile
+    @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val prefabJson: RegularFileProperty
+    abstract val configurationOnlyDirectory: DirectoryProperty
 
     override fun doTaskAction() {
-        val installDir = outputDirectory.get().asFile
-        configurePrefab(
-            getFileOperations(),
-            installDir,
-            packageName,
-            packageVersion,
-            modules,
-            configurationModel
-        )
+        // Sync files from the configuration-only folder created by PrefabPackageConfigurationTask.
+        // This includes the prefab.json and other supporting files.
+        getFileOperations().sync { spec ->
+            spec.from(configurationOnlyDirectory)
+            spec.into(outputDirectory)
+        }
         for (module in modules) {
-            createModule(module, installDir)
+            createModule(module, outputDirectory.get().asFile)
         }
     }
 
@@ -175,7 +170,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
 
-            task.prefabJson.setDisallowChanges(
+            task.configurationOnlyDirectory.setDisallowChanges(
                 creationConfig.artifacts.get(InternalArtifactType.PREFAB_PACKAGE_CONFIGURATION)
             )
         }

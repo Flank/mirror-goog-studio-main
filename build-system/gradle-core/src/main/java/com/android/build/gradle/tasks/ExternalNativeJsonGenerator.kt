@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.cxx.model.metadataGenerationTimingFolde
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
-import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
@@ -90,7 +89,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
         // If anything in the prefab package changes, re-run. Note that this also depends on the
         // directories, so added/removed files will also trigger a re-run.
-        for (pkgDir in abi.variant.prefabPackageDirectoryList) {
+        for (pkgDir in abi.variant.prefabConfigurationPackages) {
             Files.walk(pkgDir.toPath())
                 .forEach {
                     result.add(it.toFile())
@@ -104,7 +103,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         requireExplicitLogger()
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
-        abi.variant.prefabPackageDirectoryList
+        abi.variant.prefabConfigurationPackages
         abi.variant.prefabClassPath
         try {
             buildForOneConfiguration(ops, forceGeneration, abi)
@@ -165,7 +164,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     val prefabState = PrefabConfigurationState(
                             abi.variant.module.project.isPrefabEnabled,
                             abi.variant.prefabClassPath,
-                            abi.variant.prefabPackageDirectoryList
+                            abi.variant.prefabConfigurationPackages
                     )
                     val previousPrefabState =
                             getPreviousPrefabConfigurationState(abi.prefabConfigFile)

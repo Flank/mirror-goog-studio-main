@@ -348,11 +348,23 @@ fun ComponentCreationConfig.prefabConfigurePackageTaskName() =
  */
 fun ComponentCreationConfig.prefabPackageLocation() : String {
     return services.projectInfo.getIntermediatesDir()
-        .resolve("prefab_package")
+        .resolve(PREFAB_PACKAGE_SEGMENT)
         .resolve(name)
         .absolutePath
 }
 
+/**
+ * Return the folder location of the prefab package output.
+ */
+fun ComponentCreationConfig.prefabPackageConfigurationLocation() : String {
+    return services.projectInfo.getIntermediatesDir()
+        .resolve(PREFAB_PACKAGE_CONFIGURATION_SEGMENT)
+        .resolve(name)
+        .absolutePath
+}
+
+const val PREFAB_PACKAGE_SEGMENT = "prefab_package"
+const val PREFAB_PACKAGE_CONFIGURATION_SEGMENT = "prefab_package_configuration"
 private val EXTRACT_VERSION_PATTERN = Pattern.compile("^\\d+(\\.\\d+(\\.\\d+(\\.\\d+)?)?)?")
 
 /**
