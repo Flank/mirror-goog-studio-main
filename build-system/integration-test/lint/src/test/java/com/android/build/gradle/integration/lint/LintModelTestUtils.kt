@@ -50,14 +50,14 @@ fun checkLintModels(
                 expected.toTypedArray(),
                 actual.toTypedArray()
             )
-            if (System.getenv("GENERATE_MODEL_GOLDEN_FILES").isNullOrEmpty()) {
-                errors += "Unexpected lint model change for ${model.fileName}\n" +
+            errors += if (System.getenv("GENERATE_MODEL_GOLDEN_FILES").isNullOrEmpty()) {
+                "Unexpected lint model change for ${model.fileName}\n" +
                         "Run with env var GENERATE_MODEL_GOLDEN_FILES=true to regenerate\n" +
                         diff
             } else {
                 val fileToUpdate = TestUtils.resolveWorkspacePath("tools/base/build-system/integration-test/lint/src/test/resources/com/android/build/gradle/integration/lint/$modelSnapshotResourceRelativePath/${model.fileName}")
                 Files.write(fileToUpdate, actual)
-                errors += "Updated ${model.fileName} with \n$diff"
+                "Updated ${model.fileName} with \n$diff"
             }
         }
     }
@@ -83,6 +83,10 @@ fun createReplacements(project: GradleTestProject): Map<String, String> {
         put(project.androidSdkDir!!.absolutePath, "${"$"}{androidSdkDir}")
         put(project.location.testLocation.gradleCacheDir.absolutePath, "${"$"}{gradleCacheDir}")
         put(project.location.testLocation.gradleUserHome.toAbsolutePath().toString(), "${"$"}{gradleUserHome}")
+        put("android-${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}",
+            "android-${"$"}{androidHighestKnownStableApi}")
+        put("""targetSdkVersion="${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}"""",
+            """targetSdkVersion="${"$"}{androidHighestKnownStableApi}"""")
         for (repository in localRepositories) {
             put(repository, "${"$"}{mavenRepo}")
         }
