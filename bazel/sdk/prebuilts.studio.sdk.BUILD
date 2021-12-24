@@ -33,6 +33,14 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/latest/aidl",
+    srcs = glob(
+        include = ["*/build-tools/30.0.3/aidl"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "build-tools/30.0.2",
     srcs = glob(
         include = ["*/build-tools/30.0.2/**"],
@@ -186,6 +194,14 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = "platforms/latest/framework.aidl",
+    srcs = glob(
+        include = ["*/platforms/android-31/framework.aidl"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
 # Use this target to compile against.
 # Note: these stubbed classes will not be available at runtime.
 java_import(
@@ -193,6 +209,7 @@ java_import(
     jars = sdk_path(["platforms/android-31/android.jar"]),
     neverlink = 1,
     visibility = [
+        "//tools/adt/idea/emulator/screen-sharing-agent:__pkg__",
         "//tools/base/app-inspection/agent:__pkg__",
         "//tools/base/app-inspection/inspectors:__subpackages__",
         "//tools/base/deploy/agent/runtime:__pkg__",
