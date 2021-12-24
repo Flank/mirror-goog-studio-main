@@ -511,6 +511,7 @@ fun parseCmakeFileApiReply(
                 extra += source.rootSourceFolder.resolve(source.sourcePath).absolutePath
             }
         }
+        additionalFiles.parentFile.mkdirs()
         additionalFiles.writeText(extra.joinToString("\n"))
 
         // Write the ninja build command, possibly with user settings from CMakeSettings.json.

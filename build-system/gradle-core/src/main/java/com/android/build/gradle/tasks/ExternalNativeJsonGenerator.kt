@@ -41,11 +41,11 @@ import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessCommand
 import com.android.build.gradle.internal.cxx.timing.TimingEnvironment
 import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
-import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
 import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_FAILURE
 import com.google.common.base.Charsets
@@ -157,7 +157,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
                     // See whether the current build command matches a previously written build command.
                     val currentBuildCommand = """
-                    $processBuilder
+                    ${processBuilder.argsText()}
                     Build command args: ${abi.getBuildCommandArguments()}
                     Version: $ANDROID_GRADLE_BUILD_VERSION
                     """.trimIndent()
@@ -328,7 +328,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         )
     }
 
-    abstract fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder
+    abstract fun getProcessBuilder(abi: CxxAbiModel): ExecuteProcessCommand
 
     /**
      * Executes the JSON generation process. Return the combination of STDIO and STDERR from running

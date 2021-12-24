@@ -27,10 +27,6 @@ import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
 import com.android.build.gradle.internal.cxx.configure.toNdkBuildArguments
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.VERBOSE
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.BUILD_STDOUT
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.CLEAN_STDOUT
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.CONFIGURE_STDOUT
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
@@ -205,26 +201,6 @@ val CxxModuleModel.cmakeGenerator : String
         cmake.minimumCmakeVersion.isCmakeForkVersion() -> "Android Gradle - Ninja"
         else -> "Ninja"
     }
-
-/**
- * Call [compute] if logging native configure to lifecycle
- */
-fun <T> CxxModuleModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
-    if (outputOptions.contains(VERBOSE) ||
-        outputOptions.contains(CONFIGURE_STDOUT)) compute() else null
-
-/**
- * Call [compute] if logging native build to lifecycle
- */
-fun <T> CxxModuleModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
-    if (outputOptions.contains(VERBOSE) ||
-        outputOptions.contains(BUILD_STDOUT)) compute() else null
-
-/**
- * Return true if we should log native clean to lifecycle log
- */
-val CxxModuleModel.logNativeCleanToLifecycle : Boolean get() =
-    outputOptions.contains(VERBOSE) || outputOptions.contains(CLEAN_STDOUT)
 
 /**
  * Determine, for CMake, which STL is used based on command-line arguments from the user.

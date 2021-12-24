@@ -28,11 +28,10 @@ import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
-import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
-import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
-import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessType.CONFIGURE_PROCESS
+import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.executeProcess
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import com.google.common.base.Charsets
 import com.google.gson.GsonBuilder
@@ -56,37 +55,30 @@ internal class NdkBuildExternalNativeJsonGenerator(
      * Get the process builder with -n flag. This will tell ndk-build to emit the steps that it
      * would do to execute the build.
      */
-    override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
-        val builder = ProcessInfoBuilder()
-        builder.setExecutable(ndkBuild)
+    override fun getProcessBuilder(abi: CxxAbiModel): ExecuteProcessCommand {
+        return createExecuteProcessCommand(ndkBuild)
             .addArgs(
                 abi.configurationArguments
                         + listOf(
-                            // Disable any response files so we can parse the command line.
-                            "$APP_SHORT_COMMANDS=false",
-                            "$LOCAL_SHORT_COMMANDS=false",
-                            // Clean, dry run
-                            "-B", "-n"
-                        )
+                    // Disable any response files so we can parse the command line.
+                    "$APP_SHORT_COMMANDS=false",
+                    "$LOCAL_SHORT_COMMANDS=false",
+                    // Clean, dry run
+                    "-B", "-n"
+                )
             )
-        return builder
     }
 
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
-        createProcessOutputJunction(
-            abi.metadataGenerationCommandFile,
-            abi.metadataGenerationStdoutFile,
-            abi.metadataGenerationStderrFile,
-            getProcessBuilder(abi),
-            ""
-        )
-            .logStderr()
-            .execute(ops::exec)
-
-        parseDryRunOutput(abi)
+        abi.executeProcess(
+            processType = CONFIGURE_PROCESS,
+            command = getProcessBuilder(abi),
+            ops = ops,
+            processStdout = { stdout -> parseDryRunOutput(abi, stdout) },
+            processStderr = { /* ignore */ })
     }
 
-    private fun parseDryRunOutput(abi: CxxAbiModel) {
+    private fun parseDryRunOutput(abi: CxxAbiModel, stdout: File) {
         // Write the captured ndk-build output to a file for diagnostic purposes.
         infoln("parse and convert ndk-build output to build configuration JSON")
 
@@ -110,7 +102,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // NOTE: CMake doesn't have the same issue because CMake JSON generation happens fully
         // within the Exec call which has 'project/app' as the current directory.
 
-        val buildOutput = abi.metadataGenerationStdoutFile.readText()
+        val buildOutput = stdout.readText()
 
         // TODO(jomof): This NativeBuildConfigValue is probably consuming a lot of memory for large
         // projects. Should be changed to a streaming model where NativeBuildConfigValueBuilder

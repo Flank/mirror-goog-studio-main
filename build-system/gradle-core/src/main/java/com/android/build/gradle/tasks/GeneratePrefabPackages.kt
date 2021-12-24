@@ -27,13 +27,14 @@ import com.android.build.gradle.internal.cxx.model.prefabPackageConfigurationDir
 import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.prefab.PREFAB_PACKAGE_CONFIGURATION_SEGMENT
 import com.android.build.gradle.internal.cxx.prefab.PREFAB_PACKAGE_SEGMENT
-import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessType.PREFAB_PROCESS
+import com.android.build.gradle.internal.cxx.process.createJavaExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.executeProcess
 import com.android.build.gradle.tasks.ErrorMatchType.InformationOnly
 import com.android.build.gradle.tasks.ErrorMatchType.OtherError
 import com.android.build.gradle.tasks.ErrorMatchType.RelevantLibraryDiscovery
 import com.android.build.gradle.tasks.ErrorMatchType.RelevantLibraryError
 import com.android.build.gradle.tasks.ErrorMatchType.Unrecognized
-import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.cxx.CxxDiagnosticCode
 import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_FATAL
 import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_JSON_FORMAT_PROBLEM
@@ -68,8 +69,9 @@ fun generatePrefabPackages(
     val finalOutput = abi.prefabFolder.resolve("prefab")
 
     // TODO: Get main class from manifest.
-    val builder = ProcessInfoBuilder().setClasspath(prefabClassPath.toString())
-        .setMain("com.google.prefab.cli.AppKt")
+    val executeCommand = createJavaExecuteProcessCommand(
+        classPath = prefabClassPath.path,
+        main = "com.google.prefab.cli.AppKt")
         .addArgs("--build-system", buildSystem)
         .addArgs("--platform", "android")
         .addArgs("--abi", abi.abi.tag)
@@ -79,14 +81,11 @@ fun generatePrefabPackages(
         .addArgs("--output", configureOutput.path)
         .addArgs(abi.variant.prefabConfigurationPackages.map { it.path })
 
-    val stderr = abi.soFolder.resolve("prefab_stderr_${buildSystem}_${abi.abi.tag}.txt")
-    createProcessOutputJunction(
-        abi.soFolder.resolve("prefab_command_${buildSystem}_${abi.abi.tag}.txt"),
-        abi.soFolder.resolve("prefab_stdout_${buildSystem}_${abi.abi.tag}.txt"),
-        stderr,
-        builder, "prefab"
-    ).javaProcess().logStderr().execute(ops::javaexec)
-    reportErrors(stderr)
+    abi.executeProcess(
+        processType = PREFAB_PROCESS,
+        command = executeCommand,
+        ops = ops,
+        processStderr = ::reportErrors)
     translateFromConfigurationToFinal(configureOutput, finalOutput)
 }
 

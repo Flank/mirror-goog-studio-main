@@ -132,21 +132,4 @@ val CxxVariantModel.cFlags
 val CxxVariantModel.cppFlags
     get() = cppFlagsList.joinToString(" ")
 
-/**
- * Return true if we should log native clean to lifecycle log
- */
-val CxxVariantModel.logNativeCleanToLifecycle : Boolean get() =
-    module.logNativeCleanToLifecycle
-
-/**
- * Call [compute] if logging native configure to lifecycle
- */
-fun <T> CxxVariantModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
-    module.ifLogNativeConfigureToLifecycle(compute)
-
-/**
- * Call [compute] if logging native build to lifecycle
- */
-fun <T> CxxVariantModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
-    module.ifLogNativeBuildToLifecycle(compute)
 

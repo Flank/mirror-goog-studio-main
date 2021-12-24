@@ -23,14 +23,12 @@ import com.android.build.gradle.internal.cxx.model.clientQueryFolder
 import com.android.build.gradle.internal.cxx.model.clientReplyFolder
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
-import com.android.build.gradle.internal.cxx.model.ifLogNativeConfigureToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
-import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
-import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.model.createNinjaCommand
-import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessType
+import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.executeProcess
 import com.android.utils.FileUtils.join
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
@@ -58,16 +56,11 @@ internal class CmakeQueryMetadataGenerator(
         join(abi.clientQueryFolder, "cmakeFiles-v1").writeText("")
 
         // Execute CMake
-        createProcessOutputJunction(
-          abi.metadataGenerationCommandFile,
-          abi.metadataGenerationStdoutFile,
-          abi.metadataGenerationStderrFile,
-          getProcessBuilder(abi),
-          "${abi.variant.variantName}|${abi.abi.tag} :")
-          .logStderr()
-          .logStdout()
-          .logFullStdout(abi.variant.ifLogNativeConfigureToLifecycle { true } ?: false)
-          .execute(ops::exec)
+        abi.executeProcess(
+            processType = ExecuteProcessType.CONFIGURE_PROCESS,
+            command = getProcessBuilder(abi),
+            ops = ops
+        )
 
         // Build expected metadata
         parseCmakeFileApiReply(
@@ -80,11 +73,9 @@ internal class CmakeQueryMetadataGenerator(
         )
     }
 
-    override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
-        val builder = ProcessInfoBuilder()
-        builder.setExecutable(abi.variant.module.cmake!!.cmakeExe!!)
-        builder.addArgs(abi.configurationArguments)
-        return builder
+    override fun getProcessBuilder(abi: CxxAbiModel): ExecuteProcessCommand {
+        return createExecuteProcessCommand(abi.variant.module.cmake!!.cmakeExe!!)
+            .addArgs(abi.configurationArguments)
     }
 
     override fun checkPrefabConfig() { }

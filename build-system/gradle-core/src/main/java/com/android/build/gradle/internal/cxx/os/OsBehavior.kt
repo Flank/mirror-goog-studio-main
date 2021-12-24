@@ -29,6 +29,18 @@ import com.android.utils.StringHelperWindows
 val exe get() = os.exe
 
 /**
+ * A shell script file extension.
+ * Either ".bat" or "".
+ */
+val bat get() = os.bat
+
+/**
+ * Given a literal string [argument] quote it such that if [argument] is passed to a program
+ * it is treated as a single argument with all text, including special characters, kept unchanged.
+ */
+fun quoteCommandLineArgument(argument: String) = os.quoteCommandLineArgument(argument)
+
+/**
  * Behavior of the current host platform.
  */
 private val os : OsBehavior = createOsBehavior()
@@ -43,6 +55,12 @@ interface OsBehavior {
      * File extension to use for executable files.
      */
     val exe : String
+
+    /**
+     * A shell script file extension.
+     * Either ".bat" or "".
+     */
+    val bat : String
 
     /**
      * Split multiple commands separated by && (or other host-specific separator).
@@ -60,6 +78,12 @@ interface OsBehavior {
      * escaped characters to their evaluated equivalent.
      */
     fun tokenizeCommandLineToEscaped(command: String) : List<String>
+
+    /**
+     * Given a literal string [argument] quote it such that if [argument] is passed to a program
+     * it is treated as a single argument all text, including special characters, kept intact.
+     */
+    fun quoteCommandLineArgument(argument: String) : String
 }
 
 /**
@@ -69,16 +93,49 @@ fun createOsBehavior(platform : Int) : OsBehavior {
     return if (platform == PLATFORM_WINDOWS) object : OsBehavior {
         override val platform: Int get() = platform
         override val exe = ".exe"
+        override val bat = ".bat"
         override fun splitCommandLine(commandLine: String) = StringHelperWindows.splitCommandLine(commandLine)
         override fun tokenizeCommandLineToRaw(command: String) = StringHelperWindows.tokenizeCommandLineToRaw(command)
         override fun tokenizeCommandLineToEscaped(command: String) = StringHelperWindows.tokenizeCommandLineToEscaped(command)
+        override fun quoteCommandLineArgument(argument: String) : String {
+            // These exclusions were found by experiment. I didn't find a source that defined them.
+            if (argument.contains("\u0000")) error("argument had embedded 0x0000")
+            if (argument.contains("\u001a")) error("argument had embedded 0x001a") // EOF marker
+            if (argument.contains("`")) error("argument had embedded tick-mark (`)")
+            if (argument.contains("\r")) error("argument had embedded line-feed (\\r)")
+            if (argument.contains("\n")) error("argument had embedded carriage-return (\\n)")
+            val escaped = argument.replace("%", "%%")
+            return if (listOf(",", ";", "=", " ", "\u0008", "|", "&",
+                    "*", "\"", "<", ">", "^").any { argument.contains(it) }) {
+                "\"${escaped
+                    .replace("\\", "\\\\")
+                    .replace("\"", "\"\"")}\""
+            } else escaped
+
+        }
     }
     else object : OsBehavior {
         override val platform: Int get() = platform
         override val exe = ""
+        override val bat = ""
         override fun splitCommandLine(commandLine: String) = StringHelperPOSIX.splitCommandLine(commandLine)
         override fun tokenizeCommandLineToRaw(command: String) = StringHelperPOSIX.tokenizeCommandLineToRaw(command)
         override fun tokenizeCommandLineToEscaped(command: String) = StringHelperPOSIX.tokenizeCommandLineToEscaped(command)
+        override fun quoteCommandLineArgument(argument: String) : String {
+            // The only character that seems not to work on *nix even with quoting or escaping is 0x00
+            if (argument.contains("\u0000")) error("argument had embedded 0x0000")
+            return if (listOf(" ", "*", ";", "<", ">", "~", "|", "&", "'", "\n").any { argument.contains(it) }) {
+                "\"${argument
+                    .replace("\"", "\\\"")}\""
+            }
+            else {
+                argument
+                    .replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("$", "\\$")
+                    .replace("`", "\\`")
+            }
+        }
     }
 }
 

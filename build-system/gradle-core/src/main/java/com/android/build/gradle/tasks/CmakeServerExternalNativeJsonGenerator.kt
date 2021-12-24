@@ -49,8 +49,9 @@ import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.createNinjaCommand
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
 import com.android.ide.common.process.ProcessException
-import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -81,11 +82,9 @@ internal class CmakeServerExternalNativeJsonGenerator(
         executeProcessAndGetOutput(abi)
     }
 
-    override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
-        val builder = ProcessInfoBuilder()
-        builder.setExecutable(cmake.cmakeExe!!)
-        builder.addArgs(abi.configurationArguments)
-        return builder
+    override fun getProcessBuilder(abi: CxxAbiModel): ExecuteProcessCommand {
+        return createExecuteProcessCommand(cmake.cmakeExe!!)
+            .addArgs(abi.configurationArguments)
     }
 
     /**
@@ -309,7 +308,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         nativeBuildConfigValue.cFileExtensions!!.addAll(CmakeUtils.getCExtensionSet(codeModel))
         assert(nativeBuildConfigValue.cppFileExtensions != null)
         nativeBuildConfigValue.cppFileExtensions!!.addAll(CmakeUtils.getCppExtensionSet(codeModel))
-
+        abi.additionalProjectFilesIndexFile.parentFile.mkdirs()
         abi.additionalProjectFilesIndexFile.bufferedWriter(StandardCharsets.UTF_8).use { additionalProjectFilesIndexWriter ->
             // Fill in the required fields in NativeBuildConfigValue from the code model obtained from
             // Cmake server.
@@ -456,7 +455,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                     continue
                 }
                 for (source in fileGroup.sources) {
-                    additionalProjectFilesIndexWriter.appendln(sourceDirectory.resolve(source).absolutePath)
+                    additionalProjectFilesIndexWriter.appendLine(sourceDirectory.resolve(source).absolutePath)
                 }
             }
             return nativeLibraryValue

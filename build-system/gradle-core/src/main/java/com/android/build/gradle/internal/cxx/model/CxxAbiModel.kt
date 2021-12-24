@@ -140,6 +140,12 @@ val CxxAbiModel.miniConfigFile: File
 private val CxxAbiModel.modelMetadataFolder: File
     get() = join(intermediatesParentFolder, "meta", abi.tag)
 
+/**
+ * Location of spawned process logs file
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/log
+ */
+val CxxAbiModel.logsFolder: File
+    get() = join(intermediatesParentFolder, "logs", abi.tag)
 
 /**
  * Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
@@ -195,14 +201,14 @@ val CxxAbiModel.objFolder: File
  *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_model.json
  */
 val CxxAbiModel.modelOutputFile: File
-    get() = join(modelMetadataFolder, "build_model.json")
+    get() = join(logsFolder, "build_model.json")
 
 /**
  * Json Generation logging record
  *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/metadata_generation_record.json
  */
 val CxxAbiModel.jsonGenerationLoggingRecordFile: File
-    get() = join(modelMetadataFolder, "metadata_generation_record.json")
+    get() = join(logsFolder, "metadata_generation_record.json")
 
 /**
  * Text file containing command run to generate C/C++ metadata.
@@ -229,14 +235,14 @@ val CxxAbiModel.metadataGenerationStderrFile: File
  * Folder used to hold metadata generation performance timings.
  */
 val CxxAbiModel.metadataGenerationTimingFolder: File
-    get() = modelMetadataFolder
+    get() = logsFolder
 
 /**
  * When CMake server is used, this is the log of the interaction with it.
  *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/cmake_server_log.txt
  */
 val CxxAbiModel.cmakeServerLogFile: File
-    get() = join(modelMetadataFolder, "cmake_server_log.txt")
+    get() = join(logsFolder, "cmake_server_log.txt")
 
 /**
  * The prefab configuration used when building this project
@@ -308,18 +314,6 @@ fun CxxAbiModel.buildIsPrefabCapable(): Boolean = variant.module.project.isPrefa
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean = buildIsPrefabCapable()
         && variant.prefabPackages != null
         && !variant.prefabPackages.isEmpty
-
-/**
- * Call [compute] if logging native configure to lifecycle
- */
-fun <T> CxxAbiModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
-    variant.ifLogNativeConfigureToLifecycle(compute)
-
-/**
- * Call [compute] if logging native build to lifecycle
- */
-fun <T> CxxAbiModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
-    variant.ifLogNativeBuildToLifecycle(compute)
 
 /**
  * Returns the Ninja build commands from CMakeSettings.json.
