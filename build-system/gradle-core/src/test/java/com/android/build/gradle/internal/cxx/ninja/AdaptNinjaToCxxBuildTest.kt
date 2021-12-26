@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.ninja
 
 import com.android.SdkConstants.PLATFORM_LINUX
 import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.build.gradle.internal.cxx.explainLineDifferences
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.testutils.TestUtils
@@ -634,11 +635,21 @@ class AdaptNinjaToCxxBuildTest {
             sb.appendLine()
             sb.appendLine()
         }
-        val text = sb.toString()
+        val currentText = sb.toString()
             .replace(sourceRoot, "[SOURCE ROOT]")
             .replace(ndk, "[NDK]")
-        buildNinja.resolveSibling("compile_commands_summary.txt").writeText(text)
-        return text.replace("\\", "/")
+
+        val original = buildNinja.resolveSibling("compile_commands_summary.txt")
+        if (original.isFile) {
+            val originalText = original.readText()
+            if (currentText != originalText) {
+                // Fail the first time but leave the file changed to the new content
+                original.writeText(currentText)
+                error("$original content changed: \\n${explainLineDifferences(originalText, currentText)}")
+            }
+        }
+        original.writeText(currentText)
+        return currentText
     }
 
     private fun StringTable.text(value : File, tag : String) : String {
