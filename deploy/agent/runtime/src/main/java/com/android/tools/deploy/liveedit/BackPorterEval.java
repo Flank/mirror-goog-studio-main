@@ -24,6 +24,7 @@ import java.util.List;
 
 public class BackPorterEval extends AndroidEval {
 
+    private static final String BP_PKG_NAME = "com/android/tools/deploy/liveedit/backported";
     private static final HashMap<String, MethodDescription> backported = new HashMap<>();
     private static int apiLevel;
 
@@ -69,13 +70,23 @@ public class BackPorterEval extends AndroidEval {
             addBackported("java/lang", math, "multiplyHigh", "(JJ)J");
             addBackported("java/lang", math, "floorDiv", "(JI)J");
             addBackported("java/lang", math, "floorMod", "(JI)I");
+
+            BackportedMethod bp =
+                    BackportedMethod.as("(ILjava/lang/Object;)V")
+                            .from("android/util/SparseArray", "set")
+                            .to("android/util/SparseArray", "put")
+                            .build();
+            backported.put(bp.key(), bp.target());
         }
-        // TODO: android.util.SparseArray.set -> put
         // TODO: All 3x copyOf
     }
 
     private static void addBackported(String pkg, String className, String name, String desc) {
-        BackportedMethod bp = new BackportedMethod(pkg, className, name, desc);
+        BackportedMethod bp =
+                BackportedMethod.as(desc)
+                        .from(pkg + "/" + className, name)
+                        .to(BP_PKG_NAME + "/" + className, name)
+                        .build();
         backported.put(bp.key(), bp.target());
     }
 
