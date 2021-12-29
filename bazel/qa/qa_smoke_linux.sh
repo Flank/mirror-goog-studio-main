@@ -90,7 +90,7 @@ if [[ $lsb_release == "crostini" ]]; then
   readonly bazel_status_no_emu=$?
 
   if [[ -d "${dist_dir}" ]]; then
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${test_invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+    echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${test_invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
   fi
 
   readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
@@ -146,7 +146,7 @@ else #Executes normally on linux as before
   readonly bazel_status_no_emu=$?
 
   if [[ -d "${dist_dir}" ]]; then
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+    echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
   fi
 
   if [[ -d "${dist_dir}" ]]; then
