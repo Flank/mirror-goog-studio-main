@@ -135,7 +135,9 @@ class ManagedDeviceTestRunner(
                 resultProtos.forEach(resultsMerger::merge)
 
                 val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
-                resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
+                mergedTestResultPbFile.outputStream().use {
+                    resultsMerger.result.writeTo(it)
+                }
             }
         }
 
