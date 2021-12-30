@@ -44,7 +44,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.NATIVE_BUILD_OUTPUT_LEVEL
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
-import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -58,7 +57,6 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
-import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -390,17 +388,12 @@ fun createCxxMetadataGenerator(
             }
             val cmakeRevision = cmake.minimumCmakeVersion
             variantBuilder?.nativeCmakeVersion = cmakeRevision.toString()
-            if (cmakeRevision.isCmakeForkVersion()) {
-                return CmakeAndroidNinjaExternalNativeJsonGenerator(abi, variantBuilder)
-            }
             if (cmakeRevision.major < 3
                 || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
             ) {
-                errorln(
-                    CMAKE_VERSION_IS_UNSUPPORTED,
-                    "Unsupported CMake version $cmakeRevision. Try 3.7.0 or later."
-                )
-                return CxxNopMetadataGenerator(variantBuilder)
+                // Aside from fork-CMake, this is the range of CMake versions that was
+                // unsupported before the introduction of Ninja-parsing based metadata generation.
+                return CMakeNinjaParserMetadataGenerator(abi, variantBuilder)
             }
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15

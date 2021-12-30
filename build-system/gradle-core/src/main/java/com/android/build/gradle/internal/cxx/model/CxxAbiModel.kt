@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.cmake.cmakeBoolean
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
@@ -174,8 +175,7 @@ val CxxAbiModel.minSdkVersion : Int get() {
  *   ex, $moduleRootFolder/.cxx/cmake/debug/x86/.ninja_log
  */
 val CxxAbiModel.ninjaLogFile: File
-    get() = join(cxxBuildFolder, ".ninja_log")
-
+    get() = join(redirectedCxxBuildFolder, ".ninja_log")
 
 /**
  * .ninja_deps file for this ABI. Only applies to CMake builds.
@@ -183,7 +183,30 @@ val CxxAbiModel.ninjaLogFile: File
  * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/.ninja_deps
  */
 val CxxAbiModel.ninjaDepsFile: File
-    get() = join(cxxBuildFolder, ".ninja_deps")
+    get() = join(redirectedCxxBuildFolder, ".ninja_deps")
+
+/**
+ * Path to the expected build.ninja for this ABI.
+ * For example, $moduleRootFolder/.cxx/Debug/3c254s6s/arm64-v8a/build.ninja
+ */
+val CxxAbiModel.ninjaBuildFile: File
+    get() = join(redirectedCxxBuildFolder, "build.ninja")
+
+private val CxxAbiModel.redirectedCxxBuildFolder : File get() {
+    if (cxxBuildFolder.resolve("build.ninja").isFile) return cxxBuildFolder
+    if (ninjaBuildLocationFile.isFile) {
+        return File(ninjaBuildLocationFile.readText().lineSequence().first()).parentFile
+    }
+    return cxxBuildFolder
+}
+
+/**
+ * Path to the expected build.ninja redirect file which is a file that contains the full path
+ * to the real build.ninja.
+ * For example, $moduleRootFolder/.cxx/Debug/3c254s6s/arm64-v8a/build.ninja.txt
+ */
+val CxxAbiModel.ninjaBuildLocationFile: File
+    get() = join(cxxBuildFolder, "build.ninja.txt")
 
 /**
  * Folder for .o files
@@ -193,6 +216,7 @@ val CxxAbiModel.objFolder: File
     get() = when(variant.module.buildSystem) {
         CMAKE -> join(cxxBuildFolder, "CMakeFiles")
         NDK_BUILD -> soFolder
+        NINJA -> soFolder
         else -> error("${variant.module.buildSystem}")
     }
 
@@ -401,14 +425,17 @@ val CxxAbiModel.platformCode
 /**
  * Construct a ninja command-line with [args] at the end.
  */
-fun CxxAbiModel.createNinjaCommand(vararg args: String) : List<String> {
+fun CxxAbiModel.createNinjaCommand(args: List<String>) : List<String> {
     val command = mutableListOf<String>()
     command.add(variant.module.ninjaExe!!.absolutePath)
     command.addAll(getBuildCommandArguments())
     command.add("-C")
-    command.add(cxxBuildFolder.absolutePath)
-    command.addAll(args.asList())
+    command.add(ninjaBuildFile.parentFile.absolutePath)
+    command.addAll(args)
     return command
 }
+
+fun CxxAbiModel.createNinjaCommand(vararg args: String) = createNinjaCommand(args.toList())
+
 
 
