@@ -29,8 +29,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
-import com.google.common.io.Resources
-import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.junit.Before
 import org.junit.Rule
@@ -493,6 +491,31 @@ class LibraryPublishingTest {
         PathSubject.assertThat(module).contains(Usage.USAGE_ATTRIBUTE.name)
         PathSubject.assertThat(module).doesNotContain(AgpVersionAttr.ATTRIBUTE.name)
         PathSubject.assertThat(module).doesNotContain(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+    }
+
+    // regression test for b/211725182
+    @Test
+    fun testAllVariantsWithProductFlavors() {
+        addPublication(DEFAULT)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants {
+                            allVariants()
+                        }
+                    }
+                    flavorDimensions 'price'
+                    productFlavors {
+                        free {}
+                        paid {}
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
     }
 
     private fun addPublication(componentName: String) {
