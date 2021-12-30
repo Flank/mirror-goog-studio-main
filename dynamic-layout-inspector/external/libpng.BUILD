@@ -33,6 +33,7 @@ cc_library(
             "-Wall",
             "-Werror",
             "-Wno-unused-parameter",
+            "-Wno-unused-but-set-variable",
         ],
     }),
     includes = [
