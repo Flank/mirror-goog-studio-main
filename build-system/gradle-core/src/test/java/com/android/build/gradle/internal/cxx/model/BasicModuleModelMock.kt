@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
@@ -62,7 +61,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.SetProperty
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
@@ -234,6 +232,8 @@ open class BasicModuleModelMock {
         )!!
     }
 
+    private val variantExperimentalProperties : MutableMap<String, Any> = mutableMapOf()
+
     private fun <T> any(): T {
         Mockito.any<T>()
         return uninitialized()
@@ -392,6 +392,7 @@ open class BasicModuleModelMock {
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
         doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
         doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
+        doReturn(variantExperimentalProperties).`when`(variantDslInfo).experimentalProperties
         doReturn(true).`when`(variantImpl).debuggable
 
         val ndkInfo = NdkR19Info(ndkFolder)

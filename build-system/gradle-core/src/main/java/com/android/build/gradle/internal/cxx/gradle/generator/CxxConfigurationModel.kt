@@ -19,11 +19,13 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
+import com.android.build.gradle.internal.cxx.configure.ninja
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
@@ -47,6 +49,7 @@ import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
@@ -108,6 +111,7 @@ data class CxxConfigurationParameters(
     val cxxCacheFolder: File,
     val buildSystem: NativeBuildSystem,
     val makeFile: File,
+    val configureScript: File?,
     val buildStagingFolder: File?,
     val moduleRootFolder: File,
     val buildDir: File,
@@ -185,10 +189,13 @@ fun tryCreateConfigurationParameters(
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
     val project = projectInfo.getProject()
+    val (buildSystem, makeFile, configureScript, buildStagingFolder) =
+        getProjectPath(variant.variantDslInfo, globalConfig.externalNativeBuild) ?: return null
 
-    val (buildSystem, makeFile, buildStagingFolder) =
-        getProjectPath(globalConfig.externalNativeBuild)
-            ?: return null
+    if (buildSystem == NINJA) {
+        warnln("This version of Android Gradle Plugin does not support the Ninja build system")
+        return null
+    }
 
     val cxxFolder = findCxxFolder(
         buildSystem,
@@ -278,6 +285,7 @@ fun tryCreateConfigurationParameters(
         cxxCacheFolder = cxxCacheFolder,
         buildSystem = buildSystem,
         makeFile = makeFile,
+        configureScript = configureScript,
         buildStagingFolder = buildStagingFolder,
         moduleRootFolder = project.projectDir,
         buildDir = project.buildDir,
@@ -315,11 +323,14 @@ fun tryCreateConfigurationParameters(
  * - If there are more than 1, then that is an error. The user has specified both cmake and
  *   ndkBuild in the same project.
  */
-private fun getProjectPath(config: ExternalNativeBuild)
-        : Triple<NativeBuildSystem, File, File?>? {
+private fun getProjectPath(
+    variantDslInfo : VariantDslInfo,
+    config: ExternalNativeBuild)
+        : NativeProjectPath? {
     val externalProjectPaths = listOfNotNull(
-        config.cmake.path?.let { Triple(CMAKE, it, config.cmake.buildStagingDirectory)},
-        config.ndkBuild.path?.let { Triple(NativeBuildSystem.NDK_BUILD, it, config.ndkBuild.buildStagingDirectory) })
+        variantDslInfo.ninja.path?.let { NativeProjectPath(NINJA, it, variantDslInfo.ninja.configure, variantDslInfo.ninja.buildStagingDirectory) },
+        config.cmake.path?.let { NativeProjectPath(CMAKE, it, null, config.cmake.buildStagingDirectory) },
+        config.ndkBuild.path?.let { NativeProjectPath(NDK_BUILD, it, null, config.ndkBuild.buildStagingDirectory) })
 
     return when {
         externalProjectPaths.size > 1 -> {
@@ -336,6 +347,13 @@ private fun getProjectPath(config: ExternalNativeBuild)
         else -> externalProjectPaths[0]
     }
 }
+
+private data class NativeProjectPath(
+    val buildSystem : NativeBuildSystem,
+    val makefile : File,
+    val configureScript : File?,
+    val buildStagingDirectory: File?
+)
 
 /**
  * This function is used at task execution time to construct a [CxxMetadataGenerator] to do the
@@ -358,6 +376,7 @@ fun createCxxMetadataGenerator(
         variant.module.gradleModulePathName, variant.variantName)
 
     return when (variant.module.buildSystem) {
+        NINJA -> error("TODO(192006965) Ninja Metadata Generator is not yet implemented")
         NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
             abi,
             variantBuilder

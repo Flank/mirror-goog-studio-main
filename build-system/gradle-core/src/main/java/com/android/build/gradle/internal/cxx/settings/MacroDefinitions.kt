@@ -114,6 +114,13 @@ enum class Macro(
         tag = "maxPlatform",
         example = "29",
         bind = CxxModuleModel::ndkMaxPlatform),
+    NDK_MODULE_MAKE_FILE(
+        description = "Path to the make file for the current build system type.",
+        environment = GRADLE,
+        tag = "moduleMakeFile",
+        example = "\$PROJECTS/MyProject/CMakeLists.txt",
+        ndkBuildExample = "\$PROJECTS/MyProject/Android.mk",
+        bind = CxxModuleModel::makeFile),
     NDK_PLATFORM_SYSTEM_VERSION(
         description = "The currently targeted Android system version, suitable for passing to " +
                 "CMake in CMAKE_SYSTEM_VERSION.",
@@ -271,14 +278,14 @@ enum class Macro(
         example = "app1",
         bind = CxxModuleModel::moduleName),
     NDK_MODULE_BUILD_ROOT(
-        description = "The default module-level CMake or ndk-build build root that gradle uses.",
+        description = "The default CMake, ndk-build, or Ninja build root folder without ABI.",
         environment = GRADLE,
         tag = "moduleBuildRoot",
         example = "${NDK_MODULE_DIR.ref}/.cxx",
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx",
         bind = CxxModuleModel::cxxFolder),
     NDK_BUILD_ROOT(
-        description = "The default CMake or ndk-build build root that gradle uses.",
+        description = "The default CMake, ndk-build, or Ninja build root folder that gradle uses.",
         environment = GRADLE,
         tag = "buildRoot",
         example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64",
@@ -402,6 +409,8 @@ enum class Macro(
 
     /**
      * Try to look up a value for this [Macro] from [instance]
+     * Returns null when the requested macro doesn't exist on [instance].
+     * Returns "" when the requested macro exists on [instance] but the macro value itself is null.
      */
     fun <T:Any> takeFrom(instance:T) : String? {
         return MACRO_DEFINITIONS_BINDINGS_GETTERS[instance::class to this]?.let { property ->

@@ -61,7 +61,7 @@ True if Android Gradle Plugin is hosting this CMakeSettings.json.
 - environment: ndk
 
 ## ${ndk.buildRoot}
-The default CMake or ndk-build build root that gradle uses.
+The default CMake, ndk-build, or Ninja build root folder that gradle uses.
 - cmake example: ${ndk.moduleDir}/.cxx/Debug/${ndk.configurationHash}/x86_64
 - ndk-build example: ${ndk.moduleDir}/build/.cxx/Debug/${ndk.configurationHash}/x86_64
 - environment: android-gradle
@@ -107,7 +107,7 @@ The module level build intermediates cxx subfolder.
 - environment: android-gradle
 
 ## ${ndk.moduleBuildRoot}
-The default module-level CMake or ndk-build build root that gradle uses.
+The default CMake, ndk-build, or Ninja build root folder without ABI.
 - cmake example: ${ndk.moduleDir}/.cxx
 - ndk-build example: ${ndk.moduleDir}/build/.cxx
 - environment: android-gradle
@@ -125,6 +125,12 @@ Name of the generator used by CMake.
 ## ${ndk.moduleDir}
 Folder of the module level build.gradle.
 - example: $PROJECTS/MyProject/Source/Android/app1
+- environment: android-gradle
+
+## ${ndk.moduleMakeFile}
+Path to the make file for the current build system type.
+- cmake example: $PROJECTS/MyProject/CMakeLists.txt
+- ndk-build example: $PROJECTS/MyProject/Android.mk
 - environment: android-gradle
 
 ## ${ndk.moduleName}

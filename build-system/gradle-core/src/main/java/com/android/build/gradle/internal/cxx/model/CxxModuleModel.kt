@@ -160,6 +160,11 @@ data class CxxModuleModel(
      *   ex, /path/to/ninja/ninja.exe
      */
     val ninjaExe: File?,
+
+    /**
+     * If present, a script to generate build.ninja
+     */
+    val configureScript: File?,
 )
 
 /** The user's CMakeSettings.json file next to CMakeLists.txt */
