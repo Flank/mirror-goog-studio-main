@@ -176,6 +176,25 @@ class AdaptNinjaToCxxBuildTest {
     }
 
     @Test
+    fun `shared C++ runtime file`() {
+        val (config, compileCommandsSummary) = adaptNinja("""
+             rule CLANG
+               command = wrap.sh /ndk/clang ${'$'}in -o ${'$'}out
+             build source.o : CLANG source.cpp
+             build lib.so : CLANG source.o /path/to/ndk/libc++_shared.so
+        """.trimIndent())
+
+        config.libraries.getValue("lib").apply {
+            assertThat(artifactName).isEqualTo("lib")
+            assertThat(hasPassthrough).isFalse()
+            assertThat(abi).isEqualTo("x86")
+            assertThat(output).isEqualTo(File("path/to/cxx/build/lib.so"))
+            assertThat(runtimeFiles.single()).isEqualTo(File("/path/to/ndk/libc++_shared.so"))
+        }
+        assertThat(compileCommandsSummary).contains("Compiler:    /ndk/clang")
+    }
+
+    @Test
     fun `simplest viable compiler wrapper`() {
         val (config, compileCommandsSummary) = adaptNinja("""
              rule CLANG
@@ -263,6 +282,17 @@ class AdaptNinjaToCxxBuildTest {
         assertThat(deconflictSourceFiles(listOf("source.cpp", "pch.pch"))).isEqualTo("source.cpp")
         assertThat(deconflictSourceFiles(listOf("pch.pch", "source.cpp"))).isEqualTo("source.cpp")
         assertThat(deconflictSourceFiles(listOf("pch.pch", "pch.pch"))).isEqualTo("pch.pch")
+    }
+
+    @Test
+    fun `check isPackageable`() {
+        assertThat(isPackageable("libshared.so")).isTrue()
+        assertThat(isPackageable("executable")).isTrue()
+        assertThat(isPackageable("/path/to/ndk/sysroot/libEGL.so")).isFalse()
+        assertThat(isPackageable("/path/to/ndk/runtime/libc++_shared.so")).isTrue()
+        assertThat(isPackageable("libstatic.a")).isFalse()
+        assertThat(isPackageable("C:/Users/jomof/AppData/Local/Android/Sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so")).isTrue()
+        assertThat(isPackageable("/path/to/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libEGL.so")).isFalse()
     }
 
     // Relevant test: CMakeBasicProjectTest#`bug 187448826 precompiled header works`
@@ -527,11 +557,11 @@ class AdaptNinjaToCxxBuildTest {
         assertThat(config.buildFiles.map { it.name }.distinct()).contains("GameEngine.vcxproj")
         config.libraries["GameApplication"]!!.apply {
             assertThat(hasPassthrough).isTrue()
-            assertThat(output.name).isEqualTo("libGameApplication.so")
+            assertThat(output!!.name).isEqualTo("libGameApplication.so")
         }
         config.libraries["GameEngine"]!!.apply {
             assertThat(hasPassthrough).isTrue()
-            assertThat(output.name).isEqualTo("libGameEngine.a")
+            assertThat(output!!.name).isEqualTo("libGameEngine.a")
         }
         val body = summarizeCompileCommandsJsonBin(
             buildNinja = buildNinja,
