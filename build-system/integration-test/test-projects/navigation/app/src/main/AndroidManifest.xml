@@ -23,6 +23,7 @@
         android:label="@string/app_label" >
         <activity
             android:name=".MainActivity"
+            android:exported="true"
             android:label="@string/activity_label" >
             <nav-graph android:value="@navigation/nav1" />
             <nav-graph android:value="@navigation/nav2" />
