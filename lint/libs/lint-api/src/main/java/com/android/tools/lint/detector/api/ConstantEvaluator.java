@@ -17,7 +17,6 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_OBJECT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
-import static org.jetbrains.uast.UastBinaryExpressionWithTypeKind.TYPE_CAST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -87,6 +86,7 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UResolvable;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.UastBinaryExpressionWithTypeKind;
 import org.jetbrains.uast.UastBinaryOperator;
 import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastPrefixOperator;
@@ -212,7 +212,7 @@ public class ConstantEvaluator {
                 return result;
             }
         } else if (node instanceof UBinaryExpressionWithType
-                && ((UBinaryExpressionWithType) node).getOperationKind() == TYPE_CAST) {
+                && ((UBinaryExpressionWithType) node).getOperationKind() == UastBinaryExpressionWithTypeKind.TypeCast.INSTANCE) {
             UBinaryExpressionWithType cast = (UBinaryExpressionWithType) node;
             Object operandValue = evaluate(cast.getOperand());
             if (operandValue instanceof Number) {
