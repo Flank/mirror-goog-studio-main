@@ -16,46 +16,85 @@
 
 package com.android.build.api.extension.impl
 
+import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantSelector
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import org.gradle.api.Action
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KClass
 
 /**
  * Registrar object to keep track of Variant API operations registered on the [Component]
  */
-class OperationsRegistrar<Component: ComponentIdentity> {
+open class OperationsRegistrar<Component: ComponentIdentity> {
 
-    private class Operation<Component: ComponentIdentity>(
-            val selector: VariantSelectorImpl,
-            val callBack: Action<Component>
+    private class Operation<Component : ComponentIdentity>(
+        val selector: VariantSelectorImpl,
+        val callBack: Action<Component>
     )
 
-    private val operations= mutableListOf<Operation<Component>>()
+    private val operations = mutableListOf<Operation<Component>>()
 
     private val noSelector = VariantSelectorImpl().all()
     private val actionsExecuted = AtomicBoolean(false)
 
     fun addOperation(
-            callback: Action<Component>,
-            selector: VariantSelector = noSelector
+        callback: Action<Component>,
+        selector: VariantSelector = noSelector
     ) {
         if (actionsExecuted.get()) {
-            throw RuntimeException("""
+            throw RuntimeException(
+                """
                 It is too late to add actions as the callbacks already executed.
                 Did you try to call beforeVariants or onVariants from the old variant API
                 'applicationVariants' for instance ? you should always call beforeVariants or
                 onVariants directly from the androidComponents DSL block.
-                """)
+                """
+            )
         }
         operations.add(Operation(selector as VariantSelectorImpl, callback))
     }
 
-    fun executeOperations(variant: Component) {
+    fun executeOperations(userVisibleVariant: Component) {
         actionsExecuted.set(true)
         operations.forEach { operation ->
-            if (operation.selector.appliesTo(variant)) {
-                operation.callBack.execute(variant)
+            if (operation.selector.appliesTo(userVisibleVariant)) {
+                operation.callBack.execute(userVisibleVariant)
+            }
+        }
+    }
+}
+
+class VariantOperationsRegistrar<Component: ComponentIdentity> : OperationsRegistrar<Component>() {
+
+    fun executeOperations(userVisibleVariant: Component, internalVariant: ComponentImpl) {
+        super.executeOperations(userVisibleVariant)
+        wireAllFinalizedBy(internalVariant)
+    }
+
+    private fun wireAllFinalizedBy(variant: ComponentImpl) {
+        InternalArtifactType::class.sealedSubclasses.forEach { kClass ->
+            handleFinalizedByForType(variant, kClass)
+        }
+    }
+
+    private fun handleFinalizedByForType(variant: ComponentImpl, type: KClass<out InternalArtifactType<*>>) {
+        type.objectInstance?.let { artifact ->
+            artifact.finalizingArtifact?.forEach { artifactFinalizedBy ->
+                val artifactContainer = when(artifactFinalizedBy) {
+                    is SingleArtifact -> variant.artifacts.getArtifactContainer(artifact)
+                    is MultipleArtifact -> variant.artifacts.getArtifactContainer(artifact)
+                    else -> throw RuntimeException("Unhandled artifact type : $artifactFinalizedBy")
+                }
+                artifactContainer.getTaskProviders().forEach { taskProvider ->
+                    taskProvider.configure {
+                        it.finalizedBy(variant.artifacts.get(artifact))
+                    }
+                }
             }
         }
     }

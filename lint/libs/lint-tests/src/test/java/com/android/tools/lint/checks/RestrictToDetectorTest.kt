@@ -2286,6 +2286,37 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testSingleAnnotationHandling() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.VisibleForTesting
+
+                open class Foo {
+                    @VisibleForTesting
+                    var updateCount = 0
+                        protected set
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                public class Bar extends Foo {
+                    public void test() {
+                        int count = getUpdateCount() + 1;
+                        setUpdateCount(count);
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).testModes(TestMode.DEFAULT).run().expectClean() // In C we flag this
+    }
+
     private val guavaVisibleForTestingAnnotation: TestFile = java(
         """
         package com.google.common.annotations;

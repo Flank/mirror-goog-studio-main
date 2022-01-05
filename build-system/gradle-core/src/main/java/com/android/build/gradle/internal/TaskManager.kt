@@ -1168,9 +1168,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                     .build())
             creationConfig
                     .artifacts
-                    .appendTo(
-                            MultipleArtifact.ALL_CLASSES_DIRS,
-                            creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES));
+                    .appendTo(MultipleArtifact.ALL_CLASSES_DIRS, RUNTIME_R_CLASS_CLASSES)
             return
         }
         createNonNamespacedResourceTasks(
@@ -1242,7 +1240,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 }
                 artifacts.appendTo(
                         MultipleArtifact.ALL_CLASSES_JARS,
-                        artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
+                        COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
 
                 if (!creationConfig.debuggable &&
                         !creationConfig.variantType.isForTesting &&
@@ -1391,7 +1389,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .artifacts
                 .appendTo(
                         MultipleArtifact.ALL_CLASSES_DIRS,
-                        creationConfig.artifacts.get(JAVAC));
+                        JAVAC)
     }
 
     /**
@@ -2331,7 +2329,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createPackagingTask(creationConfig: ApkCreationConfig) {
         // ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
         val taskContainer = creationConfig.taskContainer
-        val signedApk = creationConfig.signingConfig?.isSigningReady() ?: false
+        val signedApk = creationConfig.signingConfigImpl?.isSigningReady() ?: false
 
         /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
@@ -2376,7 +2374,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 null)
 
         // create the listing file redirect
-        val ideRedirectFileTask = taskFactory.register(
+        taskFactory.register(
             ListingFileRedirectTask.CreationAction(
                 creationConfig = creationConfig,
                 taskSuffix = "Apk",
@@ -2390,7 +2388,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .configure { task: Task ->
                     task.dependsOn(
                             creationConfig.artifacts.get(SingleArtifact.APK),
-                            ideRedirectFileTask
                     )
                 }
 
@@ -2414,7 +2411,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createValidateSigningTask(creationConfig: ApkCreationConfig) {
-        if (creationConfig.signingConfig?.isSigningReady() != true) {
+        if (creationConfig.signingConfigImpl?.isSigningReady() != true) {
             return
         }
 
@@ -2573,7 +2570,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createAssembleTask(component: ComponentImpl) {
+    private fun createAssembleTask(component: ComponentImpl) {
         taskFactory.register(
                 component.computeTaskName("assemble"),
                 null /*preConfigAction*/,
@@ -2593,7 +2590,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         )
     }
 
-    fun createBundleTask(component: ComponentImpl) {
+    private fun createBundleTask(component: ComponentImpl) {
         taskFactory.register(
                 component.computeTaskName("bundle"),
                 null,
@@ -2601,8 +2598,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     override fun configure(task: Task) {
                         task.description = "Assembles bundle for variant " + component.name
                         task.dependsOn(component.artifacts.get(SingleArtifact.BUNDLE))
-                        task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL))
-                        task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE))
                     }
                 },
                 object : TaskProviderCallback<Task> {

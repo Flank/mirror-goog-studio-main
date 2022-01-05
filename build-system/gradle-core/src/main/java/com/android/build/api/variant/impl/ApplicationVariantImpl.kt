@@ -18,7 +18,9 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
+import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
@@ -90,7 +92,7 @@ open class ApplicationVariantImpl @Inject constructor(
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                     .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
+                            null, taskCreationServices.regularFile(internalServices.provider { it })
                     )
         }
     }
@@ -118,15 +120,17 @@ open class ApplicationVariantImpl @Inject constructor(
         )
     }
 
-    override val signingConfig: SigningConfigImpl? by lazy {
-        variantDslInfo.signingConfig?.let {
-            SigningConfigImpl(
-                it,
-                internalServices,
-                minSdkVersion.apiLevel,
-                internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-            )
-        }
+    override val signingConfigImpl: SigningConfigImpl? by lazy {
+        signingConfig
+    }
+
+    override val signingConfig: SigningConfigImpl by lazy {
+        SigningConfigImpl(
+            variantDslInfo.signingConfig,
+            internalServices,
+            minSdkVersion.apiLevel,
+            internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+        )
     }
 
     override val packaging: ApkPackaging by lazy {
@@ -140,9 +144,9 @@ open class ApplicationVariantImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
-    override var androidTest: AndroidTest? = null
+    override var androidTest: AndroidTestImpl? = null
 
-    override var testFixtures: TestFixtures? = null
+    override var testFixtures: TestFixturesImpl? = null
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)

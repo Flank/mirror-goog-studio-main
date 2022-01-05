@@ -93,7 +93,8 @@ open class TestVariantImpl @Inject constructor(
         variantDslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                     .addInitialProvider(
-                            taskCreationServices.regularFile(internalServices.provider { it })
+                        null,
+                        taskCreationServices.regularFile(internalServices.provider { it })
                     )
         }
     }
@@ -189,7 +190,7 @@ open class TestVariantImpl @Inject constructor(
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()
 
-    override val signingConfig: SigningConfigImpl? by lazy {
+    override val signingConfigImpl: SigningConfigImpl? by lazy {
         variantDslInfo.signingConfig?.let {
             SigningConfigImpl(
                 it,

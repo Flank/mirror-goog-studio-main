@@ -85,7 +85,7 @@ class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator:
         // override. In that case, we need to just link the source to the target.
         if (singleStorage[type] == null)
             singleStorage[type] = container
-        else singleStorage[type]?.setInitialProvider(container.get())
+        else singleStorage[type]?.transferFrom(container)
     }
 
     internal fun copy(type: Artifact.Multiple<T>,
@@ -95,7 +95,7 @@ class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator:
         // override. In that case, we need to just link the source to the target.
         if (multipleStorage[type] == null)
             multipleStorage[type] = container
-        else multipleStorage[type]?.setInitialProvider(container.get())
+        else multipleStorage[type]?.addInitialProvider(container)
     }
 
     fun lock() {
