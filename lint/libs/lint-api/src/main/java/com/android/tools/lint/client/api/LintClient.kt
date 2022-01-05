@@ -327,10 +327,21 @@ abstract class LintClient {
      * the content of the file.
      */
     open fun getXmlDocument(file: File, contents: CharSequence? = null): Document? {
-        return if (contents?.isNotBlank() == true) {
-            xmlParser.parseXml(contents, file)
-        } else {
-            xmlParser.parseXml(file)
+        return try {
+            if (contents?.isNotBlank() == true) {
+                xmlParser.parseXml(contents, file)
+            } else {
+                xmlParser.parseXml(file)
+            }
+        } catch (exception: Exception) {
+            val message = exception.message ?: "${exception.javaClass.simpleName} attempting to read and parse $file"
+            report(
+                client = this,
+                issue = IssueRegistry.LINT_ERROR,
+                message = TextFormat.TEXT.convertTo(message, TextFormat.RAW), // ensure \ paths are escaped etc
+                file = file
+            )
+            null
         }
     }
 
