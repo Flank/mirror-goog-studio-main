@@ -212,7 +212,8 @@ public class ConstantEvaluator {
                 return result;
             }
         } else if (node instanceof UBinaryExpressionWithType
-                && ((UBinaryExpressionWithType) node).getOperationKind() == UastBinaryExpressionWithTypeKind.TypeCast.INSTANCE) {
+                && ((UBinaryExpressionWithType) node).getOperationKind()
+                        == UastBinaryExpressionWithTypeKind.TypeCast.INSTANCE) {
             UBinaryExpressionWithType cast = (UBinaryExpressionWithType) node;
             Object operandValue = evaluate(cast.getOperand());
             if (operandValue instanceof Number) {
