@@ -648,6 +648,7 @@ class AdaptNinjaToCxxBuildTest {
                 error("$original content changed: \\n${explainLineDifferences(originalText, currentText)}")
             }
         }
+        original.parentFile.mkdirs()
         original.writeText(currentText)
         return currentText
     }
