@@ -12499,6 +12499,18 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "androidx.lifecycle.lifecycle-livedata-core-ktx_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-livedata-core-ktx/2.4.0/lifecycle-livedata-core-ktx-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-livedata-core-ktx/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-livedata-core_2.4.0",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.5.30",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "androidx.lifecycle.lifecycle-livedata-core_2.0.0",
     pom = "repository/androidx/lifecycle/lifecycle-livedata-core/2.0.0/lifecycle-livedata-core-2.0.0.pom",
     repo_root_path = "repository",
@@ -12564,6 +12576,19 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "androidx.lifecycle.lifecycle-livedata-core_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-livedata-core/2.4.0/lifecycle-livedata-core-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-livedata-core/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-common_2.4.0",
+        "androidx.arch.core.core-common_2.1.0",
+        "androidx.arch.core.core-runtime_2.1.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
     pom = "repository/androidx/lifecycle/lifecycle-livedata-ktx/2.2.0/lifecycle-livedata-ktx-2.2.0.pom",
     repo_root_path = "repository",
@@ -12587,6 +12612,20 @@ maven_artifact(
         "androidx.lifecycle.lifecycle-livedata-core-ktx_2.3.1",
         "org.jetbrains.kotlin.kotlin-stdlib_1.4.20",
         "org.jetbrains.kotlinx.kotlinx-coroutines-core_1.4.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.lifecycle.lifecycle-livedata-ktx_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-livedata-ktx/2.4.0/lifecycle-livedata-ktx-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-livedata-ktx/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-livedata_2.4.0",
+        "androidx.lifecycle.lifecycle-livedata-core-ktx_2.4.0",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.5.30",
+        "org.jetbrains.kotlinx.kotlinx-coroutines-core_1.5.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -12631,12 +12670,37 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "androidx.lifecycle.lifecycle-livedata_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-livedata/2.4.0/lifecycle-livedata-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-livedata/2.4.0",
+    deps = [
+        "androidx.arch.core.core-runtime_2.1.0",
+        "androidx.lifecycle.lifecycle-livedata-core_2.4.0",
+        "androidx.arch.core.core-common_2.1.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "androidx.lifecycle.lifecycle-process_2.2.0",
     pom = "repository/androidx/lifecycle/lifecycle-process/2.2.0/lifecycle-process-2.2.0.pom",
     repo_root_path = "repository",
     repo_path = "androidx/lifecycle/lifecycle-process/2.2.0",
     deps = [
         "androidx.lifecycle.lifecycle-runtime_2.2.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.lifecycle.lifecycle-process_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-process/2.4.0/lifecycle-process-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-process/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-runtime_2.4.0",
+        "androidx.startup.startup-runtime_1.0.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -12664,6 +12728,20 @@ maven_artifact(
         "androidx.lifecycle.lifecycle-runtime_2.3.1",
         "org.jetbrains.kotlin.kotlin-stdlib_1.4.20",
         "org.jetbrains.kotlinx.kotlinx-coroutines-android_1.4.1",
+        "androidx.annotation.annotation_1.0.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.lifecycle.lifecycle-runtime-ktx_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-runtime-ktx/2.4.0/lifecycle-runtime-ktx-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-runtime-ktx/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-runtime_2.4.0",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.5.30",
+        "org.jetbrains.kotlinx.kotlinx-coroutines-android_1.5.0",
         "androidx.annotation.annotation_1.0.0",
     ],
     visibility = ["//visibility:public"],
@@ -12751,6 +12829,20 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "androidx.lifecycle.lifecycle-runtime_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-runtime/2.4.0/lifecycle-runtime-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-runtime/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-common_2.4.0",
+        "androidx.arch.core.core-common_2.1.0",
+        "androidx.annotation.annotation_1.1.0",
+        "androidx.arch.core.core-runtime_2.1.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "androidx.lifecycle.lifecycle-service_2.0.0",
     pom = "repository/androidx/lifecycle/lifecycle-service/2.0.0/lifecycle-service-2.0.0.pom",
     repo_root_path = "repository",
@@ -12768,6 +12860,17 @@ maven_artifact(
     repo_path = "androidx/lifecycle/lifecycle-service/2.2.0",
     deps = [
         "androidx.lifecycle.lifecycle-runtime_2.2.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.lifecycle.lifecycle-service_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-service/2.4.0/lifecycle-service-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-service/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-runtime_2.4.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -12794,6 +12897,19 @@ maven_artifact(
         "androidx.lifecycle.lifecycle-viewmodel_2.3.1",
         "org.jetbrains.kotlin.kotlin-stdlib_1.4.20",
         "org.jetbrains.kotlinx.kotlinx-coroutines-android_1.4.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.lifecycle.lifecycle-viewmodel-ktx_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-viewmodel-ktx/2.4.0/lifecycle-viewmodel-ktx-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-viewmodel-ktx/2.4.0",
+    deps = [
+        "androidx.lifecycle.lifecycle-viewmodel_2.4.0",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.5.30",
+        "org.jetbrains.kotlinx.kotlinx-coroutines-android_1.5.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -12930,6 +13046,18 @@ maven_artifact(
     repo_path = "androidx/lifecycle/lifecycle-viewmodel/2.3.1",
     deps = [
         "androidx.annotation.annotation_1.1.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.lifecycle.lifecycle-viewmodel_2.4.0",
+    pom = "repository/androidx/lifecycle/lifecycle-viewmodel/2.4.0/lifecycle-viewmodel-2.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/lifecycle/lifecycle-viewmodel/2.4.0",
+    deps = [
+        "androidx.annotation.annotation_1.1.0",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.5.30",
     ],
     visibility = ["//visibility:public"],
 )
