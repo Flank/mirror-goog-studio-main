@@ -217,7 +217,6 @@ gradle_connected_test(
         "//tools/base/build-system/integration-test/connected:databinding_prebuilts",
         "//tools/base/build-system/integration-test:utp_plugins",
     ],
-    tags = ["manual"],  # TODO(b/203802678): Re-enable this test when fixed.
     deps = TEST_DEPS,
 )
 
@@ -236,13 +235,13 @@ gradle_connected_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:androidx_test_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/integration-test/connected:prebuilts",
         "//tools/base/build-system/integration-test/connected:databinding_prebuilts",
         "//tools/base/build-system/integration-test:utp_plugins",
     ],
-    tags = ["manual"],  # TODO(b/203802678): Re-enable this test when fixed.
     deps = TEST_DEPS,
 )
 
