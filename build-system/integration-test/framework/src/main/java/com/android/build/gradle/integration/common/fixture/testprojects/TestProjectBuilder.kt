@@ -227,6 +227,9 @@ interface DependenciesBuilder {
      */
     fun api(dependency: Any)
 
+    /** Adds a dependency to the runtimeOnly configuration. See [implementation] for details. */
+    fun runtimeOnly(dependency: Any)
+
     /**
      * adds a dependency in the testImplementation scope.
      *
