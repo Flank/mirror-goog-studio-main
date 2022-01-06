@@ -215,7 +215,14 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("not specify an $AAR_FORMAT_VERSION_PROPERTY value")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' does not specify an
+                              aarFormatVersion value, which is a required value.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -233,12 +240,11 @@ class CheckAarMetadataTaskTest {
             assertThat(Throwables.getRootCause(e).message).startsWith("""
                 An issue was found when checking AAR metadata:
 
-                  1.  The aarFormatVersion (99999) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
+                  1.  Dependency 'library.aar' has an aarFormatVersion value of
+                      '99999', which is not compatible with this version of the
+                      Android Gradle plugin.
+
                       Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: library.aar.
-                      AAR metadata file:
             """.trimIndent())
         }
     }
@@ -255,7 +261,16 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_FORMAT_VERSION_PROPERTY value.")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' has an invalid
+                              aarFormatVersion value (invalid).
+
+                              Invalid revision: invalid
+                    """.trimIndent()
+                )
         }
     }
 
@@ -271,7 +286,14 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("not specify an $AAR_METADATA_VERSION_PROPERTY value")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' does not specify an
+                              aarMetadataVersion value, which is a required value.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -289,12 +311,11 @@ class CheckAarMetadataTaskTest {
             assertThat(Throwables.getRootCause(e).message).startsWith("""
                 An issue was found when checking AAR metadata:
 
-                  1.  The aarMetadataVersion (99999) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
+                  1.  Dependency 'library.aar' has an aarMetadataVersion value of
+                      '99999', which is not compatible with this version of the
+                      Android Gradle plugin.
+
                       Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: library.aar.
-                      AAR metadata file:
                 """.trimIndent())
         }
     }
@@ -328,7 +349,16 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_METADATA_VERSION_PROPERTY value.")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' has an invalid
+                              aarMetadataVersion value (invalid).
+
+                              Invalid revision: invalid
+                    """.trimIndent()
+                )
         }
     }
 
@@ -345,7 +375,16 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $MIN_COMPILE_SDK_PROPERTY value.")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' has an invalid
+                              minCompileSdk value (invalid).
+
+                              minCompileSdk must be an integer.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -362,14 +401,11 @@ class CheckAarMetadataTaskTest {
             project.executor().run(":app:assembleDebug")
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message).contains(AAR_FORMAT_VERSION_PROPERTY)
+            assertThat(Throwables.getRootCause(e).message).contains(AAR_METADATA_VERSION_PROPERTY)
+            assertThat(Throwables.getRootCause(e).message).contains(MIN_COMPILE_SDK_PROPERTY)
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_FORMAT_VERSION_PROPERTY value.")
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_METADATA_VERSION_PROPERTY value.")
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $MIN_COMPILE_SDK_PROPERTY value.")
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY value")
+                .contains(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
         }
     }
 

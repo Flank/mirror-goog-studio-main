@@ -117,12 +117,11 @@ class CheckAarMetadataTaskTest {
             assertThat(e.message).isEqualTo("""
                 An issue was found when checking AAR metadata:
 
-                  1.  The aarFormatVersion (2.0) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
+                  1.  Dependency 'displayName' has an aarFormatVersion value of
+                      '2.0', which is not compatible with this version of the
+                      Android Gradle plugin.
+
                       Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: displayName.
-                      AAR metadata file: ${aarMetadataFile.absolutePath}.
             """.trimIndent())
         }
     }
@@ -157,14 +156,13 @@ class CheckAarMetadataTaskTest {
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             assertThat(e.message).isEqualTo("""
-               An issue was found when checking AAR metadata:
+                An issue was found when checking AAR metadata:
 
-                 1.  The aarMetadataVersion (2.0) specified in a dependency's AAR metadata
-                     (META-INF/com/android/build/gradle/aar-metadata.properties)
-                     is not compatible with this version of the Android Gradle plugin.
-                     Please upgrade to a newer version of the Android Gradle plugin.
-                     Dependency: displayName.
-                     AAR metadata file: ${aarMetadataFile.absolutePath}.
+                  1.  Dependency 'displayName' has an aarMetadataVersion value of
+                      '2.0', which is not compatible with this version of the
+                      Android Gradle plugin.
+
+                      Please upgrade to a newer version of the Android Gradle plugin.
             """.trimIndent())
         }
     }
@@ -348,19 +346,17 @@ class CheckAarMetadataTaskTest {
             assertThat(e.message).isEqualTo("""
                 4 issues were found when checking AAR metadata:
 
-                  1.  The aarFormatVersion (2.0) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
-                      Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: displayName.
-                      AAR metadata file: ${aarMetadataFile.absolutePath}.
+                  1.  Dependency 'displayName' has an aarFormatVersion value of
+                      '2.0', which is not compatible with this version of the
+                      Android Gradle plugin.
 
-                  2.  The aarMetadataVersion (2.0) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
                       Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: displayName.
-                      AAR metadata file: ${aarMetadataFile.absolutePath}.
+
+                  2.  Dependency 'displayName' has an aarMetadataVersion value of
+                      '2.0', which is not compatible with this version of the
+                      Android Gradle plugin.
+
+                      Please upgrade to a newer version of the Android Gradle plugin.
 
                   3.  Dependency 'displayName' requires libraries and applications that
                       depend on it to compile against version 28 or later of the
