@@ -26,7 +26,7 @@ import com.android.tools.idea.wizard.template.impl.activities.composeActivityMat
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.themeKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.typeKt
 
-const val COMPOSE_MATERIAL3_KOTLIN_VERSION = "1.5.31"
+const val COMPOSE_MATERIAL3_KOTLIN_VERSION = "1.6.0"
 
 private fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
     val projectData = data.projectTemplateData
@@ -48,10 +48,10 @@ fun RecipeExecutor.composeActivityRecipe(
   addAllKotlinDependencies(moduleData)
 
   val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
-  setExtVar(composeVersionVarName, "1.1.0-beta01")
+  setExtVar(composeVersionVarName, "1.1.0-rc01")
 
   addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
-  addDependency(mavenCoordinate = "androidx.compose.material3:material3:1.0.0-alpha01")
+  addDependency(mavenCoordinate = "androidx.compose.material3:material3:1.0.0-alpha02")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}",
                 configuration = "debugImplementation")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeVersionVarName}")
