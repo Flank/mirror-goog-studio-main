@@ -95,7 +95,7 @@ open class LintFixPerformer constructor(
     ) {
         val location = getLocation(incident, lintFix)
         val fileData = getFileData(fileMap, location.file)
-        if (addEdits(fileData, location, lintFix)) {
+        if (addEdits(fileData, location, incident, lintFix)) {
             incident.wasAutoFixed = true
         }
     }
@@ -118,12 +118,13 @@ open class LintFixPerformer constructor(
     @VisibleForTesting
     fun fix(
         file: File,
+        incident: Incident,
         fixes: List<LintFix>,
         text: String = file.readText(Charsets.UTF_8)
     ): Boolean {
         val pendingEditFile = PendingEditFile(client, file, text)
         fixes.filter { canAutoFix(it, requireAutoFixable) }.forEach {
-            addEdits(pendingEditFile, null, it)
+            addEdits(pendingEditFile, null, incident, it)
         }
         return applyEdits(listOf(pendingEditFile))
     }
@@ -334,20 +335,21 @@ open class LintFixPerformer constructor(
     private fun addEdits(
         file: PendingEditFile,
         location: Location?,
+        incident: Incident,
         lintFix: LintFix
     ): Boolean {
         return if (lintFix is ReplaceString) {
-            addReplaceString(file, lintFix, location)
+            addReplaceString(file, incident, lintFix, location)
         } else if (lintFix is SetAttribute) {
             addSetAttribute(file, lintFix, location)
         } else if (lintFix is AnnotateFix) {
-            addAnnotation(file, lintFix, location)
+            addAnnotation(file, incident, lintFix, location)
         } else if (lintFix is CreateFileFix) {
             addCreateFile(file, lintFix)
         } else if (lintFix is LintFixGroup && lintFix.type == GroupType.COMPOSITE) {
             var all = true
             for (nested in lintFix.fixes) {
-                if (!addEdits(file, location, nested)) {
+                if (!addEdits(file, location, incident, nested)) {
                     all = false
                 }
             }
@@ -359,13 +361,14 @@ open class LintFixPerformer constructor(
 
     private fun addAnnotation(
         file: PendingEditFile,
+        incident: Incident,
         annotateFix: AnnotateFix,
         fixLocation: Location?
     ): Boolean {
         val replaceFix = createAnnotationFix(
             annotateFix, annotateFix.range ?: fixLocation, file.initialText
         )
-        return addReplaceString(file, replaceFix, fixLocation)
+        return addReplaceString(file, incident, replaceFix, fixLocation)
     }
 
     private fun addCreateFile(
@@ -582,6 +585,7 @@ open class LintFixPerformer constructor(
 
     private fun addReplaceString(
         file: PendingEditFile,
+        incident: Incident,
         replaceFix: ReplaceString,
         fixLocation: Location?
     ): Boolean {
@@ -660,9 +664,15 @@ open class LintFixPerformer constructor(
                         oldString +
                         "\" in \"" +
                         locationRange +
-                        "\" as suggested in the quickfix. Consider calling " +
-                        "ReplaceStringBuilder#range() to set a larger range to " +
-                        "search than the default highlight range."
+                        "\" in " +
+                        file.client.getDisplayPath(null, file.file) +
+                        " as suggested in the quickfix.\n" +
+                        "\n" +
+                        "Consider calling ReplaceStringBuilder#range() to set a larger range to\n" +
+                        "search than the default highlight range.\n" +
+                        "\n" +
+                        "(This fix is associated with the issue id `${incident.issue.id}`,\n" +
+                        "reported via ${incident.issue.implementation.detectorClass.name}.)"
                 )
             }
         } else {
@@ -675,7 +685,12 @@ open class LintFixPerformer constructor(
                         oldPattern +
                         "\" in \"" +
                         locationRange +
-                        "\" as suggested in the quickfix"
+                        "\" in " +
+                        file.client.getDisplayPath(null, file.file) +
+                        " as suggested in the quickfix.\n" +
+                        "\n" +
+                        "(This fix is associated with the issue id `${incident.issue.id}`,\n" +
+                        "reported via ${incident.issue.implementation.detectorClass.name}.)"
                 )
             } else {
                 startOffset = start.offset
