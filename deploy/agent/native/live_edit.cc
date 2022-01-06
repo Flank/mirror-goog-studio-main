@@ -133,6 +133,8 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
       bool result = recompose.InvalidateGroupsWithKey(
           reloader, jni->NewStringUTF(target_class.class_name().c_str()),
           req.start_offset(), req.end_offset(), error);
+      Log::V("InvalidateGroupsWithKey %d, %d", req.start_offset(),
+             req.end_offset());
       if (!result) {
         Log::E("%s", error.c_str());
         resp.set_status(proto::LiveEditResponse::ERROR);
