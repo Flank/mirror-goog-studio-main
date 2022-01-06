@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-@file:JvmName("TestVersions")
 package com.android.build.gradle.integration.common.fixture
 
-const val DEFAULT_COMPILE_SDK_VERSION = 31
-const val DEFAULT_MIN_SDK_VERSION = 14
-const val SUPPORT_LIB_MIN_SDK = 14
-const val NDK_19_SUPPORT_LIB_MIN_SDK = 21
+import com.android.sdklib.SdkVersionInfo
+import com.google.common.truth.Truth.assertWithMessage
+import org.junit.Test
 
-const val ANDROIDX_VERSION = "1.0.0"
-const val ANDROIDX_CONSTRAINT_LAYOUT_VERSION = "1.1.3"
-
-const val SUPPORT_LIB_VERSION = "28.0.0"
-const val SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION = "1.0.2"
-const val ANDROID_ARCH_VERSION = "1.1.1"
-const val TEST_SUPPORT_LIB_VERSION = "1.0.2"
-
-const val PLAY_SERVICES_VERSION = "15.0.1"
-
-const val DESUGAR_DEPENDENCY_VERSION = "1.1.5"
+/** Test to ensure that the test versions don't fall too far behind other versions */
+class TestVersionsTest {
+    @Test
+    fun checkCompileSdkVersion() {
+        assertWithMessage("The compile sdk version used for tests should be recent")
+            .that(DEFAULT_COMPILE_SDK_VERSION)
+            .named("TestVersions DEFAULT_COMPILE_SDK_VERSION")
+            .isAtLeast(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API - 1)
+    }
+}
