@@ -328,7 +328,7 @@ class GradleTestProject @JvmOverloads internal constructor(
                 DEFAULT_COMPILE_SDK_VERSION =
                     MoreObjects.firstNonNull(
                         envCustomCompileSdk,
-                        SdkVersionInfo.HIGHEST_KNOWN_STABLE_API.toString()
+                        com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION.toString()
                     )
             } catch (t: Throwable) {
                 // Print something to stdout, to give us a chance to debug initialization problems.
