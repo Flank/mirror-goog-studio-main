@@ -17,20 +17,21 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.SdkConstants.CMAKE_DIR_PROPERTY
-import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
-import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.CmakeVersionRequirements
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
+import com.android.build.gradle.internal.cxx.configure.NinjaLocator
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
+import com.android.build.gradle.internal.cxx.os.exe
 import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -43,7 +44,8 @@ fun createCxxModuleModel(
     sdkComponents : SdkComponentsBuildService,
     androidLocationProvider: AndroidLocationsProvider,
     configurationParameters: CxxConfigurationParameters,
-    cmakeLocator: CmakeLocator
+    cmakeLocator: CmakeLocator,
+    ninjaLocator: NinjaLocator
 ) : CxxModuleModel {
 
     val cxxFolder = configurationParameters.cxxFolder
@@ -94,7 +96,6 @@ fun createCxxModuleModel(
     val ndkMetaAbiList = time("create-ndk-meta-abi-list") { NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList }
     val cmake = time("create-cmake-model") {
         if (configurationParameters.buildSystem == CMAKE) {
-            val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
             val cmakeFolder =
                     cmakeLocator.findCmakePath(
                             configurationParameters.cmakeVersion,
@@ -105,20 +106,26 @@ fun createCxxModuleModel(
             val cmakeExe =
                     if (cmakeFolder == null) null
                     else join(cmakeFolder, "bin", "cmake$exe")
-            val ninjaExe =
-                    cmakeExe?.parentFile?.resolve("ninja$exe")
-                            ?.takeIf { it.exists() }
             CxxCmakeModuleModel(
                     minimumCmakeVersion =
                     CmakeVersionRequirements(configurationParameters.cmakeVersion).effectiveRequestVersion,
                     isValidCmakeAvailable = cmakeFolder != null,
-                    cmakeExe = cmakeExe,
-                    ninjaExe = ninjaExe
+                    cmakeExe = cmakeExe
             )
 
         } else {
             null
         }
+    }
+
+    val ninjaExe = when(configurationParameters.buildSystem) {
+        NINJA, CMAKE -> {
+            ninjaLocator.findNinjaPath(
+                cmake?.cmakeExe?.parentFile,
+                sdkComponents.sdkDirectoryProvider.get().asFile
+            )
+        }
+        else -> null
     }
 
     return CxxModuleModel(
@@ -141,15 +148,11 @@ fun createCxxModuleModel(
         gradleModulePathName = configurationParameters.gradleModulePathName,
         moduleRootFolder = configurationParameters.moduleRootFolder,
         stlSharedObjectMap =
-            ndk.ndkInfo.supportedStls
-                .map { stl ->
-                    Pair(
-                        stl,
-                        ndk.ndkInfo.getStlSharedObjectFiles(stl, ndk.ndkInfo.supportedAbis)
-                    )
-                }
-                .toMap(),
+        ndk.ndkInfo.supportedStls.associateWith { stl ->
+            ndk.ndkInfo.getStlSharedObjectFiles(stl, ndk.ndkInfo.supportedAbis)
+        },
         outputOptions = configurationParameters.outputOptions,
+        ninjaExe = ninjaExe
     )
 }
 
@@ -161,6 +164,7 @@ fun createCxxModuleModel(
     sdkComponents,
     androidLocationProvider,
     configurationParameters,
-    CmakeLocator()
+    CmakeLocator(),
+    NinjaLocator()
 )
 

@@ -125,6 +125,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DataBindingDetector.ESCAPE_XML,
                 DateFormatDetector.DATE_FORMAT,
                 DateFormatDetector.WEEK_YEAR,
+                DefaultEncodingDetector.ISSUE,
                 DeletedProviderDetector.ISSUE,
                 DeprecationDetector.ISSUE,
                 DiffUtilDetector.ISSUE,
@@ -202,6 +203,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 IconDetector.WEBP_UNSUPPORTED,
                 IgnoreWithoutReasonDetector.ISSUE,
                 IncludeDetector.ISSUE,
+                IndentationDetector.ISSUE,
                 InefficientWeightDetector.BASELINE_WEIGHTS,
                 InefficientWeightDetector.INEFFICIENT_WEIGHT,
                 InefficientWeightDetector.NESTED_WEIGHTS,
@@ -436,7 +438,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ViewTypeDetector.WRONG_VIEW_CAST,
                 WakelockDetector.ISSUE,
                 WakelockDetector.TIMEOUT,
-                WearableConfigurationActionDetector.ISSUE,
+                WearableConfigurationActionDetector.ACTION_DUPLICATE,
+                WearableConfigurationActionDetector.CONFIGURATION_ACTION,
+                WatchFaceForAndroidXDetector.ISSUE,
                 WatchFaceEditorDetector.ISSUE,
                 WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE,
                 WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE,
@@ -527,7 +531,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 scope.contains(Scope.ALL_RESOURCE_FILES) -> initialSize += 12
             }
             when {
-                scope.contains(Scope.JAVA_FILE) -> initialSize += 151
+                scope.contains(Scope.JAVA_FILE) -> initialSize += 180
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
                 scope.contains(Scope.MANIFEST) -> initialSize += 70
                 scope.contains(Scope.GRADLE_FILE) -> initialSize += 24

@@ -173,11 +173,11 @@ class StringOption(
      */
     override fun getValue(configuration: Configuration): String? {
         ensureRegistered()
-        return configuration.getOption(issue, name, defaultValue)
+        return configuration.getOption(this) as String? ?: defaultValue
     }
 
     override fun getValue(context: Context): String? =
-        getValue(context.client.configurations.getConfigurationForFile(context.file))
+        getValue(context.findConfiguration(context.file))
 
     override fun defaultAsString(): String? {
         return defaultValue?.let { "\"$it\"" }
@@ -201,11 +201,13 @@ class BooleanOption(
 ) : Option(name, description, explanation) {
     override fun getValue(configuration: Configuration): Boolean {
         ensureRegistered()
-        return configuration.getOptionAsBoolean(issue, name, defaultValue)
+        return configuration.getOption(this) as Boolean? ?: defaultValue
     }
 
-    override fun getValue(context: Context): Boolean =
-        getValue(context.client.configurations.getConfigurationForFile(context.file))
+    override fun getValue(context: Context): Boolean {
+        val configuration = context.findConfiguration(context.file)
+        return getValue(configuration)
+    }
 
     override fun defaultAsString(): String {
         return defaultValue.toString()
@@ -234,11 +236,11 @@ class IntOption(
 ) : Option(name, description, explanation) {
     override fun getValue(configuration: Configuration): Int {
         ensureRegistered()
-        return configuration.getOptionAsInt(issue, name, defaultValue)
+        return configuration.getOption(this) as Int? ?: defaultValue
     }
 
     override fun getValue(context: Context): Int =
-        getValue(context.client.configurations.getConfigurationForFile(context.file))
+        getValue(context.findConfiguration(context.file))
 
     override fun rangeAsString(): String? {
         if (min == Int.MIN_VALUE) {
@@ -280,11 +282,11 @@ class FloatOption(
 ) : Option(name, description, explanation) {
     override fun getValue(configuration: Configuration): Float {
         ensureRegistered()
-        return configuration.getOption(issue, name, null)?.toFloat() ?: defaultValue
+        return configuration.getOption(this) as Float? ?: defaultValue
     }
 
     override fun getValue(context: Context): Float =
-        getValue(context.client.configurations.getConfigurationForFile(context.file))
+        getValue(context.findConfiguration(context.file))
 
     override fun rangeAsString(): String? {
         if (min == Float.MIN_VALUE) {
@@ -320,11 +322,11 @@ class FileOption(
 ) : Option(name, description, explanation) {
     override fun getValue(configuration: Configuration): File? {
         ensureRegistered()
-        return configuration.getOptionAsFile(issue, name, defaultValue)
+        return configuration.getOption(this) as File? ?: defaultValue
     }
 
     override fun getValue(context: Context): File? =
-        getValue(context.client.configurations.getConfigurationForFile(context.file))
+        getValue(context.findConfiguration(context.file))
 
     override fun defaultAsString(): String? {
         return defaultValue?.path

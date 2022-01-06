@@ -193,6 +193,7 @@ class AvdManagerTest {
                 anyString(),
                 any(File::class.java),
                 any(File::class.java),
+                anyString(),
                 any(ILogger::class.java),
                 anyString()))
             // first return false to force generation, then return true to assert success.
@@ -204,7 +205,7 @@ class AvdManagerTest {
             "device1",
             "Pixel 2")
 
-        manager.loadSnapshotIfNeeded("device1")
+        manager.loadSnapshotIfNeeded("device1", "auto-no-window")
 
         verify(snapshotHandler)
             .generateSnapshot(
@@ -212,6 +213,7 @@ class AvdManagerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
+                anyString(),
                 any(ILogger::class.java))
     }
 
@@ -227,6 +229,7 @@ class AvdManagerTest {
                 anyString(),
                 any(File::class.java),
                 any(File::class.java),
+                anyString(),
                 any(ILogger::class.java),
                 anyString()))
             .thenReturn(true)
@@ -237,7 +240,7 @@ class AvdManagerTest {
             "device1",
             "Pixel 2")
 
-        manager.loadSnapshotIfNeeded("device1")
+        manager.loadSnapshotIfNeeded("device1", "auto-no-window")
 
         verify(snapshotHandler, times(0))
             .generateSnapshot(
@@ -245,6 +248,7 @@ class AvdManagerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
+                anyString(),
                 any(ILogger::class.java))
     }
 

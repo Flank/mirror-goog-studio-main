@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.AnnotationOrigin.METHOD
 import com.android.tools.lint.detector.api.AnnotationOrigin.OUTER_CLASS
 import com.android.tools.lint.detector.api.AnnotationOrigin.PACKAGE
 import com.android.tools.lint.detector.api.AnnotationOrigin.PARAMETER
+import com.android.tools.lint.detector.api.AnnotationOrigin.PROPERTY_DEFAULT
 import com.android.tools.lint.detector.api.AnnotationOrigin.VARIABLE
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
@@ -319,7 +320,7 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
                         it
                     }
                 }
-                if (addAnnotation(annotation, owner, AnnotationOrigin.PROPERTY_DEFAULT, false)) {
+                if (addAnnotation(annotation, owner, PROPERTY_DEFAULT, false)) {
                     count++
                 }
             }
@@ -754,10 +755,15 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
                     checkContextAnnotations(context, call, local, method)
                 }
 
-                if (annotations[0].annotated === method) {
-                    // The method annotations should not be passed as "surrounding" the parameter
-                    // annotations; they're considered return value annotations
-                    annotations.removeFirst()
+                // The method annotations should not be passed as "surrounding" the parameter
+                // annotations; they're considered return value annotations
+                while (true) {
+                    val first = annotations.firstOrNull()?.origin
+                    if (first == METHOD || first == PROPERTY_DEFAULT) {
+                        annotations.removeFirst()
+                    } else {
+                        break
+                    }
                 }
             }
 

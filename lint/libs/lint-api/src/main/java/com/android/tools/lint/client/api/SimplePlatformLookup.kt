@@ -35,7 +35,6 @@ import java.io.File
 import java.io.File.separator
 import java.io.File.separatorChar
 import java.io.FileInputStream
-import java.io.FileReader
 import java.io.IOException
 import java.nio.file.Path
 import java.util.Properties
@@ -163,9 +162,9 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
             var revision = 1
 
             try {
-                FileReader(packageXml).use {
+                packageXml.bufferedReader().use { reader ->
                     val parser = KXmlParser()
-                    parser.setInput(it)
+                    parser.setInput(reader)
                     while (parser.next() != XmlPullParser.END_DOCUMENT) {
                         val eventType = parser.eventType
                         if (eventType != XmlPullParser.START_TAG) continue
@@ -423,7 +422,7 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
      * the [location] is the platforms/ folder containing all the
      * platform metadata; the [buildTargetHash] is the string which
      * corresponds to the compileSdkVersion as a string (e.g. if you
-     * specify 30 it will be interpreted as "android-30", and if you
+     * specify 30 it will be interpreted as "android-31", and if you
      * specify "android-R" it will be used as is). The [version] is
      * the API level and optionally code name for previews. For normal
      * SDK releases, [platform] is true, and for add-ons it's false.

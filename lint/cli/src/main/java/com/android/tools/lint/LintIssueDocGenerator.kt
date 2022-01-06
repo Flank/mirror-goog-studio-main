@@ -27,6 +27,7 @@ import com.android.SdkConstants.TAG_MANIFEST
 import com.android.SdkConstants.TAG_RESOURCES
 import com.android.resources.ResourceFolderType
 import com.android.support.AndroidxNameUtils
+import com.android.tools.lint.LintCliClient.Companion.printWriter
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintCliFlags.ERRNO_USAGE
@@ -68,7 +69,7 @@ import java.io.File
 import java.io.File.pathSeparator
 import java.io.File.separator
 import java.io.File.separatorChar
-import java.io.PrintStream
+import java.io.PrintWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.EnumSet
@@ -1186,7 +1187,7 @@ class LintIssueDocGenerator constructor(
         sourcePath: Map<String, Map<File, List<File>>>,
         store: (file: File?, url: String?) -> Unit
     ) {
-        val relative = detectorName.replace('.', separatorChar)
+        val relative = detectorName.replace('/', separatorChar)
         val relativeKt = relative + DOT_KT
         val relativeJava = relative + DOT_JAVA
         for ((prefix, path) in sourcePath) {
@@ -1356,7 +1357,7 @@ class LintIssueDocGenerator constructor(
 
         val libs = mutableListOf<File>()
         val classPath: String = System.getProperty("java.class.path")
-        for (path in classPath.split(':')) {
+        for (path in classPath.split(pathSeparator)) {
             val file = File(path)
             val name = file.name
             if (name.endsWith(DOT_JAR)) {
@@ -2116,10 +2117,12 @@ class LintIssueDocGenerator constructor(
             return sb.toString()
         }
 
-        fun printUsage(fromLint: Boolean, out: PrintStream = System.out) {
+        fun printUsage(fromLint: Boolean, out: PrintWriter = System.out.printWriter()) {
             val command = if (fromLint) "lint --generate-docs" else "lint-issue-docs-generator"
-            out.println("Usage: $command [flags] --output <directory or file>]\n")
-            out.println("Flags:\n")
+            out.println("Usage: $command [flags] --output <directory or file>]")
+            out.println()
+            out.println("Flags:")
+            out.println()
             Main.printUsage(
                 out,
                 arrayOf(
@@ -2182,15 +2185,15 @@ class LintIssueDocGenerator constructor(
                 return when {
                     className == null -> if (DOT_KT == extension)
                         if (packageName != null)
-                            packageName.replace('.', separatorChar) + separatorChar + "test.kt"
+                            packageName.replace('.', '/') + "/test.kt"
                         else
                             "test.kt"
                     else
                         null
                     packageName != null -> packageName.replace(
                         '.',
-                        separatorChar
-                    ) + separatorChar + className + extension
+                        '/'
+                    ) + '/' + className + extension
                     else -> className + extension
                 }
             }

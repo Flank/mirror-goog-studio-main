@@ -19,6 +19,7 @@ import static com.android.build.gradle.external.gnumake.CommandClassifierUtilsKt
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.cxx.os.OsBehavior;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -51,9 +52,9 @@ class CommandClassifier {
     @VisibleForTesting
     static List<BuildStepInfo> classify(
             @NonNull String commands,
-            @NonNull OsFileConventions policy,
+            @NonNull OsBehavior os,
             @NonNull List<BuildTool> classifiers) {
-        List<CommandLine> commandLines = CommandLineParser.parse(commands, policy);
+        List<CommandLine> commandLines = CommandLineParser.parse(commands, os);
 
         List<BuildStepInfo> commandSummaries = new ArrayList<>();
 
@@ -75,9 +76,8 @@ class CommandClassifier {
      * information about inputs and outputs.
      */
     @NonNull
-    static List<BuildStepInfo> classify(
-            @NonNull String commands, @NonNull OsFileConventions policy) {
-        return classify(commands, policy, DEFAULT_CLASSIFIERS);
+    static List<BuildStepInfo> classify(@NonNull String commands, @NonNull OsBehavior os) {
+        return classify(commands, os, DEFAULT_CLASSIFIERS);
     }
 
     interface BuildTool {

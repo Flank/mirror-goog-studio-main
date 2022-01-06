@@ -3,7 +3,7 @@ package com.android.tools.profgen
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.*
+import java.util.BitSet
 import kotlin.experimental.or
 
 
@@ -13,7 +13,13 @@ private const val INLINE_CACHE_MISSING_TYPES_ENCODING = 6
 /** Serialization encoding for a megamorphic inline cache.  */
 private const val INLINE_CACHE_MEGAMORPHIC_ENCODING = 7
 
+private const val MAX_NUM_DEX_FILES = 1 shl 8
+
 private const val MAX_NUM_CLASS_IDS = 1 shl 16
+
+private const val MAX_NUM_METHOD_IDS = 1 shl 16
+
+private const val MAX_PROFILE_KEY_SIZE = 4096
 
 internal fun profileKey(dexName: String, apkName: String, separator: String): String {
     if (apkName.isEmpty()) return enforceSeparator(dexName, separator)
@@ -33,10 +39,464 @@ private fun enforceSeparator(value: String, separator: String): String {
     }
 }
 
+enum class MetadataVersion(internal val versionBytes: ByteArray) {
+    V_001(byteArrayOf('0', '0', '1', '\u0000')),
+    V_002(byteArrayOf('0', '0', '2', '\u0000'));
+}
+
 enum class ArtProfileSerializer(
     internal val versionBytes: ByteArray,
     internal val magicBytes: ByteArray = MAGIC
 ) {
+
+    /**
+     * 0.1.5 Serialization format (S/Android 12.0.0):
+     * =============================================
+     *
+     * The file starts with a header and section information:
+     *   FileHeader
+     *   FileSectionInfo[]
+     * The first FileSectionInfo must be for the DexFiles section.
+     *
+     * The rest of the file is allowed to contain different sections in any order,
+     * at arbitrary offsets, with any gaps between them and each section can be
+     * either plaintext or separately zipped. However, we're writing sections
+     * without any gaps with the following order and compression:
+     *   DexFiles - mandatory, plaintext
+     *   ExtraDescriptors - optional, zipped
+     *   Classes - optional, zipped
+     *   Methods - optional, zipped
+     *   AggregationCounts - optional, zipped, server-side
+     *
+     * DexFiles:
+     *    number_of_dex_files
+     *    (checksum,num_type_ids,num_method_ids,profile_key)[number_of_dex_files]
+     * where `profile_key` is a length-prefixed string, the length is `uint16_t`.
+     *
+     * ExtraDescriptors:
+     *    number_of_extra_descriptors
+     *    (extra_descriptor)[number_of_extra_descriptors]
+     * where `extra_descriptor` is a length-prefixed string, the length is `uint16_t`.
+     *
+     * Classes section contains records for any number of dex files, each consisting of:
+     *    profile_index  // Index of the dex file in DexFiles section.
+     *    number_of_classes
+     *    type_index_diff[number_of_classes]
+     * where instead of storing plain sorted type indexes, we store their differences
+     * as smaller numbers are likely to compress better.
+     *
+     * Methods section contains records for any number of dex files, each consisting of:
+     *    profile_index  // Index of the dex file in DexFiles section.
+     *    following_data_size  // For easy skipping of remaining data when dex file is filtered out.
+     *    method_flags
+     *    bitmap_data
+     *    method_encoding[]  // Until the size indicated by `following_data_size`.
+     * where `method_flags` is a union of flags recorded for methods in the referenced dex file,
+     * `bitmap_data` contains `num_method_ids` bits for each bit set in `method_flags` other
+     * than "hot" (the size of `bitmap_data` is rounded up to whole bytes) and `method_encoding[]`
+     * contains data for hot methods. The `method_encoding` is:
+     *    method_index_diff
+     *    number_of_inline_caches
+     *    inline_cache_encoding[number_of_inline_caches]
+     * where differences in method indexes are used for better compression,
+     * and the `inline_cache_encoding` is
+     *    dex_pc
+     *    (M|dex_map_size)
+     *    type_index_diff[dex_map_size]
+     * where `M` stands for special encodings indicating missing types (kIsMissingTypesEncoding)
+     * or memamorphic call (kIsMegamorphicEncoding) which both imply `dex_map_size == 0`.
+     **/
+    V0_1_5_S(byteArrayOf('0', '1', '5', '\u0000')) {
+
+        override fun write(
+            os: OutputStream,
+            profileData: Map<DexFile, DexFileData>,
+            apkName: String,
+        ) {
+            writeProfileSections(os, profileData, apkName)
+        }
+
+        override fun read(src: InputStream): Map<DexFile, DexFileData> {
+            // We load the full file into memory here. This is because we might need to rewind
+            // the stream to go to a previous offset given file section ordering is not guaranteed.
+            src.use {
+                val contents = src.readBytes()
+                // We also need the parts of the InputStream we previously consumed to ensure
+                // all the offsets are correct.
+                val profile = magicBytes + versionBytes + contents
+                val sections = readFileSections(contents.inputStream())
+                val dexFileSection = sections[FileSectionType.DEX_FILES]
+                require(dexFileSection != null) {
+                    "Missing DEX_FILES section."
+                }
+                // DexFile section
+                val dexFileDataArray =
+                    readDexFileSection(dexFileSection.readCompressed(profile).inputStream())
+                // Classes section
+                val classesSection = sections[FileSectionType.CLASSES]
+                if (classesSection != null) {
+                    readClassesSection(
+                        classesSection.readCompressed(profile).inputStream(),
+                        dexFileDataArray
+                    )
+                }
+                // Methods Section
+                val methodsSection = sections[FileSectionType.METHODS]
+                if (methodsSection != null) {
+                    readMethodsSection(
+                        methodsSection.readCompressed(profile).inputStream(),
+                        dexFileDataArray
+                    )
+                }
+
+                return dexFileDataArray.associate {
+                    it.dexFile to it.asDexFileData()
+                }
+            }
+        }
+
+        private fun readFileSections(src: InputStream): Map<FileSectionType, ReadableFileSection> {
+            src.use {
+                val fileSectionCount = src.readUInt32()
+                val sections = mutableMapOf<FileSectionType, ReadableFileSection>()
+                for (i in 0 until fileSectionCount) {
+                    val type = FileSectionType.parse(src.readUInt32())
+                    val offset = src.readUInt32()
+                    require(offset < Int.MAX_VALUE) {
+                        "Offset $offset must be <= ${Int.MAX_VALUE}"
+                    }
+                    val size = src.readUInt32()
+                    require(size < Int.MAX_VALUE) {
+                        "Size $size must be <= ${Int.MAX_VALUE}"
+                    }
+                    val inflateSize = src.readUInt32()
+                    require(inflateSize < Int.MAX_VALUE) {
+                        "Inflate Size $inflateSize must be <= ${Int.MAX_VALUE}"
+                    }
+                    val fileSection = ReadableFileSection(
+                        type = type,
+                        span = Span(size = size.toInt(), offset = offset.toInt()),
+                        inflateSize = inflateSize.toInt()
+                    )
+                    sections += (type to fileSection)
+                }
+                return sections
+            }
+        }
+
+        private fun readDexFileSection(src: InputStream): Array<MutableDexFileData> {
+            src.use {
+                val dexFileCount = src.readUInt16()
+                require(dexFileCount < MAX_NUM_DEX_FILES) {
+                    "Found $dexFileCount dex files. Maximum number allowed are $MAX_NUM_DEX_FILES"
+                }
+                val dexFileData = Array(dexFileCount) {
+                    val dexChecksum = src.readUInt32()
+                    val typeIdSetSize = src.readUInt32()
+                    require(typeIdSetSize <= MAX_NUM_CLASS_IDS) {
+                        "Invalid typeIdSetSize $typeIdSetSize. Max allowed is $MAX_NUM_CLASS_IDS"
+                    }
+                    val numMethodIds = src.readUInt32()
+                    require(numMethodIds <= MAX_NUM_METHOD_IDS) {
+                        "Invalid numMethodIds $numMethodIds. Max allowed is $MAX_NUM_METHOD_IDS"
+                    }
+                    val profileKeySize = src.readUInt16()
+                    require(profileKeySize <= MAX_PROFILE_KEY_SIZE) {
+                        """"Invalid profileKeySize $profileKeySize.
+                            | Max allowed is $MAX_PROFILE_KEY_SIZE""".trimMargin()
+                    }
+                    val profileKey = src.readString(profileKeySize)
+                    val dexFile = DexFile(
+                        header = DexHeader(
+                            stringIds = Span.Empty,
+                            typeIds = Span(typeIdSetSize.toInt(), 0),
+                            prototypeIds = Span.Empty,
+                            methodIds = Span(numMethodIds.toInt(), 0),
+                            classDefs = Span.Empty,
+                            data = Span.Empty,
+                        ),
+                        dexChecksum = dexChecksum,
+                        name = profileKey,
+                    )
+                    MutableDexFileData(
+                        classIdSetSize = 0,
+                        typeIdSetSize = typeIdSetSize.toInt(),
+                        // We fill this when we finish reading the methods section
+                        hotMethodRegionSize = 0,
+                        numMethodIds = numMethodIds.toInt(),
+                        dexFile = dexFile,
+                        classIdSet = mutableSetOf(),
+                        typeIdSet = mutableSetOf(),
+                        methods = mutableMapOf(),
+                    )
+                }
+                return dexFileData
+            }
+        }
+
+        private fun writeProfileSections(
+            os: OutputStream,
+            profileData: Map<DexFile, DexFileData>,
+            apkName: String,
+        ) {
+            os.use {
+                val sections = mutableListOf<WritableFileSection>()
+                sections.add(writeDexFileSection(profileData, apkName))
+                sections.add(createCompressibleClassSection(profileData))
+                sections.add(createCompressibleMethodsSection(profileData))
+                var offset = versionBytes.size + MAGIC.size
+                offset += UINT_32_SIZE // number of sections
+                // (section type, offset, size, inflate size) per section
+                offset += (4 * UINT_32_SIZE) * sections.size
+                // Section contents
+                val sectionContents = mutableMapOf<FileSectionType, ByteArray>()
+                // Number of sections
+                os.writeUInt32(sections.size.toLong())
+                sections.forEach { section ->
+                    // File Section Type
+                    os.writeUInt32(section.type.value)
+                    // Offset
+                    os.writeUInt32(offset.toLong())
+                    // Contents
+                    if (section.needsCompression) {
+                        val inflateSize = section.contents.size
+                        val compressed = section.contents.compressed()
+                        sectionContents[section.type] = compressed
+                        // Size
+                        os.writeUInt32(compressed.size.toLong())
+                        // Inflated Size
+                        os.writeUInt32(inflateSize.toLong())
+                        offset += compressed.size
+                    } else {
+                        val size = section.contents.size
+                        sectionContents[section.type] = section.contents
+                        // Size
+                        os.writeUInt32(size.toLong())
+                        // Inflated Size (0L represents uncompressed)
+                        os.writeUInt32(0L)
+                        offset += size
+                    }
+                }
+                // Write contents
+                sectionContents.forEach { (_, contents) ->
+                    os.write(contents)
+                }
+            }
+        }
+
+        private fun writeDexFileSection(
+            profileData: Map<DexFile, DexFileData>,
+            apkName: String,
+        ): WritableFileSection {
+            val out = ByteArrayOutputStream()
+            // Compute expected size of the header
+            var expectedSize = 0
+            out.use {
+                // Number of Dex files
+                expectedSize += UINT_16_SIZE
+                out.writeUInt16(profileData.size)
+                profileData.forEach { entry ->
+                    val dexFile = entry.key
+                    // Checksum
+                    expectedSize += UINT_32_SIZE
+                    out.writeUInt32(dexFile.dexChecksum)
+                    // Number of type ids
+                    expectedSize += UINT_32_SIZE
+                    // This is information we may not have.
+                    // For this to be a valid profile, the data should have been merged with
+                    // METADATA_0_0_2.
+                    out.writeUInt32(dexFile.header.typeIds.size.toLong())
+                    // number of method ids
+                    expectedSize += UINT_32_SIZE
+                    out.writeUInt32(dexFile.header.methodIds.size.toLong())
+                    // Profile key
+                    val profileKey = profileKey(dexFile.name, apkName, "!")
+                    // Profile key size
+                    expectedSize += UINT_16_SIZE;
+                    out.writeUInt16(profileKey.utf8Length)
+                    expectedSize += UINT_8_SIZE * profileKey.utf8Length
+                    out.writeString(profileKey)
+                }
+            }
+            val contents = out.toByteArray()
+            require(contents.size == expectedSize) {
+                "Bytes saved (${contents.size}) do not match the expected size ($expectedSize)."
+            }
+            return WritableFileSection(
+                type = FileSectionType.DEX_FILES,
+                expectedInflateSize = expectedSize,
+                contents = contents,
+                needsCompression = false
+            )
+        }
+
+        private fun readClassesSection(
+            src: InputStream,
+            dexFileDataArray: Array<MutableDexFileData>,
+        ) {
+            src.use {
+                while (src.available() > 0) {
+                    val dexProfileIdx = src.readUInt16()
+                    require(dexProfileIdx <= MAX_NUM_DEX_FILES) {
+                        """Invalid value for dex profile index $dexProfileIdx.
+                        | Max allowed is $MAX_NUM_DEX_FILES""".trimMargin()
+                    }
+                    val typeIdSetSize = src.readUInt16()
+                    require(typeIdSetSize <= MAX_NUM_CLASS_IDS) {
+                        """Invalid value for typeIdSetSize $typeIdSetSize.
+                        | Max allowed is $MAX_NUM_CLASS_IDS""".trimMargin()
+                    }
+                    val dexFileData = dexFileDataArray[dexProfileIdx]
+                    src.readIntsAsDeltas(typeIdSetSize, dexFileData.typeIdSet)
+                }
+            }
+        }
+
+        private fun createCompressibleClassSection(
+            profileData: Map<DexFile, DexFileData>,
+        ): WritableFileSection {
+            // Compute expected size of the header
+            var expectedSize = 0
+            val out = ByteArrayOutputStream()
+            out.use {
+                profileData.onEachIndexed { index, entry ->
+                    val dexFileData = entry.value
+                    // Profile Index
+                    expectedSize += UINT_16_SIZE
+                    out.writeUInt16(index)
+                    // Number of classes
+                    expectedSize += UINT_16_SIZE
+                    out.writeUInt16(dexFileData.typeIndexes.size)
+                    // Class Indexes
+                    expectedSize += UINT_16_SIZE * dexFileData.typeIndexes.size
+                    out.writeIntsAsDeltas(dexFileData.typeIndexes)
+                }
+            }
+            val contents = out.toByteArray()
+            require(contents.size == expectedSize) {
+                "Bytes saved (${contents.size}) do not match the expected size ($expectedSize)."
+            }
+            return WritableFileSection(
+                type = FileSectionType.CLASSES,
+                expectedInflateSize = expectedSize,
+                contents = contents,
+                needsCompression = true
+            )
+        }
+
+        private fun readMethodsSection(
+            src: InputStream,
+            dexFileDataArray: Array<MutableDexFileData>,
+        ) {
+            src.use {
+                while (src.available() > 0) {
+                    val dexProfileIdx = src.readUInt16()
+                    require(dexProfileIdx <= MAX_NUM_DEX_FILES) {
+                        """Invalid value for dex profile index $dexProfileIdx.
+                            | Max allowed is $MAX_NUM_DEX_FILES""".trimMargin()
+                    }
+                    val followingDataSize = src.readUInt32()
+                    require(followingDataSize <= src.available()) {
+                        """Following data size $followingDataSize.
+                            | Max available bytes (${src.available()}""".trimMargin()
+                    }
+                    // Useful to determine the size of the method bitmap size with BOOT profiles.
+                    // We have an alternate way of determining the size of the bitmap storage size.
+                    src.readUInt16() // ignore method flags
+                    val dexFileData = dexFileDataArray[dexProfileIdx]
+                    val methodBitMapSize = getMethodBitmapStorageSize(dexFileData.numMethodIds)
+                    src.readMethodBitmap(dexFileData)
+                    // followingDataSize includes the method flag which is a UINT_16
+                    dexFileData.hotMethodRegionSize =
+                        followingDataSize.toInt() - (UINT_16_SIZE + methodBitMapSize)
+                    src.readHotMethodRegion(dexFileData)
+                }
+            }
+        }
+
+        private fun createCompressibleMethodsSection(
+            profileData: Map<DexFile, DexFileData>,
+        ): WritableFileSection {
+            var expectedSize = 0
+            val out = ByteArrayOutputStream()
+            out.use {
+                profileData.onEachIndexed { index, entry ->
+                    // Method Flags
+                    val methodFlags = computeMethodFlags(entry)
+                    // Bitmap Region
+                    val bitmapContents = createMethodBitmapRegion(entry)
+                    // Methods with Inline Caches
+                    val methodRegionContents = createMethodsWithInlineCaches(entry)
+                    // Profile Index
+                    expectedSize += UINT_16_SIZE
+                    out.writeUInt16(index)
+                    // Following Data (flags + bitmap contents + method region)
+                    val followingDataSize =
+                        UINT_16_SIZE + bitmapContents.size + methodRegionContents.size
+                    expectedSize += UINT_32_SIZE
+                    out.writeUInt32(followingDataSize.toLong())
+                    // Contents
+                    out.writeUInt16(methodFlags)
+                    out.write(bitmapContents)
+                    out.write(methodRegionContents)
+                    expectedSize += followingDataSize
+                }
+            }
+            val contents = out.toByteArray()
+            require(contents.size == expectedSize) {
+                "Bytes saved (${contents.size}) do not match the expected size ($expectedSize)."
+            }
+            return WritableFileSection(
+                type = FileSectionType.METHODS,
+                expectedInflateSize = expectedSize,
+                contents = contents,
+                needsCompression = true
+            )
+        }
+
+        private fun createMethodBitmapRegion(
+            entry: Map.Entry<DexFile, DexFileData>,
+        ): ByteArray {
+            val dexFile = entry.key
+            val dexFileData = entry.value
+            val out = ByteArrayOutputStream()
+            out.use {
+                out.writeMethodBitmap(dexFile, dexFileData)
+            }
+            return out.toByteArray()
+        }
+
+        private fun createMethodsWithInlineCaches(
+            entry: Map.Entry<DexFile, DexFileData>,
+        ): ByteArray {
+            val dexFileData = entry.value
+            val out = ByteArrayOutputStream()
+            out.use {
+                out.writeMethodsWithInlineCaches(dexFileData)
+            }
+            return out.toByteArray()
+        }
+
+        private fun computeMethodFlags(
+            entry: Map.Entry<DexFile, DexFileData>,
+        ): Int {
+            val dexFileData = entry.value
+            var methodFlags = 0
+            for ((_, methodData) in dexFileData.methods) {
+                methodFlags = methodFlags or methodData.flags
+            }
+            return methodFlags
+        }
+
+        private fun ReadableFileSection.readCompressed(contents: ByteArray): ByteArray {
+            val slice = contents.inputStream(span.offset, span.size)
+            return when {
+                isCompressed() -> slice.readCompressed(span.size, inflateSize)
+                else -> slice.readBytes()
+            }
+        }
+    },
+
     /**
      * 0.0.1 Metadata Serialization format (N):
      * =============================================
@@ -51,7 +511,7 @@ enum class ArtProfileSerializer(
      *   class_id1,class_id2...
      */
     METADATA_FOR_N(
-            byteArrayOf('0', '0', '1', '\u0000'),
+            MetadataVersion.V_001.versionBytes,
             byteArrayOf('p', 'r', 'm', '\u0000')
     ) {
         override fun write(
@@ -66,7 +526,7 @@ enum class ArtProfileSerializer(
                     apkName
             )
             writeUInt8(profileData.size) // number of dex files
-            writeUInt32(profileBytes.size.toLong())
+            writeUInt32(profileBytes.size.toLong()) // uncompressed data size
             writeCompressed(profileBytes)
         }
 
@@ -74,7 +534,10 @@ enum class ArtProfileSerializer(
          * Serializes the profile data in a byte array. This methods only serializes the actual
          * profile content and not the necessary headers.
          */
-        private fun createCompressibleBody(profileData: List<Map.Entry<DexFile, DexFileData>>, apkName: String): ByteArray {
+        private fun createCompressibleBody(
+            profileData: List<Map.Entry<DexFile, DexFileData>>,
+            apkName: String,
+        ): ByteArray {
             // Start by creating a couple of caches for the data we re-use during serialization.
 
             // The required capacity in bytes for the uncompressed profile data.
@@ -181,6 +644,139 @@ enum class ArtProfileSerializer(
             }.toMap()
         }
 
+    },
+
+    /**
+     * 0.0.2 Metadata Serialization format (used by N, S)
+     * ==================================================
+     * profile_header:
+     *  magic,version,number_of_dex_files,uncompressed_size_of_zipped_data,compressed_data_size
+     * profile_data:
+     *  profile_index, profile_key_size, profile_key,
+     *  type_id_size, class_index_size, class_index_deltas
+     */
+    METADATA_0_0_2(
+        MetadataVersion.V_002.versionBytes,
+        byteArrayOf('p', 'r', 'm', '\u0000')
+    ) {
+
+        override fun write(
+            os: OutputStream,
+            profileData: Map<DexFile, DexFileData>,
+            apkName: String,
+        ) {
+            os.use {
+                // Number of Dex Files
+                os.writeUInt16(profileData.size)
+                writeMetadataSection(os, profileData, apkName)
+            }
+        }
+
+        private fun writeMetadataSection(
+            os: OutputStream,
+            profileData: Map<DexFile, DexFileData>,
+            apkName: String,
+        ) {
+            val out = ByteArrayOutputStream()
+            var expectedSize = 0
+            out.use {
+                profileData.onEachIndexed { index, entry ->
+                    val dexFile = entry.key
+                    val dexFileData = entry.value
+                    // Profile index
+                    expectedSize += UINT_16_SIZE
+                    out.writeUInt16(index)
+                    // Profile Key Size
+                    val profileKey = profileKey(dexFile.name, apkName, "!")
+                    expectedSize += UINT_16_SIZE;
+                    out.writeUInt16(profileKey.utf8Length)
+                    // Profile Key
+                    expectedSize += UINT_8_SIZE * profileKey.utf8Length
+                    out.writeString(profileKey)
+                    // The total number of type ids
+                    expectedSize += UINT_32_SIZE
+                    out.writeUInt32(dexFile.header.typeIds.size.toLong())
+                    // Class Index Count
+                    expectedSize += UINT_16_SIZE
+                    out.writeUInt16(dexFileData.classIndexes.size)
+                    // Class Indexes
+                    expectedSize += UINT_16_SIZE * dexFileData.classIndexes.size
+                    out.writeIntsAsDeltas(dexFileData.classIndexes)
+                }
+            }
+            val contents = out.toByteArray()
+            require(contents.size == expectedSize) {
+                "Bytes saved (${contents.size}) do not match the expected size ($expectedSize)."
+            }
+            // Uncompressed size
+            os.writeUInt32(contents.size.toLong())
+            // Contents
+            os.writeCompressed(contents)
+        }
+
+        override fun read(src: InputStream): Map<DexFile, DexFileData> {
+            src.use {
+                // No of dex files
+                val dexFileCount = src.readUInt16()
+                // Uncompressed
+                val uncompressed = src.readUInt32()
+                // Compressed
+                val compressed = src.readUInt32()
+                val contents = src.readCompressed(
+                    compressed.toInt(),
+                    uncompressed.toInt()
+                )
+                contents.inputStream().use { input ->
+                    val indexedDexFileData: Array<MutableDexFileData> =
+                        Array(dexFileCount) {
+                            // Profile Index
+                            input.readUInt16()
+                            // Profile Key
+                            val profileKeySize = input.readUInt16()
+                            require(profileKeySize <= MAX_PROFILE_KEY_SIZE) {
+                                """"Invalid profileKeySize $profileKeySize.
+                            | Max allowed is $MAX_PROFILE_KEY_SIZE""".trimMargin()
+                            }
+                            val profileKey = input.readString(profileKeySize)
+                            // Total number of type ids
+                            val typeIdSize = input.readUInt32()
+                            // Class Index Size
+                            val classIdSetSize = input.readUInt16()
+                            val dexFile = DexFile(
+                                header = DexHeader(
+                                    stringIds = Span.Empty,
+                                    typeIds = Span(typeIdSize.toInt(), 0),
+                                    prototypeIds = Span.Empty,
+                                    methodIds = Span.Empty,
+                                    classDefs = Span.Empty,
+                                    data = Span.Empty,
+                                ),
+                                dexChecksum = 0L,
+                                name = profileKey,
+                            )
+                            val dexFileData = MutableDexFileData(
+                                classIdSetSize = classIdSetSize,
+                                typeIdSetSize = 0,
+                                hotMethodRegionSize = 0,
+                                numMethodIds = 0,
+                                dexFile = dexFile,
+                                classIdSet = mutableSetOf(),
+                                typeIdSet = mutableSetOf(),
+                                methods = mutableMapOf(),
+                            )
+                            input.readIntsAsDeltas(
+                                dexFileData.classIdSetSize,
+                                dexFileData.classIdSet
+                            )
+                            dexFileData
+                        }
+
+                    return indexedDexFileData
+                        .associate { data -> data.dexFile to data.asDexFileData() }
+
+                }
+            }
+        }
     },
 
     /**
@@ -752,7 +1348,7 @@ enum class ArtProfileSerializer(
     internal abstract fun read(src: InputStream): Map<DexFile, DexFileData>
 
     /**
-     * Skips the data for an single method's inline cache, since we do not need incline cache data for profgen.
+     * Skips the data for a single method's inline cache, since we do not need inline cache data for profgen.
      * This method is valid to use for P/O but not N
      */
     internal fun InputStream.skipInlineCache() {
@@ -827,7 +1423,7 @@ enum class ArtProfileSerializer(
      *
      * @param dexFileData the dex data containing the methods that should be serialized
      */
-    private fun OutputStream.writeMethodsWithInlineCaches(
+    internal fun OutputStream.writeMethodsWithInlineCaches(
             dexFileData: DexFileData
     ) {
         // The profile stores the first method index, then the remainder are relative
@@ -869,7 +1465,7 @@ enum class ArtProfileSerializer(
      * @param dexFile the dex file to which the data belongs
      * @param dexFileData the dex data that should be serialized
      */
-    private fun OutputStream.writeMethodBitmap(
+    internal fun OutputStream.writeMethodBitmap(
             dexFile: DexFile,
             dexFileData: DexFileData,
     ) {

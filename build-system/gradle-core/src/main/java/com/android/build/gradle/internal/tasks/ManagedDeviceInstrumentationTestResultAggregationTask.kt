@@ -49,12 +49,16 @@ abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncreme
         if (!resultProtos.isEmpty) {
             val resultMerger = UtpTestSuiteResultMerger()
             resultProtos.forEach { resultProtoFile ->
-                val proto = TestSuiteResult.parseFrom(resultProtoFile.inputStream())
+                val proto = resultProtoFile.inputStream().use {
+                    TestSuiteResult.parseFrom(it)
+                }
                 resultMerger.merge(proto)
             }
 
             val mergedTestResultPbFile = outputTestResultProto.get().asFile
-            resultMerger.result.writeTo(mergedTestResultPbFile.outputStream())
+            mergedTestResultPbFile.outputStream().use {
+                resultMerger.result.writeTo(it)
+            }
             logger.lifecycle(
                 "\nTest results saved as ${mergedTestResultPbFile.toURI()}.\n" +
                 "Inspect these results in Android Studio by selecting Run > Import Tests " +

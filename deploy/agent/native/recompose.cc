@@ -27,6 +27,9 @@
 
 namespace deploy {
 
+const char* Recompose::kComposeSupportClass =
+    "com/android/tools/deploy/liveedit/ComposeSupport";
+
 // Can be null if the application isn't a JetPack Compose application.
 jobject Recompose::GetComposeHotReload() const {
   jclass klass = class_finder_.FindInClassLoader(
@@ -96,6 +99,35 @@ void Recompose::LoadStateAndCompose(jobject reloader, jobject state) const {
     jni_->ExceptionDescribe();
     jni_->ExceptionClear();
   }
+}
+
+bool Recompose::InvalidateGroupsWithKey(jobject reloader, jstring className,
+                                        jint offsetStart, jint offsetEnd,
+                                        std::string& error) const {
+  JniClass support(jni_, Recompose::kComposeSupportClass);
+  JniObject reloader_jnio(jni_, reloader);
+
+  jstring jresult = (jstring)support.CallStaticObjectMethod(
+      "recomposeFunction",
+      "(Ljava/lang/Object;Ljava/lang/String;II)Ljava/lang/String;", reloader,
+      className, offsetStart, offsetEnd);
+
+  if (jni_->ExceptionCheck()) {
+    jni_->ExceptionDescribe();
+    jni_->ExceptionClear();
+    error = "Exception During invalidateGroupsWithKey";
+    return false;
+  }
+
+  const char* cresult = jni_->GetStringUTFChars(jresult, JNI_FALSE);
+  std::string result(cresult);
+  jni_->ReleaseStringUTFChars(jresult, cresult);
+
+  if (!result.empty()) {
+    error = result;
+    return false;
+  }
+  return true;
 }
 
 }  // namespace deploy

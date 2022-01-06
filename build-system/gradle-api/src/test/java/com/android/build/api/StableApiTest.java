@@ -72,14 +72,8 @@ public class StableApiTest {
                         .getTopLevelClassesRecursive("com.android.build.api");
 
         List<ClassPath.ClassInfo> classes =
-                allClasses
-                        .stream()
-                        .filter(
-                                classInfo ->
-                                        !classInfo.getSimpleName().endsWith("Test")
-                                                && !classInfo
-                                                        .getSimpleName()
-                                                        .equals("StableApiUpdater"))
+                allClasses.stream()
+                        .filter(ApiTestUtils::filterNonApiClasses)
                         .collect(Collectors.toList());
 
         return new ApiTester(

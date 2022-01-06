@@ -29,6 +29,7 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import junit.framework.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -187,6 +188,19 @@ class R8TaskTest {
                 GradleTestProject.ApkType.DEBUG,
                 GradleTestProject.ApkLocation.Intermediates)
         assertThatApk(apkApi23).hasClass("Lexample/MyInterface$-CC;")
+    }
+
+    // regression test for b/210573363
+    @Test
+    fun testDefaultProguardRules() {
+        project.executor().run("assembleDebug")
+        TestFileUtils.searchAndReplace(
+                project.buildFile,
+                "getDefaultProguardFile('proguard-android-optimize.txt'),",
+                ""
+        )
+        val result = project.executor().run("assembleDebug")
+        assertTrue(result.didWorkTasks.contains(":minifyDebugWithR8"))
     }
 
     private fun enableMultiDex() {

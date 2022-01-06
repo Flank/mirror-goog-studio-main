@@ -343,6 +343,17 @@ interface VariantDslInfo {
 
     val lintOptions: Lint
 
+    /**
+     * Returns the component ids of those external library dependencies whose keep rules are ignored
+     * when building the project.
+     */
+    val ignoredLibraryKeepRules: Set<String>
+
+    /**
+     * Returns whether to ignore all keep rules from external library dependencies.
+     */
+    val ignoreAllLibraryKeepRules: Boolean
+
     ////////////////////////////////////////////////////////////////////////////////////////
     //  APIs below should only be used at CreationConfig/Variant instantiation time       //
     //  DO NOT USE THOSE IN TASKS                                                         //

@@ -27,7 +27,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
@@ -46,16 +45,10 @@ import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class ResourceEvaluatorTest {
-
-    @Before
-    public void setUp() {
-        TestUtils.disableIfOnWindowsWithBazel(); // b/73709727
-    }
 
     @Language("JAVA")
     private static String getFullKotlinSource(String statementsSource) {

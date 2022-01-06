@@ -105,7 +105,7 @@ public final class SdkConstants {
      * The encoding we strive to use for all files we write.
      *
      * <p>When possible, use the APIs which take a {@link java.nio.charset.Charset} and pass in
-     * {@link com.google.common.base.Charsets#UTF_8} instead of using the String encoding method.
+     * {@link java.nio.charset.StandardCharsets#UTF_8} instead of using the String encoding method.
      */
     public static final String UTF_8 = "UTF-8";
 
@@ -2863,7 +2863,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.3";
+    public static final String GRADLE_LATEST_VERSION = "7.3.3";
 
     /**
      * The minimum released version of the Android Gradle Plugin that this version of Studio will

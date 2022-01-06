@@ -39,6 +39,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.findFromRuntimeClassPath
+import com.android.tools.lint.checks.infrastructure.portablePath
 import org.junit.Test
 import java.io.File
 
@@ -576,7 +577,7 @@ class LintDetectorDetectorTest {
         val srcPath = src.path
         return src.walkTopDown().mapNotNull {
             if (it.isFile) {
-                val target = "src/main/java/" + it.path.substring(srcPath.length + 1)
+                val target = "src/main/java/" + it.path.substring(srcPath.length + 1).portablePath()
                 val contents = it.readText()
                 source(target, contents)
             } else {

@@ -31,7 +31,10 @@ gradle_integration_test(
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
-    tags = ["no_test_windows"],  # b/73306170
+    tags = [
+        "manual",  # TODO(b/203802678): Re-enable this test when fixed.
+        "no_test_windows",  # b/73306170
+    ],
     deps = [
         "//tools/apksig",
         "//tools/base/annotations",

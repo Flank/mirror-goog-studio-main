@@ -21,6 +21,6 @@ package com.android.build.gradle.tasks
  */
 enum class NativeBuildSystem {
     CMAKE,
-    CUSTOM,
+    NINJA,
     NDK_BUILD;
 }

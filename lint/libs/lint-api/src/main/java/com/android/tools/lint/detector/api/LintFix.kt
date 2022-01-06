@@ -1772,6 +1772,8 @@ open class LintFix protected constructor(
                             val group = groupString.toInt()
                             if (group <= matcher.groupCount()) {
                                 sb.append(matcher.group(group))
+                            } else {
+                                error("Invalid backreference $group in `$replacement`: there are only ${matcher.groupCount()} matches in this matcher, $matcher")
                             }
                             begin = next + 1
                         } else {

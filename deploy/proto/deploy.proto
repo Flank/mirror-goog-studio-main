@@ -643,9 +643,18 @@ message LiveEditRequest {
   // changed (lambdas, Compose classes, etc.)
   repeated LiveEditClass support_classes = 2;
 
-  string package_name = 3;
-  Arch arch = 4;
-  repeated int32 process_ids = 5;
+  // Signal rather or not the target method is a composable
+  // and should a function recompose be triggered.
+  bool composable = 3;
+
+  // The start and end offset of the function. This will be
+  // use to look up the compose group for partial recomposition.
+  int32 start_offset = 4;
+  int32 end_offset = 5;
+
+  string package_name = 6;
+  Arch arch = 7;
+  repeated int32 process_ids = 8;
 }
 
 message LiveEditClass {

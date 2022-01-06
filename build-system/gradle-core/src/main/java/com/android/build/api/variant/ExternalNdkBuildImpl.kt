@@ -17,45 +17,45 @@
 package com.android.build.api.variant
 
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 
 class ExternalNdkBuildImpl(
     mergedExternalNativeNdkBuildOptions: CoreExternalNativeNdkBuildOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices
+    variantServices: VariantServices
 ): ExternalNativeBuild {
 
     override val abiFilters: SetProperty<String> =
-            variantPropertiesApiServices.setPropertyOf(
+            variantServices.setPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeNdkBuildOptions.abiFilters,
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val arguments: ListProperty<String> =
-            variantPropertiesApiServices.listPropertyOf(
+            variantServices.listPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeNdkBuildOptions.arguments,
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cFlags: ListProperty<String> =
-            variantPropertiesApiServices.listPropertyOf(
+            variantServices.listPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeNdkBuildOptions.getcFlags(),
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cppFlags: ListProperty<String> =
-            variantPropertiesApiServices.listPropertyOf(
+            variantServices.listPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeNdkBuildOptions.cppFlags,
                 disallowUnsafeRead = false, // see b/193722661
             )
 
     override val targets: SetProperty<String> =
-            variantPropertiesApiServices.setPropertyOf(
+            variantServices.setPropertyOf(
                 type = String::class.java,
                 value = mergedExternalNativeNdkBuildOptions.targets,
                 disallowUnsafeRead = false, // see b/193722661

@@ -24,7 +24,6 @@ import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.infrastructure.TestLintResult
 import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.Detector
-import java.io.FileWriter
 
 class TextReporterTest : AbstractCheckTest() {
     fun testBasic() {
@@ -221,7 +220,7 @@ class TextReporterTest : AbstractCheckTest() {
     private fun TestLintResult.expectText(expected: String, flags: LintCliFlags) {
         expectReported(
             expected, DOT_TXT, { client, file ->
-                Reporter.createTextReporter(client, flags, file, FileWriter(file), true)
+                Reporter.createTextReporter(client, flags, file, file.bufferedWriter(), true)
             }
         )
     }

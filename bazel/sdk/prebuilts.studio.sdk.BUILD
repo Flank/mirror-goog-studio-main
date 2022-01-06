@@ -33,6 +33,14 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/latest/aidl",
+    srcs = glob(
+        include = ["*/build-tools/30.0.3/aidl"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "build-tools/30.0.2",
     srcs = glob(
         include = ["*/build-tools/30.0.2/**"],
@@ -170,19 +178,27 @@ filegroup(
 
 filegroup(
     name = "platforms/latest_build_only",
-    srcs = [":platforms/android-30_build_only"],
+    srcs = [":platforms/android-31_build_only"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-30"],
+    srcs = [":platforms/android-31"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-30"],  # Currently there isn't a preview available
+    srcs = [":platforms/android-31"],  # Currently there isn't a preview available
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "platforms/latest/framework.aidl",
+    srcs = glob(
+        include = ["*/platforms/android-31/framework.aidl"],
+    ),
     visibility = ["//visibility:public"],
 )
 
@@ -190,9 +206,10 @@ filegroup(
 # Note: these stubbed classes will not be available at runtime.
 java_import(
     name = "platforms/latest_jar",
-    jars = sdk_path(["platforms/android-30/android.jar"]),
+    jars = sdk_path(["platforms/android-31/android.jar"]),
     neverlink = 1,
     visibility = [
+        "//tools/adt/idea/emulator/screen-sharing-agent:__pkg__",
         "//tools/base/app-inspection/agent:__pkg__",
         "//tools/base/app-inspection/inspectors:__subpackages__",
         "//tools/base/deploy/agent/runtime:__pkg__",
@@ -206,7 +223,7 @@ java_import(
 # Note: these are stubbed classes.
 java_import(
     name = "platforms/latest_runtime_jar",
-    jars = sdk_path(["platforms/android-30/android.jar"]),
+    jars = sdk_path(["platforms/android-31/android.jar"]),
     testonly = 1,
     visibility = [
         "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
@@ -222,12 +239,7 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-31",
-    visibility = [
-        # Temporarily added to support 1.1.0-beta01. Remove as part of b/203422822
-        "//tools/adt/idea/android-templates:__pkg__",
-        "//tools/adt/idea/compose-designer:__pkg__",
-        "//tools/adt/idea/designer-perf-tests:__pkg__",
-    ],
+    visibility = ["//visibility:private"],
 )
 
 platform_filegroup(

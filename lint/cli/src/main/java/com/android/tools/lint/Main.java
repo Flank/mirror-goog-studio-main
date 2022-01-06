@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.VALUE_NONE;
+import static com.android.tools.lint.LintCliClient.printWriter;
 import static com.android.tools.lint.LintCliFlags.ERRNO_APPLIED_SUGGESTIONS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
@@ -29,7 +30,6 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_USAGE;
 import static com.android.tools.lint.detector.api.Lint.endsWith;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -71,9 +71,10 @@ import com.google.common.io.ByteStreams;
 import com.intellij.pom.java.LanguageLevel;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -239,6 +240,7 @@ public class Main {
         @NonNull List<File> files = new ArrayList<>();
         @NonNull LintDriver.DriverMode mode = LintDriver.DriverMode.GLOBAL;
         @Nullable PathVariables pathVariables = null;
+        @Nullable List<String> desugaredMethodsPaths = null;
     }
 
     /**
@@ -249,7 +251,7 @@ public class Main {
      */
     public int run(String[] args) {
         if (args.length < 1) {
-            printUsage(System.err);
+            printUsage(printWriter(System.err));
             return ERRNO_USAGE;
         }
 
@@ -827,7 +829,7 @@ public class Main {
                     if (topic.equals("suppress") || topic.equals("ignore")) {
                         printHelpTopicSuppress();
                         return ERRNO_HELP;
-                    } else {
+                    } else if (!topic.startsWith("-")) {
                         System.err.printf("Unknown help topic \"%1$s\"%n", topic);
                         return ERRNO_INVALID_ARGS;
                     }
@@ -849,17 +851,17 @@ public class Main {
                                 // will match issue category "Usability:Icons" etc.
                                 if (issue.getCategory().getName().startsWith(category)
                                         || issue.getCategory().getFullName().startsWith(category)) {
-                                    listIssue(System.out, issue);
+                                    listIssue(printWriter(System.out), issue);
                                 }
                             }
                         } else {
                             System.err.println("Invalid category \"" + id + "\".\n");
-                            displayValidIds(registry, System.err);
+                            displayValidIds(registry, printWriter(System.err));
                             return ERRNO_INVALID_ARGS;
                         }
                     }
                 } else {
-                    displayValidIds(registry, System.out);
+                    displayValidIds(registry, printWriter(System.out));
                 }
                 return ERRNO_SUCCESS;
             } else if (arg.equals(ARG_SHOW)) {
@@ -886,7 +888,7 @@ public class Main {
                             System.out.println();
                         } else {
                             System.err.println("Invalid id or category \"" + id + "\".\n");
-                            displayValidIds(registry, System.err);
+                            displayValidIds(registry, printWriter(System.err));
                             return ERRNO_INVALID_ARGS;
                         }
                     }
@@ -1054,11 +1056,10 @@ public class Main {
                 boolean closeWriter;
                 String outputName = args[++index];
                 if (outputName.equals("stdout")) {
-                    writer = new PrintWriter(System.out, true);
+                    writer = printWriter(System.out);
                     closeWriter = false;
                 } else if (outputName.equals("stderr")) {
-                    //noinspection IOResourceOpenedButNotSafelyClosed,resource
-                    writer = new PrintWriter(System.err, true);
+                    writer = printWriter(System.err);
                     closeWriter = false;
                 } else {
                     File output = getOutArgumentPath(outputName);
@@ -1079,7 +1080,10 @@ public class Main {
                         return ERRNO_EXISTS;
                     }
                     try {
-                        writer = new BufferedWriter(new FileWriter(output));
+                        writer =
+                                new BufferedWriter(
+                                        new OutputStreamWriter(
+                                                new FileOutputStream(output), Charsets.UTF_8));
                     } catch (IOException e) {
                         log(e, null);
                         return ERRNO_INVALID_ARGS;
@@ -1467,12 +1471,10 @@ public class Main {
                     return ERRNO_INVALID_ARGS;
                 }
                 String path = args[++index];
-                File input = getInArgumentPath(path);
-                if (!input.isFile()) {
-                    System.err.println("Desugared methods file " + input + " does not exist.");
-                    return ERRNO_INVALID_ARGS;
+                if (argumentState.desugaredMethodsPaths == null) {
+                    argumentState.desugaredMethodsPaths = new ArrayList<>();
                 }
-                DesugaredMethodLookup.Companion.setDesugaredMethods(FilesKt.readText(input, UTF_8));
+                argumentState.desugaredMethodsPaths.add(path);
             } else if (arg.equals(ARG_PRINT_INTERNAL_ERROR_STACKTRACE)) {
                 flags.setPrintInternalErrorStackTrace(true);
             } else if (arg.equals(ARG_ANALYZE_ONLY)) {
@@ -1532,6 +1534,15 @@ public class Main {
             SyncOptions.syncTo(modules.get(0), flags);
         }
 
+        List<String> paths = argumentState.desugaredMethodsPaths;
+        if (paths != null) {
+            String firstError = DesugaredMethodLookup.Companion.setDesugaredMethods(paths);
+            if (firstError != null) {
+                System.err.println("Failed to process --Xdesugared-methods: " + firstError);
+                return ERRNO_INVALID_ARGS;
+            }
+        }
+
         if (files.isEmpty() && modules.isEmpty() && flags.getProjectDescriptorOverride() == null) {
             System.err.println("No files to analyze.");
             return ERRNO_INVALID_ARGS;
@@ -1581,8 +1592,8 @@ public class Main {
                         ARG_URL, ARG_HTML);
             }
 
-            reporters.add(
-                    new TextReporter(client, flags, new PrintWriter(System.out, true), false));
+            PrintWriter writer = printWriter(System.out);
+            reporters.add(new TextReporter(client, flags, writer, false));
         } else {
             if (urlMap != null && !urlMap.equals(VALUE_NONE)) {
                 Map<String, String> map = new HashMap<>();
@@ -1931,7 +1942,7 @@ public class Main {
         }
     }
 
-    private static void displayValidIds(IssueRegistry registry, PrintStream out) {
+    private static void displayValidIds(IssueRegistry registry, PrintWriter out) {
         List<Category> categories = registry.getCategories();
         out.println("Valid issue categories:");
         for (Category category : categories) {
@@ -1945,7 +1956,7 @@ public class Main {
         }
     }
 
-    private static void listIssue(PrintStream out, Issue issue) {
+    private static void listIssue(PrintWriter out, Issue issue) {
         out.print(wrapArg("\"" + issue.getId() + "\": " + issue.getBriefDescription(TEXT)));
     }
 
@@ -2044,10 +2055,14 @@ public class Main {
     }
 
     private static void printUsage(PrintStream out) {
+        printUsage(printWriter(out));
+    }
+
+    private static void printUsage(PrintWriter out) {
         printUsage(out, false);
     }
 
-    static void printUsage(PrintStream out, boolean markdown) {
+    static void printUsage(PrintWriter out, boolean markdown) {
         String command = "lint";
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
@@ -2258,7 +2273,7 @@ public class Main {
                 markdown);
     }
 
-    static void printUsage(PrintStream out, String[] args, boolean md) {
+    static void printUsage(PrintWriter out, String[] args, boolean md) {
         int argWidth = 0;
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];

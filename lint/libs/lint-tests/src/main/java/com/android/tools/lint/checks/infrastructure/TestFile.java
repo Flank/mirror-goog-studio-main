@@ -206,7 +206,8 @@ public class TestFile {
             String to;
             //noinspection VariableNotUsedInsideIf
             if (cls == null) {
-                assert !source.contains("{") : "Couldn't find class declaration in source";
+                assert !source.contains("{")
+                        : "Couldn't find class declaration in source: " + source;
                 to = pkg.replace('.', '/') + '/' + "package-info.java";
             } else {
                 to = pkg.replace('.', '/') + '/' + cls + DOT_JAVA;

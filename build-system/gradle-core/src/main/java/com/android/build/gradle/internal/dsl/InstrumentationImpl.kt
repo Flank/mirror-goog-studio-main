@@ -23,13 +23,13 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Instrumentation
 import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.SetProperty
 
 class InstrumentationImpl(
     services: TaskCreationServices,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     private val isLibraryVariant: Boolean
 ) : Instrumentation {
 
@@ -61,7 +61,7 @@ class InstrumentationImpl(
     }
 
     override val excludes: SetProperty<String> =
-        variantPropertiesApiServices.setPropertyOf(String::class.java, mutableListOf())
+        variantServices.setPropertyOf(String::class.java, mutableListOf())
 
     // private APIs
 

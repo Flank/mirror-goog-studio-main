@@ -20,7 +20,7 @@ import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 enum class NativeBuildSystem {
-    NDK_BUILD, CMAKE
+    NDK_BUILD, CMAKE, NINJA
 }
 
 /**

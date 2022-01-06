@@ -133,7 +133,9 @@ class UtpTestRunner @JvmOverloads constructor(
             val mergedTestResultPbFile = File(resultsDir, TEST_RESULT_PB_FILE_NAME)
             val resultsMerger = UtpTestSuiteResultMerger()
             resultProtos.forEach(resultsMerger::merge)
-            resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
+            mergedTestResultPbFile.outputStream().use {
+                resultsMerger.result.writeTo(it)
+            }
             logger.quiet(
                 "\nTest results saved as ${mergedTestResultPbFile.toURI()}. " +
                         "Inspect these results in Android Studio by selecting Run > Import Tests " +

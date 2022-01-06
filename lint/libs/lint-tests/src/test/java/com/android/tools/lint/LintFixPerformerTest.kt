@@ -17,9 +17,17 @@
 package com.android.tools.lint
 
 import com.android.SdkConstants
+import com.android.tools.lint.checks.LintDetectorDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.client.api.LintDriverCrashTest
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
+import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
 import com.android.utils.toSystemLineSeparator
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
@@ -28,12 +36,14 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 class LintFixPerformerTest : TestCase() {
+    @Suppress("LintImplTextFormat")
     fun check(
         file: File,
         source: String,
         vararg fixes: LintFix,
         expected: String,
-        expectedOutput: String? = null
+        expectedOutput: String? = null,
+        expectedFailure: String? = null
     ) {
         val client = TestLintClient()
         for (fix in fixes) {
@@ -59,7 +69,24 @@ class LintFixPerformerTest : TestCase() {
                 output = stringWriter.toString()
             }
         }
-        performer.fix(file, fixes.toList(), source)
+        val testIncident = Incident().apply { issue =
+            Issue.create(
+                "_FixPerformerTestIssue",
+                "Sample",
+                "Sample",
+                Category.CORRECTNESS, 5, Severity.WARNING,
+                Implementation(LintDetectorDetector::class.java, Scope.RESOURCE_FILE_SCOPE)
+            )
+        }
+        try {
+            performer.fix(file, testIncident, fixes.toList(), source)
+        } catch (e: Throwable) {
+            if (expectedFailure != null) {
+                assertEquals(expectedFailure.trimIndent().trim(), e.message)
+            } else {
+                throw e
+            }
+        }
         assertEquals(expected.trimIndent().trim(), after.trim())
         if (expectedOutput != null) {
             assertEquals(
@@ -89,6 +116,49 @@ class LintFixPerformerTest : TestCase() {
             2nd line.
             Third line.""",
             expectedOutput = "Applied 1 edits across 1 files for this fix: Replace with 2nd"
+        )
+    }
+
+    fun testInvalidTextReplaceFix() {
+        val file = File("source.txt")
+        val source =
+            """
+            First line.
+            """.trimIndent()
+
+        val range = Location.create(file, source, 0, source.length)
+        val fix =
+            fix().replace().text("Not Present").range(range).with("2nd").autoFix().build()
+        check(
+            file, source, fix,
+            expected = "First line.",
+            expectedFailure = """
+                Did not find "Not Present" in "First line." in source.txt as suggested in the quickfix.
+
+                Consider calling ReplaceStringBuilder#range() to set a larger range to
+                search than the default highlight range.
+
+                (This fix is associated with the issue id `_FixPerformerTestIssue`,
+                reported via com.android.tools.lint.checks.LintDetectorDetector.)
+                """
+        )
+    }
+
+    fun testInvalidRegexReplaceFix() {
+        val file = File("source.txt")
+        val source = "First line."
+        val range = Location.create(file, source, 0, source.length)
+        val fix =
+            fix().replace().pattern("(Not Present)").range(range).with("2nd").autoFix().build()
+        check(
+            file, source, fix,
+            expected = "First line.",
+            expectedFailure = """
+                Did not match pattern "(Not Present)" in "First line." in source.txt as suggested in the quickfix.
+
+                (This fix is associated with the issue id `_FixPerformerTestIssue`,
+                reported via com.android.tools.lint.checks.LintDetectorDetector.)
+                """
         )
     }
 

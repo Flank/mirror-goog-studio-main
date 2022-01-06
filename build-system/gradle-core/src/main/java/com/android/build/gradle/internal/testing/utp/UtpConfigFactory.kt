@@ -194,10 +194,11 @@ class UtpConfigFactory {
         additionalTestOutputDir: File?,
         useOrchestrator: Boolean,
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
+        emulatorGpuFlag: String,
         shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
-            addDevice(createGradleManagedDevice(device, utpDependencies))
+            addDevice(createGradleManagedDevice(device, utpDependencies, emulatorGpuFlag))
             addTestFixture(
                 createTestFixture(
                     null, null, appApks, additionalInstallOptions, helperApks, testData,
@@ -262,19 +263,21 @@ class UtpConfigFactory {
 
     private fun createGradleManagedDevice(
         managedDevice: UtpManagedDevice,
-        utpDependencies: UtpDependencies
+        utpDependencies: UtpDependencies,
+        emulatorGpuFlag: String
     ): DeviceProto.Device {
         return DeviceProto.Device.newBuilder().apply {
             deviceIdBuilder.apply {
                 id = managedDevice.id
             }
-            provider = createGradleDeviceProvider(managedDevice, utpDependencies)
+            provider = createGradleDeviceProvider(managedDevice, utpDependencies, emulatorGpuFlag)
         }.build()
     }
 
     private fun createGradleDeviceProvider(
         deviceInfo: UtpManagedDevice,
-        utpDependencies: UtpDependencies
+        utpDependencies: UtpDependencies,
+        emulatorGpuFlag: String,
     ): ExtensionProto.Extension {
         return ANDROID_DEVICE_PROVIDER_GRADLE.toExtensionProto(
             utpDependencies, GradleManagedAndroidDeviceProviderConfig::newBuilder) {
@@ -289,6 +292,7 @@ class UtpConfigFactory {
                     path = deviceInfo.emulatorPath
                 }.build())
                 gradleDslDeviceName = deviceInfo.deviceName
+                emulatorGpu = emulatorGpuFlag
             }
             adbServerPort = DEFAULT_ADB_SERVER_PORT
         }

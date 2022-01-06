@@ -114,12 +114,15 @@ import com.intellij.openapi.util.Computable;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiModifierListOwner;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -1173,7 +1176,8 @@ public class TestLintClient extends LintCliClient {
                                     + "\n"
                                     + "in a reported error message; this is discouraged because absolute\n"
                                     + "paths do not play well with baselines, shared HTML reports, remote\n"
-                                    + "caching, etc.");
+                                    + "caching, etc. If you really want this, you can set the property\n"
+                                    + "`lint().allowAbsolutePathsInMessages(true)`.");
                 }
                 offset = matcher.end();
             }
@@ -1199,8 +1203,10 @@ public class TestLintClient extends LintCliClient {
         // after reporting it.
         try {
             File xmlFile = File.createTempFile("incident", ".xml");
-            XmlWriter xmlWriter =
-                    new XmlWriter(this, XmlFileType.INCIDENTS, new FileWriter(xmlFile));
+            Writer writer =
+                    new BufferedWriter(
+                            new OutputStreamWriter(new FileOutputStream(xmlFile), Charsets.UTF_8));
+            XmlWriter xmlWriter = new XmlWriter(this, XmlFileType.INCIDENTS, writer);
             xmlWriter.writeIncidents(Collections.singletonList(incident), emptyList());
 
             // Read it back

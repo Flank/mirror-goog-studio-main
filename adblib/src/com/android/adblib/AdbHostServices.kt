@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.Flow
 interface AdbHostServices {
 
     /**
+     * The session this [AdbHostServices] instance belongs to.
+     */
+    val session: AdbLibSession
+
+    /**
      * Returns the internal version of the ADB server ("host:version" query).
      *
      * The internal version is an integer value that is incremented when newer builds of ADB
@@ -36,14 +41,14 @@ interface AdbHostServices {
      * device ([short][DeviceInfoFormat.SHORT_FORMAT] or [long][DeviceInfoFormat.LONG_FORMAT]
      * format supported).
      */
-    suspend fun devices(format: DeviceInfoFormat): DeviceList
+    suspend fun devices(format: DeviceInfoFormat = DeviceInfoFormat.SHORT_FORMAT): DeviceList
 
     /**
      * Returns a [Flow] that emits a new [DeviceList] everytime a device state change is
      * detected by the ADB Host ("host:track-devices" query). The flow is active until
      * an exception is thrown or cancellation is requested by the flow consumer.
      */
-    fun trackDevices(format: DeviceInfoFormat): Flow<DeviceList>
+    fun trackDevices(format: DeviceInfoFormat = DeviceInfoFormat.SHORT_FORMAT): Flow<DeviceList>
 
     enum class DeviceInfoFormat {
         /**

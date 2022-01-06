@@ -153,8 +153,9 @@ fun runUtpTestSuiteAndWait(
 
                 val resultsProto = resultsProto
                 val testPassed = if (resultsProto != null) {
-                    val testResultPbFile = File(config.utpOutputDir, TEST_RESULT_PB_FILE_NAME)
-                    resultsProto.writeTo(testResultPbFile.outputStream())
+                    File(config.utpOutputDir, TEST_RESULT_PB_FILE_NAME).outputStream().use {
+                        resultsProto.writeTo(it)
+                    }
                     val testFailed = resultsProto.hasPlatformError() ||
                             resultsProto.testResultList.any { testCaseResult ->
                                 testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED

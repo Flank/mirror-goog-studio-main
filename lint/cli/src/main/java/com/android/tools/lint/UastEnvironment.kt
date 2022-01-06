@@ -354,10 +354,6 @@ private fun configureProjectEnvironment(
         KotlinUastResolveProviderService::class.java,
         CliKotlinUastResolveProviderService::class.java
     )
-    project.registerService(
-        BaseKotlinUastResolveProviderService::class.java,
-        CliKotlinUastResolveProviderService::class.java
-    )
 
     // PsiNameHelper is used by Kotlin UAST.
     project.registerService(PsiNameHelper::class.java, PsiNameHelperImpl::class.java)
@@ -395,7 +391,7 @@ private fun configureApplicationEnvironment(appEnv: CoreApplicationEnvironment) 
     }
 
     // Mark the registry as loaded, otherwise there are warnings upon registry value lookup.
-    Registry.getInstance().markAsLoaded()
+    Registry.markAsLoaded()
 
     // The Kotlin compiler does not use UAST, so we must configure it ourselves.
     CoreApplicationEnvironment.registerApplicationExtensionPoint(
@@ -409,6 +405,10 @@ private fun configureApplicationEnvironment(appEnv: CoreApplicationEnvironment) 
     appEnv.addExtension(UastLanguagePlugin.extensionPointName, JavaUastLanguagePlugin())
     appEnv.addExtension(UastLanguagePlugin.extensionPointName, KotlinUastLanguagePlugin())
     appEnv.addExtension(UEvaluatorExtension.EXTENSION_POINT_NAME, KotlinEvaluatorExtension())
+    appEnv.application.registerService(
+        BaseKotlinUastResolveProviderService::class.java,
+        CliKotlinUastResolveProviderService::class.java
+    )
 
     // These extensions points seem to be needed too, probably because Lint
     // triggers different IntelliJ code paths than the Kotlin compiler does.

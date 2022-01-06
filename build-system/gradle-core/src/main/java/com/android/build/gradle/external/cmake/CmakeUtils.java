@@ -26,11 +26,9 @@ import com.android.build.gradle.external.cmake.server.Configuration;
 import com.android.build.gradle.external.cmake.server.FileGroup;
 import com.android.build.gradle.external.cmake.server.Project;
 import com.android.build.gradle.external.cmake.server.Target;
-import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
 import com.android.repository.Revision;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -79,48 +77,6 @@ public class CmakeUtils {
     @NonNull
     public static Revision getVersion(@NonNull String cmakeVersionString) {
         return Revision.parseRevision(cmakeVersionString);
-    }
-
-    /**
-     * Returns the build command for the given target (given the output folder and cmake
-     * executable).
-     */
-    @NonNull
-    public static List<String> getBuildCommand(
-            @NonNull File cmakeExecutable, @NonNull File outputFolder, @NonNull String targetName) {
-        return ImmutableList.of(
-                getNinjaExecutable(cmakeExecutable),
-                "-C",
-                outputFolder.getAbsolutePath(),
-                targetName);
-    }
-
-    /**
-     * Returns the command to clean up for the given target (given the output folder and cmake
-     * executable).
-     */
-    @NonNull
-    public static List<String> getCleanCommand(
-            @NonNull File cmakeExecutable, @NonNull File outputFolder) {
-        return ImmutableList.of(
-                getNinjaExecutable(cmakeExecutable), "-C", outputFolder.getAbsolutePath(), "clean");
-    }
-
-    /**
-     * Returns the command to build multiple targets. Before executing the returned command, the
-     * targets to build must be substituted using the substituteBuildTargetsCommand method.
-     */
-    public static List<String> getBuildTargetsCommand(
-            @NonNull File cmakeExecutable,
-            @NonNull File outputFolder,
-            @NonNull List<String> buildCommandArgs) {
-        return ImmutableList.<String>builder()
-                .add(getNinjaExecutable(cmakeExecutable))
-                .addAll(buildCommandArgs)
-                .add("-C")
-                .add(outputFolder.getAbsolutePath())
-                .add(CxxRegularBuilder.BUILD_TARGETS_PLACEHOLDER)
-                .build();
     }
 
     /** Returns the C++ file extensions for the given code model. */
@@ -270,25 +226,6 @@ public class CmakeUtils {
         } // Configuration
 
         return languageSet;
-    }
-
-    /**
-     * Returns the path to the Ninja executable if it exists next to the cmakeExecutable; otherwise
-     * assumes Ninja exists exist on $PATH and returns just the platform specific Ninja binary name.
-     */
-    @VisibleForTesting
-    @NonNull
-    static String getNinjaExecutable(@NonNull File cmakeExecutable) {
-        File cmakeBinFolder = cmakeExecutable.getParentFile();
-        File possibleNinja =
-                isWindows()
-                        ? new File(cmakeBinFolder, "ninja.exe")
-                        : new File(cmakeBinFolder, "ninja");
-        if (possibleNinja.isFile()) {
-            return possibleNinja.getPath();
-        }
-
-        return isWindows() ? "ninja.exe" : "ninja";
     }
 
     /** Returns true if currently on Windows. */

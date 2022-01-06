@@ -105,9 +105,9 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
                 artProfile.save(it, ArtProfileSerializer.V0_1_0_P)
             }
 
-            // create the metadata for N and above.
+            // create the metadata.
             parameters.binaryArtProfileMetadataOutputFile.get().asFile.outputStream().use {
-                artProfile.save(it, ArtProfileSerializer.METADATA_FOR_N)
+                artProfile.save(it, ArtProfileSerializer.METADATA_0_0_2)
             }
         }
     }

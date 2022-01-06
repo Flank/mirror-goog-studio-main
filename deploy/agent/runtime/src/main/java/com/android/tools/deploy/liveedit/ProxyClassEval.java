@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
-class ProxyClassEval extends AndroidEval {
+class ProxyClassEval extends BackPorterEval {
 
     private final LiveEditContext context;
 
@@ -37,8 +37,6 @@ class ProxyClassEval extends AndroidEval {
     @NonNull
     @Override
     public Value getField(@NonNull Value target, FieldDescription field) {
-        String className = field.getOwnerInternalName();
-
         if (target.obj() instanceof ProxyClass) {
             Log.v("live.deploy.lambda", "getField: " + field);
             ProxyClassHandler handler =
@@ -51,8 +49,6 @@ class ProxyClassEval extends AndroidEval {
 
     @Override
     public void setField(@NonNull Value target, FieldDescription field, Value value) {
-        String className = field.getOwnerInternalName();
-
         if (target.obj() instanceof ProxyClass) {
             Log.v("live.deploy.lambda", "setField: " + field);
             ProxyClassHandler handler =
@@ -124,10 +120,7 @@ class ProxyClassEval extends AndroidEval {
     @NonNull
     @Override
     public Value invokeMethod(
-            @NonNull Value target,
-            MethodDescription method,
-            @NonNull List<? extends Value> args,
-            boolean invokeSpecial) {
+            @NonNull Value target, MethodDescription method, @NonNull List<? extends Value> args) {
         final String methodName = method.getName();
         final String methodDesc = method.getDesc();
 
@@ -137,7 +130,7 @@ class ProxyClassEval extends AndroidEval {
             return makeValue(result, Type.getReturnType(methodDesc));
         }
 
-        return super.invokeMethod(target, method, args, invokeSpecial);
+        return super.invokeMethod(target, method, args);
     }
 
     @NonNull

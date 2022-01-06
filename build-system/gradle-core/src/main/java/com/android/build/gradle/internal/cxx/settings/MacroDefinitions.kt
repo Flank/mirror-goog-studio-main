@@ -214,7 +214,7 @@ enum class Macro(
         example = "${NDK_PROJECT_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja",
         ndkBuildExample = "",
         cmakeProperties = listOf(CMAKE_MAKE_PROGRAM),
-        bind = CxxCmakeModuleModel::ninjaExe),
+        bind = CxxModuleModel::ninjaExe),
     NDK_MODULE_CMAKE_GENERATOR(
         description = "Name of the generator used by CMake.",
         environment = GRADLE,

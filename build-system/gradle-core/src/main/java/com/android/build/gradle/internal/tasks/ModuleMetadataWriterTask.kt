@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -61,6 +62,12 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
     @get:Input
     abstract val abiFilters: ListProperty<String>
 
+    @get:Input
+    abstract val ignoredLibraryKeepRules: SetProperty<String>
+
+    @get:Input
+    abstract val ignoreAllLibraryKeepRules: Property<Boolean>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -71,7 +78,9 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
                 versionCode = versionCode.orNull?.toString(),
                 versionName = versionName.orNull,
                 debuggable = debuggable.get(),
-                abiFilters = abiFilters.get()
+                abiFilters = abiFilters.get(),
+                ignoredLibraryKeepRules = ignoredLibraryKeepRules.get(),
+                ignoreAllLibraryKeepRules = ignoreAllLibraryKeepRules.get()
             )
 
         declaration.save(outputFile.get().asFile)
@@ -108,6 +117,10 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             task.versionCode.setDisallowChanges(creationConfig.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(creationConfig.outputs.getMainSplit().versionName)
             task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis.sorted())
+            task.ignoredLibraryKeepRules.setDisallowChanges(
+                    creationConfig.variantDslInfo.ignoredLibraryKeepRules)
+            task.ignoreAllLibraryKeepRules.setDisallowChanges(
+                    creationConfig.ignoreAllLibraryKeepRules)
         }
     }
 }

@@ -243,10 +243,10 @@ public class NdkSampleTest {
             testClassifiers.addAll(CommandClassifier.DEFAULT_CLASSIFIERS);
             testClassifiers.addAll(extraTestClassifiers);
             List<CommandLine> commandLines =
-                    CommandLineParser.parse(variantBuildOutputText, fileConventions);
+                    CommandLineParser.parse(variantBuildOutputText, fileConventions.os());
             List<BuildStepInfo> recognized =
                     CommandClassifier.classify(
-                            variantBuildOutputText, fileConventions, testClassifiers);
+                            variantBuildOutputText, fileConventions.os(), testClassifiers);
             checkAllCommandsRecognized(commandLines, recognized);
             checkExpectedCompilerParserBehavior(commandLines);
 

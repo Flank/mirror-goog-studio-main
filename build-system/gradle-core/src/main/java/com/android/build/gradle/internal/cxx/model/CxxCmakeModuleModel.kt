@@ -36,10 +36,4 @@ data class CxxCmakeModuleModel(
      * The effective minimum version required.
      */
     val minimumCmakeVersion: Revision,
-
-    /**
-     * Path to ninja.exe, Null means the we will let CMake find the ninja executable
-     *   ex, /path/to/ninja/ninja.exe
-     */
-    val ninjaExe: File?,
 )

@@ -315,7 +315,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "}\n"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected).expectFixDiffs(
+        ).allowNonAlphabeticalFixOrder(true).run().expect(expected).expectFixDiffs(
             """
             Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_INDEFINITE:
             @@ -27 +27
@@ -1740,7 +1740,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect(
+        ).allowNonAlphabeticalFixOrder(true).run().expect(
             """
             src/test/pkg/ExactAlarmTest.java:7: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
                     alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
@@ -1973,5 +1973,44 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).testModes(TestMode.Companion.DEFAULT).run().expectClean()
+    }
+
+    fun test210507429() {
+        // 210507429: Linter incorrectly asserts `android.content.ContextWrapper#checkCallingPermission` should take in
+        //            PackageManager.PERMISSION_GRANTED or PackageManager.PERMISSION_DENIED
+        lint().files(
+            kotlin(
+                """
+                package test.api
+
+                import android.Manifest.permission.ACCEPT_HANDOVER
+                import android.Manifest.permission.CAMERA
+                import android.content.pm.PackageManager.PERMISSION_DENIED
+                import android.content.pm.PackageManager.PERMISSION_GRANTED
+                import androidx.annotation.CheckResult
+                import androidx.annotation.IntDef
+                import androidx.annotation.StringDef
+
+                class ParameterTest {
+                    fun test() {
+                        val permissionResult = checkCallingPermission(CAMERA)
+                    }
+
+                    @CheckResult
+                    @PermissionResult
+                    fun checkCallingPermission(@PermissionName name: String): Int = TODO()
+
+                    @IntDef(value = [PERMISSION_GRANTED, PERMISSION_DENIED])
+                    @Retention(AnnotationRetention.SOURCE)
+                    annotation class PermissionResult
+
+                    @StringDef(value = [CAMERA, ACCEPT_HANDOVER])
+                    @Retention(AnnotationRetention.SOURCE)
+                    annotation class PermissionName
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 }

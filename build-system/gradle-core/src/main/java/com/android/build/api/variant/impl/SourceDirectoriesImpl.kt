@@ -17,11 +17,10 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.SourceDirectories
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternFilterable
@@ -34,14 +33,14 @@ import java.io.File
  *
  * @param _name name of the source directories, as returned by [SourceType.name]
  * @param projectDirectory the project's directory.
- * @param variantServices the variant's [VariantPropertiesApiServices]
+ * @param variantServices the variant's [VariantServices]
  * @param variantDslFilters filters set on the variant specific source directory in the DSL, may be null if
  * the is no variant specific source directory.
  */
 class SourceDirectoriesImpl(
     private val _name: String,
     private val projectDirectory: Directory,
-    private val variantServices: VariantPropertiesApiServices,
+    private val variantServices: VariantServices,
     private val variantDslFilters: PatternFilterable?
 ): SourceDirectories {
 

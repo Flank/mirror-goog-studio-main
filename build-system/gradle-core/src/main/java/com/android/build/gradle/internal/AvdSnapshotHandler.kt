@@ -72,6 +72,7 @@ class AvdSnapshotHandler(
         avdName: String,
         emulatorExecutable: File,
         avdLocation: File,
+        emulatorGpuFlag: String,
         logger: ILogger,
         snapshotName: String = "default_boot"
     ): Boolean {
@@ -83,7 +84,7 @@ class AvdSnapshotHandler(
                 "-no-window",
                 "-no-boot-anim",
                 "-gpu",
-                "auto-no-window",
+                emulatorGpuFlag,
                 "-check-snapshot-loadable",
                 snapshotName
             )
@@ -134,6 +135,7 @@ class AvdSnapshotHandler(
         emulatorExecutable: File,
         adbExecutable: File,
         avdLocation: File,
+        emulatorGpuFlag: String,
         logger: ILogger
     ) {
         logger.verbose("Creating snapshot for $avdName")
@@ -149,7 +151,7 @@ class AvdSnapshotHandler(
                 "-id",
                 deviceId,
                 "-gpu",
-                "auto-no-window",
+                emulatorGpuFlag,
             )
         )
         processBuilder.environment()["ANDROID_AVD_HOME"] = avdLocation.absolutePath

@@ -62,7 +62,7 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
         val profile = ArtProfile(hrp, obf, apk)
         profile.save(outFile.outputStream(), ArtProfileSerializer.V0_1_0_P)
         if (metaFile != null) {
-            profile.save(metaFile.outputStream(), ArtProfileSerializer.METADATA_FOR_N)
+            profile.save(metaFile.outputStream(), ArtProfileSerializer.METADATA_0_0_2)
         }
     }
 }

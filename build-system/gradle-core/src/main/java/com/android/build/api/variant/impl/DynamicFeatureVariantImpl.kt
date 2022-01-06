@@ -25,7 +25,6 @@ import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
-import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Component
@@ -45,7 +44,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.ModuleMetadata
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
@@ -69,7 +68,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    internalServices: VariantPropertiesApiServices,
+    internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     globalTaskCreationConfig: GlobalTaskCreationConfig,
 ) : VariantImpl(
@@ -182,7 +181,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             ) ?: emptyList()
         }
 
-    override val signingConfig: SigningConfigImpl? = null
+    override val signingConfigImpl: SigningConfigImpl? = null
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, only present for old variant API.
@@ -289,4 +288,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
+
+    override val ignoredLibraryKeepRules: Provider<Set<String>> =
+            baseModuleMetadata.map { it.ignoredLibraryKeepRules }
 }

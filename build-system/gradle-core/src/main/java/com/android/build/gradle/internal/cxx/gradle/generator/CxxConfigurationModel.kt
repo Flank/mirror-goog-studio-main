@@ -94,6 +94,7 @@ data class CxxConfigurationModel(
  */
 enum class NativeBuildOutputOptions {
     VERBOSE, // Whether to forward the full native build, configure, and clean output to stdout.
+    PREFAB_STDOUT, // Whether to forward the full native prefab output to stdout.
     CONFIGURE_STDOUT, // Whether to forward the full native configure output to stdout.
     BUILD_STDOUT, // Whether to forward the full native build output to stdout.
     CLEAN_STDOUT, // Whether to forward the full native clean output to stdout.

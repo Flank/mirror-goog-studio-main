@@ -368,6 +368,87 @@ class WearableConfigurationActionDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testActionDuplicate() {
+        lint().files(
+            GRADLE_WATCHFACE_DEPENDENCY,
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="androidx.wear.watchface.samples.minimal.style">
+
+                  <uses-feature android:name="android.hardware.type.watch" />
+
+                  <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+                  <application
+                      android:allowBackup="true"
+                      android:icon="@mipmap/ic_launcher"
+                      android:label="@string/app_name"
+                      android:supportsRtl="true"
+                      android:theme="@android:style/Theme.DeviceDefault"
+                      android:fullBackupContent="false">
+
+                    <activity
+                        android:name=".ConfigActivity"
+                        android:label="@string/configuration_title">
+                      <intent-filter>
+                        <action android:name="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+
+                        <category
+                            android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION" />
+                        <category android:name="android.intent.category.DEFAULT" />
+                      </intent-filter>
+                    </activity>
+
+                    <service
+                        android:name=".WatchFaceService"
+                        android:directBootAware="true"
+                        android:exported="true"
+                        android:label="@string/app_name"
+                        android:permission="android.permission.BIND_WALLPAPER">
+
+                      <intent-filter>
+                        <action android:name="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+                      </intent-filter>
+
+                      <intent-filter>
+                        <action android:name="android.service.wallpaper.WallpaperService" />
+                        <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+                      </intent-filter>
+
+                      <meta-data
+                          android:name="com.google.android.wearable.watchface.preview"
+                          android:resource="@drawable/preview" />
+
+                      <meta-data
+                          android:name="android.service.wallpaper"
+                          android:resource="@xml/watch_face" />
+
+                      <meta-data
+                          android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
+                          android:value="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+
+                      <meta-data
+                          android:name="com.google.android.wearable.watchface.companionBuiltinConfigurationEnabled"
+                          android:value="true" />
+
+                    </service>
+
+                  </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/main/AndroidManifest.xml:20: Warning: Duplicate watch face configuration activities found [WearableActionDuplicate]
+                    <action android:name="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testCorrectWearableConfiguration() {
         lint().files(
             GRADLE_WATCHFACE_DEPENDENCY,

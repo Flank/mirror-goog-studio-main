@@ -23,7 +23,6 @@ import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.AndroidSdkHandler
-import com.android.tools.lint.checks.AbstractCheckTest.isWindows
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -56,9 +55,7 @@ class SimplePlatformLookupTest {
 
     private fun checkQueries(sdkFolder: File, checks: (PlatformLookup) -> Unit) {
         checkWithSimple(sdkFolder, checks)
-        if (!isWindows()) {
-            checkWithFull(sdkFolder, checks)
-        }
+        checkWithFull(sdkFolder, checks)
     }
 
     private fun checkWithFull(
@@ -132,7 +129,7 @@ class SimplePlatformLookupTest {
     fun testLatest() {
         checkQueries { lookup ->
             assertEquals(
-                "Platform android-30; api=API 30, rev=3",
+                "Platform android-31; api=API 31, rev=2",
                 lookup.getLatestSdkTarget(includePreviews = false).describe()
             )
 //            assertEquals(
@@ -260,7 +257,8 @@ class SimplePlatformLookupTest {
                     "Platform android-29; api=API 29, rev=5\n" +
                     "Platform android-R; api=API 29, R preview, rev=4\n" +
                     "Platform android-30; api=API 30, rev=3\n" +
-                    "Platform android-S; api=API 30, S preview, rev=2",
+                    "Platform android-S; api=API 30, S preview, rev=2\n" +
+                    "Platform android-31; api=API 31, rev=2",
                 string
             )
         }
@@ -382,6 +380,7 @@ class SimplePlatformLookupTest {
         createSamplePlatform(sdk, "android-29", 29, null, 5)
         createSamplePlatform(sdk, "android-R", 29, "R", 4)
         createSamplePlatform(sdk, "android-30", 30, null, 3)
+        createSamplePlatform(sdk, "android-31", 31, null, 2)
 
         // Not a real target as of this writing but here to
         // test getLatest+includePreviews

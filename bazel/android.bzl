@@ -106,6 +106,46 @@ def select_target_android_host_unx(v, default):
         "//conditions:default": default,
     })
 
+def _aidl_to_java(filename, output_dir):
+    """Converts the name of an .aidl file to the name of a generated .java file by replacing
+       the file extension and the directory prefix up to the "aidl" segment with the value of
+       the output_dir parameter."""
+
+    if filename.endswith(".aidl"):
+        filename = filename[:-len(".aidl")] + ".java"
+    segments = filename.split("/")
+    return output_dir + "/" + "/".join(segments[segments.index("aidl") + 1:])
+
+def aidl_library(name, srcs = [], visibility = None, tags = [], deps = []):
+    """Builds a Java library out of .aidl files."""
+
+    gen_name = name + "_gen_aidl"
+    intermediates = [_aidl_to_java(filename, gen_name) for filename in srcs]
+    cmd = ("LD_LIBRARY_PATH=$(location //prebuilts/studio/sdk:build-tools/latest/aidl)/../lib64" +
+           " $(location //prebuilts/studio/sdk:build-tools/latest/aidl)" +
+           " -p$(location //prebuilts/studio/sdk:platforms/latest/framework.aidl)" +
+           " $< -o$(RULEDIR)/" + gen_name)
+    tools = [
+        "//prebuilts/studio/sdk:build-tools/latest",
+        "//prebuilts/studio/sdk:build-tools/latest/aidl",
+        "//prebuilts/studio/sdk:platforms/latest/framework.aidl",
+    ]
+    native.genrule(
+        name = gen_name,
+        srcs = srcs,
+        outs = intermediates,
+        tags = tags,
+        cmd = cmd,
+        tools = tools,
+    )
+    native.java_library(
+        name = name,
+        srcs = intermediates,
+        visibility = visibility,
+        tags = tags,
+        deps = deps,
+    )
+
 def dex_library(name, jars = [], output = None, visibility = None, tags = [], flags = [], dexer = "D8"):
     if dexer == "DX":
         cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$(SRCS)"

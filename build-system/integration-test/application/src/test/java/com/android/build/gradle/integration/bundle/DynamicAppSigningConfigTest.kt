@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.application.SigningTest
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.SigningHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
@@ -149,7 +150,7 @@ class DynamicAppSigningConfigTest {
             assertThat(apk).contains("META-INF/CERT.RSA")
             assertThat(apk).contains("META-INF/CERT.SF")
             assertThat(apk).containsApkSigningBlock()
-            val result = SigningTest.assertApkSignaturesVerify(apk, 23)
+            val result = SigningHelper.assertApkSignaturesVerify(apk, 23)
             assertThat(result.isVerifiedUsingV1Scheme).isTrue()
             assertThat(result.isVerifiedUsingV2Scheme).isTrue()
             assertThat(result.isVerifiedUsingV3Scheme).isTrue()
@@ -160,7 +161,7 @@ class DynamicAppSigningConfigTest {
             assertThat(androidTestApk).contains("META-INF/CERT.RSA")
             assertThat(androidTestApk).contains("META-INF/CERT.SF")
             assertThat(androidTestApk).containsApkSigningBlock()
-            val androidTestResult = SigningTest.assertApkSignaturesVerify(androidTestApk, 23)
+            val androidTestResult = SigningHelper.assertApkSignaturesVerify(androidTestApk, 23)
             assertThat(androidTestResult.isVerifiedUsingV1Scheme).isTrue()
             assertThat(androidTestResult.isVerifiedUsingV2Scheme).isTrue()
             assertThat(androidTestResult.isVerifiedUsingV3Scheme).isTrue()

@@ -15,6 +15,7 @@
  */
 package androidx.compose.runtime;
 
+// TODO: Should probably translate this to Kotlin instead.
 /** Mock the Jet Pack Compose Runtime */
 public class HotReloader {
     public static String state = "";
@@ -28,6 +29,11 @@ public class HotReloader {
 
         public void loadStateAndCompose(Object c) {
             state += c;
+        }
+
+        public boolean invalidateGroupsWithKey(int key) {
+            System.out.println("invalidateGroupsWithKey(" + key + ")");
+            return true;
         }
     }
 }

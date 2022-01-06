@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Option
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
@@ -536,6 +537,7 @@ open class ConfigurationHierarchy(
             }
 
             override fun getOption(issue: Issue, name: String, default: String?): String? = default
+            override fun getOption(option: Option): Any? = null
             override fun getOptionAsFile(issue: Issue, name: String, default: File?): File? =
                 default
 

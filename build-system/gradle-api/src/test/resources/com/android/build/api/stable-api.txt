@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ef484d2fac266cdd98a2db1ae553519319bf206d2488ece6a3164ee2f9bf4859
+c90a9b9f2cb1a36586315f666b6e73fa7abfcfb0a68e31ec262ce31239580637
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -571,6 +571,7 @@ com.android.build.api.variant.Variant.getProguardFiles: org.gradle.api.provider.
 com.android.build.api.variant.Variant.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.variant.ComponentBuilder
+com.android.build.api.variant.VariantBuilder$DefaultImpls
 com.android.build.api.variant.VariantBuilder.getEnableUnitTest: boolean ()
 com.android.build.api.variant.VariantBuilder.getMaxSdk: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdk: java.lang.Integer ()

@@ -165,6 +165,7 @@ interface AndroidComponentsBuilder {
     fun disableVariant(variantName: String)
     fun disableAndroidTest(variantName: String)
     fun disableUnitTest(variantName: String)
+    fun registerSourceType(name: String)
 }
 
 interface Config {

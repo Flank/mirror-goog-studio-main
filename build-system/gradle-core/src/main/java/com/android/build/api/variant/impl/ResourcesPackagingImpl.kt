@@ -20,23 +20,23 @@ import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 
 open class ResourcesPackagingImpl(
     private val dslPackagingOptions: PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices
+    variantServices: VariantServices
 ) : ResourcesPackaging {
 
     override val excludes =
-        variantPropertiesApiServices.setPropertyOf(String::class.java) { getBaseExcludes() }
+        variantServices.setPropertyOf(String::class.java) { getBaseExcludes() }
 
     override val pickFirsts =
-        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+        variantServices.setPropertyOf(String::class.java) {
             dslPackagingOptions.pickFirsts.union(dslPackagingOptions.resources.pickFirsts)
         }
 
     override val merges =
-        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+        variantServices.setPropertyOf(String::class.java) {
             // the union of dslPackagingOptions.merges and dslPackagingOptions.resources.merges,
             // minus the default patterns removed from either of them.
             dslPackagingOptions.merges

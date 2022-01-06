@@ -105,7 +105,13 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("xx"),
                 StandardCharsets.UTF_8);
 
-        checkFailed(ImmutableList.of("'xx'"), ImmutableList.of());
+        checkFailed(
+                ImmutableList.of(
+                        "'xx'",
+                        // Check that the evaluated command was output.
+                        "C++ build system [build] failed while executing:",
+                        "NDK_DEBUG=1"),
+                ImmutableList.of());
     }
 
     @Test
@@ -168,7 +174,14 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("xx"),
                 StandardCharsets.UTF_8);
 
-        checkFailed(ImmutableList.of("'xx'"), ImmutableList.of());
+        checkFailed(
+                ImmutableList.of(
+                        "'xx'",
+                        // Check that the evaluated command was output.
+                        "C++ build system [build] failed while executing:",
+                        "-C" // Check for a flag passed to ninja
+                        ),
+                ImmutableList.of());
     }
 
     // Related to b.android.com/219899 -- no libraries in CMake caused a NullReferenceException

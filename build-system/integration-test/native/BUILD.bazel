@@ -311,6 +311,15 @@ single_gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/prefabNoDeps",
     ],
     maven_repos = MAVEN_REPOS,
+    shard_count = 2,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "PrefabErrorReportingTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
+    data = DATA,
+    maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
 

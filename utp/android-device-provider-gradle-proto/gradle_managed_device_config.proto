@@ -47,4 +47,8 @@ message GradleManagedDeviceConfig {
 
     // The name of the Managed Device as provided from the dsl.
     string gradle_dsl_device_name = 6;
+
+    // The gpu value passed to the emulator executable to create the managed
+    // device.
+    string emulator_gpu = 7;
 }

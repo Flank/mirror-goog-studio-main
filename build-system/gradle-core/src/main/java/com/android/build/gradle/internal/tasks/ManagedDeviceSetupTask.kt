@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
+import com.android.build.gradle.internal.computeManagedDeviceEmulatorMode
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.services.getBuildService
@@ -81,6 +82,9 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
     @get: Input
     abstract val hardwareProfile: Property<String>
 
+    @get: Input
+    abstract val emulatorGpuFlag: Property<String>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
             it.initializeWith(projectPath,  path, analyticsService)
@@ -93,6 +97,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 computeAvdName(
                     apiLevel.get(), systemImageVendor.get(), abi.get(), hardwareProfile.get()))
             it.hardwareProfile.set(hardwareProfile)
+            it.emulatorGpuFlag.set(emulatorGpuFlag)
         }
     }
 
@@ -114,7 +119,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 parameters.hardwareProfile.get()).get()
 
             parameters.avdService.get().ensureLoadableSnapshot(
-                parameters.deviceName.get())
+                parameters.deviceName.get(),
+                parameters.emulatorGpuFlag.get())
         }
     }
 
@@ -126,6 +132,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
         abstract val imageHash: Property<String>
         abstract val deviceName: Property<String>
         abstract val hardwareProfile: Property<String>
+        abstract val emulatorGpuFlag: Property<String>
     }
 
     private fun computeImageHash(): String {
@@ -171,6 +178,10 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             task.apiLevel.setDisallowChanges(apiLevel)
             task.abi.setDisallowChanges(abi)
             task.hardwareProfile.setDisallowChanges(hardwareProfile)
+
+            task.emulatorGpuFlag.setDisallowChanges(
+                computeManagedDeviceEmulatorMode(creationConfig.services.projectOptions)
+            )
         }
     }
 

@@ -63,5 +63,5 @@ fun findFromRuntimeClassPath(accept: (File) -> Boolean): List<File> {
 
 private fun isKotlinStdLib(file: File): Boolean {
     val name = file.name
-    return name.startsWith("kotlin-stdlib") || name.startsWith("kotlin-reflect") || name.startsWith("kotlin-script-runtime")
+    return name.startsWith("kotlin-stdlib") || name.startsWith("kotlin-reflect")
 }

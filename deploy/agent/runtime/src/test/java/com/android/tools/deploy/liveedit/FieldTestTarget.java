@@ -254,4 +254,15 @@ class FieldTestTarget {
                 + publicStaticObjectField
                 + privateStaticObjectField;
     }
+
+    public static void setStaticBoolean() {
+        boolean b = true;
+        publicStaticBooleanField = b;
+    }
+
+    public static void setBoolean() {
+        FieldTestTarget t = new FieldTestTarget();
+        boolean b = true;
+        t.publicBooleanField = b;
+    }
 }

@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.build.api.variant.AnnotationProcessor
 import com.android.build.gradle.api.AnnotationProcessorOptions
 import com.android.build.gradle.internal.dsl.decorator.LockableList
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -29,7 +29,7 @@ import org.gradle.process.CommandLineArgumentProvider
 class AnnotationProcessorImpl(
     annotationProcessorOptions: AnnotationProcessorOptions,
     val dataBindingEnabled: Boolean,
-    val internalServices: VariantPropertiesApiServices,
+    val internalServices: VariantServices,
 ): AnnotationProcessor {
 
     /**

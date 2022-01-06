@@ -405,11 +405,11 @@ class UastTest : TestCase() {
                                                         UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [hashCode()] : PsiType:int
                                                             UIdentifier (Identifier (hashCode)) [UIdentifier (Identifier (hashCode))]
                                                             USimpleNameReferenceExpression (identifier = hashCode, resolvesTo = null) [hashCode] : PsiType:int
-                                            UExpressionList (when) [    it is java.lang.Integer -> {...    ] : PsiType:Object
-                                                USwitchClauseExpressionWithBody [it is java.lang.Integer -> {...]
-                                                    UBinaryExpressionWithType [it is java.lang.Integer]
+                                            UExpressionList (when) [    it is int -> {...    ] : PsiType:Object
+                                                USwitchClauseExpressionWithBody [it is int -> {...]
+                                                    UBinaryExpressionWithType [it is int]
                                                         USimpleNameReferenceExpression (identifier = it) [it]
-                                                        UTypeReferenceExpression (name = java.lang.Integer) [java.lang.Integer]
+                                                        UTypeReferenceExpression (name = int) [int]
                                                     UExpressionList (when_entry) [{...]
                                                         UYieldExpression [yield println(something)]
                                                             UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:void

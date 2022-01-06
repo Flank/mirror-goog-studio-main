@@ -17,17 +17,16 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Packaging
-import com.android.build.api.variant.ResourcesPackaging
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 
 open class PackagingImpl(
     dslPackagingOptions: com.android.build.api.dsl.PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices
+    variantServices: VariantServices
 ) : Packaging {
 
     override val jniLibs =
-        JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
+        JniLibsPackagingImpl(dslPackagingOptions, variantServices)
 
     override val resources =
-        ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
+        ResourcesPackagingImpl(dslPackagingOptions, variantServices)
 }

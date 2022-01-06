@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.AssertDetector
 import com.android.tools.lint.checks.CheckResultDetector
 import com.android.tools.lint.checks.CommentDetector
 import com.android.tools.lint.checks.DateFormatDetector
+import com.android.tools.lint.checks.DefaultEncodingDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.LintDetectorDetector
 import com.android.tools.lint.checks.SamDetector
@@ -53,6 +54,7 @@ class StudioIssueRegistry : IssueRegistry() {
             InteroperabilityDetector.NO_HARD_KOTLIN_KEYWORDS.setEnabledByDefault(true)
             InteroperabilityDetector.LAMBDA_LAST.setEnabledByDefault(true)
             InteroperabilityDetector.KOTLIN_PROPERTY.setEnabledByDefault(true)
+            DefaultEncodingDetector.ISSUE.setEnabledByDefault(true)
         }
     }
 
@@ -88,7 +90,4 @@ class StudioIssueRegistry : IssueRegistry() {
         PathAsIterableDetector.ISSUE,
         NoOpDetector.ISSUE
     )
-
-    // TODO other checks:
-    // TODO: Creating file reader or writer without UTF-8!
 }

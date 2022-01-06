@@ -85,7 +85,8 @@ fun createPublishingInfoForLibrary(
             ensureUsersInputCorrectness(multipleVariant, buildTypes, productFlavors, issueReporter)
 
             val buildTypeAttribute = computeBuildTypeAttribute(multipleVariant, buildType)
-            val flavorDimensionAttributes = computeFlavorDimensionAttribute(multipleVariant)
+            val flavorDimensionAttributes =
+                computeFlavorDimensionAttribute(multipleVariant, flavorList)
 
             val isClassifierRequired = buildTypeAttribute != null || flavorDimensionAttributes.isNotEmpty()
 
@@ -162,13 +163,21 @@ private fun computeBuildTypeAttribute(
 
 private fun computeFlavorDimensionAttribute(
     multipleVariant : MultipleVariantsImpl,
+    allFlavors: List<ProductFlavor>
 ): MutableSet<String> {
     val flavorDimensionAttributes = mutableSetOf<String>()
-    for (entry in multipleVariant.includedFlavorDimensionAndValues.entries) {
-        if (entry.value.size > 1 || multipleVariant.allVariants) {
-            flavorDimensionAttributes.add(entry.key)
+    if (multipleVariant.allVariants) {
+        allFlavors.map {
+            flavorDimensionAttributes.add(it.dimension!!)
+        }
+    } else {
+        for (entry in multipleVariant.includedFlavorDimensionAndValues.entries) {
+            if (entry.value.size > 1) {
+                flavorDimensionAttributes.add(entry.key)
+            }
         }
     }
+
     return flavorDimensionAttributes
 }
 

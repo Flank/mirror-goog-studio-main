@@ -22,7 +22,6 @@ import java.io.PrintStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-
 class Apk internal constructor(val dexes: List<DexFile>, val name: String = "")
 
 fun Apk(file: File, name: String = ""): Apk {
@@ -66,7 +65,6 @@ class DexFile internal constructor(
     internal val classDefPool = IntArray(header.classDefs.size)
 
     companion object : Comparator<DexFile> {
-
         override fun compare(o1: DexFile?, o2: DexFile?): Int {
             return when {
                 o1 == null && o2 == null -> 0
@@ -75,7 +73,6 @@ class DexFile internal constructor(
                 else -> o1.name.compareTo(o2.name)
             }
         }
-
     }
 }
 
@@ -179,9 +176,9 @@ internal operator fun DexFileData.plus(other: DexFileData?): DexFileData {
 internal class MutableDexFileData(
     val classIdSetSize: Int,
     val typeIdSetSize: Int,
-    val hotMethodRegionSize: Int,
     val numMethodIds: Int,
     val dexFile: DexFile,
+    var hotMethodRegionSize: Int,
     val classIdSet: MutableSet<Int>,
     val typeIdSet: MutableSet<Int>,
     val methods: MutableMap<Int, MethodData>,
@@ -246,3 +243,56 @@ internal fun splitParameters(parameters: String): List<String> {
     }
     return result
 }
+
+/**
+ * A list of known [ReadableFileSection] types.
+ */
+internal enum class FileSectionType(val value: Long) {
+
+    /** Represents a dex file section. This is a required file section type. */
+    DEX_FILES(0L),
+
+    /**
+     * Optional file sections. The only ones we care about are [CLASSES] and [METHODS].
+     * Listing [EXTRA_DESCRIPTORS] & [AGGREGATION_COUNT] for completeness.
+     */
+    EXTRA_DESCRIPTORS(1L),
+    CLASSES(2L),
+    METHODS(3L),
+    AGGREGATION_COUNT(4L);
+
+    companion object {
+        fun parse(value: Long): FileSectionType {
+            val type = values().firstOrNull {
+                it.value == value
+            }
+
+            return type
+                ?: throw IllegalArgumentException("Unsupported FileSection type $value")
+        }
+    }
+}
+
+/**
+ * A Readable Profile Section for ART profiles on Android 12.
+ */
+internal data class ReadableFileSection(
+    val type: FileSectionType,
+    val span: Span,
+    val inflateSize: Int,
+) {
+
+    fun isCompressed(): Boolean {
+        return inflateSize != 0
+    }
+}
+
+/**
+ * A Writable Profile Section for ART profiles on Android 12.
+ */
+internal class WritableFileSection(
+    val type: FileSectionType,
+    val expectedInflateSize: Int,
+    val contents: ByteArray,
+    val needsCompression: Boolean,
+)

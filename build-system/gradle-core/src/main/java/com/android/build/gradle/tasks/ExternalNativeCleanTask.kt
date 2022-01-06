@@ -24,19 +24,18 @@ import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnviron
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.model.logNativeCleanToLifecycle
-import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessType
+import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.executeProcess
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
-import com.android.ide.common.process.ProcessInfoBuilder
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
 import org.gradle.work.DisableCachingByDefault
-import java.io.File
 import javax.inject.Inject
 
 /**
@@ -74,18 +73,20 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                 }
             }
             val configValueList = getNativeBuildMiniConfigs(existingJsonAbis,null)
-            val abiToLogFolder = allAbis
-                    .associate { it.abi.tag to it.intermediatesParentFolder }
-            val batch = configValueList.map { config ->
-                val abiName = config.libraries.values.mapNotNull { it.abi }.distinct().single()
-                CleanProcessInfo(
-                    commands = config.cleanCommandsComponents,
-                    logFolder = abiToLogFolder.getValue(abiName),
-                    targets = config.libraries.values.joinToString { library ->
-                        "${library.artifactName}-${library.abi}"
-                    }
-                )
-            }
+            val abiNameToAbi = allAbis.associateBy { it.abi.tag }
+            val batch = configValueList
+                .filter { config -> config.libraries.values.isNotEmpty() }
+                .map { config ->
+                    val abiName = config.libraries.values.mapNotNull { it.abi }.distinct().single()
+                    val abi = abiNameToAbi.getValue(abiName)
+                    CleanProcessInfo(
+                        abi = abi,
+                        commands = config.cleanCommandsComponents,
+                        targets = config.libraries.values.joinToString { library ->
+                            "${library.artifactName}-${library.abi}"
+                        }
+                    )
+                }
             infoln("about to execute %s clean command batches", batch.size)
             executeProcessBatch(batch)
             infoln("clean complete")
@@ -98,7 +99,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
      * then each subsequent command-line parameter for it.
      */
     private data class CleanProcessInfo(
-        val logFolder : File,
+        val abi : CxxAbiModel,
         val commands : List<List<String>>,
         val targets : String
     )
@@ -108,27 +109,18 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
      * that point.
      */
     private fun executeProcessBatch(cleanProcessInfos: List<CleanProcessInfo>) {
-        val logFullStdout = configurationModel.variant.logNativeCleanToLifecycle
         for (cleanProcessInfo in cleanProcessInfos) with(cleanProcessInfo) {
             for (commandIndex in commands.indices) {
                 val number = if (commandIndex == 0) "" else " [$commandIndex]"
                 val tokens = commands[commandIndex]
                 logger.lifecycle("Clean $targets$number")
-                val processBuilder = ProcessInfoBuilder()
-                processBuilder.setExecutable(tokens[0])
-                processBuilder.addArgs(tokens.drop(1))
-                infoln("$processBuilder")
-                createProcessOutputJunction(
-                    logFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
-                    logFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
-                    logFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
-                    processBuilder,
-                    ""
+                val command = createExecuteProcessCommand(tokens[0])
+                    .addArgs(tokens.drop(1))
+                abi.executeProcess(
+                    processType = ExecuteProcessType.CLEAN_PROCESS,
+                    command = command,
+                    ops = ops
                 )
-                    .logStderr()
-                    .logStdout()
-                    .logFullStdout(logFullStdout)
-                    .execute(ops::exec)
             }
         }
     }

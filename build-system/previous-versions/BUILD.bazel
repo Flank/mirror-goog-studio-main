@@ -149,6 +149,14 @@ gradle_build(
     tasks = ["assembleRelease"],
 )
 
+AGP_3_1_4_ARTIFACTS = ["@maven//:com.android.tools.build.gradle_3.1.4"]
+
+maven_repository(
+    name = "3.1.4",
+    artifacts = AGP_3_1_4_ARTIFACTS,
+    visibility = ["//tools/adt/idea/old-agp-tests:__pkg__"],
+)
+
 maven_repository(
     name = "3.0.0",
     # keep sorted

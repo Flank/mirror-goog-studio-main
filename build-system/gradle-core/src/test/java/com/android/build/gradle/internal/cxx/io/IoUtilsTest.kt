@@ -219,4 +219,21 @@ class IoUtilsTest {
         file2.delete()
         assertThat(file1.isFile).isTrue()
     }
+
+    @Test
+    fun `check removeDuplicateFiles`() {
+        val file1 = temporaryFolder.newFile("my-file-1.txt")
+        val file2 = temporaryFolder.newFile("my-file-2.txt")
+        val sameContentAsFile1 = temporaryFolder.newFile("my-file-3.txt")
+        file1.writeText("content-A")
+        file2.writeText("content-B")
+        sameContentAsFile1.writeText("content-A")
+        assertThat(removeDuplicateFiles(listOf())).isEmpty()
+        assertThat(removeDuplicateFiles(listOf(file1))).isEqualTo(listOf(file1))
+        assertThat(removeDuplicateFiles(listOf(file1, file2))).isEqualTo(listOf(file1, file2))
+        assertThat(removeDuplicateFiles(listOf(file1, file2, sameContentAsFile1)))
+            .isEqualTo(listOf(file1, file2))
+        assertThat(removeDuplicateFiles(listOf(file1, sameContentAsFile1, file2)))
+            .isEqualTo(listOf(file1, file2))
+    }
 }

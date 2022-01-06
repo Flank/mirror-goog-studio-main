@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-fe619f1b82a30a8fdc4ac6cabf242ff0c2d1955caf725da3cbe49cadc5b87842
+7fd44810380bbd2aa36febebfe820755978cc307beede3ccbdee4d5e47428cc6
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -484,7 +484,6 @@ com.android.builder.model.level2.Library.getType: int ()
 com.android.builder.model.level2.Library.getVariant: java.lang.String ()
 com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.CustomSourceDirectory
-com.android.builder.model.v2.CustomSourceDirectory.<init>: com.android.builder.model.v2.CustomSourceDirectory (java.lang.String, java.io.File)
 com.android.builder.model.v2.CustomSourceDirectory.getDirectory: java.io.File ()
 com.android.builder.model.v2.CustomSourceDirectory.getSourceTypeName: java.lang.String ()
 com.android.builder.model.v2.ModelSyncFile

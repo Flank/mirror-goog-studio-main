@@ -22,6 +22,12 @@ const val DEFAULT_SHELL_BUFFER_SIZE = 8_192
  * Exposes services that are executed by the ADB daemon of a given device
  */
 interface AdbDeviceServices {
+
+    /**
+     * The session this [AdbDeviceServices] instance belongs to.
+     */
+    val session: AdbLibSession
+
     /**
      * Returns a [Flow] that, when collected, executes a shell command on a device
      * ("<device-transport>:shell" query) and emits the output of the command to the [Flow].
@@ -161,7 +167,6 @@ fun AdbDeviceServices.shellAsLines(
  * [commandOutputTimeout].
  */
 fun <T> AdbDeviceServices.shellWithIdleMonitoring(
-    host: AdbLibHost,
     device: DeviceSelector,
     command: String,
     stdoutCollector: ShellCollector<T>,
@@ -171,7 +176,6 @@ fun <T> AdbDeviceServices.shellWithIdleMonitoring(
     bufferSize: Int = DEFAULT_SHELL_BUFFER_SIZE,
 ): Flow<T> {
     return ShellWithIdleMonitoring(
-        host,
         this,
         device,
         command,
@@ -238,24 +242,33 @@ fun AdbDeviceServices.shellV2AsLines(
 }
 
 /**
- * The base class of each entry of the [Flow] returned by [AdbDeviceServices.shellV2AsLines]
+ * The base class of each entry of the [Flow] returned by [AdbDeviceServices.shellV2AsLines].
  */
 sealed class ShellCommandOutputElement {
     /**
-     * A `stdout` text line of the shell command
+     * A `stdout` text line of the shell command.
      */
-    class StdoutLine(val contents: String) : ShellCommandOutputElement()
+    class StdoutLine(val contents: String) : ShellCommandOutputElement() {
+        // Returns the contents of the stdout line.
+        override fun toString(): String = contents
+    }
 
     /**
-     * A `stderr` text line of the shell command
+     * A `stderr` text line of the shell command.
      */
-    class StderrLine(val contents: String) : ShellCommandOutputElement()
+    class StderrLine(val contents: String) : ShellCommandOutputElement() {
+        // Returns the contents of the stdout line.
+        override fun toString(): String = contents
+    }
 
     /**
      * The exit code of the shell command. This is always the last entry of the [Flow] returned by
      * [AdbDeviceServices.shellV2AsLines].
      */
-    class ExitCode(val exitCode: Int) : ShellCommandOutputElement()
+    class ExitCode(val exitCode: Int) : ShellCommandOutputElement() {
+        // Returns the exit code in a text form.
+        override fun toString(): String = exitCode.toString()
+    }
 }
 
 /**
@@ -268,8 +281,8 @@ suspend fun AdbDeviceServices.syncSend(
     sourceChannel: AdbInputChannel,
     remoteFilePath: String,
     remoteFileMode: RemoteFileMode,
-    remoteFileTime: FileTime,
-    progress: SyncProgress,
+    remoteFileTime: FileTime? = null,
+    progress: SyncProgress? = null,
     bufferSize: Int = SYNC_DATA_MAX
 ) {
     sync(device).use {
@@ -290,13 +303,12 @@ suspend fun AdbDeviceServices.syncSend(
  * @see [AdbDeviceSyncServices.send]
  */
 suspend fun AdbDeviceServices.syncSend(
-    session: AdbLibSession,
     device: DeviceSelector,
     sourcePath: Path,
     remoteFilePath: String,
     remoteFileMode: RemoteFileMode,
-    remoteFileTime: FileTime,
-    progress: SyncProgress,
+    remoteFileTime: FileTime? = null,
+    progress: SyncProgress? = null,
     bufferSize: Int = SYNC_DATA_MAX
 ) {
     session.channelFactory.openFile(sourcePath).use { source ->
@@ -322,7 +334,7 @@ suspend fun AdbDeviceServices.syncRecv(
     device: DeviceSelector,
     remoteFilePath: String,
     destinationChannel: AdbOutputChannel,
-    progress: SyncProgress,
+    progress: SyncProgress? = null,
     bufferSize: Int = SYNC_DATA_MAX
 ) {
     sync(device).use {
@@ -341,11 +353,10 @@ suspend fun AdbDeviceServices.syncRecv(
  * @see [AdbDeviceSyncServices.recv]
  */
 suspend fun AdbDeviceServices.syncRecv(
-    session: AdbLibSession,
     device: DeviceSelector,
     remoteFilePath: String,
     destinationPath: Path,
-    progress: SyncProgress,
+    progress: SyncProgress? = null,
     bufferSize: Int = SYNC_DATA_MAX
 ) {
     session.channelFactory.createFile(destinationPath).use { destination ->

@@ -68,14 +68,12 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AnchorTaskNames
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
 import com.android.builder.core.VariantTypeImpl
-import com.android.builder.dexing.D8DesugaredMethodsGenerator.generate
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ModelSyncFile
@@ -651,7 +649,7 @@ class ModelBuilder<
         }
 
         val signingConfig = if (component is ApkCreationConfig)
-            component.signingConfig else null
+            component.signingConfigImpl else null
 
         val minSdkVersion =
                 ApiVersionImpl(component.minSdkVersion.apiLevel, component.minSdkVersion.codename)
@@ -679,7 +677,8 @@ class ModelBuilder<
             maxSdkVersion = maxSdkVersion,
 
             signingConfigName = signingConfig?.name,
-            isSigned = signingConfig != null,
+            isSigned = signingConfig?.hasConfig() ?: false,
+
 
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,

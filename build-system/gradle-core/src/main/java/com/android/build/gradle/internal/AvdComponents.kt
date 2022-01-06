@@ -121,8 +121,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
      * @param deviceName The name of the avd to check. This avd should have already been created via
      * a call to get() on the provider returned by [avdProvider].
      */
-    fun ensureLoadableSnapshot(deviceName: String) {
-        avdManager.loadSnapshotIfNeeded(deviceName)
+    fun ensureLoadableSnapshot(deviceName: String, emulatorGpuMode: String) {
+        avdManager.loadSnapshotIfNeeded(deviceName, emulatorGpuMode)
     }
 
     class RegistrationAction(

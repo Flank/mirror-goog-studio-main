@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -88,7 +88,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
             "https://d.android.com/r/tools/use-properties";
 
     @NonNull protected final ComponentImpl component;
-    @NonNull protected final VariantPropertiesApiServices services;
+    @NonNull protected final VariantServices services;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
 
@@ -96,7 +96,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     BaseVariantImpl(
             @NonNull ComponentImpl component,
-            @NonNull VariantPropertiesApiServices services,
+            @NonNull VariantServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         this.component = component;

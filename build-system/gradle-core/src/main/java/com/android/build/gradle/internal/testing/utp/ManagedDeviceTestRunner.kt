@@ -33,6 +33,7 @@ class ManagedDeviceTestRunner(
     private val retentionConfig: RetentionConfig,
     private val useOrchestrator: Boolean,
     private val numShards: Int?,
+    private val emulatorGpuFlag: String,
     private val utpLoggingLevel: Level = Level.WARNING,
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
@@ -98,6 +99,7 @@ class ManagedDeviceTestRunner(
                         additionalTestOutputDir,
                         useOrchestrator,
                         resultListenerServerMetadata,
+                        emulatorGpuFlag,
                         shardConfig
                     )
                 }
@@ -133,7 +135,9 @@ class ManagedDeviceTestRunner(
                 resultProtos.forEach(resultsMerger::merge)
 
                 val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
-                resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
+                mergedTestResultPbFile.outputStream().use {
+                    resultsMerger.result.writeTo(it)
+                }
             }
         }
 

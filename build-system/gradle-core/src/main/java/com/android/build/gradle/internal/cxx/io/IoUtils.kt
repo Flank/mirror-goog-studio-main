@@ -141,23 +141,22 @@ fun compareFileContents(
         source as Any === destination as Any -> return SAME_PATH_BY_FILE_OBJECT_IDENTITY
         source.path == destination.path -> return SAME_PATH_ACCORDING_TO_LEXICAL_PATH
         source.canonicalPath == destination.canonicalPath ->
-        // Canonical path can throw an IO exception when the paths are not valid for the
-        // underlying OS file provider. Here, we let the exception propagate rather than
-        // claiming the files are the same or different.
-        return SAME_PATH_ACCORDING_TO_CANONICAL_PATH
+            // Canonical path can throw an IO exception when the paths are not valid for the
+            // underlying OS file provider. Here, we let the exception propagate rather than
+            // claiming the files are the same or different.
+            return SAME_PATH_ACCORDING_TO_CANONICAL_PATH
         !source.isFile && !destination.isFile -> return SAME_SOURCE_AND_DESTINATION_DID_NOT_EXIST
         !source.isFile -> return NOT_SAME_SOURCE_DID_NOT_EXIST
         !destination.isFile -> return NOT_SAME_DESTINATION_DID_NOT_EXIST
         isSameFile(source.toPath(), destination.toPath()) ->
-        // This method should follow hard links and return true if those files lead to the
-        // same content.
-        return SAME_PATH_ACCORDING_TO_FILE_SYSTEM_PROVIDER
+            // This method should follow hard links and return true if those files lead to the
+            // same content.
+            return SAME_PATH_ACCORDING_TO_FILE_SYSTEM_PROVIDER
         source.length() != destination.length() -> return NOT_SAME_LENGTH
     }
 
-    // Both files are the same size and length. Now check the actual content to see whether
-    // there are byte-wise differences. Ideally, this path is rare because hard links are used
-    // in most cases.
+    // Both files are the same size. Now check the actual content to see whether there are
+    // byte-wise differences.
     val buffer1 = ByteArray(compareBufferSize)
     val buffer2 = ByteArray(compareBufferSize)
     FileInputStream(source).use { input1 ->
@@ -175,6 +174,25 @@ fun compareFileContents(
             } while(true)
         }
     }
+}
+
+/**
+ * Remove [files] that are the same as, or have the same content as, a file earlier in the list.
+ */
+fun removeDuplicateFiles(files : List<File>): List<File> {
+    if (files.size < 2) return files
+    val seen = mutableListOf<File>()
+    for(file in files) {
+        // This is O(N^2) but normally there's at most one expensive call to isSameFileContent(...)
+        // because:
+        // - When two files are different their file size is likely to be different and
+        //   isSameFileOrContent(...) will be fast.
+        // - When two files are the same then isSameFileOrContent(...) is expensive but then the
+        //   'any { }' call will return early before evaluating the rest of 'seen'
+        if (seen.any { saw -> isSameFileOrContent(saw, file) } ) continue
+        seen.add(file)
+    }
+    return seen
 }
 
 private val SynchronizeFile.Comparison.areSameFileOrContent : Boolean

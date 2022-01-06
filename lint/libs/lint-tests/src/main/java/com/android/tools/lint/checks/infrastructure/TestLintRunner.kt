@@ -116,7 +116,7 @@ class TestLintRunner(private val task: TestLintTask) {
                     project.type = ProjectDescription.Type.JAVA
                 }
             }
-            projects.expandProjects()
+            projects.expandProjects(defaultType)
             projects.addProject(reportFrom)
             val projectMap: MutableMap<String, List<File>> = HashMap()
             val results: MutableMap<TestMode, TestResultState> = LinkedHashMap()
@@ -150,7 +150,7 @@ class TestLintRunner(private val task: TestLintTask) {
                     TestResultState(
                         createClient(), rootDir, e.message ?: "", emptyList(), e
                     )
-                val defaultType: TestMode = testModes.iterator().next()
+                val defaultType: TestMode = currentTestMode
                 results[defaultType] = state
                 TestLintResult(this, results, defaultType)
             } finally {
@@ -447,16 +447,14 @@ class TestLintRunner(private val task: TestLintTask) {
         }
         rootPath = rootPath.replace(File.separatorChar, '/')
         if (s.contains(rootPath)) {
-            s = s.replace(rootPath, "/TESTROOT")
+            // URI conversion on Windows seems to add an extra slash before the drive letter
+            s = s.replace("file:///$rootPath", "file://TESTROOT")
+            s = s.replace(rootPath, "TESTROOT")
         }
         if (task.stripRoot && s.contains("TESTROOT")) {
             s = s
-                .replace("/TESTROOT/", "")
-                .replace("/TESTROOT\\", "")
-                .replace("\nTESTROOT/", "\n")
-            if (s.startsWith("TESTROOT/")) {
-                s = s.substring("TESTROOT/".length)
-            }
+                .replace("TESTROOT/", "")
+                .replace("TESTROOT\\", "")
         }
         return s
     }
@@ -543,7 +541,7 @@ class TestLintRunner(private val task: TestLintTask) {
             dirToProjectDescription.clear()
             projectMocks.clear()
             projects.assignProjectNames()
-            projects.expandProjects()
+            projects.expandProjects(defaultType)
 
             if (task.reportFrom == null) {
                 projects.implicitReportFrom?.let { task.reportFrom(it) }

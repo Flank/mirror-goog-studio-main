@@ -46,11 +46,12 @@ import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfigurati
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.OptimizationImpl
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
@@ -108,7 +109,7 @@ open class VariantDslInfoImpl internal constructor(
     val dataProvider: ManifestDataProvider,
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
-    private val services: VariantPropertiesApiServices,
+    private val services: VariantServices,
     private val buildDirectory: DirectoryProperty,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
     override val publishInfo: VariantPublishingInfo?,
@@ -160,6 +161,7 @@ open class VariantDslInfoImpl internal constructor(
     private val mergedJavaCompileOptions =
         dslServices.newDecoratedInstance(MergedJavaCompileOptions::class.java, dslServices)
     private val mergedAarMetadata = MergedAarMetadata()
+    private val mergedOptimization = MergedOptimization()
 
     init {
         mergeOptions()
@@ -961,6 +963,11 @@ open class VariantDslInfoImpl internal constructor(
                 { (this as LibraryVariantDimension).aarMetadata }
             )
         }
+        computeMergedOptions(
+            mergedOptimization,
+            { optimization as OptimizationImpl },
+            { optimization as OptimizationImpl }
+        )
     }
 
     override val ndkConfig: MergedNdkConfig
@@ -1219,6 +1226,12 @@ open class VariantDslInfoImpl internal constructor(
 
     override val lintOptions: Lint
         get() = extension.lint
+
+    override val ignoredLibraryKeepRules: Set<String>
+        get() = mergedOptimization.ignoredLibraryKeepRules
+
+    override val ignoreAllLibraryKeepRules: Boolean
+        get() = mergedOptimization.ignoreAllLibraryKeepRules
 
     companion object {
 

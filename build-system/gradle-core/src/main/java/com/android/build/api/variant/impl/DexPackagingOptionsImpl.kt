@@ -18,19 +18,19 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.DexPackagingOptions
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.sdklib.AndroidVersion.VersionCodes.P
 
 class DexPackagingOptionsImpl(
-        dslPackagingOptions: PackagingOptions,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
-        minSdk: Int
+    dslPackagingOptions: PackagingOptions,
+    variantServices: VariantServices,
+    minSdk: Int
 ) : DexPackagingOptions {
 
     // Default to false for P+ because uncompressed dex files yield smaller installation sizes
     // because ART doesn't need to store an extra uncompressed copy on disk.
     override val useLegacyPackaging =
-            variantPropertiesApiServices.propertyOf(
+            variantServices.propertyOf(
                     Boolean::class.java,
                     dslPackagingOptions.dex.useLegacyPackaging ?: (minSdk < P)
             )

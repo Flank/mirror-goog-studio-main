@@ -39,13 +39,9 @@ import com.google.common.collect.Maps
 import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
-import java.io.InputStreamReader
 import java.io.Writer
-import java.nio.charset.StandardCharsets
 
 /**
  * A lint baseline is a collection of warnings for a project that have
@@ -190,7 +186,7 @@ class LintBaseline(
                 "%1\$d errors/warnings were listed in the " +
                     "baseline file (%2\$s) but not found in the project; perhaps they have " +
                     "been fixed?",
-                fixedCount, getDisplayPath(client, project, baselineFile)
+                fixedCount, TextFormat.TEXT.convertTo(getDisplayPath(client, project, baselineFile), TextFormat.RAW)
             )
             if (LintClient.isGradle && project.buildModule != null &&
                 project.buildModule?.lintOptions?.checkDependencies == false
@@ -395,11 +391,7 @@ class LintBaseline(
         }
 
         try {
-            BufferedReader(
-                InputStreamReader(
-                    FileInputStream(file), StandardCharsets.UTF_8
-                )
-            ).use { reader ->
+            file.bufferedReader().use { reader ->
                 val parser = KXmlParser()
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
                 parser.setInput(reader)
@@ -741,11 +733,12 @@ class LintBaseline(
             baselineDisplayPath: String
         ): String {
             val counts = describeCounts(errors, warnings, comma = false, capitalize = true)
+            val escapedPath = TextFormat.TEXT.convertTo(baselineDisplayPath, TextFormat.RAW)
             // Keep in sync with isFilteredMessage() below
             return if (errors + warnings == 1) {
-                "$counts was filtered out because it is listed in the baseline file, $baselineDisplayPath\n"
+                "$counts was filtered out because it is listed in the baseline file, $escapedPath\n"
             } else {
-                "$counts were filtered out because they are listed in the baseline file, $baselineDisplayPath\n"
+                "$counts were filtered out because they are listed in the baseline file, $escapedPath\n"
             }
         }
 

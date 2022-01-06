@@ -74,7 +74,7 @@ class AndroidLocationTest {
                 Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values
                 Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.
                 Current values:
-                ANDROID_SDK_ROOT: $androidPrefsRootLocation
+                ANDROID_PREFS_ROOT: $androidPrefsRootLocation
                 ANDROID_SDK_HOME: $androidSdkHomeLocation
                 """.trimIndent()
         )

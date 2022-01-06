@@ -17,9 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.tasks.NativeBuildSystem
 import org.gradle.api.file.FileCollection
-import java.io.File
 
 /**
  * Holds immutable ABI-level information for C/C++ build and sync, see README.md
@@ -91,14 +89,19 @@ data class CxxVariantModel(
     /**
      * Path to the Prefab jar to use.
      */
-    val prefabClassPathFileCollection: FileCollection?,
+    val prefabClassPaths: FileCollection?,
 
     /**
      * Paths to the unprocessed prefab package directories extracted from the AAR.
      *
      * For example: jsoncpp/build/.transforms/$SHA/jsoncpp/prefab
      */
-    val prefabPackageDirectoryListFileCollection: FileCollection?,
+    val prefabPackages: FileCollection?,
+
+    /**
+     * Paths to prefab package configuration directories.
+     */
+    val prefabPackageConfigurations: FileCollection?,
 
     /**
      * If present, the type of the STL.
@@ -129,21 +132,4 @@ val CxxVariantModel.cFlags
 val CxxVariantModel.cppFlags
     get() = cppFlagsList.joinToString(" ")
 
-/**
- * Return true if we should log native clean to lifecycle log
- */
-val CxxVariantModel.logNativeCleanToLifecycle : Boolean get() =
-    module.logNativeCleanToLifecycle
-
-/**
- * Call [compute] if logging native configure to lifecycle
- */
-fun <T> CxxVariantModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
-    module.ifLogNativeConfigureToLifecycle(compute)
-
-/**
- * Call [compute] if logging native build to lifecycle
- */
-fun <T> CxxVariantModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
-    module.ifLogNativeBuildToLifecycle(compute)
 

@@ -22,7 +22,7 @@ package com.android.tools.utp.plugins.deviceprovider.gradle
  */
 interface EmulatorHandle {
     /** Configure the path to the emulator executable. */
-    fun configure(emulatorPath: String)
+    fun configure(emulatorPath: String, emulatorGpuFlag: String)
 
     /** Returns true if and only if handling an active instance of the emulator. */
     fun isAlive(): Boolean

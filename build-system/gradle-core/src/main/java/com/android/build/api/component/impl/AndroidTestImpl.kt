@@ -30,6 +30,7 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
@@ -47,7 +48,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -59,6 +60,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -74,7 +76,7 @@ open class AndroidTestImpl @Inject constructor(
     variantData: BaseVariantData,
     testedVariant: VariantImpl,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig,
 ) : TestComponentImpl(
@@ -89,7 +91,7 @@ open class AndroidTestImpl @Inject constructor(
     variantData,
     testedVariant,
     transformManager,
-    variantPropertiesApiServices,
+    variantServices,
     taskCreationServices,
     global,
 ), AndroidTest, AndroidTestCreationConfig {
@@ -139,14 +141,14 @@ open class AndroidTestImpl @Inject constructor(
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
                 variantDslInfo.androidResources,
-                variantPropertiesApiServices
+                variantServices
         )
     }
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
             variantDslInfo.packaging,
-            variantPropertiesApiServices,
+            variantServices,
             minSdkVersion.apiLevel
         )
     }
@@ -182,11 +184,14 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val signingConfig: SigningConfigImpl? by lazy {
+    override val signingConfig: SigningConfig?
+        get() = signingConfigImpl
+
+    override val signingConfigImpl: SigningConfigImpl? by lazy {
         variantDslInfo.signingConfig?.let {
             SigningConfigImpl(
                 it,
-                variantPropertiesApiServices,
+                variantServices,
                 minSdkVersion.apiLevel,
                 services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
             )
@@ -198,7 +203,7 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantPropertiesApiServices.listPropertyOf(
+        variantServices.listPropertyOf(
             RegularFile::class.java) {
             variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
         }
@@ -307,6 +312,15 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    override val ignoredLibraryKeepRules: SetProperty<String>
+        get() = internalServices.setPropertyOf(
+                String::class.java,
+                variantDslInfo.ignoredLibraryKeepRules
+        )
+
+    override val ignoreAllLibraryKeepRules: Boolean
+        get() = variantDslInfo.ignoreAllLibraryKeepRules
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

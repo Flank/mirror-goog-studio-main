@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    compileSdkVersion(30)
+    compileSdk = property("latestCompileSdk") as Int
     flavorDimensions += "color"
     productFlavors {
         create("yellow") {

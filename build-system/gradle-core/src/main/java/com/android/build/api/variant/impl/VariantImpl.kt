@@ -42,7 +42,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -53,6 +53,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class VariantImpl(
@@ -66,7 +67,7 @@ abstract class VariantImpl(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig
 ) : ComponentImpl(
@@ -80,7 +81,7 @@ abstract class VariantImpl(
     variantScope,
     variantData,
     transformManager,
-    variantPropertiesApiServices,
+    variantServices,
     taskCreationServices,
     global
 ), Variant, ConsumableCreationConfig {
@@ -134,14 +135,14 @@ abstract class VariantImpl(
                     variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
                         ExternalCmakeImpl(
                                 it,
-                                variantPropertiesApiServices
+                                variantServices
                         )
                     }
                 VariantManager.NativeBuiltType.NDK_BUILD ->
                     variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
                         ExternalNdkBuildImpl(
                                 it,
-                                variantPropertiesApiServices
+                                variantServices
                         )
                     }
             }
@@ -152,7 +153,7 @@ abstract class VariantImpl(
         type.cast(externalExtensions?.get(type))
 
     override val proguardFiles: ListProperty<RegularFile> =
-        variantPropertiesApiServices.listPropertyOf(RegularFile::class.java) {
+        variantServices.listPropertyOf(RegularFile::class.java) {
             variantDslInfo.getProguardFiles(it)
         }
 
@@ -250,4 +251,11 @@ abstract class VariantImpl(
                 null
             }
         )
+
+    override val ignoredLibraryKeepRules: Provider<Set<String>> =
+            internalServices.setPropertyOf(
+                    String::class.java,
+                    variantDslInfo.ignoredLibraryKeepRules)
+
+    override val ignoreAllLibraryKeepRules: Boolean = variantDslInfo.ignoreAllLibraryKeepRules
 }

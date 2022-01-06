@@ -16,15 +16,21 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.SigningHelper
 import com.android.build.gradle.options.StringOption
-import com.google.common.truth.Truth.assertThat
+import com.android.builder.core.BuilderConstants
+import com.google.common.io.Resources
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import sun.security.x509.X500Name
 
 /**
  * Tests verifying that builds using the profileable option are configured correctly.
@@ -61,5 +67,18 @@ class ProfileableTest {
                 "              A: http://schemas.android.com/apk/res/android:shell(0x01010594)=true"
             )
         )
+    }
+
+    @Test
+    fun verifyReleaseBuildsUseDebugSigningWhenNoSigningConfigs() {
+        project.executor()
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .with(StringOption.PROFILING_MODE, "profileable")
+            .run("assembleRelease")
+        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED)
+        val verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 14)
+        assertThat(
+            (verificationResult.signerCertificates.first().subjectDN as X500Name).commonName
+        ).isEqualTo("Android Debug")
     }
 }

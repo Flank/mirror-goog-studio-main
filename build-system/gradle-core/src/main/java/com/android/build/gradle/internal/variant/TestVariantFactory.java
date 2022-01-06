@@ -51,7 +51,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantBuilderServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
@@ -105,7 +105,7 @@ public class TestVariantFactory
             @NonNull VariantScope variantScope,
             @NonNull BaseVariantData variantData,
             @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
             @NonNull GlobalTaskCreationConfig globalConfig) {
 
@@ -124,7 +124,7 @@ public class TestVariantFactory
                                 variantScope,
                                 variantData,
                                 transformManager,
-                                variantPropertiesApiServices,
+                                variantServices,
                                 taskCreationServices,
                                 globalConfig);
 
@@ -188,7 +188,7 @@ public class TestVariantFactory
             @NonNull TestVariantData variantData,
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
             @NonNull GlobalTaskCreationConfig globalConfig) {
         throw new RuntimeException("cannot instantiate unit-test properties in test plugin");
@@ -208,7 +208,7 @@ public class TestVariantFactory
             @NonNull TestVariantData variantData,
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
             @NonNull GlobalTaskCreationConfig globalConfig) {
         throw new RuntimeException("cannot instantiate android-test properties in test plugin");

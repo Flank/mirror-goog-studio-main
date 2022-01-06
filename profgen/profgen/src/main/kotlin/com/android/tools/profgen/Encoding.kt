@@ -16,7 +16,11 @@
 
 package com.android.tools.profgen
 
-import java.io.*
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.UTFDataFormatException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
@@ -172,12 +176,23 @@ internal fun OutputStream.writeString(s: String) {
  * @throws IOException in case of IO errors
  */
 internal fun OutputStream.writeCompressed(data: ByteArray) {
-    val compressor = Deflater(Deflater.BEST_SPEED)
-    val bos = ByteArrayOutputStream()
-    DeflaterOutputStream(bos, compressor).use { it.write(data) }
-    writeUInt32(bos.size().toLong())
+    val compressed = data.compressed()
+    writeUInt32(compressed.size.toLong())
     // TODO(calin): we can get rid of the multiple byte array copy using a custom stream.
-    write(bos.toByteArray())
+    write(compressed)
+}
+
+/**
+ * Compresses data using a [DeflaterOutputStream].
+ */
+internal fun ByteArray.compressed(): ByteArray {
+    val compressor = Deflater(Deflater.BEST_SPEED)
+    val out = ByteArrayOutputStream()
+    val deflater = DeflaterOutputStream(out, compressor)
+    deflater.use {
+        deflater.write(this)
+    }
+    return out.toByteArray()
 }
 
 /**

@@ -16,8 +16,6 @@
 
 package com.android.tools.deploy.interpreter;
 
-import static com.android.deploy.asm.Opcodes.GETSTATIC;
-import static com.android.deploy.asm.Opcodes.PUTSTATIC;
 
 import com.android.annotations.NonNull;
 import com.android.deploy.asm.tree.FieldInsnNode;
@@ -26,25 +24,16 @@ public class FieldDescription {
     private final String ownerInternalName;
     private final String name;
     private final String desc;
-    private final boolean isStatic;
 
     private FieldDescription(
-            @NonNull String ownerInternalName,
-            @NonNull String name,
-            @NonNull String desc,
-            boolean isStatic) {
+            @NonNull String ownerInternalName, @NonNull String name, @NonNull String desc) {
         this.ownerInternalName = ownerInternalName;
         this.name = name;
         this.desc = desc;
-        this.isStatic = isStatic;
     }
 
     public FieldDescription(FieldInsnNode insn) {
-        this(
-                insn.owner,
-                insn.name,
-                insn.desc,
-                insn.getOpcode() == GETSTATIC || insn.getOpcode() == PUTSTATIC);
+        this(insn.owner, insn.name, insn.desc);
     }
 
     @NonNull
@@ -60,11 +49,6 @@ public class FieldDescription {
     @NonNull
     public String getDesc() {
         return desc;
-    }
-
-    @NonNull
-    public boolean isStatic() {
-        return isStatic;
     }
 
     public String toString() {

@@ -22,12 +22,12 @@ import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.LibraryReferenceTestFile
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.utils.NullLogger
 import com.google.common.base.Joiner
 import org.junit.Assert
 import org.junit.Assert.fail
 import java.io.File
-import java.io.FileWriter
 import java.io.IOException
 import java.util.ArrayList
 
@@ -39,6 +39,11 @@ class ProjectDescription : Comparable<ProjectDescription> {
     var dependencyGraph: String? = null
     var name: String = ""
     var type = Type.APP
+        set(value) {
+            field = value
+            haveSetType = true
+        }
+    var haveSetType = false
     var report: Boolean = true
     var primary: Boolean = true
     var under: ProjectDescription? = null
@@ -191,7 +196,9 @@ class ProjectDescription : Comparable<ProjectDescription> {
             }
             val added = targets.add(file.targetRelativePath)
             if (!added) {
-                if (file.targetRelativePath.endsWith("/test.kt") && ClassName(file.contents, DOT_KT).className == null) {
+                if ((file.targetRelativePath.endsWith("/test.kt") || file.targetRelativePath == "test.kt") &&
+                    ClassName(file.contents, DOT_KT).className == null
+                ) {
                     // Just a default name assigned to a Kotlin compilation unit with no class: pick a new unique name
                     var next = 2
                     val base = file.targetRelativePath.substring(0, file.targetRelativePath.length - 7)
@@ -383,6 +390,28 @@ class ProjectDescription : Comparable<ProjectDescription> {
             } else {
                 CompiledSourceFile.createFiles(projectDir, compiled)
             }
+
+            if (configuredOptions != null) {
+                if (testFiles.any { it.targetRelativePath == "lint.xml" }) {
+                    fail("Cannot combine lint.xml with `configureOption`; add options as <option> elements in your custom lint.xml instead")
+                }
+                val sb = StringBuilder()
+                sb.append("<lint>\n")
+                for ((key, value) in configuredOptions) {
+                    for (issue in issues) {
+                        for (option in issue.getOptions()) {
+                            if (option.name == key) {
+                                sb.append("    <issue id=\"${issue.id}\">\n")
+                                sb.append("        <option name=\"$key\" value=\"$value\" />\n")
+                                sb.append("    </issue>\n")
+                            }
+                        }
+                    }
+                }
+                sb.append("</lint>")
+                val config = xml("lint.xml", sb.toString())
+                config.createFile(projectDir)
+            }
         }
 
         /**
@@ -398,18 +427,16 @@ class ProjectDescription : Comparable<ProjectDescription> {
                     val ok = parentFile.mkdirs()
                     Assert.assertTrue("Couldn't create directory $parentFile", ok)
                 }
-                FileWriter(manifest).use { fw ->
-                    fw.write(
-                        """
-                        <?xml version="1.0" encoding="utf-8"?>
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            package="lint.test.pkg"
-                            android:versionCode="1"
-                            android:versionName="1.0" >
-                        </manifest>
-                        """.trimIndent()
-                    )
-                }
+                manifest.writeText(
+                    """
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                        package="lint.test.pkg"
+                        android:versionCode="1"
+                        android:versionName="1.0" >
+                    </manifest>
+                    """.trimIndent()
+                )
             }
         }
     }

@@ -27,14 +27,12 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.ifLogNativeBuildToLifecycle
-import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
-import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
+import com.android.build.gradle.internal.cxx.process.ExecuteProcessType.BUILD_PROCESS
+import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
+import com.android.build.gradle.internal.cxx.process.executeProcess
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
 import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
 import com.android.utils.cxx.CxxDiagnosticCode
 import com.google.common.base.Joiner
@@ -44,7 +42,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.gradle.api.GradleException
 import org.gradle.process.ExecOperations
-import java.io.File
 import java.time.Clock
 import kotlin.streams.toList
 
@@ -65,11 +62,8 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(
-        val abi: CxxAbiModel,
         val buildCommandComponents: List<String>,
-        val libraries: List<NativeLibraryValueMini>,
-        val targetsFromDsl : Set<String>,
-        val outputFolder: File
+        val libraries: List<NativeLibraryValueMini>
     )
 
     override fun build(ops: ExecOperations) {
@@ -113,11 +107,8 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
                 )
             buildSteps.add(
                 BuildStep(
-                    abi,
                     buildTargetsCommand,
-                    librariesToBuild,
-                    variant.buildTargetSet,
-                    abi.jsonFile.parentFile
+                    librariesToBuild
                 )
             )
             infoln("about to build targets " + artifactNames.joinToString(", "))
@@ -126,11 +117,8 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             for (libraryValue in librariesToBuild) {
                 buildSteps.add(
                     BuildStep(
-                        abi,
                         libraryValue.buildCommandComponents!!,
-                        listOf(libraryValue),
-                        variant.buildTargetSet,
-                        abi.jsonFile.parentFile
+                        listOf(libraryValue)
                     )
                 )
                 infoln("about to build ${libraryValue.buildCommandComponents!!.joinToString(" ")}")
@@ -155,9 +143,6 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             if (!output.exists()) {
                 throw GradleException(
                     "Expected output file at $output for target ${library.artifactName} but there was none")
-            }
-            if (library.abi == null) {
-                throw GradleException("Expected NativeLibraryValue to have non-null abi")
             }
 
             // If the build chose to write the library output somewhere besides objFolder
@@ -280,7 +265,7 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
                 if (variant.implicitBuildTargetSet.contains(libraryValue.artifactName)) {
                     infoln("building target ${libraryValue.artifactName} because it is required by the build")
                 } else {
-                    when (com.google.common.io.Files.getFileExtension(output.name)) {
+                    when (output.extension) {
                         "a" -> {
                             infoln("not building target library ${libraryValue.artifactName!!} because static libraries are not build by default.")
                             continue@loop
@@ -298,7 +283,7 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             librariesToBuild.add(libraryValue)
         }
 
-        implicitTargets.removeAll(librariesToBuild.map { it.artifactName })
+        implicitTargets.removeAll(librariesToBuild.map { it.artifactName }.toSet())
         if (implicitTargets.isNotEmpty()) {
             errorln(
                 CxxDiagnosticCode.REQUIRED_BUILD_TARGETS_MISSING,
@@ -317,31 +302,23 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
         buildSteps: List<BuildStep>) {
         for (buildStep in buildSteps) {
             val tokens = buildStep.buildCommandComponents
-            val processBuilder = ProcessInfoBuilder()
-            processBuilder.setExecutable(tokens[0])
-            for (i in 1 until tokens.size) {
-                processBuilder.addArgs(tokens[i])
-            }
-            infoln("$processBuilder")
+            val command = createExecuteProcessCommand(tokens[0])
+                .addArgs(tokens.drop(1))
+                .addEnvironments(abi.buildSettings.getEnvironmentVariableMap())
 
-            val logFileSuffix: String
-            val abiName = buildStep.libraries[0].abi
-            val abi = buildStep.abi
-            if (buildStep.libraries.size > 1) {
-                logFileSuffix = "targets"
+            val logFileSuffix = if (buildStep.libraries.size > 1) {
                 val targetNames = buildStep
                     .libraries
                     .stream()
-                    .map { library -> library.artifactName + "_" + library.abi }
+                    .map { library -> library.artifactName + "_" + abi.abi.tag }
                     .toList()
                 infoln("Build multiple targets ${targetNames.joinToString(" ")}")
+                "targets"
             } else {
                 Preconditions.checkElementIndex(0, buildStep.libraries.size)
-                logFileSuffix = buildStep.libraries[0].artifactName + "_" + abiName
-                infoln("Build $logFileSuffix")
+                infoln("Build ${buildStep.libraries[0].artifactName!!}")
+                buildStep.libraries[0].artifactName!!
             }
-
-            applyBuildSettings(abi.buildSettings, processBuilder)
 
             val buildStartTime = Clock.systemUTC().millis()
 
@@ -351,16 +328,12 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
                 abi.ninjaLogFile.useLines { it.count() }
             } else 0
 
-            createProcessOutputJunction(
-                buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
-                buildStep.outputFolder.resolve("android_gradle_build_stdout_$logFileSuffix.txt"),
-                buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
-                processBuilder,
-                "")
-                .logStderr()
-                .logStdout()
-                .logFullStdout(abi.ifLogNativeBuildToLifecycle { true } ?: false)
-                .execute(ops::exec)
+            abi.executeProcess(
+                processType = BUILD_PROCESS,
+                command = command,
+                ops = ops,
+                logFileSuffix = logFileSuffix
+            )
 
             // Build attribution reporting based on .ninja_log
             // This is best-effort because it appears that ninja does not guarantee
@@ -394,10 +367,6 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
                 logStructured { encoder -> attributions.encode(encoder) }
             }
         }
-    }
-
-    private fun applyBuildSettings(buildSettings: BuildSettingsConfiguration, processBuilder: ProcessInfoBuilder){
-        processBuilder.addEnvironments(buildSettings.getEnvironmentVariableMap())
     }
 
     companion object {

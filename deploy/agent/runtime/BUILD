@@ -89,6 +89,7 @@ coverage_java_test(
         "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
         "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 

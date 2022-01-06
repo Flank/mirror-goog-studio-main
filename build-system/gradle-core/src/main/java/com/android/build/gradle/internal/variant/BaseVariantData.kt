@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.google.common.base.MoreObjects
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -48,7 +48,7 @@ abstract class BaseVariantData(
     protected val variantSources: VariantSources,
     protected val paths: VariantPathHelper,
     protected val artifacts: ArtifactsImpl,
-    protected val services: VariantPropertiesApiServices,
+    protected val services: VariantServices,
     val taskContainer: MutableTaskContainer
 ) {
 

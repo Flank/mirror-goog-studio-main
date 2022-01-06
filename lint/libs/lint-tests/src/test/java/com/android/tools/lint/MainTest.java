@@ -106,7 +106,7 @@ public class MainTest extends AbstractCheckTest {
 
             int exitCode = main.run(args);
 
-            String stderr = error.toString();
+            String stderr = new String(error.toByteArray(), Charsets.UTF_8);
             if (cleanup != null) {
                 stderr = cleanup.cleanup(stderr);
             }
@@ -114,7 +114,7 @@ public class MainTest extends AbstractCheckTest {
                 assertEquals(expectedError, stderr); // instead of fail: get difference in output
             }
             if (expectedOutput != null) {
-                String stdout = output.toString();
+                String stdout = new String(output.toByteArray(), Charsets.UTF_8);
                 expectedOutput = StringsKt.trimIndent(expectedOutput);
                 stdout = StringsKt.trimIndent(stdout);
                 if (cleanup != null) {
@@ -1140,10 +1140,6 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testPrintFirstError() throws Exception {
-        if (isWindows()) {
-            return; // b/73709727
-        }
-
         // Regression test for 183625575: Lint tasks doesn't output errors anymore
         File project =
                 getProjectDir(
@@ -1200,7 +1196,9 @@ public class MainTest extends AbstractCheckTest {
                     "SomeUnknownId",
                     project.getPath()
                 },
-                s -> s.replace(html.getPath(), "report.html"),
+                s ->
+                        s.replace(dos2unix(html.getPath()), "report.html")
+                                .replace("file:///", "file://"),
                 null);
     }
 
