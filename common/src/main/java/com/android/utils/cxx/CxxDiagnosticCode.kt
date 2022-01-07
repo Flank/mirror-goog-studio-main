@@ -98,5 +98,6 @@ enum class CxxDiagnosticCode(val errorCode: Int) {
  * [CxxDiagnosticCode].
  */
 enum class CxxBugDiagnosticCode(val bugNumber: Int)  {
-    CMAKE_SERVER_HANDSHAKE_FAILED(194020297);
+    CMAKE_SERVER_HANDSHAKE_FAILED(194020297),
+    NINJA_BUILD_SCRIPT_AUTHOR_FEEDBACK(213607318);
 }
