@@ -66,7 +66,7 @@ class AnnotationInfo(
      */
     val qualifiedName: String,
     /** The element that we looked up the annotation for. */
-    val annotated: PsiElement,
+    val annotated: PsiElement?,
     /**
      * The source of the annotation, such as [AnnotationOrigin.FILE] if
      * this annotation was from a `@file:` annotation surrounding the
@@ -127,6 +127,12 @@ class AnnotationInfo(
  * surrounding class, or a surrounding outer class, etc.
  */
 enum class AnnotationOrigin {
+    /**
+     * When an annotation is visited on its own (via
+     * [AnnotationUsageType.DEFINITION]) the origin is itself.
+     */
+    SELF,
+
     /** The annotation appeared on a parameter. */
     PARAMETER,
 

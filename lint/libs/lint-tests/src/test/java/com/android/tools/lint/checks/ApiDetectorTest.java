@@ -1258,7 +1258,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/foo/bar/ApiCallTest5.java:21: Error: Call requires API level 11 (current min is 2): android.view.View#combineMeasuredStates [NewApi]\n"
                         + "        ApiCallTest5.combineMeasuredStates(0, 0);\n"
                         + "                     ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "4 errors, 0 warnings\n";
+                        + "src/foo/bar/ApiCallTest5.java:14: Warning: Unnecessary; SDK_INT is always >= 2 [ObsoleteSdkInt]\n"
+                        + "    @TargetApi(2)\n"
+                        + "    ~~~~~~~~~~~~~\n"
+                        + "4 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(2),
@@ -4537,6 +4540,78 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testUnnecessaryRequiresApi() {
+        lint().files(
+                        manifest().minSdk(28),
+                        java(
+                                "src/test/pkg/ApiDetectorTest2.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "import androidx.test.filters.SdkSuppress;\n"
+                                        + "import org.robolectric.annotation.Config;\n"
+                                        // https://issuetracker.google.com/74130329:
+                                        + "import android.annotation.TargetApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(api=24)\n"
+                                        + "@TargetApi(api=24)\n"
+                                        + "@Config(minSdk=24)\n"
+                                        + "@SdkSuppress(minSdkVersion = 24)\n"
+                                        + "public class MyClass {\n"
+                                        + "}"),
+                        // https://issuetracker.google.com/37140910:
+                        xml(
+                                "res/drawable/vector.xml",
+                                "<vector xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "tools:targetApi='21' />\n"),
+                        xml(
+                                "res/drawable/vector_ok.xml",
+                                "<vector xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "tools:targetApi='30' />\n"),
+                        sdkSuppressStub,
+                        roboElectricConfigStub,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/ApiDetectorTest2.java:8: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@RequiresApi(api=24)\n"
+                                + "~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiDetectorTest2.java:9: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@TargetApi(api=24)\n"
+                                + "~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiDetectorTest2.java:10: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@Config(minSdk=24)\n"
+                                + "~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiDetectorTest2.java:11: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@SdkSuppress(minSdkVersion = 24)\n"
+                                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/drawable/vector.xml:2: Warning: Unnecessary; SDK_INT is always >= 21 [ObsoleteSdkInt]\n"
+                                + "tools:targetApi='21' />\n"
+                                + "~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 5 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 8: Delete @RequiresApi:\n"
+                                + "@@ -8 +8\n"
+                                + "- @RequiresApi(api=24)\n"
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 9: Delete @RequiresApi:\n"
+                                + "@@ -9 +9\n"
+                                + "- @TargetApi(api=24)\n"
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 10: Delete @RequiresApi:\n"
+                                + "@@ -10 +10\n"
+                                + "- @Config(minSdk=24)\n"
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 11: Delete @RequiresApi:\n"
+                                + "@@ -11 +11\n"
+                                + "- @SdkSuppress(minSdkVersion = 24)\n"
+                                + "Fix for res/drawable/vector.xml line 2: Delete tools:targetApi:\n"
+                                + "@@ -2 +2\n"
+                                + "- tools:targetApi='21' />\n"
+                                + "+  />");
+    }
+
     public void testRequiresApi() {
         String expected =
                 ""
@@ -4652,24 +4727,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    @RequiresApi(30)\n"
                                         + "    fun requires30() { }\n"
                                         + "}"),
-                        java(
-                                ""
-                                        + "package org.robolectric.annotation;\n"
-                                        + "public @interface Config {\n"
-                                        + "    int minSdk() default 1;\n"
-                                        + "    int maxSdk() default -1;\n"
-                                        + "}\n"),
-                        java(
-                                ""
-                                        + "package androidx.test.filters;\n"
-                                        + "import java.lang.annotation.*;\n"
-                                        + "@Retention(RetentionPolicy.RUNTIME)\n"
-                                        + "@Target({ElementType.TYPE, ElementType.METHOD})\n"
-                                        + "public @interface SdkSuppress {\n"
-                                        + "    int minSdkVersion() default 1;\n"
-                                        + "    int maxSdkVersion() default Integer.MAX_VALUE;\n"
-                                        + "    String codeName() default \"unset\";\n"
-                                        + "}"),
+                        roboElectricConfigStub,
+                        sdkSuppressStub,
                         SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
@@ -7476,7 +7535,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/main/kotlin/test/pkg/Point.kt:28: Error: Call requires API level 28 (current min is 21): minus [NewApi]\n"
                                 + "    println(p1 - 1L) // ERROR\n"
                                 + "               ~\n"
-                                + "13 errors, 0 warnings");
+                                + "src/main/kotlin/test/pkg/Point.kt:51: Warning: Unnecessary; SDK_INT is always >= 5 [ObsoleteSdkInt]\n"
+                                + "    @RequiresApi(5)\n"
+                                + "    ~~~~~~~~~~~~~~~\n"
+                                + "13 errors, 1 warnings");
     }
 
     public void testSparseArrayDesugared() {
@@ -8320,5 +8382,26 @@ public class ApiDetectorTest extends AbstractCheckTest {
                             + "    dependencies {\n"
                             + "        classpath 'com.android.tools.build:gradle:2.3.1'\n"
                             + "    }\n"
+                            + "}");
+
+    private static TestFile roboElectricConfigStub =
+            java(
+                    ""
+                            + "package org.robolectric.annotation;\n"
+                            + "public @interface Config {\n"
+                            + "    int minSdk() default 1;\n"
+                            + "    int maxSdk() default -1;\n"
+                            + "}\n");
+    private static TestFile sdkSuppressStub =
+            java(
+                    ""
+                            + "package androidx.test.filters;\n"
+                            + "import java.lang.annotation.*;\n"
+                            + "@Retention(RetentionPolicy.RUNTIME)\n"
+                            + "@Target({ElementType.TYPE, ElementType.METHOD})\n"
+                            + "public @interface SdkSuppress {\n"
+                            + "    int minSdkVersion() default 1;\n"
+                            + "    int maxSdkVersion() default Integer.MAX_VALUE;\n"
+                            + "    String codeName() default \"unset\";\n"
                             + "}");
 }

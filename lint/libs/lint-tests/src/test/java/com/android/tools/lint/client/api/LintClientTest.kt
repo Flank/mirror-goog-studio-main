@@ -58,6 +58,7 @@ class LintClientTest {
 
     @Test
     fun testClient() {
+        clientName = LintClient.CLIENT_UNIT_TESTS
         assertTrue(!isGradle || !isStudio)
     }
 

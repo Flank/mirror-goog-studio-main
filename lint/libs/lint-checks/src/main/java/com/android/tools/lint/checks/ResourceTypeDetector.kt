@@ -157,7 +157,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     )
 
     // Include all types, including equality and comparisons
-    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean = true
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean = type != AnnotationUsageType.DEFINITION
 
     override fun visitAnnotationUsage(
         context: JavaContext,

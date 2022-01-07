@@ -375,7 +375,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                 val location = context.getLocation(annotation)
                 context.report(ANNOTATION_USAGE, annotation, location, "Must specify an API level", fix)
             } else {
-                val apiLevel = getApiLevel(context, annotation)
+                val apiLevel = getApiLevel(context, annotation, REQUIRES_API_ANNOTATION.newName())
                 val minSdk = context.project.minSdk
                 val targetApi = getTargetApi(annotation.uastParent?.uastParent)
                 val max = max(minSdk, targetApi)
