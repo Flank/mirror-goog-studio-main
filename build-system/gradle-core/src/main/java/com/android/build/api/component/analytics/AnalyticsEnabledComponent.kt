@@ -73,7 +73,8 @@ abstract class AnalyticsEnabledComponent(
 
     override val instrumentation: Instrumentation
         get() {
-            // TODO: Add analytics enum
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.INSTRUMENTATION_VALUE
             return objectFactory.newInstance(
                 AnalyticsEnabledInstrumentation::class.java,
                 delegate.instrumentation,

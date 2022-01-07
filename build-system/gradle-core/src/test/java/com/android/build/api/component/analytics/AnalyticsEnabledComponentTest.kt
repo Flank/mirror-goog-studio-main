@@ -21,6 +21,7 @@ import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
+import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -56,26 +57,32 @@ class AnalyticsEnabledComponentTest {
 
     @Test
     fun transformClasspathWith() {
+        Mockito.`when`(delegate.instrumentation)
+            .thenReturn(Mockito.mock(Instrumentation::class.java))
         val block = { _ : InstrumentationParameters  -> }
-        proxy.transformClassesWith(
+        proxy.instrumentation.transformClassesWith(
             MockedVisitor::class.java,
             InstrumentationScope.PROJECT,
             block
         )
 
-        proxy.transformClassesWith(
+        proxy.instrumentation.transformClassesWith(
             MockedVisitor::class.java,
             InstrumentationScope.ALL,
             block
         )
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(2)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ASM_TRANSFORM_CLASSES_VALUE)
+            stats.variantApiAccess.variantPropertiesAccessList.count {
+                it.type == VariantPropertiesMethodType.INSTRUMENTATION_VALUE
+            }
+        ).isEqualTo(2)
         Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.last().type
-        ).isEqualTo(VariantPropertiesMethodType.ASM_TRANSFORM_CLASSES_VALUE)
+            stats.variantApiAccess.variantPropertiesAccessList.count {
+                it.type == VariantPropertiesMethodType.INSTRUMENTATION_TRANSFORM_CLASSES_WITH_VALUE
+            }
+        ).isEqualTo(2)
 
         Truth.assertThat(stats.asmClassesTransformsCount).isEqualTo(2)
         Truth.assertThat(stats.asmClassesTransformsList.first().classVisitorFactoryClassName)
@@ -88,29 +95,40 @@ class AnalyticsEnabledComponentTest {
         Truth.assertThat(stats.asmClassesTransformsList.last().scope)
             .isEqualTo(AsmClassesTransformRegistration.Scope.ALL)
 
-        Mockito.verify(delegate, times(1))
+        val instrumentationDelegate = (proxy.instrumentation as AnalyticsEnabledInstrumentation)
+            .delegate
+        Mockito.verify(instrumentationDelegate, times(1))
             .transformClassesWith(MockedVisitor::class.java, InstrumentationScope.PROJECT, block)
-        Mockito.verify(delegate, times(1))
+        Mockito.verify(instrumentationDelegate, times(1))
             .transformClassesWith(MockedVisitor::class.java, InstrumentationScope.ALL, block)
     }
 
     @Test
     fun setAsmFramesComputationNode() {
-        proxy.setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
-        proxy.setAsmFramesComputationMode(
+        Mockito.`when`(delegate.instrumentation)
+            .thenReturn(Mockito.mock(Instrumentation::class.java))
+        proxy.instrumentation.setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
+        proxy.instrumentation.setAsmFramesComputationMode(
             FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
         )
-        proxy.setAsmFramesComputationMode(
+        proxy.instrumentation.setAsmFramesComputationMode(
             FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
         )
-        proxy.setAsmFramesComputationMode(FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES)
+        proxy.instrumentation.setAsmFramesComputationMode(
+            FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES
+        )
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
-        stats.variantApiAccess.variantPropertiesAccessList.forEach {
-            Truth.assertThat(it.type).isEqualTo(
-                VariantPropertiesMethodType.ASM_FRAMES_COMPUTATION_NODE_VALUE
-            )
-        }
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(8)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.count {
+                it.type == VariantPropertiesMethodType.INSTRUMENTATION_VALUE
+            }
+        ).isEqualTo(4)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.count {
+                it.type == VariantPropertiesMethodType.INSTRUMENTATION_SET_ASM_FRAMES_COMPUTATUION_MODE_VALUE
+            }
+        ).isEqualTo(4)
 
         Truth.assertThat(stats.framesComputationModeUpdatesCount).isEqualTo(4)
         Truth.assertThat(stats.framesComputationModeUpdatesList[0].mode).isEqualTo(
@@ -126,18 +144,41 @@ class AnalyticsEnabledComponentTest {
             AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_ALL_CLASSES
         )
 
-        Mockito.verify(delegate, times(1))
+        val instrumentationDelegate = (proxy.instrumentation as AnalyticsEnabledInstrumentation)
+            .delegate
+
+        Mockito.verify(instrumentationDelegate, times(1))
             .setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
-        Mockito.verify(delegate, times(1))
+        Mockito.verify(instrumentationDelegate, times(1))
             .setAsmFramesComputationMode(
                 FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
             )
-        Mockito.verify(delegate, times(1))
+        Mockito.verify(instrumentationDelegate, times(1))
             .setAsmFramesComputationMode(
                 FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
             )
-        Mockito.verify(delegate, times(1))
+        Mockito.verify(instrumentationDelegate, times(1))
             .setAsmFramesComputationMode(FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES)
+    }
+
+    @Test
+    fun instrumentationExcludes() {
+        Mockito.`when`(delegate.instrumentation)
+            .thenReturn(Mockito.mock(Instrumentation::class.java))
+        proxy.instrumentation.excludes
+        proxy.instrumentation.excludes
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.count {
+                it.type == VariantPropertiesMethodType.INSTRUMENTATION_VALUE
+            }
+        ).isEqualTo(2)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.count {
+                it.type == VariantPropertiesMethodType.INSTRUMENTATION_EXCLUDES_VALUE
+            }
+        ).isEqualTo(2)
     }
 
     @Test
