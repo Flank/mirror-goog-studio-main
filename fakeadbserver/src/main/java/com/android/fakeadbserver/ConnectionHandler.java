@@ -23,6 +23,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.ListForwardCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.PairCommandHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -53,8 +56,9 @@ final class ConnectionHandler implements Runnable {
                                     "transport-local",
                                     "transport-any",
                                     "host-features",
-                                    "mdns",
-                                    "pair")));
+                                    ListForwardCommandHandler.COMMAND,
+                                    MdnsCommandHandler.COMMAND,
+                                    PairCommandHandler.COMMAND)));
 
     @NonNull
     private final FakeAdbServer mServer;

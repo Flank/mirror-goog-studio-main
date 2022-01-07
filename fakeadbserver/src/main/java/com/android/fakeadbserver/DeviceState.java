@@ -196,8 +196,9 @@ public class DeviceState {
     public boolean addPortForwarder(@NonNull PortForwarder forwarder, boolean noRebind) {
         synchronized (mPortForwarders) {
             if (noRebind) {
-                return mPortForwarders
-                        .computeIfAbsent(forwarder.getSource().mPort, port -> forwarder) == null;
+                return mPortForwarders.computeIfAbsent(
+                                forwarder.getSource().mPort, port -> forwarder)
+                        == forwarder;
             } else {
                 // Just overwrite the previous forwarder.
                 mPortForwarders.put(forwarder.getSource().mPort, forwarder);

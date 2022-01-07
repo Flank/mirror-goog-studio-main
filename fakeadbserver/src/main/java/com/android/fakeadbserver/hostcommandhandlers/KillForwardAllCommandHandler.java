@@ -24,10 +24,15 @@ public class KillForwardAllCommandHandler extends HostCommandHandler {
         assert device != null;
         device.removeAllPortForwarders();
         try {
+            // We send 2 OKAY answers: 1st OKAY is connect, 2nd OKAY is status.
+            // See
+            // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/adb.cpp;l=1058
+            writeOkay(responseSocket.getOutputStream());
             writeOkay(responseSocket.getOutputStream());
         } catch (IOException ignored) {
-            return false;
         }
-        return true;
+
+        // We always close the connection, as per ADB protocol spec.
+        return false;
     }
 }
