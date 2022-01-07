@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.sdk;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.internal.cxx.configure.NdkLocatorKt.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
@@ -28,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
@@ -39,6 +39,7 @@ import com.android.testutils.AssumeUtil;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -73,9 +74,9 @@ public class SdkAutoDownloadTest {
 
     private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION =
-            TestUtils.getLatestAndroidPlatform().replace("android-", "");
-    private static final String NDK_VERSION = "21.3.6528147";
-    private static final String CMAKE_VERSION = "3.6.0";
+            Integer.toString(TestVersions.DEFAULT_COMPILE_SDK_VERSION);
+    private static final String NDK_VERSION = "23.0.7344513";
+    private static final String CMAKE_VERSION = "3.18.1";
 
     @Rule
     public GradleTestProject project =
@@ -86,6 +87,7 @@ public class SdkAutoDownloadTest {
                                     .useCppSource(true)
                                     .build())
                     .addGradleProperties(IntegerOption.ANDROID_SDK_CHANNEL.getPropertyName() + "=3")
+                    .withSdk(false)
                     .create();
 
     private File mSdkHome;
@@ -141,38 +143,6 @@ public class SdkAutoDownloadTest {
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.minSdkVersion = 30");
-    }
-
-    private void installPlatforms() throws IOException {
-        FileUtils.copyDirectoryToDirectory(
-                TestUtils.getSdk()
-                        .resolve(SdkConstants.FD_PLATFORMS)
-                        .resolve("android-" + PLATFORM_VERSION)
-                        .toFile(),
-                FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
-    }
-
-    private void installBuildTools() throws IOException {
-        FileUtils.copyDirectoryToDirectory(
-                TestUtils.getSdk()
-                        .resolve(SdkConstants.FD_BUILD_TOOLS)
-                        .resolve(BUILD_TOOLS_VERSION)
-                        .toFile(),
-                FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
-    }
-
-    private void installPlatformTools() throws IOException {
-        FileUtils.copyDirectoryToDirectory(
-                TestUtils.getSdk().resolve(SdkConstants.FD_PLATFORM_TOOLS).toFile(), mSdkHome);
-    }
-
-    private void installNdk() throws IOException {
-        FileUtils.copyDirectoryToDirectory(
-                FileUtils.join(
-                        TestUtils.getSdk().toFile(),
-                        SdkConstants.FD_NDK_SIDE_BY_SIDE,
-                        ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
-                FileUtils.join(mSdkHome, SdkConstants.FD_NDK_SIDE_BY_SIDE));
     }
 
     /** Tests that the compile SDK target and build tools are automatically downloaded. */
@@ -250,7 +220,6 @@ public class SdkAutoDownloadTest {
     /** Tests that we don't crash when a codename is used for the compile SDK level. */
     @Test
     public void checkCompileSdkCodename() throws Exception {
-        installBuildTools();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -271,8 +240,6 @@ public class SdkAutoDownloadTest {
      */
     @Test
     public void checkPlatformToolsDownloading() throws Exception {
-        installPlatforms();
-        installBuildTools();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -285,27 +252,33 @@ public class SdkAutoDownloadTest {
 
         File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
 
+        // Run one build to setup the SDK with it auto-downloaded
+        getExecutor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
+        assertThat(platformTools).isDirectory();
+
+        PathUtils.deleteRecursivelyIfExists(platformTools.toPath());
+
         // http://b/158204704
         getOfflineExecutor()
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("assembleDebug");
         assertThat(platformTools).doesNotExist();
 
-        getExecutor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("assembleDebug");
-        assertThat(platformTools).isDirectory();
+
     }
 
     @Test
     public void checkCmakeDownloading() throws Exception {
         AssumeUtil.assumeIsLinux();
-        installPlatforms();
-        installBuildTools();
-        installNdk();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
+                        + "android.ndkVersion '"
+                        + NDK_VERSION
+                        + "'"
+                        + System.lineSeparator()
                         + "android.compileSdkVersion "
                         + PLATFORM_VERSION
                         + System.lineSeparator()
@@ -333,13 +306,11 @@ public class SdkAutoDownloadTest {
         assertThat(ndkDirectory).isDirectory();
     }
 
+    /** TODO: Test like checkPlatformToolsDownloading once b/213592468 is fixed */
     @Test
+    @Ignore("b/213592468")
     public void checkCmakeMissingLicense() throws Exception {
         AssumeUtil.assumeIsLinux();
-        installPlatforms();
-        installBuildTools();
-        installPlatformTools();
-        installNdk();
         FileUtils.delete(previewLicenseFile);
         deleteLicense();
 
@@ -373,8 +344,6 @@ public class SdkAutoDownloadTest {
     @Test
     public void checkNdkDownloading() throws Exception {
         AssumeUtil.assumeIsLinux();
-        installPlatforms();
-        installBuildTools();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -422,9 +391,6 @@ public class SdkAutoDownloadTest {
     @Test
     public void checkNdkMissingLicense() throws Exception {
         AssumeUtil.assumeIsLinux();
-        installPlatforms();
-        installBuildTools();
-        installPlatformTools();
         FileUtils.delete(previewLicenseFile);
         deleteLicense();
 
