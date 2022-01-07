@@ -21,8 +21,6 @@ import com.android.build.gradle.internal.cxx.cmake.cmakeBoolean
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
-import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
-import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import com.android.utils.tokenizeCommandLineToEscaped
@@ -218,9 +216,7 @@ val CxxAbiModel.ninjaBuildLocationFile: File
 val CxxAbiModel.objFolder: File
     get() = when(variant.module.buildSystem) {
         CMAKE -> join(cxxBuildFolder, "CMakeFiles")
-        NDK_BUILD -> soFolder
-        NINJA -> soFolder
-        else -> error("${variant.module.buildSystem}")
+        else -> soFolder
     }
 
 /**

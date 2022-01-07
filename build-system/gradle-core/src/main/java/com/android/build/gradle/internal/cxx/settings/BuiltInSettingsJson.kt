@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.Defin
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_DEBUG
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.configure.getNdkBuildProperty
+import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
 import com.android.build.gradle.internal.cxx.model.buildSystemTag
@@ -106,10 +107,10 @@ fun getCmakeDefaultEnvironment(buildIsPrefabCapable: Boolean): Settings {
 }
 
 /**
- * A placeholder environment for ndk-build. It doesn't do anything except declare the name of
- * the inheritted environment "ndk"
+ * A placeholder environment for ndk-build and Ninja. It doesn't do anything except declare the
+ * name of the inherited environment "ndk"
  */
-fun getNdkBuildDefaultEnvironment(): Settings {
+fun getDefaultEnvironment(): Settings {
     return Settings(
             configurations = listOf(
                     SettingsConfiguration(
@@ -199,7 +200,7 @@ fun CxxAbiModel.getAndroidGradleSettings() : Settings {
 }
 
 /**
- * Builds an environment from CMake command-line arguments.
+ * Builds an environment from CMake, ndk-build, or other build system command-line arguments.
  */
 fun CxxAbiModel.getSettingsFromCommandLine(arguments: List<CommandLineArgument>): Settings {
     val nameTable = NameTable()
@@ -223,13 +224,15 @@ fun CxxAbiModel.getSettingsFromCommandLine(arguments: List<CommandLineArgument>)
                         else -> "Debug"
                     }
         )
-        else -> error("${variant.module.buildSystem}")
+        else ->
+            infoln("No Macro values redefined from command-line arguments " +
+                    "for '${variant.module.buildSystem}' build system")
     }
 
     val stl =  variant.module.determineUsedStlFromArguments(arguments)
 
     val stlLibraryFile =
-            variant.module.stlSharedObjectMap.getValue(stl)[abi]?.toString() ?: ""
+            variant.module.stlSharedObjectMap[stl]?.get(abi)?.toString() ?: ""
 
     nameTable.addAll(
         NDK_VARIANT_STL_TYPE to stl.argumentName,
@@ -259,8 +262,7 @@ fun CxxAbiModel.gatherSettingsFromAllLocations() : Settings {
             // Add the synthetic traditional environment.
             settings += getCmakeDefaultEnvironment(buildIsPrefabCapable())
         }
-        NDK_BUILD -> settings += getNdkBuildDefaultEnvironment()
-        else -> error("${variant.module.buildSystem}")
+        else -> settings += getDefaultEnvironment()
     }
 
     // Construct settings for gradle hosting environment.

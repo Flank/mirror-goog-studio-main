@@ -45,6 +45,8 @@ open class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
     override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
         NativeBuildSystem.CMAKE -> Stl.LIBCXX_STATIC
         NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM
+        // Ninja generating script decides its own STL.
+        NativeBuildSystem.NINJA -> Stl.UNKNOWN
         else -> error("$buildSystem")
     }
 
