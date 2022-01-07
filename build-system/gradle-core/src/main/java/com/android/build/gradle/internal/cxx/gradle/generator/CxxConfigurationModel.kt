@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
+import com.android.build.gradle.internal.cxx.configure.NinjaMetadataGenerator
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.ninja
@@ -189,11 +190,6 @@ fun tryCreateConfigurationParameters(
     val project = projectInfo.getProject()
     val (buildSystem, makeFile, configureScript, buildStagingFolder) =
         getProjectPath(variant.variantDslInfo, globalConfig.externalNativeBuild) ?: return null
-
-    if (buildSystem == NINJA) {
-        warnln("This version of Android Gradle Plugin does not support the Ninja build system")
-        return null
-    }
 
     val cxxFolder = findCxxFolder(
         buildSystem,
@@ -374,7 +370,7 @@ fun createCxxMetadataGenerator(
         variant.module.gradleModulePathName, variant.variantName)
 
     return when (variant.module.buildSystem) {
-        NINJA -> error("TODO(192006965) Ninja Metadata Generator is not yet implemented")
+        NINJA -> NinjaMetadataGenerator(abi, variantBuilder)
         NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
             abi,
             variantBuilder

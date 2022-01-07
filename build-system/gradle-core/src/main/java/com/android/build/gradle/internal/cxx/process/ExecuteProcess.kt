@@ -48,6 +48,11 @@ enum class ExecuteProcessType(
     CLEAN_PROCESS("clean", CLEAN_STDOUT)
 }
 
+data class ExecuteProcessResult(
+    val stdout : File,
+    val stderr : File
+)
+
 /**
  * Execute a process of type [ExecuteProcessType] in the context of this [CxxAbiModel].
  *
@@ -74,7 +79,7 @@ enum class ExecuteProcessType(
  * will not be logged to gradle build output. Instead, the function ([processStderr] or
  * [processStdout]) will be called with a file containing the output. These functions will not
  * be called if a build process exception was thrown. Instead, they will be appended to the
- * [ProcessException] message tex.
+ * [ProcessException] message text.
  */
 fun CxxAbiModel.executeProcess(
     processType: ExecuteProcessType,
@@ -83,7 +88,7 @@ fun CxxAbiModel.executeProcess(
     logFileSuffix: String? = null,
     processStderr: ((File) -> Unit)? = null,
     processStdout: ((File) -> Unit)? = null
-) {
+) : ExecuteProcessResult {
     val suffix = logFileSuffix?.let { "_$it"} ?: ""
     val options = variant.module.outputOptions
     val final = command.copy(
@@ -110,6 +115,8 @@ fun CxxAbiModel.executeProcess(
     if (processStderr != null) {
         processStderr(final.stderr)
     }
+
+    return ExecuteProcessResult(final.stdout, final.stderr)
 }
 
 /**

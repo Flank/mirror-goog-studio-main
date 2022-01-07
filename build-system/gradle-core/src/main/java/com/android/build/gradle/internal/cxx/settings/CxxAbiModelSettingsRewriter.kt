@@ -414,7 +414,9 @@ private fun CxxModuleModel.rewrite(rewrite : (property: KProperty1<*, *>, value:
         intermediatesFolder = rewrite(CxxModuleModel::intermediatesFolder, intermediatesFolder.path).toFile(),
         moduleRootFolder = rewrite(CxxModuleModel::moduleRootFolder, moduleRootFolder.path).toFile(),
         ndkFolder = rewrite(CxxModuleModel::ndkFolder, ndkFolder.path).toFile(),
-        ninjaExe = rewrite.fileOrNull(CxxModuleModel::ninjaExe, ninjaExe)
+        ninjaExe = rewrite.fileOrNull(CxxModuleModel::ninjaExe, ninjaExe),
+        makeFile = rewrite.fileOrNull(CxxModuleModel::makeFile, makeFile)!!,
+        configureScript = rewrite.fileOrNull(CxxModuleModel::configureScript, configureScript)
 )
 
 // Rewriter for CxxVariantModel

@@ -50,6 +50,7 @@ import java.nio.file.Paths
 import java.util.zip.ZipInputStream
 import com.android.SdkConstants.GRADLE_LATEST_VERSION
 import com.android.utils.SdkUtils.escapePropertyValue
+import com.google.common.truth.Truth.assertThat
 
 data class CompileCommandsJsonBinEntry(
         val sourceFile: String,
@@ -657,3 +658,19 @@ class NativeBuildBenchmarkProject(
     }
 }
 
+
+fun assertEqualsMultiline(actual : String, expected : String) {
+    if (actual == expected) return
+    val actualLines = actual.split("\n").toTypedArray()
+    val expectedLines = expected.split("\n").toTypedArray()
+
+    var line = 0
+    for((actualLine, expectedLine) in actualLines zip expectedLines) {
+        assertThat(actualLine)
+            .named("Difference on line $line")
+            .isEqualTo(expectedLine)
+        ++line
+    }
+
+    assertThat(actual).isEqualTo(expected)
+}

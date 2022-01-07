@@ -85,7 +85,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    shard_count = 2,
+    shard_count = 4,
     deps = DEPS,
 )
 
