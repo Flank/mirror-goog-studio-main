@@ -74,7 +74,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             OBTAIN_ATTRIBUTES,
             OBTAIN_TYPED_ARRAY,
 
-            // Release check
+            // ContentProviderClient release/close check
             ACQUIRE_CPC,
 
             // Cursor close check
@@ -168,8 +168,16 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     }
                 }
             ACQUIRE_CPC ->
-                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false))
-                    checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE)
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
+                    checkRecycled(
+                        context,
+                        node,
+                        CONTENT_PROVIDER_CLIENT_CLS,
+                        RELEASE,
+                        CLOSE,
+                        autoCloseable = true
+                    )
+                }
             QUERY, RAW_QUERY, QUERY_WITH_FACTORY, RAW_QUERY_WITH_FACTORY ->
                 if (evaluator.extendsClass(containingClass, SQLITE_DATABASE_CLS, false) ||
                     evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
@@ -193,21 +201,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     //    android.provider.MediaStore$Images$Media#query
                     //    android.widget.FilterQueryProvider#runQuery
 
-                    // If it's in a try-with-resources clause, don't flag it: these
-                    // will be cleaned up automatically
-                    var curr: UElement? = node
-                    while (curr != null) {
-                        val psi = curr.sourcePsi
-                        if (psi != null) {
-                            if (getParentOfType(psi, PsiResourceVariable::class.java) != null) {
-                                return
-                            }
-                            break
-                        }
-                        curr = curr.uastParent
-                    }
-
-                    checkRecycled(context, node, CURSOR_CLS, CLOSE)
+                    checkRecycled(context, node, CURSOR_CLS, CLOSE, autoCloseable = true)
                 }
 
             OF_INT, OF_ARGB, OF_FLOAT, OF_OBJECT, OF_PROPERTY_VALUES_HOLDER -> {
@@ -222,8 +216,15 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         node: UCallExpression,
         recycleType: String,
-        recycleName: String
+        vararg recycleNames: String,
+        autoCloseable: Boolean = false
     ) {
+        // If it's an AutoCloseable in a try-with-resources clause, don't flag it: these will be
+        // cleaned up automatically
+        if (autoCloseable && node.isInTryWithResourcesVariable()) {
+            return
+        }
+
         val method = node.getParentOfType(UMethod::class.java) ?: return
         var recycled = false
         var escapes = false
@@ -254,7 +255,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     }
                 }
 
-                if (recycleName != methodName) {
+                if (methodName !in recycleNames) {
                     return false
                 }
                 val resolved = call.resolve()
@@ -309,7 +310,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
         if (!recycled && !escapes) {
             val className = recycleType.substring(recycleType.lastIndexOf('.') + 1)
-            val message = when (recycleName) {
+            val message = when (val recycleName = recycleNames.first()) {
                 RECYCLE -> {
                     String.format(
                         "This `%1\$s` should be recycled after use with `#recycle()`",
@@ -747,3 +748,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         }
     }
 }
+
+private tailrec fun UElement?.isInTryWithResourcesVariable(): Boolean =
+    when {
+        this == null -> false
+        sourcePsi?.let { getParentOfType(it, PsiResourceVariable::class.java) } != null -> true
+        else -> uastParent.isInTryWithResourcesVariable()
+    }

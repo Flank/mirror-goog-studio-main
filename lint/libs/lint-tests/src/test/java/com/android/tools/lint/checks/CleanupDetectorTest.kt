@@ -736,7 +736,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
         val expected =
             """
-            src/test/pkg/ContentProviderClientTest.java:8: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
+            src/test/pkg/ContentProviderClientTest.java:10: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
                     ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
@@ -744,12 +744,13 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
                     package test.pkg;
+
                     import android.content.ContentProviderClient;
                     import android.content.ContentResolver;
+                    import android.net.Uri;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "UnnecessaryLocalVariable"})
                     public class ContentProviderClientTest {
@@ -764,15 +765,40 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
                         public void ok2(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                            client.close();
+                        }
+
+                        public void ok3(ContentResolver resolver) {
+                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             unknown(client);
                         }
 
-                        public ContentProviderClient ok3(ContentResolver resolver) {
+                        public void ok4(ContentResolver resolver, Uri uri) {
+                            try (ContentProviderClient client = resolver.acquireContentProviderClient("test")) { // OK
+                                client.refresh(uri, null, null);
+                            }
+                        }
+
+                        public ContentProviderClient ok5(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             return client;
                         }
 
                         private void unknown(ContentProviderClient client) {
+                        }
+                    }
+                    """
+            ).indented(),
+            kotlin(
+                """
+                    package test.pkg
+
+                    import android.content.ContentResolver
+                    import android.net.Uri
+
+                    fun ok1(resolver: ContentResolver, uri: Uri) {
+                        resolver.acquireContentProviderClient("test")?.use { client ->  // OK
+                            client?.refresh(uri, null, null)
                         }
                     }
                     """
