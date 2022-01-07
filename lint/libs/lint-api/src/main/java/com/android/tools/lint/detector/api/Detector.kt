@@ -666,7 +666,7 @@ abstract class Detector {
         // turning this off to avoid false positives when this has not been explicitly
         // requested
         @Suppress("UseExpressionBody")
-        return type != AnnotationUsageType.BINARY && type != AnnotationUsageType.EQUALITY
+        return type != AnnotationUsageType.BINARY && type != AnnotationUsageType.EQUALITY && type != AnnotationUsageType.DEFINITION
     }
 
     open fun inheritAnnotation(annotation: String): Boolean = true

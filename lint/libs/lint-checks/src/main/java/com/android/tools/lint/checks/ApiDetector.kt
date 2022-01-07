@@ -31,6 +31,7 @@ import com.android.SdkConstants.ATTR_IMPORTANT_FOR_AUTOFILL
 import com.android.SdkConstants.ATTR_LABEL_FOR
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
+import com.android.SdkConstants.ATTR_MIN_SDK_VERSION
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PARENT
 import com.android.SdkConstants.ATTR_ROUND_ICON
@@ -106,6 +107,7 @@ import com.android.tools.lint.detector.api.getChildren
 import com.android.tools.lint.detector.api.getInternalMethodName
 import com.android.tools.lint.detector.api.isInlined
 import com.android.tools.lint.detector.api.isKotlin
+import com.android.tools.lint.detector.api.minSdkAtLeast
 import com.android.tools.lint.detector.api.resolveOperator
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
@@ -211,7 +213,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val apiDatabase = apiDatabase ?: return
 
         var attributeApiLevel = -1
-        if (ANDROID_URI == attribute.namespaceURI) {
+        val namespace = attribute.namespaceURI
+        if (ANDROID_URI == namespace) {
             val name = attribute.localName
             if (name != ATTR_LAYOUT_WIDTH &&
                 name != ATTR_LAYOUT_HEIGHT &&
@@ -263,7 +266,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     }
                 }
             }
-
             // Special case:
             // the dividers attribute is present in API 1, but it won't be read on older
             // versions, so don't flag the common pattern
@@ -295,6 +297,39 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     val message =
                         "Attribute `android:foreground` has no effect on API levels lower than 23 (current min is %1\$d)"
                     report(context, UNUSED, attribute, location, message, 23, minSdk)
+                }
+            }
+        } else if (TOOLS_URI == namespace) {
+            val name = attribute.localName
+            if (name == ATTR_TARGET_API) {
+                val targetApiString = attribute.value
+                val api = if (targetApiString.isNotBlank() && targetApiString[0].isDigit()) {
+                    try {
+                        Integer.parseInt(targetApiString)
+                    } catch (e: NumberFormatException) {
+                        null
+                    }
+                } else {
+                    SdkVersionInfo.getApiByBuildCode(targetApiString, true)
+                }
+                if (api != null) {
+                    val message = "Unnecessary; SDK_INT is always >= $api"
+                    val fix = fix()
+                        .replace().all().with("")
+                        .range(context.getLocation(attribute))
+                        .name("Delete ${attribute.name}")
+                        .build()
+                    context.report(
+                        Incident(
+                            OBSOLETE_SDK,
+                            message,
+                            context.getLocation(attribute),
+                            attribute,
+                            fix
+                        ),
+                        minSdkAtLeast(api)
+                    )
+                    return
                 }
             }
         }
@@ -370,7 +405,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // Don't complain about resource references in the tools namespace,
             // such as for example "tools:layout="@android:layout/list_content",
             // used only for designtime previews
-            if (TOOLS_URI == attribute.namespaceURI) {
+            if (TOOLS_URI == namespace) {
                 return
             }
 
@@ -620,11 +655,15 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     // ---- implements SourceCodeScanner ----
 
     override fun applicableAnnotations(): List<String> {
-        return listOf(REQUIRES_API_ANNOTATION.oldName(), REQUIRES_API_ANNOTATION.newName())
+        return listOf(
+            REQUIRES_API_ANNOTATION.oldName(), REQUIRES_API_ANNOTATION.newName(),
+            ANDROIDX_SDK_SUPPRESS_ANNOTATION, FQCN_TARGET_API, ROBO_ELECTRIC_CONFIG_ANNOTATION
+        )
     }
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
-        return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type)
+        return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type) ||
+            type == AnnotationUsageType.DEFINITION
     }
 
     override fun inheritAnnotation(annotation: String): Boolean {
@@ -639,10 +678,32 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     ) {
         val annotation = annotationInfo.annotation
         val member = usageInfo.referenced as? PsiMember
-        val api = getApiLevel(context, annotation)
+        val api = getApiLevel(context, annotation, annotationInfo.qualifiedName)
         if (api == -1) return
         val minSdk = getMinSdk(context)
-        if (api <= minSdk) return
+        if (usageInfo.type == AnnotationUsageType.DEFINITION) {
+            val message = "Unnecessary; SDK_INT is always >= $api"
+            val fix = fix()
+                .replace().all().with("")
+                .range(context.getLocation(annotation))
+                .name("Delete @RequiresApi")
+                .build()
+            context.report(
+                Incident(
+                    OBSOLETE_SDK,
+                    message,
+                    context.getLocation(annotation),
+                    annotation,
+                    fix
+                ),
+                minSdkAtLeast(api)
+            )
+            return
+        }
+        if (annotation.qualifiedName == SDK_SUPPRESS_ANNOTATION || annotation.qualifiedName == TARGET_API) {
+            // These two annotations do not propagate the requirement outwards to callers
+            return
+        }
         val target = getTargetApi(element)
         if (target == -1 || api > target) {
             if (isWithinVersionCheckConditional(context, element, api)) {
@@ -2855,8 +2916,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         @JvmStatic
-        fun getApiLevel(context: JavaContext, annotation: UAnnotation): Int {
-            var api = getLongAttribute(context, annotation, ATTR_VALUE, -1).toInt()
+        fun getApiLevel(context: JavaContext, annotation: UAnnotation, qualifiedName: String): Int {
+            var api =
+                when (qualifiedName) {
+                    ROBO_ELECTRIC_CONFIG_ANNOTATION -> getLongAttribute(context, annotation, "minSdk", -1).toInt()
+                    SDK_SUPPRESS_ANNOTATION, ANDROIDX_SDK_SUPPRESS_ANNOTATION -> {
+                        val fromCodeName = getLongAttribute(context, annotation, "codeName", -1)
+                        getLongAttribute(context, annotation, ATTR_MIN_SDK_VERSION, fromCodeName).toInt()
+                    }
+                    else -> getLongAttribute(context, annotation, ATTR_VALUE, -1).toInt()
+                }
+
             if (api <= 1) {
                 // @RequiresApi has two aliasing attributes: api and value
                 api = getLongAttribute(context, annotation, "api", -1).toInt()
@@ -2868,6 +2938,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // Special value defined in the Android framework to indicate current development
                 // version. This is different from the tools where we use current stable + 1 since
                 // that's the anticipated version.
+                @Suppress("KotlinConstantConditions")
                 api = if (SdkVersionInfo.HIGHEST_KNOWN_API > SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
                     SdkVersionInfo.HIGHEST_KNOWN_API
                 } else {
