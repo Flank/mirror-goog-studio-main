@@ -218,6 +218,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 InteroperabilityDetector.NO_HARD_KOTLIN_KEYWORDS,
                 InteroperabilityDetector.PLATFORM_NULLNESS,
                 InvalidImeActionIdDetector.ISSUE,
+                InvalidNotificationIdDetector.ISSUE,
                 InvalidPackageDetector.ISSUE,
                 ItemDecoratorDetector.ISSUE,
                 IteratorDetector.ISSUE,
