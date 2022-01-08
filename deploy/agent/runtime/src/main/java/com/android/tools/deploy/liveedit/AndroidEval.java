@@ -326,6 +326,7 @@ class AndroidEval implements Eval {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
+            // Static method are inherited, the lookup must be recursive starting from the owner.
             Method method = methodLookup(owner, methodName, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
