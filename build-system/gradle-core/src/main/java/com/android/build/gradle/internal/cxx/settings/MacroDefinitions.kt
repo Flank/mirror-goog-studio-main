@@ -53,6 +53,8 @@ import com.android.build.gradle.internal.cxx.model.ndkMajorVersion
 import com.android.build.gradle.internal.cxx.model.ndkMaxPlatform
 import com.android.build.gradle.internal.cxx.model.ndkMinPlatform
 import com.android.build.gradle.internal.cxx.model.ndkMinorVersion
+import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
+import com.android.build.gradle.internal.cxx.model.ninjaBuildLocationFile
 import com.android.build.gradle.internal.cxx.model.platform
 import com.android.build.gradle.internal.cxx.model.platformCode
 import com.android.build.gradle.internal.cxx.model.tag
@@ -60,6 +62,8 @@ import com.android.build.gradle.internal.cxx.settings.Environment.GRADLE
 import com.android.build.gradle.internal.cxx.settings.Environment.MICROSOFT_BUILT_IN
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK_EXPOSED_BY_HOST
+import com.android.repository.Revision
+import java.io.File
 import kotlin.reflect.KClassifier
 import kotlin.reflect.KProperty1
 
@@ -291,6 +295,21 @@ enum class Macro(
         example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64",
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64",
         bind = CxxAbiModel::cxxBuildFolder),
+    NDK_NINJA_BUILD_FILE(
+        description = "The path to the expected build.ninja file.",
+        environment = GRADLE,
+        tag = "ninjaBuildFile",
+        example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64/build.ninja",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64/build.ninja",
+        bind = CxxAbiModel::ninjaBuildFile),
+    NDK_NINJA_BUILD_LOCATION_FILE(
+        description = "Path to a file that contains the location of build.ninja. Written by custom" +
+                " external build systems to specify the location where build.ninja was written.",
+        environment = GRADLE,
+        tag = "ninjaBuildLocationFile",
+        example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64/build.ninja.txt",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64/build.ninja.txt",
+        bind = CxxAbiModel::ninjaBuildLocationFile),
     NDK_VARIANT_C_FLAGS(
         description = "The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.",
         environment = GRADLE,

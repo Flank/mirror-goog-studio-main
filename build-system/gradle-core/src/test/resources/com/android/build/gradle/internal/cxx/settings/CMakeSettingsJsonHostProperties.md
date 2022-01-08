@@ -163,6 +163,18 @@ Path to Ninja executable if one was found by Gradle. Otherwise, it expands to em
 - example: ${ndk.projectSdkDir}/cmake/[Current CMake Version]/bin/ninja
 - environment: android-gradle
 
+## ${ndk.ninjaBuildFile}
+The path to the expected build.ninja file.
+- cmake example: ${ndk.moduleDir}/.cxx/Debug/${ndk.configurationHash}/x86_64/build.ninja
+- ndk-build example: ${ndk.moduleDir}/build/.cxx/Debug/${ndk.configurationHash}/x86_64/build.ninja
+- environment: android-gradle
+
+## ${ndk.ninjaBuildLocationFile}
+Path to a file that contains the location of build.ninja. Written by custom external build systems to specify the location where build.ninja was written.
+- cmake example: ${ndk.moduleDir}/.cxx/Debug/${ndk.configurationHash}/x86_64/build.ninja.txt
+- ndk-build example: ${ndk.moduleDir}/build/.cxx/Debug/${ndk.configurationHash}/x86_64/build.ninja.txt
+- environment: android-gradle
+
 ## ${ndk.platform}
 The currently targeted Android platform string, that can be passed to CMake in ANDROID_PLATFORM.
 - example: android-19

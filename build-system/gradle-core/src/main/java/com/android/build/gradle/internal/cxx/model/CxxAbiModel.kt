@@ -192,12 +192,15 @@ val CxxAbiModel.ninjaDepsFile: File
 val CxxAbiModel.ninjaBuildFile: File
     get() = join(redirectedCxxBuildFolder, "build.ninja")
 
+/**
+ * The location of [cxxBuildFolder] after considering [ninjaBuildLocationFile].
+ * The purpose is to allow [cxxBuildFolder] to be overridden in the presence of
+ * [ninjaBuildLocationFile].
+ */
 private val CxxAbiModel.redirectedCxxBuildFolder : File get() {
-    if (cxxBuildFolder.resolve("build.ninja").isFile) return cxxBuildFolder
-    if (ninjaBuildLocationFile.isFile) {
-        return File(ninjaBuildLocationFile.readText().lineSequence().first()).parentFile
-    }
-    return cxxBuildFolder
+    if (cxxBuildFolder.resolve("build.ninja").isFile ||
+        !ninjaBuildLocationFile.isFile) return cxxBuildFolder
+    return File(ninjaBuildLocationFile.readText().lineSequence().first()).parentFile
 }
 
 /**
