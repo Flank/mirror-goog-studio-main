@@ -119,6 +119,22 @@ class ProxyClassEval extends BackPorterEval {
 
     @NonNull
     @Override
+    public Value invokeInterface(
+            @NonNull Value target, MethodDescription method, @NonNull List<? extends Value> args) {
+        final String methodName = method.getName();
+        final String methodDesc = method.getDesc();
+
+        if (target.obj() instanceof ProxyClass) {
+            Log.v("live.deploy.lambda", "invokeInterface: " + method);
+            Object result = invokeProxy(target.obj(), methodName, methodDesc, args);
+            return makeValue(result, Type.getReturnType(methodDesc));
+        }
+
+        return super.invokeInterface(target, method, args);
+    }
+
+    @NonNull
+    @Override
     public Value invokeMethod(
             @NonNull Value target, MethodDescription method, @NonNull List<? extends Value> args) {
         final String methodName = method.getName();

@@ -267,6 +267,20 @@ class AndroidEval implements Eval {
 
     @NonNull
     @Override
+    public Value invokeInterface(
+            @NonNull Value target,
+            MethodDescription methodDesc,
+            @NonNull List<? extends Value> args) {
+        // In invokeinterface, Method lookup should not start from the method desc owner but from
+        // the target object canonical name.
+        String owner = target.obj().getClass().getCanonicalName();
+        MethodDescription md =
+                new MethodDescription(owner, methodDesc.getName(), methodDesc.getDesc());
+        return invokeMethod(target, md, args);
+    }
+
+    @NonNull
+    @Override
     public Value invokeMethod(
             @NonNull Value target,
             MethodDescription methodDesc,
