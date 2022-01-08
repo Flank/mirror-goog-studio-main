@@ -427,7 +427,8 @@ class OpcodeInterpreter extends Interpreter<Value> {
                     String msg =
                             String.format(
                                     "%s cannot be cast to %s",
-                                    value.getAsmType().getClassName(), targetType.getClassName());
+                                    value.obj().getClass().getCanonicalName(),
+                                    targetType.getClassName());
                     Exception e = new ClassCastException(msg);
                     throw new LeInterpretingException(e);
                 }
