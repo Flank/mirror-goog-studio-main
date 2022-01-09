@@ -1458,6 +1458,125 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testOpenForTesting() {
+        lint().files(
+            java(
+                """
+                import androidx.annotation.OpenForTesting;
+
+                @OpenForTesting // WARN
+                public class Test {
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                import androidx.annotation.OpenForTesting
+
+                @OpenForTesting // OK
+                class KotlinTest
+                """
+            ).indented(),
+            openForTestingStub
+        ).run().expect(
+            """
+            src/Test.java:3: Error: @OpenForTesting only applies to Kotlin APIs [SupportAnnotationUsage]
+            @OpenForTesting // WARN
+            ~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testEmptySuper() {
+        lint().files(
+            java(
+                """
+                import androidx.annotation.EmptySuper;
+
+                public class TestJava {
+                  @EmptySuper // WARN 1
+                  public final void method() { }
+                  @EmptySuper // OK
+                  public void ok() { }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                import androidx.annotation.EmptySuper
+                open class TestKotlin {
+                  @EmptySuper // WARN 2
+                  fun method() { }
+                  @EmptySuper // OK
+                  open fun ok() { }
+                }
+                """
+            ).indented(),
+            emptySuperStub
+        ).run().expect(
+            """
+            src/TestJava.java:4: Error: @EmptySuper is pointless on a final method [SupportAnnotationUsage]
+              @EmptySuper // WARN 1
+              ~~~~~~~~~~~
+            src/TestKotlin.kt:3: Error: @EmptySuper is pointless on a final method [SupportAnnotationUsage]
+              @EmptySuper // WARN 2
+              ~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testReturnThis() {
+        lint().files(
+            java(
+                """
+                import androidx.annotation.ReturnThis;
+
+                public class JavaTest {
+                    @ReturnThis // WARN 1
+                    public void voidMethod() { }
+                    @ReturnThis // WARN 2
+                    public int primitiveMethod() { }
+                    @ReturnThis // OK
+                    public Integer okMethod() { }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                import androidx.annotation.ReturnThis
+
+                class KotlinTest {
+                    @ReturnThis // WARN 3
+                    fun voidMethod() { }
+                    @ReturnThis // WARN 4
+                    fun primitiveMethod(): Int { }
+                    @ReturnThis // OK
+                    fun okMethod(): Any? { }
+                }
+                """
+            ).indented(),
+            returnThisStub
+        ).run().expect(
+            """
+            src/JavaTest.java:4: Error: @ReturnThis should not be specified on void or primitive methods [SupportAnnotationUsage]
+                @ReturnThis // WARN 1
+                ~~~~~~~~~~~
+            src/JavaTest.java:6: Error: @ReturnThis should not be specified on void or primitive methods [SupportAnnotationUsage]
+                @ReturnThis // WARN 2
+                ~~~~~~~~~~~
+            src/KotlinTest.kt:4: Error: @ReturnThis should not be specified on void or primitive methods [SupportAnnotationUsage]
+                @ReturnThis // WARN 3
+                ~~~~~~~~~~~
+            src/KotlinTest.kt:6: Error: @ReturnThis should not be specified on void or primitive methods [SupportAnnotationUsage]
+                @ReturnThis // WARN 4
+                ~~~~~~~~~~~
+            4 errors, 0 warnings
+            """
+        )
+    }
+
     override fun getDetector(): Detector {
         return AnnotationDetector()
     }

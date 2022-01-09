@@ -26,6 +26,9 @@ import com.android.support.AndroidxName
 import com.android.tools.lint.checks.ApiDetector.Companion.REQUIRES_API_ANNOTATION
 import com.android.tools.lint.checks.ApiDetector.Companion.getApiLevel
 import com.android.tools.lint.checks.ApiDetector.Companion.getTargetApi
+import com.android.tools.lint.checks.EmptySuperDetector.Companion.EMPTY_SUPER_ANNOTATION
+import com.android.tools.lint.checks.OpenForTestingDetector.Companion.OPEN_FOR_TESTING_ANNOTATION
+import com.android.tools.lint.checks.ReturnThisDetector.Companion.RETURN_THIS_ANNOTATION
 import com.android.tools.lint.checks.TypedefDetector.Companion.findIntDef
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
@@ -72,6 +75,7 @@ import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.source.PsiImmediateClassType
@@ -364,6 +368,48 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                 }
                 REQUIRES_API_ANNOTATION.isEquals(type) -> {
                     checkRequiresApi(annotation)
+                }
+                type == EMPTY_SUPER_ANNOTATION -> {
+                    // Pointless on final methods
+                    val parent = skipParenthesizedExprUp(annotation.uastParent)
+                    if (parent is UMethod) {
+                        if (parent.isFinal) {
+                            context.report(
+                                ANNOTATION_USAGE, annotation, context.getLocation(annotation),
+                                "`@EmptySuper` is pointless on a final method"
+                            )
+                        }
+                    }
+                    // We don't warn if this method body isn't empty because you can legitimately
+                    // put code here, for example, backwards compatibility code meant to handle
+                    // cases where people used to call super and you now want to complain if they do
+                }
+                type == OPEN_FOR_TESTING_ANNOTATION -> {
+                    // Make sure on Kotlin and method or class
+                    val sourcePsi = annotation.sourcePsi
+                    if (sourcePsi != null && !isKotlin(sourcePsi)) {
+                        context.report(
+                            ANNOTATION_USAGE, annotation, context.getLocation(annotation),
+                            "`@OpenForTesting` only applies to Kotlin APIs"
+                        )
+                    }
+                }
+                type == RETURN_THIS_ANNOTATION -> {
+                    // Type must be non-void and non-primitive
+                    val parent = skipParenthesizedExprUp(annotation.uastParent)
+                    if (parent is UMethod) {
+                        val returnType = parent.returnType
+                        if (!parent.isConstructor && (
+                            PsiType.VOID == returnType ||
+                                returnType is PsiPrimitiveType
+                            )
+                        ) {
+                            context.report(
+                                ANNOTATION_USAGE, annotation, context.getLocation(annotation),
+                                "`@ReturnThis` should not be specified on `void` or primitive methods"
+                            )
+                        }
+                    }
                 }
             }
         }

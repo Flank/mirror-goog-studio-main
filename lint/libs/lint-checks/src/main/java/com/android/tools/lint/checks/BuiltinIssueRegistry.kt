@@ -127,6 +127,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DateFormatDetector.WEEK_YEAR,
                 DefaultEncodingDetector.ISSUE,
                 DeletedProviderDetector.ISSUE,
+                DeprecatedSinceApiDetector.ISSUE,
                 DeprecationDetector.ISSUE,
                 DiffUtilDetector.ISSUE,
                 DiscouragedDetector.ISSUE,
@@ -137,6 +138,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DuplicateResourceDetector.STRING_ESCAPING,
                 DuplicateResourceDetector.TYPE_MISMATCH,
                 EllipsizeMaxLinesDetector.ISSUE,
+                EmptySuperDetector.ISSUE,
                 ExifInterfaceDetector.ISSUE,
                 ExportedFlagDetector.ISSUE,
                 ExtraTextDetector.ISSUE,
@@ -304,6 +306,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ObjectAnimatorDetector.MISSING_KEEP,
                 ObsoleteLayoutParamsDetector.ISSUE,
                 OnClickDetector.ISSUE,
+                OpenForTestingDetector.ISSUE,
                 OverdrawDetector.ISSUE,
                 OverrideConcreteDetector.ISSUE,
                 OverrideDetector.ISSUE,
@@ -351,6 +354,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 RestrictionsDetector.ISSUE,
                 RestrictToDetector.RESTRICTED,
                 RestrictToDetector.TEST_VISIBILITY,
+                ReturnThisDetector.ISSUE,
                 RtlDetector.COMPAT,
                 RtlDetector.ENABLED,
                 RtlDetector.SYMMETRY,
@@ -466,7 +470,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
 
     init {
         for (issue in builtinIssues) {
-            //noinspection LeakingThis
+            @Suppress("LeakingThis")
             issue.registry = this
         }
     }
