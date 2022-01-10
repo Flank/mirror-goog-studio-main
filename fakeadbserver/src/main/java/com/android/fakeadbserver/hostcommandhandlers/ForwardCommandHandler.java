@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.PortForwarder;
+import com.android.fakeadbserver.devicecommandhandlers.ForwardArgs;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -45,23 +46,9 @@ public class ForwardCommandHandler extends HostCommandHandler {
         } catch (IOException ignored) {
             return false;
         }
-        boolean noRebind = false;
-        if (args.startsWith("norebind:")) {
-            noRebind = true;
-            args = args.split(":", 2)[1];
-        }
-        String[] addressStrings = args.split(";");
-        if (addressStrings.length != 2) {
-            writeFailResponse(stream, "Invalid port string format given: " + args);
-            return false;
-        }
-        String[] hostAddress = addressStrings[0].split(":");
-        if (hostAddress.length != 2) {
-            writeFailResponse(
-                    stream, "Invalid host address string format given: " + addressStrings[0]);
-            return false;
-        }
-        String hostTransport = hostAddress[0];
+        ForwardArgs forwardArgs = ForwardArgs.parse(args);
+
+        String hostTransport = forwardArgs.getFromTransport();
         switch (hostTransport) {
             case "tcp":
                 break;
@@ -76,7 +63,7 @@ public class ForwardCommandHandler extends HostCommandHandler {
         int hostPort;
         Integer hostPortToSendBack = null;
         try {
-            hostPort = Integer.parseInt(hostAddress[1]);
+            hostPort = Integer.parseInt(forwardArgs.getFromTransportArg());
             if (hostPort == 0) {
                 // This is to emulate ADB Server behavior of picking an available port
                 // This is currently hard-coded as we don't actually create sockets
@@ -84,30 +71,29 @@ public class ForwardCommandHandler extends HostCommandHandler {
             }
             hostPortToSendBack = hostPort;
         } catch (NumberFormatException ignored) {
-            writeFailResponse(stream, "Invalid host port specified: " + hostAddress[1]);
-            return false;
-        }
-        String[] deviceAddress = addressStrings[1].split(":");
-        if (deviceAddress.length != 2) {
             writeFailResponse(
-                    stream, "Invalid device address string format given: " + addressStrings[1]);
+                    stream, "Invalid host port specified: " + forwardArgs.getFromTransportArg());
             return false;
         }
-        String deviceTransport = deviceAddress[0];
+        String deviceTransport = forwardArgs.getToTransport();
         PortForwarder forwarder;
         switch (deviceTransport) {
             case "tcp":
                 try {
-                    int devicePort = Integer.parseInt(deviceAddress[1]);
+                    int devicePort = Integer.parseInt(forwardArgs.getToTransportArg());
                     forwarder = PortForwarder.createPortForwarder(hostPort, devicePort);
                 } catch (NumberFormatException ignored) {
                     writeFailResponse(
-                            stream, "Invalid device port or pid specified: " + deviceAddress[1]);
+                            stream,
+                            "Invalid device port or pid specified: "
+                                    + forwardArgs.getToTransportArg());
                     return false;
                 }
                 break;
             case "local":
-                forwarder = PortForwarder.createUnixForwarder(hostPort, deviceAddress[1]);
+                forwarder =
+                        PortForwarder.createUnixForwarder(
+                                hostPort, forwardArgs.getToTransportArg());
                 break;
             case "jdwp":
                 writeFailResponse(stream, "JDWP connections not yet supported in fake ADB Server.");
@@ -116,7 +102,7 @@ public class ForwardCommandHandler extends HostCommandHandler {
                 writeFailResponse(stream, "Invalid device transport specified: " + deviceTransport);
                 return false;
         }
-        boolean bindOk = device.addPortForwarder(forwarder, noRebind);
+        boolean bindOk = device.addPortForwarder(forwarder, forwardArgs.getNorebind());
         try {
             // We send 2 OKAY answers: 1st OKAY is connect, 2nd OKAY is status.
             // See
