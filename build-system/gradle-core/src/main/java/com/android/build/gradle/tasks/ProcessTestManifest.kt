@@ -112,6 +112,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
 
         mergeManifestsForTestVariant(
             testApplicationId.get(),
+            namespace.get(),
             minSdkVersion.get(),
             targetSdkVersion.get(),
             testedApplicationId.get(),
@@ -146,6 +147,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
      * Creates the manifest for a test variant
      *
      * @param testApplicationId the application id of the test application
+     * @param namespace the namespace of the test application
      * @param minSdkVersion the minSdkVersion of the test application
      * @param targetSdkVersion the targetSdkVersion of the test application
      * @param testedApplicationId the application id of the tested application
@@ -169,6 +171,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
      */
     private fun mergeManifestsForTestVariant(
         testApplicationId: String,
+        namespace: String,
         minSdkVersion: String,
         targetSdkVersion: String,
         testedApplicationId: String,
@@ -250,10 +253,11 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     .setPlaceHolderValues(manifestPlaceholders)
                     .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
                     .addLibraryManifest(generatedTestManifest)
-                    .addAllowNonUniquePackageNames(testApplicationId)
+                    .addAllowedNonUniqueNamespace(namespace)
                     .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                     .setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
                     .setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
+                    .setNamespace(namespace)
                     .withFeatures(ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK)
 
                 instrumentationRunner?.let {
@@ -296,6 +300,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 .addManifestProviders(manifestProviders)
                 .setPlaceHolderValues(manifestPlaceholders)
                 .addNavigationJsons(navigationJsons)
+                .setNamespace(namespace)
             if (jniLibsUseLegacyPackaging == false) {
                 finalInvoker.withFeatures(ManifestMerger2.Invoker.Feature.DO_NOT_EXTRACT_NATIVE_LIBS)
             }
@@ -368,6 +373,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
 
     @get:Input
     abstract val testedApplicationId: Property<String>
+
+    @get:Input
+    abstract val namespace: Property<String>
 
     @get:Input
     abstract val minSdkVersion: Property<String>
@@ -482,6 +490,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
 
             task.testApplicationId.setDisallowChanges(creationConfig.applicationId)
             task.testedApplicationId.setDisallowChanges(creationConfig.testedApplicationId)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
 
             task.instrumentationRunner.setDisallowChanges(creationConfig.instrumentationRunner)
             if (creationConfig is InstrumentedTestCreationConfig) {

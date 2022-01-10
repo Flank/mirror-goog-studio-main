@@ -66,7 +66,7 @@ data class VariantOutputImpl(
         @get:Input
         val outputFileName: String): Serializable {
 
-        fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
+        fun toBuiltArtifact(outputFile: File): BuiltArtifactImpl =
             BuiltArtifactImpl.make(
                 outputFile = outputFile.absolutePath,
                 versionCode = versionCode,

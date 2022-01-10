@@ -217,7 +217,7 @@ class ProcessTestManifestTest {
     }
 
     @Test
-    fun testNonUniquePackageNames() {
+    fun testNonUniqueNamespaces() {
         project.buildFile.appendText("""
             android {
                 namespace "allowedNonUnique"
@@ -235,7 +235,7 @@ class ProcessTestManifestTest {
             """.trimIndent())
         val result = project.executor().run("processDebugAndroidTestManifest")
         result.stdout.use {
-            ScannerSubject.assertThat(it).doesNotContain("Package name 'allowedNonUnique.test' used in:")
+            ScannerSubject.assertThat(it).doesNotContain("Namespace 'allowedNonUnique.test' used in:")
         }
 
     }

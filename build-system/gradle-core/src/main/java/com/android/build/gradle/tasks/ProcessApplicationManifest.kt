@@ -100,6 +100,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val packageOverride: Property<String>
 
     @get:Input
+    abstract val namespace: Property<String>
+
+    @get:Input
     abstract val profileable: Property<Boolean>
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -151,6 +154,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             navJsons,
             featureName.orNull,
             packageOverride.get(),
+            namespace.get(),
             profileable.get(),
             variantOutput.get().versionCode.orNull,
             variantOutput.get().versionName.orNull,
@@ -415,6 +419,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             }
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
             task.profileable.setDisallowChanges(creationConfig.profileable)
             task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()

@@ -88,7 +88,7 @@ public class XmlDocument {
     private final KeyBasedValueResolver<ManifestSystemProperty> mSystemPropertyResolver;
     @NonNull
     private final Type mType;
-    @Nullable private final String mMainManifestPackageName;
+    @Nullable private final String mNamespace;
     @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
     @NonNull public Map<Element, NodeOperationType> originalNodeOperation = new HashMap<>();
 
@@ -98,14 +98,14 @@ public class XmlDocument {
             @NonNull KeyBasedValueResolver<ManifestSystemProperty> systemPropertyResolver,
             @NonNull Element element,
             @NonNull Type type,
-            @Nullable String mainManifestPackageName,
+            @Nullable String namespace,
             @NonNull DocumentModel<ManifestModel.NodeTypes> model) {
         this.mSourceFile = Preconditions.checkNotNull(sourceLocation);
         this.mRootElement = Preconditions.checkNotNull(element);
         this.mSelectors = Preconditions.checkNotNull(selectors);
         this.mSystemPropertyResolver = Preconditions.checkNotNull(systemPropertyResolver);
         this.mType = type;
-        this.mMainManifestPackageName = mainManifestPackageName;
+        this.mNamespace = namespace;
         this.mModel = model;
     }
 
@@ -205,7 +205,7 @@ public class XmlDocument {
                         mSystemPropertyResolver,
                         mRootElement,
                         mType,
-                        mMainManifestPackageName,
+                        mNamespace,
                         mModel);
         newXmlDocument.originalNodeOperation = originalNodeOperation;
         return newXmlDocument;
@@ -281,15 +281,13 @@ public class XmlDocument {
     }
 
     /**
-     * Package name for this android manifest which will be used to resolve
-     * partial path. In the case of Overlays, this is absent and the main
-     * manifest packageName must be used.
-     * @return the package name to do partial class names resolution.
+     * Namespace for this android manifest which will be used to resolve partial paths.
+     *
+     * @return the namespace to do partial class names resolution.
      */
-    public String getPackageName() {
-        return mMainManifestPackageName != null
-                ? mMainManifestPackageName
-                : mRootElement.getAttribute("package");
+    @Nullable
+    public String getNamespace() {
+        return mNamespace;
     }
 
     /**
@@ -299,23 +297,6 @@ public class XmlDocument {
      */
     public String getSplitName() {
         return mRootElement.getAttribute("split");
-    }
-
-    /**
-     * Returns the package name to use to expand the attributes values with the document's package
-     * name
-     *
-     * @return the package name to use for attribute expansion.
-     */
-    public String getPackageNameForAttributeExpansion() {
-        String aPackage = mRootElement.getAttribute("package");
-        if (aPackage != null) {
-            return aPackage;
-        }
-        if (mMainManifestPackageName != null) {
-            return mMainManifestPackageName;
-        }
-        throw new RuntimeException("No package present in overlay or main manifest file");
     }
 
     public Optional<XmlAttribute> getPackage() {
@@ -628,7 +609,7 @@ public class XmlDocument {
                             getMinSdkVersion(),
                             lowerPriorityDocument.getExplicitMinSdkVersionOrDefault(),
                             lowerPriorityDocument.getSourceFile().print(false),
-                            lowerPriorityDocument.getPackageName());
+                            lowerPriorityDocument.getNamespace());
             if (usesSdk.isPresent()) {
                 mergingReport.addMessage(
                         new SourceFilePosition(getSourceFile(), usesSdk.get().getPosition()),
@@ -664,14 +645,14 @@ public class XmlDocument {
                     reparsedXmlDocument,
                     mergingReport.getActionRecorder(),
                     permission("WRITE_EXTERNAL_STORAGE"),
-                    lowerPriorityDocument.getPackageName() + " has a targetSdkVersion < 4");
+                    lowerPriorityDocument.getNamespace() + " has a targetSdkVersion < 4");
             hasWriteToExternalStoragePermission = true;
 
             addIfAbsent(
                     reparsedXmlDocument,
                     mergingReport.getActionRecorder(),
                     permission("READ_PHONE_STATE"),
-                    lowerPriorityDocument.getPackageName() + " has a targetSdkVersion < 4");
+                    lowerPriorityDocument.getNamespace() + " has a targetSdkVersion < 4");
         }
 
         // If the application has requested WRITE_EXTERNAL_STORAGE, we will
@@ -684,7 +665,7 @@ public class XmlDocument {
                     reparsedXmlDocument,
                     mergingReport.getActionRecorder(),
                     permission("READ_EXTERNAL_STORAGE"),
-                    lowerPriorityDocument.getPackageName() + " requested WRITE_EXTERNAL_STORAGE");
+                    lowerPriorityDocument.getNamespace() + " requested WRITE_EXTERNAL_STORAGE");
         }
 
         // Pre-JellyBean call log permission compatibility.
@@ -695,7 +676,7 @@ public class XmlDocument {
                         reparsedXmlDocument,
                         mergingReport.getActionRecorder(),
                         permission("READ_CALL_LOG"),
-                        lowerPriorityDocument.getPackageName()
+                        lowerPriorityDocument.getNamespace()
                                 + " has targetSdkVersion < 16 and requested READ_CONTACTS");
             }
             if (lowerPriorityDocument.getByTypeAndKey(
@@ -704,7 +685,7 @@ public class XmlDocument {
                         reparsedXmlDocument,
                         mergingReport.getActionRecorder(),
                         permission("WRITE_CALL_LOG"),
-                        lowerPriorityDocument.getPackageName()
+                        lowerPriorityDocument.getNamespace()
                                 + " has targetSdkVersion < 16 and requested WRITE_CONTACTS");
             }
         }

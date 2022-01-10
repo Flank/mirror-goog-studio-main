@@ -65,10 +65,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:OutputFile
     abstract val manifestOutputFile: RegularFileProperty
 
-    @get:Optional
-    @get:Input
-    abstract val packageOverride: Property<String>
-
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val manifestOverlays: ListProperty<File>
@@ -124,7 +120,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     }
             )
             it.manifestOverlays.set(manifestOverlays)
-            it.packageOverride.set(packageOverride)
+            it.namespace.set(namespace)
             it.minSdkVersion.set(minSdkVersion)
             it.targetSdkVersion.set(targetSdkVersion)
             it.maxSdkVersion.set(maxSdkVersion)
@@ -160,7 +156,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         abstract val namespaced: Property<Boolean>
         abstract val mainManifest: RegularFileProperty
         abstract val manifestOverlays: ListProperty<File>
-        abstract val packageOverride: Property<String>
+        abstract val namespace: Property<String>
         abstract val minSdkVersion: Property<String>
         abstract val targetSdkVersion: Property<String>
         abstract val maxSdkVersion: Property<Int>
@@ -186,12 +182,15 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             }
             val mergingReport = mergeManifests(
                 parameters.mainManifest.asFile.get(),
-                parameters.manifestOverlays.get(), emptyList(), emptyList(),
-                null,
-                parameters.packageOverride.get(),
-                false,
-                null,
-                null,
+                parameters.manifestOverlays.get(),
+                dependencies = emptyList(),
+                navigationJsons = emptyList(),
+                featureName = null,
+                packageOverride = parameters.namespace.get(),
+                namespace = parameters.namespace.get(),
+                profileable = false,
+                versionCode = null,
+                versionName = null,
                 parameters.minSdkVersion.orNull,
                 parameters.targetSdkVersion.orNull,
                 parameters.maxSdkVersion.orNull,
@@ -215,20 +214,15 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             } catch (e: IOException) {
                 throw UncheckedIOException(e)
             }
-            val properties =
-                if (mergedXmlDocument != null) mapOf(
-                    "packageId" to mergedXmlDocument.packageName,
-                    "split" to mergedXmlDocument.splitName
-                ) else mapOf()
             if (parameters.manifestOutputDirectory.isPresent) {
                 BuiltArtifactsImpl(
                     BuiltArtifacts.METADATA_FILE_VERSION,
                     InternalArtifactType.PACKAGED_MANIFESTS,
-                    parameters.packageOverride.get(),
+                    parameters.namespace.get(),
                     parameters.variantName.get(),
                     listOf(
                         parameters.mainSplit.get().toBuiltArtifact(
-                            parameters.manifestOutputFile.asFile.get(), properties
+                            parameters.manifestOutputFile.asFile.get()
                         )
                     )
                 )
@@ -238,11 +232,11 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 BuiltArtifactsImpl(
                     BuiltArtifacts.METADATA_FILE_VERSION,
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                    parameters.packageOverride.get(),
+                    parameters.namespace.get(),
                     parameters.variantName.get(),
                     listOf(
                         parameters.mainSplit.get().toBuiltArtifact(
-                            parameters.aaptFriendlyManifestOutputFile.asFile.get(), properties
+                            parameters.aaptFriendlyManifestOutputFile.asFile.get()
                         )
                     )
                 )
@@ -348,7 +342,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.mainSplit.set(creationConfig.services.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
             task.isNamespaced = creationConfig.global.namespacedAndroidResources
-            task.packageOverride.setDisallowChanges(creationConfig.applicationId)
             manifestPlaceholders?.let {
                 task.manifestPlaceholders.setDisallowChanges(it)
             }
