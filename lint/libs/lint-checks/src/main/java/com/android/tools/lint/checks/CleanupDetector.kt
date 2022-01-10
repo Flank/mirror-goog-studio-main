@@ -39,19 +39,16 @@ import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDoWhileExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UReferenceExpression
-import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.util.isConstructorCall
 
 /**
@@ -239,20 +236,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val methodName = getMethodName(call)
                 if ("use" == methodName) {
                     // Kotlin: "use" calls close; see issue 62377185
-                    // Can't call call.resolve() to check it's the runtime because
-                    // resolve returns null on these usages.
-                    // (See also ktx use method, issue 140344435, which
-                    // handles recycle() calls.)
-                    // Now make sure we're calling it on the right variable:
-                    val operand: UExpression? = call.receiver?.skipParenthesizedExprDown()
-                    if (operand != null && instances.contains(operand)) {
-                        return true
-                    } else if (operand is UResolvable) {
-                        val resolved = operand.resolve()
-                        if (resolved != null && references.contains(resolved)) {
-                            return true
-                        }
-                    }
+                    return true
                 }
 
                 if (methodName !in recycleNames) {
