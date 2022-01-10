@@ -99,6 +99,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:Input
     abstract val packageOverride: Property<String>
 
+    @get:Input
+    abstract val namespace: Property<String>
+
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val manifestOverlays: ListProperty<File>
@@ -148,6 +151,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             navJsons,
             featureName.orNull,
             packageOverride.get(),
+            namespace.get(),
             variantOutput.get().versionCode.orNull,
             variantOutput.get().versionName.orNull,
             minSdkVersion.orNull,
@@ -411,6 +415,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             }
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
             task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()
             task.mainManifest.setDisallowChanges(creationConfig.services.provider(variantSources::mainManifestFilePath))
