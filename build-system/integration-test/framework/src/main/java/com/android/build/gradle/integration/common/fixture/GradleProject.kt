@@ -121,7 +121,9 @@ abstract class GradleProject(
         }
 
         if (buildScriptContent != null) {
-            val buildFile = File(projectDir, "build.gradle")
+            val buildFileName =
+                if (sourceFiles.containsKey("build.gradle.kts")) "build.gradle.kts" else "build.gradle"
+            val buildFile = File(projectDir, buildFileName)
             if (buildFile.exists()) {
                 buildFile.writeText("$buildScriptContent\n\n${buildFile.readText()}")
             } else {

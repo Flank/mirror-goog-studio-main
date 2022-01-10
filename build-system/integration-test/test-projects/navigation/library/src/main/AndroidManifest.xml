@@ -20,6 +20,7 @@
     <application>
         <activity
             android:name=".LibraryActivity"
+            android:exported="true"
             android:label="@string/library_activity_label" >
         </activity>
     </application>
