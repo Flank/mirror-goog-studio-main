@@ -2010,6 +2010,47 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testUseHasLambdaParameter() {
+        lint().files(
+            kotlin(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentResolver;
+                    import android.database.Cursor;
+                    import android.net.Uri;
+
+                    fun test(resolver: ContentResolver, uri: Uri, projection: Array<String>) {
+                        resolver.query(uri, projection, null, null, null).use { // OK
+                            cursor.moveToNext()
+                        }
+
+                        resolver.query(uri, projection, null, null, null).use() // ERROR
+
+                        resolver.query(uri, projection, null, null, null).use(1) // ERROR
+                    }
+
+                    // These use() functions don't have a matching signature
+                    fun Cursor.use() {
+                    }
+
+                    fun Cursor.use(n: Int) {
+                    }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:12: Warning: This Cursor should be freed up after use with #close() [Recycle]
+                resolver.query(uri, projection, null, null, null).use() // ERROR
+                         ~~~~~
+            src/test/pkg/test.kt:14: Warning: This Cursor should be freed up after use with #close() [Recycle]
+                resolver.query(uri, projection, null, null, null).use(1) // ERROR
+                         ~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
     fun test117794883() {
         // Regression test for 117794883
         lint().files(

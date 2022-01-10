@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
+import com.intellij.psi.LambdaUtil
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
@@ -236,7 +237,15 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val methodName = getMethodName(call)
                 if ("use" == methodName) {
                     // Kotlin: "use" calls close; see issue 62377185
-                    return true
+                    // Ensure that "use" call accepts a single lambda parameter, so that it would
+                    // loosely match kotlin.io.use() signature and at the same time allow custom
+                    // overloads for types not extending Closeable
+                    if (call.valueArgumentCount == 1) {
+                        val argumentType = call.valueArguments.first().getExpressionType()
+                        if (argumentType != null && LambdaUtil.isFunctionalType(argumentType)) {
+                            return true
+                        }
+                    }
                 }
 
                 if (methodName !in recycleNames) {
