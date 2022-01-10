@@ -17,10 +17,16 @@ package com.android.fakeadbserver
 
 class DeviceFileState(
     val path: String,
-    val permission: String,
+    /** UNIX-style permissions bits */
+    val permission: Int,
     val modifiedDate: Int,
     val bytes: ByteArray
 ) {
+    fun isOwnerWritable(): Boolean =
+        (permission and (2 shl 6)) > 0
+
+    fun isOwnerReadable(): Boolean =
+        (permission and (4 shl 6)) > 0
 
     override fun equals(other: Any?): Boolean {
         return (other is DeviceFileState) && (path == other.path)

@@ -19,7 +19,6 @@ import com.android.fakeadbserver.CommandHandler
 import com.android.fakeadbserver.DeviceFileState
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
-import com.google.common.base.Charsets
 import java.io.EOFException
 import java.io.IOException
 import java.io.InputStream
@@ -78,8 +77,13 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
                     val modifiedDate = readDonePacket(input)
                     val bytes = bytePackets.flatMap { it.asIterable() }.toByteArray()
                     val file = DeviceFileState(path, permission, modifiedDate, bytes)
-                    device.createFile(file)
-                    sendSyncOkay(output)
+                    val existingFile = device.getFile(path)
+                    if (existingFile != null && !existingFile.isOwnerWritable()) {
+                        sendSyncFail(output, "File not writable")
+                    } else {
+                        device.createFile(file)
+                        sendSyncOkay(output)
+                    }
                     break
                 }
                 else -> {
@@ -99,6 +103,10 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
             val reason = "File does not exist: '$path'"
             sendSyncFail(output, reason)
             return  // We do not throw, as we can accept another sync request
+        }
+        if (!fileState.isOwnerReadable()) {
+            sendSyncFail(output, "File is not readable: '$path'")
+            return
         }
         val bytesToSend = fileState.bytes
         var offset = 0
@@ -124,7 +132,7 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
             return  // We do not throw, as we can accept another sync request
         }
         writeInt32(output, /* id= */ 0)
-        writeInt32(output, fileState.permission.toInt())
+        writeInt32(output, fileState.permission)
         writeInt32(output, fileState.bytes.size)
         writeInt32(output, fileState.modifiedDate)
     }
@@ -134,7 +142,9 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
         return String(bytes, UTF_8)
     }
 
-    private fun readSendHeader(input: InputStream, output: OutputStream): Pair<String, String> {
+    private data class SendHeader(val path: String, val permissions: Int)
+
+    private fun readSendHeader(input: InputStream, output: OutputStream): SendHeader {
         // Bytes 0-3: 'SEND'
         // Bytes 4-7: request size (little endian)
         // Bytes 8-xx: An utf-8 string with the remote file path followed by ',' followed by the permissions as a string
@@ -147,9 +157,9 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
             sendSyncFail(output, errorMessage)
             throw IOException(errorMessage)
         }
-        return Pair(
+        return SendHeader(
             header.substring(0, index),
-            header.substring(index + 1, header.length)
+            header.substring(index + 1, header.length).toInt()
         )
     }
 
