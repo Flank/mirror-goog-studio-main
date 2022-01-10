@@ -57,7 +57,7 @@ TEST_DATA = [
     ":avd",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:platform-tools",
-    "//prebuilts/studio/sdk:platforms/latest",
+    "//prebuilts/studio/sdk:platforms/android-30",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
 ]

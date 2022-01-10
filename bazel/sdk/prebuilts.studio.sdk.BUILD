@@ -220,12 +220,10 @@ platform_filegroup(
     visibility = ["//visibility:private"],
 )
 
+# Platform 30 is public during the transition while tests are being updated
 platform_filegroup(
     name = "platforms/android-30",
-    #visibility = ["//visibility:private"],
-    visibility = [
-        "//tools/base/build-system/integration-test:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
 )
 
 platform_filegroup(

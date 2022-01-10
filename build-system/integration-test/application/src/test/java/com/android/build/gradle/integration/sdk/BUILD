@@ -10,7 +10,7 @@ gradle_integration_test(
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:ndk",
         "//prebuilts/studio/sdk:platform-tools",
-        "//prebuilts/studio/sdk:platforms/latest",
+        "//prebuilts/studio/sdk:platforms/android-30",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/3534162-studio.sdk-patcher.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/42b081e1e068bb936179551684cdcb30315e245c.platform-tools_r31.0.2-darwin.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/91936d4ee3ccc839f0addd53c9ebf087b1e39251.build-tools_r30.0.3-windows.zip",
