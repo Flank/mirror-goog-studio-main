@@ -42,7 +42,7 @@ interface ApplicationVariant : GeneratesApk, Variant, HasAndroidTest, HasTestFix
      * Variant's signingConfig, initialized by the corresponding DSL element.
      * @return Variant's config or null if the variant is not configured for signing.
      */
-    val signingConfig: SigningConfig?
+    val signingConfig: SigningConfig
 
     /**
      * Variant's information related to the bundle creation configuration.

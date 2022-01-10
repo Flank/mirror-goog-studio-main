@@ -30,6 +30,7 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
@@ -182,7 +183,10 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val signingConfig: SigningConfigImpl? by lazy {
+    override val signingConfig: SigningConfig?
+        get() = signingConfigImpl
+
+    override val signingConfigImpl: SigningConfigImpl? by lazy {
         variantDslInfo.signingConfig?.let {
             SigningConfigImpl(
                 it,

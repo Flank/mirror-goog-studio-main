@@ -230,6 +230,12 @@ public class TypedefRemover {
                             super.visitInnerClass(name, outerName, innerName, access);
                         }
                     }
+                    @Override
+                    public void visitNestMember(String nestMember) {
+                        if (!mAnnotationNames.contains(nestMember)) {
+                            super.visitNestMember(nestMember);
+                        }
+                    }
                 };
         reader.accept(classVisitor, 0);
         return classWriter.toByteArray();

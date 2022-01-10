@@ -191,7 +191,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val signingConfig = creationConfig.signingConfig ?: throw IllegalStateException(
+            val signingConfig = creationConfig.signingConfigImpl ?: throw IllegalStateException(
                 "No signing config configured for variant " + creationConfig.name
             )
             task.signingConfigData.set(

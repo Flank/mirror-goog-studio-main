@@ -304,24 +304,19 @@ public class VariantDependenciesBuilder {
             Provider<StringCachingBuildService> stringCachingService =
                     new StringCachingBuildService.RegistrationAction(project).execute();
             // make compileClasspath match runtimeClasspath
-            compileClasspath
-                    .getIncoming()
-                    .beforeResolve(
-                            new ConstraintHandler(
-                                    runtimeClasspath, dependencies, false, stringCachingService));
+            ConstraintHandler.alignWith(
+                    compileClasspath, runtimeClasspath, dependencies, false, stringCachingService);
 
             // if this is a test App, then also synchronize the 2 runtime classpaths
             if (variantType.isApk() && testedVariant != null) {
                 Configuration testedRuntimeClasspath =
                         testedVariant.getVariantDependencies().getRuntimeClasspath();
-                runtimeClasspath
-                        .getIncoming()
-                        .beforeResolve(
-                                new ConstraintHandler(
-                                        testedRuntimeClasspath,
-                                        dependencies,
-                                        true,
-                                        stringCachingService));
+                ConstraintHandler.alignWith(
+                        runtimeClasspath,
+                        testedRuntimeClasspath,
+                        dependencies,
+                        true,
+                        stringCachingService);
             }
         }
 
