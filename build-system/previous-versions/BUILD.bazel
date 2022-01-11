@@ -90,7 +90,7 @@ gradle_build(
         "tests/3.5.0/src/main/AndroidManifest.xml",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platform-tools",
-        "//prebuilts/studio/sdk:platforms/latest",
+        "//prebuilts/studio/sdk:platforms/android-30",
     ],
     gradle_version = "6.5",  # AGP 3.5 is not supported by Gradle 7.0+
     output_file = "3.5.0.aar",
@@ -123,7 +123,7 @@ gradle_build(
         "tests/3.3.2/src/main/AndroidManifest.xml",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platform-tools",
-        "//prebuilts/studio/sdk:platforms/latest",
+        "//prebuilts/studio/sdk:platforms/android-30",
     ],
     gradle_version = "5.5",
     output_file = "3.3.2.aar",
