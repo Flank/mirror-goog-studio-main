@@ -2353,6 +2353,170 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testAssetFileDescriptor() {
+
+        val expected =
+            """
+            src/test/pkg/AssetFileDescriptorTest.java:15: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openAssetFile(uri, "mode", null); // Warn
+                           ~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:16: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                           ~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:17: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:18: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openAssetFile(uri, "mode", null); // Warn
+                             ~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:19: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openAssetFileDescriptor(uri, "mode", null); // Warn
+                             ~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:20: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                             ~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:21: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 7 warnings
+            """
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentProviderClient;
+                    import android.content.ContentResolver;
+                    import android.content.res.AssetFileDescriptor;
+                    import android.net.Uri;
+
+                    class AssetFileDescriptorTest {
+                        ContentProviderClient client;
+                        ContentResolver resolver;
+                        Uri uri;
+                        AssetFileDescriptor fileField;
+
+                        void error1() {
+                            client.openAssetFile(uri, "mode", null); // Warn
+                            client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                            client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                            resolver.openAssetFile(uri, "mode", null); // Warn
+                            resolver.openAssetFileDescriptor(uri, "mode", null); // Warn
+                            resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                            resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                        }
+
+                        void ok1() {
+                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                            file.close();
+                            AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            file2.close();
+                            AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            file3.close();
+                            AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
+                            file4.close();
+                            AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            file5.close();
+                            AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            file6.close();
+                            AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            file7.close();
+                        }
+
+                        void ok2() {
+                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                            unknown(file);
+                            AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            unknown(file2);
+                            AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            unknown(file3);
+                            AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
+                            unknown(file4);
+                            AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            unknown(file5);
+                            AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            unknown(file6);
+                            AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            unknown(file7);
+                        }
+
+                        void ok3() {
+                            fileField = client.openAssetFile(uri, "mode", null); // OK
+                            fileField = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            fileField = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            fileField = resolver.openAssetFile(uri, "mode", null); // OK
+                            fileField = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            fileField = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            fileField = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        }
+
+                        void ok4() {
+                            try (AssetFileDescriptor file = client.openAssetFile(uri, "mode", null)) { // OK
+                                file.getLength();
+                            }
+                            try (AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
+                                file2.getLength();
+                            }
+                            try (AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
+                                file3.getLength();
+                            }
+                            try (AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null)) { // OK
+                                file4.getLength();
+                            }
+                            try (AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null)) { // OK
+                                file5.getLength();
+                            }
+                            try (AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
+                                file6.getLength();
+                            }
+                            try (AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
+                                file7.getLength();
+                            }
+                        }
+
+                        AssetFileDescriptor ok5() {
+                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok6() {
+                            AssetFileDescriptor file = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok7() {
+                            AssetFileDescriptor file = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok8() {
+                            AssetFileDescriptor file = resolver.openAssetFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok9() {
+                            AssetFileDescriptor file = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok10() {
+                            AssetFileDescriptor file = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok11() {
+                            AssetFileDescriptor file = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            return file;
+                        }
+
+                        void unknown(AssetFileDescriptor file) {
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

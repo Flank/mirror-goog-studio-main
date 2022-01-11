@@ -82,6 +82,12 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             QUERY_WITH_FACTORY,
             RAW_QUERY_WITH_FACTORY,
 
+            // AssetFileDescriptor close check
+            OPEN_ASSET_FILE,
+            OPEN_ASSET_FILE_DESCRIPTOR,
+            OPEN_TYPED_ASSET_FILE,
+            OPEN_TYPED_ASSET_FILE_DESCRIPTOR,
+
             // SharedPreferences check
             EDIT,
 
@@ -201,6 +207,23 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     //    android.widget.FilterQueryProvider#runQuery
 
                     checkRecycled(context, node, CURSOR_CLS, CLOSE, autoCloseable = true)
+                }
+            OPEN_ASSET_FILE,
+            OPEN_ASSET_FILE_DESCRIPTOR,
+            OPEN_TYPED_ASSET_FILE,
+            OPEN_TYPED_ASSET_FILE_DESCRIPTOR ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
+                    evaluator.extendsClass(
+                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                    )
+                ) {
+                    checkRecycled(
+                        context,
+                        node,
+                        ASSET_FILE_DESCRIPTOR_CLS,
+                        CLOSE,
+                        autoCloseable = true
+                    )
                 }
 
             OF_INT, OF_ARGB, OF_FLOAT, OF_OBJECT, OF_PROPERTY_VALUES_HOLDER -> {
@@ -705,6 +728,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val RAW_QUERY_WITH_FACTORY = "rawQueryWithFactory"
         private const val CLOSE = "close"
         private const val EDIT = "edit"
+        private const val OPEN_ASSET_FILE = "openAssetFile"
+        private const val OPEN_ASSET_FILE_DESCRIPTOR = "openAssetFileDescriptor"
+        private const val OPEN_TYPED_ASSET_FILE = "openTypedAssetFile"
+        private const val OPEN_TYPED_ASSET_FILE_DESCRIPTOR = "openTypedAssetFileDescriptor"
 
         const val MOTION_EVENT_CLS = "android.view.MotionEvent"
         private const val PARCEL_CLS = "android.os.Parcel"
@@ -728,6 +755,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         const val ANDROID_CONTENT_SHARED_PREFERENCES = "android.content.SharedPreferences"
         private const val ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
             "android.content.SharedPreferences.Editor"
+        private const val ASSET_FILE_DESCRIPTOR_CLS = "android.content.res.AssetFileDescriptor"
 
         /**
          * Returns the variable the expression is assigned to, if any.
