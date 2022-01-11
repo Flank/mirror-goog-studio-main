@@ -297,10 +297,10 @@ class UastTest : TestCase() {
                         UField (name = x) [@org.jetbrains.annotations.NotNull private final var x: int]
                             UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                         UMethod (name = print) [public fun print() : void {...}]
-                            UBlockExpression [{...}] : PsiType:void
-                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(x)] : PsiType:void
+                            UBlockExpression [{...}] : PsiType:Unit
+                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(x)] : PsiType:Unit
                                     UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                    USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                    USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                     USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
                         UMethod (name = getX) [public final fun getX() : int = UastEmptyExpression]
                         UMethod (name = BaseImpl) [public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression]
@@ -405,16 +405,16 @@ class UastTest : TestCase() {
                                                         UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [hashCode()] : PsiType:int
                                                             UIdentifier (Identifier (hashCode)) [UIdentifier (Identifier (hashCode))]
                                                             USimpleNameReferenceExpression (identifier = hashCode, resolvesTo = null) [hashCode] : PsiType:int
-                                            UExpressionList (when) [    it is int -> {...    ] : PsiType:Object
-                                                USwitchClauseExpressionWithBody [it is int -> {...]
-                                                    UBinaryExpressionWithType [it is int]
+                                            UExpressionList (when) [    it is java.lang.Integer -> {...    ] : PsiType:Object
+                                                USwitchClauseExpressionWithBody [it is java.lang.Integer -> {...]
+                                                    UBinaryExpressionWithType [it is java.lang.Integer]
                                                         USimpleNameReferenceExpression (identifier = it) [it]
-                                                        UTypeReferenceExpression (name = int) [int]
+                                                        UTypeReferenceExpression (name = java.lang.Integer) [java.lang.Integer]
                                                     UExpressionList (when_entry) [{...]
                                                         UYieldExpression [yield println(something)]
-                                                            UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:void
+                                                            UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:Unit
                                                                 UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                                                USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                                                USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                                                 USimpleNameReferenceExpression (identifier = something) [something] : PsiType:int
                                                 USwitchClauseExpressionWithBody [ -> {...]
                                                     UExpressionList (when_entry) [{...]
@@ -432,18 +432,18 @@ class UastTest : TestCase() {
                                 ULiteralExpression (value = 42) [42] : PsiType:int
                             UMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]
                                 UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
-                                UBlockExpression [{...}] : PsiType:void
-                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:void
+                                UBlockExpression [{...}] : PsiType:Unit
+                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:Unit
                                         UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                        USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                        USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                         ULiteralExpression (value = "Hello, world!") ["Hello, world!"] : PsiType:String
                             UClass (name = Companion) [public static final class Companion {...}]
                                 UMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]
                                     UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
-                                    UBlockExpression [{...}] : PsiType:void
-                                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:void
+                                    UBlockExpression [{...}] : PsiType:Unit
+                                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:Unit
                                             UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                            USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                            USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                             ULiteralExpression (value = "Hello, world!") ["Hello, world!"] : PsiType:String
                                 UMethod (name = Companion) [private fun Companion() = UastEmptyExpression]
                         UClass (name = FooAnnotation) [public abstract annotation FooAnnotation {...}]
@@ -515,7 +515,7 @@ class UastTest : TestCase() {
                 import android.widget.TextView
 
                 public final class Test : android.app.Activity {
-                    private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, @null ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {
+                    private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {
                         var z: int = x + y
                     }
                     public fun Test() = UastEmptyExpression
@@ -530,14 +530,13 @@ class UastTest : TestCase() {
                 UFile (package = test.pkg) [package test.pkg...]
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
-                        UMethod (name = setUi) [private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, @null ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {...}]
+                        UMethod (name = setUi) [private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {...}]
                             UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                             UParameter (name = y) [@org.jetbrains.annotations.NotNull var y: int]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
-                            UParameter (name = ${'$'}completion) [@null var ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>]
-                                UAnnotation (fqName = null) [@null]
-                            UBlockExpression [{...}] : PsiType:void
+                            UParameter (name = ${'$'}completion) [var ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>]
+                            UBlockExpression [{...}] : PsiType:Unit
                                 UDeclarationsExpression [var z: int = x + y]
                                     ULocalVariable (name = z) [var z: int = x + y]
                                         UBinaryExpression (operator = +) [x + y] : PsiType:int
@@ -587,33 +586,33 @@ class UastTest : TestCase() {
                     public static final fun function2(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function3(@org.jetbrains.annotations.Nullable t: T) : void {
+                    public static fun function3(@org.jetbrains.annotations.Nullable t: T) : void {
                     }
-                    static fun function4(@org.jetbrains.annotations.Nullable t: T) : T {
+                    public static fun function4(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function5(@org.jetbrains.annotations.Nullable t: T) : int {
+                    public static fun function5(@org.jetbrains.annotations.Nullable t: T) : int {
                         return 42
                     }
-                    static fun function6(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function6: T, @org.jetbrains.annotations.Nullable t: T) : T {
+                    public static fun function6(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function6: T, @org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function7(@org.jetbrains.annotations.Nullable t: T) : T {
+                    public static fun function7(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function8(@org.jetbrains.annotations.Nullable t: T) : T {
+                    private static fun function8(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function9(@org.jetbrains.annotations.Nullable t: T) : T {
+                    public static fun function9(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function10(@org.jetbrains.annotations.Nullable t: T) : T {
+                    public static fun function10(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function11(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function11: T, @org.jetbrains.annotations.Nullable t: T) : T {
+                    public static fun function11(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function11: T, @org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    static fun function12(@org.jetbrains.annotations.Nullable t: T) : void {
+                    public static fun function12(@org.jetbrains.annotations.Nullable t: T) : void {
                     }
                 }
 
@@ -689,7 +688,7 @@ class UastTest : TestCase() {
 
             fun hasTypeParameterKeyword(element: PsiTypeParameter?, keyword: KtModifierKeywordToken): Boolean {
                 val ktOrigin = when (element) {
-                    is KotlinLightTypeParameterBuilder -> element.sourcePsi
+                    is KotlinLightTypeParameterBuilder -> element.origin
                     else -> element?.unwrapped as? KtTypeParameter ?: return false
                 }
                 return ktOrigin.hasModifier(keyword)
@@ -907,7 +906,7 @@ class UastTest : TestCase() {
 
                 public final class GraphVariables {
                     public final fun getSet() : java.util.Set<test.pkg.GraphVariable<?>> = UastEmptyExpression
-                    fun variable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) : void {
+                    public fun variable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) : void {
                         this.set.add(<init>(name, graphType, value))
                     }
                 }
@@ -1039,7 +1038,7 @@ class UastTest : TestCase() {
                 UFile (package = test.pkg) [package test.pkg...]
                   UClass (name = TestKt) [public final class TestKt {...}]
                     UMethod (name = test1) [public static final fun test1() : void {...}]
-                      UBlockExpression [{...}] : PsiType:void
+                      UBlockExpression [{...}] : PsiType:Unit
                         UDeclarationsExpression [var thread1: java.lang.Thread = <init>({ ...})]
                           ULocalVariable (name = thread1) [var thread1: java.lang.Thread = <init>({ ...})]
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>({ ...})] : PsiType:Thread
@@ -1047,12 +1046,12 @@ class UastTest : TestCase() {
                               USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: Thread) [<init>] : PsiType:Thread
                               ULambdaExpression [{ ...}] : PsiType:Function0<? extends Unit>
                                 UBlockExpression [{...}]
-                                  UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:void
+                                  UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:Unit
                                     UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                    USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                    USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                     ULiteralExpression (value = "hello") ["hello"] : PsiType:String
                     UMethod (name = test2) [public static final fun test2() : void {...}]
-                      UBlockExpression [{...}] : PsiType:void
+                      UBlockExpression [{...}] : PsiType:Unit
                         UDeclarationsExpression [var thread2: java.lang.Thread = <init>(Runnable({ ...}))]
                           ULocalVariable (name = thread2) [var thread2: java.lang.Thread = <init>(Runnable({ ...}))]
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(Runnable({ ...}))] : PsiType:Thread
@@ -1063,9 +1062,9 @@ class UastTest : TestCase() {
                                 USimpleNameReferenceExpression (identifier = Runnable, resolvesTo = PsiClass: Runnable) [Runnable] : PsiType:Runnable
                                 ULambdaExpression [{ ...}] : PsiType:Function0<? extends Unit>
                                   UBlockExpression [{...}]
-                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:void
+                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:Unit
                                       UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                      USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                      USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                       ULiteralExpression (value = "hello") ["hello"] : PsiType:String
                 """.trimIndent(),
                 file.asLogTypes(indent = "  ").trim()
@@ -1210,7 +1209,7 @@ class UastTest : TestCase() {
                 public final class SimpleClass {
                     @org.jetbrains.annotations.NotNull private var foo: int
                     public final fun getFoo() : int = UastEmptyExpression
-                    public final fun setFoo(@null foo: int) : void = UastEmptyExpression
+                    public final fun setFoo(value: int) : void = UastEmptyExpression
                     public fun SimpleClass() {
                         {
                             foo = android.R.layout.activity_list_item
@@ -1361,9 +1360,8 @@ class UastTest : TestCase() {
                           ULiteralExpression (value = "SomeStringValue") ["SomeStringValue"] : PsiType:String
                       ULiteralExpression (value = 0) [0] : PsiType:int
                     UMethod (name = getMyProperty) [public static final fun getMyProperty() : int = UastEmptyExpression]
-                    UMethod (name = setMyProperty) [public static final fun setMyProperty(@null myProperty: int) : void = UastEmptyExpression]
-                      UParameter (name = myProperty) [@null var myProperty: int]
-                        UAnnotation (fqName = null) [@null]
+                    UMethod (name = setMyProperty) [public static final fun setMyProperty(value: int) : void = UastEmptyExpression]
+                      UParameter (name = value) [var value: int]
                   UClass (name = MyFieldAnnotation) [public abstract annotation MyFieldAnnotation {...}]
                     UAnnotation (fqName = kotlin.annotation.Target) [@kotlin.annotation.Target(allowedTargets = AnnotationTarget.FIELD)]
                       UNamedExpression (name = allowedTargets) [allowedTargets = AnnotationTarget.FIELD]

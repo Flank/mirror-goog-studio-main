@@ -235,9 +235,8 @@ class ResolveTest : TestCase() {
                         UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull] => <FAILED>
                         ULiteralExpression (value = 0) [0]
                     UMethod (name = getMyField) [public final fun getMyField() : int = UastEmptyExpression]
-                    UMethod (name = setMyField) [public final fun setMyField(@null myField: int) : void = UastEmptyExpression]
-                        UParameter (name = myField) [@null var myField: int]
-                            UAnnotation (fqName = null) [@null] => <FAILED>
+                    UMethod (name = setMyField) [public final fun setMyField(value: int) : void = UastEmptyExpression]
+                        UParameter (name = value) [var value: int]
                     UMethod (name = mutate) [public final fun mutate() : void {...}]
                         UBlockExpression [{...}]
                             UBinaryExpression (operator = =) [myField = 42]

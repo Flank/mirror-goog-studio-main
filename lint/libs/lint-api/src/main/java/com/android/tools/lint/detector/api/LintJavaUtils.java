@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.psi.KtElement;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.kotlin.BaseKotlinInternalUastUtilsKt;
 import org.jetbrains.uast.kotlin.KotlinInternalUastUtilsKt;
 
 // Class which contains some code which cannot be expressed in Kotlin;
@@ -45,7 +46,7 @@ class LintJavaUtils {
             @NonNull KtElement ktElement,
             boolean boxed) {
         // TODO(kotlin-uast-cleanup): avoid using "internal" utils
-        return KotlinInternalUastUtilsKt.toPsiType(type, source, ktElement, boxed);
+        return KotlinInternalUastUtilsKt.toPsiType(type, source, ktElement, BaseKotlinInternalUastUtilsKt.getTypeOwnerKind(ktElement), boxed);
     }
 
     @Nullable
