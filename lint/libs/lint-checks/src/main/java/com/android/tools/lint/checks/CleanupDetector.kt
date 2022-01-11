@@ -74,6 +74,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
             // ContentProviderClient release/close check
             ACQUIRE_CPC,
+            ACQUIRE_UNSTABLE_CPC,
 
             // Cursor close check
             QUERY,
@@ -165,7 +166,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         }
                     }
                 }
-            ACQUIRE_CPC ->
+            ACQUIRE_CPC, ACQUIRE_UNSTABLE_CPC ->
                 if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
                     checkRecycled(
                         context,
@@ -687,6 +688,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val OBTAIN = "obtain"
         private const val SHOW = "show"
         private const val ACQUIRE_CPC = "acquireContentProviderClient"
+        private const val ACQUIRE_UNSTABLE_CPC = "acquireUnstableContentProviderClient"
         private const val OBTAIN_NO_HISTORY = "obtainNoHistory"
         private const val OBTAIN_ATTRIBUTES = "obtainAttributes"
         private const val OBTAIN_TYPED_ARRAY = "obtainTypedArray"

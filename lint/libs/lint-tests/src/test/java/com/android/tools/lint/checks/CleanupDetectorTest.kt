@@ -739,7 +739,10 @@ class CleanupDetectorTest : AbstractCheckTest() {
             src/test/pkg/ContentProviderClientTest.java:10: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
                     ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
+            src/test/pkg/ContentProviderClientTest.java:11: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
+                    ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // Warn
+                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
             """
         lint().files(
             classpath(),
@@ -756,31 +759,46 @@ class CleanupDetectorTest : AbstractCheckTest() {
                     public class ContentProviderClientTest {
                         public void error1(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // Warn
                         }
 
                         public void ok1(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             client.release();
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            client2.release();
                         }
 
                         public void ok2(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             client.close();
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            client2.close();
                         }
 
                         public void ok3(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             unknown(client);
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            unknown(client2);
                         }
 
                         public void ok4(ContentResolver resolver, Uri uri) {
                             try (ContentProviderClient client = resolver.acquireContentProviderClient("test")) { // OK
                                 client.refresh(uri, null, null);
                             }
+                            try (ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test")) { // OK
+                                client2.refresh(uri, null, null);
+                            }
                         }
 
                         public ContentProviderClient ok5(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                            return client;
+                        }
+
+                        public ContentProviderClient ok6(ContentResolver resolver) {
+                            ContentProviderClient client = resolver.acquireUnstableContentProviderClient("test"); // OK
                             return client;
                         }
 
@@ -798,6 +816,9 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
                     fun ok1(resolver: ContentResolver, uri: Uri) {
                         resolver.acquireContentProviderClient("test")?.use { client ->  // OK
+                            client?.refresh(uri, null, null)
+                        }
+                        resolver.acquireUnstableContentProviderClient("test")?.use { client ->  // OK
                             client?.refresh(uri, null, null)
                         }
                     }
