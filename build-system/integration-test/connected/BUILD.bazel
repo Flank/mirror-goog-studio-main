@@ -333,7 +333,6 @@ gradle_connected_test(
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/kotlinApp"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # TODO(b/203802678): Re-enable this test when fixed.
     deps = TEST_DEPS,
 )
 
