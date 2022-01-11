@@ -1,4 +1,10 @@
 config_setting(
+    name = "darwin",
+    values = {"host_cpu": "darwin"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
     name = "windows",
     values = {"host_cpu": "x64_windows"},
     visibility = ["//visibility:public"],
@@ -28,6 +34,12 @@ cc_library(
     hdrs = ["png.h"],
     copts = select({
         "windows": [],
+        "darwin": [
+            "-std=gnu89",
+            "-Wall",
+            "-Werror",
+            "-Wno-unused-parameter",
+        ],
         "//conditions:default": [
             "-std=gnu89",
             "-Wall",

@@ -157,7 +157,6 @@ cc_toolchain_config(
         "-Wall",
         "-Wthread-safety",
         "-Wself-assign",
-        "-Wno-elaborated-enum-base",
         "-fno-omit-frame-pointer",
     ],
     compiler = "compiler",
