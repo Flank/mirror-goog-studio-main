@@ -2517,6 +2517,111 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testParcelFileDescriptor() {
+
+        val expected =
+            """
+            src/test/pkg/ParcelFileDescriptorTest.java:15: Warning: This ParcelFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openFile(uri, "mode", null); // Warn
+                           ~~~~~~~~
+            src/test/pkg/ParcelFileDescriptorTest.java:16: Warning: This ParcelFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openFile(uri, "mode", null); // Warn
+                             ~~~~~~~~
+            src/test/pkg/ParcelFileDescriptorTest.java:17: Warning: This ParcelFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openFileDescriptor(uri, "mode", null); // Warn
+                             ~~~~~~~~~~~~~~~~~~
+            0 errors, 3 warnings
+            """
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentProviderClient;
+                    import android.content.ContentResolver;
+                    import android.net.Uri;
+                    import android.os.ParcelFileDescriptor;
+
+                    class ParcelFileDescriptorTest {
+                        ContentProviderClient client;
+                        ContentResolver resolver;
+                        Uri uri;
+                        ParcelFileDescriptor fileField;
+
+                        void error1() {
+                            client.openFile(uri, "mode", null); // Warn
+                            resolver.openFile(uri, "mode", null); // Warn
+                            resolver.openFileDescriptor(uri, "mode", null); // Warn
+                        }
+
+                        void ok1() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            file.close();
+                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                            file2.close();
+                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            file3.close();
+                        }
+
+                        void ok2() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            file.closeWithError("msg");
+                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                            file2.closeWithError("msg");
+                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            file3.closeWithError("msg");
+                        }
+
+                        void ok3() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            unknown(file);
+                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                            unknown(file2);
+                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            unknown(file3);
+                        }
+
+                        void ok4() {
+                            fileField = client.openFile(uri, "mode", null); // OK
+                            fileField = resolver.openFile(uri, "mode", null); // OK
+                            fileField = resolver.openFileDescriptor(uri, "mode", null); // OK
+                        }
+
+                        void ok5() {
+                            try (ParcelFileDescriptor file = client.openFile(uri, "mode", null)) { // OK
+                                file.getStatSize();
+                            }
+                            try (ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null)) { // OK
+                                file2.getStatSize();
+                            }
+                            try (ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null)) { // OK
+                                file3.getStatSize();
+                            }
+                        }
+
+                        ParcelFileDescriptor ok6() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        ParcelFileDescriptor ok7() {
+                            ParcelFileDescriptor file = resolver.openFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        ParcelFileDescriptor ok8() {
+                            ParcelFileDescriptor file = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        void unknown(ParcelFileDescriptor file) {
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

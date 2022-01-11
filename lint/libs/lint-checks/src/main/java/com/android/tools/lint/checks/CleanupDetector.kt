@@ -88,6 +88,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             OPEN_TYPED_ASSET_FILE,
             OPEN_TYPED_ASSET_FILE_DESCRIPTOR,
 
+            // ParcelFileDescriptor close/closeWithError check
+            OPEN_FILE,
+            OPEN_FILE_DESCRIPTOR,
+
             // SharedPreferences check
             EDIT,
 
@@ -222,6 +226,21 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         node,
                         ASSET_FILE_DESCRIPTOR_CLS,
                         CLOSE,
+                        autoCloseable = true
+                    )
+                }
+            OPEN_FILE, OPEN_FILE_DESCRIPTOR ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
+                    evaluator.extendsClass(
+                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                    )
+                ) {
+                    checkRecycled(
+                        context,
+                        node,
+                        PARCEL_FILE_DESCRIPTOR_CLS,
+                        CLOSE,
+                        CLOSE_WITH_ERROR,
                         autoCloseable = true
                     )
                 }
@@ -727,9 +746,12 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val QUERY_WITH_FACTORY = "queryWithFactory"
         private const val RAW_QUERY_WITH_FACTORY = "rawQueryWithFactory"
         private const val CLOSE = "close"
+        private const val CLOSE_WITH_ERROR = "closeWithError"
         private const val EDIT = "edit"
         private const val OPEN_ASSET_FILE = "openAssetFile"
         private const val OPEN_ASSET_FILE_DESCRIPTOR = "openAssetFileDescriptor"
+        private const val OPEN_FILE = "openFile"
+        private const val OPEN_FILE_DESCRIPTOR = "openFileDescriptor"
         private const val OPEN_TYPED_ASSET_FILE = "openTypedAssetFile"
         private const val OPEN_TYPED_ASSET_FILE_DESCRIPTOR = "openTypedAssetFileDescriptor"
 
@@ -756,6 +778,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
             "android.content.SharedPreferences.Editor"
         private const val ASSET_FILE_DESCRIPTOR_CLS = "android.content.res.AssetFileDescriptor"
+        private const val PARCEL_FILE_DESCRIPTOR_CLS = "android.os.ParcelFileDescriptor"
 
         /**
          * Returns the variable the expression is assigned to, if any.
