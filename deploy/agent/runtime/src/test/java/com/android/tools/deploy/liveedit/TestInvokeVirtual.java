@@ -20,25 +20,16 @@ import static com.android.tools.deploy.liveedit.Utils.classToType;
 
 import org.junit.Assert;
 
-public class TestInvokeInterface {
-    @org.junit.Test
-    public void testInvokeSuperHash() throws Exception {
-        byte[] byteCode = buildClass(InvokeInterface.class);
-
-        MethodBodyEvaluator body = new MethodBodyEvaluator(byteCode, "callInterface", "()I");
-        Object result = body.evalStatic(new Object[] {});
-        Integer expected = Integer.valueOf(0);
-        Assert.assertEquals("invokeinterface", expected, result);
-    }
+public class TestInvokeVirtual {
 
     @org.junit.Test
-    public void testInnerClassCall() throws Exception {
+    public void testInnerClass() throws Exception {
         byte[] byteCode = buildClass(OuterClass.class);
         OuterClass obj = new OuterClass();
-        MethodBodyEvaluator body = new MethodBodyEvaluator(byteCode, "getValueViaInterface", "()I");
+        MethodBodyEvaluator body = new MethodBodyEvaluator(byteCode, "getValue", "()I");
         String type = classToType(OuterClass.class);
         Object result = body.eval(obj, type, new Object[] {});
 
-        Assert.assertEquals("invokeinterface (innerclass)", obj.getValueViaInterface(), result);
+        Assert.assertEquals("invokevirtual (inner class)", obj.getValue(), result);
     }
 }
