@@ -1,13 +1,13 @@
 syntax = "proto3";
-option java_package = "com.android.ide.model.sync";
+option java_package = "com.android.ide.common.build.filebasedproperties.module";
 option java_multiple_files = true;
 
 //
-// Messages for Module level sync types.
+// Messages for Module level properties.
 //
 
 //
-// List of Application IDs for a module.
+// List of all Application IDs in a module.
 //
 message AppIdListSync {
     // list of application for each variant.

@@ -1,82 +1,84 @@
 syntax = "proto3";
-option java_package = "com.android.ide.model.sync";
+option java_package = "com.android.ide.common.build.filebasedproperties.variant";
 option java_multiple_files = true;
 
 //
-// Top level message for variant model.
+// Top-level message with properties attached to a single variant.
 //
-message Variant {
+message VariantProperties {
     // common properties that are shared by all variant types.
-    CommonVariantModel common = 1;
+    CommonProperties common = 1;
 
-    // variant model information, per variant type. Only one of the field is valid at a time.
+    // variant properties, per variant type. Only one of the field is valid at a time.
     oneof variant {
-        ApplicationVariantModel applicationVariantModel = 2;
-        LibraryVariantModel libraryVariantModel = 3;
-        DynamicFeatureVariantModel dynamicFeatureVariantModel = 4;
-        AndroidTestVariantModel androidTestVariantModel = 5;
-        UnitTestVariantModel unitTestVariantModel = 6;
-        TestVariantModel testVariantModel = 7;
-        TestFixturesVariantModel testFixtureVariantModel = 8;
+        ApplicationVariantProperties applicationVariantProperties = 2;
+        LibraryVariantProperties libraryVariantProperties = 3;
+        DynamicFeatureVariantProperties dynamicFeatureVariantProperties = 4;
+        AndroidTestVariantProperties androidTestVariantProperties = 5;
+        UnitTestVariantProperties unitTestVariantProperties = 6;
+        TestVariantProperties testVariantProperties = 7;
+        TestFixturesVariantProperties testFixtureVariantProperties = 8;
     }
 }
 
 //
-// Common model information for all variant types.
+// Common properties that are present in all variant types.
 //
-message CommonVariantModel {
+message CommonProperties {
 }
 
 //
-// Common model information for variant types producing an APK or Bundle
+// Common properties for variant producing an APK or Bundle.
 //
-message ModuleVariantModel {
+message ArtifactOutputProperties {
     map<string, string> manifestPlaceholders = 1;
 }
 
 //
-// Application VariantType specific model.
+// Properties of Application variants.
 //
-message ApplicationVariantModel {
-    ModuleVariantModel moduleCommonModel = 1;
+message ApplicationVariantProperties {
+    ArtifactOutputProperties artifactOutputProperties = 1;
     string applicationId = 2;
 }
 
 //
-// Library VariantType specific model.
+// Properties of Library variants.
 //
-message LibraryVariantModel {
-    ModuleVariantModel moduleCommonModel = 1;
+message LibraryVariantProperties {
+    ArtifactOutputProperties artifactOutputProperties = 1;
 }
 
 //
-// Dynamic Feature VariantType specific model.
+// Properties of DynamicFeature variants.
 //
-message DynamicFeatureVariantModel {
-    ModuleVariantModel moduleCommonModel = 1;
+message DynamicFeatureVariantProperties {
+    ArtifactOutputProperties artifactOutputProperties = 1;
 }
 
 //
-// AndroidTest VariantType specific model.
+// Properties of AndroidTest variants.
 //
-message AndroidTestVariantModel {
-    ModuleVariantModel moduleCommonModel = 1;
+message AndroidTestVariantProperties {
+    ArtifactOutputProperties artifactOutputProperties = 1;
     string applicationId = 2;
 }
 
 //
-// UnitTest VariantType specific model.
+// Properties of UnitTest variants.
 //
-message UnitTestVariantModel {
+message UnitTestVariantProperties {
 }
 
 //
-// Test VariantType specific model.
+// Properties of Test variants.
 //
-message TestVariantModel {
-    ModuleVariantModel moduleCommonModel = 1;
+message TestVariantProperties {
+    ArtifactOutputProperties artifactOutputProperties = 1;
 }
 
-// TestFixture Variant type specific model
-message TestFixturesVariantModel {
+//
+// Properties of TestFixture variants.
+//
+message TestFixturesVariantProperties {
 }
