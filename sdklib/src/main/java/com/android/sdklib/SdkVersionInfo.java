@@ -35,7 +35,7 @@ public class SdkVersionInfo {
      *
      * <p>Make sure to keep this in sync with the value in TestUtils.
      */
-    public static final int HIGHEST_KNOWN_STABLE_API = 30;
+    public static final int HIGHEST_KNOWN_STABLE_API = 31;
 
     /**
      * The lowest active API level in the ecosystem. This number will change over time as the
