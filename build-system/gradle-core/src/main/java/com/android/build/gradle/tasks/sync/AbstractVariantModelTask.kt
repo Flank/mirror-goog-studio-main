@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -40,7 +40,7 @@ abstract class AbstractVariantModelTask: NonIncrementalTask() {
     abstract val outputModelFile: RegularFileProperty
 
     override fun doTaskAction() {
-        val variant = Variant.newBuilder().also { variant ->
+        val variant = VariantProperties.newBuilder().also { variant ->
             addVariantContent(variant)
         }.build()
 
@@ -49,7 +49,7 @@ abstract class AbstractVariantModelTask: NonIncrementalTask() {
         }
     }
 
-    protected abstract fun addVariantContent(variant: Variant.Builder)
+    protected abstract fun addVariantContent(variant: VariantProperties.Builder)
 
     abstract class CreationAction<T : AbstractVariantModelTask, U: ComponentCreationConfig>(
         creationConfig: U

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.model.sync.ModuleVariantModel
+import com.android.ide.common.build.filebasedproperties.variant.ArtifactOutputProperties
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
 import org.gradle.work.DisableCachingByDefault
@@ -27,7 +27,7 @@ abstract class ModuleVariantModelTask: AbstractVariantModelTask() {
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, String>
 
-    protected fun addVariantContent(variant: ModuleVariantModel.Builder) {
-        variant.putAllManifestPlaceholders(manifestPlaceholders.get())
+    protected fun addVariantContent(artifactProperties: ArtifactOutputProperties.Builder) {
+        artifactProperties.putAllManifestPlaceholders(manifestPlaceholders.get())
     }
 }

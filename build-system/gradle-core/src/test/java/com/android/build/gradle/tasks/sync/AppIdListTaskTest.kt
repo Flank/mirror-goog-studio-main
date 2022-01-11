@@ -20,8 +20,8 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.artifact.impl.SingleInitialProviderRequestImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.ide.model.sync.AppIdListSync
-import com.android.ide.model.sync.AppIdSync
+import com.android.ide.common.build.filebasedproperties.module.AppIdListSync
+import com.android.ide.common.build.filebasedproperties.module.AppIdSync
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile

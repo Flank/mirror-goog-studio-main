@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.builder.model.v2.ModelSyncFile
-import com.android.ide.model.sync.AppIdListSync
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.module.AppIdListSync
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -35,9 +35,9 @@ class ModelSyncFilesTest {
     fun testApplicationModel() {
         val variantSyncFileModel = getVariantSyncModel()
         Truth.assertThat(variantSyncFileModel.variantCase)
-            .isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
-        Truth.assertThat(variantSyncFileModel.applicationVariantModel).isNotNull()
-        Truth.assertThat(variantSyncFileModel.applicationVariantModel.applicationId)
+            .isEqualTo(VariantProperties.VariantCase.APPLICATIONVARIANTPROPERTIES)
+        Truth.assertThat(variantSyncFileModel.applicationVariantProperties).isNotNull()
+        Truth.assertThat(variantSyncFileModel.applicationVariantProperties.applicationId)
             .isEqualTo("com.example.helloworld")
     }
 
@@ -46,9 +46,9 @@ class ModelSyncFilesTest {
         addCustomizationToBuildFile()
         val variantSyncFileModel = getVariantSyncModel()
         Truth.assertThat(variantSyncFileModel.variantCase)
-            .isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
-        Truth.assertThat(variantSyncFileModel.applicationVariantModel).isNotNull()
-        Truth.assertThat(variantSyncFileModel.applicationVariantModel.applicationId)
+            .isEqualTo(VariantProperties.VariantCase.APPLICATIONVARIANTPROPERTIES)
+        Truth.assertThat(variantSyncFileModel.applicationVariantProperties).isNotNull()
+        Truth.assertThat(variantSyncFileModel.applicationVariantProperties.applicationId)
             .isEqualTo("set.from.task.debugAppIdProducerTask")
     }
 
@@ -124,7 +124,7 @@ class ModelSyncFilesTest {
         }
     }
 
-    private fun getVariantSyncModel(): Variant {
+    private fun getVariantSyncModel(): VariantProperties {
         val variant = getAppVariant()
         Truth.assertThat(variant.mainArtifact.modelSyncFiles.size).isEqualTo(1)
         val appModelSync = variant.mainArtifact.modelSyncFiles.first()
@@ -134,7 +134,7 @@ class ModelSyncFilesTest {
             Truth.assertThat(result.failedTasks).isEmpty()
             Truth.assertThat(appModelSyncFile.exists()).isTrue()
             FileInputStream(appModelSyncFile).use {
-                Variant.parseFrom(it)
+                VariantProperties.parseFrom(it)
             }
         }
     }

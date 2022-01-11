@@ -19,17 +19,14 @@ package com.android.build.gradle.tasks.sync
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
-import com.android.ide.model.sync.Variant
-import com.google.common.truth.Truth
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import java.io.FileInputStream
 
 /**
  * Tests for [ApplicationVariantModelTask]
@@ -49,10 +46,10 @@ internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<App
                     it.setupModuleTaskInputs()
                 },
                 expect = {
-                    assertThat(it.variantCase).isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
-                    it.applicationVariantModel.moduleCommonModel.testModuleFields()
-                    assertThat(it.applicationVariantModel).isNotNull()
-                    assertThat(it.applicationVariantModel.applicationId)
+                    assertThat(it.variantCase).isEqualTo(VariantProperties.VariantCase.APPLICATIONVARIANTPROPERTIES)
+                    it.applicationVariantProperties.artifactOutputProperties.testModuleFields()
+                    assertThat(it.applicationVariantProperties).isNotNull()
+                    assertThat(it.applicationVariantProperties.applicationId)
                             .isEqualTo("testApplicationId")                }
         )
     }

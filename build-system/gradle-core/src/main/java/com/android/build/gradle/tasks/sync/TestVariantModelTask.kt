@@ -17,13 +17,13 @@
 package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
 abstract class TestVariantModelTask: AbstractVariantModelTask() {
 
-    override fun addVariantContent(variant: Variant.Builder) {}
+    override fun addVariantContent(variant: VariantProperties.Builder) {}
 
     class CreationAction(creationConfig: TestCreationConfig):
         AbstractVariantModelTask.CreationAction<TestVariantModelTask, TestCreationConfig>(

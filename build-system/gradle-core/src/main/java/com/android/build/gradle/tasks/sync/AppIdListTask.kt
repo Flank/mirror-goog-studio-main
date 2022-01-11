@@ -21,8 +21,8 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.model.sync.AppIdListSync
-import com.android.ide.model.sync.AppIdSync
+import com.android.ide.common.build.filebasedproperties.module.AppIdListSync
+import com.android.ide.common.build.filebasedproperties.module.AppIdSync
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
