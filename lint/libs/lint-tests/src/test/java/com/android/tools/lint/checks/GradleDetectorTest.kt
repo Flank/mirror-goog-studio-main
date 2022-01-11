@@ -3008,10 +3008,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 )
                 .expectFixDiffs(
                     """
-                    Fix for build.gradle line 5: Update targetSdkVersion to 30:
+                    Fix for build.gradle line 5: Update targetSdkVersion to $HIGHEST_KNOWN_STABLE_API:
                     @@ -5 +5
                     -         targetSdkVersion 17
-                    +         targetSdkVersion 30
+                    +         targetSdkVersion $HIGHEST_KNOWN_STABLE_API
                     """
                 )
         } finally {
@@ -3052,10 +3052,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 )
                 .expectFixDiffs(
                     """
-                    Fix for build.gradle line 5: Update targetSdkVersion to 30:
+                    Fix for build.gradle line 5: Update targetSdkVersion to $HIGHEST_KNOWN_STABLE_API:
                     @@ -5 +5
                     -         targetSdkVersion 'O'
-                    +         targetSdkVersion 30
+                    +         targetSdkVersion $HIGHEST_KNOWN_STABLE_API
                     """
                 )
         } finally {

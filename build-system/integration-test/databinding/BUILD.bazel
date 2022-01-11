@@ -31,7 +31,7 @@ TEST_DATA = [
     ":prebuilts",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:platforms/android-27_build_only",
-    "//prebuilts/studio/sdk:platforms/latest",
+    "//prebuilts/studio/sdk:platforms/android-30",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system:gradle_plugin_repo",
     "//tools/base/build-system/integration-test:androidx_test_latest",
