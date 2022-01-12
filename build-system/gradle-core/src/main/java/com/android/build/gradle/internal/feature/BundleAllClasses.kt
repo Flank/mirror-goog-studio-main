@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.internal.feature
 
+import com.android.SdkConstants.FN_CLASSES_JAR
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -122,13 +125,29 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: ComponentCreationConfig) :
+    class CreationAction(
+        creationConfig: ComponentCreationConfig,
+        private val publishedType: AndroidArtifacts.PublishedConfigType
+    ) :
         VariantTaskCreationAction<BundleAllClasses, ComponentCreationConfig>(
             creationConfig
         ) {
 
+        init {
+            check(
+                publishedType == AndroidArtifacts.PublishedConfigType.API_ELEMENTS
+                        || publishedType == AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
+            ) { "App classes bundling is supported only for api and runtime." }
+        }
+
         override val name: String
-            get() = computeTaskName("bundle", "Classes")
+            get() = computeTaskName("bundle",
+                if (publishedType == AndroidArtifacts.PublishedConfigType.API_ELEMENTS) {
+                    "ClassesToCompileJar"
+                } else {
+                    "ClassesToRuntimeJar"
+                }
+            )
         override val type: Class<BundleAllClasses>
             get() = BundleAllClasses::class.java
 
@@ -137,28 +156,67 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 BundleAllClasses::outputJar
-            ).withName("classes.jar").on(InternalArtifactType.APP_CLASSES)
+            ).withName(FN_CLASSES_JAR).let {
+                if (publishedType == AndroidArtifacts.PublishedConfigType.API_ELEMENTS) {
+                    it.on(InternalArtifactType.COMPILE_APP_CLASSES_JAR)
+                } else {
+                    it.on(InternalArtifactType.RUNTIME_APP_CLASSES_JAR)
+                }
+            }
         }
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            task.inputDirs.from(
-                creationConfig.artifacts.get(InternalArtifactType.JAVAC),
-                creationConfig.variantData.allPreJavacGeneratedBytecode,
-                creationConfig.variantData.allPostJavacGeneratedBytecode
-            )
-            if (creationConfig.global.namespacedAndroidResources) {
-                task.inputJars.fromDisallowChanges(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.COMPILE_R_CLASS_JAR
+            // Only add the instrumented classes to the runtime jar
+            if (publishedType == AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS &&
+                creationConfig.projectClassesAreInstrumented) {
+                if (creationConfig.asmFramesComputationMode ==
+                    FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
+                    task.inputDirs.from(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES
+                        )
                     )
-                )
+                    task.inputJars.from(
+                        creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(
+                                InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS
+                            )
+                        ).asFileTree
+                    )
+                } else {
+                    task.inputDirs.from(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES
+                        )
+                    )
+                    task.inputJars.from(
+                        creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(
+                                InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS
+                            )
+                        ).asFileTree
+                    )
+                }
             } else {
-                task.inputJars.fromDisallowChanges(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                    )
+                task.inputDirs.from(
+                    creationConfig.artifacts.get(InternalArtifactType.JAVAC),
+                    creationConfig.variantData.allPreJavacGeneratedBytecode,
+                    creationConfig.variantData.allPostJavacGeneratedBytecode
                 )
+                if (creationConfig.global.namespacedAndroidResources) {
+                    task.inputJars.fromDisallowChanges(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.COMPILE_R_CLASS_JAR
+                        )
+                    )
+                } else {
+                    task.inputJars.fromDisallowChanges(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                        )
+                    )
+                }
             }
             task.modulePath = task.project.path
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType

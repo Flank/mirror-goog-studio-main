@@ -22,7 +22,7 @@
       proguardRules="proguard.txt"/>
   <library
       name="${projectDir}@@:app::release"
-      jars="${projectDir}/app/build/intermediates/app_classes/release/classes.jar"
+      jars="${projectDir}/app/build/intermediates/compile_app_classes_jar/release/classes.jar"
       resolved="::"/>
   <library
       name="${projectDir}@@:javaLib::testFixtures"
