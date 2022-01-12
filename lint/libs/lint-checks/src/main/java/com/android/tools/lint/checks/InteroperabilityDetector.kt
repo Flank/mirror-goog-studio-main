@@ -813,8 +813,15 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             }
         }
 
+        /**
+         * Returns true if this declaration has an inherited signature
+         */
+        private fun isInherited(node: UDeclaration): Boolean {
+            return node is UMethod && node.javaPsi.findSuperMethods().isNotEmpty()
+        }
+
         private fun ensureNonKeyword(name: String, node: UDeclaration, typeLabel: String) {
-            if (isKotlinHardKeyword(name)) {
+            if (isKotlinHardKeyword(name) && !isInherited(node)) {
                 // See if this method is overriding some other method; in that case
                 // we don't have a choice here.
                 if (node is UMethod && context.evaluator.isOverride(node)) {
@@ -844,6 +851,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                             // Don't flag Executor; see b/135275901
                             if (parameter.type.canonicalText == "java.util.concurrent.Executor") {
                                 continue
+                            }
+                            if (isInherited(method)) {
+                                return
                             }
 
                             val message =
