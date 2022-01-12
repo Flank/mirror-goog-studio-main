@@ -41,12 +41,6 @@ interface AbstractArtifact {
     val classesFolders: Set<File>
 
     /**
-     * Folders or jars containing additional classes (e.g., R.jar or those registered by third-party
-     * plugins like Kotlin).
-     */
-    val additionalClassesFolders: Set<File>
-
-    /**
      * Returns names of tasks that need to be run when setting up the IDE project. After these
      * tasks have run, all the generated source files etc. that the IDE needs to know about should
      * be in place.

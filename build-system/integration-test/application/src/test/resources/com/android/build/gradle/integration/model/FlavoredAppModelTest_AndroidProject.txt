@@ -13,9 +13,8 @@
             - compileTaskName               = "compileProDebugSources"
             - assembleTaskName              = "assembleProDebug"
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/proDebug/classes{!}
-            - additionalClassesFolders:
                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proDebug/R.jar{!}
+               * {PROJECT}/build/intermediates/javac/proDebug/classes{!}
             - ideSetupTaskNames             = ["generateProDebugSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proDebug/out{!}
@@ -48,9 +47,8 @@
             - compileTaskName               = "compileProDebugAndroidTestSources"
             - assembleTaskName              = "assembleProDebugAndroidTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/proDebugAndroidTest/classes{!}
-            - additionalClassesFolders:
                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proDebugAndroidTest/R.jar{!}
+               * {PROJECT}/build/intermediates/javac/proDebugAndroidTest/classes{!}
             - ideSetupTaskNames             = ["generateProDebugAndroidTestSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proDebugAndroidTest/out{!}
@@ -83,9 +81,8 @@
             - compileTaskName       = "compileProDebugUnitTestSources"
             - assembleTaskName      = "assembleProDebugUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/proDebugUnitTest/classes{!}
-            - additionalClassesFolders:
                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proDebug/R.jar{!}
+               * {PROJECT}/build/intermediates/javac/proDebugUnitTest/classes{!}
             - ideSetupTaskNames     = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/proDebugUnitTest/out{!}

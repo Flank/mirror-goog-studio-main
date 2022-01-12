@@ -629,17 +629,14 @@ class ModelBuilder<
 
         // The class folders. This is supposed to be the output of the compilation steps + other
         // steps that create bytecode
-        // For now, until Module Per SourceSet lands, we need to separate the main compilation
-        // output from the rest, so we use 2 properties.
-        // Long term, we'll move everything to classesFolders.
-        val classesFolders = setOf(component.artifacts.get(JAVAC).get().asFile)
-
-        val additionalClassesFolders = mutableSetOf<File>()
+        val classesFolders = mutableSetOf<File>()
+        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
         component.getCompiledRClassArtifact()?.get()?.asFile?.let {
-            additionalClassesFolders.add(it)
+            classesFolders.add(it)
         }
-        additionalClassesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        additionalClassesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.addAll(component.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH).files)
 
         val testInfo: TestInfo? = when(component) {
             is TestVariantImpl, is AndroidTestImpl -> {
@@ -719,7 +716,6 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
             generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
             classesFolders = classesFolders,
-            additionalClassesFolders = additionalClassesFolders,
             assembleTaskOutputListingFile = if (component.variantType.isApk)
                 component.artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE).get().asFile
             else
@@ -736,23 +732,19 @@ class ModelBuilder<
 
         // The class folders. This is supposed to be the output of the compilation steps + other
         // steps that create bytecode
-        // For now, until Module Per SourceSet lands, we need to separate the main compilation
-        // output from the rest, so we use 2 properties.
-        // Long term, we'll move everything to classesFolders.
-        val classesFolders = setOf(component.artifacts.get(JAVAC).get().asFile)
-
-        val additionalClassesFolders = mutableSetOf<File>()
-
+        val classesFolders = mutableSetOf<File>()
+        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        // The separately compile R class, if applicable.
+        if (extension.testOptions.unitTests.isIncludeAndroidResources) {
+            classesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
+        }
         // TODO(b/111168382): When namespaced resources is on, then the provider returns null, so let's skip for now and revisit later
         if (!extension.androidResources.namespaced) {
             component.getCompiledRClassArtifact()?.get()?.asFile?.let {
-                additionalClassesFolders.add(it)
+                classesFolders.add(it)
             }
-        }
-        additionalClassesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        additionalClassesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
-        if (extension.testOptions.unitTests.isIncludeAndroidResources) {
-            additionalClassesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
         }
 
         return JavaArtifactImpl(
@@ -761,7 +753,6 @@ class ModelBuilder<
             ideSetupTaskNames = setOf(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
 
             classesFolders = classesFolders,
-            additionalClassesFolders = additionalClassesFolders,
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
             runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
 

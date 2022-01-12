@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d244a1e01c3e6452427f1962665ca97f165ccd66d3c1e020c60739c177fa2a09
+49d794a0216fe2e2d47be5150c80e3b3e387f2da97b912ae742ac422d08f9dd2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -570,7 +570,6 @@ com.android.builder.model.v2.ide.AaptOptions$Namespacing.valueOf: com.android.bu
 com.android.builder.model.v2.ide.AaptOptions$Namespacing.values: com.android.builder.model.v2.ide.AaptOptions$Namespacing[] ()
 com.android.builder.model.v2.ide.AaptOptions.getNamespacing: com.android.builder.model.v2.ide.AaptOptions$Namespacing ()
 com.android.builder.model.v2.ide.AbstractArtifact
-com.android.builder.model.v2.ide.AbstractArtifact.getAdditionalClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.AbstractArtifact.getAssembleTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.AbstractArtifact.getClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.AbstractArtifact.getCompileTaskName: java.lang.String ()

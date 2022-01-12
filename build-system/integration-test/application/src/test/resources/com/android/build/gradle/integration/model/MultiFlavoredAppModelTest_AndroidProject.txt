@@ -13,9 +13,8 @@
             - compileTaskName               = "compileProPlayDebugSources"
             - assembleTaskName              = "assembleProPlayDebug"
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/proPlayDebug/classes{!}
-            - additionalClassesFolders:
                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebug/R.jar{!}
+               * {PROJECT}/build/intermediates/javac/proPlayDebug/classes{!}
             - ideSetupTaskNames             = ["generateProPlayDebugSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proPlayDebug/out{!}
@@ -48,9 +47,8 @@
             - compileTaskName               = "compileProPlayDebugAndroidTestSources"
             - assembleTaskName              = "assembleProPlayDebugAndroidTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/proPlayDebugAndroidTest/classes{!}
-            - additionalClassesFolders:
                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebugAndroidTest/R.jar{!}
+               * {PROJECT}/build/intermediates/javac/proPlayDebugAndroidTest/classes{!}
             - ideSetupTaskNames             = ["generateProPlayDebugAndroidTestSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proPlayDebugAndroidTest/out{!}
@@ -83,9 +81,8 @@
             - compileTaskName       = "compileProPlayDebugUnitTestSources"
             - assembleTaskName      = "assembleProPlayDebugUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/proPlayDebugUnitTest/classes{!}
-            - additionalClassesFolders:
                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebug/R.jar{!}
+               * {PROJECT}/build/intermediates/javac/proPlayDebugUnitTest/classes{!}
             - ideSetupTaskNames     = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/proPlayDebugUnitTest/out{!}
