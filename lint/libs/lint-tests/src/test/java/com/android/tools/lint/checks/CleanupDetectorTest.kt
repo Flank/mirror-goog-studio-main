@@ -2622,6 +2622,88 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testOpenStreams() {
+
+        val expected =
+            """
+            src/test/pkg/OpenStreamsTest.java:15: Warning: This InputStream should be freed up after use with #close() [Recycle]
+                    resolver.openInputStream(uri); // Warn
+                             ~~~~~~~~~~~~~~~
+            src/test/pkg/OpenStreamsTest.java:16: Warning: This OutputStream should be freed up after use with #close() [Recycle]
+                    resolver.openOutputStream(uri); // Warn
+                             ~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentResolver;
+                    import android.net.Uri;
+                    import java.io.InputStream;
+                    import java.io.OutputStream;
+
+                    class OpenStreamsTest {
+                        ContentResolver resolver;
+                        Uri uri;
+                        InputStream inputStreamField;
+                        InputStream outputStreamField;
+
+                        void error1() {
+                            resolver.openInputStream(uri); // Warn
+                            resolver.openOutputStream(uri); // Warn
+                        }
+
+                        void ok1() {
+                            InputStream inputStream = resolver.openInputStream(uri); // OK
+                            inputStream.close();
+                            OutputStream outputStream = resolver.openOutputStream(uri); // OK
+                            outputStream.close();
+                        }
+
+                        void ok2() {
+                            InputStream inputStream = resolver.openInputStream(uri); // OK
+                            unknown(inputStream);
+                            OutputStream outputStream = resolver.openOutputStream(uri); // OK
+                            unknown(outputStream);
+                        }
+
+                        void ok3() {
+                            inputStreamField = resolver.openInputStream(uri); // OK
+                            outputStreamField = resolver.openOutputStream(uri); // OK
+                        }
+
+                        void ok4() {
+                            try (InputStream inputStream = resolver.openInputStream(uri)) { // OK
+                                inputStream.read();
+                            }
+                            try (OutputStream outputStream = resolver.openOutputStream(uri)) { // OK
+                                outputStream.flush();
+                            }
+                        }
+
+                        ParcelFileDescriptor ok5() {
+                            InputStream inputStream = resolver.openInputStream(uri); // OK
+                            return inputStream;
+                        }
+
+                        ParcelFileDescriptor ok6() {
+                            OutputStream outputStream = resolver.openOutputStream(uri);
+                            return outputStream;
+                        }
+
+                        void unknown(InputStream inputStream) {
+                        }
+
+                        void unknown(OutputStream outputStream) {
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

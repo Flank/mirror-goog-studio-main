@@ -88,6 +88,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             OPEN_TYPED_ASSET_FILE,
             OPEN_TYPED_ASSET_FILE_DESCRIPTOR,
 
+            // InputStream/OutputStream close check
+            OPEN_INPUT_STREAM,
+            OPEN_OUTPUT_STREAM,
+
             // ParcelFileDescriptor close/closeWithError check
             OPEN_FILE,
             OPEN_FILE_DESCRIPTOR,
@@ -243,6 +247,14 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         CLOSE_WITH_ERROR,
                         autoCloseable = true
                     )
+                }
+            OPEN_INPUT_STREAM ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
+                    checkRecycled(context, node, INPUT_STREAM_CLS, CLOSE, autoCloseable = true)
+                }
+            OPEN_OUTPUT_STREAM ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
+                    checkRecycled(context, node, OUTPUT_STREAM_CLS, CLOSE, autoCloseable = true)
                 }
 
             OF_INT, OF_ARGB, OF_FLOAT, OF_OBJECT, OF_PROPERTY_VALUES_HOLDER -> {
@@ -752,6 +764,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val OPEN_ASSET_FILE_DESCRIPTOR = "openAssetFileDescriptor"
         private const val OPEN_FILE = "openFile"
         private const val OPEN_FILE_DESCRIPTOR = "openFileDescriptor"
+        private const val OPEN_INPUT_STREAM = "openInputStream"
+        private const val OPEN_OUTPUT_STREAM = "openOutputStream"
         private const val OPEN_TYPED_ASSET_FILE = "openTypedAssetFile"
         private const val OPEN_TYPED_ASSET_FILE_DESCRIPTOR = "openTypedAssetFileDescriptor"
 
@@ -778,6 +792,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
             "android.content.SharedPreferences.Editor"
         private const val ASSET_FILE_DESCRIPTOR_CLS = "android.content.res.AssetFileDescriptor"
+        private const val INPUT_STREAM_CLS = "java.io.InputStream"
+        private const val OUTPUT_STREAM_CLS = "java.io.OutputStream"
         private const val PARCEL_FILE_DESCRIPTOR_CLS = "android.os.ParcelFileDescriptor"
 
         /**
