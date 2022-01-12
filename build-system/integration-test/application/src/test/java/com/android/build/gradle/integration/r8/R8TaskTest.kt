@@ -73,7 +73,7 @@ class R8TaskTest {
                         .withLoggingLevel(LoggingLevel.DEBUG)
                         .run(":assembleDebugAndroidTest")
         val appClasses = project.getIntermediateFile(
-                InternalArtifactType.APP_CLASSES.getFolderName() + "/debug/classes.jar"
+                InternalArtifactType.COMPILE_APP_CLASSES_JAR.getFolderName() + "/debug/classes.jar"
         );
         buildResult.stdout.use {
             ScannerSubject.assertThat(it)
