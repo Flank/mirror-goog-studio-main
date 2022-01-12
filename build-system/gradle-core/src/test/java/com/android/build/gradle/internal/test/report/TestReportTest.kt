@@ -85,4 +85,27 @@ class TestReportTest {
         assertThat(classHtml).contains("""<td class="failures">failed (0s)</td>""")
         assertThat(classHtml).contains("""<td class="skipped">ignored (-)</td>""")
     }
+
+    @Test
+    fun shouldNotGenerateEmptyPackageReportForUnnamedTestSuite() {
+        val reportXml = File(resultsOutDir, "TEST-Pixel_4_XL_API_30(AVD) - 11-app-.xml")
+        Files.asCharSink(reportXml, Charsets.UTF_8).write("""
+            <?xml version='1.0' encoding='UTF-8' ?>
+            <testsuite tests="0" failures="0" errors="0" skipped="0" time="0.518" timestamp="2022-01-12T22:11:43" hostname="localhost">
+              <properties>
+                <property name="device" value="pixel3_1" />
+                <property name="flavor" value="" />
+                <property name="project" value=":app" />
+              </properties>
+            </testsuite>
+        """.trimIndent())
+
+        TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir).generateReport()
+
+        val indexHtml = File(reportOutDir, "index.html")
+        assertThat(indexHtml).exists()
+
+        val packageHtml = File(reportOutDir, ".html")
+        assertThat(packageHtml).doesNotExist()
+    }
 }

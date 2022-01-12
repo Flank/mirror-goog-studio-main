@@ -27,6 +27,7 @@ import java.text.ParseException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
+import kotlin.text.StringsKt;
 import org.gradle.api.GradleException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -125,14 +126,16 @@ public class TestReport {
                 model.addTest(className, testName, 0, deviceName, projectName, flavorName).ignored();
             }
             String suiteClassName = document.getDocumentElement().getAttribute("name");
-            ClassTestResults suiteResults = model.addTestClass(suiteClassName);
-            NodeList stdOutElements = document.getElementsByTagName("system-out");
-            for (int i = 0; i < stdOutElements.getLength(); i++) {
-                suiteResults.addStandardOutput(stdOutElements.item(i).getTextContent());
-            }
-            NodeList stdErrElements = document.getElementsByTagName("system-err");
-            for (int i = 0; i < stdErrElements.getLength(); i++) {
-                suiteResults.addStandardError(stdErrElements.item(i).getTextContent());
+            if (!StringsKt.isBlank(suiteClassName)) {
+                ClassTestResults suiteResults = model.addTestClass(suiteClassName);
+                NodeList stdOutElements = document.getElementsByTagName("system-out");
+                for (int i = 0; i < stdOutElements.getLength(); i++) {
+                    suiteResults.addStandardOutput(stdOutElements.item(i).getTextContent());
+                }
+                NodeList stdErrElements = document.getElementsByTagName("system-err");
+                for (int i = 0; i < stdErrElements.getLength(); i++) {
+                    suiteResults.addStandardError(stdErrElements.item(i).getTextContent());
+                }
             }
         } catch (Exception e) {
             throw new GradleException(String.format("Could not load test results from '%s'.", file), e);
