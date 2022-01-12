@@ -336,7 +336,6 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 5,
-    tags = ["manual"],  # TODO(b/203802678): Re-enable this test when fixed.
     deps = TEST_DEPS,
 )
 
