@@ -10,8 +10,8 @@ gradle_integration_test(
     ]),
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/latest_build_only",
         "//tools/base/build-system:gradle-distrib",
+        "//tools/base/build-system/integration-test:android_platform_for_tests",
         "//tools/base/build-system/integration-test:test-projects/databindingIncremental",
     ],
     maven_repo_zips = [

@@ -24,6 +24,12 @@ LATEST_ANDROID_X_ARCH = "2.0.0"
 
 LATEST_ANDROID_X_CONSTRAINTLAYOUT = "1.1.3"
 
+filegroup(
+    name = "android_platform_for_tests",
+    srcs = ["//prebuilts/studio/sdk:platforms/latest_build_only"],
+    visibility = [":__subpackages__"],
+)
+
 load("//tools/base/bazel:maven.bzl", "maven_repository")
 
 maven_repository(
