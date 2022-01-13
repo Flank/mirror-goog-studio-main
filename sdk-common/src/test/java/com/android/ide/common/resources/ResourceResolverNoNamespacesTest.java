@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 public class ResourceResolverNoNamespacesTest extends TestCase {
@@ -231,9 +232,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                     @Override
                     public void warning(
                             String tag, String message, Object viewCookie, Object data) {
-/* b/214269611
                         fail(message);
-b/214269611 */
                     }
 
                     @Override
@@ -412,12 +411,10 @@ b/214269611 */
                                     ResourceType.STRING,
                                     "bright_foreground_dark",
                                     "@color/background_light"));
-        } catch (AssertionError expected) {
+        } catch (AssertionFailedError expected) {
             failed = true;
         }
-/* b/214269611
         assertTrue("incorrect resource returned: " + val, failed);
-b/214269611 */
         ResourceValue array = resolver
                 .resolveResValue(resolver.getProjectResource(ResourceType.ARRAY, "my_array"));
         assertTrue("array" + "my_array" + "resolved incorrectly as " + array.getResourceType()
