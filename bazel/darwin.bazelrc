@@ -8,7 +8,3 @@ build --linkopt="-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Li
 
 build --host_platform=//tools/base/bazel/platforms:macos
 build --platforms=//tools/base/bazel/platforms:macos
-
-# TODO(b/196437640) move this configuration to a user/system bazelrc file
-# to avoid using a checked-in credential.
-build --google_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
