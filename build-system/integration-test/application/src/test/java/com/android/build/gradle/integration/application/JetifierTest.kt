@@ -305,11 +305,6 @@ class JetifierTest(private val withKotlin: Boolean) {
 
     private fun prepareProjectForAndroidX() {
         TestFileUtils.searchAndReplace(
-            project.getSubproject(":app").buildFile,
-            "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-31\""
-        )
-        TestFileUtils.searchAndReplace(
             project.getSubproject(":app")
                 .file("src/main/java/com/example/app/MainActivity.java"),
             "import android.support.v7.app.AppCompatActivity;",

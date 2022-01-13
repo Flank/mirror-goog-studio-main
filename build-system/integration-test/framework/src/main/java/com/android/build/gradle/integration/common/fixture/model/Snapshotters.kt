@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.model.v2.CustomSourceDirectory
@@ -170,7 +171,7 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
 }
 internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {
     item("groupId", AndroidDsl::groupId)
-    item("compileTarget", AndroidDsl::compileTarget)
+    item("compileTarget", AndroidDsl::compileTarget, ::normaliseCompileTarget)
     item("buildToolsVersion", AndroidDsl::buildToolsVersion) { version ->
         version?.let { normalizeBuildToolsVersion(it) }
     }
@@ -689,7 +690,15 @@ private fun normalizeBuildToolsVersion(version: String): Any {
     return version
 }
 
+private fun normaliseCompileTarget(target: String?): Any? {
+    if (target == "android-$DEFAULT_COMPILE_SDK_VERSION") {
+        return PredefinedModelValues.DEFAULT_COMPILE_SDK_VERSION
+    }
+    return target
+}
+
 internal enum class PredefinedModelValues {
     DEFAULT_BUILD_TOOLS_REVISION,
     DEFAULT_AGP_REVISION,
+    DEFAULT_COMPILE_SDK_VERSION,
 }

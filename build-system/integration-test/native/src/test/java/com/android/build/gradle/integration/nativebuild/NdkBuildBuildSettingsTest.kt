@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -54,7 +55,7 @@ class NdkBuildBuildSettingsTest {
             """
             apply plugin: 'com.android.application'
                 android {
-                    compileSdkVersion 31
+                    compileSdkVersion $DEFAULT_COMPILE_SDK_VERSION
                     ndkPath "${project.ndkPath}"
                     defaultConfig {
                       externalNativeBuild {

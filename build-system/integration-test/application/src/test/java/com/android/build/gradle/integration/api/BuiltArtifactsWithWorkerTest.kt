@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.api
 
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -47,7 +48,7 @@ apply plugin: 'com.android.application'
 
 android {
     defaultConfig.minSdkVersion 14
-    compileSdkVersion 31
+    compileSdkVersion $DEFAULT_COMPILE_SDK_VERSION
     lintOptions.checkReleaseBuilds = false
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
