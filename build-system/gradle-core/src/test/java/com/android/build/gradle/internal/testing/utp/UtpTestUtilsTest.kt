@@ -184,7 +184,7 @@ class UtpTestUtilsTest {
     }
 
     private fun createStubResultProto(): TestSuiteResultProto.TestSuiteResult {
-        return TextFormat.parse("""
+        return createResultProto("""
             test_suite_meta_data {
               scheduled_test_case_count: 1
             }
@@ -196,7 +196,11 @@ class UtpTestUtilsTest {
               }
               test_status: PASSED
             }
-        """.trimIndent(), TestSuiteResultProto.TestSuiteResult::class.java)
+        """)
+    }
+
+    private fun createResultProto(asciiProto: String): TestSuiteResultProto.TestSuiteResult {
+        return TextFormat.parse(asciiProto, TestSuiteResultProto.TestSuiteResult::class.java)
     }
 
     @Test
@@ -329,5 +333,33 @@ class UtpTestUtilsTest {
 
         assertThat(hasEmulatorTimeoutException(testResult)).isFalse()
         assertThat(hasEmulatorTimeoutException(null)).isFalse()
+    }
+
+    @Test
+    fun getPlatformErrorMessageShouldReturnErrorMessage() {
+        val resultProto = createResultProto("""
+            test_status: ERROR
+            platform_error {
+              error_detail {
+                summary {
+                  namespace {
+                    namespace: "com.google.testing.platform"
+                  }
+                  error_code: 3002
+                  error_name: "DEVICE_PROVISION_FAILED"
+                  error_classification: "UNDERLYING_TOOL"
+                  error_message: "Failed trying to provide device controller."
+                }
+                cause {
+                  summary {
+                    error_message: "Gradle was unable to attach one or more devices to the adb server."
+                  }
+                }
+              }
+            }
+        """)
+
+        assertThat(getPlatformErrorMessage(resultProto))
+            .isEqualTo("PLATFORM ERROR: Gradle was unable to attach one or more devices to the adb server.")
     }
 }

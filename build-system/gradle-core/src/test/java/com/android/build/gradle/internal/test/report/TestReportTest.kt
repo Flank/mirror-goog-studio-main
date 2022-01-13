@@ -40,9 +40,8 @@ class TestReportTest {
         reportOutDir = tempDirRule.newFolder()
     }
 
-    @Test
-    fun generateReport() {
-        val reportXml = File(resultsOutDir, "TEST-Pixel_4_XL_API_30(AVD) - 11-app-.xml")
+    private fun createTestReportXmlFile() {
+        val reportXml = File(resultsOutDir, "TEST-valid.xml")
         Files.asCharSink(reportXml, Charsets.UTF_8).write("""
             <?xml version='1.0' encoding='UTF-8' ?>
             <testsuite name="com.example.myapplication.ExampleInstrumentedTest" tests="8" failures="1" errors="0" skipped="2" time="3.272" timestamp="2021-08-10T21:09:43" hostname="localhost">
@@ -69,6 +68,40 @@ class TestReportTest {
               <testcase name="runActivity" classname="com.example.myapplication.ExampleInstrumentedTest" time="2.34" />
             </testsuite>
         """.trimIndent())
+    }
+
+    private fun createEmptyTestReportXmlFile() {
+        val reportXml = File(resultsOutDir, "TEST-empty.xml")
+        Files.asCharSink(reportXml, Charsets.UTF_8).write("""
+            <?xml version='1.0' encoding='UTF-8' ?>
+            <testsuite tests="0" failures="0" errors="0" skipped="0" time="0.518" timestamp="2022-01-12T22:11:43" hostname="localhost">
+              <properties>
+                <property name="device" value="pixel3_1" />
+                <property name="flavor" value="" />
+                <property name="project" value=":app" />
+              </properties>
+            </testsuite>
+        """.trimIndent())
+    }
+
+    private fun createTestReportXmlFileWithToolFailures() {
+        val reportXml = File(resultsOutDir, "TEST-empty.xml")
+        Files.asCharSink(reportXml, Charsets.UTF_8).write("""
+            <?xml version='1.0' encoding='UTF-8' ?>
+            <testsuite tests="0" failures="0" errors="0" skipped="0" time="0.518" timestamp="2022-01-12T22:11:43" hostname="localhost">
+              <properties>
+                <property name="device" value="pixel3_1" />
+                <property name="flavor" value="" />
+                <property name="project" value=":app" />
+              </properties>
+              <system-err>PLATFORM ERROR</system-err>
+            </testsuite>
+        """.trimIndent())
+    }
+
+    @Test
+    fun generateReport() {
+        createTestReportXmlFile()
 
         TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir).generateReport()
 
@@ -88,17 +121,7 @@ class TestReportTest {
 
     @Test
     fun shouldNotGenerateEmptyPackageReportForUnnamedTestSuite() {
-        val reportXml = File(resultsOutDir, "TEST-Pixel_4_XL_API_30(AVD) - 11-app-.xml")
-        Files.asCharSink(reportXml, Charsets.UTF_8).write("""
-            <?xml version='1.0' encoding='UTF-8' ?>
-            <testsuite tests="0" failures="0" errors="0" skipped="0" time="0.518" timestamp="2022-01-12T22:11:43" hostname="localhost">
-              <properties>
-                <property name="device" value="pixel3_1" />
-                <property name="flavor" value="" />
-                <property name="project" value=":app" />
-              </properties>
-            </testsuite>
-        """.trimIndent())
+        createEmptyTestReportXmlFile()
 
         TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir).generateReport()
 
@@ -107,5 +130,17 @@ class TestReportTest {
 
         val packageHtml = File(reportOutDir, ".html")
         assertThat(packageHtml).doesNotExist()
+    }
+
+    @Test
+    fun generateReportWithToolFailuresTab() {
+        createTestReportXmlFileWithToolFailures()
+
+        TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir).generateReport()
+
+        val indexHtml = File(reportOutDir, "index.html")
+        assertThat(indexHtml).exists()
+        assertThat(indexHtml).contains("<h2>Tool failures</h2>")
+        assertThat(indexHtml).contains("PLATFORM ERROR")
     }
 }

@@ -136,6 +136,15 @@ public class TestReport {
                 for (int i = 0; i < stdErrElements.getLength(); i++) {
                     suiteResults.addStandardError(stdErrElements.item(i).getTextContent());
                 }
+            } else {
+                NodeList stdOutElements = document.getElementsByTagName("system-out");
+                for (int i = 0; i < stdOutElements.getLength(); i++) {
+                    model.addStandardOutput(stdOutElements.item(i).getTextContent());
+                }
+                NodeList stdErrElements = document.getElementsByTagName("system-err");
+                for (int i = 0; i < stdErrElements.getLength(); i++) {
+                    model.addStandardError(stdErrElements.item(i).getTextContent());
+                }
             }
         } catch (Exception e) {
             throw new GradleException(String.format("Could not load test results from '%s'.", file), e);

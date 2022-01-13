@@ -37,6 +37,8 @@ public abstract class CompositeTestResults extends TestResultModel {
     private final Map<String, DeviceTestResults> devices = new TreeMap<>();
     private final Map<String, VariantTestResults> variants = new TreeMap<>();
 
+    private final StringBuilder standardOutput = new StringBuilder();
+    private final StringBuilder standardError = new StringBuilder();
 
     protected CompositeTestResults(CompositeTestResults parent) {
         this.parent = parent;
@@ -155,5 +157,21 @@ public abstract class CompositeTestResults extends TestResultModel {
         }
 
         return projectName + ":" + flavorName;
+    }
+
+    public void addStandardOutput(String textContent) {
+        standardOutput.append(textContent);
+    }
+
+    public void addStandardError(String textContent) {
+        standardError.append(textContent);
+    }
+
+    public CharSequence getStandardError() {
+        return standardError;
+    }
+
+    public CharSequence getStandardOutput() {
+        return standardOutput;
     }
 }
