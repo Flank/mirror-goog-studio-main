@@ -51,6 +51,7 @@ import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -1258,6 +1259,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         UExpression argument = args.get(argIndex);
         ResourceUrl resource = ResourceEvaluator.getResource(context.getEvaluator(), argument);
         if (resource == null || resource.isFramework() || resource.type != ResourceType.STRING) {
+            checkTrivialString(context, calledMethod, call, args, specifiesLocale);
             return;
         }
 
@@ -1483,8 +1485,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                         // flag parameters on the Object[] instead of the wrapped parameters
                         return;
                     }
-                    boolean trivial = true;
-                    boolean uppercase = false;
                     for (int i = 1; i <= count; i++) {
                         int argumentIndex = i + argIndex;
                         PsiType type = args.get(argumentIndex).getExpressionType();
@@ -1503,11 +1503,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 // TODO
                                 continue;
                             }
-                            // If uppercase formatting is used but all format types are trivial,
-                            // String.toUpperCase() will be suggested.
-                            if (Character.isUpperCase(last)) {
-                                uppercase = true;
-                            }
                             switch (last) {
                                     // Booleans. It's okay to pass objects to these;
                                     // it will print "true" if non-null, but it's
@@ -1515,11 +1510,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 case 'b':
                                 case 'B':
                                     valid = isBooleanType(type);
-                                    // '+' concatenation of Booleans does not exist in Kotlin,
-                                    // so "%b" should not be flagged as a trivial conversion.
-                                    if (Lint.isKotlin(calledMethod)) {
-                                        trivial = false;
-                                    }
                                     break;
 
                                     // Numeric: integer and floats in various formats
@@ -1535,7 +1525,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 case 'a':
                                 case 'A':
                                     valid = isNumericType(type, true);
-                                    trivial = false;
                                     break;
                                 case 'c':
                                 case 'C':
@@ -1551,7 +1540,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                     // We'll still warn about %s since you may have intended
                                     // numeric formatting, but hex printing seems pretty well
                                     // intended.
-                                    trivial = false;
                                     continue;
                                 case 's':
                                 case 'S':
@@ -1561,12 +1549,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                     // explanation for this?
                                     valid = !isBooleanType(type) && !isNumericType(type, false);
                                     break;
-                            }
-
-                            // Strings with formatting arguments that contain modifiers (precision,
-                            // justification, etc.) will not be flagged as trivial.
-                            if (trivial && hasFormatArgumentModifiers(s, i)) {
-                                trivial = false;
                             }
 
                             if (!valid) {
@@ -1651,22 +1633,85 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                             }
                         }
                     }
-                    // Creates the lint check message based on the conversions in the format string.
-                    if (trivial) {
-                        String message =
-                                "This formatting string is trivial. Rather than using "
-                                        + "`String.format` to create your String, it will be more "
-                                        + "performant to concatenate your arguments with `+`. ";
-                        if (uppercase) {
-                            message +=
-                                    "If uppercase formatting is necessary, use `String.toUpperCase()`.";
-                        }
-                        context.report(
-                                TRIVIAL, call, context.getLocation(args.get(argIndex)), message);
-                    }
                 }
             }
         }
+    }
+
+    private void checkTrivialString(
+            JavaContext context,
+            PsiMethod calledMethod,
+            UCallExpression call,
+            List<UExpression> args,
+            boolean specifiesLocale) {
+        int stringIndex = specifiesLocale ? 1 : 0;
+        String s = ConstantEvaluator.evaluateString(context, args.get(stringIndex), false);
+        if (s == null) {
+            return;
+        }
+        boolean uppercase = false;
+        int count = getFormatArgumentCount(s, null);
+        for (int i = 1; i <= count; i++) {
+            int argumentIndex = i + stringIndex;
+            PsiType type = args.get(argumentIndex).getExpressionType();
+            if (type != null) {
+                String formatType = getFormatArgumentType(s, i);
+                if (formatType == null) {
+                    return;
+                }
+                char last = formatType.charAt(formatType.length() - 1);
+                if (formatType.length() >= 2
+                        && Character.toLowerCase(formatType.charAt(formatType.length() - 2))
+                                == 't') {
+                    return;
+                }
+                switch (last) {
+                    case 'x':
+                    case 'X':
+                    case 'd':
+                    case 'o':
+                    case 'e':
+                    case 'E':
+                    case 'f':
+                    case 'g':
+                    case 'G':
+                    case 'a':
+                    case 'A':
+                    case 'h':
+                    case 'H':
+                        return;
+                    case 'b':
+                    case 'B':
+                        // '+' concatenation of Booleans does not exist in Kotlin,
+                        // so "%b" should not be flagged as a trivial conversion.
+                        if (Lint.isKotlin(calledMethod)) {
+                            return;
+                        }
+                }
+
+                // Strings with formatting arguments that contain modifiers (precision,
+                // justification, etc.) will not be flagged as trivial.
+                if (hasFormatArgumentModifiers(s, i)) {
+                    return;
+                }
+
+                // If uppercase formatting is used but all format types are trivial,
+                // String.toUpperCase() will be suggested.
+                if (Character.isUpperCase(last)) {
+                    uppercase = true;
+                }
+            }
+        }
+
+        // Creates the lint check message based on the conversions in the format string.
+        String message =
+                "This formatting string is trivial. Rather than using "
+                        + "`String.format` to create your String, it will be more "
+                        + "performant to concatenate your arguments with `+`. ";
+        if (uppercase) {
+            message += "If uppercase formatting is necessary, use `String.toUpperCase()`.";
+        }
+        context.report(TRIVIAL, call, context.getLocation(args.get(stringIndex)), message);
     }
 
     private static boolean isCharacterType(PsiType type) {

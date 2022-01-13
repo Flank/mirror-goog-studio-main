@@ -1496,6 +1496,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "import android.content.res.Resources;\n"
                                         + "\n"
                                         + "public class FormatCheck {\n"
+                                        + "    @SuppressWarnings(\"StringFormatTrivial\")\n"
                                         + "    private static String test(Resources resources) {\n"
                                         + "        return String.format(\"%s\", resources.getString(R.string.a_b_c));\n"
                                         + "    }\n"
@@ -1959,15 +1960,16 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
 
     public void testTrivialString() {
         String expected =
-                "src/test/pkg/Trivial.java:10: Warning: This formatting string is trivial. Rather than using String.format to create your String, it will be more performant to concatenate your arguments with +.  [StringFormatTrivial]\n"
-                        + "        String output1 = String.format(trivial1, \"Hello world\");\n"
-                        + "                                       ~~~~~~~~\n"
+                ""
+                        + "src/test/pkg/Trivial.java:10: Warning: This formatting string is trivial. Rather than using String.format to create your String, it will be more performant to concatenate your arguments with +.  [StringFormatTrivial]\n"
+                        + "        String output1a = String.format(\"%s\", \"Hello world\");\n"
+                        + "                                        ~~~~\n"
                         + "src/test/pkg/Trivial.java:11: Warning: This formatting string is trivial. Rather than using String.format to create your String, it will be more performant to concatenate your arguments with +.  [StringFormatTrivial]\n"
-                        + "        String output2 = String.format(trivial2, \"Hello world\", '!');\n"
-                        + "                                       ~~~~~~~~\n"
+                        + "        String output2a = String.format(\"%s %c\", \"Hello world\", '!');\n"
+                        + "                                        ~~~~~~~\n"
                         + "src/test/pkg/Trivial.java:12: Warning: This formatting string is trivial. Rather than using String.format to create your String, it will be more performant to concatenate your arguments with +.  [StringFormatTrivial]\n"
-                        + "        String output3 = String.format(trivial3, \"Hello world\", '!', true);\n"
-                        + "                                       ~~~~~~~~\n"
+                        + "        String output3a = String.format(\"%s %c %b\", \"Hello world\", '!', true);\n"
+                        + "                                        ~~~~~~~~~~\n"
                         + "0 errors, 3 warnings";
         lint().files(
                         java(
@@ -1979,12 +1981,15 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "public class Trivial {\n"
                                         + "    private static void test(Resources resources) {\n"
-                                        + "        String trivial1 = resources.getString(R.string.trivial1);\n"
-                                        + "        String trivial2 = resources.getString(R.string.trivial2);\n"
-                                        + "        String trivial3 = resources.getString(R.string.trivial3);\n"
-                                        + "        String output1 = String.format(trivial1, \"Hello world\");\n"
-                                        + "        String output2 = String.format(trivial2, \"Hello world\", '!');\n"
-                                        + "        String output3 = String.format(trivial3, \"Hello world\", '!', true);\n"
+                                        + "        String trivial1 = resources.getString(R.string.trivial1); // OK\n"
+                                        + "        String trivial2 = resources.getString(R.string.trivial2); // OK\n"
+                                        + "        String trivial3 = resources.getString(R.string.trivial3); // OK\n"
+                                        + "        String output1a = String.format(\"%s\", \"Hello world\");\n"
+                                        + "        String output2a = String.format(\"%s %c\", \"Hello world\", '!');\n"
+                                        + "        String output3a = String.format(\"%s %c %b\", \"Hello world\", '!', true);\n"
+                                        + "        String output1b = String.format(trivial1, \"Hello world\");\n"
+                                        + "        String output2b = String.format(trivial2, \"Hello world\", '!');\n"
+                                        + "        String output3b = String.format(trivial3, \"Hello world\", '!', true);\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    public static final class R {\n"
@@ -2011,10 +2016,26 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
 
     public void testTrivialStringWithUppercase() {
         String expected =
-                "src/test/pkg/TrivialUppercase.java:8: Warning: This formatting string is trivial. Rather than using String.format to create your String, it will be more performant to concatenate your arguments with +. If uppercase formatting is necessary, use String.toUpperCase(). [StringFormatTrivial]\n"
-                        + "        String output = String.format(trivialUppercase, \"Hello world\");\n"
-                        + "                                      ~~~~~~~~~~~~~~~~\n"
+                ""
+                        + "src/test/pkg/TrivialUppercase.java:5: Warning: This formatting string is trivial. Rather than using String.format to create your String, it will be more performant to concatenate your arguments with +. If uppercase formatting is necessary, use String.toUpperCase(). [StringFormatTrivial]\n"
+                        + "        String output = String.format(\"%S\", \"Hello world\");\n"
+                        + "                                      ~~~~\n"
                         + "0 errors, 1 warnings";
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "public class TrivialUppercase {\n"
+                                        + "    private static void test() {\n"
+                                        + "        String output = String.format(\"%S\", \"Hello world\");\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expect(expected);
+    }
+
+    public void testNonTrivialStringWithUppercaseInResources() {
         lint().files(
                         java(
                                 "src/test/pkg/TrivialUppercase.java",
@@ -2044,7 +2065,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "</resources>\n"
                                         + "\n"))
                 .run()
-                .expect(expected);
+                .expectClean();
     }
 
     public void testNonTrivialString() {
