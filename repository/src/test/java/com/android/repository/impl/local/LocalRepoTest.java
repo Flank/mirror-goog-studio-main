@@ -16,6 +16,8 @@
 
 package com.android.repository.impl.local;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.repository.Revision;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.License;
@@ -34,20 +36,11 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableSet;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * Tests for {@link LocalRepoLoaderImpl}.
@@ -101,7 +94,7 @@ public class LocalRepoTest extends TestCase {
     }
 
     // Test writing a package out to xml
-    public void testMarshalGeneric() throws Exception {
+    public void testMarshalGeneric() {
         RepoManager manager = new RepoManagerImpl();
 
         CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
@@ -132,63 +125,24 @@ public class LocalRepoTest extends TestCase {
                 manager.getResourceResolver(progress), progress);
         progress.assertNoErrorsOrWarnings();
 
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-
-        dbf.setNamespaceAware(true);
-        dbf.setSchema(SchemaModuleUtil.getSchema(ImmutableSet.of(RepoManager.getGenericModule()),
-                SchemaModuleUtil.createResourceResolver(ImmutableSet.of(RepoManager.getCommonModule()),
-                        progress),
-                progress));
-        progress.assertNoErrorsOrWarnings();
-        DocumentBuilder db = dbf.newDocumentBuilder();
-
-        db.setErrorHandler(new ErrorHandler() {
-            @Override
-            public void warning(SAXParseException exception) throws SAXException {
-                throw exception;
-            }
-
-            @Override
-            public void error(SAXParseException exception) throws SAXException {
-                throw exception;
-            }
-
-            @Override
-            public void fatalError(SAXParseException exception) throws SAXException {
-                throw exception;
-            }
-        });
-
-        Document doc = db.parse(new ByteArrayInputStream(output.toByteArray()));
-
-        NodeList licences = doc.getElementsByTagName("license");
-        assertEquals(1, licences.getLength());
-        Element licenseNode = (Element) licences.item(0);
-        assertEquals("license1", licenseNode.getAttribute("id"));
-        assertEquals("some license text", licenseNode.getTextContent());
-        Element packageNode = (Element) doc.getElementsByTagName("localPackage").item(0);
-        assertEquals("mypackage;path", packageNode.getAttribute("path"));
-        Element details = (Element) packageNode.getElementsByTagName("type-details").item(0);
-/* b/214307220
-        assertEquals("genericDetailsType", details.getSchemaTypeInfo().getTypeName());
-b/214307220 */
-        Element revision = (Element) packageNode.getElementsByTagName("revision").item(0);
-        assertEquals("1", revision.getElementsByTagName("major").item(0).getTextContent());
-        assertEquals("2", revision.getElementsByTagName("minor").item(0).getTextContent());
-        assertEquals(
-                "package name",
-                packageNode.getElementsByTagName("display-name").item(0).getTextContent());
-        Element usesLicense = (Element) packageNode.getElementsByTagName("uses-license").item(0);
-        assertEquals("license1", usesLicense.getAttribute("ref"));
-        Element dependencies = (Element) packageNode.getElementsByTagName("dependencies").item(0);
-        Element dependency = (Element) dependencies.getElementsByTagName("dependency").item(0);
-        assertEquals("depId1", dependency.getAttribute("path"));
-        revision = (Element) dependency.getElementsByTagName("min-revision").item(0);
-        assertEquals("1", revision.getElementsByTagName("major").item(0).getTextContent());
-        assertEquals("2", revision.getElementsByTagName("minor").item(0).getTextContent());
-        assertEquals("3", revision.getElementsByTagName("micro").item(0).getTextContent());
-        dependency = (Element) dependencies.getElementsByTagName("dependency").item(1);
-        assertEquals("depId2", dependency.getAttribute("path"));
+        assertThat(output.toString())
+                .isEqualTo(
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><ns4:repository "
+                                + "xmlns:ns2=\"http://schemas.android.com/repository/android/generic/01\" "
+                                + "xmlns:ns3=\"http://schemas.android.com/repository/android/generic/02\" "
+                                + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/02\">"
+                                + "<license id=\"license1\" type=\"text\">some license text</license>"
+                                + "<localPackage path=\"mypackage;path\">"
+                                + "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                                + "xsi:type=\"ns3:genericDetailsType\"/>"
+                                + "<revision><major>1</major><minor>2</minor></revision>"
+                                + "<display-name>package name</display-name>"
+                                + "<uses-license ref=\"license1\"/>"
+                                + "<dependencies>"
+                                + "<dependency path=\"depId1\"><min-revision><major>1</major>"
+                                + "<minor>2</minor><micro>3</micro></min-revision></dependency>"
+                                + "<dependency path=\"depId2\"/></dependencies>"
+                                + "</localPackage></ns4:repository>");
     }
 
     // Test that a package in an inconsistent location gives a warning.
@@ -219,7 +173,7 @@ b/214307220 */
         assertFalse(progress.getWarnings().isEmpty());
     }
 
-    // Test that a package in an inconsistent is overridden by one in the right place
+    // Test that a package in an inconsistent location is overridden by one in the right place
     public void testDuplicate() throws Exception {
         Path sdkRoot =
                 InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo/bogus").getParent();
