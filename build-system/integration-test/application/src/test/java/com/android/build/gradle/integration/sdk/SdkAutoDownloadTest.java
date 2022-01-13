@@ -72,6 +72,7 @@ public class SdkAutoDownloadTest {
             + System.lineSeparator()
             + "target_link_libraries(hello-jni log)";
 
+    // These all need to be kept in sync with the sibling BUILD file
     private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION = "31";
     private static final String NDK_VERSION = "23.0.7344513";
