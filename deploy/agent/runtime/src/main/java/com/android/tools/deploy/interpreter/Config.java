@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.deploy.interpreter;
 
-package com.android.tools.deploy.liveedit;
+public class Config {
 
-import com.android.tools.deploy.interpreter.Config;
+    private boolean debugEnabled = false;
 
-public final class Log {
-    public interface Logger {
-        void v(String tag, String message);
+    private Config() {}
+
+    private static Config instance = new Config();
+
+    public static Config getInstance() {
+        return instance;
     }
 
-    private static Logger logger = null;
-
-    public static void setLogger(Logger logger) {
-        Log.logger = logger;
+    public boolean debugEnabled() {
+        return debugEnabled;
     }
 
-    public static void v(String tag, String message) {
-        if (logger != null && Config.getInstance().debugEnabled()) {
-            logger.v(tag, message);
-        }
+    public void setDebugMode(boolean enabled) {
+        this.debugEnabled = enabled;
     }
 }

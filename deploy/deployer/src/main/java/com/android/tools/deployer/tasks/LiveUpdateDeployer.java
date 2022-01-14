@@ -66,6 +66,7 @@ public class LiveUpdateDeployer {
         public final int endOffSet;
         public final byte[] classData;
         public final Map<String, byte[]> supportClasses;
+        final boolean debugModeEnabled;
 
         /**
          * @param startOffSet The starting PSI index of that function node.
@@ -79,7 +80,8 @@ public class LiveUpdateDeployer {
                 int startOffSet,
                 int endOffSet,
                 byte[] classData,
-                Map<String, byte[]> supportClasses) {
+                Map<String, byte[]> supportClasses,
+                boolean debugModeEnabled) {
             this.className = className;
             this.methodName = methodName;
             this.methodDesc = methodDesc;
@@ -88,6 +90,7 @@ public class LiveUpdateDeployer {
             this.endOffSet = endOffSet;
             this.classData = classData;
             this.supportClasses = supportClasses;
+            this.debugModeEnabled = debugModeEnabled;
         }
     }
 
@@ -170,6 +173,7 @@ public class LiveUpdateDeployer {
             requestBuilder.addSupportClasses(
                     Deploy.LiveEditClass.newBuilder().setClassName(name).setClassData(data));
         }
+        requestBuilder.setDebugModeEnabled(param.debugModeEnabled);
         Deploy.LiveEditRequest request = requestBuilder.build();
 
         List<UpdateLiveEditError> errors = new LinkedList<>();

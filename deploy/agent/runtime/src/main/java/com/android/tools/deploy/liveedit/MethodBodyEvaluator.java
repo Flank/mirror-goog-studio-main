@@ -20,6 +20,7 @@ import com.android.deploy.asm.Type;
 import com.android.deploy.asm.tree.MethodNode;
 import com.android.deploy.asm.tree.analysis.Frame;
 import com.android.tools.deploy.interpreter.ByteCodeInterpreter;
+import com.android.tools.deploy.interpreter.Config;
 import com.android.tools.deploy.interpreter.Eval;
 import com.android.tools.deploy.interpreter.InterpretedMethod;
 import com.android.tools.deploy.interpreter.InterpreterResult;
@@ -29,8 +30,6 @@ import com.android.tools.deploy.interpreter.Value;
 import com.android.tools.deploy.interpreter.ValueReturned;
 
 public class MethodBodyEvaluator {
-    private static final boolean DEBUG_EVAL = true;
-
     private final LiveEditContext context;
     private final InterpretedMethod method;
 
@@ -88,7 +87,7 @@ public class MethodBodyEvaluator {
         }
 
         Eval evaluator = new ProxyClassEval(context);
-        if (DEBUG_EVAL) {
+        if (Config.getInstance().debugEnabled()) {
             evaluator = new LoggingEval(evaluator);
         }
 
