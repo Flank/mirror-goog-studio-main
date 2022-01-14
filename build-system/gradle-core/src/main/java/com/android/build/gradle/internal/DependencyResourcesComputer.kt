@@ -17,6 +17,7 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -224,7 +225,10 @@ abstract class DependencyResourcesComputer {
         this.libraries.disallowChanges()
         this.librarySourceSets.disallowChanges()
 
-        addResourceSets(sourceSetInputs.localResources.get(), relativeLocalResources) {
+        addResourceSets(
+            creationConfig.sources.res.getLocalSourcesAsFileCollection().get(),
+            relativeLocalResources
+        ) {
             services.newInstance(ResourceSourceSetInput::class.java)
         }
         resources.disallowChanges()
@@ -232,10 +236,11 @@ abstract class DependencyResourcesComputer {
         extraGeneratedResFolders.fromDisallowChanges(sourceSetInputs.extraGeneratedResDir)
 
 
-        if (sourceSetInputs.generatedResDir.isPresent) {
-            generatedResOutputDir.fromDisallowChanges(sourceSetInputs.generatedResDir)
+        if (creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES).isPresent) {
+            generatedResOutputDir.fromDisallowChanges(
+                creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES)
+            )
         }
-        generatedResOutputDir.disallowChanges()
 
         if (creationConfig.taskContainer.generateApkDataTask != null) {
             microApkResDirectory.from(microApkResDir)

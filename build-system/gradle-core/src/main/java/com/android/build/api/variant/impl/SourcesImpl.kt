@@ -19,6 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.impl.DefaultSourcesProvider
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
+import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -55,22 +56,7 @@ class SourcesImpl(
             defaultSourceProvider.java.run {
                 sourceDirectoriesImpl.addSources(this)
             }
-            // reset the original variant specific source set in [VariantSources] as sourceDirectoriesImpl is now
-            // owned by this. TODO, make the [VariantSources] unavailable to other components in
-            // AGP as they should all use this [SourcesImpl] from now on.
-            if (variantSourceSet != null) {
-                for (srcDir in variantSourceSet.java.srcDirs) {
-                    sourceDirectoriesImpl.addSource(
-                        FileBasedDirectoryEntryImpl(
-                            name = "variant",
-                            directory = srcDir,
-                            filter = variantSourceSet.java.filter,
-                            isUserAdded = true
-                        )
-                    )
-                }
-                variantSourceSet.java.setSrcDirs(emptyList<File>())
-            }
+            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.java)
         }
 
     override val res: SourceAndOverlayDirectoriesImpl =
@@ -81,8 +67,11 @@ class SourcesImpl(
             variantSourceSet?.res?.filter
         ).also { sourceDirectoriesImpl ->
             defaultSourceProvider.res.run {
-                forEach(sourceDirectoriesImpl::addSources)
+                forEach {
+                    sourceDirectoriesImpl.addSources(it)
+                }
             }
+            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.res)
         }
 
     internal val extras: NamedDomainObjectContainer<SourceDirectoriesImpl> by lazy {
@@ -109,5 +98,33 @@ class SourcesImpl(
                 variantServices = variantServices,
                 variantDslFilters = null
             )
+    }
+
+    /**
+     * reset the original variant specific source set in
+     * [com.android.build.gradle.internal.core.VariantSources] since the variant
+     * specific folders are owned by this abstraction (so users can add it if needed).
+     * TODO, make the VariantSources unavailable to other components in
+     * AGP as they should all use this [SourcesImpl] from now on.
+     */
+    private fun resetVariantSourceSet(
+        target: AbstractSourceDirectoriesImpl,
+        sourceSet: AndroidSourceDirectorySet?,
+    ) {
+        if (sourceSet != null) {
+            for (srcDir in sourceSet.srcDirs) {
+                target.addSource(
+                    FileBasedDirectoryEntryImpl(
+                        name = "variant",
+                        directory = srcDir,
+                        filter = sourceSet.filter,
+                        // since it was part of the original set of sources for the module, we
+                        // must add it back to the model as it is expecting to have variant sources.
+                        shouldBeAddedToIdeModel = true
+                    )
+                )
+            }
+            sourceSet.setSrcDirs(emptyList<File>())
+        }
     }
 }

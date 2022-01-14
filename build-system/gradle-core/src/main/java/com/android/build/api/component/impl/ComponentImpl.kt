@@ -29,6 +29,7 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.SourceDirectoriesImpl
@@ -542,7 +543,7 @@ abstract class ComponentImpl(
 
         override val java: List<DirectoryEntry>
             get() = component.defaultJavaSources()
-        override val res: List<Collection<DirectoryEntry>>
+        override val res: List<DirectoryEntries>
             get() = component.defaultResSources()
     }
 
@@ -615,15 +616,14 @@ abstract class ComponentImpl(
                 TaskProviderBasedDirectoryEntryImpl(
                     name = "mlModel_generated",
                     directoryProvider = artifacts.get(ML_SOURCE_OUT),
-                    shouldBeAddedToIdeModel = false,
                 )
             )
         }
         return sourceSets.build()
     }
 
-    private fun defaultResSources(): List<Collection<DirectoryEntry>> {
-        val sourceDirectories = mutableListOf<Collection<DirectoryEntry>>()
+    private fun defaultResSources(): List<DirectoryEntries> {
+        val sourceDirectories = mutableListOf<DirectoryEntries>()
 
         sourceDirectories.addAll(variantSources.resSourceList)
 
@@ -632,7 +632,7 @@ abstract class ComponentImpl(
             generatedFolders.add(
                 TaskProviderBasedDirectoryEntryImpl(
                     name = "renderscript_generated_res",
-                    directoryProvider = artifacts.get(RENDERSCRIPT_GENERATED_RES)
+                    directoryProvider = artifacts.get(RENDERSCRIPT_GENERATED_RES),
                 )
             )
         }
@@ -646,7 +646,7 @@ abstract class ComponentImpl(
             )
         }
 
-        sourceDirectories.add(generatedFolders)
+        sourceDirectories.add(DirectoryEntries("generated", generatedFolders))
 
         return Collections.unmodifiableList(sourceDirectories)
     }
@@ -678,7 +678,7 @@ abstract class ComponentImpl(
 
         allRes.from(sources.res.getVariantSources().map { allRes ->
             allRes.map { directoryEntries ->
-                directoryEntries
+                directoryEntries.directoryEntries
                     .map { it.asFiles(services::directoryProperty) }
             }
         })

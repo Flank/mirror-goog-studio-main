@@ -45,8 +45,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    val generatedResDir: Provider<String>
-        get() = sourceSetInputs.generatedResDir.getLocationOnlyFilepathProvider()
+    abstract val generatedResDir: Property<String>
 
     @get:Input
     @get:Optional
@@ -55,8 +54,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    val renderscriptResOutputDir: Provider<String>
-        get() = sourceSetInputs.renderscriptResOutputDir.getLocationOnlyFilepathProvider()
+    abstract val renderscriptResOutputDir: Property<String>
 
     @get:Input
     @get:Optional
@@ -64,8 +62,8 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
         get() = sourceSetInputs.incrementalMergedDir.getLocationOnlyFilepathProvider()
 
     @get:Input
-    val localResources: MapProperty<String, FileCollection>
-        get() = sourceSetInputs.localResources
+    abstract val localResources: MapProperty<String, FileCollection>
+
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -126,16 +124,29 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
         override fun configure(task: MapSourceSetPathsTask) {
             super.configure(task)
+            task.generatedResDir.setDisallowChanges(
+                creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES).map {
+                    it.asFile.absolutePath
+                }
+            )
+            task.renderscriptResOutputDir.setDisallowChanges(
+                creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES).map {
+                    it.asFile.absolutePath
+                }
+            )
             task.namespace.setDisallowChanges(creationConfig.namespace)
             task.sourceSetInputs.initialise(creationConfig, includeDependencies)
             task.allGeneratedRes.setDisallowChanges(creationConfig.sources.res.getVariantSources().map { allRes ->
                 allRes.map { directoryEntries ->
-                    directoryEntries
+                    directoryEntries.directoryEntries
                         .filter { it.isGenerated }
                         .map { it.asFiles(task.project.objects::directoryProperty) }
                         .map { it.get().asFile.absolutePath }
                 }
             })
+            task.localResources.setDisallowChanges(
+                creationConfig.sources.res.getLocalSourcesAsFileCollection()
+            )
             if (!mergeResourcesTask.get().isVectorSupportLibraryUsed) {
                 task.generatedPngsOutputDir.setDisallowChanges(
                     creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES).map {

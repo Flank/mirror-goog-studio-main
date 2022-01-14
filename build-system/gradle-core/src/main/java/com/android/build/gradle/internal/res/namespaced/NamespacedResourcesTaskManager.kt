@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask
 import com.android.utils.appendCapitalized
 import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -112,7 +113,19 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createCompileResourcesTask() {
-        for((sourceSetName, artifacts) in creationConfig.variantData.androidResources) {
+        // By the time this is called, the list of potential source files is known since the
+        // variant API has run. Eventually, it could be better to not do a get() here and instead
+        // create a unique Task that uses workers for parallelization.
+        creationConfig.sources.res.getVariantSources().get().forEach { dimensionSources ->
+
+            val providerList: List<Provider<Directory>> = dimensionSources.directoryEntries
+                .filter { !it.isGenerated }
+                .map { it.asFiles(creationConfig.services::directoryProperty) }
+
+            val artifacts = creationConfig.services.fileCollection().from(providerList)
+
+            val sourceSetName = dimensionSources.name
+
             val name = "compile".appendCapitalized(sourceSetName) +
                     "ResourcesFor".appendCapitalized(creationConfig.name)
             // TODO : figure out when we need explicit task dependency and potentially remove it.

@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
-import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
+import com.android.build.api.variant.impl.SourceAndOverlayDirectoriesImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.utils.immutableMapBuilder
-import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.model.v2.CustomSourceDirectory
@@ -30,6 +30,7 @@ import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.AssetSet
 import com.android.ide.common.resources.ResourceSet
 import com.google.common.collect.Lists
+import org.gradle.api.file.DirectoryProperty
 import java.io.File
 import java.util.function.Function
 
@@ -151,7 +152,12 @@ class VariantSources internal constructor(
      * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
      * @return a list ResourceSet.
      */
-    fun getResourceSets(validateEnabled: Boolean, aaptEnv: String?): List<ResourceSet> {
+    fun getResourceSets(
+        sources: SourceAndOverlayDirectoriesImpl,
+        validateEnabled: Boolean,
+        aaptEnv: String?,
+        directoryPropertyCreator: () -> DirectoryProperty
+    ): List<ResourceSet> {
         val resourceSets: MutableList<ResourceSet> =
             Lists.newArrayList()
         val mainResDirs =
@@ -218,6 +224,24 @@ class VariantSources internal constructor(
                 aaptEnv
             )
             resourceSet.addSources(variantResDirs)
+            resourceSets.add(resourceSet)
+        }
+
+        val userAddedFolders: List<File> = sources.getVariantSources().get().map {
+            it.directoryEntries
+                .filter { it.isUserAdded }
+                .map { it.asFiles(directoryPropertyCreator).get().asFile }
+        }.flatten()
+
+        if (userAddedFolders.isNotEmpty()) {
+            resourceSet = ResourceSet(
+                "user_added",
+                ResourceNamespace.RES_AUTO,
+                null,
+                validateEnabled,
+                aaptEnv
+            )
+            resourceSet.addSources(userAddedFolders)
             resourceSets.add(resourceSet)
         }
 
@@ -303,17 +327,20 @@ class VariantSources internal constructor(
     val jniSourceList: Collection<File>
         get() = getSourceFiles{ obj: SourceProvider -> obj.cDirectories }
 
-    val resSourceList: List<Collection<DirectoryEntry>>
+    val resSourceList: List<DirectoryEntries>
         get() = getSourceList { sourceProvider -> sourceProvider.resDirectories }
 
-    fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<Collection<DirectoryEntry>> {
+    fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<DirectoryEntries> {
         return sortedSourceProviders.map { sourceProvider ->
-            action(sourceProvider).map { directory ->
-                FileBasedDirectoryEntryImpl(
-                    sourceProvider.name,
-                    directory,
-                )
-            }
+            DirectoryEntries(
+                sourceProvider.name,
+                action(sourceProvider).map { directory ->
+                    FileBasedDirectoryEntryImpl(
+                        sourceProvider.name,
+                        directory,
+                    )
+                }
+            )
         }
     }
 

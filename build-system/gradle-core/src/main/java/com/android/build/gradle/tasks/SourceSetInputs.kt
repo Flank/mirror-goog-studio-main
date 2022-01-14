@@ -43,19 +43,10 @@ abstract class SourceSetInputs {
     abstract val extraGeneratedResDir: ConfigurableFileCollection
 
     @get:Internal
-    abstract val generatedResDir: DirectoryProperty
-
-    @get:Internal
-    abstract val renderscriptResOutputDir: DirectoryProperty
-
-    @get:Internal
     abstract val mergeResourcesOutputDir: DirectoryProperty
 
     @get:Internal
     abstract val incrementalMergedDir: DirectoryProperty
-
-    @get:Internal
-    abstract val localResources: MapProperty<String, FileCollection>
 
     @get:Internal
     abstract val resourceSourceSets: ConfigurableFileCollection
@@ -67,13 +58,9 @@ abstract class SourceSetInputs {
         creationConfig: ComponentCreationConfig,
         includeDependencies: Boolean = true
     ) {
-        val androidResources = creationConfig.variantData.androidResources
-        localResources.setDisallowChanges(androidResources)
-        resourceSourceSets.setFrom(androidResources.values)
-        generatedResDir.setDisallowChanges(
-            creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES))
-        renderscriptResOutputDir.setDisallowChanges(
-            creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES))
+        resourceSourceSets.setFrom(creationConfig.sources.res.getLocalSourcesAsFileCollection().map {
+            it.values
+        })
         extraGeneratedResDir.setFrom(
             creationConfig.variantData.extraGeneratedResFolders)
         if (includeDependencies) {

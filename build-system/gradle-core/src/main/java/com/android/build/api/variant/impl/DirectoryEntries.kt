@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.impl
-
-import com.android.build.api.variant.impl.DirectoryEntries
-import com.android.build.api.variant.impl.DirectoryEntry
+package com.android.build.api.variant.impl
 
 /**
- * Interface to calculate the default list of sources [DirectoryEntry] per source type.
+ * Internal representation of [DirectoryEntry] that have the same priorities.
  */
-interface DefaultSourcesProvider {
-
-    /**
-     * the list of sources [DirectoryEntry] for java
-     */
-    val java: List<DirectoryEntry>
-
-    /**
-     * the list of sources [DirectoryEntry] for android resources.
-     */
-    val res: List<DirectoryEntries>
-}
+class DirectoryEntries(
+    val name: String,
+    val directoryEntries: Collection<DirectoryEntry>
+)

@@ -210,13 +210,15 @@ internal fun DefaultAndroidSourceSet.convert(
     name = name,
     manifestFile = manifestFile,
     javaDirectories = sources.java.variantSourcesForModel {
-              it.isUserAdded && it.shouldBeAddedToIdeModel
+              it.shouldBeAddedToIdeModel
     },
     kotlinDirectories = kotlinDirectories,
     resourcesDirectories = resourcesDirectories,
     aidlDirectories = if (features.aidl) aidlDirectories else null,
     renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,
-    resDirectories = if (features.androidResources) resDirectories else null,
+    resDirectories = if (features.androidResources) sources.res.variantSourcesForModel {
+        it.shouldBeAddedToIdeModel
+    } else null,
     assetsDirectories = assetsDirectories,
     jniLibsDirectories = jniLibsDirectories,
     shadersDirectories = if (features.shaders) shadersDirectories else null,

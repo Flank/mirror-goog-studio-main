@@ -625,7 +625,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                                     "legacy_" + taskProvider.getName(),
                                     mappedDirectory,
                                     true, /* isGenerated */
-                                    true, /*isUserProvidesd */
+                                    true, /*isUserProvided */
                                     true /* shouldBeAddedToIdeModel */));
         }
         getVariantData().registerJavaGeneratingTask(taskProvider, sourceFolders);
