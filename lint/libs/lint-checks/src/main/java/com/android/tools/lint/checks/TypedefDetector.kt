@@ -479,6 +479,17 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
     }
 
+    /** If this element is a literal, return its value. */
+    private fun UElement.getLiteralValue(): Any? {
+        if (this is ULiteralExpression ||
+            // -1 shows up as a UPrefixExpression(-, ULiteralExpression(1))
+            this is UPrefixExpression && this.operand is ULiteralExpression
+        ) {
+            return (this as UExpression).evaluate()
+        }
+        return null
+    }
+
     private fun reportTypeDef(
         context: JavaContext,
         annotation: UAnnotation,
@@ -490,16 +501,14 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (allowed != null && allowed.isArrayInitializer()) {
             val initializerExpression = allowed as UCallExpression
             val initializers = initializerExpression.valueArguments
-            reportTypeDef(
-                context,
-                argument,
-                errorNode,
-                false,
-                initializers,
-                usageInfo,
-                annotation,
-                null
-            )
+
+            // If the API specifies specific allowed numbers, allow passing in that literal number as well
+            val value = argument.getLiteralValue()
+            if (value is Number && initializers.any { value == it.getLiteralValue() }) {
+                return
+            }
+
+            reportTypeDef(context, argument, errorNode, false, initializers, usageInfo, annotation, null)
         }
     }
 
