@@ -84,8 +84,8 @@ class DeprecatedApiTest {
                 ApiTester.Filter.DEPRECATED_ONLY,
                 """
                 The deprecated API has changed, if you're removing a previously deprecated API or
-                deprecating an API, make sure that you announce these updates on http://go/as-release-notes
-                to be added on https://developer.android.com/studio/preview/features#android_gradle_plugin_api_updates,
+                deprecating an API, make sure that you announce these updates on http://go/agp-api-updates
+                to be added on https://developer.android.com/studio/releases/gradle-plugin-api-updates
                 then run DeprecatedApiUpdater.main[] from the IDE to update the API file.
 
                 DeprecatedApiUpdater will apply the following changes if run:
