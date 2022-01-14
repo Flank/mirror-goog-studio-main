@@ -160,6 +160,25 @@ public class XmlTestRunListenerTest extends TestCase {
         assertTrue(output.contains(failureTag));
     }
 
+    public void testSystemError() {
+        mResultReporter.testRunStarted("run", 0);
+        mResultReporter.addSystemError("Test system error message");
+        mResultReporter.testRunEnded(3, Collections.emptyMap());
+        String output =  getOutput();
+        assertTrue(output.contains("tests=\"0\" failures=\"0\" errors=\"0\""));
+        assertTrue(output.contains("<system-err>Test system error message</system-err>"));
+    }
+
+    public void testSystemErrorElementShouldNotBeCreatedWhenEmpty() {
+        mResultReporter.testRunStarted("run", 0);
+        mResultReporter.addSystemError("");
+        mResultReporter.testRunEnded(3, Collections.emptyMap());
+        String output =  getOutput();
+        assertTrue(output.contains("tests=\"0\" failures=\"0\" errors=\"0\""));
+        assertFalse(output.contains("<system-err>"));
+        assertFalse(output.contains("</system-err>"));
+    }
+
     /**
      * Gets the output produced, stripping it of extraneous whitespace characters.
      */
