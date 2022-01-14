@@ -31,7 +31,6 @@ public class TimeoutRemainderTest {
         // Act
 
         // Assert
-        assertEquals(1_000L, rem.getRemainingUnits());
         assertEquals(1L, rem.getRemainingUnits(TimeUnit.SECONDS));
         assertEquals(1_000L, rem.getRemainingUnits(TimeUnit.MILLISECONDS));
         assertEquals(1_000_000L, rem.getRemainingUnits(TimeUnit.MICROSECONDS));
@@ -48,25 +47,25 @@ public class TimeoutRemainderTest {
         nanoProviderMock.advanceMillis(50);
 
         // Assert
-        assertEquals(950, rem.getRemainingUnits());
+        assertEquals(950, rem.getRemainingUnits(TimeUnit.MILLISECONDS));
 
         // Act
         nanoProviderMock.advanceMillis(100);
 
         // Assert
-        assertEquals(850, rem.getRemainingUnits());
+        assertEquals(850, rem.getRemainingUnits(TimeUnit.MILLISECONDS));
 
         // Act
         nanoProviderMock.advanceMillis(500);
 
         // Assert
-        assertEquals(350, rem.getRemainingUnits());
+        assertEquals(350, rem.getRemainingUnits(TimeUnit.MILLISECONDS));
 
         // Act
         nanoProviderMock.advanceMillis(500);
 
         // Assert
-        assertTrue(rem.getRemainingUnits() < 0);
+        assertTrue(rem.getRemainingUnits(TimeUnit.NANOSECONDS) < 0);
     }
 
     @Test
@@ -81,7 +80,7 @@ public class TimeoutRemainderTest {
 
         // Assert
         assertTrue(rem.getRemainingNanos() > 0);
-        assertTrue(rem.getRemainingUnits() > 0);
+        assertTrue(rem.getRemainingUnits(TimeUnit.MILLISECONDS) > 0);
     }
 
     private static class NanoProviderMock implements TimeoutRemainder.SystemNanoTimeProvider {
