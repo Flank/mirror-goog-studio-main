@@ -40,6 +40,7 @@ def main():
   env['SHELL'] = os.environ.get('SHELL', '')
   env['HOME'] = os.environ.get('HOME', '')
   env['DISPLAY'] = os.environ.get('DISPLAY', '')
+  env['GOOGLE_APPLICATION_CREDENTIALS'] = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
   if 'QA_ANDROID_SDK_ROOT' in os.environ:
     env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':
