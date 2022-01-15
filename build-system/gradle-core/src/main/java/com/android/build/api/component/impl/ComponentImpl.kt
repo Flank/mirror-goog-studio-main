@@ -33,7 +33,6 @@ import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.SourceDirectoriesImpl
-import com.android.build.api.variant.impl.SourceType
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -536,121 +535,6 @@ abstract class ComponentImpl(
         }
     }
 
-    /**
-     * Computes the default sources for all [SourceType]s.
-     */
-    private class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesProvider {
-
-        override val java: List<DirectoryEntry>
-            get() = component.defaultJavaSources()
-        override val res: List<DirectoryEntries>
-            get() = component.defaultResSources()
-    }
-
-    /**
-     * Computes the default java sources: source sets and generated sources.
-     * For access to the final list of java sources, use [sources]
-     *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
-     */
-    private fun defaultJavaSources(): List<DirectoryEntry> {
-        // Build the list of source folders.
-        val sourceSets = ImmutableList.builder<DirectoryEntry>()
-
-        // First the actual source folders.
-        val providers = variantSources.sortedSourceProviders
-        for (provider  in providers) {
-            val sourceSet = provider as AndroidSourceSet
-            for (srcDir in sourceSet.java.srcDirs) {
-                sourceSets.add(
-                    FileBasedDirectoryEntryImpl(
-                        name = sourceSet.name,
-                        directory = srcDir,
-                        filter = (provider as AndroidSourceSet).java.filter,
-                    )
-                )
-            }
-        }
-
-        // for the other, there's no duplicate so no issue.
-        if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_SOURCE) {
-            sourceSets.add(
-                TaskProviderBasedDirectoryEntryImpl(
-                    "generated_build_config",
-                    artifacts.get(GENERATED_BUILD_CONFIG_JAVA),
-                )
-            )
-        }
-        if (taskContainer.aidlCompileTask != null) {
-            sourceSets.add(
-                TaskProviderBasedDirectoryEntryImpl(
-                    "generated_aidl",
-                    artifacts.get(AIDL_SOURCE_OUTPUT_DIR),
-                )
-            )
-        }
-        if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
-            // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
-            if (buildFeatures.dataBinding) {
-                // Under some conditions (e.g., for a unit test variant where
-                // includeAndroidResources == false or testedVariantType != AAR, see
-                // TaskManager.createUnitTestVariantTasks), the artifact may not have been created,
-                // so we need to check its presence first (using internal AGP API instead of Gradle
-                // API---see https://android.googlesource.com/platform/tools/base/+/ca24108e58e6e0dc56ce6c6f639cdbd0fa3b812f).
-                if (!artifacts.getArtifactContainer(DATA_BINDING_TRIGGER)
-                        .needInitialProducer().get()
-                ) {
-                    sourceSets.add(
-                        TaskProviderBasedDirectoryEntryImpl(
-                            name = "databinding_generated",
-                            directoryProvider = artifacts.get(DATA_BINDING_TRIGGER),
-                        )
-                    )
-                }
-            }
-            addDataBindingSources(sourceSets)
-        }
-        addRenderscriptSources(sourceSets)
-        if (buildFeatures.mlModelBinding) {
-            sourceSets.add(
-                TaskProviderBasedDirectoryEntryImpl(
-                    name = "mlModel_generated",
-                    directoryProvider = artifacts.get(ML_SOURCE_OUT),
-                )
-            )
-        }
-        return sourceSets.build()
-    }
-
-    private fun defaultResSources(): List<DirectoryEntries> {
-        val sourceDirectories = mutableListOf<DirectoryEntries>()
-
-        sourceDirectories.addAll(variantSources.resSourceList)
-
-        val generatedFolders = mutableListOf<DirectoryEntry>()
-        if (buildFeatures.renderScript) {
-            generatedFolders.add(
-                TaskProviderBasedDirectoryEntryImpl(
-                    name = "renderscript_generated_res",
-                    directoryProvider = artifacts.get(RENDERSCRIPT_GENERATED_RES),
-                )
-            )
-        }
-
-        if (buildFeatures.resValues) {
-            generatedFolders.add(
-                TaskProviderBasedDirectoryEntryImpl(
-                    name = "generated_res",
-                    directoryProvider = artifacts.get(GENERATED_RES),
-                )
-            )
-        }
-
-        sourceDirectories.add(DirectoryEntries("generated", generatedFolders))
-
-        return Collections.unmodifiableList(sourceDirectories)
-    }
-
     // Deprecated, DO NOT USE, this will be removed once we can remove the old variant API.
     // TODO : b/214316660
     internal val allRawAndroidResources: FileCollection by lazy {
@@ -689,7 +573,7 @@ abstract class ComponentImpl(
      * adds renderscript sources if present.
      */
     open fun addRenderscriptSources(
-        sourceSets: ImmutableList.Builder<DirectoryEntry>,
+        sourceSets: MutableList<DirectoryEntry>,
     ) {
         // not active by default, only sub types will have renderscript enabled.
     }
@@ -698,7 +582,7 @@ abstract class ComponentImpl(
      * adds databinding sources to the list of sources.
      */
     open fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<DirectoryEntry>
+        sourceSets: MutableList<DirectoryEntry>
     ) {
         sourceSets.add(
             TaskProviderBasedDirectoryEntryImpl(

@@ -219,7 +219,7 @@ abstract class VariantImpl(
      * adds renderscript sources if present.
      */
     override fun addRenderscriptSources(
-            sourceSets: ImmutableList.Builder<DirectoryEntry>,
+            sourceSets: MutableList<DirectoryEntry>,
     ) {
         renderscript?.let {
             if (!it.ndkModeEnabled.get()
