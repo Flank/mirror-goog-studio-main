@@ -24,8 +24,6 @@ class Houdini {
     private static final String STUB_CLASS = "com.android.tools.deploy.liveedit.LiveEditStubs";
     private static final String STUB_METHOD_PREFIX = "stub";
 
-    public static final MethodDescription NO_EXIT = MethodDescription.EMPTY;
-
     // The FIFO stack where all interpreters are stored. These provide both the exit point and
     // the StackTraceElement to replace a stacktrace block of interpreter elements.
     private static final ThreadLocal<ArrayDeque<ByteCodeInterpreter>> frames = new ThreadLocal<>();
