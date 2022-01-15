@@ -66,7 +66,7 @@ class ProxyClassEval extends BackPorterEval {
         if (isProxyClass(clazz)) {
             Log.v("live.deploy.lambda", "getStaticField: " + field);
             Object value = clazz.getStaticField(field.getName());
-            Log.v("live.deploy.lambda", "\tTHE TYPE IS " + value);
+            Log.v("live.deploy.lambda", "\tfield_type=" + value.getClass());
             return makeValue(value, Type.getType(field.getDesc()));
         }
 
@@ -79,7 +79,7 @@ class ProxyClassEval extends BackPorterEval {
         if (isProxyClass(clazz)) {
             Log.v("live.deploy.lambda", "setStaticField: " + field);
             clazz.setStaticField(field.getName(), value.obj());
-            Log.v("live.deploy.lambda", "\tTHE TYPE IS " + value.obj());
+            Log.v("live.deploy.lambda", "\tfield_type=" + value.obj().getClass());
         } else {
             super.setStaticField(field, value);
         }
