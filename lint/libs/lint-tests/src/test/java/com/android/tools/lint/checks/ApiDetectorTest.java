@@ -5896,18 +5896,12 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#map [NewApi]\n"
                                 + "        return list.stream().map((Function<String, Object>) s -> \n"
                                 + "                             ~~~\n"
-                                + "src/test/pkg/Used.java:9: Error: Cast to Function requires API level 24 (current min is 15) [NewApi]\n"
-                                + "        return list.stream().map((Function<String, Object>) s -> \n"
-                                + "                                 ^\n"
                                 + "src/test/pkg/Used.java:10: Error: Call requires API level 24 (current min is 15): java.util.stream.Collectors#toList [NewApi]\n"
                                 + "                fromNullable(s)).collect(Collectors.toList());\n"
                                 + "                                                    ~~~~~~\n"
                                 + "src/test/pkg/Used.java:10: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#collect [NewApi]\n"
                                 + "                fromNullable(s)).collect(Collectors.toList());\n"
                                 + "                                 ~~~~~~~\n"
-                                + "src/test/pkg/Used.java:10: Error: Cast to Collector requires API level 24 (current min is 15) [NewApi]\n"
-                                + "                fromNullable(s)).collect(Collectors.toList());\n"
-                                + "                                         ~~~~~~~~~~~~~~~~~~~\n"
                                 + "src/test/pkg/Used.java:14: Error: Call requires API level 24 (current min is 15): java.util.Collection#stream [NewApi]\n"
                                 + "        list.stream().map(new Function<String, Object>() {\n"
                                 + "             ~~~~~~\n"
@@ -5917,7 +5911,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Used.java:14: Error: Class requires API level 24 (current min is 15): java.util.function.Function [NewApi]\n"
                                 + "        list.stream().map(new Function<String, Object>() {\n"
                                 + "                              ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "9 errors, 0 warnings");
+                                + "7 errors, 0 warnings");
     }
 
     public void testKotlinArgumentsInConstructorDelegation() {
@@ -7566,6 +7560,60 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 .indented())
                 .run()
                 .expectClean();
+    }
+
+    public void testCast214271281() {
+        // 214271281: Not useful finding for JavaAndKotlinLint:NewApi: Cast to `Collector`…
+        lint().files(
+                        java(""
+                                        + "package org.apache.logging.log4j.core.appender;\n"
+                                        + "\n"
+                                        + "import org.apache.logging.log4j.core.Appender;\n"
+                                        + "import org.apache.logging.log4j.core.config.AppenderControl;\n"
+                                        + "\n"
+                                        + "import java.util.List;\n"
+                                        + "import java.util.stream.Collectors;\n"
+                                        + "\n"
+                                        + "public class AsyncAppenderEventDispatcher {\n"
+                                        + "    private List<AppenderControl> appenders;\n"
+                                        + "    List<Appender> getAppenders() {\n"
+                                        + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented(),
+                        java(""
+                                        + "package org.apache.logging.log4j.core.config;\n"
+                                        + "\n"
+                                        + "import org.apache.logging.log4j.core.Appender;\n"
+                                        + "\n"
+                                        + "public class AppenderControl {\n"
+                                        + "    public Appender getAppender() {\n"
+                                        + "        return null;\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented(),
+                        java(""
+                                        + "package org.apache.logging.log4j.core;\n"
+                                        + "\n"
+                                        + "public interface Appender {\n"
+                                        + "}\n")
+                                .indented())
+                .run()
+                .expect(
+                        ""
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.Collection#stream [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                         ~~~~~~\n"
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.stream.Collectors#toList [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                                                                                       ~~~~~~\n"
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.stream.Stream#collect [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                                                                    ~~~~~~~\n"
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.stream.Stream#map [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                                  ~~~\n"
+                                + "4 errors, 0 warnings");
     }
 
     @Override
