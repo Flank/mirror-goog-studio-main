@@ -16,20 +16,12 @@
 
 package com.android.utils;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Charsets;
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import junit.framework.TestCase;
+import kotlin.io.FilesKt;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -38,8 +30,27 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
-@SuppressWarnings({"javadoc", "IOResourceOpenedButNotSafelyClosed"})
-public class PositionXmlParserTest extends TestCase {
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.AUTO_URI;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
+public class PositionXmlParserTest {
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Test
     public void test() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -61,10 +72,8 @@ public class PositionXmlParserTest extends TestCase {
                 "        android:text=\"Button\" />\n" +
                 "\n" +
                 "</LinearLayout>\n";
-        File file = File.createTempFile("parsertest", ".xml");
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
 
@@ -73,7 +82,6 @@ public class PositionXmlParserTest extends TestCase {
         assertNotNull(linearLayout);
         NodeList buttons = document.getElementsByTagName("Button");
         assertEquals(2, buttons.getLength());
-        final String ANDROID_URI = "http://schemas.android.com/apk/res/android";
         assertEquals("wrap_content",
                 linearLayout.getAttributeNS(ANDROID_URI, "layout_height"));
 
@@ -110,10 +118,9 @@ public class PositionXmlParserTest extends TestCase {
                 position.getStartLine(), position.getStartColumn()));
         assertSame(button2, PositionXmlParser.findNodeAtOffset(document,
                 position.getStartOffset()));
-
-        file.delete();
     }
 
+    @Test
     public void testText() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -130,11 +137,8 @@ public class PositionXmlParserTest extends TestCase {
                 "          some text\n" +
                 "done\n  " +
                 "</LinearLayout>\n";
-        File file = File.createTempFile("parsertest", ".xml");
-        file.deleteOnExit();
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
 
@@ -169,6 +173,7 @@ public class PositionXmlParserTest extends TestCase {
         assertEquals(xml.indexOf("me"), start.getStartOffset());
     }
 
+    @Test
     public void testLineEndings() throws Exception {
         // Test for http://code.google.com/p/android/issues/detail?id=22925
         String xml =
@@ -177,17 +182,13 @@ public class PositionXmlParserTest extends TestCase {
                 "\r" +
                 "<LinearLayout></LinearLayout>\r\n" +
                 "</LinearLayout>\r\n";
-        File file = File.createTempFile("parsertest2", ".xml");
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
-
-        file.delete();
     }
 
-    private static void checkEncoding(String encoding, boolean writeBom, boolean writeEncoding,
+    private void checkEncoding(String encoding, boolean writeBom, boolean writeEncoding,
             String lineEnding)
             throws Exception {
         // Norwegian extra vowel characters such as "latin small letter a with ring above"
@@ -262,10 +263,9 @@ public class PositionXmlParserTest extends TestCase {
         assertNotNull(position);
         assertEquals(4, position.getStartLine());
         assertEquals(startAttrOffset, position.getStartOffset());
-
-        file.delete();
     }
 
+    @Test
     public void testEncoding() throws Exception {
         checkEncoding("utf-8", false /*bom*/, true /*encoding*/, "\n");
         checkEncoding("UTF-8", false /*bom*/, true /*encoding*/, "\n");
@@ -324,6 +324,7 @@ public class PositionXmlParserTest extends TestCase {
         checkEncoding("iso-8859-1", false /*bom*/, true /*encoding*/, "\r\n");
     }
 
+    @Test
     public void testOneLineComment() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -341,11 +342,8 @@ public class PositionXmlParserTest extends TestCase {
                         "          some text\n" +
                         "\n" +
                         "</LinearLayout>\n";
-        File file = File.createTempFile("parsertest", ".xml");
-        file.deleteOnExit();
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
 
@@ -370,6 +368,7 @@ public class PositionXmlParserTest extends TestCase {
         assertEquals(4, buttonPosition.getStartColumn());
     }
 
+    @Test
     public void testMultipleLineComment() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -389,11 +388,8 @@ public class PositionXmlParserTest extends TestCase {
                         "          some text\n" +
                         "\n" +
                         "</LinearLayout>\n";
-        File file = File.createTempFile("parsertest", ".xml");
-        file.deleteOnExit();
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
 
@@ -418,6 +414,7 @@ public class PositionXmlParserTest extends TestCase {
         assertEquals(4, buttonPosition.getStartColumn());
     }
 
+    @Test
     public void testAttributeWithoutNamespace() throws Exception {
         // Search for attribute with different prefixes and with no prefix.
         // Make sure we find it regardless of which one comes first (which is why we
@@ -445,11 +442,8 @@ public class PositionXmlParserTest extends TestCase {
                 + "</LinearLayout>\n"
                 + "\n";
 
-        File file = File.createTempFile("parsertest", ".xml");
-        file.deleteOnExit();
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
 
@@ -487,19 +481,18 @@ public class PositionXmlParserTest extends TestCase {
     }
 
 
+    @Test
     public void testTagNamespace() throws Exception {
 
         final String NAMESPACE_URL = "http://example.org/path";
-        final String XML =
+        final String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<ns:SomeTag xmlns:ns=\"" + NAMESPACE_URL + "\">\n" +
                         "    <ns:SubTag\n" +
                         "        ns:text=\"Button\" />\n" +
                         "</ns:SomeTag>\n";
-        File file = File.createTempFile("parsertest", ".xml");
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(XML);
-        fw.close();
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
         Element e = document.getDocumentElement();
@@ -521,22 +514,20 @@ public class PositionXmlParserTest extends TestCase {
         SourcePosition position = PositionXmlParser.getPosition(attr);
         assertNotNull(position);
         assertEquals("ns:text=\"Button\"",
-                XML.substring(position.getStartOffset(), position.getEndOffset()));
+                xml.substring(position.getStartOffset(), position.getEndOffset()));
         assertEquals("Button", subTag.getAttributeNS(NAMESPACE_URL, "text"));
         assertEquals(NAMESPACE_URL, subTag.getNamespaceURI());
     }
 
+    @Test
     public void testCdata() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"
                         + "    <string name=\"cdata_string\"><![CDATA[<html>not<br>\nxml]]></string>\n"
                         + "</resources>";
-        File file = File.createTempFile("parsertest", ".xml");
-        file.deleteOnExit();
-        try (Writer fw = new BufferedWriter(new FileWriter(file))) {
-            fw.write(xml);
-        }
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
         Element e = document.getDocumentElement();
@@ -547,17 +538,15 @@ public class PositionXmlParserTest extends TestCase {
         assertThat(cdata.getNodeType()).isEqualTo(Node.CDATA_SECTION_NODE);
     }
 
+    @Test
     public void testCdataMixed() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"
                         + "    <string name=\"cdata_string\">XXX<![CDATA[<html>not<br>\nxml]]>YYY<![CDATA[<a href=\"url://web.site\">link</a>]]>ZZZ</string>\n"
                         + "</resources>";
-        File file = File.createTempFile("parsertest", ".xml");
-        file.deleteOnExit();
-        try (Writer fw = new BufferedWriter(new FileWriter(file))) {
-            fw.write(xml);
-        }
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         Document document = PositionXmlParser.parse(new FileInputStream(file));
         assertNotNull(document);
         Element e = document.getDocumentElement();
@@ -580,6 +569,7 @@ public class PositionXmlParserTest extends TestCase {
         assertThat(data.item(4).getNodeType()).isEqualTo(Node.TEXT_NODE);
     }
 
+    @Test
     public void testPreventDocType() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +

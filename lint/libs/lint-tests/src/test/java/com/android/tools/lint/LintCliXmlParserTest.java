@@ -16,13 +16,18 @@
 
 package com.android.tools.lint;
 
+import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Location;
@@ -31,18 +36,27 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.DomExtensions;
 import com.google.common.base.Charsets;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
-import junit.framework.TestCase;
 import kotlin.io.FilesKt;
+import kotlin.jvm.functions.Function1;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
-@SuppressWarnings("javadoc")
-public class LintCliXmlParserTest extends TestCase {
+public class LintCliXmlParserTest {
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Test
     public void testBasic() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -65,7 +79,7 @@ public class LintCliXmlParserTest extends TestCase {
                         + "\n"
                         + "</LinearLayout>\n";
         LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
-        File file = File.createTempFile("parsertest", ".xml");
+        File file = temporaryFolder.newFile("parsertest.xml");
         FilesKt.writeText(file, xml, Charsets.UTF_8);
         LintClient client = new TestClient();
         LintRequest request = new LintRequest(client, Collections.emptyList());
@@ -159,11 +173,9 @@ public class LintCliXmlParserTest extends TestCase {
         assertEquals(xml.indexOf("<Button", button1End), start.getOffset());
         assertEquals(xml.indexOf("/>", start.getOffset()) + 2, end.getOffset());
         assertEquals(16, end.getLine());
-
-        //noinspection ResultOfMethodCallIgnored
-        file.delete();
     }
 
+    @Test
     public void testLineEndings() throws Exception {
         // Test for http://code.google.com/p/android/issues/detail?id=22925
         String xml =
@@ -173,7 +185,7 @@ public class LintCliXmlParserTest extends TestCase {
                         + "<LinearLayout></LinearLayout>\r\n"
                         + "</LinearLayout>\r\n";
         LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
-        File file = File.createTempFile("parsertest2", ".xml");
+        File file = temporaryFolder.newFile("parsertest.xml");
         FilesKt.writeText(file, xml, Charsets.UTF_8);
         LintClient client = new TestClient();
         LintRequest request = new LintRequest(client, Collections.emptyList());
@@ -183,9 +195,116 @@ public class LintCliXmlParserTest extends TestCase {
                 new XmlContext(driver, project, null, file, null, xml, parser.parseXml(xml, file));
         Document document = parser.parseXml(context);
         assertNotNull(document);
+    }
 
-        //noinspection ResultOfMethodCallIgnored
-        file.delete();
+    @Test
+    public void testValueLocations() throws IOException {
+        // Regression test for https://issuetracker.google.com/211693606
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n"
+                        + "    <Button\n"
+                        + "        android:hint='my \"hint&quot;'\n"
+                        + "        app:visible=\"@{hasValue &amp;&amp; isFeatureOn}\"\n"
+                        + "        android:text=\"> &lt; &gt; ' &apos;'\" />\n"
+                        + "</LinearLayout>\n";
+        XmlContext context = getContext(xml);
+        String printed = printLocations(context);
+
+        assertEquals(
+                ""
+                        + ""
+                        + "android:hint range:\n"
+                        + "        android:hint='my \"hint&quot;'\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + ":android:hint name range:\n"
+                        + "        android:hint='my \"hint&quot;'\n"
+                        + "        ~~~~~~~~~~~~\n"
+                        + ":android:hint value range for \"my \"hint\"\":\n"
+                        + "        android:hint='my \"hint&quot;'\n"
+                        + "                      ~~~~~~~~~~~~~~\n"
+                        + "\n"
+                        + "android:text range:\n"
+                        + "        android:text=\"> &lt; &gt; ' &apos;'\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + ":android:text name range:\n"
+                        + "        android:text=\"> &lt; &gt; ' &apos;'\" />\n"
+                        + "        ~~~~~~~~~~~~\n"
+                        + ":android:text value range for \"> < > ' ''\":\n"
+                        + "        android:text=\"> &lt; &gt; ' &apos;'\" />\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "\n"
+                        + "app:visible range:\n"
+                        + "        app:visible=\"@{hasValue &amp;&amp; isFeatureOn}\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + ":app:visible name range:\n"
+                        + "        app:visible=\"@{hasValue &amp;&amp; isFeatureOn}\"\n"
+                        + "        ~~~~~~~~~~~\n"
+                        + ":app:visible value range for \"@{hasValue && isFeatureOn}\":\n"
+                        + "        app:visible=\"@{hasValue &amp;&amp; isFeatureOn}\"\n"
+                        + "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "\n",
+                printed);
+    }
+
+    @NotNull
+    private XmlContext getContext(String xml) throws IOException {
+        File file = temporaryFolder.newFile("parsertest.xml");
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
+
+        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
+        LintClient client = new TestClient();
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
+        Project project = Project.create(client, file.getParentFile(), file.getParentFile());
+        Document document = parser.parseXml(xml, file);
+        assertNotNull(document);
+        return new XmlContext(driver, project, null, file, null, xml, document);
+    }
+
+    @NotNull
+    private String printLocations(XmlContext context) {
+        CharSequence contents = context.getContents();
+        assertNotNull(contents);
+        String xml = contents.toString();
+        Document document = context.document;
+        XmlParser parser = context.getParser();
+        StringBuilder sb = new StringBuilder();
+        Function1<File, CharSequence> textProvider = file1 -> xml;
+        DomExtensions.visitElements(
+                document.getDocumentElement(),
+                element -> {
+                    NamedNodeMap attributes = element.getAttributes();
+                    for (int i = 0; i < attributes.getLength(); i++) {
+                        Attr attr = (Attr) attributes.item(i);
+                        if (attr.getName().startsWith(XMLNS_PREFIX)) {
+                            // just to cut down on the size of the golden string; nothing special
+                            // here
+                            continue;
+                        }
+                        Location location = parser.getLocation(context, attr);
+                        String lines = ReporterKt.getErrorLines(location, textProvider);
+                        sb.append(attr.getName()).append(" range:\n");
+                        sb.append(lines);
+                        Location nameLocation = parser.getNameLocation(context, attr);
+                        String nameLines = ReporterKt.getErrorLines(nameLocation, textProvider);
+                        sb.append(":").append(attr.getName()).append(" name range:\n");
+                        sb.append(nameLines);
+                        sb.append(":")
+                                .append(attr.getName())
+                                .append(" value range for \"")
+                                .append(attr.getValue())
+                                .append("\":\n");
+                        Location valueLocation = parser.getValueLocation(context, attr);
+                        String valueLines = ReporterKt.getErrorLines(valueLocation, textProvider);
+                        sb.append(valueLines);
+                        sb.append("\n");
+                    }
+                    return false;
+                });
+
+        return sb.toString();
     }
 
     private static class TestClient extends LintCliClient {

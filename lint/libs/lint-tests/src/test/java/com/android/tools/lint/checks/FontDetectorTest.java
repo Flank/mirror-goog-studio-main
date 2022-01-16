@@ -477,7 +477,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/font/font1.xml:6: Error: Unexpected keyword: size expected one of: width, weight, italic, besteffort [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\">\n"
-                        + "                               ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
         lint().files(
                         manifest().minSdk(28),
@@ -553,7 +553,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/font/font1.xml:6: Warning: No exact match found for: Montserrat [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Montserrat&amp;weight=600\">\n"
-                        + "                               ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
         String expectedFix =
                 ""
@@ -586,7 +586,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/font/font1.xml:6: Error: No exact match found for: Montserrat [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Montserrat&amp;weight=600&amp;besteffort=false\">\n"
-                        + "                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
@@ -817,7 +817,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + " [LintBaseline]\n"
                         + "res/font/font3.xml:6: Error: Unexpected keyword: size expected one of: width, weight, italic, besteffort [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\">\n"
-                        + "                               ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings (1 error, 1 warning filtered by baseline baseline.xml)",
                 "",
 

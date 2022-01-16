@@ -77,10 +77,10 @@ class DataBindingDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "res/layout/layout1.xml:8: Error: < must be escaped (as &lt;) in attribute values [XmlEscapeNeeded]\n" +
             "        type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
-            "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "res/layout/layout1.xml:16: Error: < must be escaped (as &lt;) in attribute values [XmlEscapeNeeded]\n" +
             "      android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
-            "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "2 errors, 0 warnings"
         lint().allowCompilationErrors().files(
             xml(
@@ -109,7 +109,8 @@ class DataBindingDetectorTest : AbstractCheckTest() {
                     "\n"
             )
         ).allowCompilationErrors().clientFactory(factory).run().expect(expected).expectFixDiffs(
-            "Fix for res/layout/layout1.xml line 8: Change '<' to '&lt;':\n" +
+            "" +
+                "Fix for res/layout/layout1.xml line 8: Change '<' to '&lt;':\n" +
                 "@@ -8 +8\n" +
                 "-         type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
                 "+         type=\"test.langdb.calc.Calculator  &lt;  String>\" />\n" +
