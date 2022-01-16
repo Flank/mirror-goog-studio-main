@@ -1391,7 +1391,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val argumentType = argument.getExpressionType()
                         if (argumentType == null ||
                             parameterType == argumentType ||
-                            argumentType !is PsiClassType
+                            argumentType !is PsiClassType ||
+                            parameterType.rawType() == argumentType.rawType()
                         ) {
                             continue
                         }
