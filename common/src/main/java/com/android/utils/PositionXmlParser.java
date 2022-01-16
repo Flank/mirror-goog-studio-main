@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
-import org.w3c.dom.CharacterData;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -230,7 +229,7 @@ public class PositionXmlParser {
                 xml = xml.replaceFirst("^([\\W]+)<", "<");
                 retry = true;
             }
-        };
+        }
         return domBuilder.getDocument();
     }
 
@@ -238,7 +237,7 @@ public class PositionXmlParser {
     private static Document parseInternal(
             @NonNull String xml, boolean namespaceAware, @NonNull List<String> parseErrors)
             throws ParserConfigurationException, IOException {
-        DomBuilder domBuilder = null;
+        DomBuilder domBuilder;
         boolean retry = false;
         while (true) {
             domBuilder = new DomBuilder(xml);
@@ -620,8 +619,8 @@ public class PositionXmlParser {
                 // Fast string check first for the common occurrence.
                 String name = attr.getName();
                 Pattern pattern = Pattern.compile(attr.getPrefix() != null
-                    ? String.format("(%1$s\\s*=\\s*[\"'].*?[\"'])", name)
-                    : String.format("[^:](%1$s\\s*=\\s*[\"'].*?[\"'])", name));
+                    ? String.format("(%1$s\\s*=\\s*((\".*?\")|('.*?')))", name)
+                    : String.format("[^:](%1$s\\s*=\\s*((\".*?\")|('.*?')))", name));
                 Matcher matcher = pattern.matcher(contents);
                 if (matcher.find(startOffset) && matcher.start(1) <= endOffset) {
                     int index = matcher.start(1);
@@ -1000,13 +999,13 @@ public class PositionXmlParser {
         }
 
         @Override
-        public void startCDATA() throws SAXException {
+        public void startCDATA() {
             flushText();
             mCdata = true;
         }
 
         @Override
-        public void endCDATA() throws SAXException {
+        public void endCDATA() {
             flushText();
             mCdata = false;
         }
