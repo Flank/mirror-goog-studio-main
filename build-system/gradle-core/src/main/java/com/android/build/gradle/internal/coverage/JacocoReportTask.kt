@@ -250,6 +250,8 @@ abstract class JacocoReportTask : NonIncrementalTask() {
             } catch (e: IOException) {
                 throw UncheckedIOException("Unable to generate Jacoco report", e)
             }
+            val reportLocation = parameters.reportDir.locationOnly.get().file("index.html").asFile.toURI()
+            logger.lifecycle("View coverage report at $reportLocation")
         }
         companion object {
 
