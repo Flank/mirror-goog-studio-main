@@ -812,29 +812,12 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "public @interface Hide {}"
             ),
             java(
-                "src/test/pkg/package-info.java",
+                "src/test/pkg/internal/package-info.java",
                 "" +
                     "@Hide\n" +
                     "package test.pkg.internal;\n" +
                     "\n" +
                     "import com.google.android.gms.common.internal.Hide;\n"
-            ),
-            // Also register the compiled version of the above package-info jar file;
-            // without this we don't resolve package annotations
-            base64gzip(
-                "libs/packageinfoclass.jar",
-                "" +
-                    "H4sIAAAAAAAAAAvwZmYRYeDg4GC4tYDfmwEJcDKwMPi6hjjqevq56f87xcDA" +
-                    "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ" +
-                    "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9KzpF6KLX22RE1suVZGxdJpFqKq" +
-                    "ac9EtUVei758mv2p6GMRI9gtbSuDVb2ANnmhuEVhPqpbVIC4JLW4RL8gO10/" +
-                    "M68ktSgvMUe/IDE5OzE9VTczLy1fLzknsbjYt9cw75CDgOt/oQOKoRmXXB6x" +
-                    "pc0qWZmhpKSoqKoe8SbRNM22+c1WfveDjBYih1RcP3X/X/q/q3znvHMM9wxO" +
-                    "T0itKKn4tW2d5g9nJesz/fssfhzY+eLetKnv9x5+Hb7cM+vflbiom65xK6M+" +
-                    "efpEt9cER/ge1HFRW5+aHBS0Ilrq3a0pLsLmr5TXLn1S3u76yOziR4F/J+qX" +
-                    "H/581+ti9oK36x4p7WXgU/6T1tI+Xy7Z6E2JQvADNlAAHM4XN1kP9N5VcAAw" +
-                    "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
-                    "6pmB8DyQPsUI4gEAH9csuq8CAAA="
             )
         ).skipTestModes(TestMode.FULLY_QUALIFIED).run().expect(
             "" +
@@ -1139,23 +1122,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "package test.pkg.internal;\n" +
                     "\n" +
                     "import com.google.android.gms.common.internal.Hide;\n"
-            ),
-            // Also register the compiled version of the above package-info jar file;
-            // without this we don't resolve package annotations
-            base64gzip(
-                "libs/packageinfoclass.jar",
-                "" +
-                    "H4sIAAAAAAAAAAvwZmYRYeDg4GC4tYDfmwEJcDKwMPi6hjjqevq56f87xcDA" +
-                    "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ" +
-                    "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9KzpF6KLX22RE1suVZGxdJpFqKq" +
-                    "ac9EtUVei758mv2p6GMRI9gtbSuDVb2ANnmhuEVhPqpbVIC4JLW4RL8gO10/" +
-                    "M68ktSgvMUe/IDE5OzE9VTczLy1fLzknsbjYt9cw75CDgOt/oQOKoRmXXB6x" +
-                    "pc0qWZmhpKSoqKoe8SbRNM22+c1WfveDjBYih1RcP3X/X/q/q3znvHMM9wxO" +
-                    "T0itKKn4tW2d5g9nJesz/fssfhzY+eLetKnv9x5+Hb7cM+vflbiom65xK6M+" +
-                    "efpEt9cER/ge1HFRW5+aHBS0Ilrq3a0pLsLmr5TXLn1S3u76yOziR4F/J+qX" +
-                    "H/581+ti9oK36x4p7WXgU/6T1tI+Xy7Z6E2JQvADNlAAHM4XN1kP9N5VcAAw" +
-                    "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
-                    "6pmB8DyQPsUI4gEAH9csuq8CAAA="
             )
         ).run().expect(
             "" +
@@ -1267,23 +1233,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "package test.pkg.internal;\n" +
                     "\n" +
                     "import com.google.android.gms.common.internal.Hide;\n"
-            ),
-            // Also register the compiled version of the above package-info jar file;
-            // without this we don't resolve package annotations
-            base64gzip(
-                "libs/packageinfoclass.jar",
-                "" +
-                    "H4sIAAAAAAAAAAvwZmYRYeDg4GC4tYDfmwEJcDKwMPi6hjjqevq56f87xcDA" +
-                    "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ" +
-                    "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9KzpF6KLX22RE1suVZGxdJpFqKq" +
-                    "ac9EtUVei758mv2p6GMRI9gtbSuDVb2ANnmhuEVhPqpbVIC4JLW4RL8gO10/" +
-                    "M68ktSgvMUe/IDE5OzE9VTczLy1fLzknsbjYt9cw75CDgOt/oQOKoRmXXB6x" +
-                    "pc0qWZmhpKSoqKoe8SbRNM22+c1WfveDjBYih1RcP3X/X/q/q3znvHMM9wxO" +
-                    "T0itKKn4tW2d5g9nJesz/fssfhzY+eLetKnv9x5+Hb7cM+vflbiom65xK6M+" +
-                    "efpEt9cER/ge1HFRW5+aHBS0Ilrq3a0pLsLmr5TXLn1S3u76yOziR4F/J+qX" +
-                    "H/581+ti9oK36x4p7WXgU/6T1tI+Xy7Z6E2JQvADNlAAHM4XN1kP9N5VcAAw" +
-                    "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
-                    "6pmB8DyQPsUI4gEAH9csuq8CAAA="
             )
         )
 

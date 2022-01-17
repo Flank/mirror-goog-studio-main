@@ -4871,23 +4871,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class MyClass {\n"
                                         + "    public static void myMethod() { }\n"
                                         + "}"),
-                        // Include the compiled version of the package-info file;
-                        // without this we can't resolve package annotations.
-                        bytecode(
-                                "libs/packageinfoclass.jar",
-                                // "bin/classes/com/mylib/mypackage/package-info.class",
-                                java(
-                                        ""
-                                                + "@RequiresApi(19)\n"
-                                                + "package com.mylib.mypackage;\n"
-                                                + "import androidx.annotation.RequiresApi;"),
-                                0xf57b8b02,
-                                "com/mylib/mypackage/package-info.class:"
-                                        + "H4sIAAAAAAAAAE2Nz2rCQBjEZ7Vp/HOxFLz00j6A7rEHT7kUAoVC+gRf1q/y"
-                                        + "6WZXk2ywr+bBB/ChSrdWxIGZgZnD7/RzOAJ4xTjFMMVIYfTpQ234TSwrPGzJ"
-                                        + "bGjFM3Fffr6mjhSeiuBaqTh3nTRSWs6c8y214l2j8PJObll7We41XXdd8C5I"
-                                        + "zU22lYVC0pEN3I/cR4Vn4ytdfVspY15w+harMPkDa0tupT/KNZt2Cij08K8e"
-                                        + "+ue8QxJ7HJ/76DTH4BcsZCcD3QAAAA=="),
+                        java(
+                                ""
+                                        + "@RequiresApi(19)\n"
+                                        + "package com.mylib.mypackage;\n"
+                                        + "import androidx.annotation.RequiresApi;"),
                         SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
