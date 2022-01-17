@@ -98,9 +98,10 @@ public class ResourceEvaluator {
     public static final ResourceType DIMENSION_DP_MARKER_TYPE = ResourceType.AAPT;
 
     /** The marker types respresenting dimensions */
-    public static final ResourceType[] DIMENSION_MARKERS = new ResourceType[] {
-            DIMENSION_MARKER_TYPE, DIMENSION_SP_MARKER_TYPE, DIMENSION_DP_MARKER_TYPE
-    };
+    public static final ResourceType[] DIMENSION_MARKERS =
+            new ResourceType[] {
+                DIMENSION_MARKER_TYPE, DIMENSION_SP_MARKER_TYPE, DIMENSION_DP_MARKER_TYPE
+            };
 
     /** Marker type used to signify *all* resource types (for the annotation `AnyRes`) */
     public static final ResourceType ANY_RES_MARKER_TYPE = ResourceType.MACRO;
@@ -628,7 +629,8 @@ public class ResourceEvaluator {
     }
 
     @Nullable
-    public static EnumSet<ResourceType> getTypesFromAnnotations(@NonNull JavaEvaluator evaluator, @NonNull PsiModifierListOwner owner) {
+    public static EnumSet<ResourceType> getTypesFromAnnotations(
+            @NonNull JavaEvaluator evaluator, @NonNull PsiModifierListOwner owner) {
         List<UAnnotation> annotations = evaluator.getAnnotations(owner, true, null);
         EnumSet<ResourceType> typeAnnotations = getTypesFromAnnotations(annotations);
         if ((typeAnnotations == null || typeAnnotations.isEmpty())
@@ -707,7 +709,8 @@ public class ResourceEvaluator {
     }
 
     @Nullable
-    public static ResourceType getTypeFromAnnotation(@Nullable UAnnotation annotation, @Nullable String signature) {
+    public static ResourceType getTypeFromAnnotation(
+            @Nullable UAnnotation annotation, @Nullable String signature) {
         if (signature == null) {
             return null;
         } else if (isPlatformAnnotation(signature)) {
@@ -739,9 +742,12 @@ public class ResourceEvaluator {
                         //   int PX = 1;
                         //   int SP = 2;
                         switch ((Integer) value) {
-                            case 0: return DIMENSION_DP_MARKER_TYPE;
-                            case 1: return DIMENSION_MARKER_TYPE;
-                            case 2: return DIMENSION_SP_MARKER_TYPE;
+                            case 0:
+                                return DIMENSION_DP_MARKER_TYPE;
+                            case 1:
+                                return DIMENSION_MARKER_TYPE;
+                            case 2:
+                                return DIMENSION_SP_MARKER_TYPE;
                         }
                     }
                 }

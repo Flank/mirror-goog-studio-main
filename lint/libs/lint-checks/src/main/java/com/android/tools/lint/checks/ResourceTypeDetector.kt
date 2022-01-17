@@ -375,7 +375,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val typeUnit = ResourceEvaluator.DIMENSION_MARKERS.firstOrNull { types.contains(it) } ?: return
             if (unit != typeUnit && unit.isDimension()) {
                 val message = "Mismatched @Dimension units here; expected ${
-                    unit.getMarkerTypeDescription()} but received ${typeUnit.getMarkerTypeDescription()}"
+                unit.getMarkerTypeDescription()} but received ${typeUnit.getMarkerTypeDescription()}"
                 report(context, RESOURCE_TYPE, argument, context.getLocation(argument), message)
             }
         }
@@ -445,14 +445,14 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
             expectedTypes.contains(DIMENSION_SP_MARKER_TYPE) -> {
                 "Should pass resolved scale-independent (sp) pixel size instead of resource id here: " +
-                        "`getResources().getDimension*(${argument.asSourceString()})`"
+                    "`getResources().getDimension*(${argument.asSourceString()})`"
             }
             actual != null && actual.size == 1 && actual.contains(DIMENSION_DP_MARKER_TYPE) -> {
                 "Expected a dimension resource id (`R.dimen.`) but received ${DIMENSION_DP_MARKER_TYPE.getMarkerTypeDescription()}"
             }
             expectedTypes.contains(DIMENSION_DP_MARKER_TYPE) -> {
                 "Should pass resolved density-independent (dp) pixel size instead of resource id here: " +
-                        "`getResources().getDimension*(${argument.asSourceString()})`"
+                    "`getResources().getDimension*(${argument.asSourceString()})`"
             }
             expectedTypes == ResourceEvaluator.getAnyRes() -> {
                 "Expected resource identifier (`R`.type.`name`)"

@@ -658,7 +658,6 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     val cls = type.resolve()?.qualifiedName ?: return true // on resolve failures, assume it's handled
                     if (allowSuperClass && exceptionClass != null) {
                         return InheritanceUtil.isInheritor(exceptionClass, false, cls)
-
                     } else if (exceptionClassName == cls) {
                         return true
                     }
