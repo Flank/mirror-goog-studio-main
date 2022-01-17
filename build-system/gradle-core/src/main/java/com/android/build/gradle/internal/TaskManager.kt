@@ -403,6 +403,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
         createAssembleTask(variantProperties)
+        if (variantProperties.services.projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {
+            variantProperties.taskContainer.assembleTask.configure {
+                it.dependsOn(variantProperties.artifacts.get(InternalArtifactType.VARIANT_MODEL))
+            }
+        }
+
         if (variantType.isBaseModule) {
             createBundleTask(variantProperties)
         }
