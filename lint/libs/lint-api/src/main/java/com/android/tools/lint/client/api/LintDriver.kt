@@ -1383,7 +1383,7 @@ class LintDriver(
                     if (files != null) {
                         checkIndividualResources(
                             project, main, xmlDetectors, dirChecks,
-                            binaryChecks, files
+                            binaryChecks, files, project.manifestFiles
                         )
                     } else {
                         val resourceFolders = project.resourceFolders
@@ -2341,7 +2341,8 @@ class LintDriver(
         xmlDetectors: List<XmlScanner>,
         dirChecks: List<Detector>?,
         binaryChecks: List<Detector>?,
-        files: List<File>
+        files: List<File>,
+        manifestFiles: List<File>
     ) {
         for (file in files) {
             if (file.isDirectory) {
@@ -2357,7 +2358,7 @@ class LintDriver(
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
                 }
-            } else if (file.isFile && isXmlFile(file) && file.name != ANDROID_MANIFEST_XML) {
+            } else if (file.isFile && isXmlFile(file) && file.name != ANDROID_MANIFEST_XML && !manifestFiles.contains(file)) {
                 // Yes, find out its resource type
                 val folderName = file.parentFile.name
                 val type = ResourceFolderType.getFolderType(folderName)
