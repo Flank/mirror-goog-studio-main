@@ -189,10 +189,8 @@ class MergeJavaResourceTaskTest {
         assertThat(newResourcesDir).doesNotExist()
         assertThat(newResourcesDir.mkdirs()).isTrue()
         project.executor().run(":mergeDebugJavaResource").run {
-            // This expectation will fail once we update to Gradle 7.4 as having only empty
-            // directories as inputs to ProcessJavaResTask will not skip this task.
-            assertThat(getTask(":processDebugJavaRes")).wasSkipped()
-            assertThat(getTask(":mergeDebugJavaResource")).wasUpToDate()
+            assertThat(getTask(":processDebugJavaRes")).didWork()
+            assertThat(getTask(":mergeDebugJavaResource")).didWork()
         }
     }
 }
