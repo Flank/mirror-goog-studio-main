@@ -2848,7 +2848,7 @@ public class ManifestMerger2SmallTest {
         fail("could not find " + s + " in logging records");
     }
 
-    private static Document parse(String xml)
+    public static Document parse(String xml)
             throws IOException, SAXException, ParserConfigurationException {
         return XmlUtils.parseDocument(xml, true /* namespaceAware */);
     }
