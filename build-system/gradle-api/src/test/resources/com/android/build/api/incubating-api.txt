@@ -766,6 +766,7 @@ com.android.build.api.variant.BundleConfig
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.getCompileClasspath: org.gradle.api.file.FileCollection ()
 com.android.build.api.variant.Component.getInstrumentation: com.android.build.api.variant.Instrumentation ()
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
 com.android.build.api.variant.Component.getSources: com.android.build.api.variant.Sources ()

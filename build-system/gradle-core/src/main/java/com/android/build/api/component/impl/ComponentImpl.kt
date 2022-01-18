@@ -173,6 +173,14 @@ abstract class ComponentImpl(
         isLibraryVariant = false
     )
 
+    override val compileClasspath: FileCollection by lazy {
+        getJavaClasspath(
+            ConsumedConfigType.COMPILE_CLASSPATH,
+            AndroidArtifacts.ArtifactType.CLASSES_JAR,
+            generatedBytecodeKey = null
+        )
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -394,7 +402,7 @@ abstract class ComponentImpl(
 
     // Precomputed file paths.
     @JvmOverloads
-    override fun getJavaClasspath(
+    final override fun getJavaClasspath(
         configType: ConsumedConfigType,
         classesType: AndroidArtifacts.ArtifactType,
         generatedBytecodeKey: Any?
@@ -564,7 +572,7 @@ abstract class ComponentImpl(
         }
 
         // for the other, there's no duplicate so no issue.
-        if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
+        if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_SOURCE) {
             sourceSets.add(
                 TaskProviderBasedDirectoryEntryImpl(
                     "generated_build_config",
@@ -867,7 +875,7 @@ abstract class ComponentImpl(
         ) {
             BuildConfigType.JAR
         } else {
-            BuildConfigType.JAVA_CLASS
+            BuildConfigType.JAVA_SOURCE
         }
     }
 

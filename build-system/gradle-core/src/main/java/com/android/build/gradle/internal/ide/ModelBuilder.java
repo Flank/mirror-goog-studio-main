@@ -1169,7 +1169,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         Callable<Directory> aidlCallable =
                 () -> artifacts.get(AIDL_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
         fileCollection.from(aidlCallable);
-        if (component.getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
+        if (component.getBuildConfigType() == BuildConfigType.JAVA_SOURCE) {
             Callable<Directory> buildConfigCallable =
                     () -> component.getPaths().getBuildConfigSourceOutputDir().getOrNull();
             fileCollection.from(buildConfigCallable);

@@ -22,8 +22,8 @@ package com.android.builder.compiling
 enum class BuildConfigType {
     // BuildConfig is represented by a Jar file containing a compiled BuildConfig .class file.
     JAR,
-    // BuildConfig is represented by a Java source file class.
-    JAVA_CLASS,
+    // BuildConfig is represented by a Java source file.
+    JAVA_SOURCE,
     // No BuildConfig exists.
     NONE
 }

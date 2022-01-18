@@ -22,6 +22,7 @@ import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
+import org.gradle.api.file.FileCollection
 
 interface Component: ComponentIdentity {
 
@@ -57,4 +58,12 @@ interface Component: ComponentIdentity {
      */
     @get:Incubating
     val instrumentation: Instrumentation
+
+    /**
+     * Access to the variant's compile classpath.
+     *
+     * The returned [FileCollection] should not be resolved until execution time.
+     */
+    @get:Incubating
+    val compileClasspath: FileCollection
 }

@@ -617,7 +617,7 @@ class ModelBuilder<
                 variant.minSdkVersionForDexing,
                 variant.global.compileSdkHashString,
                 variant.global.bootClasspath
-            )
+            ).files.toList()
         )
     }
 
