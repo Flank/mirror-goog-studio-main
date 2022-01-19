@@ -170,17 +170,17 @@ In order to fetch new Maven artifacts into the local Maven repository under
 `//prebuilts/tools/common/m2/`, follow these steps:
 
 
-1. Add the dependency to the `artifacts` or `data` section of the
-`local_maven_repository` rule in the `tools/base/bazel/toplevel.WORKSPACE`
-file.
+1. Add the dependency to the `ARTIFACTS` or `DATA` in
+the `tools/base/bazel/maven/artifacts.bzl` file.
 
   * If the artifact is needed as a compile or runtime Java dependency in Bazel,
-    then add it to `artifacts`.
+    then add it to `ARTIFACTS`.
 
   * If the artifact will only be used in tests as data (i.e., passed into
-    `maven_repository` rules), then add it to `data`.
+    `maven_repository` rules), then add it to `DATA`.
 
-2. Use the following script to download the artifacts:
+2. Use the following script to download the artifacts and update the
+   `BUILD.maven` file.
 
 ```
 tools/base/bazel/maven/maven_fetch.sh
@@ -198,6 +198,8 @@ tools/base/bazel/maven/maven_fetch.sh
 
 4. Check-in your new artifact (and any new transitive dependencies)
    under `//prebuilts/tools/common/m2/`.
+
+5. Check-in generated changes to the `tools/base/bazel/maven/BUILD.maven` file.
 
 See the `toplevel.WORKSPACE` file for examples on how to express non-jar dependency
 types and classifiers (e.g., `linux-x86_64`).

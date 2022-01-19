@@ -48,7 +48,12 @@ public class BuildFileWriter {
     private final Set<String> generatedRuleNames = new HashSet<>();
 
     public BuildFileWriter(Path repoPath, String filePath) throws IOException {
-        repoPrefix = Paths.get("").toAbsolutePath().relativize(repoPath);
+        // The relative path of the Maven repository with respect to the directory
+        // that the generated BUILD file will be mounted at.
+        // This assumes the following:
+        //   The maven repo is at studio-main/prebuilts/tools/common/m2/repository
+        //   The BUILD file will be mounted at studio-main/prebuilts/tools/m2/
+        repoPrefix = Paths.get("repository");
         fileWriter = new FileWriter(filePath);
     }
 

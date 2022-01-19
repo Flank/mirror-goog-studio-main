@@ -450,7 +450,7 @@ class PrefabErrorReportingTest {
         if (!hasLibrary && !hasLibrary2) return
         workingDir.mkdirs()
         val maven = if (runningFromBazel()) {
-            File("..").resolve("maven/repo").absoluteFile.canonicalFile
+            File("..").resolve("maven/repository").absoluteFile.canonicalFile
         } else getPrebuiltOfflineMavenRepo().toFile()
         val prefabClassPath = maven.resolve("com/google/prefab/cli/$prefabVersion/cli-$prefabVersion-all.jar")
         if (!prefabClassPath.isFile) {

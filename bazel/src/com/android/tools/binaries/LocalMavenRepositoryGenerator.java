@@ -511,6 +511,21 @@ public class LocalMavenRepositoryGenerator {
             System.exit(1);
         }
 
+        String workspacePath = System.getenv("BUILD_WORKSPACE_DIRECTORY");
+        if (workspacePath != null) {
+            // The tool is executed from inside "bazel run" command. Treat relative
+            // repo and output file paths as relative to the WORKSPACE file so that
+            // they refer to the source tree (i.e., fetch maven artifacts into source
+            // tree, write output file to source tree).
+            if (!repoPath.isAbsolute()) {
+                repoPath = Paths.get(workspacePath, repoPath.toString());
+            }
+
+            if (!Paths.get(outputFile).isAbsolute()) {
+                outputFile = Paths.get(workspacePath, outputFile).toString();
+            }
+        }
+
         new LocalMavenRepositoryGenerator(
                         repoPath,
                         outputFile,
