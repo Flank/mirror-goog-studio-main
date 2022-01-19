@@ -176,10 +176,3 @@ class ManifestBuilderDslTest {
     }
 }
 
-private fun Node.getNamedAttributeAndroidNS(localName: String) =
-    attributes.getNamedItemNS("http://schemas.android.com/apk/res/android", localName)
-
-private fun NodeList.asSequence(): Sequence<Node> {
-    var i = 0
-    return generateSequence { if (i < length) item(i++) else null }
-}
