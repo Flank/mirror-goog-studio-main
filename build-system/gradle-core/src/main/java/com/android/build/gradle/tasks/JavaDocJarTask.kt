@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import org.gradle.api.attributes.DocsType
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
@@ -74,7 +75,7 @@ abstract class JavaDocJarTask : Jar(), VariantAwareTask {
                     .getOutputPath(
                         creationConfig.artifacts.buildDirectory,
                         creationConfig.name,
-                        "out.jar"
+                        "${creationConfig.name}-${DocsType.JAVADOC}.jar"
                     )
 
             task.archiveFileName.set(outputFile.name)

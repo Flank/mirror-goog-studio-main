@@ -29,7 +29,7 @@ readonly bazel_status=$?
 if [[ -d "${DIST_DIR}" ]]; then
 
   # Generate a HTML page redirecting to test results.
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${DIST_DIR}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${DIST_DIR}"/upsalite_test_results.html
 
   # Generate logs/junit/logs-summary.xml file that will be consumed by ATP.
   ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \

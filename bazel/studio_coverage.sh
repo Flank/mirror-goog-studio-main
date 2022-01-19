@@ -61,7 +61,7 @@ readonly invocation_id="$(uuidgen)"
 
 if [[ -d "${dist_dir}" ]]; then
   # Link to test results
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 fi
 
 declare -a bazelrc_flags
@@ -109,7 +109,7 @@ readonly report_invocation_id="$(uuidgen)"
 
 if [[ -d "${dist_dir}" ]]; then
   # Link to test results
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${report_invocation_id}'\" />" > "${dist_dir}"/upsalite_build_report_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${report_invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_build_report_results.html
 fi
 
 # Build the lcov file

@@ -80,7 +80,8 @@ class CacheabilityTest {
              * If you add a task to this list, remember to add an explanation/file a bug for it.
              */
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
-            TaskInfo(DID_WORK, "bundle", "Classes", listOf("Debug", "Release")),
+            TaskInfo(DID_WORK, "bundle", "ClassesToCompileJar", listOf("Debug", "Release")),
+            TaskInfo(DID_WORK, "bundle", "ClassesToRuntimeJar", listOf("Debug", "Release")),
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
             TaskInfo(DID_WORK, "check", "AarMetadata", listOf("Debug", "Release")),
             /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */

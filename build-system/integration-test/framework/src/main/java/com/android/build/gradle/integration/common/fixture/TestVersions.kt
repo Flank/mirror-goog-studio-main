@@ -17,7 +17,12 @@
 @file:JvmName("TestVersions")
 package com.android.build.gradle.integration.common.fixture
 
-const val DEFAULT_COMPILE_SDK_VERSION = 30
+/**
+ * When updating the DEFAULT_COMPILE_SDK_VERSION, the bazel filegroup
+ * //tools/base/build-system/integration-test:android_platform_for_tests will also need to be
+ * updated to match
+*/
+const val DEFAULT_COMPILE_SDK_VERSION = 32
 const val DEFAULT_MIN_SDK_VERSION = 14
 const val SUPPORT_LIB_MIN_SDK = 14
 const val NDK_19_SUPPORT_LIB_MIN_SDK = 21

@@ -21,7 +21,7 @@ for /f "tokens=*" %%f in ('uuidgen') do (
   set INVOCATIONID=%%f
 )
 if exist %DISTDIR%\ (
-  echo "<meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_build_results.html
+  echo "<head><meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" /></head>" > %DISTDIR%\upsalite_build_results.html
 )
 
 call %BASEDIR%\tools\base\bazel\bazel.cmd ^

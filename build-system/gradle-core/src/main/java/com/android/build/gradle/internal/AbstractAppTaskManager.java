@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.tasks.AnalyticsRecordingTask;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
@@ -184,7 +185,12 @@ public abstract class AbstractAppTaskManager<
     protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
         super.postJavacCreation(creationConfig);
 
-        taskFactory.register(new BundleAllClasses.CreationAction(creationConfig));
+        taskFactory.register(
+                new BundleAllClasses.CreationAction(
+                        creationConfig, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
+        taskFactory.register(
+                new BundleAllClasses.CreationAction(
+                        creationConfig, AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS));
     }
 
     @Override

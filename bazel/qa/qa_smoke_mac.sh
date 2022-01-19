@@ -50,7 +50,7 @@ readonly target_filters="qa_smoke,ui_test,-qa_unreliable,-no_mac,-no_test_mac,-r
 readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/../bazel" info --config=release bazel-testlogs)"
   mkdir "${dist_dir}"/testlogs

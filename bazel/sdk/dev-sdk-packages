@@ -19,6 +19,7 @@ build-tools;25.0.0
 build-tools;24.0.3
 
 # Platforms. There's no Google APIs for 25.
+platforms;android-32
 platforms;android-31
 platforms;android-30
 platforms;android-28
