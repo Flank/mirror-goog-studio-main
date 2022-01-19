@@ -23,7 +23,6 @@ class JavaScriptInterfaceDetectorTest : AbstractCheckTest() {
     fun testOlderSdk() {
         lint().files(
             classpath(),
-            projectProperties().compileSdk(19),
             manifest().minSdk(10),
             annotatedObject,
             inheritsFromAnnotated,
@@ -36,7 +35,6 @@ class JavaScriptInterfaceDetectorTest : AbstractCheckTest() {
         // Regression test for issue 118464831
         lint().files(
             classpath(),
-            projectProperties().compileSdk(19),
             manifest().minSdk(10),
             java(
                 """
@@ -90,7 +88,6 @@ class JavaScriptInterfaceDetectorTest : AbstractCheckTest() {
 
         lint().files(
             classpath(),
-            projectProperties().compileSdk(19),
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"

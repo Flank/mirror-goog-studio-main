@@ -127,6 +127,8 @@ class GradleDetectorTest : AbstractCheckTest() {
     override fun lint(): TestLintTask {
         val task = super.lint()
         task.sdkHome(mockSupportLibraryInstallation)
+        // The mock SDK installation isn't a full valid SDK
+        task.requireCompileSdk(false)
         initializeNetworkMocksAndCaches(task)
         return task
     }

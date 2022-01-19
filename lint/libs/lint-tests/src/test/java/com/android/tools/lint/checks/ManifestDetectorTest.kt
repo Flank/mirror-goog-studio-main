@@ -421,7 +421,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
     fun testDuplicateActivityAcrossSourceSets() {
         val library = project(
             manifest().minSdk(14),
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             libraryCode,
             libraryStrings
         ).name("LibraryProject")
@@ -568,7 +568,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
         // Not flagged in library projects
         lint().files(
             manifest().minSdk(14),
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             strings
         ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
@@ -1006,7 +1006,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
     fun testMissingApplicationIconInLibrary() {
         lint().files(
             missingApplicationIcon,
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             strings
         ).issues(ManifestDetector.APPLICATION_ICON).run().expectClean()
     }
@@ -1269,7 +1269,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented(),
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             gradle(
                 """
                 android {
@@ -1405,7 +1405,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
 
     fun testFullBackupContentMissingInLibrary() {
         lint().files(
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -1426,7 +1426,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
 
     fun testFullBackupContentOk() {
         lint().files(
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -1793,7 +1793,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
             1 errors, 0 warnings
             """
         lint().files(
-            projectProperties().compileSdk(24),
+            // When not specifying compileSdkVersion, it will always be >= 24 (so we don't need to pick a specific one)
             xml(
                 "src/main/AndroidManifest.xml",
                 """
@@ -1828,13 +1828,14 @@ class ManifestDetectorTest : AbstractCheckTest() {
             // version is 8.4.0 rather than whatever happens to actually be the
             // latest version at the time (such as 9.6.1 at the moment of this writing)
             .sdkHome(mockSupportLibraryInstallation)
+            // the mock support installation doesn't contain an actual android.jar etc
+            .requireCompileSdk(false)
             .run()
             .expect(expected)
     }
 
     fun testAppIndexingNoWarn() {
         lint().files(
-            projectProperties().compileSdk(26),
             manifest(
                 "src/main/AndroidManifest.xml",
                 """
@@ -1876,7 +1877,6 @@ class ManifestDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
         lint().files(
-            projectProperties().compileSdk(26),
             manifest(
                 "src/main/AndroidManifest.xml",
                 """
@@ -1912,7 +1912,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
     fun testVersionCodeNotRequiredInLibraries() {
         // Regression test for b/144803800
         lint().files(
-            projectProperties().compileSdk(26).library(true),
+            projectProperties().library(true),
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -2258,9 +2258,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
     }
 
     fun testNoAllowBackupWithBuildApi31() {
-        // No longer flagging this; it's noisy and many users just suppress it
         lint().files(
-            projectProperties().compileSdk(35),
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">

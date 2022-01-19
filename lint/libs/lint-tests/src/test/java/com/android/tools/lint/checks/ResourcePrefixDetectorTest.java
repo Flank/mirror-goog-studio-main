@@ -204,7 +204,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                 project(
                                 // Library project
                                 manifest().pkg("foo.library").minSdk(14),
-                                projectProperties().library(true).compileSdk(14),
+                                projectProperties().library(true),
                                 java(
                                         ""
                                                 + "package foo.library;\n"

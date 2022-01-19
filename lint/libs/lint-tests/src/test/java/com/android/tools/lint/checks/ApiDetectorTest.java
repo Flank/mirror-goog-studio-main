@@ -2348,6 +2348,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "                    ~~~~~~~~~~~~~~~~~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), projectProperties().compileSdk(3), mApiCallTest11)
+                // We need the ApiDetector to observe compileSdkVersion < 11
+                // (it doesn't actually need access to the older android.jar)
+                .requireCompileSdk(false)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2367,14 +2370,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "  SimpleDateFormat format = new SimpleDateFormat(\"cc yyyy-MM-dd\");\n"
                         + "                                                 ~~\n"
                         + "3 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(4), projectProperties().compileSdk(19), mApiCallTest12)
+        lint().files(manifest().minSdk(4), mApiCallTest12)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
     }
 
     public void testDateFormatOk() {
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mApiCallTest12)
+        lint().files(manifest().minSdk(10), mApiCallTest12)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -2489,7 +2492,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
-                        projectProperties().compileSdk(19),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -2627,7 +2629,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        <item name=\"android:actionBarStyle\">...</item>\n"
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2)
+        lint().files(manifest().minSdk(10), mStyles2)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2641,7 +2643,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/values-v9: Warning: This folder configuration (v9) is unnecessary; minSdkVersion is 10. Merge all the resources in this folder into values. [ObsoleteSdkInt]\n"
                         + "1 errors, 1 warnings\n";
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class)
+        lint().files(manifest().minSdk(10), mStyles2_class)
                 .checkMessage(this::checkReportedError)
                 .skipTestModes(PARTIAL)
                 .run()
@@ -2649,14 +2651,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testStyleDeclarationInV11() {
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class2)
+        lint().files(manifest().minSdk(10), mStyles2_class2)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
     }
 
     public void testStyleDeclarationInV14() {
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class3)
+        lint().files(manifest().minSdk(10), mStyles2_class3)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -2675,7 +2677,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
-                        projectProperties().compileSdk(19),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -2769,6 +2770,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class FragmentActivity extends Activity {\n"
                                         + "}\n"))
                 .checkMessage(this::checkReportedError)
+                // We need the ApiDetector to observe compileSdkVersion < 11 for the Override error
+                // (it doesn't actually need access to the older android.jar)
+                .requireCompileSdk(false)
                 .run()
                 .expect(expected);
     }
@@ -2792,7 +2796,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(4),
-                        projectProperties().compileSdk(19),
                         java(
                                 "src/test/pkg/ApiCallTest13.java",
                                 ""

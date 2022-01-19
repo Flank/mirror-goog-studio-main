@@ -59,206 +59,205 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
 
 
-                    import android.annotation.SuppressLint;
-                    import android.content.Context;
-                    import android.content.res.TypedArray;
-                    import android.os.Message;
-                    import android.os.Parcel;
-                    import android.util.AttributeSet;
-                    import android.view.MotionEvent;
-                    import android.view.VelocityTracker;
-                    import android.view.View;
+                import android.annotation.SuppressLint;
+                import android.content.Context;
+                import android.content.res.TypedArray;
+                import android.os.Message;
+                import android.os.Parcel;
+                import android.util.AttributeSet;
+                import android.view.MotionEvent;
+                import android.view.VelocityTracker;
+                import android.view.View;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "UnnecessaryLocalVariable", "UnusedAssignment", "MethodMayBeStatic"})
-                    public class RecycleTest extends View {
-                        // ---- Check recycling TypedArrays ----
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "UnnecessaryLocalVariable", "UnusedAssignment", "MethodMayBeStatic"})
+                public class RecycleTest extends View {
+                    // ---- Check recycling TypedArrays ----
 
-                        public RecycleTest(Context context, AttributeSet attrs, int defStyle) {
-                            super(context, attrs, defStyle);
-                        }
+                    public RecycleTest(Context context, AttributeSet attrs, int defStyle) {
+                        super(context, attrs, defStyle);
+                    }
 
-                        public void ok1(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            String example = a.getString(R.styleable.MyView_exampleString);
+                    public void ok1(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        String example = a.getString(R.styleable.MyView_exampleString);
+                        a.recycle();
+                    }
+
+                    public void ok2(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        String example = a.getString(R.styleable.MyView_exampleString);
+                        // If there's complicated logic, don't flag
+                        if (something()) {
                             a.recycle();
-                        }
-
-                        public void ok2(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            String example = a.getString(R.styleable.MyView_exampleString);
-                            // If there's complicated logic, don't flag
-                            if (something()) {
-                                a.recycle();
-                            }
-                        }
-
-                        public TypedArray ok3(AttributeSet attrs, int defStyle) {
-                            // Value passes out of method: don't flag, caller might be recycling
-                            return getContext().obtainStyledAttributes(attrs, R.styleable.MyView,
-                                    defStyle, 0);
-                        }
-
-                        private TypedArray myref;
-
-                        public void ok4(AttributeSet attrs, int defStyle) {
-                            // Value stored in a field: might be recycled later
-                            TypedArray ref = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            myref = ref;
-                        }
-
-                        public void wrong1(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            String example = a.getString(R.styleable.MyView_exampleString);
-                            // a.recycle();
-                        }
-
-                        public void wrong2(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(new int[0]);
-                            // a.recycle();
-                        }
-
-                        public void unknown(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            // We don't know what this method is (usually it will be in a different
-                            // class)
-                            // so don't flag it; it might recycle
-                            handle(a);
-                        }
-
-                        // ---- Check recycling VelocityTracker ----
-
-                        public void tracker() {
-                            VelocityTracker tracker = VelocityTracker.obtain();
-                        }
-
-                        // ---- Check recycling Message ----
-
-                        public void message() {
-                            Message message1 = getHandler().obtainMessage();
-                            Message message2 = Message.obtain();
-                        }
-
-                        // ---- Check recycling MotionEvent ----
-
-                        public void motionEvent() {
-                            MotionEvent event1 = MotionEvent.obtain(null);
-                            MotionEvent event2 = MotionEvent.obtainNoHistory(null);
-                        }
-
-                        public void motionEvent2() {
-                            MotionEvent event1 = MotionEvent.obtain(null); // OK
-                            MotionEvent event2 = MotionEvent.obtainNoHistory(null); // Not recycled
-                            event1.recycle();
-                        }
-
-                        public void motionEvent3() {
-                            MotionEvent event1 = MotionEvent.obtain(null);  // Not recycled
-                            MotionEvent event2 = MotionEvent.obtain(event1);
-                            event2.recycle();
-                        }
-
-                        // ---- Using recycled objects ----
-
-                        public void recycled() {
-                            MotionEvent event1 = MotionEvent.obtain(null);  // Not recycled
-                            event1.recycle();
-                            int contents2 = event1.describeContents(); // BAD, after recycle
-                            final TypedArray a = getContext().obtainStyledAttributes(new int[0]);
-                            String example = a.getString(R.styleable.MyView_exampleString); // OK
-                            a.recycle();
-                            example = a.getString(R.styleable.MyView_exampleString); // BAD, after recycle
-                        }
-
-                        // ---- Check recycling Parcel ----
-
-                        public void parcelOk() {
-                            Parcel myparcel = Parcel.obtain();
-                            myparcel.createBinderArray();
-                            myparcel.recycle();
-                        }
-
-                        public void parcelMissing() {
-                            Parcel myparcel = Parcel.obtain();
-                            myparcel.createBinderArray();
-                        }
-
-
-                        // ---- Check suppress ----
-
-                        @SuppressLint("Recycle")
-                        public void recycledSuppress() {
-                            MotionEvent event1 = MotionEvent.obtain(null);  // Not recycled
-                            event1.recycle();
-                            int contents2 = event1.describeContents(); // BAD, after recycle
-                            final TypedArray a = getContext().obtainStyledAttributes(new int[0]);
-                            String example = a.getString(R.styleable.MyView_exampleString); // OK
-                        }
-
-                        // ---- Stubs ----
-
-                        static void handle(TypedArray a) {
-                            // Unknown method
-                        }
-
-                        protected boolean something() {
-                            return true;
-                        }
-
-                        public android.content.res.TypedArray obtainStyledAttributes(
-                                AttributeSet set, int[] attrs, int defStyleAttr, int defStyleRes) {
-                            return null;
-                        }
-
-                        private static class R {
-                            public static class styleable {
-                                public static final int[] MyView = new int[] {};
-                                public static final int MyView_exampleString = 2;
-                            }
-                        }
-
-                        // Local variable tracking
-
-                        @SuppressWarnings("UnnecessaryLocalVariable")
-                        public void ok5(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            String example = a.getString(R.styleable.MyView_exampleString);
-                            TypedArray b = a;
-                            b.recycle();
-                        }
-
-                        @SuppressWarnings("UnnecessaryLocalVariable")
-                        public void ok6(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,
-                                    R.styleable.MyView, defStyle, 0);
-                            String example = a.getString(R.styleable.MyView_exampleString);
-                            TypedArray b;
-                            b = a;
-                            b.recycle();
-                        }
-
-                        @SuppressWarnings({"UnnecessaryLocalVariable", "UnusedAssignment"})
-                        public void wrong3(AttributeSet attrs, int defStyle) {
-                            final TypedArray a = getContext().obtainStyledAttributes(attrs,  // Not recycled
-                                    R.styleable.MyView, defStyle, 0);
-                            String example = a.getString(R.styleable.MyView_exampleString);
-                            TypedArray b;
-                            b = a;
                         }
                     }
-                    """
+
+                    public TypedArray ok3(AttributeSet attrs, int defStyle) {
+                        // Value passes out of method: don't flag, caller might be recycling
+                        return getContext().obtainStyledAttributes(attrs, R.styleable.MyView,
+                                defStyle, 0);
+                    }
+
+                    private TypedArray myref;
+
+                    public void ok4(AttributeSet attrs, int defStyle) {
+                        // Value stored in a field: might be recycled later
+                        TypedArray ref = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        myref = ref;
+                    }
+
+                    public void wrong1(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        String example = a.getString(R.styleable.MyView_exampleString);
+                        // a.recycle();
+                    }
+
+                    public void wrong2(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(new int[0]);
+                        // a.recycle();
+                    }
+
+                    public void unknown(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        // We don't know what this method is (usually it will be in a different
+                        // class)
+                        // so don't flag it; it might recycle
+                        handle(a);
+                    }
+
+                    // ---- Check recycling VelocityTracker ----
+
+                    public void tracker() {
+                        VelocityTracker tracker = VelocityTracker.obtain();
+                    }
+
+                    // ---- Check recycling Message ----
+
+                    public void message() {
+                        Message message1 = getHandler().obtainMessage();
+                        Message message2 = Message.obtain();
+                    }
+
+                    // ---- Check recycling MotionEvent ----
+
+                    public void motionEvent() {
+                        MotionEvent event1 = MotionEvent.obtain(null);
+                        MotionEvent event2 = MotionEvent.obtainNoHistory(null);
+                    }
+
+                    public void motionEvent2() {
+                        MotionEvent event1 = MotionEvent.obtain(null); // OK
+                        MotionEvent event2 = MotionEvent.obtainNoHistory(null); // Not recycled
+                        event1.recycle();
+                    }
+
+                    public void motionEvent3() {
+                        MotionEvent event1 = MotionEvent.obtain(null);  // Not recycled
+                        MotionEvent event2 = MotionEvent.obtain(event1);
+                        event2.recycle();
+                    }
+
+                    // ---- Using recycled objects ----
+
+                    public void recycled() {
+                        MotionEvent event1 = MotionEvent.obtain(null);  // Not recycled
+                        event1.recycle();
+                        int contents2 = event1.describeContents(); // BAD, after recycle
+                        final TypedArray a = getContext().obtainStyledAttributes(new int[0]);
+                        String example = a.getString(R.styleable.MyView_exampleString); // OK
+                        a.recycle();
+                        example = a.getString(R.styleable.MyView_exampleString); // BAD, after recycle
+                    }
+
+                    // ---- Check recycling Parcel ----
+
+                    public void parcelOk() {
+                        Parcel myparcel = Parcel.obtain();
+                        myparcel.createBinderArray();
+                        myparcel.recycle();
+                    }
+
+                    public void parcelMissing() {
+                        Parcel myparcel = Parcel.obtain();
+                        myparcel.createBinderArray();
+                    }
+
+
+                    // ---- Check suppress ----
+
+                    @SuppressLint("Recycle")
+                    public void recycledSuppress() {
+                        MotionEvent event1 = MotionEvent.obtain(null);  // Not recycled
+                        event1.recycle();
+                        int contents2 = event1.describeContents(); // BAD, after recycle
+                        final TypedArray a = getContext().obtainStyledAttributes(new int[0]);
+                        String example = a.getString(R.styleable.MyView_exampleString); // OK
+                    }
+
+                    // ---- Stubs ----
+
+                    static void handle(TypedArray a) {
+                        // Unknown method
+                    }
+
+                    protected boolean something() {
+                        return true;
+                    }
+
+                    public android.content.res.TypedArray obtainStyledAttributes(
+                            AttributeSet set, int[] attrs, int defStyleAttr, int defStyleRes) {
+                        return null;
+                    }
+
+                    private static class R {
+                        public static class styleable {
+                            public static final int[] MyView = new int[] {};
+                            public static final int MyView_exampleString = 2;
+                        }
+                    }
+
+                    // Local variable tracking
+
+                    @SuppressWarnings("UnnecessaryLocalVariable")
+                    public void ok5(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        String example = a.getString(R.styleable.MyView_exampleString);
+                        TypedArray b = a;
+                        b.recycle();
+                    }
+
+                    @SuppressWarnings("UnnecessaryLocalVariable")
+                    public void ok6(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,
+                                R.styleable.MyView, defStyle, 0);
+                        String example = a.getString(R.styleable.MyView_exampleString);
+                        TypedArray b;
+                        b = a;
+                        b.recycle();
+                    }
+
+                    @SuppressWarnings({"UnnecessaryLocalVariable", "UnusedAssignment"})
+                    public void wrong3(AttributeSet attrs, int defStyle) {
+                        final TypedArray a = getContext().obtainStyledAttributes(attrs,  // Not recycled
+                                R.styleable.MyView, defStyle, 0);
+                        String example = a.getString(R.styleable.MyView_exampleString);
+                        TypedArray b;
+                        b = a;
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -290,147 +289,146 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.Activity;
-                    import android.app.Fragment;
-                    import android.app.FragmentManager;
-                    import android.app.FragmentTransaction;
+                import android.app.Activity;
+                import android.app.Fragment;
+                import android.app.FragmentManager;
+                import android.app.FragmentTransaction;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "ConstantConditions", "UnusedAssignment", "MethodMayBeStatic"})
-                    public class CommitTest extends Activity {
-                        public void ok1() {
-                            getFragmentManager().beginTransaction().commit(); // OK 1
-                        }
-
-                        public void ok2() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 2
-                            transaction.commit();
-                        }
-
-                        public void ok3() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 3
-                            transaction.commitAllowingStateLoss();
-                        }
-
-                        public void error1() {
-                            getFragmentManager().beginTransaction(); // ERROR 1
-                        }
-
-                        public void error2() {
-                            FragmentTransaction transaction1 = getFragmentManager().beginTransaction(); // OK
-                            FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // ERROR 2
-                            transaction1.commit();
-                        }
-
-                        public void error3_public() {
-                            error3();
-                        }
-
-                        private void error3() {
-                            getFragmentManager().beginTransaction(); // ERROR 3
-                        }
-
-                        public void ok4(FragmentManager manager, String tag) {
-                            FragmentTransaction ft = manager.beginTransaction(); // OK 4
-                            ft.add(null, tag);
-                            ft.commit();
-                        }
-
-                        // Support library
-
-                        private android.support.v4.app.FragmentManager getSupportFragmentManager() {
-                            return null;
-                        }
-
-                        public void ok5() {
-                            getSupportFragmentManager().beginTransaction().commit(); // OK 5
-                        }
-
-                        public void ok6(android.support.v4.app.FragmentManager manager, String tag) {
-                            android.support.v4.app.FragmentTransaction ft = manager.beginTransaction(); // OK 6
-                            ft.add(null, tag);
-                            ft.commit();
-                        }
-
-                        public void error4() {
-                            getSupportFragmentManager().beginTransaction(); // ERROR 4
-                        }
-
-                        android.support.v4.app.Fragment mFragment1 = null;
-                        Fragment mFragment2 = null;
-
-                        public void ok7() {
-                            getSupportFragmentManager().beginTransaction().add(android.R.id.content, mFragment1).commit(); // OK 7
-                        }
-
-                        public void ok8() {
-                            getFragmentManager().beginTransaction().add(android.R.id.content, mFragment2).commit(); // OK 8
-                        }
-
-                        public void ok10() {
-                            // Test chaining
-                            FragmentManager fragmentManager = getFragmentManager();
-                            fragmentManager.beginTransaction().addToBackStack("test").attach(mFragment2).detach(mFragment2) // OK 10
-                            .disallowAddToBackStack().hide(mFragment2).setBreadCrumbShortTitle("test")
-                            .show(mFragment2).setCustomAnimations(0, 0).commit();
-                        }
-
-                        public void ok9() {
-                            FragmentManager fragmentManager = getFragmentManager();
-                            fragmentManager.beginTransaction().commit(); // OK 9
-                        }
-
-                        public void ok11() {
-                            FragmentTransaction transaction;
-                            // Comment in between variable declaration and assignment
-                            transaction = getFragmentManager().beginTransaction(); // OK 11
-                            transaction.commit();
-                        }
-
-                        public void ok12() {
-                            FragmentTransaction transaction;
-                            transaction = (getFragmentManager().beginTransaction()); // OK 12
-                            transaction.commit();
-                        }
-
-                        @SuppressWarnings("UnnecessaryLocalVariable")
-                        public void ok13() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 13
-                            FragmentTransaction temp;
-                            temp = transaction;
-                            temp.commitAllowingStateLoss();
-                        }
-
-                        @SuppressWarnings("UnnecessaryLocalVariable")
-                        public void ok14() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 14
-                            FragmentTransaction temp = transaction;
-                            temp.commitAllowingStateLoss();
-                        }
-
-                        public void error5(FragmentTransaction unrelated) {
-                            FragmentTransaction transaction;
-                            // Comment in between variable declaration and assignment
-                            transaction = getFragmentManager().beginTransaction(); // ERROR 5
-                            transaction = unrelated;
-                            transaction.commit();
-                        }
-
-                        public void error6(FragmentTransaction unrelated) {
-                            FragmentTransaction transaction;
-                            FragmentTransaction transaction2;
-                            // Comment in between variable declaration and assignment
-                            transaction = getFragmentManager().beginTransaction(); // ERROR 6
-                            transaction2 = transaction;
-                            transaction2 = unrelated;
-                            transaction2.commit();
-                        }
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "ConstantConditions", "UnusedAssignment", "MethodMayBeStatic"})
+                public class CommitTest extends Activity {
+                    public void ok1() {
+                        getFragmentManager().beginTransaction().commit(); // OK 1
                     }
-                    """
+
+                    public void ok2() {
+                        FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 2
+                        transaction.commit();
+                    }
+
+                    public void ok3() {
+                        FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 3
+                        transaction.commitAllowingStateLoss();
+                    }
+
+                    public void error1() {
+                        getFragmentManager().beginTransaction(); // ERROR 1
+                    }
+
+                    public void error2() {
+                        FragmentTransaction transaction1 = getFragmentManager().beginTransaction(); // OK
+                        FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // ERROR 2
+                        transaction1.commit();
+                    }
+
+                    public void error3_public() {
+                        error3();
+                    }
+
+                    private void error3() {
+                        getFragmentManager().beginTransaction(); // ERROR 3
+                    }
+
+                    public void ok4(FragmentManager manager, String tag) {
+                        FragmentTransaction ft = manager.beginTransaction(); // OK 4
+                        ft.add(null, tag);
+                        ft.commit();
+                    }
+
+                    // Support library
+
+                    private android.support.v4.app.FragmentManager getSupportFragmentManager() {
+                        return null;
+                    }
+
+                    public void ok5() {
+                        getSupportFragmentManager().beginTransaction().commit(); // OK 5
+                    }
+
+                    public void ok6(android.support.v4.app.FragmentManager manager, String tag) {
+                        android.support.v4.app.FragmentTransaction ft = manager.beginTransaction(); // OK 6
+                        ft.add(null, tag);
+                        ft.commit();
+                    }
+
+                    public void error4() {
+                        getSupportFragmentManager().beginTransaction(); // ERROR 4
+                    }
+
+                    android.support.v4.app.Fragment mFragment1 = null;
+                    Fragment mFragment2 = null;
+
+                    public void ok7() {
+                        getSupportFragmentManager().beginTransaction().add(android.R.id.content, mFragment1).commit(); // OK 7
+                    }
+
+                    public void ok8() {
+                        getFragmentManager().beginTransaction().add(android.R.id.content, mFragment2).commit(); // OK 8
+                    }
+
+                    public void ok10() {
+                        // Test chaining
+                        FragmentManager fragmentManager = getFragmentManager();
+                        fragmentManager.beginTransaction().addToBackStack("test").attach(mFragment2).detach(mFragment2) // OK 10
+                        .disallowAddToBackStack().hide(mFragment2).setBreadCrumbShortTitle("test")
+                        .show(mFragment2).setCustomAnimations(0, 0).commit();
+                    }
+
+                    public void ok9() {
+                        FragmentManager fragmentManager = getFragmentManager();
+                        fragmentManager.beginTransaction().commit(); // OK 9
+                    }
+
+                    public void ok11() {
+                        FragmentTransaction transaction;
+                        // Comment in between variable declaration and assignment
+                        transaction = getFragmentManager().beginTransaction(); // OK 11
+                        transaction.commit();
+                    }
+
+                    public void ok12() {
+                        FragmentTransaction transaction;
+                        transaction = (getFragmentManager().beginTransaction()); // OK 12
+                        transaction.commit();
+                    }
+
+                    @SuppressWarnings("UnnecessaryLocalVariable")
+                    public void ok13() {
+                        FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 13
+                        FragmentTransaction temp;
+                        temp = transaction;
+                        temp.commitAllowingStateLoss();
+                    }
+
+                    @SuppressWarnings("UnnecessaryLocalVariable")
+                    public void ok14() {
+                        FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 14
+                        FragmentTransaction temp = transaction;
+                        temp.commitAllowingStateLoss();
+                    }
+
+                    public void error5(FragmentTransaction unrelated) {
+                        FragmentTransaction transaction;
+                        // Comment in between variable declaration and assignment
+                        transaction = getFragmentManager().beginTransaction(); // ERROR 5
+                        transaction = unrelated;
+                        transaction.commit();
+                    }
+
+                    public void error6(FragmentTransaction unrelated) {
+                        FragmentTransaction transaction;
+                        FragmentTransaction transaction2;
+                        // Comment in between variable declaration and assignment
+                        transaction = getFragmentManager().beginTransaction(); // ERROR 6
+                        transaction2 = transaction;
+                        transaction2 = unrelated;
+                        transaction2.commit();
+                    }
+                }
+                """
             ).indented(),
             // Stubs just to be able to do type resolution without needing the full appcompat jar
             fragment,
@@ -446,14 +444,14 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                    package test.pkg
-                    import android.app.FragmentManager
+                package test.pkg
+                import android.app.FragmentManager
 
-                    fun ok(f: FragmentManager) {
-                        val transaction = f.beginTransaction() ?: return
-                        transaction.commitAllowingStateLoss()
-                    }
-                    """
+                fun ok(f: FragmentManager) {
+                    val transaction = f.beginTransaction() ?: return
+                    transaction.commitAllowingStateLoss()
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -462,7 +460,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             // Stubs just to be able to do type resolution without needing the full appcompat jar
             fragment,
             dialogFragment,
@@ -475,39 +472,38 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.support.v4.app.DialogFragment;
-                    import android.support.v4.app.Fragment;
-                    import android.support.v4.app.FragmentManager;
-                    import android.support.v4.app.FragmentTransaction;
+                import android.support.v4.app.DialogFragment;
+                import android.support.v4.app.Fragment;
+                import android.support.v4.app.FragmentManager;
+                import android.support.v4.app.FragmentTransaction;
 
-                    @SuppressWarnings({"unused", "MethodMayBeStatic", "ClassNameDiffersFromFileName", "ConstantConditions"})
-                    public class CommitTest2 {
-                        private void test() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                            MyDialogFragment fragment = new MyDialogFragment();
-                            fragment.show(transaction, "MyTag");
+                @SuppressWarnings({"unused", "MethodMayBeStatic", "ClassNameDiffersFromFileName", "ConstantConditions"})
+                public class CommitTest2 {
+                    private void test() {
+                        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                        MyDialogFragment fragment = new MyDialogFragment();
+                        fragment.show(transaction, "MyTag");
+                    }
+
+                    private FragmentManager getFragmentManager() {
+                        return null;
+                    }
+
+                    public static class MyDialogFragment extends DialogFragment {
+                        public MyDialogFragment() {
                         }
 
-                        private FragmentManager getFragmentManager() {
-                            return null;
-                        }
-
-                        public static class MyDialogFragment extends DialogFragment {
-                            public MyDialogFragment() {
-                            }
-
-                            @Override
-                            public int show(FragmentTransaction transaction, String tag) {
-                                return super.show(transaction, tag);
-                            }
+                        @Override
+                        public int show(FragmentTransaction transaction, String tag) {
+                            return super.show(transaction, tag);
                         }
                     }
-                    """
+                }
+                """
             ).indented(),
             // Stubs just to be able to do type resolution without needing the full appcompat jar
             fragment,
@@ -528,77 +524,76 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.support.v4.app.DialogFragment;
-                    import android.support.v4.app.Fragment;
-                    import android.support.v4.app.FragmentManager;
-                    import android.support.v4.app.FragmentTransaction;
+                import android.support.v4.app.DialogFragment;
+                import android.support.v4.app.Fragment;
+                import android.support.v4.app.FragmentManager;
+                import android.support.v4.app.FragmentTransaction;
 
-                    @SuppressWarnings({"unused", "MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})
-                    public class CommitTest3 {
-                        private void testOk() {
-                            android.app.FragmentTransaction transaction =
-                                    getFragmentManager().beginTransaction();
-                            transaction.commit();
-                            android.app.FragmentTransaction transaction2 =
-                                    getFragmentManager().beginTransaction();
-                            MyDialogFragment fragment = new MyDialogFragment();
-                            fragment.show(transaction2, "MyTag");
+                @SuppressWarnings({"unused", "MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})
+                public class CommitTest3 {
+                    private void testOk() {
+                        android.app.FragmentTransaction transaction =
+                                getFragmentManager().beginTransaction();
+                        transaction.commit();
+                        android.app.FragmentTransaction transaction2 =
+                                getFragmentManager().beginTransaction();
+                        MyDialogFragment fragment = new MyDialogFragment();
+                        fragment.show(transaction2, "MyTag");
+                    }
+
+                    private void testCompatOk() {
+                        android.support.v4.app.FragmentTransaction transaction =
+                                getCompatFragmentManager().beginTransaction();
+                        transaction.commit();
+                        android.support.v4.app.FragmentTransaction transaction2 =
+                                getCompatFragmentManager().beginTransaction();
+                        MyCompatDialogFragment fragment = new MyCompatDialogFragment();
+                        fragment.show(transaction2, "MyTag");
+                    }
+
+                    private void testCompatWrong() {
+                        android.support.v4.app.FragmentTransaction transaction =
+                                getCompatFragmentManager().beginTransaction();
+                        transaction.commit();
+                        android.support.v4.app.FragmentTransaction transaction2 =
+                                getCompatFragmentManager().beginTransaction();
+                        MyCompatDialogFragment fragment = new MyCompatDialogFragment();
+                        fragment.show(transaction, "MyTag"); // Note: Should have been transaction2!
+                    }
+
+                    private android.support.v4.app.FragmentManager getCompatFragmentManager() {
+                        return null;
+                    }
+
+                    private android.app.FragmentManager getFragmentManager() {
+                        return null;
+                    }
+
+                    public static class MyDialogFragment extends android.app.DialogFragment {
+                        public MyDialogFragment() {
                         }
 
-                        private void testCompatOk() {
-                            android.support.v4.app.FragmentTransaction transaction =
-                                    getCompatFragmentManager().beginTransaction();
-                            transaction.commit();
-                            android.support.v4.app.FragmentTransaction transaction2 =
-                                    getCompatFragmentManager().beginTransaction();
-                            MyCompatDialogFragment fragment = new MyCompatDialogFragment();
-                            fragment.show(transaction2, "MyTag");
-                        }
-
-                        private void testCompatWrong() {
-                            android.support.v4.app.FragmentTransaction transaction =
-                                    getCompatFragmentManager().beginTransaction();
-                            transaction.commit();
-                            android.support.v4.app.FragmentTransaction transaction2 =
-                                    getCompatFragmentManager().beginTransaction();
-                            MyCompatDialogFragment fragment = new MyCompatDialogFragment();
-                            fragment.show(transaction, "MyTag"); // Note: Should have been transaction2!
-                        }
-
-                        private android.support.v4.app.FragmentManager getCompatFragmentManager() {
-                            return null;
-                        }
-
-                        private android.app.FragmentManager getFragmentManager() {
-                            return null;
-                        }
-
-                        public static class MyDialogFragment extends android.app.DialogFragment {
-                            public MyDialogFragment() {
-                            }
-
-                            @Override
-                            public int show(android.app.FragmentTransaction transaction, String tag) {
-                                return super.show(transaction, tag);
-                            }
-                        }
-
-                        public static class MyCompatDialogFragment extends android.support.v4.app.DialogFragment {
-                            public MyCompatDialogFragment() {
-                            }
-
-                            @Override
-                            public int show(android.support.v4.app.FragmentTransaction transaction, String tag) {
-                                return super.show(transaction, tag);
-                            }
+                        @Override
+                        public int show(android.app.FragmentTransaction transaction, String tag) {
+                            return super.show(transaction, tag);
                         }
                     }
-                    """
+
+                    public static class MyCompatDialogFragment extends android.support.v4.app.DialogFragment {
+                        public MyCompatDialogFragment() {
+                        }
+
+                        @Override
+                        public int show(android.support.v4.app.FragmentTransaction transaction, String tag) {
+                            return super.show(transaction, tag);
+                        }
+                    }
+                }
+                """
             ).indented(),
             // Stubs just to be able to do type resolution without needing the full appcompat jar
             fragment,
@@ -620,21 +615,20 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
-                    import android.app.Activity;
+                package test.pkg;
+                import android.app.Activity;
 
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    public class TransactionTest extends Activity {
-                        void test() {
-                            android.app.FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                            android.app.FragmentTransaction transaction2 = getFragmentManager().beginTransaction();
-                            transaction.disallowAddToBackStack().commit();
-                        }
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class TransactionTest extends Activity {
+                    void test() {
+                        android.app.FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                        android.app.FragmentTransaction transaction2 = getFragmentManager().beginTransaction();
+                        transaction.disallowAddToBackStack().commit();
                     }
-                    """
+                }
+                """
             ).indented(),
             // Stubs just to be able to do type resolution without needing the full appcompat jar
             fragment,
@@ -662,45 +656,44 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
-                    import android.graphics.SurfaceTexture;
-                    import android.view.Surface;
+                package test.pkg;
+                import android.graphics.SurfaceTexture;
+                import android.view.Surface;
 
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class SurfaceTextureTest {
-                        public void test1() {
-                            SurfaceTexture texture = new SurfaceTexture(1); // OK: released
-                            texture.release();
-                        }
-
-                        public void test2() {
-                            SurfaceTexture texture = new SurfaceTexture(1); // OK: not sure what the method does
-                            unknown(texture);
-                        }
-
-                        public void test3() {
-                            SurfaceTexture texture = new SurfaceTexture(1); // Warn: texture not released
-                        }
-
-                        private void unknown(SurfaceTexture texture) {
-                        }
-
-                        public void test4() {
-                            SurfaceTexture texture = new SurfaceTexture(1); // Warn: texture not released
-                            Surface surface = new Surface(texture);
-                            surface.release();
-                        }
-
-                        public void test5() {
-                            SurfaceTexture texture = new SurfaceTexture(1);
-                            Surface surface = new Surface(texture); // Warn: surface not released
-                            texture.release();
-                        }
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class SurfaceTextureTest {
+                    public void test1() {
+                        SurfaceTexture texture = new SurfaceTexture(1); // OK: released
+                        texture.release();
                     }
-                    """
+
+                    public void test2() {
+                        SurfaceTexture texture = new SurfaceTexture(1); // OK: not sure what the method does
+                        unknown(texture);
+                    }
+
+                    public void test3() {
+                        SurfaceTexture texture = new SurfaceTexture(1); // Warn: texture not released
+                    }
+
+                    private void unknown(SurfaceTexture texture) {
+                    }
+
+                    public void test4() {
+                        SurfaceTexture texture = new SurfaceTexture(1); // Warn: texture not released
+                        Surface surface = new Surface(texture);
+                        surface.release();
+                    }
+
+                    public void test5() {
+                        SurfaceTexture texture = new SurfaceTexture(1);
+                        Surface surface = new Surface(texture); // Warn: surface not released
+                        texture.release();
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -749,80 +742,80 @@ class CleanupDetectorTest : AbstractCheckTest() {
             manifest().minSdk(4),
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentProviderClient;
-                    import android.content.ContentResolver;
-                    import android.net.Uri;
+                import android.content.ContentProviderClient;
+                import android.content.ContentResolver;
+                import android.net.Uri;
 
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "UnnecessaryLocalVariable"})
-                    public class ContentProviderClientTest {
-                        public void error1(ContentResolver resolver) {
-                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
-                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // Warn
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "UnnecessaryLocalVariable"})
+                public class ContentProviderClientTest {
+                    public void error1(ContentResolver resolver) {
+                        ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
+                        ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // Warn
+                    }
+
+                    public void ok1(ContentResolver resolver) {
+                        ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                        client.release();
+                        ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                        client2.release();
+                    }
+
+                    public void ok2(ContentResolver resolver) {
+                        ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                        client.close();
+                        ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                        client2.close();
+                    }
+
+                    public void ok3(ContentResolver resolver) {
+                        ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                        unknown(client);
+                        ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                        unknown(client2);
+                    }
+
+                    public void ok4(ContentResolver resolver, Uri uri) {
+                        try (ContentProviderClient client = resolver.acquireContentProviderClient("test")) { // OK
+                            client.refresh(uri, null, null);
                         }
-
-                        public void ok1(ContentResolver resolver) {
-                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
-                            client.release();
-                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
-                            client2.release();
-                        }
-
-                        public void ok2(ContentResolver resolver) {
-                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
-                            client.close();
-                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
-                            client2.close();
-                        }
-
-                        public void ok3(ContentResolver resolver) {
-                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
-                            unknown(client);
-                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
-                            unknown(client2);
-                        }
-
-                        public void ok4(ContentResolver resolver, Uri uri) {
-                            try (ContentProviderClient client = resolver.acquireContentProviderClient("test")) { // OK
-                                client.refresh(uri, null, null);
-                            }
-                            try (ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test")) { // OK
-                                client2.refresh(uri, null, null);
-                            }
-                        }
-
-                        public ContentProviderClient ok5(ContentResolver resolver) {
-                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
-                            return client;
-                        }
-
-                        public ContentProviderClient ok6(ContentResolver resolver) {
-                            ContentProviderClient client = resolver.acquireUnstableContentProviderClient("test"); // OK
-                            return client;
-                        }
-
-                        private void unknown(ContentProviderClient client) {
+                        try (ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test")) { // OK
+                            client2.refresh(uri, null, null);
                         }
                     }
-                    """
+
+                    public ContentProviderClient ok5(ContentResolver resolver) {
+                        ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                        return client;
+                    }
+
+                    public ContentProviderClient ok6(ContentResolver resolver) {
+                        ContentProviderClient client = resolver.acquireUnstableContentProviderClient("test"); // OK
+                        return client;
+                    }
+
+                    private void unknown(ContentProviderClient client) {
+                    }
+                }
+                """
             ).indented(),
             kotlin(
                 """
-                    package test.pkg
+                package test.pkg
 
-                    import android.content.ContentResolver
-                    import android.net.Uri
+                import android.content.ContentResolver
+                import android.net.Uri
 
-                    fun ok1(resolver: ContentResolver, uri: Uri) {
-                        resolver.acquireContentProviderClient("test")?.use { client ->  // OK
-                            client?.refresh(uri, null, null)
-                        }
-                        resolver.acquireUnstableContentProviderClient("test")?.use { client ->  // OK
-                            client?.refresh(uri, null, null)
-                        }
+                fun ok1(resolver: ContentResolver, uri: Uri) {
+                    resolver.acquireContentProviderClient("test")?.use { client ->  // OK
+                        client?.refresh(uri, null, null)
                     }
-                    """
+                    resolver.acquireUnstableContentProviderClient("test")?.use { client ->  // OK
+                        client?.refresh(uri, null, null)
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -851,98 +844,97 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentProvider;
-                    import android.content.ContentProviderClient;
-                    import android.content.ContentResolver;
-                    import android.database.Cursor;
-                    import android.database.sqlite.SQLiteDatabase;
-                    import android.net.Uri;
-                    import android.os.RemoteException;
+                import android.content.ContentProvider;
+                import android.content.ContentProviderClient;
+                import android.content.ContentResolver;
+                import android.database.Cursor;
+                import android.database.sqlite.SQLiteDatabase;
+                import android.net.Uri;
+                import android.os.RemoteException;
 
-                    @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class CursorTest {
-                        public void error1(SQLiteDatabase db, long route_id) {
-                            Cursor cursor = db.query("TABLE_TRIPS",
-                                    new String[]{"KEY_TRIP_ID"},
-                                    "ROUTE_ID=?",
-                                    new String[]{Long.toString(route_id)},
-                                    null, null, null);
-                        }
-
-                        public int error2(SQLiteDatabase db, long route_id, String table, String whereClause, String id) {
-                            int total_deletions = 0;
-                            Cursor cursor = db.query("TABLE_TRIPS",
-                                    new String[]{"KEY_TRIP_ID"},
-                                    "ROUTE_ID=?",
-                                    new String[]{Long.toString(route_id)},
-                                    null, null, null);
-
-                            while (cursor.moveToNext()) {
-                                total_deletions += db.delete(table, whereClause + "=?",
-                                        new String[]{Long.toString(cursor.getLong(0))});
-                            }
-
-                            // Not closed!
-                            //cursor.close();
-
-                            total_deletions += db.delete(table, id + "=?", new String[]{Long.toString(route_id)});
-
-                            return total_deletions;
-                        }
-
-                        public int ok(SQLiteDatabase db, long route_id, String table, String whereClause, String id) {
-                            int total_deletions = 0;
-                            Cursor cursor = db.query("TABLE_TRIPS",
-                                    new String[]{
-                                            "KEY_TRIP_ID"},
-                                    "ROUTE_ID=?",
-                                    new String[]{Long.toString(route_id)},
-                                    null, null, null);
-
-                            while (cursor.moveToNext()) {
-                                total_deletions += db.delete(table, whereClause + "=?",
-                                        new String[]{Long.toString(cursor.getLong(0))});
-                            }
-                            cursor.close();
-
-                            return total_deletions;
-                        }
-
-                        public Cursor getCursor(SQLiteDatabase db) {
-                            @SuppressWarnings("UnnecessaryLocalVariable")
-                            Cursor cursor = db.query("TABLE_TRIPS",
-                                    new String[]{
-                                            "KEY_TRIP_ID"},
-                                    "ROUTE_ID=?",
-                                    new String[]{Long.toString(5)},
-                                    null, null, null);
-
-                            return cursor;
-                        }
-
-                        void testProviderQueries(Uri uri, ContentProvider provider, ContentResolver resolver,
-                                                 ContentProviderClient client) throws RemoteException {
-                            Cursor query = provider.query(uri, null, null, null, null);
-                            Cursor query2 = resolver.query(uri, null, null, null, null);
-                            Cursor query3 = client.query(uri, null, null, null, null);
-                        }
-
-                        void testProviderQueriesOk(Uri uri, ContentProvider provider, ContentResolver resolver,
-                                                   ContentProviderClient client) throws RemoteException {
-                            Cursor query = provider.query(uri, null, null, null, null);
-                            Cursor query2 = resolver.query(uri, null, null, null, null);
-                            Cursor query3 = client.query(uri, null, null, null, null);
-                            query.close();
-                            query2.close();
-                            query3.close();
-                        }
+                @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class CursorTest {
+                    public void error1(SQLiteDatabase db, long route_id) {
+                        Cursor cursor = db.query("TABLE_TRIPS",
+                                new String[]{"KEY_TRIP_ID"},
+                                "ROUTE_ID=?",
+                                new String[]{Long.toString(route_id)},
+                                null, null, null);
                     }
-                    """
+
+                    public int error2(SQLiteDatabase db, long route_id, String table, String whereClause, String id) {
+                        int total_deletions = 0;
+                        Cursor cursor = db.query("TABLE_TRIPS",
+                                new String[]{"KEY_TRIP_ID"},
+                                "ROUTE_ID=?",
+                                new String[]{Long.toString(route_id)},
+                                null, null, null);
+
+                        while (cursor.moveToNext()) {
+                            total_deletions += db.delete(table, whereClause + "=?",
+                                    new String[]{Long.toString(cursor.getLong(0))});
+                        }
+
+                        // Not closed!
+                        //cursor.close();
+
+                        total_deletions += db.delete(table, id + "=?", new String[]{Long.toString(route_id)});
+
+                        return total_deletions;
+                    }
+
+                    public int ok(SQLiteDatabase db, long route_id, String table, String whereClause, String id) {
+                        int total_deletions = 0;
+                        Cursor cursor = db.query("TABLE_TRIPS",
+                                new String[]{
+                                        "KEY_TRIP_ID"},
+                                "ROUTE_ID=?",
+                                new String[]{Long.toString(route_id)},
+                                null, null, null);
+
+                        while (cursor.moveToNext()) {
+                            total_deletions += db.delete(table, whereClause + "=?",
+                                    new String[]{Long.toString(cursor.getLong(0))});
+                        }
+                        cursor.close();
+
+                        return total_deletions;
+                    }
+
+                    public Cursor getCursor(SQLiteDatabase db) {
+                        @SuppressWarnings("UnnecessaryLocalVariable")
+                        Cursor cursor = db.query("TABLE_TRIPS",
+                                new String[]{
+                                        "KEY_TRIP_ID"},
+                                "ROUTE_ID=?",
+                                new String[]{Long.toString(5)},
+                                null, null, null);
+
+                        return cursor;
+                    }
+
+                    void testProviderQueries(Uri uri, ContentProvider provider, ContentResolver resolver,
+                                             ContentProviderClient client) throws RemoteException {
+                        Cursor query = provider.query(uri, null, null, null, null);
+                        Cursor query2 = resolver.query(uri, null, null, null, null);
+                        Cursor query3 = client.query(uri, null, null, null, null);
+                    }
+
+                    void testProviderQueriesOk(Uri uri, ContentProvider provider, ContentResolver resolver,
+                                               ContentProviderClient client) throws RemoteException {
+                        Cursor query = provider.query(uri, null, null, null, null);
+                        Cursor query2 = resolver.query(uri, null, null, null, null);
+                        Cursor query3 = client.query(uri, null, null, null, null);
+                        query.close();
+                        query2.close();
+                        query3.close();
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1006,29 +998,29 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/CursorTest.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.Activity;
-                    import android.database.Cursor;
-                    import android.database.sqlite.SQLiteException;
-                    import android.net.Uri;
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    public class CursorTest extends Activity {
-                        public void testSimple() {
-                            Cursor cursor;
-                            try {
-                                cursor = getContentResolver().query(Uri.parse("blahblah"),
-                                        new String[]{"_id", "display_name"}, null, null, null);
-                            } catch (SQLiteException e) {
-                                // Fallback
-                                cursor = getContentResolver().query(Uri.parse("blahblah"),
-                                        new String[]{"_id2", "display_name"}, null, null, null);
-                            }
-                            assert cursor != null;
-                            cursor.close();
+                import android.app.Activity;
+                import android.database.Cursor;
+                import android.database.sqlite.SQLiteException;
+                import android.net.Uri;
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class CursorTest extends Activity {
+                    public void testSimple() {
+                        Cursor cursor;
+                        try {
+                            cursor = getContentResolver().query(Uri.parse("blahblah"),
+                                    new String[]{"_id", "display_name"}, null, null, null);
+                        } catch (SQLiteException e) {
+                            // Fallback
+                            cursor = getContentResolver().query(Uri.parse("blahblah"),
+                                    new String[]{"_id2", "display_name"}, null, null, null);
                         }
+                        assert cursor != null;
+                        cursor.close();
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1052,85 +1044,84 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
-                    import android.app.Activity;
-                    import android.content.Context;
-                    import android.os.Bundle;
-                    import android.widget.Toast;
-                    import android.content.SharedPreferences; import android.content.SharedPreferences.Editor;
-                    import android.preference.PreferenceManager;
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "AccessStaticViaInstance", "MethodMayBeStatic"}) public class SharedPrefsTest extends Activity {
-                        // OK 1
-                        public void onCreate1(Bundle savedInstanceState) {
-                            super.onCreate(savedInstanceState);
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                            SharedPreferences.Editor editor = preferences.edit();
-                            editor.putString("foo", "bar");
-                            editor.putInt("bar", 42);
-                            editor.commit();
+                package test.pkg;
+                import android.app.Activity;
+                import android.content.Context;
+                import android.os.Bundle;
+                import android.widget.Toast;
+                import android.content.SharedPreferences; import android.content.SharedPreferences.Editor;
+                import android.preference.PreferenceManager;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "AccessStaticViaInstance", "MethodMayBeStatic"}) public class SharedPrefsTest extends Activity {
+                    // OK 1
+                    public void onCreate1(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("foo", "bar");
+                        editor.putInt("bar", 42);
+                        editor.commit();
+                    }
+
+                    // OK 2
+                    public void onCreate2(Bundle savedInstanceState, boolean apply) {
+                        super.onCreate(savedInstanceState);
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("foo", "bar");
+                        editor.putInt("bar", 42);
+                        if (apply) {
+                            editor.apply();
                         }
+                    }
 
-                        // OK 2
-                        public void onCreate2(Bundle savedInstanceState, boolean apply) {
-                            super.onCreate(savedInstanceState);
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                            SharedPreferences.Editor editor = preferences.edit();
-                            editor.putString("foo", "bar");
-                            editor.putInt("bar", 42);
-                            if (apply) {
-                                editor.apply();
-                            }
-                        }
+                    // OK 3
+                    public boolean test1(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("foo", "bar");
+                        editor.putInt("bar", 42);
+                        editor.apply(); return true;
+                    }
 
-                        // OK 3
-                        public boolean test1(Bundle savedInstanceState) {
-                            super.onCreate(savedInstanceState);
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                            SharedPreferences.Editor editor = preferences.edit();
-                            editor.putString("foo", "bar");
-                            editor.putInt("bar", 42);
-                            editor.apply(); return true;
-                        }
-
-                        // Not a bug
-                        public void test(Foo foo) {
-                            Bar bar1 = foo.edit();
-                            Bar bar2 = Foo.edit();
-                            Bar bar3 = edit();
+                    // Not a bug
+                    public void test(Foo foo) {
+                        Bar bar1 = foo.edit();
+                        Bar bar2 = Foo.edit();
+                        Bar bar3 = edit();
 
 
-                        }
+                    }
 
-                        // Bug
-                        public void bug1(Bundle savedInstanceState) {
-                            super.onCreate(savedInstanceState);
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                            SharedPreferences.Editor editor = preferences.edit();
-                            editor.putString("foo", "bar");
-                            editor.putInt("bar", 42);
-                        }
+                    // Bug
+                    public void bug1(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("foo", "bar");
+                        editor.putInt("bar", 42);
+                    }
 
-                        // Constructor test
-                        public SharedPrefsTest(Context context) {
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-                            SharedPreferences.Editor editor = preferences.edit();
-                            editor.putString("foo", "bar");
-                        }
+                    // Constructor test
+                    public SharedPrefsTest(Context context) {
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("foo", "bar");
+                    }
 
-                        private Bar edit() {
-                            return null;
-                        }
+                    private Bar edit() {
+                        return null;
+                    }
 
-                        private static class Foo {
-                            static Bar edit() { return null; }
-                        }
+                    private static class Foo {
+                        static Bar edit() { return null; }
+                    }
 
-                        private static class Bar {
+                    private static class Bar {
 
-                        }
-                     }
-
-                    """
+                    }
+                 }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1179,26 +1170,26 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.annotation.SuppressLint;
-                    import android.app.Activity;
-                    import android.content.SharedPreferences;
-                    import android.content.SharedPreferences.Editor;
-                    import android.os.Bundle;
-                    import android.preference.PreferenceManager;
+                import android.annotation.SuppressLint;
+                import android.app.Activity;
+                import android.content.SharedPreferences;
+                import android.content.SharedPreferences.Editor;
+                import android.os.Bundle;
+                import android.preference.PreferenceManager;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class SharedPrefsTest2 extends Activity {
-                        public void test1(SharedPreferences preferences) {
-                            SharedPreferences.Editor editor = preferences.edit();
-                        }
-
-                        public void test2(SharedPreferences preferences) {
-                            Editor editor = preferences.edit();
-                        }
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class SharedPrefsTest2 extends Activity {
+                    public void test1(SharedPreferences preferences) {
+                        SharedPreferences.Editor editor = preferences.edit();
                     }
-                    """
+
+                    public void test2(SharedPreferences preferences) {
+                        Editor editor = preferences.edit();
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1215,22 +1206,22 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.annotation.SuppressLint;
-                    import android.app.Activity;
-                    import android.content.SharedPreferences;
-                    import android.content.SharedPreferences.*;
-                    import android.os.Bundle;
-                    import android.preference.PreferenceManager;
+                import android.annotation.SuppressLint;
+                import android.app.Activity;
+                import android.content.SharedPreferences;
+                import android.content.SharedPreferences.*;
+                import android.os.Bundle;
+                import android.preference.PreferenceManager;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class SharedPrefsTest3 extends Activity {
-                        public void test(SharedPreferences preferences) {
-                            Editor editor = preferences.edit();
-                        }
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class SharedPrefsTest3 extends Activity {
+                    public void test(SharedPreferences preferences) {
+                        Editor editor = preferences.edit();
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1247,22 +1238,22 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.annotation.SuppressLint;
-                    import android.app.Activity;
-                    import android.content.SharedPreferences;
-                    import android.content.SharedPreferences.Editor;
-                    import android.os.Bundle;
-                    import android.preference.PreferenceManager;
+                import android.annotation.SuppressLint;
+                import android.app.Activity;
+                import android.content.SharedPreferences;
+                import android.content.SharedPreferences.Editor;
+                import android.os.Bundle;
+                import android.preference.PreferenceManager;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class SharedPrefsTest4 extends Activity {
-                        public void test(SharedPreferences preferences) {
-                            Editor editor = preferences.edit();
-                        }
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class SharedPrefsTest4 extends Activity {
+                    public void test(SharedPreferences preferences) {
+                        Editor editor = preferences.edit();
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1298,61 +1289,61 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.Context;
-                    import android.content.SharedPreferences;
-                    import android.content.SharedPreferences.Editor;
-                    import android.preference.PreferenceManager;
+                import android.content.Context;
+                import android.content.SharedPreferences;
+                import android.content.SharedPreferences.Editor;
+                import android.preference.PreferenceManager;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic", "ConstantConditions"})
-                    class SharedPrefsTest5 {
-                        SharedPreferences mPreferences;
-                        private static final String PREF_FOO = "foo";
-                        private static final String PREF_BAZ = "bar";
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic", "ConstantConditions"})
+                class SharedPrefsTest5 {
+                    SharedPreferences mPreferences;
+                    private static final String PREF_FOO = "foo";
+                    private static final String PREF_BAZ = "bar";
 
-                        private void wrong() {
-                            // Field reference to preferences
-                            mPreferences.edit().putString(PREF_FOO, "bar");
-                            mPreferences.edit().remove(PREF_BAZ).remove(PREF_FOO);
-                        }
-
-                        private void ok() {
-                            mPreferences.edit().putString(PREF_FOO, "bar").commit();
-                            mPreferences.edit().remove(PREF_BAZ).remove(PREF_FOO).commit();
-                        }
-
-                        private void wrong2(SharedPreferences preferences) {
-                            preferences.edit().putString(PREF_FOO, "bar");
-                            preferences.edit().remove(PREF_BAZ).remove(PREF_FOO);
-                        }
-
-                        private void wrong3(Context context) {
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-                            preferences.edit().putString(PREF_FOO, "bar");
-                            preferences.edit().remove(PREF_BAZ).remove(PREF_FOO);
-                        }
-
-                        private void wrong4(Context context) {
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-                            Editor editor = preferences.edit().putString(PREF_FOO, "bar");
-                        }
-
-                        private void ok2(Context context) {
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-                            preferences.edit().putString(PREF_FOO, "bar").commit();
-                        }
-
-                        private final SharedPreferences mPrefs = null;
-
-                        public void ok3() {
-                            final SharedPreferences.Editor editor = mPrefs.edit().putBoolean(
-                                    PREF_FOO, true);
-                            editor.putString(PREF_BAZ, "");
-                            editor.apply();
-                        }
+                    private void wrong() {
+                        // Field reference to preferences
+                        mPreferences.edit().putString(PREF_FOO, "bar");
+                        mPreferences.edit().remove(PREF_BAZ).remove(PREF_FOO);
                     }
-                    """
+
+                    private void ok() {
+                        mPreferences.edit().putString(PREF_FOO, "bar").commit();
+                        mPreferences.edit().remove(PREF_BAZ).remove(PREF_FOO).commit();
+                    }
+
+                    private void wrong2(SharedPreferences preferences) {
+                        preferences.edit().putString(PREF_FOO, "bar");
+                        preferences.edit().remove(PREF_BAZ).remove(PREF_FOO);
+                    }
+
+                    private void wrong3(Context context) {
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                        preferences.edit().putString(PREF_FOO, "bar");
+                        preferences.edit().remove(PREF_BAZ).remove(PREF_FOO);
+                    }
+
+                    private void wrong4(Context context) {
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                        Editor editor = preferences.edit().putString(PREF_FOO, "bar");
+                    }
+
+                    private void ok2(Context context) {
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                        preferences.edit().putString(PREF_FOO, "bar").commit();
+                    }
+
+                    private final SharedPreferences mPrefs = null;
+
+                    public void ok3() {
+                        final SharedPreferences.Editor editor = mPrefs.edit().putBoolean(
+                                PREF_FOO, true);
+                        editor.putString(PREF_BAZ, "");
+                        editor.apply();
+                    }
+                }
+                """
             ).indented()
         ).issues(CleanupDetector.SHARED_PREF).run().expect(expected)
     }
@@ -1370,22 +1361,22 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.SharedPreferences;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class SharedPrefsTest7 {
-                        private static final String PREF_NAME = "MyPrefName";
-                        private static final String MY_PREF_KEY = "MyKey";
-                        SharedPreferences getSharedPreferences(String key, int deflt) {
-                            return null;
-                        }
-                        public void test(String myPrefValue) {
-                            SharedPreferences settings = getSharedPreferences(PREF_NAME, 0);
-                            settings.edit().putString(MY_PREF_KEY, myPrefValue);
-                        }
+                import android.content.SharedPreferences;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class SharedPrefsTest7 {
+                    private static final String PREF_NAME = "MyPrefName";
+                    private static final String MY_PREF_KEY = "MyKey";
+                    SharedPreferences getSharedPreferences(String key, int deflt) {
+                        return null;
                     }
-                    """
+                    public void test(String myPrefValue) {
+                        SharedPreferences settings = getSharedPreferences(PREF_NAME, 0);
+                        settings.edit().putString(MY_PREF_KEY, myPrefValue);
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1400,11 +1391,12 @@ class CleanupDetectorTest : AbstractCheckTest() {
             """
         lint().files(manifest().minSdk(11), sharedPrefsTest8).run().expect(expected)
             .expectFixDiffs(
-                "" +
-                    "Fix for src/test/pkg/SharedPrefsTest8.java line 10: Replace commit() with apply():\n" +
-                    "@@ -11 +11\n" +
-                    "-         editor.commit();\n" +
-                    "+         editor.apply();\n"
+                """
+                Fix for src/test/pkg/SharedPrefsTest8.java line 10: Replace commit() with apply():
+                @@ -11 +11
+                -         editor.commit();
+                +         editor.apply();
+                """
             )
     }
 
@@ -1423,36 +1415,36 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/Chained.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.Context;
-                    import android.preference.PreferenceManager;
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    public class Chained {
-                        private static void falsePositive(Context context) {
-                            PreferenceManager
-                                    .getDefaultSharedPreferences(context)
-                                    .edit()
-                                    .putString("wat", "wat")
-                                    .commit();
-                        }
-
-                        private static void falsePositive2(Context context) {
-                            boolean var = PreferenceManager
-                                    .getDefaultSharedPreferences(context)
-                                    .edit()
-                                    .putString("wat", "wat")
-                                    .commit();
-                        }
-
-                        private static void truePositive(Context context) {
-                            PreferenceManager
-                                    .getDefaultSharedPreferences(context)
-                                    .edit()
-                                    .putString("wat", "wat");
-                        }
+                import android.content.Context;
+                import android.preference.PreferenceManager;
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class Chained {
+                    private static void falsePositive(Context context) {
+                        PreferenceManager
+                                .getDefaultSharedPreferences(context)
+                                .edit()
+                                .putString("wat", "wat")
+                                .commit();
                     }
-                    """
+
+                    private static void falsePositive2(Context context) {
+                        boolean var = PreferenceManager
+                                .getDefaultSharedPreferences(context)
+                                .edit()
+                                .putString("wat", "wat")
+                                .commit();
+                    }
+
+                    private static void truePositive(Context context) {
+                        PreferenceManager
+                                .getDefaultSharedPreferences(context)
+                                .edit()
+                                .putString("wat", "wat");
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -1463,31 +1455,33 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/CommitTest.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.Activity;
-                    import android.app.FragmentManager;
-                    import android.app.FragmentTransaction;
-                    import android.content.Context;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic", "ConstantConditions"})
-                    public class CommitTest {
-                        private Context mActivity;
-                        public void selectTab1() {
-                            FragmentTransaction trans = null;
-                            if (mActivity instanceof Activity) {
-                                trans = ((Activity)mActivity).getFragmentManager().beginTransaction()
-                                        .disallowAddToBackStack();
-                            }
-
-                            if (trans != null && !trans.isEmpty()) {
-                                trans.commit();
-                            }
+                import android.app.Activity;
+                import android.app.FragmentManager;
+                import android.app.FragmentTransaction;
+                import android.content.Context;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic", "ConstantConditions"})
+                public class CommitTest {
+                    private Context mActivity;
+                    public void selectTab1() {
+                        FragmentTransaction trans = null;
+                        if (mActivity instanceof Activity) {
+                            trans = ((Activity)mActivity).getFragmentManager().beginTransaction()
+                                    .disallowAddToBackStack();
                         }
 
-                        public void select(FragmentManager fragmentManager) {
-                            FragmentTransaction trans = fragmentManager.beginTransaction().disallowAddToBackStack();
+                        if (trans != null && !trans.isEmpty()) {
                             trans.commit();
-                        }}"""
+                        }
+                    }
+
+                    public void select(FragmentManager fragmentManager) {
+                        FragmentTransaction trans = fragmentManager.beginTransaction().disallowAddToBackStack();
+                        trans.commit();
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1499,22 +1493,23 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/CommitTest2.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.FragmentManager;
-                    import android.app.FragmentTransaction;
+                import android.app.FragmentManager;
+                import android.app.FragmentTransaction;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class CommitTest2 {
-                        private void navigateToFragment(FragmentTransaction transaction,
-                                                        FragmentManager supportFragmentManager) {
-                            if (transaction == null) {
-                                transaction = supportFragmentManager.beginTransaction();
-                            }
-
-                            transaction.commit();
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class CommitTest2 {
+                    private void navigateToFragment(FragmentTransaction transaction,
+                                                    FragmentManager supportFragmentManager) {
+                        if (transaction == null) {
+                            transaction = supportFragmentManager.beginTransaction();
                         }
-                    }"""
+
+                        transaction.commit();
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1527,26 +1522,27 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/SharedPrefsTest.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.Context;
-                    import android.content.SharedPreferences;
-                    import android.preference.PreferenceManager;
+                import android.content.Context;
+                import android.content.SharedPreferences;
+                import android.preference.PreferenceManager;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
-                    public abstract class SharedPrefsTest extends Context {
-                        private SharedPreferences.Editor getEditor() {
-                            return getPreferences().edit();
-                        }
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public abstract class SharedPrefsTest extends Context {
+                    private SharedPreferences.Editor getEditor() {
+                        return getPreferences().edit();
+                    }
 
-                        private boolean editAndCommit() {
-                            return getPreferences().edit().commit();
-                        }
+                    private boolean editAndCommit() {
+                        return getPreferences().edit().commit();
+                    }
 
-                        private SharedPreferences getPreferences() {
-                            return PreferenceManager.getDefaultSharedPreferences(this);
-                        }
-                    }"""
+                    private SharedPreferences getPreferences() {
+                        return PreferenceManager.getDefaultSharedPreferences(this);
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1557,16 +1553,18 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/CommitTest.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.FragmentManager;
-                    import android.app.FragmentTransaction;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class CommitTest {
-                        public void select(FragmentManager fragmentManager) {
-                            FragmentTransaction trans = fragmentManager.beginTransaction().disallowAddToBackStack();
-                            trans.commitNow();
-                        }}"""
+                import android.app.FragmentManager;
+                import android.app.FragmentTransaction;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class CommitTest {
+                    public void select(FragmentManager fragmentManager) {
+                        FragmentTransaction trans = fragmentManager.beginTransaction().disallowAddToBackStack();
+                        trans.commitNow();
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1581,26 +1579,26 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/TryWithResources.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentResolver;
-                    import android.database.Cursor;
-                    import android.net.Uri;
-                    import android.os.Build;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class TryWithResources {
-                        public void test(ContentResolver resolver, Uri uri, String[] projection) {
-                            try (Cursor cursor = resolver.query(uri, projection, null, null, null)) {
-                                if (cursor != null) {
-                                    //noinspection StatementWithEmptyBody
-                                    while (cursor.moveToNext()) {
-                                        // ..
-                                    }
+                import android.content.ContentResolver;
+                import android.database.Cursor;
+                import android.net.Uri;
+                import android.os.Build;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class TryWithResources {
+                    public void test(ContentResolver resolver, Uri uri, String[] projection) {
+                        try (Cursor cursor = resolver.query(uri, projection, null, null, null)) {
+                            if (cursor != null) {
+                                //noinspection StatementWithEmptyBody
+                                while (cursor.moveToNext()) {
+                                    // ..
                                 }
                             }
                         }
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1616,20 +1614,20 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/CommitPrefTest.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.Context;
-                    import android.content.SharedPreferences;
-                    import android.preference.PreferenceManager;
+                import android.content.Context;
+                import android.content.SharedPreferences;
+                import android.preference.PreferenceManager;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
-                    public abstract class CommitPrefTest extends Context {
-                        public void test() {
-                            SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(this).edit();
-                            edit.putInt("foo", 1).apply();
-                        }
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public abstract class CommitPrefTest extends Context {
+                    public void test() {
+                        SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(this).edit();
+                        edit.putInt("foo", 1).apply();
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1641,18 +1639,19 @@ class CleanupDetectorTest : AbstractCheckTest() {
             java(
                 "src/test/pkg/CommitTest2.java",
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.FragmentManager;
-                    import android.app.FragmentTransaction;
+                import android.app.FragmentManager;
+                import android.app.FragmentTransaction;
 
-                    @SuppressWarnings({"unused", "MethodMayBeStatic", "ClassNameDiffersFromFileName"})
-                    public class CommitTest2 {
-                        private void navigateToFragment(FragmentManager supportFragmentManager) {
-                            FragmentTransaction transaction = supportFragmentManager.beginTransaction();
-                            transaction.commitNowAllowingStateLoss();
-                        }
-                    }"""
+                @SuppressWarnings({"unused", "MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+                public class CommitTest2 {
+                    private void navigateToFragment(FragmentManager supportFragmentManager) {
+                        FragmentTransaction transaction = supportFragmentManager.beginTransaction();
+                        transaction.commitNowAllowingStateLoss();
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1662,28 +1661,28 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.Service;
-                    import android.content.SharedPreferences;
-                    import android.preference.PreferenceManager;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public abstract class CommitFromField extends Service {
-                        private SharedPreferences prefs;
-                        @SuppressWarnings("FieldCanBeLocal")
-                        private SharedPreferences.Editor editor;
+                import android.app.Service;
+                import android.content.SharedPreferences;
+                import android.preference.PreferenceManager;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public abstract class CommitFromField extends Service {
+                    private SharedPreferences prefs;
+                    @SuppressWarnings("FieldCanBeLocal")
+                    private SharedPreferences.Editor editor;
 
-                        @Override
-                        public void onCreate() {
-                            prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                        }
-
-                        private void engine() {
-                            editor = prefs.edit();
-                            editor.apply();
-                        }
+                    @Override
+                    public void onCreate() {
+                        prefs = PreferenceManager.getDefaultSharedPreferences(this);
                     }
-                    """
+
+                    private void engine() {
+                        editor = prefs.edit();
+                        editor.apply();
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1693,19 +1692,20 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.SharedPreferences;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public abstract class PrefTest {
-                        public static void something(SomePref pref) {
-                            pref.edit(1, 2, 3);
-                        }
+                import android.content.SharedPreferences;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public abstract class PrefTest {
+                    public static void something(SomePref pref) {
+                        pref.edit(1, 2, 3);
+                    }
 
-                        public interface SomePref extends SharedPreferences {
-                            void edit(Object...args);
-                        }
-                    }"""
+                    public interface SomePref extends SharedPreferences {
+                        void edit(Object...args);
+                    }
+                }
+                """
             )
         ).issues(CleanupDetector.SHARED_PREF).run().expectClean()
     }
@@ -1715,20 +1715,20 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.app.Activity;
-                    import android.app.Fragment;
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class CommitTest extends Activity {
-                        public void test() {
-                            final int id = getFragmentManager().beginTransaction()
-                                    .add(new Fragment(), null)
-                                    .addToBackStack(null)
-                                    .commit();
-                        }
+                import android.app.Activity;
+                import android.app.Fragment;
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class CommitTest extends Activity {
+                    public void test() {
+                        final int id = getFragmentManager().beginTransaction()
+                                .add(new Fragment(), null)
+                                .addToBackStack(null)
+                                .commit();
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1738,21 +1738,22 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                    package test.pkg
+                package test.pkg
 
-                    import android.app.Activity
+                import android.app.Activity
 
-                    fun test(activity: Activity) {
-                        with(activity.fragmentManager.beginTransaction()) {
-                            addToBackStack(null)
-                            commit()
-                        }
+                fun test(activity: Activity) {
+                    with(activity.fragmentManager.beginTransaction()) {
+                        addToBackStack(null)
+                        commit()
+                    }
 
-                        activity.fragmentManager.beginTransaction().run {
-                            addToBackStack(null)
-                            commit()
-                        }
-                    }"""
+                    activity.fragmentManager.beginTransaction().run {
+                        addToBackStack(null)
+                        commit()
+                    }
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1762,21 +1763,22 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                    package test.pkg
+                package test.pkg
 
-                    import android.content.SharedPreferences
+                import android.content.SharedPreferences
 
-                    private inline fun SharedPreferences.update(transaction: SharedPreferences.Editor.() -> Unit) =
-                            edit().run {
-                                transaction()
-                                apply()
-                            }
+                private inline fun SharedPreferences.update(transaction: SharedPreferences.Editor.() -> Unit) =
+                        edit().run {
+                            transaction()
+                            apply()
+                        }
 
-                    private inline fun SharedPreferences.update2(transaction: SharedPreferences.Editor.() -> Unit) =
-                            with(edit()) {
-                                transaction()
-                                apply()
-                            }"""
+                private inline fun SharedPreferences.update2(transaction: SharedPreferences.Editor.() -> Unit) =
+                        with(edit()) {
+                            transaction()
+                            apply()
+                        }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1802,25 +1804,25 @@ class CleanupDetectorTest : AbstractCheckTest() {
             kotlin(
                 "src/androidx/core/content/SharedPreferences.kt",
                 """
-                    package androidx.core.content
+                package androidx.core.content
 
-                    import android.annotation.SuppressLint
-                    import android.content.SharedPreferences
+                import android.annotation.SuppressLint
+                import android.content.SharedPreferences
 
-                    @SuppressLint("ApplySharedPref")
-                    inline fun SharedPreferences.edit(
-                        commit: Boolean = false,
-                        action: SharedPreferences.Editor.() -> Unit
-                    ) {
-                        val editor = edit()
-                        action(editor)
-                        if (commit) {
-                            editor.commit()
-                        } else {
-                            editor.apply()
-                        }
+                @SuppressLint("ApplySharedPref")
+                inline fun SharedPreferences.edit(
+                    commit: Boolean = false,
+                    action: SharedPreferences.Editor.() -> Unit
+                ) {
+                    val editor = edit()
+                    action(editor)
+                    if (commit) {
+                        editor.commit()
+                    } else {
+                        editor.apply()
                     }
-                    """
+                }
+                """
             ).indented()
         ).run().expectClean()
     }
@@ -1986,46 +1988,46 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                    package test.pkg
-                    import android.content.ContentProviderClient
-                    import android.database.Cursor
-                    import android.net.Uri
+                package test.pkg
+                import android.content.ContentProviderClient
+                import android.database.Cursor
+                import android.net.Uri
 
-                    internal inline fun <T, U> ContentProviderClient.queryOne(
-                        uri: Uri,
-                        projection: Array<String>?,
-                        selection: String?,
-                        args: Array<String>?,
-                        wrapper: (Cursor) -> T,
-                        mapper: (T) -> U
-                    ): U? {
-                        return query(uri, projection, selection, args, null)?.use { cursor ->
-                            val wrapped = wrapper.invoke(cursor)
-                            if (cursor.moveToFirst()) {
-                                val result = mapper.invoke(wrapped)
-                                check(!cursor.moveToNext()) { "Cursor has more than one item" }
-                                return result
-                            }
-                            return null
+                internal inline fun <T, U> ContentProviderClient.queryOne(
+                    uri: Uri,
+                    projection: Array<String>?,
+                    selection: String?,
+                    args: Array<String>?,
+                    wrapper: (Cursor) -> T,
+                    mapper: (T) -> U
+                ): U? {
+                    return query(uri, projection, selection, args, null)?.use { cursor ->
+                        val wrapped = wrapper.invoke(cursor)
+                        if (cursor.moveToFirst()) {
+                            val result = mapper.invoke(wrapped)
+                            check(!cursor.moveToNext()) { "Cursor has more than one item" }
+                            return result
                         }
+                        return null
                     }
+                }
 
-                    internal inline fun <T, U> ContentProviderClient.queryList(
-                        uri: Uri,
-                        projection: Array<String>?,
-                        selection: String?,
-                        args: Array<String>?,
-                        wrapper: (Cursor) -> T,
-                        mapper: (T) -> U
-                    ): List<U> {
-                        return query(uri, projection, selection, args, null)?.use { cursor ->
-                            val wrapped = wrapper.invoke(cursor)
-                            return List(cursor.count) { index ->
-                                cursor.moveToPosition(index)
-                                mapper.invoke(wrapped)
-                            }
-                        } ?: emptyList()
-                    }
+                internal inline fun <T, U> ContentProviderClient.queryList(
+                    uri: Uri,
+                    projection: Array<String>?,
+                    selection: String?,
+                    args: Array<String>?,
+                    wrapper: (Cursor) -> T,
+                    mapper: (T) -> U
+                ): List<U> {
+                    return query(uri, projection, selection, args, null)?.use { cursor ->
+                        val wrapped = wrapper.invoke(cursor)
+                        return List(cursor.count) { index ->
+                            cursor.moveToPosition(index)
+                            mapper.invoke(wrapped)
+                        }
+                    } ?: emptyList()
+                }
                 """
             ).indented()
         ).run().expectClean()
@@ -2035,28 +2037,28 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentResolver;
-                    import android.database.Cursor;
-                    import android.net.Uri;
+                import android.content.ContentResolver;
+                import android.database.Cursor;
+                import android.net.Uri;
 
-                    fun test(resolver: ContentResolver, uri: Uri, projection: Array<String>) {
-                        resolver.query(uri, projection, null, null, null).use { // OK
-                            cursor.moveToNext()
-                        }
-
-                        resolver.query(uri, projection, null, null, null).use() // ERROR
-
-                        resolver.query(uri, projection, null, null, null).use(1) // ERROR
+                fun test(resolver: ContentResolver, uri: Uri, projection: Array<String>) {
+                    resolver.query(uri, projection, null, null, null).use { // OK
+                        cursor.moveToNext()
                     }
 
-                    // These use() functions don't have a matching signature
-                    fun Cursor.use() {
-                    }
+                    resolver.query(uri, projection, null, null, null).use() // ERROR
 
-                    fun Cursor.use(n: Int) {
-                    }
+                    resolver.query(uri, projection, null, null, null).use(1) // ERROR
+                }
+
+                // These use() functions don't have a matching signature
+                fun Cursor.use() {
+                }
+
+                fun Cursor.use(n: Int) {
+                }
                 """
             ).indented()
         ).run().expect(
@@ -2227,20 +2229,21 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).run().expect(
-            "" +
-                "src/test/pkg/test.kt:23: Warning: This animation should be started with #start() [Recycle]\n" +
-                "    ValueAnimator.ofFloat(0f, 100f).apply { // ERROR\n" +
-                "                  ~~~~~~~\n" +
-                "src/test/pkg/test.kt:28: Warning: This animation should be started with #start() [Recycle]\n" +
-                "    val animation = ValueAnimator.ofFloat(0f, 100f)  // ERROR\n" +
-                "                                  ~~~~~~~\n" +
-                "src/test/pkg/test.kt:32: Warning: This animation should be started with #start() [Recycle]\n" +
-                "    val objectAnimator = ObjectAnimator.ofFloat(textView, \"translationX\", 100f)  // ERROR\n" +
-                "                                        ~~~~~~~\n" +
-                "src/test/pkg/test.kt:36: Warning: This animation should be started with #start() [Recycle]\n" +
-                "    val animatorSet = AnimatorSet()  // ERROR\n" +
-                "                      ~~~~~~~~~~~\n" +
-                "0 errors, 4 warnings"
+            """
+            src/test/pkg/test.kt:23: Warning: This animation should be started with #start() [Recycle]
+                ValueAnimator.ofFloat(0f, 100f).apply { // ERROR
+                              ~~~~~~~
+            src/test/pkg/test.kt:28: Warning: This animation should be started with #start() [Recycle]
+                val animation = ValueAnimator.ofFloat(0f, 100f)  // ERROR
+                                              ~~~~~~~
+            src/test/pkg/test.kt:32: Warning: This animation should be started with #start() [Recycle]
+                val objectAnimator = ObjectAnimator.ofFloat(textView, "translationX", 100f)  // ERROR
+                                                    ~~~~~~~
+            src/test/pkg/test.kt:36: Warning: This animation should be started with #start() [Recycle]
+                val animatorSet = AnimatorSet()  // ERROR
+                                  ~~~~~~~~~~~
+            0 errors, 4 warnings
+            """
         )
     }
 
@@ -2354,7 +2357,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
     }
 
     fun testAssetFileDescriptor() {
-
         val expected =
             """
             src/test/pkg/AssetFileDescriptorTest.java:15: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
@@ -2383,136 +2385,136 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentProviderClient;
-                    import android.content.ContentResolver;
-                    import android.content.res.AssetFileDescriptor;
-                    import android.net.Uri;
+                import android.content.ContentProviderClient;
+                import android.content.ContentResolver;
+                import android.content.res.AssetFileDescriptor;
+                import android.net.Uri;
 
-                    class AssetFileDescriptorTest {
-                        ContentProviderClient client;
-                        ContentResolver resolver;
-                        Uri uri;
-                        AssetFileDescriptor fileField;
+                class AssetFileDescriptorTest {
+                    ContentProviderClient client;
+                    ContentResolver resolver;
+                    Uri uri;
+                    AssetFileDescriptor fileField;
 
-                        void error1() {
-                            client.openAssetFile(uri, "mode", null); // Warn
-                            client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
-                            client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
-                            resolver.openAssetFile(uri, "mode", null); // Warn
-                            resolver.openAssetFileDescriptor(uri, "mode", null); // Warn
-                            resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
-                            resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                    void error1() {
+                        client.openAssetFile(uri, "mode", null); // Warn
+                        client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                        client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                        resolver.openAssetFile(uri, "mode", null); // Warn
+                        resolver.openAssetFileDescriptor(uri, "mode", null); // Warn
+                        resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                        resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                    }
+
+                    void ok1() {
+                        AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                        file.close();
+                        AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        file2.close();
+                        AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        file3.close();
+                        AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
+                        file4.close();
+                        AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                        file5.close();
+                        AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        file6.close();
+                        AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        file7.close();
+                    }
+
+                    void ok2() {
+                        AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                        unknown(file);
+                        AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        unknown(file2);
+                        AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        unknown(file3);
+                        AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
+                        unknown(file4);
+                        AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                        unknown(file5);
+                        AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        unknown(file6);
+                        AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        unknown(file7);
+                    }
+
+                    void ok3() {
+                        fileField = client.openAssetFile(uri, "mode", null); // OK
+                        fileField = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        fileField = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        fileField = resolver.openAssetFile(uri, "mode", null); // OK
+                        fileField = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                        fileField = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        fileField = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                    }
+
+                    void ok4() {
+                        try (AssetFileDescriptor file = client.openAssetFile(uri, "mode", null)) { // OK
+                            file.getLength();
                         }
-
-                        void ok1() {
-                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
-                            file.close();
-                            AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            file2.close();
-                            AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            file3.close();
-                            AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
-                            file4.close();
-                            AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
-                            file5.close();
-                            AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            file6.close();
-                            AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            file7.close();
+                        try (AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
+                            file2.getLength();
                         }
-
-                        void ok2() {
-                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
-                            unknown(file);
-                            AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            unknown(file2);
-                            AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            unknown(file3);
-                            AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
-                            unknown(file4);
-                            AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
-                            unknown(file5);
-                            AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            unknown(file6);
-                            AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            unknown(file7);
+                        try (AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
+                            file3.getLength();
                         }
-
-                        void ok3() {
-                            fileField = client.openAssetFile(uri, "mode", null); // OK
-                            fileField = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            fileField = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            fileField = resolver.openAssetFile(uri, "mode", null); // OK
-                            fileField = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
-                            fileField = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            fileField = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        try (AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null)) { // OK
+                            file4.getLength();
                         }
-
-                        void ok4() {
-                            try (AssetFileDescriptor file = client.openAssetFile(uri, "mode", null)) { // OK
-                                file.getLength();
-                            }
-                            try (AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
-                                file2.getLength();
-                            }
-                            try (AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
-                                file3.getLength();
-                            }
-                            try (AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null)) { // OK
-                                file4.getLength();
-                            }
-                            try (AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null)) { // OK
-                                file5.getLength();
-                            }
-                            try (AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
-                                file6.getLength();
-                            }
-                            try (AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
-                                file7.getLength();
-                            }
+                        try (AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null)) { // OK
+                            file5.getLength();
                         }
-
-                        AssetFileDescriptor ok5() {
-                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
-                            return file;
+                        try (AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
+                            file6.getLength();
                         }
-
-                        AssetFileDescriptor ok6() {
-                            AssetFileDescriptor file = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            return file;
-                        }
-
-                        AssetFileDescriptor ok7() {
-                            AssetFileDescriptor file = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            return file;
-                        }
-
-                        AssetFileDescriptor ok8() {
-                            AssetFileDescriptor file = resolver.openAssetFile(uri, "mode", null); // OK
-                            return file;
-                        }
-
-                        AssetFileDescriptor ok9() {
-                            AssetFileDescriptor file = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
-                            return file;
-                        }
-
-                        AssetFileDescriptor ok10() {
-                            AssetFileDescriptor file = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
-                            return file;
-                        }
-
-                        AssetFileDescriptor ok11() {
-                            AssetFileDescriptor file = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
-                            return file;
-                        }
-
-                        void unknown(AssetFileDescriptor file) {
+                        try (AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
+                            file7.getLength();
                         }
                     }
-                    """
+
+                    AssetFileDescriptor ok5() {
+                        AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                        return file;
+                    }
+
+                    AssetFileDescriptor ok6() {
+                        AssetFileDescriptor file = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        return file;
+                    }
+
+                    AssetFileDescriptor ok7() {
+                        AssetFileDescriptor file = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        return file;
+                    }
+
+                    AssetFileDescriptor ok8() {
+                        AssetFileDescriptor file = resolver.openAssetFile(uri, "mode", null); // OK
+                        return file;
+                    }
+
+                    AssetFileDescriptor ok9() {
+                        AssetFileDescriptor file = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                        return file;
+                    }
+
+                    AssetFileDescriptor ok10() {
+                        AssetFileDescriptor file = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                        return file;
+                    }
+
+                    AssetFileDescriptor ok11() {
+                        AssetFileDescriptor file = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        return file;
+                    }
+
+                    void unknown(AssetFileDescriptor file) {
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
@@ -2535,95 +2537,94 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentProviderClient;
-                    import android.content.ContentResolver;
-                    import android.net.Uri;
-                    import android.os.ParcelFileDescriptor;
+                import android.content.ContentProviderClient;
+                import android.content.ContentResolver;
+                import android.net.Uri;
+                import android.os.ParcelFileDescriptor;
 
-                    class ParcelFileDescriptorTest {
-                        ContentProviderClient client;
-                        ContentResolver resolver;
-                        Uri uri;
-                        ParcelFileDescriptor fileField;
+                class ParcelFileDescriptorTest {
+                    ContentProviderClient client;
+                    ContentResolver resolver;
+                    Uri uri;
+                    ParcelFileDescriptor fileField;
 
-                        void error1() {
-                            client.openFile(uri, "mode", null); // Warn
-                            resolver.openFile(uri, "mode", null); // Warn
-                            resolver.openFileDescriptor(uri, "mode", null); // Warn
+                    void error1() {
+                        client.openFile(uri, "mode", null); // Warn
+                        resolver.openFile(uri, "mode", null); // Warn
+                        resolver.openFileDescriptor(uri, "mode", null); // Warn
+                    }
+
+                    void ok1() {
+                        ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                        file.close();
+                        ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                        file2.close();
+                        ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                        file3.close();
+                    }
+
+                    void ok2() {
+                        ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                        file.closeWithError("msg");
+                        ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                        file2.closeWithError("msg");
+                        ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                        file3.closeWithError("msg");
+                    }
+
+                    void ok3() {
+                        ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                        unknown(file);
+                        ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                        unknown(file2);
+                        ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                        unknown(file3);
+                    }
+
+                    void ok4() {
+                        fileField = client.openFile(uri, "mode", null); // OK
+                        fileField = resolver.openFile(uri, "mode", null); // OK
+                        fileField = resolver.openFileDescriptor(uri, "mode", null); // OK
+                    }
+
+                    void ok5() {
+                        try (ParcelFileDescriptor file = client.openFile(uri, "mode", null)) { // OK
+                            file.getStatSize();
                         }
-
-                        void ok1() {
-                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
-                            file.close();
-                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
-                            file2.close();
-                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
-                            file3.close();
+                        try (ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null)) { // OK
+                            file2.getStatSize();
                         }
-
-                        void ok2() {
-                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
-                            file.closeWithError("msg");
-                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
-                            file2.closeWithError("msg");
-                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
-                            file3.closeWithError("msg");
-                        }
-
-                        void ok3() {
-                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
-                            unknown(file);
-                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
-                            unknown(file2);
-                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
-                            unknown(file3);
-                        }
-
-                        void ok4() {
-                            fileField = client.openFile(uri, "mode", null); // OK
-                            fileField = resolver.openFile(uri, "mode", null); // OK
-                            fileField = resolver.openFileDescriptor(uri, "mode", null); // OK
-                        }
-
-                        void ok5() {
-                            try (ParcelFileDescriptor file = client.openFile(uri, "mode", null)) { // OK
-                                file.getStatSize();
-                            }
-                            try (ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null)) { // OK
-                                file2.getStatSize();
-                            }
-                            try (ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null)) { // OK
-                                file3.getStatSize();
-                            }
-                        }
-
-                        ParcelFileDescriptor ok6() {
-                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
-                            return file;
-                        }
-
-                        ParcelFileDescriptor ok7() {
-                            ParcelFileDescriptor file = resolver.openFile(uri, "mode", null); // OK
-                            return file;
-                        }
-
-                        ParcelFileDescriptor ok8() {
-                            ParcelFileDescriptor file = resolver.openFileDescriptor(uri, "mode", null); // OK
-                            return file;
-                        }
-
-                        void unknown(ParcelFileDescriptor file) {
+                        try (ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null)) { // OK
+                            file3.getStatSize();
                         }
                     }
-                    """
+
+                    ParcelFileDescriptor ok6() {
+                        ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                        return file;
+                    }
+
+                    ParcelFileDescriptor ok7() {
+                        ParcelFileDescriptor file = resolver.openFile(uri, "mode", null); // OK
+                        return file;
+                    }
+
+                    ParcelFileDescriptor ok8() {
+                        ParcelFileDescriptor file = resolver.openFileDescriptor(uri, "mode", null); // OK
+                        return file;
+                    }
+
+                    void unknown(ParcelFileDescriptor file) {
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }
 
     fun testOpenStreams() {
-
         val expected =
             """
             src/test/pkg/OpenStreamsTest.java:15: Warning: This InputStream should be freed up after use with #close() [Recycle]
@@ -2637,69 +2638,69 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
 
-                    import android.content.ContentResolver;
-                    import android.net.Uri;
-                    import java.io.InputStream;
-                    import java.io.OutputStream;
+                import android.content.ContentResolver;
+                import android.net.Uri;
+                import java.io.InputStream;
+                import java.io.OutputStream;
 
-                    class OpenStreamsTest {
-                        ContentResolver resolver;
-                        Uri uri;
-                        InputStream inputStreamField;
-                        InputStream outputStreamField;
+                class OpenStreamsTest {
+                    ContentResolver resolver;
+                    Uri uri;
+                    InputStream inputStreamField;
+                    InputStream outputStreamField;
 
-                        void error1() {
-                            resolver.openInputStream(uri); // Warn
-                            resolver.openOutputStream(uri); // Warn
+                    void error1() {
+                        resolver.openInputStream(uri); // Warn
+                        resolver.openOutputStream(uri); // Warn
+                    }
+
+                    void ok1() {
+                        InputStream inputStream = resolver.openInputStream(uri); // OK
+                        inputStream.close();
+                        OutputStream outputStream = resolver.openOutputStream(uri); // OK
+                        outputStream.close();
+                    }
+
+                    void ok2() {
+                        InputStream inputStream = resolver.openInputStream(uri); // OK
+                        unknown(inputStream);
+                        OutputStream outputStream = resolver.openOutputStream(uri); // OK
+                        unknown(outputStream);
+                    }
+
+                    void ok3() {
+                        inputStreamField = resolver.openInputStream(uri); // OK
+                        outputStreamField = resolver.openOutputStream(uri); // OK
+                    }
+
+                    void ok4() {
+                        try (InputStream inputStream = resolver.openInputStream(uri)) { // OK
+                            inputStream.read();
                         }
-
-                        void ok1() {
-                            InputStream inputStream = resolver.openInputStream(uri); // OK
-                            inputStream.close();
-                            OutputStream outputStream = resolver.openOutputStream(uri); // OK
-                            outputStream.close();
-                        }
-
-                        void ok2() {
-                            InputStream inputStream = resolver.openInputStream(uri); // OK
-                            unknown(inputStream);
-                            OutputStream outputStream = resolver.openOutputStream(uri); // OK
-                            unknown(outputStream);
-                        }
-
-                        void ok3() {
-                            inputStreamField = resolver.openInputStream(uri); // OK
-                            outputStreamField = resolver.openOutputStream(uri); // OK
-                        }
-
-                        void ok4() {
-                            try (InputStream inputStream = resolver.openInputStream(uri)) { // OK
-                                inputStream.read();
-                            }
-                            try (OutputStream outputStream = resolver.openOutputStream(uri)) { // OK
-                                outputStream.flush();
-                            }
-                        }
-
-                        ParcelFileDescriptor ok5() {
-                            InputStream inputStream = resolver.openInputStream(uri); // OK
-                            return inputStream;
-                        }
-
-                        ParcelFileDescriptor ok6() {
-                            OutputStream outputStream = resolver.openOutputStream(uri);
-                            return outputStream;
-                        }
-
-                        void unknown(InputStream inputStream) {
-                        }
-
-                        void unknown(OutputStream outputStream) {
+                        try (OutputStream outputStream = resolver.openOutputStream(uri)) { // OK
+                            outputStream.flush();
                         }
                     }
-                    """
+
+                    ParcelFileDescriptor ok5() {
+                        InputStream inputStream = resolver.openInputStream(uri); // OK
+                        return inputStream;
+                    }
+
+                    ParcelFileDescriptor ok6() {
+                        OutputStream outputStream = resolver.openOutputStream(uri);
+                        return outputStream;
+                    }
+
+                    void unknown(InputStream inputStream) {
+                    }
+
+                    void unknown(OutputStream outputStream) {
+                    }
+                }
+                """
             ).indented()
         ).run().expect(expected)
     }

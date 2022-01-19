@@ -140,7 +140,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
             """
         lint().files(
             manifest().pkg("foo.library").minSdk(14),
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             mCustomview
         ).run().expect(expected)
     }
@@ -198,7 +198,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
     fun testCustomOk2() {
         lint().files(
             manifest().pkg("foo.library").minSdk(14),
-            projectProperties().library(true).compileSdk(14),
+            projectProperties().library(true),
             // This project already uses the res-auto package
             xml(
                 "res/layout/customview2.xml",
@@ -530,7 +530,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
         lint().files(
             mNamespace3,
             manifest().pkg("foo.library").minSdk(14),
-            projectProperties().library(true).compileSdk(14)
+            projectProperties().library(true)
         ).run().expect(expected)
     }
 
@@ -545,7 +545,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
         lint().files(
             mNamespace4,
             manifest().pkg("foo.library").minSdk(14),
-            projectProperties().library(true).compileSdk(14)
+            projectProperties().library(true)
         ).run().expect(expected)
     }
 
@@ -581,7 +581,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
                     "</android.support.v7.widget.GridLayout>\n"
             ),
             manifest().pkg("foo.library").minSdk(14),
-            projectProperties().library(true).compileSdk(14)
+            projectProperties().library(true)
         ).run().expect(expected)
     }
 

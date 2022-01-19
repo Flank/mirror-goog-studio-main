@@ -1732,7 +1732,7 @@ public class TestLintClient extends LintCliClient {
         final IAndroidTarget compileTarget = super.getCompileTarget(project);
         String targetHash = project.getBuildTargetHash();
         if (compileTarget == null) {
-            if (task.requireCompileSdk && targetHash != null) {
+            if (task.requireCompileSdk && targetHash != null && project.isAndroidProject()) {
                 fail(
                         "Could not find SDK to compile with ("
                                 + targetHash

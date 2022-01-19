@@ -222,8 +222,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             OPEN_TYPED_ASSET_FILE_DESCRIPTOR ->
                 if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
                     evaluator.extendsClass(
-                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
-                    )
+                            containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                        )
                 ) {
                     checkRecycled(
                         context,
@@ -236,8 +236,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             OPEN_FILE, OPEN_FILE_DESCRIPTOR ->
                 if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
                     evaluator.extendsClass(
-                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
-                    )
+                            containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                        )
                 ) {
                     checkRecycled(
                         context,

@@ -45,7 +45,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         mAndroidManifest,
-                        projectProperties().compileSdk(10),
                         mCustombg,
                         mCustombg2,
                         image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
@@ -161,7 +160,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                         manifest(
                                 mAndroidManifest.contents.replace(
                                         "android:theme=", "android:notheme=")),
-                        projectProperties().compileSdk(10),
                         mCustombg,
                         mCustombg2,
                         image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
@@ -201,7 +199,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         mAndroidManifest,
-                        projectProperties().compileSdk(10),
                         mCustombg,
                         mCustombg2,
                         image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
@@ -238,7 +235,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         mAndroidManifest,
-                        projectProperties().compileSdk(10),
                         image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
                         xml(
                                 "res/layout/fourth.xml",
@@ -268,7 +264,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         mAndroidManifest,
-                        projectProperties().compileSdk(10),
                         image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
                         xml(
                                 "res/layout/fourth.xml",
@@ -300,7 +295,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         mAndroidManifest,
-                        projectProperties().compileSdk(10),
                         xml(
                                 "res/layout/null.xml",
                                 ""
@@ -329,7 +323,6 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         mAndroidManifest,
-                        projectProperties().compileSdk(10),
                         xml(
                                 "res/layout/tools_background.xml",
                                 ""
