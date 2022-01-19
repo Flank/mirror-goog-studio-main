@@ -27,6 +27,7 @@ import com.android.builder.packaging.JarFlinger
 import com.android.sdklib.AndroidTargetHash
 import com.android.tools.r8.Version
 import com.google.common.io.ByteStreams
+import java.io.File
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -134,10 +135,13 @@ fun getDesugaredMethods(
             getDesugarLibLintFromTransform(coreLibDesugarConfig, minSdk, compileSdk))
     }
 
-    val fakeJar = project.gradle.gradleUserHomeDir.resolve("$ANDROID_SUBDIR/$FAKE_DEPENDENCY_JAR")
-    if (!fakeJar.exists()) {
-        fakeJar.parentFile.mkdirs()
-        JarFlinger(fakeJar.toPath()).use {}
+    var fakeJar: File?
+    synchronized(project.gradle) {
+        fakeJar = project.gradle.gradleUserHomeDir.resolve("$ANDROID_SUBDIR/$FAKE_DEPENDENCY_JAR")
+        if (fakeJar != null && !fakeJar!!.exists()) {
+            fakeJar!!.parentFile.mkdirs()
+            JarFlinger(fakeJar!!.toPath()).use {}
+        }
     }
     val fakeDependency = project.dependencies.create(project.files(fakeJar))
     val adhocConfiguration = project.configurations.detachedConfiguration(fakeDependency)
