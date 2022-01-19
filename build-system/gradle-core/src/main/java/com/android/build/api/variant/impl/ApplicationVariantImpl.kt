@@ -166,8 +166,6 @@ open class ApplicationVariantImpl @Inject constructor(
         get() = delegate.isCoreLibraryDesugaringEnabled
     override val debuggable: Boolean
         get() = delegate.isDebuggable
-    override val profileable: Boolean
-        get() = delegate.isProfileable
 
     override val shouldPackageProfilerDependencies: Boolean
         get() = advancedProfilingTransforms.isNotEmpty()
@@ -251,7 +249,7 @@ open class ApplicationVariantImpl @Inject constructor(
 
     // Apps include the jacoco agent if test coverage is enabled
     override val packageJacocoRuntime: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = variantDslInfo.isTestCoverageEnabled
 
     override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
         CodeTransparencyImpl(

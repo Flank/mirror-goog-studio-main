@@ -362,7 +362,8 @@ class R8ToolTest {
                 programClasses,
                 listOf(ExampleClasses::class.java, ExampleClasses.ProgramClass::class.java))
 
-        val programClasspath = mutableListOf(programClasses)
+        val libraries = mutableListOf(programClasses)
+        libraries.addAll(bootClasspath)
 
         val proguardInputMapping = tmp.newFile("space in name.txt").toPath()
         Files.write(
@@ -391,8 +392,8 @@ class R8ToolTest {
             output,
             listOf(),
             javaRes,
-            bootClasspath,
-            programClasspath,
+            libraries,
+            emptyList(),
             toolConfig,
             proguardConfig,
             mainDexConfig,

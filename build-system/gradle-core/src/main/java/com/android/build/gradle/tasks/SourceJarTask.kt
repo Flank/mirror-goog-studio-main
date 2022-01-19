@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.Project
-import org.gradle.api.attributes.DocsType
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Internal
@@ -82,7 +81,7 @@ abstract class SourceJarTask : Jar(), VariantAwareTask {
                     .getOutputPath(
                         creationConfig.artifacts.buildDirectory,
                         creationConfig.name,
-                        "${creationConfig.name}-${DocsType.SOURCES}.jar"
+                        "out.jar"
                     )
 
             task.archiveFileName.set(outputFile.name)

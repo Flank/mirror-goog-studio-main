@@ -25,7 +25,6 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.composeActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.composeActivityMaterial3Template
-import com.android.tools.idea.wizard.template.impl.activities.composeWearActivity.composeWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.cppEmptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
@@ -77,7 +76,6 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     basicActivityTemplate,
     basicActivityMaterial3Template,
     blankWearActivityTemplate,
-    composeWearActivityTemplate,
     bottomNavigationActivityTemplate,
     composeActivityTemplate,
     composeActivityMaterial3Template,

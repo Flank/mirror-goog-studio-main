@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
@@ -116,15 +115,13 @@ open class UnitTestImpl @Inject constructor(
         get() = testedConfig.applicationId
 
     override val debuggable: Boolean
-        get() = testedConfig.debuggable
-
-    override val profileable: Boolean
-        get() = testedConfig.profileable
+        get() = global.profilingMode.isDebuggable ?: testedConfig.debuggable
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isUnitTestCoverageEnabled
+        get() = variantDslInfo.isTestCoverageEnabled
+                || variantDslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<DirectoryEntry>) {}

@@ -353,14 +353,8 @@ class FileNormalizerImpl(
             )
         }
 
-        val defaultPlatformLocation =
-            "platforms/android-${DEFAULT_COMPILE_SDK_VERSION}/"
         androidSdkDir?.let {
-            mutableList.add(
-                RootData(it, "ANDROID_SDK") { string ->
-                    string.replace(defaultPlatformLocation, "platforms/android-{COMPILE_SDK_VERSION}/")
-                }
-            )
+            mutableList.add(RootData(it, "ANDROID_SDK"))
         }
         androidPrefsDir?.let {
             mutableList.add(RootData(it, "ANDROID_PREFS"))

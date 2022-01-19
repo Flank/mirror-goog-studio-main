@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.desugar
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
@@ -31,10 +32,8 @@ class D8DesugarMethodsTest {
 
     @Test
     fun testModelFetching() {
-        val model = project.modelV2().fetchModels().container.getProject(":").androidProject
+        val model = project.model().fetchAndroidProjects().onlyModel
         val expectedMethods = "java/lang/Boolean#compare(ZZ)I"
-        val d8BackportedMethods = model!!.variants.first().desugaredMethods
-            .find { it.name.contains("D8BackportedDesugaredMethods.txt") }
-        d8BackportedMethods!!.readLines().contains(expectedMethods)
+        Truth.assertThat(model.variants.first().desugaredMethods).contains(expectedMethods)
     }
 }

@@ -29,6 +29,8 @@ class ClassTestResults extends CompositeTestResults {
     private final String name;
     private final PackageTestResults packageResults;
     private final Set<TestResult> results = new TreeSet<>();
+    private final StringBuilder standardOutput = new StringBuilder();
+    private final StringBuilder standardError = new StringBuilder();
 
     public ClassTestResults(String name, PackageTestResults packageResults) {
         super(packageResults);
@@ -75,6 +77,14 @@ class ClassTestResults extends CompositeTestResults {
         return map;
     }
 
+    public CharSequence getStandardError() {
+        return standardError;
+    }
+
+    public CharSequence getStandardOutput() {
+        return standardOutput;
+    }
+
     public TestResult addTest(String testName, long duration,
                               String device, String project, String flavor) {
         TestResult test = new TestResult(testName, duration, device, project, flavor, this);
@@ -84,5 +94,13 @@ class ClassTestResults extends CompositeTestResults {
         addVariant(project, flavor, test);
 
         return addTest(test);
+    }
+
+    public void addStandardOutput(String textContent) {
+        standardOutput.append(textContent);
+    }
+
+    public void addStandardError(String textContent) {
+        standardError.append(textContent);
     }
 }

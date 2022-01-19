@@ -13,8 +13,9 @@
             - compileTaskName               = "compileDebugSources"
             - assembleTaskName              = "assembleDebug"
             - classesFolders:
-               * {PROJECT}/test/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                * {PROJECT}/test/build/intermediates/javac/debug/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/test/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
             - ideSetupTaskNames             = ["generateDebugSources"]
             - generatedSourceFolders:
                * {PROJECT}/test/build/generated/aidl_source_output_dir/debug/out{!}
@@ -49,7 +50,6 @@
          - testedTargetVariant:
             - targetProjectPath = ":app"
             - targetVariant     = "debug"
-         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
       < debug
    < variants
    - javaCompileOptions:
@@ -67,5 +67,4 @@
       * "TRANSITIVE_R_CLASS -> true"
       * "UNIFIED_TEST_PLATFORM -> true"
    - lintChecksJars        = []
-   - modelSyncFiles        = []
 < AndroidProject

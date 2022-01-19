@@ -95,7 +95,7 @@ cc_toolchain_config(
     cpu = "k8",
     cxx_builtin_include_directories = [
         "/usr/local/include",
-        clang_latest_linux + "/lib64/clang/14.0.0/include",
+        clang_latest_linux + "/lib64/clang/9.0.4/include",
         "/usr/include/x86_64-linux-gnu",
         "/usr/include",
         "/usr/include/c++/8.0.1",
@@ -165,7 +165,6 @@ cc_toolchain_config(
     cpu = "darwin",
     cxx_builtin_include_directories = [
         clang_latest_darwin + "/include/c++/v1",
-        # TODO(b/213648391) update mac version
         clang_latest_darwin + "/lib64/clang/9.0.4/include",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
@@ -267,7 +266,8 @@ cc_toolchain_config(
         "cpp": clang_latest_windows + "/bin/clang-cl.exe",
         "gcc": clang_latest_windows + "/bin/clang-cl.exe",
         "gcov": "wrapper/bin/msvc_nop.bat",
-        "ld": clang_latest_windows + "/bin/lld-link.exe",
+        # TODO: remove wrapper when buildbot on windows supports symlinks
+        "ld": clang_latest_windows + "/bin/link.exe",
         "nm": "wrapper/bin/msvc_nop.bat",
         "objcopy": "wrapper/bin/msvc_nop.bat",
         "objdump": "wrapper/bin/msvc_nop.bat",

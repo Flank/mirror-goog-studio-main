@@ -26,7 +26,9 @@ import com.android.build.api.dsl.TestBuildType
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.IssueReporter
@@ -69,8 +71,6 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         return name
     }
 
-    abstract override var enableAndroidTestCoverage: Boolean
-
     abstract override var enableUnitTestCoverage: Boolean
 
     abstract var _isDebuggable: Boolean
@@ -89,8 +89,6 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
     abstract override var isRenderscriptDebuggable: Boolean
 
     abstract override var renderscriptOptimLevel: Int
-
-    abstract override var isProfileable: Boolean
 
     @Deprecated("This property is deprecated. Changing its value has no effect.")
     override var isZipAlignEnabled: Boolean
@@ -129,6 +127,9 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
     private var _postProcessingConfiguration: PostProcessingConfiguration? = null
     private var postProcessingDslMethodUsed: String? = null
     private var _shrinkResources = false
+    private val profilingMode = ProfilingMode.getProfilingModeType(
+        dslServices.projectOptions[StringOption.PROFILING_MODE]
+    )
 
     /*
      * (Non javadoc): Whether png crunching should be enabled if not explicitly overridden.
@@ -168,7 +169,8 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
      */
     fun init(debugSigningConfig: SigningConfig?) {
         init()
-        if (BuilderConstants.DEBUG == name) {
+        val isProfileable = profilingMode == ProfilingMode.PROFILEABLE
+        if (BuilderConstants.DEBUG == name || isProfileable) {
             assert(debugSigningConfig != null)
             setSigningConfig(debugSigningConfig)
         }
@@ -237,7 +239,6 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         _shrinkResources = thatBuildType._shrinkResources
         shaders._initWith(thatBuildType.shaders)
         enableUnitTestCoverage = thatBuildType.enableUnitTestCoverage
-        enableAndroidTestCoverage = thatBuildType.enableAndroidTestCoverage
         externalNativeBuildOptions._initWith(thatBuildType.externalNativeBuildOptions)
         _postProcessing.initWith(that.postprocessing)
         isCrunchPngs = thatBuildType.isCrunchPngs
@@ -245,7 +246,6 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         setMatchingFallbacks(thatBuildType.matchingFallbacks)
         // we don't want to dynamically link these values. We just want to copy the current value.
         isDefault = thatBuildType.isDefault
-        isProfileable = thatBuildType.isProfileable
         aarMetadata.minCompileSdk = thatBuildType.aarMetadata.minCompileSdk
         (optimization as OptimizationImpl).initWith(that.optimization as OptimizationImpl)
     }

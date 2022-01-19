@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-49d794a0216fe2e2d47be5150c80e3b3e387f2da97b912ae742ac422d08f9dd2
+7fd44810380bbd2aa36febebfe820755978cc307beede3ccbdee4d5e47428cc6
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -570,6 +570,7 @@ com.android.builder.model.v2.ide.AaptOptions$Namespacing.valueOf: com.android.bu
 com.android.builder.model.v2.ide.AaptOptions$Namespacing.values: com.android.builder.model.v2.ide.AaptOptions$Namespacing[] ()
 com.android.builder.model.v2.ide.AaptOptions.getNamespacing: com.android.builder.model.v2.ide.AaptOptions$Namespacing ()
 com.android.builder.model.v2.ide.AbstractArtifact
+com.android.builder.model.v2.ide.AbstractArtifact.getAdditionalClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.AbstractArtifact.getAssembleTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.AbstractArtifact.getClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.AbstractArtifact.getCompileTaskName: java.lang.String ()
@@ -753,7 +754,6 @@ com.android.builder.model.v2.ide.UnresolvedDependency.getCause: java.lang.String
 com.android.builder.model.v2.ide.UnresolvedDependency.getName: java.lang.String ()
 com.android.builder.model.v2.ide.Variant implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.Variant.getAndroidTestArtifact: com.android.builder.model.v2.ide.AndroidArtifact ()
-com.android.builder.model.v2.ide.Variant.getDesugaredMethods: java.util.List<java.io.File> ()
 com.android.builder.model.v2.ide.Variant.getDisplayName: java.lang.String ()
 com.android.builder.model.v2.ide.Variant.getMainArtifact: com.android.builder.model.v2.ide.AndroidArtifact ()
 com.android.builder.model.v2.ide.Variant.getName: java.lang.String ()
@@ -784,7 +784,6 @@ com.android.builder.model.v2.models.AndroidProject.getDynamicFeatures: java.util
 com.android.builder.model.v2.models.AndroidProject.getFlags: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags ()
 com.android.builder.model.v2.models.AndroidProject.getJavaCompileOptions: com.android.builder.model.v2.ide.JavaCompileOptions ()
 com.android.builder.model.v2.models.AndroidProject.getLintChecksJars: java.util.List<java.io.File> ()
-com.android.builder.model.v2.models.AndroidProject.getModelSyncFiles: java.util.Collection<com.android.builder.model.v2.ModelSyncFile> ()
 com.android.builder.model.v2.models.AndroidProject.getNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getResourcePrefix: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getTestFixturesNamespace: java.lang.String ()

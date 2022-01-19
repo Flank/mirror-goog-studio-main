@@ -36,7 +36,6 @@ import com.android.tools.lint.detector.api.ResourceEvaluator
 import com.android.tools.lint.detector.api.ResourceEvaluator.ANIMATOR_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.ANIM_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.ANY_RES_ANNOTATION
-import com.android.tools.lint.detector.api.ResourceEvaluator.ANY_RES_MARKER_TYPE
 import com.android.tools.lint.detector.api.ResourceEvaluator.ARRAY_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.ATTR_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.BOOL_RES_ANNOTATION
@@ -44,9 +43,7 @@ import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATIO
 import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_MARKER_TYPE
 import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_ANNOTATION
-import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_DP_MARKER_TYPE
 import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_MARKER_TYPE
-import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_SP_MARKER_TYPE
 import com.android.tools.lint.detector.api.ResourceEvaluator.DIMEN_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.DRAWABLE_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.FONT_RES_ANNOTATION
@@ -75,7 +72,6 @@ import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
@@ -165,7 +161,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         annotationInfo: AnnotationInfo,
         usageInfo: AnnotationUsageInfo
     ) {
-        when (val qualifiedName = annotationInfo.qualifiedName) {
+        val qualifiedName = annotationInfo.qualifiedName
+        when (qualifiedName) {
             COLOR_INT_ANNOTATION.oldName(), COLOR_INT_ANNOTATION.newName() -> checkColor(
                 context,
                 element
@@ -174,8 +171,10 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 context,
                 element
             )
-            DIMENSION_ANNOTATION.oldName(), DIMENSION_ANNOTATION.newName(), PX_ANNOTATION.oldName(), PX_ANNOTATION.newName() ->
-                checkPx(context, element, annotationInfo.annotation)
+            DIMENSION_ANNOTATION.oldName(), DIMENSION_ANNOTATION.newName(), PX_ANNOTATION.oldName(), PX_ANNOTATION.newName() -> checkPx(
+                context,
+                element
+            )
             else -> {
                 if (isResourceAnnotation(qualifiedName)) {
                     // Make sure it's the first one to avoid duplicate warnings since we check all
@@ -302,8 +301,6 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (types != null && !types.isEmpty()) {
             val type = when {
                 types.contains(DIMENSION_MARKER_TYPE) -> "dimension"
-                types.contains(DIMENSION_SP_MARKER_TYPE) -> "sp dimension"
-                types.contains(DIMENSION_DP_MARKER_TYPE) -> "dp dimension"
                 types.contains(COLOR_INT_MARKER_TYPE) -> "color"
                 else -> "resource id"
             }
@@ -353,36 +350,36 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return generateSequence(seed, nextFunction)
     }
 
-    private fun checkPx(context: JavaContext, argument: UElement, annotation: UAnnotation) {
+    private fun checkPx(context: JavaContext, argument: UElement) {
         if (argument is UIfExpression) {
-            argument.thenExpression?.let { checkPx(context, it, annotation) }
-            argument.elseExpression?.let { checkPx(context, it, annotation) }
+            if (argument.thenExpression != null) {
+                checkPx(context, argument.thenExpression!!)
+            }
+            if (argument.elseExpression != null) {
+                checkPx(context, argument.elseExpression!!)
+            }
             return
         } else if (argument is UParenthesizedExpression) {
-            checkPx(context, argument.expression, annotation)
+            checkPx(context, argument.expression)
             return
         }
 
-        val types = ResourceEvaluator.getResourceTypes(context.evaluator, argument)
-            ?: return
-        if (types.contains(ResourceType.DIMEN)) {
-            val message =
-                "Should pass resolved pixel dimension instead of resource id here: " +
-                    "`getResources().getDimension*(${argument.asSourceString()})`"
-            report(context, RESOURCE_TYPE, argument, context.getLocation(argument), message)
-        } else {
-            val unit = ResourceEvaluator.getTypeFromAnnotation(annotation) ?: return
-            val typeUnit = ResourceEvaluator.DIMENSION_MARKERS.firstOrNull { types.contains(it) } ?: return
-            if (unit != typeUnit && unit.isDimension()) {
-                val message = "Mismatched @Dimension units here; expected ${
-                unit.getMarkerTypeDescription()} but received ${typeUnit.getMarkerTypeDescription()}"
-                report(context, RESOURCE_TYPE, argument, context.getLocation(argument), message)
-            }
-        }
-    }
+        val types = ResourceEvaluator.getResourceTypes(
+            context.evaluator,
+            argument
+        )
 
-    private fun ResourceType.isDimension(): Boolean {
-        return this == DIMENSION_MARKER_TYPE || this == DIMENSION_DP_MARKER_TYPE || this == DIMENSION_SP_MARKER_TYPE
+        if (types != null && types.contains(ResourceType.DIMEN)) {
+            val message = String.format(
+                "Should pass resolved pixel dimension instead of resource id here: " +
+                    "`getResources().getDimension*(%1\$s)`",
+                argument.asSourceString()
+            )
+            report(
+                context, COLOR_USAGE, argument,
+                context.getLocation(argument), message
+            )
+        }
     }
 
     private fun checkResourceType(
@@ -427,31 +424,17 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         val message = when {
             actual != null && actual.size == 1 && actual.contains(COLOR_INT_MARKER_TYPE) -> {
-                "Expected a color resource id (`R.color.`) but received ${COLOR_INT_MARKER_TYPE.getMarkerTypeDescription()}"
+                "Expected a color resource id (`R.color.`) but received an RGB integer"
             }
             expectedTypes.contains(COLOR_INT_MARKER_TYPE) -> {
                 "Should pass resolved color instead of resource id here: " +
                     "`getResources().getColor(${argument.asSourceString()})`"
             }
             actual != null && actual.size == 1 && actual.contains(DIMENSION_MARKER_TYPE) -> {
-                "Expected a dimension resource id (`R.dimen.`) but received ${DIMENSION_MARKER_TYPE.getMarkerTypeDescription()}"
+                "Expected a dimension resource id (`R.dimen.`) but received a pixel integer"
             }
             expectedTypes.contains(DIMENSION_MARKER_TYPE) -> {
                 "Should pass resolved pixel size instead of resource id here: " +
-                    "`getResources().getDimension*(${argument.asSourceString()})`"
-            }
-            actual != null && actual.size == 1 && actual.contains(DIMENSION_SP_MARKER_TYPE) -> {
-                "Expected a dimension resource id (`R.dimen.`) but received ${DIMENSION_SP_MARKER_TYPE.getMarkerTypeDescription()}"
-            }
-            expectedTypes.contains(DIMENSION_SP_MARKER_TYPE) -> {
-                "Should pass resolved scale-independent (sp) pixel size instead of resource id here: " +
-                    "`getResources().getDimension*(${argument.asSourceString()})`"
-            }
-            actual != null && actual.size == 1 && actual.contains(DIMENSION_DP_MARKER_TYPE) -> {
-                "Expected a dimension resource id (`R.dimen.`) but received ${DIMENSION_DP_MARKER_TYPE.getMarkerTypeDescription()}"
-            }
-            expectedTypes.contains(DIMENSION_DP_MARKER_TYPE) -> {
-                "Should pass resolved density-independent (dp) pixel size instead of resource id here: " +
                     "`getResources().getDimension*(${argument.asSourceString()})`"
             }
             expectedTypes == ResourceEvaluator.getAnyRes() -> {
@@ -462,17 +445,6 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
         report(context, RESOURCE_TYPE, argument, context.getLocation(argument), message)
-    }
-
-    private fun ResourceType.getMarkerTypeDescription(): String? {
-        return when (this) {
-            COLOR_INT_MARKER_TYPE -> "an RGB integer"
-            DIMENSION_MARKER_TYPE -> "a pixel integer"
-            DIMENSION_SP_MARKER_TYPE -> "a scale-independent (sp) integer"
-            DIMENSION_DP_MARKER_TYPE -> "density-independent (dp) integer"
-            ANY_RES_MARKER_TYPE -> "resource id of any type"
-            else -> null
-        }
     }
 
     /**

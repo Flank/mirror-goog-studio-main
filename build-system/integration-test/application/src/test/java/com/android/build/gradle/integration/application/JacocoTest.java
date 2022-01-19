@@ -77,8 +77,7 @@ public class JacocoTest {
     @Before
     public void setup() throws Exception {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.buildTypes.debug.enableAndroidTestCoverage true\n");
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true\n");
         TestFileUtils.appendToFile(
                 project.getGradlePropertiesFile(),
                 BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION.getPropertyName() + "="
@@ -105,13 +104,11 @@ public class JacocoTest {
     @Test
     public void testDisablingAndEnablingJacoco() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.buildTypes.debug.enableAndroidTestCoverage false\n");
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled false\n");
         project.executor().run("assembleDebug");
 
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.buildTypes.debug.enableAndroidTestCoverage true\n");
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true\n");
         project.executor().run("assembleDebug");
     }
 
@@ -127,7 +124,7 @@ public class JacocoTest {
                         + "    def generated = project.files(\"generated-classes.jar\")\n"
                         + "    variant.registerPostJavacGeneratedBytecode(generated)\n"
                         + "}\n"
-                        + "android.buildTypes.debug.enableAndroidTestCoverage = true\n");
+                        + "android.buildTypes.debug.testCoverageEnabled = true\n");
 
         project.executor().run("assembleDebug");
 

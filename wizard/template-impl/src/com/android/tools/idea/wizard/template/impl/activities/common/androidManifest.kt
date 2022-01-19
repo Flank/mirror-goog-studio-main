@@ -33,8 +33,7 @@ fun androidManifestXml(
 
   val generateActivityTitleBlock = renderIf(generateActivityTitle) { "android:label = \"@string/$appName\"" }
 
-  val themeBlock = when {
-    activityThemeName.startsWith("@android:style/") -> """android:theme = "$activityThemeName""""
+  val hasActionBarBlock = when {
     hasNoActionBar -> """android:theme = "@style/${activityThemeName}""""
     else -> ""
   }
@@ -55,7 +54,7 @@ fun androidManifestXml(
     <activity android:name ="${packageName}.${activityClass}"
     android:exported="$launcher"
     $generateActivityTitleBlock
-    $themeBlock
+    $hasActionBarBlock
     $isResizeableBlock>
     ${commonActivityBody(launcher, isLibraryProject)}
     </activity>

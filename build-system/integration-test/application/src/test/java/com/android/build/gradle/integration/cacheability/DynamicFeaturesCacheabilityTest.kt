@@ -159,8 +159,7 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
-                    ":app:bundleDebugClassesToCompileJar", /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
-                    ":app:bundleDebugClassesToRuntimeJar", /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
+                    ":app:bundleDebugClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.feature.BundleAllClasses] */
                     ":app:checkDebugAarMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckAarMetadataTask] */
                     ":app:checkDebugDuplicateClasses", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask] */
                     ":app:createDebugApkListingFileRedirect",

@@ -33,7 +33,7 @@ class JacocoLibraryProjectTest {
     @Before
     fun enableCodeCoverage() {
         project.buildFile.appendText("""
-            android.buildTypes.debug.enableAndroidTestCoverage true
+            android.buildTypes.debug.testCoverageEnabled true
             dependencies {
                 testImplementation "junit:junit:4.12"
             }

@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.renderIf
 
 fun buildGradle(
-  packageName: String,
   buildApiString: String?,
   generateKotlin: Boolean,
   minApi: String,
@@ -33,7 +32,6 @@ plugins {
     ${renderIf(generateKotlin) {"    id 'org.jetbrains.kotlin.android'"}}
 }
 android {
-    namespace '$packageName'
     compileSdkVersion ${buildApiString?.toIntOrNull() ?: "\"$buildApiString\""}
 
     defaultConfig {

@@ -141,10 +141,7 @@ fun createCxxModuleModel(
         ndkSupportedAbiList = ndk.supportedAbis,
         ndkDefaultAbiList = ndk.defaultAbis,
         ndkDefaultStl = ndk.ndkInfo.getDefaultStl(configurationParameters.buildSystem),
-        makeFile = configurationParameters.moduleRootFolder.resolve(configurationParameters.makeFile).normalize(),
-        configureScript = configurationParameters.configureScript?.let { configureScript ->
-            configurationParameters.moduleRootFolder.resolve(configureScript).normalize()
-        },
+        makeFile = configurationParameters.makeFile,
         buildSystem = configurationParameters.buildSystem,
         intermediatesBaseFolder = intermediatesBaseFolder,
         intermediatesFolder = intermediatesFolder,

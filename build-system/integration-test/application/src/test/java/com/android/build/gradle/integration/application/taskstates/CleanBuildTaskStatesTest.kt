@@ -36,8 +36,7 @@ class CleanBuildTaskStatesTest {
         private val EXPECTED_TASK_STATES = mapOf(
             // Sort alphabetically for readability
             DID_WORK to setOf(
-                ":app:bundleDebugClassesToCompileJar",
-                ":app:bundleDebugClassesToRuntimeJar",
+                ":app:bundleDebugClasses",
                 ":app:checkDebugAarMetadata",
                 ":app:checkDebugDuplicateClasses",
                 ":app:compileDebugJavaWithJavac",

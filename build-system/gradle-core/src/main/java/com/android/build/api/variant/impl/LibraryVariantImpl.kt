@@ -127,10 +127,7 @@ open class  LibraryVariantImpl @Inject constructor(
         get() = delegate.dexingType
 
     override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
-
-    override val profileable: Boolean
-        get() = variantDslInfo.isProfileable
+        get() = global.profilingMode.isDebuggable ?: variantDslInfo.isDebuggable
 
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
@@ -162,5 +159,5 @@ open class  LibraryVariantImpl @Inject constructor(
         get() = delegate.minSdkVersionForDexing
 
     override val packageJacocoRuntime: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = variantDslInfo.isTestCoverageEnabled
 }

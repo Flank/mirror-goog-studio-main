@@ -531,7 +531,7 @@ public class AndroidDebugBridge {
                         return sThis;
                     } else {
                         // stop the current server
-                        if (!sThis.stop(rem.getRemainingNanos(), TimeUnit.NANOSECONDS)) {
+                        if (!sThis.stop(rem.getRemainingUnits(), unit)) {
                             // We return without notifying listeners, since there were no changes
                             return null;
                         }
@@ -545,7 +545,7 @@ public class AndroidDebugBridge {
 
             try {
                 localThis = new AndroidDebugBridge(osLocation);
-                if (!localThis.start(rem.getRemainingNanos(), TimeUnit.NANOSECONDS)) {
+                if (!localThis.start(rem.getRemainingUnits(), unit)) {
                     // Note: Don't return here, as we want to notify listeners
                     localThis = null;
                 }
@@ -1076,7 +1076,7 @@ public class AndroidDebugBridge {
         // Don't stop ADB when using user managed ADB server.
         if (sUserManagedAdbMode) {
             Log.i(DDMS, "User managed ADB mode: Not stopping ADB server");
-        } else if (!stopAdb(rem.getRemainingNanos(), TimeUnit.NANOSECONDS)) {
+        } else if (!stopAdb(rem.getRemainingUnits(), unit)) {
             return false;
         }
 
@@ -1138,13 +1138,13 @@ public class AndroidDebugBridge {
 
         boolean isSuccessful;
         synchronized (this) {
-            isSuccessful = stopAdb(rem.getRemainingNanos(), TimeUnit.NANOSECONDS);
+            isSuccessful = stopAdb(rem.getRemainingUnits(), unit);
             if (!isSuccessful) {
                 Log.w(ADB, "Error stopping ADB without specified timeout");
             }
 
             if (isSuccessful) {
-                isSuccessful = startAdb(rem.getRemainingNanos(), TimeUnit.NANOSECONDS);
+                isSuccessful = startAdb(rem.getRemainingUnits(), unit);
             }
 
             if (isSuccessful && mDeviceMonitor == null) {
@@ -1498,7 +1498,7 @@ public class AndroidDebugBridge {
         }
 
         // get the return code from the process
-        if (process.waitFor(rem.getRemainingNanos(), TimeUnit.NANOSECONDS)) {
+        if (process.waitFor(rem.getRemainingUnits(), unit)) {
             return process.exitValue();
         } else {
             Log.w(ADB, "Process did not terminate within specified timeout, killing it");

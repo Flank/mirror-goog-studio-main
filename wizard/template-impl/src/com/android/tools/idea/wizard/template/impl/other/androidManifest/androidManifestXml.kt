@@ -15,9 +15,11 @@
  */
 package com.android.tools.idea.wizard.template.impl.other.androidManifest
 
-fun androidManifestXml() =
-"""
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+fun androidManifestXml(
+  packageName: String
+) = """
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="${packageName}">
 
     <application>
 

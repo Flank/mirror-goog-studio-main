@@ -1,0 +1,82 @@
+syntax = "proto3";
+option java_package = "com.android.ide.model.sync";
+option java_multiple_files = true;
+
+//
+// Top level message for variant model.
+//
+message Variant {
+    // common properties that are shared by all variant types.
+    CommonVariantModel common = 1;
+
+    // variant model information, per variant type. Only one of the field is valid at a time.
+    oneof variant {
+        ApplicationVariantModel applicationVariantModel = 2;
+        LibraryVariantModel libraryVariantModel = 3;
+        DynamicFeatureVariantModel dynamicFeatureVariantModel = 4;
+        AndroidTestVariantModel androidTestVariantModel = 5;
+        UnitTestVariantModel unitTestVariantModel = 6;
+        TestVariantModel testVariantModel = 7;
+        TestFixturesVariantModel testFixtureVariantModel = 8;
+    }
+}
+
+//
+// Common model information for all variant types.
+//
+message CommonVariantModel {
+}
+
+//
+// Common model information for variant types producing an APK or Bundle
+//
+message ModuleVariantModel {
+    map<string, string> manifestPlaceholders = 1;
+}
+
+//
+// Application VariantType specific model.
+//
+message ApplicationVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
+    string applicationId = 2;
+}
+
+//
+// Library VariantType specific model.
+//
+message LibraryVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
+}
+
+//
+// Dynamic Feature VariantType specific model.
+//
+message DynamicFeatureVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
+}
+
+//
+// AndroidTest VariantType specific model.
+//
+message AndroidTestVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
+    string applicationId = 2;
+}
+
+//
+// UnitTest VariantType specific model.
+//
+message UnitTestVariantModel {
+}
+
+//
+// Test VariantType specific model.
+//
+message TestVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
+}
+
+// TestFixture Variant type specific model
+message TestFixturesVariantModel {
+}

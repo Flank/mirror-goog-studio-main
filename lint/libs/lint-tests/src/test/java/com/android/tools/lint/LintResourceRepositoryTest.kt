@@ -528,7 +528,6 @@ class LintResourceRepositoryTest {
 
     private fun checkRepository(
         vararg files: TestFile,
-        includeAgpRepository: Boolean = true,
         assertions: (String, ResourceRepository, File) -> Unit
     ) {
         val root = temporaryFolder.root
@@ -537,10 +536,10 @@ class LintResourceRepositoryTest {
         val res = File(dir, "res")
 
         val client = LintCliClient(LintClient.CLIENT_UNIT_TESTS)
-        val standardRepo = if (includeAgpRepository) TestLintClient.getResources(
+        val standardRepo = TestLintClient.getResources(
             ResourceNamespace.RES_AUTO, null,
             listOf(Pair("app", listOf(res))), true
-        ) else null
+        )
 
         val lintRepo = LintResourceRepository.createFromFolder(
             client, sequenceOf(res), null, null,
@@ -549,12 +548,11 @@ class LintResourceRepositoryTest {
 
         for (
             pair in sequenceOf(
-                if (standardRepo != null) Pair("Backed by XML (using AGP resource repositories)", standardRepo) else null,
+                Pair("Backed by XML (using AGP resource repositories)", standardRepo),
                 Pair("Backed by serialization", deserialize(serialize(lintRepo))),
                 Pair("Backed by XML (using lint's folder processor)", lintRepo)
             )
         ) {
-            pair ?: continue
             assertions(pair.first, pair.second, root)
         }
     }
@@ -572,36 +570,6 @@ class LintResourceRepositoryTest {
         val pathVariables = PathVariables()
         pathVariables.add("ROOT", temporaryFolder.root)
         return pathVariables
-    }
-
-    @Test
-    fun testEmptyAndHiddenFiles() {
-        checkRepository(
-            xml(
-                "res/values/test.xml",
-                """
-                    <resources>
-                        <string name="string1">String 1</string>
-                    </resources>
-                    """
-            ).indented(),
-            xml(
-                "res/values/.ignore.xml",
-                """
-                    <resources>
-                        <string name="ignore">Ignore</string>
-                    </resources>
-                    """
-            ).indented(),
-            xml("res/values/empty.xml", ""),
-            includeAgpRepository = false
-        ) { _, repository, root ->
-            assertEquals(
-                "namespace:apk/res-auto\n" +
-                    "  @string/string1 (value) config=default source=/app/res/values/test.xml;  String 1\n",
-                repository.prettyPrint(root).dos2unix()
-            )
-        }
     }
 
     @Test

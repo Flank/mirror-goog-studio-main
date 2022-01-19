@@ -46,7 +46,6 @@ import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.MethodSignatureUtil
 import com.intellij.psi.util.TypeConversionUtil
 import com.intellij.util.io.URLUtil
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
@@ -302,30 +301,22 @@ open class DefaultJavaEvaluator(
             // Optimization: JavaDirectoryService can be slow so try to compute it directly
             if (containingFile is PsiJavaFile) {
                 return packageInfoCache.computeIfAbsent(containingFile.packageName) { name ->
-                    val pkg = JavaPsiFacade.getInstance(containingFile.project).findPackage(name)
-                    if (pkg != null) {
-                        pkg
-                    } else {
-                        val cls = findClass(name + '.' + PsiPackage.PACKAGE_INFO_CLASS)
-                        val modifierList = cls?.modifierList
-                        object : PsiPackageImpl(node.manager, name) {
-                            override fun getAnnotationList(): PsiModifierList? {
-                                return if (modifierList != null) {
-                                    // Use composite even if we just have one such that we don't
-                                    // pass a modifier list tied to source elements in the class
-                                    // (modifier lists can be part of the AST)
-                                    PsiCompositeModifierList(
-                                        manager,
-                                        listOf(modifierList)
-                                    )
-                                } else null
-                            }
+                    val cls = findClass(name + '.' + PsiPackage.PACKAGE_INFO_CLASS)
+                    val modifierList = cls?.modifierList
+                    object : PsiPackageImpl(node.manager, name) {
+                        override fun getAnnotationList(): PsiModifierList? {
+                            return if (modifierList != null) {
+                                // Use composite even if we just have one such that we don't
+                                // pass a modifier list tied to source elements in the class
+                                // (modifier lists can be part of the AST)
+                                PsiCompositeModifierList(
+                                    manager,
+                                    listOf(modifierList)
+                                )
+                            } else null
                         }
                     }
                 }
-            } else if (containingFile is KtFile) {
-                val packageFqName = containingFile.packageFqName
-                return JavaPsiFacade.getInstance(node.project).findPackage(packageFqName.asString())
             }
 
             val dir = containingFile.parent

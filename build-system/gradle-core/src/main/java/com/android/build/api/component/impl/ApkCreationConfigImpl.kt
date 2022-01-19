@@ -30,10 +30,7 @@ open class ApkCreationConfigImpl<T: ApkCreationConfig>(
 ): ConsumableCreationConfigImpl<T>(config, dslInfo) {
 
     val isDebuggable: Boolean
-        get() = variantDslInfo.isDebuggable
-
-    val isProfileable: Boolean
-        get() = variantDslInfo.isProfileable
+        get() = config.global.profilingMode.isDebuggable ?: variantDslInfo.isDebuggable
 
     override val needsShrinkDesugarLibrary: Boolean
         get() {

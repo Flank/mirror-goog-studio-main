@@ -121,8 +121,7 @@ public class AndroidBuildGradleJsons {
         File persistedMiniConfig = getMiniConfigFile(abi);
         File json = getJsonFile(abi);
         NativeBuildConfigValueMini result;
-        if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)
-                || !json.isFile()) {
+        if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)) {
             // The mini json has already been created for us. Just read it instead of parsing again.
             try (JsonReader reader = new JsonReader(new FileReader(persistedMiniConfig))) {
                 result = parseToMiniConfig(reader);
@@ -178,7 +177,7 @@ public class AndroidBuildGradleJsons {
      *
      * @throws IOException I/O failure
      */
-    public static void writeNativeBuildMiniConfigValueToJsonFile(
+    private static void writeNativeBuildMiniConfigValueToJsonFile(
             @NonNull File outputJson, @NonNull NativeBuildConfigValueMini miniConfig)
             throws IOException {
         String actualResult =

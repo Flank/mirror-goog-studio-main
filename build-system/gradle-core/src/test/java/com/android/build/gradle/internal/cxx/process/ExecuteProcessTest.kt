@@ -74,7 +74,6 @@ class ExecuteProcessTest {
 
     @Test
     fun `check problematic strings can round trip`() {
-        checkRoundtrip(":")
         checkRoundtrip("=")
         checkRoundtrip(" ")
         checkRoundtrip(",")

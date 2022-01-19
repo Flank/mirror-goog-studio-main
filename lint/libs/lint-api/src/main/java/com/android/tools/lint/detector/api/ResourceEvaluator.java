@@ -36,6 +36,7 @@ import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.ResourceReference;
 import com.google.common.collect.ImmutableMap;
+import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiElement;
@@ -45,7 +46,6 @@ import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiModifierListOwner;
-import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiReference;
@@ -55,18 +55,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import kotlin.collections.CollectionsKt;
 import org.jetbrains.kotlin.asJava.LightClassUtilsKt;
 import org.jetbrains.kotlin.asJava.elements.KtLightMethod;
 import org.jetbrains.kotlin.psi.KtAnnotationEntry;
 import org.jetbrains.kotlin.psi.KtProperty;
 import org.jetbrains.uast.UAnnotation;
-import org.jetbrains.uast.UBlockExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UIfExpression;
-import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
@@ -91,20 +88,8 @@ public class ResourceEvaluator {
      */
     public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.SAMPLE_DATA;
 
-    /** Marker for @Dimension(unit = SP); see {@link #DIMENSION_MARKER_TYPE} */
-    public static final ResourceType DIMENSION_SP_MARKER_TYPE = ResourceType.OVERLAYABLE;
-
-    /** Marker for @Dimension(unit = DP); see {@link #DIMENSION_MARKER_TYPE} */
-    public static final ResourceType DIMENSION_DP_MARKER_TYPE = ResourceType.AAPT;
-
-    /** The marker types respresenting dimensions */
-    public static final ResourceType[] DIMENSION_MARKERS =
-            new ResourceType[] {
-                DIMENSION_MARKER_TYPE, DIMENSION_SP_MARKER_TYPE, DIMENSION_DP_MARKER_TYPE
-            };
-
     /** Marker type used to signify *all* resource types (for the annotation `AnyRes`) */
-    public static final ResourceType ANY_RES_MARKER_TYPE = ResourceType.MACRO;
+    private static final ResourceType ANY_RES_MARKER_TYPE = ResourceType.MACRO;
 
     public static final AndroidxName COLOR_INT_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "ColorInt");
@@ -485,9 +470,12 @@ public class ResourceEvaluator {
                 UCallExpression call = (UCallExpression) probablyCallExpression;
                 PsiMethod method = call.resolve();
                 if (method != null) {
-                    EnumSet<ResourceType> types = getTypesFromAnnotations(method);
-                    if (types != null) {
-                        return types;
+                    PsiClass containingClass = PsiTreeUtil.getParentOfType(method, PsiClass.class);
+                    if (containingClass != null) {
+                        EnumSet<ResourceType> types = getTypesFromAnnotations(method);
+                        if (types != null) {
+                            return types;
+                        }
                     }
                 } else if (call.getKind() == UastCallKind.NESTED_ARRAY_INITIALIZER) {
                     EnumSet<ResourceType> types = EnumSet.noneOf(ResourceType.class);
@@ -502,9 +490,6 @@ public class ResourceEvaluator {
                     }
                 }
             }
-        } else if (element instanceof UBlockExpression) {
-            List<UExpression> expressions = ((UBlockExpression) element).getExpressions();
-            return getResourceTypes(CollectionsKt.lastOrNull(expressions));
         }
 
         if (element instanceof UReferenceExpression) {
@@ -576,7 +561,7 @@ public class ResourceEvaluator {
         } else if (element instanceof PsiMethodCallExpression) {
             PsiMethodCallExpression call = (PsiMethodCallExpression) element;
             PsiMethod method = call.resolveMethod();
-            if (method != null) {
+            if (method != null && method.getContainingClass() != null) {
                 EnumSet<ResourceType> types = getTypesFromAnnotations(method);
                 if (types != null) {
                     return types;
@@ -625,12 +610,6 @@ public class ResourceEvaluator {
         if (evaluator == null) {
             return null;
         }
-        return getTypesFromAnnotations(evaluator, owner);
-    }
-
-    @Nullable
-    public static EnumSet<ResourceType> getTypesFromAnnotations(
-            @NonNull JavaEvaluator evaluator, @NonNull PsiModifierListOwner owner) {
         List<UAnnotation> annotations = evaluator.getAnnotations(owner, true, null);
         EnumSet<ResourceType> typeAnnotations = getTypesFromAnnotations(annotations);
         if ((typeAnnotations == null || typeAnnotations.isEmpty())
@@ -660,10 +639,30 @@ public class ResourceEvaluator {
 
     @Nullable
     public static EnumSet<ResourceType> getTypesFromAnnotations(
+            @NonNull PsiAnnotation[] annotations) {
+        EnumSet<ResourceType> resources = null;
+        for (PsiAnnotation annotation : annotations) {
+            ResourceType type = getTypeFromAnnotation(annotation.getQualifiedName());
+            if (type != null) {
+                if (type == ANY_RES_MARKER_TYPE) {
+                    return getAnyRes();
+                } else if (resources == null) {
+                    resources = EnumSet.of(type);
+                } else {
+                    resources.add(type);
+                }
+            }
+        }
+
+        return resources;
+    }
+
+    @Nullable
+    public static EnumSet<ResourceType> getTypesFromAnnotations(
             @NonNull List<UAnnotation> annotations) {
         EnumSet<ResourceType> resources = null;
         for (UAnnotation annotation : annotations) {
-            ResourceType type = getTypeFromAnnotation(annotation);
+            ResourceType type = getTypeFromAnnotation(annotation.getQualifiedName());
             if (type != null) {
                 if (type == ANY_RES_MARKER_TYPE) {
                     return getAnyRes();
@@ -683,7 +682,7 @@ public class ResourceEvaluator {
             @NonNull List<AnnotationInfo> annotations) {
         EnumSet<ResourceType> resources = null;
         for (AnnotationInfo annotation : annotations) {
-            ResourceType type = getTypeFromAnnotation(annotation.getAnnotation());
+            ResourceType type = getTypeFromAnnotation(annotation.getQualifiedName());
             if (type != null) {
                 if (type == ANY_RES_MARKER_TYPE) {
                     return getAnyRes();
@@ -699,18 +698,7 @@ public class ResourceEvaluator {
     }
 
     @Nullable
-    public static ResourceType getTypeFromAnnotation(@Nullable String signature) {
-        return getTypeFromAnnotation(null, signature);
-    }
-
-    @Nullable
-    public static ResourceType getTypeFromAnnotation(@NonNull UAnnotation annotation) {
-        return getTypeFromAnnotation(annotation, annotation.getQualifiedName());
-    }
-
-    @Nullable
-    public static ResourceType getTypeFromAnnotation(
-            @Nullable UAnnotation annotation, @Nullable String signature) {
+    private static ResourceType getTypeFromAnnotation(@Nullable String signature) {
         if (signature == null) {
             return null;
         } else if (isPlatformAnnotation(signature)) {
@@ -718,47 +706,12 @@ public class ResourceEvaluator {
         }
         if (COLOR_INT_ANNOTATION.isEquals(signature)) {
             return COLOR_INT_MARKER_TYPE;
-        } else if (PX_ANNOTATION.isEquals(signature)) {
+        } else if (PX_ANNOTATION.isEquals(signature) || DIMENSION_ANNOTATION.isEquals(signature)) {
             return DIMENSION_MARKER_TYPE;
-        } else if (DIMENSION_ANNOTATION.isEquals(signature)) {
-            if (annotation != null) {
-                UExpression unit = annotation.findAttributeValue("unit");
-                if (unit instanceof UReferenceExpression) {
-                    PsiElement resolved = ((UReferenceExpression) unit).resolve();
-                    if (resolved instanceof PsiNamedElement) {
-                        String name = ((PsiNamedElement) resolved).getName();
-                        if ("DP".equals(name)) {
-                            return DIMENSION_DP_MARKER_TYPE;
-                        } else if ("SP".equals(name)) {
-                            return DIMENSION_SP_MARKER_TYPE;
-                        }
-                        // else: default to PX (DIMENSION_MARKER_TYPE)
-                    }
-                } else if (unit instanceof ULiteralExpression) {
-                    Object value = ((ULiteralExpression) unit).getValue();
-                    if (value instanceof Integer) {
-                        // Constants from Dimension.java:
-                        //   int DP = 0;
-                        //   int PX = 1;
-                        //   int SP = 2;
-                        switch ((Integer) value) {
-                            case 0:
-                                return DIMENSION_DP_MARKER_TYPE;
-                            case 1:
-                                return DIMENSION_MARKER_TYPE;
-                            case 2:
-                                return DIMENSION_SP_MARKER_TYPE;
-                        }
-                    }
-                }
-            }
-            return DIMENSION_MARKER_TYPE;
+        } else if (ANY_RES_ANNOTATION.isEquals(signature)) {
+            return ANY_RES_MARKER_TYPE;
         } else {
-            if (ANY_RES_ANNOTATION.isEquals(signature)) {
-                return ANY_RES_MARKER_TYPE;
-            } else {
-                return getTypeFromAnnotationSignature(signature);
-            }
+            return getTypeFromAnnotationSignature(signature);
         }
     }
 
@@ -837,9 +790,6 @@ public class ResourceEvaluator {
         EnumSet<ResourceType> types = EnumSet.allOf(ResourceType.class);
         types.remove(COLOR_INT_MARKER_TYPE);
         types.remove(DIMENSION_MARKER_TYPE);
-        types.remove(DIMENSION_SP_MARKER_TYPE);
-        types.remove(DIMENSION_DP_MARKER_TYPE);
-        types.remove(ANY_RES_MARKER_TYPE);
         return types;
     }
 }

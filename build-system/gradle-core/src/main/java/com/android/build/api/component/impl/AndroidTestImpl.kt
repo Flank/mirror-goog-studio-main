@@ -114,10 +114,7 @@ open class AndroidTestImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
-
-    override val profileable: Boolean
-        get() = variantDslInfo.isProfileable
+        get() = global.profilingMode.isDebuggable ?: variantDslInfo.isDebuggable
 
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.minSdkVersion
@@ -256,7 +253,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = variantDslInfo.instrumentationRunnerArguments
 
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = variantDslInfo.isTestCoverageEnabled
 
     override val renderscriptTargetApi: Int
         get() = testedVariant.variantBuilder.renderscriptTargetApi

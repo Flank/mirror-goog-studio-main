@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
@@ -93,10 +94,7 @@ InternalArtifactType<T : FileSystemLocation>(
     object EXTERNAL_FILE_LIB_DEX_ARCHIVES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // the packaged classes published by APK modules.
     // This is for external compile/api usage. For usage inside a module use ALL_CLASSES
-    object COMPILE_APP_CLASSES_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // the packaged runtime classes published by APK modules.
-    // This is for external runtime usage. For usage inside a module use ALL_CLASSES
-    object RUNTIME_APP_CLASSES_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
+    object APP_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // Outputs of Desugar tool for project classes.
     object DESUGAR_PROJECT_CLASSES: InternalArtifactType<Directory>(DIRECTORY)
@@ -576,7 +574,6 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // Sync dynamic properties file artifacts
     object VARIANT_MODEL: InternalArtifactType<RegularFile>(FILE)
-    object APP_ID_LIST_MODEL: InternalArtifactType<RegularFile>(FILE)
 
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()

@@ -17,11 +17,9 @@
 package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.model.v2.CustomSourceDirectory
-import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ClassField
@@ -160,18 +158,10 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
         collection?.sortedBy { it.key.name }
     }
     valueList("lintChecksJars", AndroidProject::lintChecksJars) { it?.sorted() }
-    objectList(
-        name = "modelSyncFiles",
-        propertyAction = AndroidProject::modelSyncFiles,
-        nameAction = { modelSyncType.name },
-        sortAction = { collection -> collection?.sortedBy { it.modelSyncType.name } }
-    ) {
-        snapshotNativeSyncFile()
-    }
 }
 internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {
     item("groupId", AndroidDsl::groupId)
-    item("compileTarget", AndroidDsl::compileTarget, ::normaliseCompileTarget)
+    item("compileTarget", AndroidDsl::compileTarget)
     item("buildToolsVersion", AndroidDsl::buildToolsVersion) { version ->
         version?.let { normalizeBuildToolsVersion(it) }
     }
@@ -242,10 +232,6 @@ internal fun ModelSnapshotter<NativeModule>.snapshotNativeModule() {
         if (it == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else it
     }
     item("externalNativeBuildFile", NativeModule::externalNativeBuildFile)
-}
-
-internal fun ModelSnapshotter<ModelSyncFile>.snapshotNativeSyncFile() {
-    item("syncFile", ModelSyncFile::syncFile)
 }
 
 private fun ModelSnapshotter<NativeVariant>.snapshotNativeVariant() {
@@ -448,7 +434,6 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
         item("targetProjectPath", TestedTargetVariant::targetProjectPath)
         item("targetVariant", TestedTargetVariant::targetVariant)
     }
-    list("desugaredMethods", Variant::desugaredMethods)
 }
 
 private fun ModelSnapshotter<BasicArtifact>.snapshotBasicArtifact() {
@@ -503,6 +488,7 @@ private fun ModelSnapshotter<out AbstractArtifact>.snapshotBaseArtifact() {
     item("compileTaskName", AbstractArtifact::compileTaskName)
     item("assembleTaskName", AbstractArtifact::assembleTaskName)
     valueList("classesFolders", AbstractArtifact::classesFolders) { it?.sorted() }
+    valueList("additionalClassesFolders", AbstractArtifact::additionalClassesFolders) { it?.sorted() }
     list("ideSetupTaskNames", AbstractArtifact::ideSetupTaskNames)
     valueList("generatedSourceFolders", AbstractArtifact::generatedSourceFolders) { it?.sorted() }
 }
@@ -689,15 +675,7 @@ private fun normalizeBuildToolsVersion(version: String): Any {
     return version
 }
 
-private fun normaliseCompileTarget(target: String?): Any? {
-    if (target == "android-$DEFAULT_COMPILE_SDK_VERSION") {
-        return PredefinedModelValues.DEFAULT_COMPILE_SDK_VERSION
-    }
-    return target
-}
-
 internal enum class PredefinedModelValues {
     DEFAULT_BUILD_TOOLS_REVISION,
     DEFAULT_AGP_REVISION,
-    DEFAULT_COMPILE_SDK_VERSION,
 }

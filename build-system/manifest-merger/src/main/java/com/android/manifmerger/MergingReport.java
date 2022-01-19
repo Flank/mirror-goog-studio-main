@@ -66,20 +66,23 @@ public class MergingReport {
     private final ImmutableList<String> intermediaryStages;
     @NonNull
     private final Actions actions;
+    @NonNull
+    private final String packageName;
 
-    private MergingReport(
-            @NonNull Map<MergedManifestKind, String> mergedDocuments,
+    private MergingReport(@NonNull Map<MergedManifestKind, String> mergedDocuments,
             @NonNull Map<MergedManifestKind, XmlDocument> mergedXmlDocuments,
             @NonNull Result result,
             @NonNull ImmutableList<Record> records,
             @NonNull ImmutableList<String> intermediaryStages,
-            @NonNull Actions actions) {
+            @NonNull Actions actions,
+            @NonNull String packageName) {
         this.mergedDocuments = mergedDocuments;
         this.mergedXmlDocuments = mergedXmlDocuments;
         this.result = result;
         this.records = records;
         this.intermediaryStages = intermediaryStages;
         this.actions = actions;
+        this.packageName = packageName;
     }
 
     /**
@@ -185,6 +188,11 @@ public class MergingReport {
         }
     }
 
+    @NonNull
+    public String getPackageName() {
+        return packageName;
+    }
+
     /**
      * Log record. This is used to give users some information about what is happening and
      * what might have gone wrong.
@@ -261,6 +269,7 @@ public class MergingReport {
         @NonNull
         private ActionRecorder mActionRecorder = new ActionRecorder();
         @NonNull private final ILogger mLogger;
+        private String packageName;
 
         Builder(@NonNull ILogger logger) {
             mLogger = logger;
@@ -376,7 +385,8 @@ public class MergingReport {
                     result,
                     mRecordBuilder.build(),
                     mIntermediaryStages.build(),
-                    mActionRecorder.build());
+                    mActionRecorder.build(),
+                    packageName);
         }
 
         @NonNull
@@ -387,6 +397,10 @@ public class MergingReport {
         public String blame(XmlDocument document)
                 throws ParserConfigurationException, SAXException, IOException {
             return mActionRecorder.build().blame(document);
+        }
+
+        public void setFinalPackageName(String finalPackageName) {
+            this.packageName = finalPackageName;
         }
     }
 }

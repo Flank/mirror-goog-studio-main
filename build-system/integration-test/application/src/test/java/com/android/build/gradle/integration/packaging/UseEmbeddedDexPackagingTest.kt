@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.packaging
 
-import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -95,7 +94,7 @@ class UseEmbeddedDexPackagingTest(
                     """
                         apply plugin: 'com.android.application'
                         android {
-                            compileSdk = ${DEFAULT_COMPILE_SDK_VERSION}
+                            compileSdkVersion 'android-31'
                             defaultConfig {
                                 minSdk = $minSdk
                             }

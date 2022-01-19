@@ -13,8 +13,9 @@
             - compileTaskName               = "compileDebugSources"
             - assembleTaskName              = "assembleDebug"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                * {PROJECT}/build/intermediates/javac/debug/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
             - ideSetupTaskNames             = ["generateDebugSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
@@ -49,8 +50,9 @@
             - compileTaskName               = "compileDebugAndroidTestSources"
             - assembleTaskName              = "assembleDebugAndroidTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar{!}
                * {PROJECT}/build/intermediates/javac/debugAndroidTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar{!}
             - ideSetupTaskNames             = ["generateDebugAndroidTestSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
@@ -85,8 +87,9 @@
             - compileTaskName       = "compileDebugUnitTestSources"
             - assembleTaskName      = "assembleDebugUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
             - ideSetupTaskNames     = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/debugUnitTest/out{!}
@@ -95,7 +98,6 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
       < debug
       > release:
          - name                   = "release"
@@ -105,8 +107,9 @@
             - compileTaskName               = "compileReleaseSources"
             - assembleTaskName              = "assembleRelease"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                * {PROJECT}/build/intermediates/javac/release/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
             - ideSetupTaskNames             = ["generateReleaseSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
@@ -142,8 +145,9 @@
             - compileTaskName       = "compileReleaseUnitTestSources"
             - assembleTaskName      = "assembleReleaseUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
             - ideSetupTaskNames     = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/releaseUnitTest/out{!}
@@ -152,7 +156,6 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
       < release
    < variants
    - javaCompileOptions:
@@ -170,7 +173,4 @@
       * "TRANSITIVE_R_CLASS -> true"
       * "UNIFIED_TEST_PLATFORM -> true"
    - lintChecksJars        = []
-   - modelSyncFiles:
-      - APP_ID_LIST:
-         - syncFile = {PROJECT}/build/intermediates/app_id_list_model/global/app_id_list.pb{!}
 < AndroidProject

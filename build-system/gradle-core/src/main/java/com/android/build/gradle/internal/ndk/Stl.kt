@@ -63,13 +63,6 @@ enum class Stl(val argumentName: String, val requiresPackaging: Boolean, val lib
         argumentName = "system",
         requiresPackaging = false,
         libraryName = "libstdc++.so"
-    ),
-
-    // UNKNOWN is for cases where the NDK does not know or decide which STL is used.
-    UNKNOWN(
-        argumentName = "unknown",
-        requiresPackaging = false,
-        libraryName = null
     );
 
     companion object {

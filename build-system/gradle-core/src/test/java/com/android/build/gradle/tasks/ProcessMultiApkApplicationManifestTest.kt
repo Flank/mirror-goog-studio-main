@@ -63,7 +63,6 @@ class ProcessMultiApkApplicationManifestTest {
         task.applicationId.set("com.android.test")
         task.variantName = "debug"
         task.analyticsService.set(FakeNoOpAnalyticsService())
-        task.namespace.set("com.example.foo")
         initSourceMainManifest(task.mainMergedManifest.get().asFile)
     }
 

@@ -114,10 +114,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     }
 
     public void hasMethodThatInvokes(@NonNull String name, String descriptor) {
-        hasMethodWithInvokeThatSatisfies(
-                name,
-                reference -> reference.toString().equals(descriptor),
-                "invokes a method with the descriptor `" + descriptor + "`");
+        hasMethodThatInvokes(name, reference -> reference.toString().equals(descriptor));
     }
 
     public void hasMethodThatInvokesMethod(
@@ -142,14 +139,10 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
                     }
                     return true;
                 };
-        hasMethodWithInvokeThatSatisfies(
-                name, predicate, "invokes a method with the name `" + invokedMethodName + "`");
+        hasMethodThatInvokes(name, predicate);
     }
 
-    private void hasMethodWithInvokeThatSatisfies(
-            @NonNull String name,
-            Predicate<MethodReference> predicate,
-            @NonNull String predicateMessage) {
+    private void hasMethodThatInvokes(@NonNull String name, Predicate<MethodReference> predicate) {
         assertSubjectIsNonNull();
         hasMethod(name);
         List<DexBackedMethod> methods = findMethodWithImplementation(name);
@@ -158,7 +151,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
             return;
         }
         if (!checkHasMethodInvokes(methods, predicate)) {
-            fail(predicateMessage + " from `" + name + "`");
+            fail("invokes a method with the name `" + name + "` from `" + name + "`");
         }
     }
 

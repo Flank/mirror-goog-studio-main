@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
+import com.android.ide.model.sync.Variant
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
@@ -42,7 +42,7 @@ abstract class VariantModelTaskAbstractTest<T: AbstractVariantModelTask> {
         task = taskProvider.get()
     }
 
-    fun testTaskAction(given: (T)->Unit, expect: (VariantProperties)->Unit) {
+    fun testTaskAction(given: (T)->Unit, expect: (Variant)->Unit) {
         val modelFile = project.objects.fileProperty().also {
             it.set(temporaryFolder.newFile("variant_model.proto"))
         }
@@ -54,7 +54,7 @@ abstract class VariantModelTaskAbstractTest<T: AbstractVariantModelTask> {
         modelFile.asFile.get().let { outputFile ->
             Truth.assertThat(outputFile.exists()).isTrue()
             FileInputStream(outputFile).use {
-                expect.invoke(VariantProperties.parseFrom(it))
+                expect.invoke(Variant.parseFrom(it))
             }
         }
     }

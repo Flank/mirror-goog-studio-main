@@ -171,13 +171,11 @@ open class TestVariantImpl @Inject constructor(
         get() = variantDslInfo.instrumentationRunnerArguments
 
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = variantDslInfo.isTestCoverageEnabled
 
     override val shouldPackageDesugarLibDex: Boolean = delegate.isCoreLibraryDesugaringEnabled(this)
     override val debuggable: Boolean
         get() = delegate.isDebuggable
-    override val profileable: Boolean
-        get() = delegate.isProfileable
 
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()

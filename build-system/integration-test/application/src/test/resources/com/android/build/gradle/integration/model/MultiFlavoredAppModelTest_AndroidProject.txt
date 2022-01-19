@@ -13,8 +13,9 @@
             - compileTaskName               = "compileProPlayDebugSources"
             - assembleTaskName              = "assembleProPlayDebug"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebug/R.jar{!}
                * {PROJECT}/build/intermediates/javac/proPlayDebug/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebug/R.jar{!}
             - ideSetupTaskNames             = ["generateProPlayDebugSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proPlayDebug/out{!}
@@ -47,8 +48,9 @@
             - compileTaskName               = "compileProPlayDebugAndroidTestSources"
             - assembleTaskName              = "assembleProPlayDebugAndroidTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebugAndroidTest/R.jar{!}
                * {PROJECT}/build/intermediates/javac/proPlayDebugAndroidTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebugAndroidTest/R.jar{!}
             - ideSetupTaskNames             = ["generateProPlayDebugAndroidTestSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proPlayDebugAndroidTest/out{!}
@@ -81,8 +83,9 @@
             - compileTaskName       = "compileProPlayDebugUnitTestSources"
             - assembleTaskName      = "assembleProPlayDebugUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebug/R.jar{!}
                * {PROJECT}/build/intermediates/javac/proPlayDebugUnitTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/proPlayDebug/R.jar{!}
             - ideSetupTaskNames     = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/proPlayDebugUnitTest/out{!}
@@ -91,7 +94,6 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-         - desugaredMethods       = [{GRADLE_CACHE}/{CHECKSUM}/transformed/D8BackportedDesugaredMethods.txt{F}]
       < proPlayDebug
    < variants
    - javaCompileOptions:
@@ -109,7 +111,4 @@
       * "TRANSITIVE_R_CLASS -> true"
       * "UNIFIED_TEST_PLATFORM -> true"
    - lintChecksJars        = []
-   - modelSyncFiles:
-      - APP_ID_LIST:
-         - syncFile = {PROJECT}/build/intermediates/app_id_list_model/global/app_id_list.pb{!}
 < AndroidProject

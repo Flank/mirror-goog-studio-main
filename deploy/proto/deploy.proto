@@ -655,8 +655,6 @@ message LiveEditRequest {
   string package_name = 6;
   Arch arch = 7;
   repeated int32 process_ids = 8;
-
-  bool debugModeEnabled = 9;
 }
 
 message LiveEditClass {

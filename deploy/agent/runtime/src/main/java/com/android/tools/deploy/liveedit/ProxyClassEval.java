@@ -66,7 +66,7 @@ class ProxyClassEval extends BackPorterEval {
         if (isProxyClass(clazz)) {
             Log.v("live.deploy.lambda", "getStaticField: " + field);
             Object value = clazz.getStaticField(field.getName());
-            Log.v("live.deploy.lambda", "\tfield_type=" + value.getClass());
+            Log.v("live.deploy.lambda", "\tTHE TYPE IS " + value);
             return makeValue(value, Type.getType(field.getDesc()));
         }
 
@@ -79,7 +79,7 @@ class ProxyClassEval extends BackPorterEval {
         if (isProxyClass(clazz)) {
             Log.v("live.deploy.lambda", "setStaticField: " + field);
             clazz.setStaticField(field.getName(), value.obj());
-            Log.v("live.deploy.lambda", "\tfield_type=" + value.obj().getClass());
+            Log.v("live.deploy.lambda", "\tTHE TYPE IS " + value.obj());
         } else {
             super.setStaticField(field, value);
         }
@@ -115,22 +115,6 @@ class ProxyClassEval extends BackPorterEval {
         }
 
         return super.invokeSpecial(target, method, args);
-    }
-
-    @NonNull
-    @Override
-    public Value invokeInterface(
-            @NonNull Value target, MethodDescription method, @NonNull List<? extends Value> args) {
-        final String methodName = method.getName();
-        final String methodDesc = method.getDesc();
-
-        if (target.obj() instanceof ProxyClass) {
-            Log.v("live.deploy.lambda", "invokeInterface: " + method);
-            Object result = invokeProxy(target.obj(), methodName, methodDesc, args);
-            return makeValue(result, Type.getReturnType(methodDesc));
-        }
-
-        return super.invokeInterface(target, method, args);
     }
 
     @NonNull

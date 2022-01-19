@@ -185,10 +185,7 @@ public class ByteCodeInterpreter {
     }
 
     private Throwable clear(Throwable t) {
-        if (!Config.getInstance().debugEnabled()) {
-            t = Houdini.clean(t);
-        }
-        return t;
+        return Houdini.clean(t);
     }
 
     private int getLineNumber() {

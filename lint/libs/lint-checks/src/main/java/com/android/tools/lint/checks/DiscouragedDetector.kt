@@ -38,7 +38,7 @@ import org.jetbrains.uast.UElement
 class DiscouragedDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun applicableAnnotations(): List<String> = listOf(
-        DISCOURAGED_ANNOTATION
+        "androidx.annotation.Discouraged"
     )
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
@@ -70,7 +70,6 @@ class DiscouragedDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     companion object {
-        const val DISCOURAGED_ANNOTATION = "androidx.annotation.Discouraged"
 
         private val IMPLEMENTATION = Implementation(
             DiscouragedDetector::class.java,

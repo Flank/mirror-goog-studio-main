@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.common.build.filebasedproperties.variant.ArtifactOutputProperties
+import com.android.ide.model.sync.ModuleVariantModel
 import com.google.common.truth.Truth
 
 fun ModuleVariantModelTask.setupModuleTaskInputs() {
@@ -35,7 +35,7 @@ fun ModuleVariantModelTask.assertModuleTaskInputs() {
     )
 }
 
-fun ArtifactOutputProperties.testModuleFields() {
+fun ModuleVariantModel.testModuleFields() {
     Truth.assertThat(manifestPlaceholdersMap).containsExactly(
             "key1", "value1",
             "key2", "value2"

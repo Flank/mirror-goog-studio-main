@@ -50,13 +50,9 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
      *     }
      * }
      * ```
-     * isTestCoverageEnabled is deprecated. Use enableUnitTestCoverage and
-     * enableAndroidTestCoverage instead which allow you to enable coverage
-     * separately for unit and instrumentation tests.
      */
     @get:Incubating
     @set:Incubating
-    @Deprecated("Replaced with: enableUnitTestCoverage and or enableAndroidTestCoverage.")
     var isTestCoverageEnabled: Boolean
 
     /**
@@ -69,17 +65,6 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
     @get:Incubating
     @set:Incubating
     var enableUnitTestCoverage: Boolean
-
-    /**
-     * Specifies code coverage is enabled for module tests of type AndroidTest.
-     *
-     * If enabled, prepares module class files for code coverage collection such as instrumenting
-     * dependent library classes and module classes. This allows for code coverage reports to be
-     * generated.
-     */
-    @get:Incubating
-    @set:Incubating
-    var enableAndroidTestCoverage: Boolean
 
     /**
      * Specifies whether the plugin should generate resources for pseudolocales.

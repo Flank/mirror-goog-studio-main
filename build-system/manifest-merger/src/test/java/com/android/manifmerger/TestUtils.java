@@ -123,8 +123,7 @@ public class TestUtils {
     }
 
     /** Utility method to save a {@link String} XML into a file. */
-    public static File inputAsFile(@NonNull String testName, @NonNull String input)
-            throws IOException {
+    static File inputAsFile(@NonNull String testName, @NonNull String input) throws IOException {
         File tmpFile = File.createTempFile(testName, ".xml");
         tmpFile.deleteOnExit();
         Files.asCharSink(tmpFile, Charsets.UTF_8).write(input);

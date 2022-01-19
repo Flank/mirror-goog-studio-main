@@ -427,8 +427,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
                     String msg =
                             String.format(
                                     "%s cannot be cast to %s",
-                                    value.obj().getClass().getCanonicalName(),
-                                    targetType.getClassName());
+                                    value.getAsmType().getClassName(), targetType.getClassName());
                     Exception e = new ClassCastException(msg);
                     throw new LeInterpretingException(e);
                 }
@@ -690,10 +689,8 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case INVOKESPECIAL:
                 return eval.invokeSpecial(values.get(0), method, values.subList(1, values.size()));
             case INVOKEVIRTUAL:
-                return eval.invokeMethod(values.get(0), method, values.subList(1, values.size()));
             case INVOKEINTERFACE:
-                return eval.invokeInterface(
-                        values.get(0), method, values.subList(1, values.size()));
+                return eval.invokeMethod(values.get(0), method, values.subList(1, values.size()));
             case INVOKESTATIC:
                 return eval.invokeStaticMethod(method, values);
             case INVOKEDYNAMIC:

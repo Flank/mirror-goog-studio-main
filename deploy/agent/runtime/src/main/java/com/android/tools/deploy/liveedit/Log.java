@@ -16,8 +16,6 @@
 
 package com.android.tools.deploy.liveedit;
 
-import com.android.tools.deploy.interpreter.Config;
-
 public final class Log {
     public interface Logger {
         void v(String tag, String message);
@@ -30,7 +28,7 @@ public final class Log {
     }
 
     public static void v(String tag, String message) {
-        if (logger != null && Config.getInstance().debugEnabled()) {
+        if (logger != null) {
             logger.v(tag, message);
         }
     }

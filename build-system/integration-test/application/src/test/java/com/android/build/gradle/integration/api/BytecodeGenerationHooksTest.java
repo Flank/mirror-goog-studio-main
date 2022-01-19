@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
@@ -121,10 +120,7 @@ public class BytecodeGenerationHooksTest {
         assertThat(apk.getFile()).isFile();
 
         // also verify that the app's jar used by test compilation contains the kotlin module files
-        File classesJar =
-                appProject.getIntermediateFile(
-                        InternalArtifactType.COMPILE_APP_CLASSES_JAR.INSTANCE.getFolderName()
-                                + "/debug/classes.jar");
+        File classesJar = appProject.getIntermediateFile("app_classes/debug/classes.jar");
         assertThat(classesJar).isFile();
         assertThat(
                 classesJar,
@@ -138,9 +134,7 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
                 true,
-                "app/build/intermediates/"
-                        + InternalArtifactType.COMPILE_APP_CLASSES_JAR.INSTANCE.getFolderName()
-                        + "/debug/classes.jar",
+                "app/build/intermediates/app_classes/debug/classes.jar",
                 "library/build/intermediates/"
                         + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
                         + "/debug/classes.jar",
@@ -159,9 +153,7 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebugUnitTest): ",
                 false,
-                "app/build/intermediates/"
-                        + InternalArtifactType.COMPILE_APP_CLASSES_JAR.INSTANCE.getFolderName()
-                        + "/debug/classes.jar",
+                "app/build/intermediates/app_classes/debug/classes.jar",
                 "library/build/intermediates/"
                         + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
                         + "/debug/classes.jar",
@@ -226,9 +218,7 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:test:generateBytecodeFordebug): ",
                 true,
-                "app/build/intermediates/"
-                        + InternalArtifactType.COMPILE_APP_CLASSES_JAR.INSTANCE.getFolderName()
-                        + "/debug/classes.jar",
+                "app/build/intermediates/app_classes/debug/classes.jar",
                 "jar/build/libs/jar.jar",
                 "library/build/intermediates/"
                         + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()

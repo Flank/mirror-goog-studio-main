@@ -35,11 +35,8 @@ import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
-import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
-import com.android.build.gradle.tasks.sync.AppIdListTask
-import com.android.builder.core.VariantType
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactView
@@ -49,7 +46,7 @@ import org.gradle.api.file.FileCollection
 
 class ApplicationTaskManager(
     project: Project,
-    private val variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
+    variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
     testComponents: List<TestComponentImpl>,
     testFixturesComponents: List<TestFixturesImpl>,
     globalConfig: GlobalTaskCreationConfig,
@@ -64,18 +61,6 @@ class ApplicationTaskManager(
     localConfig,
     extension,
 ) {
-
-    override fun createTopLevelTasks(variantType: VariantType, variantModel: VariantModel) {
-        super.createTopLevelTasks(variantType, variantModel)
-        taskFactory.register(
-            AppIdListTask.CreationAction(
-                globalConfig,
-                variants.associate {
-                    it.variant.name to it.variant.applicationId
-                }
-            )
-        )
-    }
 
     override fun doCreateTasksForVariant(
         variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>

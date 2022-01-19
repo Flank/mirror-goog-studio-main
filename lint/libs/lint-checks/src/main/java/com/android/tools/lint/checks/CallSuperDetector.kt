@@ -62,7 +62,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")
+        private val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")
         private const val AOSP_CALL_SUPER_ANNOTATION = "android.annotation.CallSuper"
         private const val ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow"
         private const val ON_VISIBILITY_CHANGED = "onVisibilityChanged"

@@ -16,7 +16,6 @@
 package com.android.builder.model.v2.ide
 
 import com.android.builder.model.v2.AndroidModel
-import java.io.File
 
 /**
  * A build Variant.
@@ -65,9 +64,4 @@ interface Variant: AndroidModel {
      * Only application modules and dynamic feature modules will set this property.
      */
     val isInstantAppCompatible: Boolean
-
-    /**
-     * Desugared methods supported by D8 and core library desugaring.
-     */
-    val desugaredMethods: List<File>
 }

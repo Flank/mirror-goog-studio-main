@@ -93,7 +93,7 @@ class ExtractNativeLibsPackagingTest(
                     """
                         apply plugin: 'com.android.application'
                         android {
-                            compileSdk = ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                            compileSdk = 30
                             defaultConfig {
                                 minSdk = $minSdk
                             }
@@ -135,7 +135,7 @@ class ExtractNativeLibsPackagingTest(
                     """
                         apply plugin: 'com.android.test'
                         android {
-                            compileSdk = ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                            compileSdk = 30
                             defaultConfig {
                                 minSdk = $minSdk
                             }

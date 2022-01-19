@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
@@ -75,6 +74,4 @@ interface VariantModel {
     val filteredBootClasspath: Provider<List<RegularFile>>
 
     val versionedSdkLoader: Provider<VersionedSdkLoader>
-
-    val globalArtifacts: ArtifactsImpl
 }

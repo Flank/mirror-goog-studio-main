@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_EMULATOR
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -65,7 +64,7 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Classpath
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -192,18 +191,6 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 "of running the tests on a headless emulator.")
     fun setDisplayEmulatorOption(value: Boolean) = enableEmulatorDisplay.set(value)
 
-    @get:Classpath
-    @get:Optional
-    abstract val classes: ConfigurableFileCollection
-
-    @get:Classpath
-    @get:Optional
-    abstract val buildConfigClasses: ConfigurableFileCollection
-
-    @get:Classpath
-    @get:Optional
-    abstract val rClasses: ConfigurableFileCollection
-
     override fun getIgnoreFailures(): Boolean {
         return shouldIgnore
     }
@@ -319,17 +306,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         hasFailures = false
     }
 
-    /**
-     * Determines if there are any tests to run.
-     *
-     * @return true if there are some tests to run, false otherwise
-     */
-    private fun testsFound(): Boolean {
-        return testData
-            .get()
-            .hasTests(classes, rClasses, buildConfigClasses)
-            .get()
-    }
+    private fun testsFound() = !testData.get().testDirectories.asFileTree.isEmpty
 
     class CreationAction(
         creationConfig: VariantCreationConfig,
@@ -467,14 +444,6 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION)?.let {
                     task.buddyApks.from(it)
                 }
-
-            task.classes.from(creationConfig.artifacts.getAllClasses())
-            task.classes.disallowChanges()
-            task.buildConfigClasses.from((creationConfig as ComponentImpl).getCompiledBuildConfig())
-            task.buildConfigClasses.disallowChanges()
-            task.rClasses.from((creationConfig as ComponentImpl).getCompiledRClasses(
-                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH))
-            task.rClasses.disallowChanges()
         }
     }
 }

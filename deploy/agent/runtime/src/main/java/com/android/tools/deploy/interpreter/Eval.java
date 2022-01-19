@@ -68,12 +68,6 @@ public interface Eval {
             @NonNull List<? extends Value> arguments);
 
     @NonNull
-    Value invokeInterface(
-            @NonNull Value instance,
-            @NonNull MethodDescription methodDesc,
-            @NonNull List<? extends Value> arguments);
-
-    @NonNull
     Value invokeSpecial(
             @NonNull Value target,
             MethodDescription methodDesc,

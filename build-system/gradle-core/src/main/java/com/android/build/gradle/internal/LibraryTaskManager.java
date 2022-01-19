@@ -233,8 +233,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             taskFactory.register(new ExtractAnnotations.CreationAction(libraryVariant));
         }
 
-        final boolean instrumented =
-                libraryVariant.getVariantDslInfo().isAndroidTestCoverageEnabled();
+        final boolean instrumented = libraryVariant.getVariantDslInfo().isTestCoverageEnabled();
 
         TransformManager transformManager = libraryVariant.getTransformManager();
 

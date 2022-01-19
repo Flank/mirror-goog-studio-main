@@ -43,8 +43,6 @@ public final class XmlLoader {
      *
      * @param displayName the xml file display name.
      * @param xmlFile the xml file.
-     * @param namespace the namespace, used to create or shorten fully qualified class names. If
-     *     null, the manifest's package name is used as the namespace instead.
      * @return the initialized {@link XmlDocument}
      */
     @NonNull
@@ -55,18 +53,15 @@ public final class XmlLoader {
             @NonNull File xmlFile,
             @NonNull InputStream inputStream,
             @NonNull XmlDocument.Type type,
-            @Nullable String namespace,
+            @Nullable String mainManifestPackageName,
             @NonNull DocumentModel<ManifestModel.NodeTypes> model,
             boolean rewriteNamespaces)
             throws IOException, SAXException, ParserConfigurationException {
         Document domDocument = PositionXmlParser.parse(inputStream);
-        Element rootElement = domDocument.getDocumentElement();
-        @Nullable
-        final String namespaceOrPackageName =
-                namespace != null ? namespace : rootElement.getAttribute("package");
         if (rewriteNamespaces) {
-            new NamespaceReferenceRewriter(
-                            namespaceOrPackageName, (String t, String n) -> namespaceOrPackageName)
+            Element rootElement = domDocument.getDocumentElement();
+            String localPackage = rootElement.getAttribute("package");
+            new NamespaceReferenceRewriter(localPackage, (String t, String n) -> localPackage)
                     .rewriteManifestNode(rootElement, true);
         }
         return new XmlDocument(
@@ -75,7 +70,7 @@ public final class XmlLoader {
                 systemPropertyResolver,
                 domDocument.getDocumentElement(),
                 type,
-                namespaceOrPackageName,
+                mainManifestPackageName,
                 model);
     }
 
@@ -85,8 +80,6 @@ public final class XmlLoader {
      *
      * @param sourceFile the source location to use for logging and record collection.
      * @param xml the persisted xml.
-     * @param namespace the namespace, used to create or shorten fully qualified class names. If
-     *     null, the manifest's package name is used as the namespace instead.
      * @return the initialized {@link XmlDocument}
      * @throws IOException this should never be thrown.
      * @throws SAXException if the xml is incorrect
@@ -99,21 +92,17 @@ public final class XmlLoader {
             @NonNull SourceFile sourceFile,
             @NonNull String xml,
             @NonNull XmlDocument.Type type,
-            @Nullable String namespace,
+            @Nullable String mainManifestPackageName,
             @NonNull DocumentModel<ManifestModel.NodeTypes> model)
             throws IOException, SAXException, ParserConfigurationException {
         Document domDocument = PositionXmlParser.parse(xml);
-        Element rootElement = domDocument.getDocumentElement();
-        @Nullable
-        final String namespaceOrPackageName =
-                namespace != null ? namespace : rootElement.getAttribute("package");
         return new XmlDocument(
                 sourceFile,
                 selectors,
                 systemPropertyResolver,
                 domDocument.getDocumentElement(),
                 type,
-                namespaceOrPackageName,
+                mainManifestPackageName,
                 model);
     }
 }

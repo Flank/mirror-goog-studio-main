@@ -63,7 +63,7 @@ maven_library(
     ]),
     bundled_deps = [
         "//tools/base/sdk-common/aia-manifest-jar-generator:tools.proto",
-        "//tools/base/sdk-common:filebased.buildproperties",
+        "//tools/base/sdk-common:model.sync",
     ],
     coordinates = "com.android.tools:sdk-common:" + BASE_VERSION,
     description = "sdk-common library used by other Android tools libraries.",
@@ -140,7 +140,7 @@ kotlin_test(
 )
 
 java_proto_library(
-    name = "filebased.buildproperties",
+    name = "model.sync",
     srcs = glob(["src/main/proto/*.proto"]),
     resource_strip_prefix = "tools/base/sdk-common/src/main/proto",
     resources = glob(["src/main/proto/*.proto"]),

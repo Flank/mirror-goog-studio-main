@@ -40,9 +40,8 @@ class NoOpIncrementalBuildMinifyTest {
             UP_TO_DATE to setOf(
                 ":assembleDebugAndroidTest",
                 ":assembleRelease",
-                ":bundleDebugClassesToCompileJar",
-                ":bundleReleaseClassesToCompileJar",
-                ":bundleReleaseClassesToRuntimeJar",
+                ":bundleDebugClasses",
+                ":bundleReleaseClasses",
                 ":checkDebugAarMetadata",
                 ":checkDebugAndroidTestAarMetadata",
                 ":checkDebugAndroidTestDuplicateClasses",

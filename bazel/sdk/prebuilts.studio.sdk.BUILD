@@ -231,16 +231,15 @@ java_import(
     ],
 )
 
-# Version-specific rule public while tests transition to platform 32
+# Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
     name = "platforms/android-32",
-    visibility = ["//visibility:public"],
+    visibility = ["//visibility:private"],
 )
 
-# Version-specific rule public while tests transition to platform 32
 platform_filegroup(
     name = "platforms/android-31",
-    visibility = ["//visibility:public"],
+    visibility = ["//visibility:private"],
 )
 
 platform_filegroup(
