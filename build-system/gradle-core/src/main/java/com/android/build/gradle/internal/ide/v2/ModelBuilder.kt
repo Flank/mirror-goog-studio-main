@@ -68,11 +68,13 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AnchorTaskNames
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
+import com.android.build.gradle.tasks.sync.AppIdListTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
@@ -83,6 +85,7 @@ import com.android.builder.model.v2.ide.BasicArtifact
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
+import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
@@ -361,6 +364,18 @@ class ModelBuilder<
             createVariant(it, instantAppResultMap)
         }
 
+        val modelSyncFiles = if (variantModel.projectType == ProjectType.APPLICATION) {
+            listOf(
+                ModelSyncFileImpl(
+                    ModelSyncFile.ModelSyncType.APP_ID_LIST,
+                    AppIdListTask.getTaskName(),
+                    variantModel.globalArtifacts.get(InternalArtifactType.APP_ID_LIST_MODEL).get().asFile
+                )
+            )
+        } else {
+            listOf()
+        }
+
         return AndroidProjectImpl(
             namespace = namespace ?: "",
             androidTestNamespace = androidTestNamespace,
@@ -377,6 +392,7 @@ class ModelBuilder<
 
             flags = getFlags(),
             lintChecksJars = getLocalCustomLintChecksForModel(project, variantModel.syncIssueReporter),
+            modelSyncFiles = modelSyncFiles,
         )
     }
     /**
@@ -595,6 +611,13 @@ class ModelBuilder<
             },
             testedTargetVariant = getTestTargetVariant(variant),
             isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
+            desugaredMethods = getDesugaredMethods(
+                project,
+                variant.isCoreLibraryDesugaringEnabled,
+                variant.minSdkVersionForDexing,
+                variant.global.compileSdkHashString,
+                variant.global.bootClasspath
+            )
         )
     }
 
@@ -606,17 +629,14 @@ class ModelBuilder<
 
         // The class folders. This is supposed to be the output of the compilation steps + other
         // steps that create bytecode
-        // For now, until Module Per SourceSet lands, we need to separate the main compilation
-        // output from the rest, so we use 2 properties.
-        // Long term, we'll move everything to classesFolders.
-        val classesFolders = setOf(component.artifacts.get(JAVAC).get().asFile)
-
-        val additionalClassesFolders = mutableSetOf<File>()
+        val classesFolders = mutableSetOf<File>()
+        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
         component.getCompiledRClassArtifact()?.get()?.asFile?.let {
-            additionalClassesFolders.add(it)
+            classesFolders.add(it)
         }
-        additionalClassesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        additionalClassesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.addAll(component.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH).files)
 
         val testInfo: TestInfo? = when(component) {
             is TestVariantImpl, is AndroidTestImpl -> {
@@ -696,7 +716,6 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
             generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
             classesFolders = classesFolders,
-            additionalClassesFolders = additionalClassesFolders,
             assembleTaskOutputListingFile = if (component.variantType.isApk)
                 component.artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE).get().asFile
             else
@@ -713,23 +732,19 @@ class ModelBuilder<
 
         // The class folders. This is supposed to be the output of the compilation steps + other
         // steps that create bytecode
-        // For now, until Module Per SourceSet lands, we need to separate the main compilation
-        // output from the rest, so we use 2 properties.
-        // Long term, we'll move everything to classesFolders.
-        val classesFolders = setOf(component.artifacts.get(JAVAC).get().asFile)
-
-        val additionalClassesFolders = mutableSetOf<File>()
-
+        val classesFolders = mutableSetOf<File>()
+        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        // The separately compile R class, if applicable.
+        if (extension.testOptions.unitTests.isIncludeAndroidResources) {
+            classesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
+        }
         // TODO(b/111168382): When namespaced resources is on, then the provider returns null, so let's skip for now and revisit later
         if (!extension.androidResources.namespaced) {
             component.getCompiledRClassArtifact()?.get()?.asFile?.let {
-                additionalClassesFolders.add(it)
+                classesFolders.add(it)
             }
-        }
-        additionalClassesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        additionalClassesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
-        if (extension.testOptions.unitTests.isIncludeAndroidResources) {
-            additionalClassesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
         }
 
         return JavaArtifactImpl(
@@ -738,7 +753,6 @@ class ModelBuilder<
             ideSetupTaskNames = setOf(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
 
             classesFolders = classesFolders,
-            additionalClassesFolders = additionalClassesFolders,
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
             runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
 

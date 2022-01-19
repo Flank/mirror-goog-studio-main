@@ -111,6 +111,15 @@ public class TestUtils {
             String workspaceParent = System.getenv("TEST_SRCDIR");
             if (workspace != null && workspaceParent != null) {
                 workspaceRoot = Paths.get(workspaceParent, workspace);
+
+                try {
+                    // Bazel munges Windows paths. Which triggers CodeInsightTestFixtureImpl
+                    // ::assertFileEndsWithCaseSensitivePath. This is a (hacky?) workaround.
+                    workspaceRoot = workspaceRoot.toRealPath();
+                } catch (IOException exception) {
+                    throw new UncheckedIOException(exception);
+                }
+
                 return workspaceRoot;
             }
 

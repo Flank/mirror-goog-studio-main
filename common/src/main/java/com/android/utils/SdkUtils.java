@@ -390,7 +390,7 @@ public class SdkUtils {
      * Returns true if the given file represents a bitmap drawable file
      *
      * @param file the file to be checked
-     * @return true if the given file is an xml file
+     * @return true if the given file is a bitmap file like png or jpg
      */
     public static boolean isBitmapFile(@NonNull File file) {
         return hasImageExtension(file.getPath());

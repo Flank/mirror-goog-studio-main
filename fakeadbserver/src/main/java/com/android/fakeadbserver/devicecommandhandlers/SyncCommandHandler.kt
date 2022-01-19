@@ -52,6 +52,7 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
                 when (val syncRequest = readSyncRequest(input)) {
                     "SEND" -> handleSendProtocol(device, input, output)
                     "RECV" -> handleRecvProtocol(device, input, output)
+                    "STAT" -> handleStatProtocol(device, input, output)
                     else -> throwUnsupportedRequest(output, syncRequest)
                 }
             }
@@ -109,6 +110,23 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
             remainingCount -= count
         }
         sendSyncDone(output)
+    }
+
+    /**
+     * Response is four int32s: id, mode, size, time
+     */
+    private fun handleStatProtocol(device: DeviceState, input: InputStream, output: OutputStream) {
+        val path = readRecvHeader(input)
+        val fileState = device.getFile(path)
+        if (fileState == null) {
+            val reason = "File does not exist: '$path'"
+            sendSyncFail(output, reason)
+            return  // We do not throw, as we can accept another sync request
+        }
+        writeInt32(output, /* id= */ 0)
+        writeInt32(output, fileState.permission.toInt())
+        writeInt32(output, fileState.bytes.size)
+        writeInt32(output, fileState.modifiedDate)
     }
 
     private fun readSyncRequest(input: InputStream): String {

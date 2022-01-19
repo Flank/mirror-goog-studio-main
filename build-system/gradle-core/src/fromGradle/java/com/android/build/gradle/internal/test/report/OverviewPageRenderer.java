@@ -16,11 +16,14 @@
 package com.android.build.gradle.internal.test.report;
 
 import java.io.IOException;
+import kotlin.text.StringsKt;
 
 /**
  * Custom OverviewPageRenderer based on Gradle's OverviewPageRenderer
  */
 class OverviewPageRenderer extends PageRenderer<AllTestResults> {
+
+    private final CodePanelRenderer codePanelRenderer = new CodePanelRenderer();
 
     public OverviewPageRenderer(ReportType reportType) {
         super(reportType);
@@ -28,6 +31,7 @@ class OverviewPageRenderer extends PageRenderer<AllTestResults> {
 
     @Override
     protected void registerTabs() {
+        addToolFailuresTab();
         addFailuresTab();
         if (!getResults().getPackages().isEmpty()) {
             addTab("Packages", new ErroringAction<SimpleHtmlWriter>() {
@@ -103,5 +107,17 @@ class OverviewPageRenderer extends PageRenderer<AllTestResults> {
         }
         htmlWriter.endElement();
         htmlWriter.endElement();
+    }
+
+    private void addToolFailuresTab() {
+        CharSequence stderr = getResults().getStandardError();
+        if (!StringsKt.isBlank(stderr)) {
+            addTab("Tool failures", new ErroringAction<SimpleHtmlWriter>() {
+                @Override
+                public void doExecute(SimpleHtmlWriter writer) throws IOException {
+                    codePanelRenderer.render(stderr.toString(), writer);
+                }
+            });
+        }
     }
 }

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Test
@@ -33,7 +33,7 @@ class AndroidTestVariantModelTaskTest: VariantModelTaskAbstractTest<AndroidTestV
         super.testTaskAction(
             given = {},
             expect = {
-                Truth.assertThat(it.variantCase).isEqualTo(Variant.VariantCase.VARIANT_NOT_SET)
+                Truth.assertThat(it.variantCase).isEqualTo(VariantProperties.VariantCase.VARIANT_NOT_SET)
             }
         )
     }

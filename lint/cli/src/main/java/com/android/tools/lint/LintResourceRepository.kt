@@ -258,7 +258,7 @@ open class LintResourceRepository constructor(
 
         init {
             val listFiles: Array<File>? = library.resFolder.listFiles()
-            listFiles?.sorted()?.forEach { folder ->
+            listFiles?.filter(skipHidden)?.sorted()?.forEach { folder ->
                 scanTypeFolder(client, folder, libraryName, namespace, typeToMap)
             }
         }
@@ -319,6 +319,8 @@ open class LintResourceRepository constructor(
     }
 
     companion object {
+        private val skipHidden: (File) -> Boolean = { file -> !file.name.startsWith('.') }
+
         /**
          * An empty repository which is only used if you request the
          * resource repository for a non-Android project or when the
@@ -634,7 +636,7 @@ open class LintResourceRepository constructor(
 
             for (resourceFolder in resourceFolders) {
                 val folders = resourceFolder.listFiles() ?: continue
-                for (folder in folders.sorted()) { // sorted: offer stable order in resource lists
+                for (folder in folders.filter(skipHidden).sorted()) { // sorted: offer stable order in resource lists
                     scanTypeFolder(client, folder, libraryName, namespace, map)
                 }
             }
@@ -655,7 +657,7 @@ open class LintResourceRepository constructor(
             val folderType = ResourceFolderType.getFolderType(folderName) ?: return
             val config = FolderConfiguration.getConfigForFolder(folderName) ?: return
             config.normalizeByAddingImpliedVersionQualifier()
-            val files = folder.listFiles()?.sorted() ?: return
+            val files = folder.listFiles()?.filter(skipHidden)?.sorted() ?: return
             if (folderType == ResourceFolderType.VALUES) {
                 for (file in files) {
                     processValues(client, namespace, map, config, libraryName, file)

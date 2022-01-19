@@ -16,14 +16,22 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_ABI
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_ARCH_ABI
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_ABI
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_DEBUG
+import com.android.build.gradle.internal.cxx.configure.MSBuildProperty.Platform
+import com.android.build.gradle.internal.cxx.logging.bugln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.buildSystemNameForTasks
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
+import com.android.utils.appendCapitalized
+import com.android.utils.cxx.CxxBugDiagnosticCode.NINJA_BUILD_SCRIPT_AUTHOR_FEEDBACK
+import com.google.common.annotations.VisibleForTesting
 
 /**
  * Characters that are illegal in Gradle task names.
@@ -200,41 +208,6 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
         return name
     }
 
-    /**
-     * Examine a C/C++ configuration and extract the ABI that it targets.
-     */
-    private fun abiOf(commands : Configuration) : String {
-        return when(buildSystem) {
-            CMAKE -> {
-                val arguments = commands.toCmakeArguments()
-                arguments.getCmakeProperty(CMAKE_ANDROID_ARCH_ABI) ?: ""
-            }
-            NDK_BUILD -> {
-                val arguments = commands.toNdkBuildArguments()
-                arguments.getNdkBuildProperty(APP_ABI) ?: ""
-            }
-            else -> error("$buildSystem")
-        }
-    }
-
-    /**
-     * Extract a build type like 'Debug' from a configuration.
-     */
-    private fun buildTypeOf(commands : Configuration) : String {
-        return when(buildSystem) {
-            CMAKE -> {
-                val arguments = commands.toCmakeArguments()
-                arguments.getCmakeProperty(CMAKE_BUILD_TYPE) ?: ""
-            }
-            NDK_BUILD -> {
-                val arguments = commands.toNdkBuildArguments()
-                arguments.getNdkBuildProperty(NDK_DEBUG)?.let {
-                    if(it == "1") "Debug" else "Release"
-                } ?: ""
-            }
-            else -> error("$buildSystem")
-        }
-    }
 
     /**
      * Create some text that can be appended to a task name to distinguish which targets are built.
@@ -255,8 +228,8 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
      * Create a human-readable task name suffix.
      */
     private fun taskNameAnnotation(configuration : Configuration) : String {
-        val buildType =  buildTypeOf(configuration)
-        return "$buildSystemName$buildType"
+        val buildType =  buildTypeOf(buildSystem, configuration)
+        return buildSystemName.appendCapitalized(buildType)
     }
 
     /**
@@ -269,7 +242,7 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
         val annotation = taskNameAnnotation(configuration)
         val groupTaskName = "configure$annotation"
         return groupTaskName to configurers.computeIfAbsent(configuration) {
-            val abi = abiOf(configuration)
+            val abi = abiOf(buildSystem, configuration)
             uniquify(legalize("$groupTaskName[$abi]"))
         }
     }
@@ -286,7 +259,7 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
         val annotation = taskNameAnnotation(configuration)
         val groupTaskName = "build$annotation"
         return groupTaskName to builders.computeIfAbsent(configuration to targets) {
-            val abi = abiOf(configuration)
+            val abi = abiOf(buildSystem, configuration)
             val targetAnnotation = targetAnnotation(targets)
             uniquify(legalize("$groupTaskName[$abi]$targetAnnotation"))
         }
@@ -314,4 +287,101 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     }
 }
 
+
+/**
+ * Examine a C/C++ configuration and extract the ABI that it targets.
+ */
+@VisibleForTesting
+fun abiOf(buildSystem: NativeBuildSystem, commands : Configuration) : String {
+    return when(buildSystem) {
+        NINJA -> {
+            // When it's Ninja, the configure script is user-authored. We want to guess the ABI
+            // anyway because it will give the user better task names.
+            // The way we guess is as follows:
+            // 1) We assume the arguments are like those passed to MSBuild and we look for a
+            //    'Platform' property which will be like "Android-x86" if the is AGDE.
+            // 2) If that fails, we assume the arguments are like those passed to CMake and we
+            //    look for "CMAKE_ANDROID_ARCH_ABI" or "ANDROID_ABI".
+            // 3) If that fails, we just return "" and the task name will not have an ABI in it.
+            val arguments = commands.toMSBuildArguments()
+            arguments.getMSBuildProperty(Platform) ?: run {
+                val asCMakeArguments = commands.toCmakeArguments()
+                asCMakeArguments.getCmakeProperty(CMAKE_ANDROID_ARCH_ABI) ?:
+                asCMakeArguments.getCmakeProperty(ANDROID_ABI)
+            } ?: run {
+                bugln(NINJA_BUILD_SCRIPT_AUTHOR_FEEDBACK,
+                    "Ninja-generating script must accept a parameter the defines the " +
+                            "target ABI. Currently accepted examples are: -p:Platform=x86, " +
+                            "/DCMAKE_ANDROID_ARCH_ABI=x86, and /DANDROID_ABI=x86")
+                ""
+            }
+        }
+        CMAKE -> {
+            val arguments = commands.toCmakeArguments()
+            arguments.getCmakeProperty(CMAKE_ANDROID_ARCH_ABI) ?: ""
+        }
+        NDK_BUILD -> {
+            val arguments = commands.toNdkBuildArguments()
+            arguments.getNdkBuildProperty(APP_ABI) ?: ""
+        }
+        else -> error("$buildSystem")
+    }
+}
+
+/**
+ * Extract a build type like 'Debug' from a configuration.
+ */
+@VisibleForTesting
+fun buildTypeOf(buildSystem: NativeBuildSystem, commands : Configuration) : String {
+    when(buildSystem) {
+        NINJA -> {
+            // When it's Ninja, the configure script is user-authored. We want to guess the
+            // build type if we can, because it will give the user a more human-readable
+            // task name.
+            // The way we guess is as follows:
+            // 1) We assume the arguments are like those passed to MSBuild and we append
+            //    'Configuration' (which is like Debug from -p:Configuration=Debug) if it
+            //    exists. Then we append 'NinjaProject' (which is like NinjaProject from
+            //    -p:NinjaProject=Teapots) if it exists.
+            // 2) If that gave no results then we assume the command-line is like CMake and
+            //    we look for a CMAKE_BUILD_TYPE property.
+            // 3) If that fails, then we return "" and the Gradle task name may not be as
+            //    readable. It could be something like buildNinja13 instead of
+            //    buildNinjaDebugTeapots[Android-x86].
+            val arguments = commands.toMSBuildArguments()
+            var result = ""
+            arguments.getMSBuildProperty(MSBuildProperty.Configuration)?.let {
+                result = result.appendCapitalized(it)
+            }
+            arguments.getMSBuildProperty(MSBuildProperty.NinjaProject)?.let {
+                result = result.appendCapitalized(it)
+            }
+            if (result != "") {
+                return result
+            }
+            val asCMakeArguments = commands.toCmakeArguments()
+            return asCMakeArguments.getCmakeProperty(CMAKE_BUILD_TYPE) ?: run {
+                bugln(
+                    NINJA_BUILD_SCRIPT_AUTHOR_FEEDBACK,
+                    "Ninja-generating script must accept a parameter the defines the " +
+                            "target Configuration name. Currently accepted examples are: " +
+                            "-p:Configuration=Debug, -p:NinjaProject=Teapots, and  " +
+                            "/DCMAKE_BUILD_TYPE=MinSizeRel"
+                )
+                ""
+            }
+        }
+        CMAKE -> {
+            val arguments = commands.toCmakeArguments()
+            return arguments.getCmakeProperty(CMAKE_BUILD_TYPE) ?: ""
+        }
+        NDK_BUILD -> {
+            val arguments = commands.toNdkBuildArguments()
+            return arguments.getNdkBuildProperty(NDK_DEBUG)?.let {
+                if(it == "1") "Debug" else "Release"
+            } ?: ""
+        }
+        else -> error("$buildSystem")
+    }
+}
 

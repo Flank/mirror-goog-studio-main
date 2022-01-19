@@ -93,7 +93,7 @@ fun createCxxAbiModel(
                 prefabFolder = join(variantCxxBuildFolder, "prefab", abi.tag),
                 stlLibraryFile =
                     Stl.fromArgumentName(variant.stlType)
-                        ?.let { module.stlSharedObjectMap.getValue(it)[abi]?.toString() }
+                        ?.let { module.stlSharedObjectMap[it]?.get(abi)?.toString() }
                         ?.let { File(it) },
                 intermediatesParentFolder = variantIntermediatesFolder
         )

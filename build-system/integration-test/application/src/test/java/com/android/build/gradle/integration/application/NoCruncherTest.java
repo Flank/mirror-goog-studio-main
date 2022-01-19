@@ -81,7 +81,7 @@ public class NoCruncherTest {
                         checkResource(ApkType.RELEASE, "drawable/icon.png", true);
                     }
                     // QA is debuggable, but inits from release, so the cruncher is default enabled.
-                    checkResource(ApkType.of("qa", false), "drawable/icon.png", true);
+                    checkResource(ApkType.of("qa", true), "drawable/icon.png", true);
                 });
     }
 
@@ -97,7 +97,7 @@ public class NoCruncherTest {
                     projectModification.replaceInFile(
                             "build.gradle", "// crunchPngs false", "crunchPngs false");
                     noPngCrunch.executor().run("assembleQa");
-                    checkResource(ApkType.of("qa", false), "drawable/icon.png", false);
+                    checkResource(ApkType.of("qa", true), "drawable/icon.png", false);
                 });
     }
 

@@ -16,6 +16,9 @@
 package com.android.tools.appinspection.network.httpurl
 
 import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.rules.InterceptionRuleService
+import com.android.tools.appinspection.network.rules.NetworkConnection
+import com.android.tools.appinspection.network.rules.NetworkResponse
 import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
 import java.io.IOException
 import java.io.InputStream
@@ -34,15 +37,27 @@ import java.security.Permission
 class TrackedHttpURLConnection(
     private val wrapped: HttpURLConnection,
     callstack: String,
-    trackerFactory: HttpTrackerFactory
+    trackerFactory: HttpTrackerFactory,
+    private val interceptionRuleService: InterceptionRuleService
 ) {
 
     private val connectionTracker: HttpConnectionTracker =
         trackerFactory.trackConnection(wrapped.url.toString(), callstack)
     private var connectTracked = false
     private var responseTracked = false
+
+    /**
+     * The streams are wrappers around the actual output/input streams, so
+     * they need to be cleaned up manually. (calling disconnect won't close them)
+     */
     private var trackedRequestStream: OutputStream? = null
     private var trackedResponseStream: InputStream? = null
+
+    /**
+     * The response of the network request modified by any applicable interception
+     * rules. This is what the app gets.
+     */
+    private lateinit var interceptedResponse: NetworkResponse
 
     /**
      * Calls [HttpConnectionTracker.trackRequest] only if it hasn't been called
@@ -95,10 +110,16 @@ class TrackedHttpURLConnection(
         if (!responseTracked) {
             try {
                 tryConnect()
-
+                interceptedResponse = interceptionRuleService.interceptResponse(
+                    NetworkConnection(wrapped.url.toString()),
+                    NetworkResponse(wrapped.responseMessage, wrapped.headerFields, wrapped.inputStream)
+                )
                 // Don't call our getResponseMessage/getHeaderFields overrides, as it would call
                 // this method recursively.
-                connectionTracker.trackResponse(wrapped.responseMessage, wrapped.headerFields)
+                connectionTracker.trackResponse(
+                    interceptedResponse.responseMessage,
+                    interceptedResponse.responseHeaders
+                )
             } finally {
                 responseTracked = true
             }
@@ -298,7 +319,7 @@ class TrackedHttpURLConnection(
     val responseMessage: String
         get() {
             tryTrackResponse()
-            return wrapped.responseMessage
+            return interceptedResponse.responseMessage
         }
 
     fun getHeaderField(pos: Int): String {
@@ -309,7 +330,7 @@ class TrackedHttpURLConnection(
     val headerFields: Map<String, List<String>>
         get() {
             tryTrackResponse()
-            return wrapped.headerFields
+            return interceptedResponse.responseHeaders
         }
 
     fun getHeaderField(key: String): String {
@@ -343,11 +364,9 @@ class TrackedHttpURLConnection(
             // getInputStream internally calls connect if not already connected.
             trackPreConnect()
             return try {
-                val stream = wrapped.inputStream
                 trackResponse()
-                connectionTracker.trackResponseBody(stream).also {
-                    trackedResponseStream = it
-                }
+                connectionTracker.trackResponseBody(interceptedResponse.body)
+                    .also { trackedResponseStream = it }
             } catch (e: IOException) {
                 connectionTracker.error(e.toString())
                 throw e

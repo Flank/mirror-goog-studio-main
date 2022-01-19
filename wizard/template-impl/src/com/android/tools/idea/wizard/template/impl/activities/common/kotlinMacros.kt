@@ -20,11 +20,11 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 
 
-fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
+fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData, revision: String = data.projectTemplateData.kotlinVersion) {
   val projectData = data.projectTemplateData
   if (!data.isNewModule && projectData.language == Language.Kotlin) {
-    applyPlugin("org.jetbrains.kotlin.android", projectData.kotlinVersion)
-    addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:${projectData.kotlinVersion}")
+    applyPlugin("org.jetbrains.kotlin.android", revision)
+    addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:$revision")
   }
 }
 

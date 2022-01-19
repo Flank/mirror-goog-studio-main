@@ -30,6 +30,8 @@ public class PlaceholderHandler {
 
     // interesting placeholders names that are documented to be automatically provided.
     public static final String INSTRUMENTATION_RUNNER = "instrumentationRunner";
+    // When creating a merged manifest for an app module, ${packageName} placeholders are replaced
+    // with the applicationId, not the namespace.
     public static final String PACKAGE_NAME = "packageName";
     public static final String APPLICATION_ID = "applicationId";
     public static final String FEATURE_NAME = "featureName";

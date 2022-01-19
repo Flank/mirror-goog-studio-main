@@ -913,6 +913,7 @@ coverage_report(
         "//tools/adt/idea/swingp:intellij.android.adt.swingp_tests",
         "//tools/adt/idea/transport-database:intellij.android.transportDatabase_tests",
         "//tools/adt/idea/utp:utp_tests",
+        "//tools/adt/idea/wear-pairing:intellij.android.wear-pairing.tests_tests",
         "//tools/adt/idea/whats-new-assistant:whats-new-assistant-test_tests",
         "//tools/adt/idea/wizard-model:intellij.android.wizard.model_tests",
         "//tools/analytics-library/crash:analytics-crash_tests",

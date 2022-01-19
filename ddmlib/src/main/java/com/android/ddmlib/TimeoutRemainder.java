@@ -52,10 +52,6 @@ public class TimeoutRemainder {
         return this.unit.toNanos(timeout) - elapsedNanos(startNanos);
     }
 
-    public long getRemainingUnits() {
-        return getRemainingUnits(this.unit);
-    }
-
     public long getRemainingUnits(TimeUnit unit) {
         // Using TimeUnit convert() ensures overflows are taken care of
         return unit.convert(getRemainingNanos(), TimeUnit.NANOSECONDS);

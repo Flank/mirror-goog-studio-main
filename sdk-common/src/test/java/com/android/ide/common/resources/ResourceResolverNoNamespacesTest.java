@@ -231,7 +231,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                     @Override
                     public void warning(
                             String tag, String message, Object viewCookie, Object data) {
-                        fail(message);
+                        throw new IllegalArgumentException(message);
                     }
 
                     @Override
@@ -241,12 +241,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                             Throwable throwable,
                             Object viewCookie,
                             Object data) {
-                        fail(message);
+                        throw new IllegalArgumentException(message);
                     }
 
                     @Override
                     public void error(String tag, String message, Object viewCookie, Object data) {
-                        fail(message);
+                        throw new IllegalArgumentException(message);
                     }
 
                     @Override
@@ -256,7 +256,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                             Throwable throwable,
                             Object viewCookie,
                             Object data) {
-                        fail(message);
+                        throw new IllegalArgumentException(message);
                     }
                 };
         resolver.setLogger(logger);
@@ -399,21 +399,18 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                 new ResourceValueImpl(
                                         RES_AUTO, ResourceType.ID, "my_id", "@+id/some_new_id"))
                         .isFramework());
-        // error expected.
-        boolean failed = false;
-        ResourceValue val = null;
         try {
-            val =
+            ResourceValue val =
                     resolver.resolveResValue(
                             new ResourceValueImpl(
                                     RES_AUTO,
                                     ResourceType.STRING,
                                     "bright_foreground_dark",
                                     "@color/background_light"));
-        } catch (AssertionError expected) {
-            failed = true;
+            fail("incorrect resource returned: " + val);
+        } catch (IllegalArgumentException expected) {
+            // pass
         }
-        assertTrue("incorrect resource returned: " + val, failed);
         ResourceValue array = resolver
                 .resolveResValue(resolver.getProjectResource(ResourceType.ARRAY, "my_array"));
         assertTrue("array" + "my_array" + "resolved incorrectly as " + array.getResourceType()
@@ -495,7 +492,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                 .equals(message)) {
                             wasWarned.set(true);
                         } else {
-                            fail(message);
+                            throw new IllegalArgumentException(message);
                         }
                     }
                 };
@@ -551,7 +548,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                 .equals(message)) {
                             wasWarned.set(true);
                         } else {
-                            fail(message);
+                            throw new IllegalArgumentException(message);
                         }
                     }
                 };
@@ -816,7 +813,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                 .equals(message)) {
                             wasWarned.set(true);
                         } else {
-                            fail(message);
+                            throw new IllegalArgumentException(message);
                         }
                     }
                 };

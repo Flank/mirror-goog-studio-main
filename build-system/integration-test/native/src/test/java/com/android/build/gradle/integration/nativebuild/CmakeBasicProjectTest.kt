@@ -479,12 +479,6 @@ class CmakeBasicProjectTest(
         val fetchResult =
           project.modelV2().fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86_64")))
 
-        val additionalProjectFileStatus = if (cmakeVersionInDsl == "3.6.0") {
-          // CMake 3.6 does not populate additional files known by it.
-            "!"
-        } else {
-            "F"
-        }
         // note that only build files for the requested variant and ABI exists.
         Truth.assertThat(fetchResult.dump()).isEqualTo(
           """[:]
@@ -502,7 +496,7 @@ class CmakeBasicProjectTest(
                - sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/x86_64/compile_commands.json.bin{F}
                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
-               - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+               - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{F}
          < abis
       < debug
       > release:
@@ -582,13 +576,8 @@ class CmakeBasicProjectTest(
         // We specify to not generate the build information for any variants or ABIs here.
         val result = project.modelV2().fetchNativeModules(NativeModuleParams(emptyList(), emptyList()))
 
-        // TODO(tgeng): Update this when CMake server supports populating additional project files.
-        val additionalProjectFileStatus = if (cmakeVersionInDsl == "3.6.0") {
-            // CMake 3.6 does not populate additional files known by it.
-            "!"
-        } else {
-            "F"
-        }
+        val additionalProjectFileStatus =  "F"
+
         // The files still appear to exist because we have already built the project.
         Truth.assertThat(result.dump()).isEqualTo(
           """[:]

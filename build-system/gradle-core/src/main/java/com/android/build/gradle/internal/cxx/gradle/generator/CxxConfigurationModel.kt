@@ -19,11 +19,13 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
+import com.android.build.gradle.internal.cxx.configure.ninja
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
@@ -42,11 +44,11 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.NATIVE_BUILD_OUTPUT_LEVEL
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
-import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
@@ -55,7 +57,6 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
-import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -108,6 +109,7 @@ data class CxxConfigurationParameters(
     val cxxCacheFolder: File,
     val buildSystem: NativeBuildSystem,
     val makeFile: File,
+    val configureScript: File?,
     val buildStagingFolder: File?,
     val moduleRootFolder: File,
     val buildDir: File,
@@ -185,10 +187,13 @@ fun tryCreateConfigurationParameters(
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
     val project = projectInfo.getProject()
+    val (buildSystem, makeFile, configureScript, buildStagingFolder) =
+        getProjectPath(variant.variantDslInfo, globalConfig.externalNativeBuild) ?: return null
 
-    val (buildSystem, makeFile, buildStagingFolder) =
-        getProjectPath(globalConfig.externalNativeBuild)
-            ?: return null
+    if (buildSystem == NINJA) {
+        warnln("This version of Android Gradle Plugin does not support the Ninja build system")
+        return null
+    }
 
     val cxxFolder = findCxxFolder(
         buildSystem,
@@ -278,6 +283,7 @@ fun tryCreateConfigurationParameters(
         cxxCacheFolder = cxxCacheFolder,
         buildSystem = buildSystem,
         makeFile = makeFile,
+        configureScript = configureScript,
         buildStagingFolder = buildStagingFolder,
         moduleRootFolder = project.projectDir,
         buildDir = project.buildDir,
@@ -315,11 +321,14 @@ fun tryCreateConfigurationParameters(
  * - If there are more than 1, then that is an error. The user has specified both cmake and
  *   ndkBuild in the same project.
  */
-private fun getProjectPath(config: ExternalNativeBuild)
-        : Triple<NativeBuildSystem, File, File?>? {
+private fun getProjectPath(
+    variantDslInfo : VariantDslInfo,
+    config: ExternalNativeBuild)
+        : NativeProjectPath? {
     val externalProjectPaths = listOfNotNull(
-        config.cmake.path?.let { Triple(CMAKE, it, config.cmake.buildStagingDirectory)},
-        config.ndkBuild.path?.let { Triple(NativeBuildSystem.NDK_BUILD, it, config.ndkBuild.buildStagingDirectory) })
+        variantDslInfo.ninja.path?.let { NativeProjectPath(NINJA, it, variantDslInfo.ninja.configure, variantDslInfo.ninja.buildStagingDirectory) },
+        config.cmake.path?.let { NativeProjectPath(CMAKE, it, null, config.cmake.buildStagingDirectory) },
+        config.ndkBuild.path?.let { NativeProjectPath(NDK_BUILD, it, null, config.ndkBuild.buildStagingDirectory) })
 
     return when {
         externalProjectPaths.size > 1 -> {
@@ -336,6 +345,13 @@ private fun getProjectPath(config: ExternalNativeBuild)
         else -> externalProjectPaths[0]
     }
 }
+
+private data class NativeProjectPath(
+    val buildSystem : NativeBuildSystem,
+    val makefile : File,
+    val configureScript : File?,
+    val buildStagingDirectory: File?
+)
 
 /**
  * This function is used at task execution time to construct a [CxxMetadataGenerator] to do the
@@ -358,6 +374,7 @@ fun createCxxMetadataGenerator(
         variant.module.gradleModulePathName, variant.variantName)
 
     return when (variant.module.buildSystem) {
+        NINJA -> error("TODO(192006965) Ninja Metadata Generator is not yet implemented")
         NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
             abi,
             variantBuilder
@@ -371,17 +388,12 @@ fun createCxxMetadataGenerator(
             }
             val cmakeRevision = cmake.minimumCmakeVersion
             variantBuilder?.nativeCmakeVersion = cmakeRevision.toString()
-            if (cmakeRevision.isCmakeForkVersion()) {
-                return CmakeAndroidNinjaExternalNativeJsonGenerator(abi, variantBuilder)
-            }
             if (cmakeRevision.major < 3
                 || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
             ) {
-                errorln(
-                    CMAKE_VERSION_IS_UNSUPPORTED,
-                    "Unsupported CMake version $cmakeRevision. Try 3.7.0 or later."
-                )
-                return CxxNopMetadataGenerator(variantBuilder)
+                // Aside from fork-CMake, this is the range of CMake versions that was
+                // unsupported before the introduction of Ninja-parsing based metadata generation.
+                return CMakeNinjaParserMetadataGenerator(abi, variantBuilder)
             }
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15

@@ -19,10 +19,25 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.VariantBuild
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class CxxConfigurationFoldingTest {
+
+    @Test
+    fun `MSBuild-like ninja ABI discovery`() {
+        assertThat(abiOf(NINJA, listOf("-p:Platform=Android-x86"))).isEqualTo("Android-x86")
+        assertThat(abiOf(NINJA, listOf("-DANDROID_ABI=x86"))).isEqualTo("x86")
+        assertThat(abiOf(NINJA, listOf("-DCMAKE_ANDROID_ARCH_ABI=x86"))).isEqualTo("x86")
+    }
+
+    @Test
+    fun `MSBuild-like ninja build type discovery`() {
+        assertThat(buildTypeOf(NINJA, listOf("-p:Configuration=Debug"))).isEqualTo("Debug")
+        assertThat(buildTypeOf(NINJA, listOf("-p:NinjaProject=Teapot"))).isEqualTo("Teapot")
+        assertThat(buildTypeOf(NINJA, listOf("-p:NinjaProject=Teapot", "-p:Configuration=Debug"))).isEqualTo("DebugTeapot")
+    }
 
     @Test
     fun `CMake variants that fold`() {

@@ -75,9 +75,9 @@ To register the custom sources, you just need to use
         }
         check {
             assertNotNull(this)
-            Truth.assertThat(output).contains("Custom sources: [app/src/android test/toml]")
-            Truth.assertThat(output).contains("Custom sources: [app/src/android test debug/toml]")
-            Truth.assertThat(output).contains("Custom sources: [app/src/android test release/toml]")
+            Truth.assertThat(output).contains("Custom sources: [app/src/androidTest/toml]")
+            Truth.assertThat(output).contains("Custom sources: [app/src/androidTestDebug/toml]")
+            Truth.assertThat(output).contains("Custom sources: [app/src/androidTestRelease/toml]")
             Truth.assertThat(output).contains("Custom sources: [app/src/debug/toml]")
             Truth.assertThat(output).contains("Custom sources: [app/src/main/toml]")
             Truth.assertThat(output).contains("Custom sources: [app/src/release/toml]")
@@ -308,9 +308,9 @@ where source files will be generated and added to the compilation task.
         }
         check {
             assertNotNull(this)
-            Truth.assertThat(output).contains("Custom sources: [app/src/android test/toml]")
-            Truth.assertThat(output).contains("Custom sources: [app/src/android test debug/toml]")
-            Truth.assertThat(output).contains("Custom sources: [app/src/android test release/toml]")
+            Truth.assertThat(output).contains("Custom sources: [app/src/androidTest/toml]")
+            Truth.assertThat(output).contains("Custom sources: [app/src/androidTestDebug/toml]")
+            Truth.assertThat(output).contains("Custom sources: [app/src/androidTestRelease/toml]")
             Truth.assertThat(output).contains("Custom sources: [app/src/debug/toml]")
             Truth.assertThat(output).contains("Custom sources: [app/src/main/toml]")
             Truth.assertThat(output).contains("Custom sources: [app/src/release/toml]")

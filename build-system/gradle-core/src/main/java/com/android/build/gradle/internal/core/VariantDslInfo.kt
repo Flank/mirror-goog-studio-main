@@ -257,9 +257,9 @@ interface VariantDslInfo {
      */
     fun getResValues(): Map<ResValue.Key, ResValue>
 
-    val isTestCoverageEnabled: Boolean
-
     val isUnitTestCoverageEnabled: Boolean
+
+    val isAndroidTestCoverageEnabled: Boolean
 
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build
@@ -315,6 +315,8 @@ interface VariantDslInfo {
     val isDebuggable: Boolean
 
     val isEmbedMicroApp: Boolean
+
+    val isProfileable: Boolean
 
     val isPseudoLocalesEnabled: Boolean
 

@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.ddmlib.testrunner.ITestRunListener
 import com.android.ddmlib.testrunner.TestIdentifier
+import com.android.ddmlib.testrunner.XmlTestRunListener
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent.StateCase
 import com.google.protobuf.Any
@@ -28,11 +28,12 @@ import com.google.testing.platform.proto.api.core.TestStatusProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 
 /**
- * An adapter which converts Ddmlib's [ITestRunListener] interface into [UtpTestResultListener].
+ * An adapter which converts Ddmlib's [XmlTestRunListener] interface into [UtpTestResultListener].
  */
 class DdmlibTestResultAdapter(
-        private val ddmlibTestRunName: String,
-        private val ddmlibTestResultListener: ITestRunListener) : UtpTestResultListener {
+    private val ddmlibTestRunName: String,
+    private val ddmlibTestResultListener: XmlTestRunListener
+) : UtpTestResultListener {
 
     private var numTestFails: Int = 0
     private var startTimestamp: Long = 0L
@@ -79,6 +80,13 @@ class DdmlibTestResultAdapter(
             StateCase.TEST_SUITE_FINISHED -> {
                 if (numTestFails > 0) {
                     ddmlibTestResultListener.testRunFailed("There was $numTestFails failure(s).")
+                }
+                val testSuiteResult: TestSuiteResultProto.TestSuiteResult =
+                    testResultEvent.testSuiteFinished.testSuiteResult.unpack()
+                if (testSuiteResult.hasPlatformError()) {
+                    ddmlibTestResultListener.addSystemError(
+                        getPlatformErrorMessage(testSuiteResult) + "\n"
+                    )
                 }
                 ddmlibTestResultListener.testRunEnded(
                         System.currentTimeMillis() - startTimestamp,

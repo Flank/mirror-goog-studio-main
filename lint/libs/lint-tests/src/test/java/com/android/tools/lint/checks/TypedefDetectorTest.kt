@@ -2013,4 +2013,34 @@ class TypedefDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun test167750517() {
+        // Make sure we handle specifically allowed constants as well
+        // 167750517: @IntDef doesn't support negative values?
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.IntDef
+
+                @IntDef(1, 0, -1, 42)
+                @Retention(AnnotationRetention.SOURCE)
+                annotation class Thing
+
+                @Thing const val MINUS_ONE = -1
+                @Thing const val ZERO = 0
+                @Thing const val ONE = 1
+                @Thing const val ANSWER = 42
+                @Thing const val HUNDRED = 100
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/Thing.kt:11: Error: Must be one of: 1, 0, -1, 42 [WrongConstant]
+            @Thing const val HUNDRED = 100
+                                       ~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

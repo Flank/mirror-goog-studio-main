@@ -63,6 +63,9 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
     @get:Input
     abstract val applicationId: Property<String>
 
+    @get:Input
+    abstract val namespace: Property<String>
+
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     abstract val mainMergedManifest: RegularFileProperty
@@ -136,7 +139,8 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
             listOf(),
             listOf(),
             null,
-            null,
+            packageOverride = null,
+            namespace = namespace.get(),
             false,
             variantOutput.versionCode.orNull,
             variantOutput.versionName.orNull,
@@ -197,6 +201,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
                 )
 
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

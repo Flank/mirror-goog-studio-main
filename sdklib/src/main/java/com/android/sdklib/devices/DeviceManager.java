@@ -391,10 +391,7 @@ public class DeviceManager {
     private void markDeprecatedWearSkins() {
         mSysImgDevices.values().forEach(device -> {
             if ("android-wear".equals(device.getTagId())) {
-                device.setIsDeprecated(!device.getDefaultHardware()
-                        .getSkinFile()
-                        .getName()
-                        .startsWith("wearos"));
+                device.setIsDeprecated(!device.getId().startsWith("wearos"));
             }
         });
     }

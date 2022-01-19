@@ -59,7 +59,7 @@ class ProcessLibraryManifestTest {
         task.minSdkVersion.set("1")
         task.maxSdkVersion.set(1)
         task.targetSdkVersion.set("1")
-        task.packageOverride.set("")
+        task.namespace.set("com.example.foo")
         task.manifestPlaceholders.set(mapOf())
         task.mainSplit.set(
             VariantOutputImpl(
@@ -80,7 +80,7 @@ class ProcessLibraryManifestTest {
         assertThat(task.inputs.properties).containsKey("minSdkVersion")
         assertThat(task.inputs.properties).containsKey("targetSdkVersion")
         assertThat(task.inputs.properties).containsKey("manifestPlaceholders")
-        assertThat(task.inputs.properties).containsKey("packageOverride")
+        assertThat(task.inputs.properties).containsKey("namespace")
         assertThat(task.inputs.properties).containsEntry("mainSplit.fullName", "fooRelease")
     }
 

@@ -28,10 +28,13 @@ namespace deploy {
 
 class JniClass {
  public:
+  // After calling this constructor, caller MUST verify that the class was found
+  // via isValid().
   JniClass(JNIEnv* jni, const char* name) : jni_(jni) {
-    // TODO: handle class not found.
     class_ = jni_->FindClass(name);
   }
+
+  bool isValid() { return class_ != nullptr; }
 
   JniClass(JNIEnv* jni, jclass klass) : jni_(jni) { class_ = klass; }
 

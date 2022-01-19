@@ -20,19 +20,27 @@ import com.android.tools.r8.BackportedMethodList
 import com.android.tools.r8.BackportedMethodListCommand
 import com.android.tools.r8.DiagnosticsHandler
 import com.android.tools.r8.StringConsumer
+import java.io.File
 
 /**
  * Generates backported desugared methods handled by D8, which will be consumed by Lint.
  */
 object D8DesugaredMethodsGenerator {
-    fun generate(): List<String> {
+    fun generate(
+        coreLibDesugarConfig: String?,
+        bootclasspath: Set<File>
+    ): List<String> {
         val consumer = CustomStringConsumer()
+        val commandBuilder = BackportedMethodListCommand.builder()
+
+        if (coreLibDesugarConfig != null) {
+            commandBuilder
+                .addDesugaredLibraryConfiguration(coreLibDesugarConfig)
+                .addLibraryFiles(bootclasspath.map { it.toPath() })
+        }
 
         BackportedMethodList.run(
-            BackportedMethodListCommand.builder()
-                .setConsumer(consumer)
-                .build())
-
+            commandBuilder.setConsumer(consumer).build())
         return consumer.strings
     }
 

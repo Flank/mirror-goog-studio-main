@@ -34,6 +34,7 @@ enum class MaterialColor(val colorName: String, val color: String) {
   PURPLE_700("purple_700", "FF3700B3"),
   PINK_40("pink_40", "FF7D5260"),
   PINK_80("pink_80", "FFEFB8C8"),
+  RED_400("red_400", "FFCF6679"),
   TEAL_200("teal_200", "FF03DAC5"),
   TEAL_700("teal_700", "FF018786"),
   BLACK("black", "FF000000"),

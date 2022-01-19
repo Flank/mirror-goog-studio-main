@@ -1408,6 +1408,56 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testPermissions() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.Manifest.permission.ACCESS_COARSE_LOCATION
+                import android.Manifest.permission.ACCESS_FINE_LOCATION
+                import androidx.annotation.RequiresPermission
+
+                @RequiresPermission.Read(RequiresPermission(allOf = [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION]))
+                @RequiresPermission.Write(RequiresPermission(anyOf = [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION]))
+                fun read() {
+                }
+
+                @RequiresPermission(allOf = [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION])
+                fun allOf() {
+                }
+
+                @RequiresPermission(anyOf = [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION])
+                fun anyOf() {
+                }
+
+                @RequiresPermission(anyOf = [ACCESS_COARSE_LOCATION])
+                fun single() {
+                }
+
+                @RequiresPermission(anyOf = [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION], allOf = [ACCESS_COARSE_LOCATION])
+                fun tooMany() {
+                }
+
+                @RequiresPermission
+                fun missing() {
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:24: Error: Only specify one of value, anyOf or allOf [SupportAnnotationUsage]
+            @RequiresPermission(anyOf = [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION], allOf = [ACCESS_COARSE_LOCATION])
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:28: Error: For methods, permission annotation should specify one of value, anyOf or allOf [SupportAnnotationUsage]
+            @RequiresPermission
+            ~~~~~~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     override fun getDetector(): Detector {
         return AnnotationDetector()
     }

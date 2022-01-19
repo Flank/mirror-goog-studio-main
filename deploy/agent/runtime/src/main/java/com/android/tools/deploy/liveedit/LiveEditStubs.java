@@ -148,8 +148,13 @@ public final class LiveEditStubs {
 
     private static class AndroidLogger implements Log.Logger {
         public void v(String tag, String message) {
-            // Breaks when running test on Studio (android.jar stub Log throws with "Stub!").
-            // android.util.Log.v(tag, message);
+            // When running on Studio this will link against a mock Log class that throws on
+            // every method invocation.
+            try {
+                android.util.Log.v(tag, message);
+            } catch (Exception e) {
+                // Purposely ignore
+            }
         }
     }
 }

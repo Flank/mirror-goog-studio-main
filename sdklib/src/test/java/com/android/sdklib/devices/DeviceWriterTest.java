@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+@org.junit.Ignore("b/214307222")
 public class DeviceWriterTest extends TestCase {
 
     public void testWriteIsValid_Minimal() throws Exception {

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.work.DisableCachingByDefault
 
 /**
@@ -30,8 +30,8 @@ import org.gradle.work.DisableCachingByDefault
 @DisableCachingByDefault
 abstract class TestModuleVariantModelTask: ModuleVariantModelTask() {
 
-    override fun addVariantContent(variant: Variant.Builder) {
-        super.addVariantContent(variant.testVariantModelBuilder.moduleCommonModelBuilder)
+    override fun addVariantContent(variant: VariantProperties.Builder) {
+        super.addVariantContent(variant.testVariantPropertiesBuilder.artifactOutputPropertiesBuilder)
     }
 
     class CreationAction(private val testVariantCreationConfig: TestVariantCreationConfig):

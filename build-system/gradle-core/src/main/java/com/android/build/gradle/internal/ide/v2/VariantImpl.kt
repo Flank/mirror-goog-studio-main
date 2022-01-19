@@ -20,6 +20,7 @@ import com.android.builder.model.v2.ide.AndroidArtifact
 import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.ide.Variant
+import java.io.File
 import java.io.Serializable
 
 /**
@@ -34,6 +35,7 @@ data class VariantImpl(
     override val testFixturesArtifact: AndroidArtifact?,
     override val testedTargetVariant: TestedTargetVariant?,
     override val isInstantAppCompatible: Boolean,
+    override val desugaredMethods: List<File>
 ) : Variant, Serializable {
     companion object {
         @JvmStatic

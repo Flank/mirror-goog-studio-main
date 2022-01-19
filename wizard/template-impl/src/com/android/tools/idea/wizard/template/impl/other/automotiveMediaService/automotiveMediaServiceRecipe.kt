@@ -60,6 +60,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
       // TODO: This should be created through a gradle build model instead of creating from text,
       //         creating this way given that this is the only place to create a build.gradle for anther module.
       source = buildGradle(
+        packageName = sharedPackageName,
         buildApiString = apis.buildApi.apiString,
         generateKotlin = projectData.language == Language.Kotlin,
         minApi = apis.minApi.apiString,

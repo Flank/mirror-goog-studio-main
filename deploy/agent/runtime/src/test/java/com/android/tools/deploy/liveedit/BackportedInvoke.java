@@ -63,4 +63,16 @@ public class BackportedInvoke {
     public static int strictMathFloorMod(long x, int y) {
         return StrictMath.floorMod(x, y);
     }
+
+    public static java.util.Map copyOfMap(java.util.Map map) {
+        return java.util.Map.copyOf(map);
+    }
+
+    public static java.util.Set copyOfSet(java.util.Collection set) {
+        return java.util.Set.copyOf(set);
+    }
+
+    public static java.util.List copyOfList(java.util.Collection list) {
+        return java.util.List.copyOf(list);
+    }
 }

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Test
@@ -36,9 +36,9 @@ internal class TestModuleVariantModelTaskTest
                     it.setupModuleTaskInputs()
                 },
                 expect = {
-                    it.testVariantModel.moduleCommonModel.testModuleFields()
+                    it.testVariantProperties.artifactOutputProperties.testModuleFields()
                     Truth.assertThat(it.variantCase).isEqualTo(
-                            Variant.VariantCase.TESTVARIANTMODEL
+                            VariantProperties.VariantCase.TESTVARIANTPROPERTIES
                     )
                 },
         )

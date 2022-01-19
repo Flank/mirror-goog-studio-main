@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Test
@@ -35,8 +35,8 @@ class LibraryVariantModelTaskTest: VariantModelTaskAbstractTest<LibraryVariantMo
                 it.setupModuleTaskInputs()
             },
             expect = {
-                Truth.assertThat(it.variantCase).isEqualTo(Variant.VariantCase.LIBRARYVARIANTMODEL)
-                it.libraryVariantModel.moduleCommonModel.testModuleFields()
+                Truth.assertThat(it.variantCase).isEqualTo(VariantProperties.VariantCase.LIBRARYVARIANTPROPERTIES)
+                it.libraryVariantProperties.artifactOutputProperties.testModuleFields()
             }
         )
     }

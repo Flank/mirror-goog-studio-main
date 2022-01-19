@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.co
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
+import com.android.build.gradle.internal.cxx.configure.ninja
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CommonExtensionImpl
@@ -260,9 +261,10 @@ class VariantManager<
             return testBuildTypeData
         }
 
-    enum class NativeBuiltType { CMAKE, NDK_BUILD }
+    enum class NativeBuiltType { CMAKE, NDK_BUILD, NINJA }
 
     private fun configuredNativeBuilder(): NativeBuiltType? {
+        if (dslExtension.experimentalProperties.ninja.path != null) return NativeBuiltType.NINJA
         if (dslExtension.externalNativeBuild.ndkBuild.path != null) return NativeBuiltType.NDK_BUILD
         if (dslExtension.externalNativeBuild.cmake.path != null) return NativeBuiltType.CMAKE
         return null;

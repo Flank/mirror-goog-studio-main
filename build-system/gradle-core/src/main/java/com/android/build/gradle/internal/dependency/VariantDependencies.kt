@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT_MODEL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions

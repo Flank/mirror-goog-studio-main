@@ -224,6 +224,54 @@ class AsmTransformApiInstrumentationTest {
     }
 
     @Test
+    fun unitTestClassesConsumeInstrumentedAppClasses() {
+        project.getSubproject(":app")
+            .file("src/test/java/com/example/unittest/AppInstrumentationTest.kt").apply {
+                parentFile.mkdirs()
+                writeText(
+                    // language=kotlin
+                    """
+                        package com.example.unittest
+
+                        import com.example.instrumentationlib.instrumentation.InstrumentedAnnotation
+                        import com.example.instrumentationlib.instrumentation.InstrumentedInterface
+                        import com.example.myapplication.*
+                        import org.junit.Test
+
+                        class AppInstrumentationTest {
+
+                            @Test
+                            fun appClassesWereInstrumented() {
+                                assert(ClassWithNoInterfacesOrSuperclasses::class.java.interfaces
+                                            .contains(InstrumentedInterface::class.java))
+                                assert(ClassExtendsOneClassAndImplementsTwoInterfaces::class.java.interfaces
+                                            .contains(InstrumentedInterface::class.java))
+                            }
+
+                            @Test
+                            fun appMethodsWereInstrumented() {
+                                assert(ClassImplementsI::class.java.getMethod("f1")
+                                            .annotations.map { it.annotationClass }
+                                            .contains(InstrumentedAnnotation::class))
+                                assert(ClassExtendsOneClassAndImplementsTwoInterfaces::class.java.getMethod("f3")
+                                            .annotations.map { it.annotationClass }
+                                            .contains(InstrumentedAnnotation::class))
+                                assert(ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java.getMethod("f4")
+                                            .annotations.map { it.annotationClass }
+                                            .contains(InstrumentedAnnotation::class))
+                            }
+                        }
+                        """.trimIndent()
+                )
+            }
+
+        configureExtensionForAnnotationAddingVisitor(project)
+        configureExtensionForInterfaceAddingVisitor(project)
+
+        project.executor().run(":app:testDebugUnitTest")
+    }
+
+    @Test
     fun onlyAnnotationVisitorShouldInstrumentClassesInReleaseVariant() {
         configureExtensionForAnnotationAddingVisitor(project)
         configureExtensionForInterfaceAddingVisitor(project)

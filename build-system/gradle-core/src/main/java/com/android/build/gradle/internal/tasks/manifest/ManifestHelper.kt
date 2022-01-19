@@ -30,7 +30,13 @@ import com.google.common.io.Files
 import java.io.File
 import java.io.IOException
 
-/** Invoke the Manifest Merger version 2.  */
+/**
+ * Invoke the Manifest Merger version 2.
+ *
+ * @param packageOverride the value used for the merged manifest's package attribute, which is
+ *                        the applicationId for apps and the namespace for libraries.
+ * @param namespace the namespace, used to create or shorten fully qualified class names
+ */
 fun mergeManifests(
     mainManifest: File,
     manifestOverlays: List<File>,
@@ -38,6 +44,7 @@ fun mergeManifests(
     navigationJsons: Collection<File>,
     featureName: String?,
     packageOverride: String?,
+    namespace: String,
     profileable: Boolean,
     versionCode: Int?,
     versionName: String?,
@@ -65,6 +72,7 @@ fun mergeManifests(
             .setMergeReportFile(reportFile)
             .setFeatureName(featureName)
             .addDependencyFeatureNames(dependencyFeatureNames)
+            .setNamespace(namespace)
         val isAppMerge = mergeType == ManifestMerger2.MergeType.APPLICATION
         val injectProfileable = isAppMerge && profileable
 

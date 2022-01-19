@@ -24,6 +24,9 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
 
 readonly config_options="--config=local --config=rcache"
 
+# The BAZEL_* variable is configured on the Mac Host.
+export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
+
 "${script_dir}/bazel" \
         --max_idle_secs=60 \
         test \

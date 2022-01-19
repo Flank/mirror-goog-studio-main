@@ -19,7 +19,6 @@ package com.android.tools.lint
 import com.android.SdkConstants
 import com.android.tools.lint.checks.LintDetectorDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
-import com.android.tools.lint.client.api.LintDriverCrashTest
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -69,14 +68,15 @@ class LintFixPerformerTest : TestCase() {
                 output = stringWriter.toString()
             }
         }
-        val testIncident = Incident().apply { issue =
-            Issue.create(
-                "_FixPerformerTestIssue",
-                "Sample",
-                "Sample",
-                Category.CORRECTNESS, 5, Severity.WARNING,
-                Implementation(LintDetectorDetector::class.java, Scope.RESOURCE_FILE_SCOPE)
-            )
+        val testIncident = Incident().apply {
+            issue =
+                Issue.create(
+                    "_FixPerformerTestIssue",
+                    "Sample",
+                    "Sample",
+                    Category.CORRECTNESS, 5, Severity.WARNING,
+                    Implementation(LintDetectorDetector::class.java, Scope.RESOURCE_FILE_SCOPE)
+                )
         }
         try {
             performer.fix(file, testIncident, fixes.toList(), source)

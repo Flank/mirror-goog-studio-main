@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.testing
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -47,7 +47,7 @@ class TestModuleModelSyncFilesTest {
     fun testTestModuleModel() {
         val variantSyncFileModel = getTestModuleSyncFile()
         Truth.assertThat(variantSyncFileModel.variantCase)
-                .isEqualTo(Variant.VariantCase.TESTVARIANTMODEL)
+                .isEqualTo(VariantProperties.VariantCase.TESTVARIANTPROPERTIES)
     }
 
     @Test
@@ -64,14 +64,14 @@ class TestModuleModelSyncFilesTest {
                 """.trimIndent()
         )
         val variantSyncFileModel = getTestModuleSyncFile()
-        val commonModel = variantSyncFileModel.testVariantModel.moduleCommonModel
+        val commonModel = variantSyncFileModel.testVariantProperties.artifactOutputProperties
         Truth.assertThat(commonModel.manifestPlaceholdersCount).isEqualTo(1)
         Truth.assertThat(commonModel.manifestPlaceholdersMap["label"]).isEqualTo("some_value")
 
     }
 
 
-    private fun getTestModuleSyncFile(): Variant {
+    private fun getTestModuleSyncFile(): VariantProperties {
         val variant = getTestModuleVariant()
         Truth.assertThat(variant.mainArtifact.modelSyncFiles.size).isEqualTo(1)
         val appModelSync = variant.mainArtifact.modelSyncFiles.first()
@@ -81,7 +81,7 @@ class TestModuleModelSyncFilesTest {
             Truth.assertThat(result.failedTasks).isEmpty()
             Truth.assertThat(appModelSyncFile.exists()).isTrue()
             FileInputStream(appModelSyncFile).use {
-                Variant.parseFrom(it)
+                VariantProperties.parseFrom(it)
             }
         }
     }

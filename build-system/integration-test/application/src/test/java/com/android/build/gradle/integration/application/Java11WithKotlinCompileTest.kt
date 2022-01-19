@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.TestUtils
@@ -47,7 +48,7 @@ class Java11WithKotlinCompileTest {
             """
 
                 android {
-                    compileSdkVersion 31
+                    compileSdkVersion $DEFAULT_COMPILE_SDK_VERSION
 
                     compileOptions {
                         sourceCompatibility JavaVersion.VERSION_11

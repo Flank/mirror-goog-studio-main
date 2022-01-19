@@ -56,4 +56,4 @@ package="com.example.test" >
 
 @errors
 
-WARNING:Package name 'com.example.test' used in: ManifestMerger2Test0_main.xml, ManifestMerger2Test1_lib1.xml.
+WARNING:Namespace 'com.example.test' used in: ManifestMerger2Test0_main.xml, ManifestMerger2Test1_lib1.xml.

@@ -29,11 +29,17 @@ interface ModelSyncFile {
      * Enum of all sync types supported by this plugin.
      */
     enum class ModelSyncType {
+
+        /**
+         * Sync that will contain elements of type com.android.ide.model.sync.AppIdListSync
+         */
+        APP_ID_LIST,
+
         /**
          * Basic sync type will contain elements of type com.android.ide.model.sync.Variant.
          *
          */
-        BASIC
+        BASIC,
     }
 
     /**

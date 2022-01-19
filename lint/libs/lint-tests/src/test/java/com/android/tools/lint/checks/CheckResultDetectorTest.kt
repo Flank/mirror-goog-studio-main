@@ -289,23 +289,11 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-
-            // Include the compiled version of the package-info file;
-            // without this we can't resolve package annotations.
-            compiled(
-                "libs/packageinfoclass.jar",
-                java(
-                    "" +
-                        "@CheckReturnValue\n" +
-                        "package test.pkg;\n" +
-                        "import javax.annotation.CheckReturnValue;\n"
-                ),
-                0xad536a8e,
-                "test/pkg/package-info.class:" +
-                    "H4sIAAAAAAAAAE1NvQrCMBi81J+qkw66ODprRgcnEQRBECq4p+Gzpo1JaZPi" +
-                    "szn4AD6U2CqIN9zB/XDP1/0BYIl+iDBEj2FwtL6QtFWaGEa5kJlIaK7M2S5S" +
-                    "UQmGaeSNU1famUqVKta0NsY64ZQ1JcNs37RuXPxMvrmQzCJyvjAnoT2tGMaO" +
-                    "SsfzLOH/BwzDZsy1MAk/xClJNwEYAnwRoPXhNjq1duukC7wBEsYF4sIAAAA="
+            java(
+                "" +
+                    "@CheckReturnValue\n" +
+                    "package test.pkg;\n" +
+                    "import javax.annotation.CheckReturnValue;\n"
             ),
             errorProneCanIgnoreReturnValueSource,
             javaxCheckReturnValueSource,

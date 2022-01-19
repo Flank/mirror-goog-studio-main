@@ -54,7 +54,9 @@ enum class FormFactor(val displayName: String) {
 enum class TemplateConstraint {
   AndroidX,
   Kotlin,
-  Material3
+  Material3,
+  // Compose is used as a Constrain since it implies the need of a specific Kotlin Compiler version
+  Compose,
 }
 
 /**

@@ -160,11 +160,6 @@ class GlobalTaskCreationConfigImpl(
         get() = (extension as? LibraryExtension)?.prefab
             ?: throw RuntimeException("calling prefab on non Library variant")
 
-    override val profilingMode: ProfilingMode
-        get() = ProfilingMode.getProfilingModeType(
-            services.projectOptions[StringOption.PROFILING_MODE]
-        )
-
     override val testCoverage: TestCoverage
         get() = extension.testCoverage
 

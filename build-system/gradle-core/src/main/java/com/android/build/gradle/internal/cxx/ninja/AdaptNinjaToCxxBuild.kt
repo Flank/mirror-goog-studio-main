@@ -107,11 +107,20 @@ private class NinjaToCxxBuildAdapter(
                 // special to Ninja. The inputs to 'build.ninja' should be the build files like
                 // MyApp.vcxproj or Teapots.sln. Ninja uses "generator=1" to designate these.
                 generator == "1" -> buildFiles += inIDs
-                outputHasExtension("so", "") -> packageables += outIDs
+                outputHasExtension("so", "") -> {
+                    // In a statement like:
+                    //   build lib.so : CLANG source.o /path/to/ndk/libc++_shared.so
+                    // outIDs is lib.so
+                    // and inIDs is [source.o, /path/to/ndk/libc++_shared.so]
+                    // The inIDs need to be filtered down to just packagable files
+                    packageables += outIDs
+                    packageables += inIDs.filter(::isPackageable)
+                }
                 outputHasExtension("a") -> archives += outIDs
                 outputHasExtension("passthrough") -> passthroughs += outIDs
             }
         }
+
         return BuildGraph(
             edges = edges,
             packageableIds = packageables.toSortedSet(),
@@ -290,7 +299,46 @@ private class NinjaToCxxBuildAdapter(
         idOf(stringOf(value).removeExtension(ext))
     private fun ninjaCommand(vararg args : String) = createNinjaCommand(args.toList())
     private fun ninjaCommand(vararg args : Int) = createNinjaCommand(args.map(::stringOf).toList())
+    private fun isPackageable(id : Int) = isPackageable(stringOf(id))
 }
+
+/**
+ * Heuristic to check whether name could be a packageable library (like .so or executable) that is
+ * *not* an Android system library.
+ */
+@VisibleForTesting
+fun isPackageable(name: String) : Boolean {
+    return name.hasExtension("") ||
+            (name.hasExtension("so") &&
+                    (!name.contains("ndk") || !NDK_SYSTEM_LIBS.any { name.endsWith(it) }))
+}
+
+// Libraries known to be installed on the device. When referenced by build.ninja, these should
+// not be considered as libraries that should be packaged in the APK.
+private val NDK_SYSTEM_LIBS = listOf(
+    "libEGL.so",
+    "libGLESv1_CM.so",
+    "libGLESv2.so",
+    "libGLESv3.so",
+    "libOpenMAXAL.so",
+    "libOpenSLES.so",
+    "libaaudio.so",
+    "libamidi.so",
+    "libandroid.so",
+    "libbinder_ndk.so",
+    "libc.so",
+    "libcamera2ndk.so",
+    "libdl.so",
+    "libjnigraphics.so",
+    "liblog.so",
+    "libm.so",
+    "libmediandk.so",
+    "libnativewindow.so",
+    "libneuralnetworks.so",
+    "libstdc++.so",
+    "libsync.so",
+    "libvulkan.so",
+    "libz.so")
 
 /**
  * Heuristic to check whether [exe] looks like a relevant tool from the NDK toolset
