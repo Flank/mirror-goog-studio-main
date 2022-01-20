@@ -445,6 +445,9 @@ bool isUsingSupportedCoroutinesVersion(JNIEnv* jni, jobject class_loader_object,
   if (version_file_url == nullptr) {
     // META-INF/*.version file not found, app is using kotlinx-coroutines older
     // than 1.6.0
+    *error_msg =
+        "The version of kotlinx-coroutines-core used by the app is not "
+        "supported. Should be 1.6.0 or higher.";
     return false;
   }
 
