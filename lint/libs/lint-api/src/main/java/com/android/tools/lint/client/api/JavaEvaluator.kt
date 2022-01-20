@@ -773,7 +773,10 @@ class JavaEvaluator {
         inHierarchy: Boolean = false
     ): List<UAnnotation>
 
-    @Deprecated("Use getAllUAnnotations instead", replaceWith = ReplaceWith("getAllUAnnotations(owner, inHierarchy)"))
+    @Deprecated(
+        "Use getAnnotations() instead; consider providing a parent",
+        replaceWith = ReplaceWith("getAnnotations(owner, inHierarchy)")
+    )
     abstract fun getAllAnnotations(
         owner: PsiModifierListOwner,
         inHierarchy: Boolean
