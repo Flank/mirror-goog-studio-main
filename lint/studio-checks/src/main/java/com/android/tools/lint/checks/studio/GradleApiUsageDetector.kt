@@ -53,7 +53,7 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
             explanation = """
                 Using `org.gradle.api.Project.exec` is not compatible with Gradle instant execution.
 
-                Please inject `org.gradle.process.ExecOperations` into task that needs it. This will
+                Please inject `org.gradle.process.ExecOperations` into task that needs it. This will \
                 provide you with ability to start Java and other types of processes.
             """,
             category = CORRECTNESS,

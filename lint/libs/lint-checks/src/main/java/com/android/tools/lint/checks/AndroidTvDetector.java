@@ -121,6 +121,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             "Missing Leanback Support",
                             "The manifest should declare the use of the Leanback user interface required "
                                     + "by Android TV.\n"
+                                    + "\n"
                                     + "To fix this, add\n"
                                     + "```xml\n"
                                     + "`<uses-feature android:name=\"android.software.leanback\"\n"

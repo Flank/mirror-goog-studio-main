@@ -110,7 +110,7 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
                 connect to the internet, please modify your Manifest to contain: \
                 `<uses-feature android:name="android.hardware.wifi" android:required="false" />`
 
-                Un-metered or non-roaming connections can be detected in software using
+                Un-metered or non-roaming connections can be detected in software using \
                 `NetworkCapabilities#NET_CAPABILITY_NOT_METERED` and \
                 `NetworkCapabilities#NET_CAPABILITY_NOT_ROAMING.`
                 """,

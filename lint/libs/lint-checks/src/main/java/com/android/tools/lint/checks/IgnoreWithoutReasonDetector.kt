@@ -43,7 +43,7 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
             id = "IgnoreWithoutReason",
             briefDescription = "@Ignore without Reason",
             explanation = """
-            Ignoring a test without a reason makes it difficult to figure out the problem later.
+            Ignoring a test without a reason makes it difficult to figure out the problem later. \
             Please define an explicit reason why it is ignored, and when it can be resolved.""",
             category = Category.TESTING,
             priority = 2,

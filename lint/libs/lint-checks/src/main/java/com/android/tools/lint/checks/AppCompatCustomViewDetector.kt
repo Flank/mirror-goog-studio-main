@@ -122,7 +122,7 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
                 However, this does not work for your own custom views.
 
                 Instead of extending the `android.widget` classes directly, you should \
-                instead extend one of the delegate classes in
+                instead extend one of the delegate classes in \
                 `androidx.appcompat.widget.AppCompatTextView`.
                 """,
             category = Category.CORRECTNESS,

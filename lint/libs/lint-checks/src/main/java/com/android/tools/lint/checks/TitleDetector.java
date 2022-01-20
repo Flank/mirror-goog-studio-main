@@ -57,6 +57,7 @@ public class TitleDetector extends ResourceXmlDetector {
                                     + "* Screen readers for sight-impaired users read the menu item's title.\n"
                                     + "* If the action item appears with only the icon, a user can long-press the item "
                                     + "to reveal a tool-tip that displays the action item's title.\n"
+                                    + "\n"
                                     + "The android:icon is always optional, but recommended.",
                             Category.USABILITY,
                             5,

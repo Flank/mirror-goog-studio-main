@@ -41,7 +41,7 @@ class SwingWorkerDetector : Detector(), SourceCodeScanner {
             id = "SwingWorker",
             briefDescription = "Using SwingWorker",
             explanation = """
-                Do not use `javax.swing.SwingWorker`; use
+                Do not use `javax.swing.SwingWorker`; use \
                 `com.intellij.util.concurrency.SwingWorker` instead.
 
                 For more, see `go/do-not-freeze`.
