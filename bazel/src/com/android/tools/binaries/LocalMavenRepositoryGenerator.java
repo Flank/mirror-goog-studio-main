@@ -30,6 +30,7 @@ import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -423,7 +424,8 @@ public class LocalMavenRepositoryGenerator {
                     if (possibleLicense.exists()) {
                         Files.copy(
                                 possibleLicense.toPath(),
-                                (new File(artifactDir, "NOTICE")).toPath());
+                                (new File(artifactDir, "NOTICE")).toPath(),
+                                StandardCopyOption.REPLACE_EXISTING);
                         return;
                     }
                 }
