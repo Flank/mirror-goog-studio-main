@@ -15,12 +15,14 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -74,6 +76,7 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
  */
 fun createCxxConfigureTask(
     globalConfig: GlobalTaskCreationConfig,
+    creationConfig: VariantImpl,
     abi: CxxAbiModel,
     name: String
 ) = object : GlobalTaskCreationAction<ExternalNativeBuildJsonTask>(globalConfig) {
@@ -83,5 +86,13 @@ fun createCxxConfigureTask(
         super.configure(task)
         task.abi = abi
         task.variantName = abi.variant.variantName
+        if (creationConfig.variantDslInfo.renderscriptNdkModeEnabled) {
+            creationConfig
+                .artifacts
+                .setTaskInputToFinalProduct(
+                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR,
+                    task.renderscriptSources
+                )
+        }
     }
 }
