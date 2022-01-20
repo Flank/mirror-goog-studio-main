@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_ABI
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_BUILD_SCRIPT
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_CFLAGS
@@ -115,11 +116,10 @@ private fun CxxAbiModel.calculateConfigurationArgumentsExceptHash() : CxxAbiMode
             // Instantiate ${...} macro values in the argument
             .map { argument -> rewriteConfig.reifier(argument) }
             // Parse the argument
-            // Parse the argument
             .map { argument -> when(variant.module.buildSystem) {
                     CMAKE -> argument.toCmakeArgument()
                     NDK_BUILD -> argument.toNdkBuildArgument()
-                    else -> error("${variant.module.buildSystem}")
+                    else -> UnknownArgument(argument)
                 }
             }
             // Get rid of arguments that are irrelevant because they were superseded
@@ -196,13 +196,13 @@ fun CxxAbiModel.getAbiRewriteConfiguration() : RewriteConfiguration {
     val builtInCommandLineArguments = when(variant.module.buildSystem) {
         CMAKE -> configuration.getCmakeCommandLineArguments()
         NDK_BUILD -> getNdkBuildCommandLineArguments()
-        else -> error("${variant.module.buildSystem}")
+        else -> listOf()
     }
 
     val buildGradleCommandLineArguments =  when(variant.module.buildSystem) {
         CMAKE -> variant.buildSystemArgumentList.toCmakeArguments()
         NDK_BUILD -> variant.buildSystemArgumentList.toNdkBuildArguments()
-        else -> error("${variant.module.buildSystem}")
+        else -> variant.buildSystemArgumentList.map { UnknownArgument(it) }
     }
 
     val arguments =

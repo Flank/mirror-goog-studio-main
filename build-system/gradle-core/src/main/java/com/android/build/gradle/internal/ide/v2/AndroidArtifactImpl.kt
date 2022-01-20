@@ -50,8 +50,6 @@ data class AndroidArtifactImpl(
     override val generatedSourceFolders: Collection<File>,
     override val generatedResourceFolders: Collection<File>,
     override val classesFolders: Set<File>,
-    override val additionalClassesFolders: Set<File>,
-
     override val assembleTaskOutputListingFile: File?,
     override val modelSyncFiles: Collection<ModelSyncFile>
 ) : AndroidArtifact, Serializable {

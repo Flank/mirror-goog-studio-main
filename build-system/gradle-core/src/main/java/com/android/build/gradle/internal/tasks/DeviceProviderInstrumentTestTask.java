@@ -812,13 +812,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     (EmulatorSnapshots) testOptions.getEmulatorSnapshots()));
 
             task.getCodeCoverageEnabled()
-                    .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());
+                    .set(creationConfig.getVariantDslInfo().isAndroidTestCoverageEnabled());
             boolean useJacocoTransformOutputs =
                     creationConfig
                                     .getServices()
                                     .getProjectOptions()
                                     .get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION)
-                            && creationConfig.getVariantDslInfo().isTestCoverageEnabled();
+                            && creationConfig.getVariantDslInfo().isAndroidTestCoverageEnabled();
             task.dependencies =
                     creationConfig
                             .getVariantDependencies()

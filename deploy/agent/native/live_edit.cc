@@ -58,6 +58,29 @@ void UpdateClassBytecode(JNIEnv* jni, JniClass* live_edit_stubs,
   live_edit_stubs->CallStaticVoidMethod("addClass", "(Ljava/lang/String;[BZ)V",
                                         class_name, bytecode_arr, isProxyClass);
 }
+void SetDebugMode(JNIEnv* jni, bool debugMode) {
+  jni->ExceptionClear();
+  JniClass clazz(jni, "com/android/tools/deploy/interpreter/Config");
+  if (!clazz.isValid()) {
+    return;
+  }
+
+  jobject ins = clazz.CallStaticObjectMethod(
+      "getInstance", "()Lcom/android/tools/deploy/interpreter/Config;",
+      debugMode);
+  if (ins == nullptr) {
+    return;
+  }
+
+  JniObject instance = JniObject(jni, ins);
+  jboolean mode = debugMode;
+  instance.CallVoidMethod("setDebugMode", "(Z)V", mode);
+
+  // Make sure we have not triggered something bad.
+  if (jni->ExceptionCheck()) {
+    jni->ExceptionClear();
+  }
+}
 }  // namespace
 
 proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
@@ -69,6 +92,8 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     resp.set_error_message("Could not set up instrumentation jar");
     return resp;
   }
+
+  SetDebugMode(jni, req.debugmodeenabled());
 
   JniClass live_edit_stubs(jni,
                            "com/android/tools/deploy/liveedit/LiveEditStubs");

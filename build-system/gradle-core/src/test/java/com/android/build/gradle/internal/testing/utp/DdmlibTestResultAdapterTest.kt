@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.ddmlib.testrunner.ITestRunListener
 import com.android.ddmlib.testrunner.TestIdentifier
+import com.android.ddmlib.testrunner.XmlTestRunListener
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
@@ -43,7 +43,7 @@ class DdmlibTestResultAdapterTest {
     var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
 
     @Mock
-    lateinit var mockDdmlibListener: ITestRunListener
+    lateinit var mockDdmlibListener: XmlTestRunListener
 
     @Test
     fun testPassed() {
@@ -121,6 +121,42 @@ class DdmlibTestResultAdapterTest {
                             "useAppContext")),
                     eq(mapOf()))
             verify(mockDdmlibListener).testRunFailed(eq("There was 1 failure(s)."))
+            verify(mockDdmlibListener).testRunEnded(anyLong(), eq(mapOf()))
+            verifyNoMoreInteractions()
+        }
+    }
+
+    @Test
+    fun testFailedByPlatformError() {
+        val resultProto = createResultProto("""
+            test_status: ERROR
+            platform_error {
+              error_detail {
+                summary {
+                  namespace {
+                    namespace: "com.google.testing.platform"
+                  }
+                  error_code: 3002
+                  error_name: "DEVICE_PROVISION_FAILED"
+                  error_classification: "UNDERLYING_TOOL"
+                  error_message: "Failed trying to provide device controller."
+                }
+                cause {
+                  summary {
+                    error_message: "Gradle was unable to attach one or more devices to the adb server."
+                  }
+                }
+              }
+            }
+        """)
+
+        val adapter = DdmlibTestResultAdapter("runName", mockDdmlibListener)
+
+        replayTestEvent(resultProto, adapter)
+
+        inOrder(mockDdmlibListener).apply {
+            verify(mockDdmlibListener).addSystemError(eq(
+                "PLATFORM ERROR: Gradle was unable to attach one or more devices to the adb server.\n"))
             verify(mockDdmlibListener).testRunEnded(anyLong(), eq(mapOf()))
             verifyNoMoreInteractions()
         }

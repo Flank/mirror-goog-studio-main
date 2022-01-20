@@ -17,12 +17,12 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.tooling.BuildException
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -68,7 +68,7 @@ class JacocoWithUnitTestReportTest(
 
     @Test
     fun `test expected report contents`() {
-        testProject.executor()
+        val run = testProject.executor()
             .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, isJacocoTransformEnabled)
             .run("createDebugUnitTestCoverageReport")
         checkHighlitedSourceCodeReportFiles(testProject.buildDir)
@@ -80,6 +80,11 @@ class JacocoWithUnitTestReportTest(
             "debug",
             "index.html"
         )
+        run.stdout.use {
+            assertThat(
+                ScannerSubject.assertThat(it)
+                    .contains("View coverage report at ${generatedCoverageReport.toURI()}"))
+        }
         assertThat(generatedCoverageReport.exists()).isTrue();
         val generatedCoverageReportHTML = generatedCoverageReport.readLines().joinToString("\n")
         val reportTitle = Regex("<span class=\"el_report\">(.*?)</span")

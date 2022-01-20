@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier
-import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -33,7 +32,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
@@ -102,6 +100,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val packageOverride: Property<String>
 
     @get:Input
+    abstract val namespace: Property<String>
+
+    @get:Input
     abstract val profileable: Property<Boolean>
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -153,6 +154,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             navJsons,
             featureName.orNull,
             packageOverride.get(),
+            namespace.get(),
             profileable.get(),
             variantOutput.get().versionCode.orNull,
             variantOutput.get().versionName.orNull,
@@ -417,9 +419,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             }
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
-            task.profileable.setDisallowChanges(
-                creationConfig.global.profilingMode == ProfilingMode.PROFILEABLE
-            )
+            task.namespace.setDisallowChanges(creationConfig.namespace)
+            task.profileable.setDisallowChanges(creationConfig.profileable)
             task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()
             task.mainManifest.setDisallowChanges(creationConfig.services.provider(variantSources::mainManifestFilePath))

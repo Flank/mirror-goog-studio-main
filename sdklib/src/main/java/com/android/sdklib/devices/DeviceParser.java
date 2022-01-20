@@ -62,7 +62,7 @@ public class DeviceParser {
 
     private static class DeviceHandler extends DefaultHandler {
         private static final Splitter sSpaceSplitter =
-                Splitter.on(' ').trimResults().omitEmptyStrings();
+                Splitter.onPattern("\\s").trimResults().omitEmptyStrings();
 
         private final Table<String, String, Device> mDevices = HashBasedTable.create();
         private final StringBuilder mStringAccumulator = new StringBuilder();

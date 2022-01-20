@@ -16,6 +16,7 @@
 
 package com.android.tools.appinspection.network
 
+import androidx.inspection.Inspector
 import com.android.tools.appinspection.network.http.FakeHttpUrlConnection
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -23,6 +24,7 @@ import org.junit.Test
 import studio.network.inspection.NetworkInspectorProtocol
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.Executor
 
 private const val URL_PARAMS = "activity=http"
 private val FAKE_URL = URL("https://www.google.com?$URL_PARAMS")
@@ -58,6 +60,37 @@ class HttpUrlTest {
                 NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
             )!!.responsePayload.payload.toStringUtf8()
         ).isEqualTo("Test")
+
+        assertThat(inspectorRule.connection.httpData.last().httpClosed.completed).isTrue()
+    }
+
+    @Test
+    fun httpIntercept() {
+        inspectorRule.inspector.onReceiveCommand(NetworkInspectorProtocol.Command.newBuilder()
+            .apply {
+                interceptCommandBuilder.apply {
+                    url = FAKE_URL.toExternalForm()
+                    responseBody = "InterceptedBody"
+                }
+            }
+            .build()
+            .toByteArray(), object : Inspector.CommandCallback {
+            override fun reply(response: ByteArray) {
+            }
+
+            override fun addCancellationListener(executor: Executor, runnable: Runnable) {
+            }
+        })
+
+        with(FakeHttpUrlConnection(FAKE_URL, "Test".toByteArray(), "GET").triggerHttpExitHook()) {
+            val inputStream = inputStream
+            inputStream.use { it.readBytes() }
+        }
+        assertThat(
+            inspectorRule.connection.findHttpEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
+            )!!.responsePayload.payload.toStringUtf8()
+        ).isEqualTo("InterceptedBody")
 
         assertThat(inspectorRule.connection.httpData.last().httpClosed.completed).isTrue()
     }

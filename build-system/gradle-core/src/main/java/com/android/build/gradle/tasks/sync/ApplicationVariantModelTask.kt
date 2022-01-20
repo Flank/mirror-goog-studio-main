@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks.sync
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.work.DisableCachingByDefault
@@ -36,9 +36,9 @@ abstract class ApplicationVariantModelTask: ModuleVariantModelTask() {
     @get:Input
     abstract val applicationId: Property<String>
 
-    override fun addVariantContent(variant: Variant.Builder) {
-        super.addVariantContent(variant.applicationVariantModelBuilder.moduleCommonModelBuilder)
-        variant.applicationVariantModelBuilder.applicationId = applicationId.get()
+    override fun addVariantContent(variant: VariantProperties.Builder) {
+        super.addVariantContent(variant.applicationVariantPropertiesBuilder.artifactOutputPropertiesBuilder)
+        variant.applicationVariantPropertiesBuilder.applicationId = applicationId.get()
     }
 
     class CreationAction(private val applicationCreationConfig: ApplicationCreationConfig) :

@@ -69,6 +69,7 @@ public class XmlTestRunListener implements ITestRunListener {
     private static final String ATTR_CLASSNAME = "classname";
     private static final String TIMESTAMP = "timestamp";
     private static final String HOSTNAME = "hostname";
+    private static final String SYSTEM_ERR = "system-err";
 
     /** the XML namespace */
     private static final String ns = null;
@@ -80,6 +81,8 @@ public class XmlTestRunListener implements ITestRunListener {
     private String mReportPath = "";
 
     private TestRunResult mRunResult = new TestRunResult();
+
+    private StringBuilder mSystemError = new StringBuilder();
 
     /**
      * Sets the report file to use.
@@ -198,6 +201,21 @@ public class XmlTestRunListener implements ITestRunListener {
     }
 
     /**
+     * Returns the system error message to be written into XML file in "system-err" element.
+     * The element is not created if this returns an empty string.
+     */
+    public String getSystemError() {
+        return mSystemError.toString();
+    }
+
+    /**
+     * Add system error message.
+     */
+    public void addSystemError(String systemError) {
+        mSystemError.append(systemError);
+    }
+
+    /**
      * Creates a {@link File} where the report will be created.
      * @param reportDir the root directory of the report.
      * @return a file
@@ -256,6 +274,13 @@ public class XmlTestRunListener implements ITestRunListener {
         Map<TestIdentifier, TestResult> testResults = mRunResult.getTestResults();
         for (Map.Entry<TestIdentifier, TestResult> testEntry : testResults.entrySet()) {
             print(serializer, testEntry.getKey(), testEntry.getValue());
+        }
+
+        String systemError = getSystemError();
+        if (!systemError.isEmpty()) {
+            serializer.startTag(ns, SYSTEM_ERR);
+            serializer.text(systemError);
+            serializer.endTag(ns, SYSTEM_ERR);
         }
 
         serializer.endTag(ns, TESTSUITE);

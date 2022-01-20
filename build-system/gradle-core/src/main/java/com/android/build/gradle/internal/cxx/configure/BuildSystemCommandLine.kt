@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeGeneratorName
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineMultiProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildAppendProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildJobs
@@ -135,6 +136,16 @@ sealed class CommandLineArgument {
                 return DefineProperty("-D${property.name}=$value", property.name, value)
             }
         }
+    }
+
+    /**
+     * For example, -property:WarningLevel=2;OutDir=bin\Debug
+     *
+     * Defines one or more build properties passed in from the command-line.
+     */
+    data class DefineMultiProperty(
+        override val sourceArgument : String,
+        val properties : Map<String, String>) : CommandLineArgument() {
     }
 
     /**
@@ -264,9 +275,34 @@ fun String.toNdkBuildArgument(sourceArgument: String = this): CommandLineArgumen
 }
 
 /**
+ * Parse a single MSBuild command-line argument.
+ * See: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-command-line-reference
+ */
+fun String.toMSBuildArgument(sourceArgument: String = this): CommandLineArgument {
+    fun propertyAfter(prefix : String) = run {
+        DefineMultiProperty(sourceArgument,
+            substringAfter(prefix).split(";").associate { body ->
+                body.substringBefore("=").trim() to body.substringAfter("=").trim()
+        })
+    }
+    return when {
+        startsWith("-p:") && contains("=") -> propertyAfter("-p:")
+        startsWith("/p:") && contains("=") -> propertyAfter("/p:")
+        startsWith("-property:") && contains("=") -> propertyAfter("-property:")
+        startsWith("/property:") && contains("=") -> propertyAfter("/property:")
+        else -> UnknownArgument(sourceArgument)
+    }
+}
+
+/**
  * Parse a set of flags passed to ndk-build.
  */
 fun List<String>.toNdkBuildArguments() = map { it.toNdkBuildArgument() }
+
+/**
+ * Parse a set of flags passed to MSBuild.
+ */
+fun List<String>.toMSBuildArguments() = map { it.toMSBuildArgument() }
 
 /**
  * Returns true when a set of args contains a property whose value would be considered true by
@@ -293,12 +329,25 @@ fun List<CommandLineArgument>.getNdkBuildProperty(property : NdkBuildProperty) =
         getProperty(property.name)
 
 /**
+ * Returns the value of the property. Empty string if not present. If the value is present more t
+ * han oncethen the last value is taken.
+ */
+fun List<CommandLineArgument>.getMSBuildProperty(property : MSBuildProperty) =
+    getProperty(property.name)
+
+/**
  * Returns the value of the property. Null if not present. If the value is present more than once
  * then the last value is taken.
  */
 @VisibleForTesting
 fun List<CommandLineArgument>.getProperty(property : String) =
-    filterType<DefineProperty> { it.propertyName == property }?.propertyValue
+    mapNotNull {
+            when(it) {
+                is DefineProperty -> if (it.propertyName == property) it.propertyValue else null
+                is DefineMultiProperty -> it.properties[property]
+                else -> null
+            }
+        }.lastOrNull()
 
 /**
  * Returns the generator. Null if none present

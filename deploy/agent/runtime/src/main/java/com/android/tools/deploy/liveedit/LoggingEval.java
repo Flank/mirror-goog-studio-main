@@ -91,6 +91,16 @@ class LoggingEval implements Eval {
 
     @NonNull
     @Override
+    public Value invokeInterface(
+            @NonNull Value target,
+            MethodDescription methodDesc,
+            @NonNull List<? extends Value> args) {
+        Log.v("live.deploy", "invokeInterface: " + methodDesc);
+        return receiver.invokeInterface(target, methodDesc, args);
+    }
+
+    @NonNull
+    @Override
     public Value invokeMethod(
             @NonNull Value target,
             MethodDescription methodDesc,

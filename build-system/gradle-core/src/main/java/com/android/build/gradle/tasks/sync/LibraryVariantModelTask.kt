@@ -18,17 +18,14 @@ package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.model.sync.LibraryVariantModel
-import com.android.ide.model.sync.Variant
-import org.gradle.api.provider.MapProperty
-import org.gradle.api.tasks.Input
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
 abstract class LibraryVariantModelTask: ModuleVariantModelTask() {
 
-    override fun addVariantContent(variant: Variant.Builder) {
-        super.addVariantContent(variant.libraryVariantModelBuilder.moduleCommonModelBuilder)
+    override fun addVariantContent(variant: VariantProperties.Builder) {
+        super.addVariantContent(variant.libraryVariantPropertiesBuilder.artifactOutputPropertiesBuilder)
     }
 
     class CreationAction(private val libraryCreationConfig: LibraryCreationConfig):

@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
@@ -48,9 +49,13 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.Collections
@@ -103,6 +108,11 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     @get:Nested
     abstract val environmentVariableInputs: EnvironmentVariableInputs
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val desugarMethodsFiles: ConfigurableFileCollection
 
     override fun doTaskAction() {
         lintTool.lintClassLoaderBuildService.get().shouldDispose = true
@@ -166,6 +176,10 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         arguments.add("--client-id", "gradle")
         arguments.add("--client-name", "AGP")
         arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
+
+        desugarMethodsFiles.forEach {
+            arguments.add("--Xdesugared-methods", "${it.toPath()}")
+        }
 
         return Collections.unmodifiableList(arguments)
     }
@@ -277,6 +291,16 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 isForAnalysis = true
             )
             task.lintTool.initialize(creationConfig.services)
+            task.desugarMethodsFiles.from(
+                task.project.provider {
+                    getDesugaredMethods(
+                        task.project,
+                        creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
+                        creationConfig.minSdkVersion,
+                        creationConfig.global.compileSdkHashString,
+                        creationConfig.global.bootClasspath)
+                }
+            )
         }
     }
 

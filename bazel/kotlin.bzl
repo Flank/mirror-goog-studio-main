@@ -108,7 +108,7 @@ def kotlin_test(
         deps = deps,
         testonly = True,
         runtime_deps = runtime_deps,
-        jar_name = name + ".jar",
+        jar = name + ".jar",
         lint_baseline = lint_baseline,
         lint_classpath = lint_classpath,
         lint_is_test_sources = True,
@@ -172,7 +172,6 @@ def kotlin_library(
         srcs,
         deps = None,
         javacopts = [],
-        jar_name = None,
         lint_baseline = None,
         lint_classpath = [],
         lint_is_test_sources = False,
@@ -190,7 +189,6 @@ def kotlin_library(
         resources_strip_prefix: The prefix to strip from the resources path.
         deps: The dependencies of this library.
         runtime_deps: The runtime dependencies.
-        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
         friends: The list of kotlin-friends.
         compress_resources: Whether to compress resources.
         notice: An optional notice file to be included in the jar.
@@ -212,9 +210,10 @@ def kotlin_library(
             srcs = javas + kotlins,
         )
 
+    jar = kwargs.pop("jar", "lib" + name + ".jar")
     _kotlin_library(
         name = name,
-        jar = jar_name if jar_name else "lib" + name + ".jar",
+        jar = jar,
         java_srcs = javas,
         deps = deps,
         kotlin_srcs = kotlins,
@@ -254,16 +253,18 @@ def _kotlin_library_impl(ctx):
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs or source_jars else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
-    deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.bundled_deps + ctx.attr.exports]
+    deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.exports]
     java_info_deps = [dep[JavaInfo] for dep in ctx.attr.deps]
 
     # Kotlin
     jars = []
     kotlin_providers = []
+
     if kotlin_srcs:
         if ctx.attr.stdlib:
             deps.append(ctx.attr.stdlib[JavaInfo])
             java_info_deps.append(ctx.attr.stdlib[JavaInfo])
+
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = ctx.attr.module_name,
@@ -287,6 +288,7 @@ def _kotlin_library_impl(ctx):
 
     # Java
     if java_srcs or source_jars:
+        java_jar = ctx.actions.declare_file(name + ".java.jar")
         java_provider = java_common.compile(
             ctx,
             source_files = java_srcs,
@@ -301,14 +303,10 @@ def _kotlin_library_impl(ctx):
 
         jars += [java_jar]
 
-    for dep in ctx.attr.bundled_deps:
-        jars += [java_output.class_jar for java_output in dep[JavaInfo].outputs.jars]
-
     run_singlejar(
         ctx = ctx,
         jars = jars,
         out = ctx.outputs.jar,
-        manifest_lines = ctx.attr.manifest_lines,
         # allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
@@ -319,8 +317,7 @@ def _kotlin_library_impl(ctx):
         java_toolchain = java_toolchain,
     )
 
-    bundled_source_jars = [jar for dep in ctx.attr.bundled_deps for jar in dep[JavaInfo].source_jars]
-    _sources(ctx, java_srcs + kotlin_srcs, source_jars + bundled_source_jars, ctx.outputs.source_jar, java_toolchain, host_javabase)
+    _sources(ctx, java_srcs + kotlin_srcs, source_jars, ctx.outputs.source_jar, java_toolchain, host_javabase)
 
     java_info = JavaInfo(
         output_jar = ctx.outputs.jar,
@@ -349,7 +346,6 @@ _kotlin_library = rule(
         "source_jars": attr.label_list(allow_files = True),
         "resources": attr.label_list(allow_files = True),
         "notice": attr.label(allow_single_file = True),
-        "manifest_lines": attr.string_list(),
         "data": attr.label_list(allow_files = True),
         "friends": attr.label_list(
             allow_files = [".jar"],
@@ -357,9 +353,6 @@ _kotlin_library = rule(
         "jar": attr.output(mandatory = True),
         "deps": attr.label_list(providers = [JavaInfo]),
         "exports": attr.label_list(providers = [JavaInfo]),
-        "bundled_deps": attr.label_list(
-            providers = [JavaInfo],
-        ),
         "runtime_deps": attr.label_list(
             providers = [JavaInfo],
         ),

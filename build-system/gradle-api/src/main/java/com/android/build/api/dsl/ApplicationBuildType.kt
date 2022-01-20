@@ -74,4 +74,20 @@ interface ApplicationBuildType :
     @get:Incubating
     @set:Incubating
     var isDefault: Boolean
+
+    /**
+     * Intended to produce an APK that leads to more accurate profiling.
+     *
+     * Enabling this option will declare the application as profileable in the AndroidManifest.
+     *
+     * Profileable build types will be signed with the default debug signing config if no other
+     * signing config is specified.
+     *
+     * This option doesn't make sense to combine with isDebuggable=true.
+     * If a build type is set to be both debuggable and profileable the build system will log a
+     * warning.
+     */
+    @get:Incubating
+    @set:Incubating
+    var isProfileable: Boolean
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adblib
+package com.android.tools.deploy.interpreter;
 
-data class MdnsServiceList(
-    /**
-     * The list of mDNS services currently active
-     */
-    val services: List<MdnsServiceInfo>,
-    /**
-     * List of entries that were not recognized
-     */
-    val errors: List<DeviceErrorInfo>
-)
+public class Config {
+
+    private boolean debugEnabled = false;
+
+    private Config() {}
+
+    private static Config instance = new Config();
+
+    public static Config getInstance() {
+        return instance;
+    }
+
+    public boolean debugEnabled() {
+        return debugEnabled;
+    }
+
+    public void setDebugMode(boolean enabled) {
+        this.debugEnabled = enabled;
+    }
+}

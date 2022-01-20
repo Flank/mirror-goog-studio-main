@@ -4,8 +4,8 @@ load("//tools/base/bazel:maven.bzl", "maven_repository")
 #keep sorted
 DATA = [
     "//prebuilts/studio/sdk:build-tools/latest",
-    "//prebuilts/studio/sdk:platforms/latest_build_only",
     "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system/integration-test:android_platform_for_tests",
 ]
 
 # keep sorted

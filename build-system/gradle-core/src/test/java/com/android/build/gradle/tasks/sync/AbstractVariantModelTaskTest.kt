@@ -21,7 +21,7 @@ import com.android.build.api.artifact.impl.SingleInitialProviderRequestImpl
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.TaskProvider
@@ -41,7 +41,7 @@ internal class AbstractVariantModelTaskTest {
 
     abstract class TestClass: AbstractVariantModelTask() {
 
-        override fun addVariantContent(variant: Variant.Builder) {
+        override fun addVariantContent(variant: VariantProperties.Builder) {
         }
     }
 

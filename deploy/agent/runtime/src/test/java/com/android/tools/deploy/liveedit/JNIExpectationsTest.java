@@ -15,14 +15,17 @@
  */
 package com.android.tools.deploy.liveedit;
 
+import com.android.deploy.asm.Type;
+import com.android.tools.deploy.interpreter.Config;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import org.junit.Assert;
 
-public class LiveEditStubsTest {
+public class JNIExpectationsTest {
     private static final String ADD_NAME = "addClass";
 
     @org.junit.Test
-    public void testExpectedMethods() {
+    public void testExpectedLiveEditStubsMethods() {
         Method[] methods = LiveEditStubs.class.getDeclaredMethods();
 
         Method addClassMethod = null;
@@ -42,5 +45,29 @@ public class LiveEditStubsTest {
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[0], String.class);
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[1], byte[].class);
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[2], boolean.class);
+    }
+
+    @org.junit.Test
+    public void testExpectedConfigMethods() {
+        assertHasMethod(
+                Config.class, "getInstance", "()Lcom/android/tools/deploy/interpreter/Config;");
+        assertHasMethod(Config.class, "setDebugMode", "(Z)V");
+    }
+
+    private void assertHasMethod(Class clazz, String name, String desc) {
+        Method[] methods = clazz.getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().equals(name) && Type.getMethodDescriptor(method).equals(desc)) {
+                return;
+            }
+        }
+        Assert.fail(
+                "Cannot find "
+                        + name
+                        + desc
+                        + " in "
+                        + clazz.getName()
+                        + "'s "
+                        + Arrays.toString(methods));
     }
 }

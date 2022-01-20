@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.library
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
-import com.android.ide.model.sync.Variant
+import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +45,7 @@ class LibraryModelSyncFilesTest {
     fun testLibraryModel() {
         val variantSyncFileModel = getLibrarySyncModel()
         Truth.assertThat(variantSyncFileModel.variantCase)
-            .isEqualTo(Variant.VariantCase.LIBRARYVARIANTMODEL)
+            .isEqualTo(VariantProperties.VariantCase.LIBRARYVARIANTPROPERTIES)
     }
 
     @Test
@@ -62,14 +62,13 @@ class LibraryModelSyncFilesTest {
                 """.trimIndent()
         )
         val variantSyncFileModel = getLibrarySyncModel()
-        val commonModel = variantSyncFileModel.libraryVariantModel.moduleCommonModel
-        Truth.assertThat(commonModel.manifestPlaceholdersCount).isEqualTo(1)
-        Truth.assertThat(commonModel.manifestPlaceholdersMap["label"]).isEqualTo("some_value")
-
+        val artifactProperties = variantSyncFileModel.libraryVariantProperties.artifactOutputProperties
+        Truth.assertThat(artifactProperties.manifestPlaceholdersCount).isEqualTo(1)
+        Truth.assertThat(artifactProperties.manifestPlaceholdersMap["label"]).isEqualTo("some_value")
     }
 
 
-    private fun getLibrarySyncModel(): Variant {
+    private fun getLibrarySyncModel(): VariantProperties {
         val variant = getLibraryVariant()
         Truth.assertThat(variant.mainArtifact.modelSyncFiles.size).isEqualTo(1)
         val appModelSync = variant.mainArtifact.modelSyncFiles.first()
@@ -79,7 +78,7 @@ class LibraryModelSyncFilesTest {
             Truth.assertThat(result.failedTasks).isEmpty()
             Truth.assertThat(appModelSyncFile.exists()).isTrue()
             FileInputStream(appModelSyncFile).use {
-                Variant.parseFrom(it)
+                VariantProperties.parseFrom(it)
             }
         }
     }

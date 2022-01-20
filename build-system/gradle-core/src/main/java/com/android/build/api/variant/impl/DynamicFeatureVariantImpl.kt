@@ -171,6 +171,8 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val shouldPackageDesugarLibDex: Boolean = false
     override val debuggable: Boolean
         get() = delegate.isDebuggable
+    override val profileable: Boolean
+        get() = delegate.isProfileable
 
     override val shouldPackageProfilerDependencies: Boolean = false
 

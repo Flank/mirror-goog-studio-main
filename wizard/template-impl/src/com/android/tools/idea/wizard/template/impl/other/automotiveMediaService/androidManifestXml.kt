@@ -38,8 +38,7 @@ fun androidManifestXml(
   }
 
   return """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="${sharedPackageName}">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application android:appCategory="audio">
 

@@ -380,6 +380,6 @@
       resolved="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}"/>
   <library
       name="${projectDir}@@:app::debug"
-      jars="${projectDir}/app/build/intermediates/app_classes/debug/classes.jar"
+      jars="${projectDir}/app/build/intermediates/compile_app_classes_jar/debug/classes.jar"
       resolved="::"/>
 </libraries>

@@ -111,6 +111,15 @@ public class TestUtils {
             String workspaceParent = System.getenv("TEST_SRCDIR");
             if (workspace != null && workspaceParent != null) {
                 workspaceRoot = Paths.get(workspaceParent, workspace);
+
+                try {
+                    // Bazel munges Windows paths. Which triggers CodeInsightTestFixtureImpl
+                    // ::assertFileEndsWithCaseSensitivePath. This is a (hacky?) workaround.
+                    workspaceRoot = workspaceRoot.toRealPath();
+                } catch (IOException exception) {
+                    throw new UncheckedIOException(exception);
+                }
+
                 return workspaceRoot;
             }
 
@@ -176,6 +185,17 @@ public class TestUtils {
 
         throw new IllegalArgumentException(
                 "File \"" + relativePath + "\" not found at \"" + getWorkspaceRoot() + "\"");
+    }
+
+    /**
+     * Given a relative path to a file or directory from the base of the current workspace, returns
+     * the absolute path.
+     *
+     * This method don't check if the file actually exists
+     */
+    @NonNull
+    public static Path resolveWorkspacePathUnchecked(@NonNull String relativePath) {
+        return getWorkspaceRoot().resolve(relativePath);
     }
 
     /** Returns true if the file exists in the workspace. */

@@ -34,6 +34,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD
+import com.android.builder.model.v2.models.ndk.NativeBuildSystem.NINJA
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.builder.model.v2.models.ndk.NativeVariant
@@ -108,6 +109,7 @@ class NativeModelBuilder(
             val cxxModuleModel = configurationModel.variant.module
 
             val buildSystem = when(cxxModuleModel.buildSystem) {
+                NativeBuildSystem.NINJA -> NINJA
                 NativeBuildSystem.CMAKE -> CMAKE
                 NativeBuildSystem.NDK_BUILD -> NDK_BUILD
                 else -> error("${cxxModuleModel.buildSystem}")

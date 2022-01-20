@@ -111,6 +111,7 @@ public class TestGroup {
     private List<Class<?>> scanClassPath(String classpathJarSuffix)
             throws IOException, ClassNotFoundException {
         ArrayList<Class<?>> testClasses = new ArrayList<>();
+        String classpathJarSuffixLowerCase = classpathJarSuffix.toLowerCase(Locale.US);
 
         Queue<String> paths =
                 new ArrayDeque<>(
@@ -120,7 +121,7 @@ public class TestGroup {
             String path = paths.remove();
             // Lower case in order to avoid issues on Windows/Mac.
             String pathLowerCase = path.toLowerCase(Locale.US);
-            if (pathLowerCase.endsWith(classpathJarSuffix)) {
+            if (pathLowerCase.endsWith(classpathJarSuffixLowerCase)) {
                 testClasses.addAll(scanTestJar(path));
             }
             addManifestClassPath(path, paths);

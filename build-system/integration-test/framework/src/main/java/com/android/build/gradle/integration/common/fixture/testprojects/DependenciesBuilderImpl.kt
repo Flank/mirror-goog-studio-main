@@ -41,6 +41,10 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
         dependencies.add("api" to dependency)
     }
 
+    override fun runtimeOnly(dependency: Any) {
+        dependencies.add("runtimeOnly" to dependency)
+    }
+
     override fun testImplementation(dependency: Any) {
         dependencies.add("testImplementation" to dependency)
     }
@@ -65,6 +69,10 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
 
     override fun externalLibrary(path: String, testFixtures: Boolean): ExternalDependencyBuilder =
         ExternalDependencyBuilderImpl(path, testFixtures)
+
+    override fun coreLibraryDesugaring(dependency: Any) {
+        dependencies.add("coreLibraryDesugaring" to dependency)
+    }
 
     fun writeBuildFile(sb: StringBuilder, projectDir: File) {
         sb.append("\ndependencies {\n")

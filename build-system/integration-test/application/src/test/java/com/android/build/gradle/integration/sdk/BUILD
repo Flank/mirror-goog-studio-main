@@ -2,28 +2,19 @@ load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_
 
 gradle_integration_test(
     name = "sdk_tests",
-    # TODO: can we make this test start from no prebuilt SDK.
     # Note: this test is slightly unusual in testing the auto download, hence the hardcoded file
     # references. This is not necessarily the pattern to follow in other tests.
     srcs = glob(["**/*.java"]),
     data = [
-        "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:ndk",
-        "//prebuilts/studio/sdk:platform-tools",
-        "//prebuilts/studio/sdk:platforms/latest",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/3534162-studio.sdk-patcher.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/42b081e1e068bb936179551684cdcb30315e245c.platform-tools_r31.0.2-darwin.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/91936d4ee3ccc839f0addd53c9ebf087b1e39251.build-tools_r30.0.3-windows.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/addon2-2.xml",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/addon2-3.xml",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/android-ndk-r23-beta4-linux-x86_64.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r30.0.3-linux.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-linux-x86_64.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/f6d24b187cc6bd534c6c37604205171784ac5621.build-tools_r30.0.3-macosx.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-30_r03.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r31.0.2-linux.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r31.0.2-windows.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/repository2-2.xml",
-        "//prebuilts/tools/common/cmake:cmake-3.8.2",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.18.1-linux.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/google_apis-24_r1.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-31_r01.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r31.0.3-linux.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/repository2-3.xml",
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
     ],
@@ -32,7 +23,6 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     tags = [
-        "manual",  # TODO(b/203802678): Re-enable this test when fixed.
         "no_test_windows",  # b/73306170
     ],
     deps = [

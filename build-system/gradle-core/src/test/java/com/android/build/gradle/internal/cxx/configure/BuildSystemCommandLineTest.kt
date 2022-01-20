@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.C_TEST_WAS_
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeGeneratorName
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineMultiProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildAppendProperty
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildJobs
@@ -37,15 +38,63 @@ import org.junit.Test
 class BuildSystemCommandLineKtTest {
 
     @Test
-    fun `ndk-build check define property`() {
-        val parsed = listOf("X=Y").toNdkBuildArguments()
+    fun `MSBuild check define property -p`() {
+        val parsed = listOf("-p:Platform=Android-x86").toMSBuildArguments()
         assertThat(parsed).containsExactly(
-                DefineProperty("X=Y", "X", "Y")
+            DefineMultiProperty(
+                "-p:Platform=Android-x86",
+                mapOf("Platform" to "Android-x86")
+            )
         )
-        val arg = parsed.single() as DefineProperty
-        assertThat(arg.sourceArgument).isEqualTo("X=Y")
-        assertThat(arg.propertyName).isEqualTo("X")
-        assertThat(arg.propertyValue).isEqualTo("Y")
+        assertThat(parsed.getMSBuildProperty(MSBuildProperty.Platform)).isEqualTo("Android-x86")
+    }
+
+    @Test
+    fun `MSBuild check define property forward-slash p`() {
+        val parsed = listOf("/p:Platform=Android-x86").toMSBuildArguments()
+        assertThat(parsed).containsExactly(
+            DefineMultiProperty(
+                "/p:Platform=Android-x86",
+                mapOf("Platform" to "Android-x86")
+            )
+        )
+        assertThat(parsed.getMSBuildProperty(MSBuildProperty.Platform)).isEqualTo("Android-x86")
+    }
+
+    @Test
+    fun `MSBuild check define property -property`() {
+        val parsed = listOf("-property:Platform=Android-x86").toMSBuildArguments()
+        assertThat(parsed).containsExactly(
+            DefineMultiProperty(
+                "-property:Platform=Android-x86",
+                mapOf("Platform" to "Android-x86")
+            )
+        )
+        assertThat(parsed.getMSBuildProperty(MSBuildProperty.Platform)).isEqualTo("Android-x86")
+    }
+
+    @Test
+    fun `MSBuild check define property forward-slash property`() {
+        val parsed = listOf("/property:Platform=Android-x86").toMSBuildArguments()
+        assertThat(parsed).containsExactly(
+            DefineMultiProperty(
+                "/property:Platform=Android-x86",
+                mapOf("Platform" to "Android-x86")
+            )
+        )
+        assertThat(parsed.getMSBuildProperty(MSBuildProperty.Platform)).isEqualTo("Android-x86")
+    }
+
+    @Test
+    fun `MSBuild check define multi property -p`() {
+        val parsed = listOf("-p:Platform=Android-x86;Configuration=Release").toMSBuildArguments()
+        assertThat(parsed).containsExactly(
+            DefineMultiProperty(
+                "-p:Platform=Android-x86;Configuration=Release",
+                mapOf("Platform" to "Android-x86", "Configuration" to "Release")
+            )
+        )
+        assertThat(parsed.getMSBuildProperty(MSBuildProperty.Platform)).isEqualTo("Android-x86")
     }
 
     @Test

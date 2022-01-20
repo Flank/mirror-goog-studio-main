@@ -160,6 +160,11 @@ data class CxxModuleModel(
      *   ex, /path/to/ninja/ninja.exe
      */
     val ninjaExe: File?,
+
+    /**
+     * If present, a script to generate build.ninja
+     */
+    val configureScript: File?,
 )
 
 /** The user's CMakeSettings.json file next to CMakeLists.txt */
@@ -258,6 +263,7 @@ fun CxxModuleModel.determineUsedStlFromArguments(arguments: List<CommandLineArgu
     return when(buildSystem) {
         CMAKE -> determineUsedStlForCmake(arguments)
         NDK_BUILD -> determineUsedStlForNdkBuild(arguments)
+        NINJA -> Stl.UNKNOWN
         else -> error("$buildSystem")
     }
 }
@@ -269,6 +275,7 @@ fun CxxModuleModel.determineUsedStl(arguments: List<String>): Stl {
     return when(buildSystem) {
         CMAKE -> determineUsedStlForCmake(arguments.toCmakeArguments())
         NDK_BUILD -> determineUsedStlForNdkBuild(arguments.toNdkBuildArguments())
+        NINJA -> Stl.UNKNOWN
         else -> error("$buildSystem")
     }
 }
@@ -296,9 +303,8 @@ val CxxModuleModel.buildSystemNameForTasks : String get() = when (buildSystem) {
  * Folder name suffix for particular build systems.
  */
 val CxxModuleModel.intermediatesParentDirSuffix : String get() = when(buildSystem) {
-    CMAKE -> "obj"
     NDK_BUILD -> "obj/local"
-    else -> error("$buildSystem")
+    else -> "obj"
 }
 
 

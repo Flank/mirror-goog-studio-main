@@ -40,7 +40,17 @@ open class AnalyticsEnabledInstrumentation @Inject constructor(
         scope: InstrumentationScope,
         instrumentationParamsConfig: (ParamT) -> Unit
     ) {
-        // TODO: Add analytics enum
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.INSTRUMENTATION_TRANSFORM_CLASSES_WITH_VALUE
+        stats.addAsmClassesTransformsBuilder()
+            .setClassVisitorFactoryClassName(classVisitorFactoryImplClass.name)
+            .setScope(
+                when(scope) {
+                    InstrumentationScope.PROJECT -> AsmClassesTransformRegistration.Scope.PROJECT
+                    InstrumentationScope.ALL -> AsmClassesTransformRegistration.Scope.ALL
+                }
+            )
+            .build()
         delegate.transformClassesWith(
             classVisitorFactoryImplClass,
             scope,
@@ -49,13 +59,25 @@ open class AnalyticsEnabledInstrumentation @Inject constructor(
     }
 
     override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
-        // TODO: Add analytics enum
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.INSTRUMENTATION_SET_ASM_FRAMES_COMPUTATUION_MODE_VALUE
+        stats.addFramesComputationModeUpdatesBuilder().mode =
+            when (mode) {
+                FramesComputationMode.COPY_FRAMES -> AsmFramesComputationModeUpdate.Mode.COPY_FRAMES
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS ->
+                    AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES ->
+                    AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+                FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES ->
+                    AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_ALL_CLASSES
+            }
         delegate.setAsmFramesComputationMode(mode)
     }
 
     override val excludes: SetProperty<String>
         get() {
-            // TODO: Add analytics enum
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.INSTRUMENTATION_EXCLUDES_VALUE
             return delegate.excludes
         }
 }

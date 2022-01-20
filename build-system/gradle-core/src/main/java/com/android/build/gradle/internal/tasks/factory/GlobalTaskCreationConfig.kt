@@ -85,7 +85,6 @@ interface GlobalTaskCreationConfig: BootClasspathConfig {
     val libraryRequests: Collection<LibraryRequest>
     val lintOptions: Lint
     val prefab: Set<PrefabPackagingOptions>
-    val profilingMode: ProfilingMode
     val resourcePrefix: String?
     val splits: Splits
     val testCoverage: TestCoverage

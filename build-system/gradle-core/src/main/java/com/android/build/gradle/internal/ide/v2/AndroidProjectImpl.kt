@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.Variant
@@ -38,6 +39,7 @@ data class AndroidProjectImpl(
     override val viewBindingOptions: ViewBindingOptions?,
     override val flags: AndroidGradlePluginProjectFlags,
     override val lintChecksJars: List<File>,
+    override val modelSyncFiles: List<ModelSyncFile>,
 ) : AndroidProject, Serializable {
     companion object {
         @JvmStatic

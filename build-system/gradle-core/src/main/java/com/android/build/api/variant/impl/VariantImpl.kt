@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOptions
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -145,6 +146,12 @@ abstract class VariantImpl(
                                 variantServices
                         )
                     }
+                VariantManager.NativeBuiltType.NINJA -> {
+                    ExternalNinjaImpl(
+                        variantDslInfo.externalNativeNinjaOptions,
+                        variantServices
+                    )
+                }
             }
         }
     }

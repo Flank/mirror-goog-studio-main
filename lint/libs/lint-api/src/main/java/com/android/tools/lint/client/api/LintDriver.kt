@@ -1383,7 +1383,7 @@ class LintDriver(
                     if (files != null) {
                         checkIndividualResources(
                             project, main, xmlDetectors, dirChecks,
-                            binaryChecks, files
+                            binaryChecks, files, project.manifestFiles
                         )
                     } else {
                         val resourceFolders = project.resourceFolders
@@ -2341,7 +2341,8 @@ class LintDriver(
         xmlDetectors: List<XmlScanner>,
         dirChecks: List<Detector>?,
         binaryChecks: List<Detector>?,
-        files: List<File>
+        files: List<File>,
+        manifestFiles: List<File>
     ) {
         for (file in files) {
             if (file.isDirectory) {
@@ -2357,7 +2358,7 @@ class LintDriver(
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
                 }
-            } else if (file.isFile && isXmlFile(file) && file.name != ANDROID_MANIFEST_XML) {
+            } else if (file.isFile && isXmlFile(file) && file.name != ANDROID_MANIFEST_XML && !manifestFiles.contains(file)) {
                 // Yes, find out its resource type
                 val folderName = file.parentFile.name
                 val type = ResourceFolderType.getFolderType(folderName)
@@ -3595,6 +3596,7 @@ class LintDriver(
         /** Handles an exception, generally by logging it. */
         @JvmStatic
         fun handleDetectorError(context: Context?, driver: LintDriver, throwable: Throwable) {
+            val throwableMessage = throwable.message
             when {
                 throwable is IndexNotReadyException -> {
                     // Attempting to access PSI during startup before indices are ready;
@@ -3612,7 +3614,7 @@ class LintDriver(
                     throw throwable
                 }
                 throwable is AssertionError &&
-                    throwable.message?.startsWith("Already disposed: ") == true -> {
+                    throwableMessage?.startsWith("Already disposed: ") == true -> {
                     // Editor is in the middle of analysis when project
                     // is created. This isn't common, but is often triggered by Studio UI
                     // testsuite which rapidly opens, edits and closes projects.
@@ -3637,8 +3639,9 @@ class LintDriver(
             sb.append("Unexpected failure during lint analysis")
             context?.file?.name?.let { sb.append(" of ").append(it) }
             sb.append(" (this is a bug in lint or one of the libraries it depends on)\n\n")
-            if (throwable.message?.isNotBlank() == true) {
-                sb.append("Message: ${throwable.message}\n")
+            if (throwableMessage?.isNotBlank() == true) {
+                // Make sure we escape backslashes in paths etc that may appear in some exceptions
+                sb.append("Message: ${TextFormat.TEXT.convertTo(throwableMessage, TextFormat.RAW)}\n")
             }
 
             val associated = getAssociatedDetector(throwable, driver)
@@ -3673,7 +3676,6 @@ class LintDriver(
                 )
             }
 
-            val throwableMessage = throwable.message
             if (throwableMessage != null && throwableMessage.startsWith(
                     "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
                 )

@@ -36,7 +36,7 @@ readonly BAZEL_STATUS=$?
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 if [[ -d "${DIST_DIR}" ]]; then
   # Generate a simple html page that redirects to the test results page.
-  echo "<meta http-equiv=\"refresh\" content=\"0; url='https://source.cloud.google.com/results/invocations/${INVOCATION_ID}'\" />" > "${DIST_DIR}"/upsalite_build_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; url='https://source.cloud.google.com/results/invocations/${INVOCATION_ID}'\" /></head>" > "${DIST_DIR}"/upsalite_build_results.html
 fi
 
 exit $BAZEL_STATUS

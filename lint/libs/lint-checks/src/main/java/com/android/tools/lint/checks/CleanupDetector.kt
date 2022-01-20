@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
+import com.intellij.psi.LambdaUtil
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
@@ -39,19 +40,16 @@ import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDoWhileExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UReferenceExpression
-import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.util.isConstructorCall
 
 /**
@@ -74,14 +72,29 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             OBTAIN_ATTRIBUTES,
             OBTAIN_TYPED_ARRAY,
 
-            // Release check
+            // ContentProviderClient release/close check
             ACQUIRE_CPC,
+            ACQUIRE_UNSTABLE_CPC,
 
             // Cursor close check
             QUERY,
             RAW_QUERY,
             QUERY_WITH_FACTORY,
             RAW_QUERY_WITH_FACTORY,
+
+            // AssetFileDescriptor close check
+            OPEN_ASSET_FILE,
+            OPEN_ASSET_FILE_DESCRIPTOR,
+            OPEN_TYPED_ASSET_FILE,
+            OPEN_TYPED_ASSET_FILE_DESCRIPTOR,
+
+            // InputStream/OutputStream close check
+            OPEN_INPUT_STREAM,
+            OPEN_OUTPUT_STREAM,
+
+            // ParcelFileDescriptor close/closeWithError check
+            OPEN_FILE,
+            OPEN_FILE_DESCRIPTOR,
 
             // SharedPreferences check
             EDIT,
@@ -167,9 +180,17 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         }
                     }
                 }
-            ACQUIRE_CPC ->
-                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false))
-                    checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE)
+            ACQUIRE_CPC, ACQUIRE_UNSTABLE_CPC ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
+                    checkRecycled(
+                        context,
+                        node,
+                        CONTENT_PROVIDER_CLIENT_CLS,
+                        RELEASE,
+                        CLOSE,
+                        autoCloseable = true
+                    )
+                }
             QUERY, RAW_QUERY, QUERY_WITH_FACTORY, RAW_QUERY_WITH_FACTORY ->
                 if (evaluator.extendsClass(containingClass, SQLITE_DATABASE_CLS, false) ||
                     evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
@@ -193,21 +214,47 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     //    android.provider.MediaStore$Images$Media#query
                     //    android.widget.FilterQueryProvider#runQuery
 
-                    // If it's in a try-with-resources clause, don't flag it: these
-                    // will be cleaned up automatically
-                    var curr: UElement? = node
-                    while (curr != null) {
-                        val psi = curr.sourcePsi
-                        if (psi != null) {
-                            if (getParentOfType(psi, PsiResourceVariable::class.java) != null) {
-                                return
-                            }
-                            break
-                        }
-                        curr = curr.uastParent
-                    }
-
-                    checkRecycled(context, node, CURSOR_CLS, CLOSE)
+                    checkRecycled(context, node, CURSOR_CLS, CLOSE, autoCloseable = true)
+                }
+            OPEN_ASSET_FILE,
+            OPEN_ASSET_FILE_DESCRIPTOR,
+            OPEN_TYPED_ASSET_FILE,
+            OPEN_TYPED_ASSET_FILE_DESCRIPTOR ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
+                    evaluator.extendsClass(
+                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                    )
+                ) {
+                    checkRecycled(
+                        context,
+                        node,
+                        ASSET_FILE_DESCRIPTOR_CLS,
+                        CLOSE,
+                        autoCloseable = true
+                    )
+                }
+            OPEN_FILE, OPEN_FILE_DESCRIPTOR ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
+                    evaluator.extendsClass(
+                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                    )
+                ) {
+                    checkRecycled(
+                        context,
+                        node,
+                        PARCEL_FILE_DESCRIPTOR_CLS,
+                        CLOSE,
+                        CLOSE_WITH_ERROR,
+                        autoCloseable = true
+                    )
+                }
+            OPEN_INPUT_STREAM ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
+                    checkRecycled(context, node, INPUT_STREAM_CLS, CLOSE, autoCloseable = true)
+                }
+            OPEN_OUTPUT_STREAM ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
+                    checkRecycled(context, node, OUTPUT_STREAM_CLS, CLOSE, autoCloseable = true)
                 }
 
             OF_INT, OF_ARGB, OF_FLOAT, OF_OBJECT, OF_PROPERTY_VALUES_HOLDER -> {
@@ -222,8 +269,15 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         node: UCallExpression,
         recycleType: String,
-        recycleName: String
+        vararg recycleNames: String,
+        autoCloseable: Boolean = false
     ) {
+        // If it's an AutoCloseable in a try-with-resources clause, don't flag it: these will be
+        // cleaned up automatically
+        if (autoCloseable && node.isInTryWithResourcesVariable()) {
+            return
+        }
+
         val method = node.getParentOfType(UMethod::class.java) ?: return
         var recycled = false
         var escapes = false
@@ -238,23 +292,18 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val methodName = getMethodName(call)
                 if ("use" == methodName) {
                     // Kotlin: "use" calls close; see issue 62377185
-                    // Can't call call.resolve() to check it's the runtime because
-                    // resolve returns null on these usages.
-                    // (See also ktx use method, issue 140344435, which
-                    // handles recycle() calls.)
-                    // Now make sure we're calling it on the right variable:
-                    val operand: UExpression? = call.receiver?.skipParenthesizedExprDown()
-                    if (operand != null && instances.contains(operand)) {
-                        return true
-                    } else if (operand is UResolvable) {
-                        val resolved = operand.resolve()
-                        if (resolved != null && references.contains(resolved)) {
+                    // Ensure that "use" call accepts a single lambda parameter, so that it would
+                    // loosely match kotlin.io.use() signature and at the same time allow custom
+                    // overloads for types not extending Closeable
+                    if (call.valueArgumentCount == 1) {
+                        val argumentType = call.valueArguments.first().getExpressionType()
+                        if (argumentType != null && LambdaUtil.isFunctionalType(argumentType)) {
                             return true
                         }
                     }
                 }
 
-                if (recycleName != methodName) {
+                if (methodName !in recycleNames) {
                     return false
                 }
                 val resolved = call.resolve()
@@ -309,7 +358,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
         if (!recycled && !escapes) {
             val className = recycleType.substring(recycleType.lastIndexOf('.') + 1)
-            val message = when (recycleName) {
+            val message = when (val recycleName = recycleNames.first()) {
                 RECYCLE -> {
                     String.format(
                         "This `%1\$s` should be recycled after use with `#recycle()`",
@@ -693,6 +742,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val OBTAIN = "obtain"
         private const val SHOW = "show"
         private const val ACQUIRE_CPC = "acquireContentProviderClient"
+        private const val ACQUIRE_UNSTABLE_CPC = "acquireUnstableContentProviderClient"
         private const val OBTAIN_NO_HISTORY = "obtainNoHistory"
         private const val OBTAIN_ATTRIBUTES = "obtainAttributes"
         private const val OBTAIN_TYPED_ARRAY = "obtainTypedArray"
@@ -708,7 +758,16 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val QUERY_WITH_FACTORY = "queryWithFactory"
         private const val RAW_QUERY_WITH_FACTORY = "rawQueryWithFactory"
         private const val CLOSE = "close"
+        private const val CLOSE_WITH_ERROR = "closeWithError"
         private const val EDIT = "edit"
+        private const val OPEN_ASSET_FILE = "openAssetFile"
+        private const val OPEN_ASSET_FILE_DESCRIPTOR = "openAssetFileDescriptor"
+        private const val OPEN_FILE = "openFile"
+        private const val OPEN_FILE_DESCRIPTOR = "openFileDescriptor"
+        private const val OPEN_INPUT_STREAM = "openInputStream"
+        private const val OPEN_OUTPUT_STREAM = "openOutputStream"
+        private const val OPEN_TYPED_ASSET_FILE = "openTypedAssetFile"
+        private const val OPEN_TYPED_ASSET_FILE_DESCRIPTOR = "openTypedAssetFileDescriptor"
 
         const val MOTION_EVENT_CLS = "android.view.MotionEvent"
         private const val PARCEL_CLS = "android.os.Parcel"
@@ -732,6 +791,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         const val ANDROID_CONTENT_SHARED_PREFERENCES = "android.content.SharedPreferences"
         private const val ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
             "android.content.SharedPreferences.Editor"
+        private const val ASSET_FILE_DESCRIPTOR_CLS = "android.content.res.AssetFileDescriptor"
+        private const val INPUT_STREAM_CLS = "java.io.InputStream"
+        private const val OUTPUT_STREAM_CLS = "java.io.OutputStream"
+        private const val PARCEL_FILE_DESCRIPTOR_CLS = "android.os.ParcelFileDescriptor"
 
         /**
          * Returns the variable the expression is assigned to, if any.
@@ -747,3 +810,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         }
     }
 }
+
+private tailrec fun UElement?.isInTryWithResourcesVariable(): Boolean =
+    when {
+        this == null -> false
+        sourcePsi?.let { getParentOfType(it, PsiResourceVariable::class.java) } != null -> true
+        else -> uastParent.isInTryWithResourcesVariable()
+    }

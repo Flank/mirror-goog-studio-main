@@ -78,7 +78,9 @@ public class BackPorterEval extends AndroidEval {
                             .build();
             backported.put(bp.key(), bp.target());
         }
-        // TODO: All 3x copyOf
+        addBackported("java/util", "List", "copyOf", "(Ljava/util/Collection;)Ljava/util/List;");
+        addBackported("java/util", "Set", "copyOf", "(Ljava/util/Collection;)Ljava/util/Set;");
+        addBackported("java/util", "Map", "copyOf", "(Ljava/util/Map;)Ljava/util/Map;");
     }
 
     private static void addBackported(String pkg, String className, String name, String desc) {

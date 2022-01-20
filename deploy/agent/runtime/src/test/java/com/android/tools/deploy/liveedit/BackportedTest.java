@@ -18,10 +18,16 @@ package com.android.tools.deploy.liveedit;
 import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
 import com.android.tools.deploy.liveedit.backported.Byte;
+import com.android.tools.deploy.liveedit.backported.List;
+import com.android.tools.deploy.liveedit.backported.Map;
 import com.android.tools.deploy.liveedit.backported.Math;
+import com.android.tools.deploy.liveedit.backported.Set;
 import com.android.tools.deploy.liveedit.backported.Short;
 import com.android.tools.deploy.liveedit.backported.StrictMath;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.MockedStatic;
@@ -268,6 +274,60 @@ public class BackportedTest {
             Object[] parameters = {null, null, v0, v1};
             Object r = LiveEditStubs.stubL(className, methodName, methodDesc, parameters);
             Assert.assertEquals("Bad " + methodName + " invocation", expected, r);
+        } finally {
+            LiveEditStubs.deleteClass(className);
+        }
+    }
+
+    @Test
+    public void testcopyOfMap() {
+        String methodName = "copyOfMap";
+        String methodDesc = "(Ljava/util/Map;)Ljava/util/Map;";
+        try (MockedStatic<Map> mocked = Mockito.mockStatic(Map.class)) {
+            java.util.Map expected = new HashMap();
+            java.util.Map v0 = new java.util.HashMap();
+            mocked.when(() -> Map.copyOf(v0)).thenReturn(expected);
+            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
+            Object[] parameters = {null, null, v0};
+            Object r = LiveEditStubs.stubL(className, methodName, methodDesc, parameters);
+            Assert.assertTrue("Bad " + methodName + " invocation", expected == r);
+        } finally {
+            LiveEditStubs.deleteClass(className);
+        }
+    }
+
+    @Test
+    public void testcopyOfList() {
+        String methodName = "copyOfList";
+        String methodDesc = "(Ljava/util/Collection;)Ljava/util/List;";
+        try (MockedStatic<List> mocked = Mockito.mockStatic(List.class)) {
+            java.util.List expected = new ArrayList();
+            java.util.List v0 = new java.util.ArrayList<>();
+            mocked.when(() -> List.copyOf(v0)).thenReturn(expected);
+            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
+            Object[] parameters = {null, null, v0};
+            Object r = LiveEditStubs.stubL(className, methodName, methodDesc, parameters);
+            Assert.assertTrue("Bad " + methodName + " invocation", expected == r);
+        } finally {
+            LiveEditStubs.deleteClass(className);
+        }
+    }
+
+    @Test
+    public void testcopyOfSet() {
+        String methodName = "copyOfSet";
+        String methodDesc = "(Ljava/util/Collection;)Ljava/util/Set;";
+        try (MockedStatic<Set> mocked = Mockito.mockStatic(Set.class)) {
+            java.util.Set expected = new HashSet();
+            java.util.Set v0 = new java.util.HashSet<>();
+            mocked.when(() -> Set.copyOf(v0)).thenReturn(expected);
+            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
+            Object[] parameters = {null, null, v0};
+            Object r = LiveEditStubs.stubL(className, methodName, methodDesc, parameters);
+            Assert.assertTrue("Bad " + methodName + " invocation", expected == r);
         } finally {
             LiveEditStubs.deleteClass(className);
         }

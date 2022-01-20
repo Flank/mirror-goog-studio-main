@@ -1637,6 +1637,70 @@ class ProjectInitializerTest {
     }
 
     @Test
+    fun testManifestInFolderNamedLayout() {
+        // Regression test for b/214409371:
+        // Make sure we don't accidentally interpret something in a folder named "layout"
+        // ...and make sure that manifests *not* named AndroidManifestXml
+        val root = temp.newFolder().canonicalFile.absoluteFile
+        val projects = lint().files(
+            xml(
+                "layout/SomethingNamedAndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.tools.lint.test"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                </manifest>
+                """
+            ).indented(),
+            xml(
+                "res/layout/layout.xml",
+                """
+                <merge/>
+                """
+            ).indented()
+        ).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor =
+            """
+            <project incomplete="false">
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir"/>
+            <module name="M" android="true" library="true">
+                <manifest file="layout/SomethingNamedAndroidManifest.xml" />
+                <resource file="res/layout/layout.xml" />
+            </module>
+            </project>
+            """.trimIndent()
+        val descriptorFile = File(root, "out1/out2/out3/project.xml")
+        descriptorFile.parentFile?.mkdirs()
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            """
+            layout/SomethingNamedAndroidManifest.xml: Warning: Manifest should specify a minimum API level with <uses-sdk android:minSdkVersion="?" />; if it really supports all versions of Android set it to 1 [UsesMinSdkAttributes]
+            0 errors, 1 warnings
+            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--check",
+                "RequiredSize,ManifestOrder,ContentDescription,UsesMinSdkAttributes",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
+    @Test
     fun testFindPackage() {
         assertEquals(
             "foo.bar",

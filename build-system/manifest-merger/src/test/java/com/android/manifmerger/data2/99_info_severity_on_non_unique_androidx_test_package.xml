@@ -56,4 +56,4 @@
 
 @errors
 
-INFO:Package name 'androidx.test' used in: ManifestMerger2Test1_lib1.xml, ManifestMerger2Test2_lib2.xml.
+INFO:Namespace 'androidx.test' used in: ManifestMerger2Test1_lib1.xml, ManifestMerger2Test2_lib2.xml.

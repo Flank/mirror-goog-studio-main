@@ -295,8 +295,7 @@ private fun hasEmulatorTimeoutException(error: ErrorDetailProto.ErrorDetail): Bo
 }
 
 /**
- * Finds the root cause of the Platform Error if it came form the Managed Device
- * Android Provider.
+ * Finds the root cause of the Platform Error and returns the error message.
  */
 fun getPlatformErrorMessage(resultsProto: TestSuiteResultProto.TestSuiteResult?): String {
     resultsProto ?: return UNKNOWN_PLATFORM_ERROR_MESSAGE
@@ -304,23 +303,16 @@ fun getPlatformErrorMessage(resultsProto: TestSuiteResultProto.TestSuiteResult?)
 }
 
 /**
- * Finds the root cause of the Platform Error if it came form the Managed Device
- * Android Provider.
+ * Finds the root cause of the Platform Error and returns the error message.
  *
  * @param error the top level error detail to be analyzed.
- * @return if [error] is from the managed device plugin, the message of the error is returned. Will
- * otherwise check the cause of the error detail. If no cause is from the managed device plugin a
- * default error message is returned.
  */
 private fun getPlatformErrorMessage(error : ErrorDetailProto.ErrorDetail) : String =
     when {
-        getExceptionFromStackTrace(error.summary.stackTrace).contains("EmulatorTimeoutException") ->
-            """
-                PLATFORM ERROR:
-                ${error.summary.errorMessage}
-            """.trimIndent()
-        error.hasCause() ->
-            getPlatformErrorMessage(error.cause)
+        getExceptionFromStackTrace(error.summary.stackTrace)
+            .contains("EmulatorTimeoutException") -> "PLATFORM ERROR: ${error.summary.errorMessage}"
+        error.hasCause() -> getPlatformErrorMessage(error.cause)
+        error.summary.errorMessage.isNotBlank() -> "PLATFORM ERROR: ${error.summary.errorMessage}"
         else -> UNKNOWN_PLATFORM_ERROR_MESSAGE
     }
 

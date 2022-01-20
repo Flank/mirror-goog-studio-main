@@ -4,7 +4,7 @@
    - buildName      = "other-build"
    - buildFolder    = {INCLUDED_BUILD(other-build)}/lib/build{!}
    - bootClasspath:
-      * {ANDROID_SDK}/platforms/android-31/android.jar{F}
+      * {ANDROID_SDK}/platforms/android-{COMPILE_SDK_VERSION}/android.jar{F}
    > defaultConfig:
       > sourceProvider:
          - name                = "main"

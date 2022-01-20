@@ -736,43 +736,90 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
         val expected =
             """
-            src/test/pkg/ContentProviderClientTest.java:8: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
+            src/test/pkg/ContentProviderClientTest.java:10: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
                     ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
+            src/test/pkg/ContentProviderClientTest.java:11: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
+                    ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // Warn
+                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
             """
         lint().files(
             classpath(),
             manifest().minSdk(4),
-            projectProperties().compileSdk(19),
             java(
                 """
                     package test.pkg;
+
                     import android.content.ContentProviderClient;
                     import android.content.ContentResolver;
+                    import android.net.Uri;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "UnnecessaryLocalVariable"})
                     public class ContentProviderClientTest {
                         public void error1(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // Warn
                         }
 
                         public void ok1(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             client.release();
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            client2.release();
                         }
 
                         public void ok2(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
-                            unknown(client);
+                            client.close();
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            client2.close();
                         }
 
-                        public ContentProviderClient ok3(ContentResolver resolver) {
+                        public void ok3(ContentResolver resolver) {
+                            ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
+                            unknown(client);
+                            ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            unknown(client2);
+                        }
+
+                        public void ok4(ContentResolver resolver, Uri uri) {
+                            try (ContentProviderClient client = resolver.acquireContentProviderClient("test")) { // OK
+                                client.refresh(uri, null, null);
+                            }
+                            try (ContentProviderClient client2 = resolver.acquireUnstableContentProviderClient("test")) { // OK
+                                client2.refresh(uri, null, null);
+                            }
+                        }
+
+                        public ContentProviderClient ok5(ContentResolver resolver) {
                             ContentProviderClient client = resolver.acquireContentProviderClient("test"); // OK
                             return client;
                         }
 
+                        public ContentProviderClient ok6(ContentResolver resolver) {
+                            ContentProviderClient client = resolver.acquireUnstableContentProviderClient("test"); // OK
+                            return client;
+                        }
+
                         private void unknown(ContentProviderClient client) {
+                        }
+                    }
+                    """
+            ).indented(),
+            kotlin(
+                """
+                    package test.pkg
+
+                    import android.content.ContentResolver
+                    import android.net.Uri
+
+                    fun ok1(resolver: ContentResolver, uri: Uri) {
+                        resolver.acquireContentProviderClient("test")?.use { client ->  // OK
+                            client?.refresh(uri, null, null)
+                        }
+                        resolver.acquireUnstableContentProviderClient("test")?.use { client ->  // OK
+                            client?.refresh(uri, null, null)
                         }
                     }
                     """
@@ -1984,6 +2031,47 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testUseHasLambdaParameter() {
+        lint().files(
+            kotlin(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentResolver;
+                    import android.database.Cursor;
+                    import android.net.Uri;
+
+                    fun test(resolver: ContentResolver, uri: Uri, projection: Array<String>) {
+                        resolver.query(uri, projection, null, null, null).use { // OK
+                            cursor.moveToNext()
+                        }
+
+                        resolver.query(uri, projection, null, null, null).use() // ERROR
+
+                        resolver.query(uri, projection, null, null, null).use(1) // ERROR
+                    }
+
+                    // These use() functions don't have a matching signature
+                    fun Cursor.use() {
+                    }
+
+                    fun Cursor.use(n: Int) {
+                    }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:12: Warning: This Cursor should be freed up after use with #close() [Recycle]
+                resolver.query(uri, projection, null, null, null).use() // ERROR
+                         ~~~~~
+            src/test/pkg/test.kt:14: Warning: This Cursor should be freed up after use with #close() [Recycle]
+                resolver.query(uri, projection, null, null, null).use(1) // ERROR
+                         ~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
     fun test117794883() {
         // Regression test for 117794883
         lint().files(
@@ -2263,6 +2351,357 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).run().expectClean()
+    }
+
+    fun testAssetFileDescriptor() {
+
+        val expected =
+            """
+            src/test/pkg/AssetFileDescriptorTest.java:15: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openAssetFile(uri, "mode", null); // Warn
+                           ~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:16: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                           ~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:17: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:18: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openAssetFile(uri, "mode", null); // Warn
+                             ~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:19: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openAssetFileDescriptor(uri, "mode", null); // Warn
+                             ~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:20: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                             ~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AssetFileDescriptorTest.java:21: Warning: This AssetFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 7 warnings
+            """
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentProviderClient;
+                    import android.content.ContentResolver;
+                    import android.content.res.AssetFileDescriptor;
+                    import android.net.Uri;
+
+                    class AssetFileDescriptorTest {
+                        ContentProviderClient client;
+                        ContentResolver resolver;
+                        Uri uri;
+                        AssetFileDescriptor fileField;
+
+                        void error1() {
+                            client.openAssetFile(uri, "mode", null); // Warn
+                            client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                            client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                            resolver.openAssetFile(uri, "mode", null); // Warn
+                            resolver.openAssetFileDescriptor(uri, "mode", null); // Warn
+                            resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // Warn
+                            resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // Warn
+                        }
+
+                        void ok1() {
+                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                            file.close();
+                            AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            file2.close();
+                            AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            file3.close();
+                            AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
+                            file4.close();
+                            AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            file5.close();
+                            AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            file6.close();
+                            AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            file7.close();
+                        }
+
+                        void ok2() {
+                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                            unknown(file);
+                            AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            unknown(file2);
+                            AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            unknown(file3);
+                            AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null); // OK
+                            unknown(file4);
+                            AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            unknown(file5);
+                            AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            unknown(file6);
+                            AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            unknown(file7);
+                        }
+
+                        void ok3() {
+                            fileField = client.openAssetFile(uri, "mode", null); // OK
+                            fileField = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            fileField = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            fileField = resolver.openAssetFile(uri, "mode", null); // OK
+                            fileField = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            fileField = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            fileField = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                        }
+
+                        void ok4() {
+                            try (AssetFileDescriptor file = client.openAssetFile(uri, "mode", null)) { // OK
+                                file.getLength();
+                            }
+                            try (AssetFileDescriptor file2 = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
+                                file2.getLength();
+                            }
+                            try (AssetFileDescriptor file3 = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
+                                file3.getLength();
+                            }
+                            try (AssetFileDescriptor file4 = resolver.openAssetFile(uri, "mode", null)) { // OK
+                                file4.getLength();
+                            }
+                            try (AssetFileDescriptor file5 = resolver.openAssetFileDescriptor(uri, "mode", null)) { // OK
+                                file5.getLength();
+                            }
+                            try (AssetFileDescriptor file6 = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null)) { // OK
+                                file6.getLength();
+                            }
+                            try (AssetFileDescriptor file7 = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null)) { // OK
+                                file7.getLength();
+                            }
+                        }
+
+                        AssetFileDescriptor ok5() {
+                            AssetFileDescriptor file = client.openAssetFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok6() {
+                            AssetFileDescriptor file = client.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok7() {
+                            AssetFileDescriptor file = client.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok8() {
+                            AssetFileDescriptor file = resolver.openAssetFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok9() {
+                            AssetFileDescriptor file = resolver.openAssetFileDescriptor(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok10() {
+                            AssetFileDescriptor file = resolver.openTypedAssetFile(uri, "mimeTypeFilter", null, null); // OK
+                            return file;
+                        }
+
+                        AssetFileDescriptor ok11() {
+                            AssetFileDescriptor file = resolver.openTypedAssetFileDescriptor(uri, "mimeType", null, null); // OK
+                            return file;
+                        }
+
+                        void unknown(AssetFileDescriptor file) {
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
+    }
+
+    fun testParcelFileDescriptor() {
+
+        val expected =
+            """
+            src/test/pkg/ParcelFileDescriptorTest.java:15: Warning: This ParcelFileDescriptor should be freed up after use with #close() [Recycle]
+                    client.openFile(uri, "mode", null); // Warn
+                           ~~~~~~~~
+            src/test/pkg/ParcelFileDescriptorTest.java:16: Warning: This ParcelFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openFile(uri, "mode", null); // Warn
+                             ~~~~~~~~
+            src/test/pkg/ParcelFileDescriptorTest.java:17: Warning: This ParcelFileDescriptor should be freed up after use with #close() [Recycle]
+                    resolver.openFileDescriptor(uri, "mode", null); // Warn
+                             ~~~~~~~~~~~~~~~~~~
+            0 errors, 3 warnings
+            """
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentProviderClient;
+                    import android.content.ContentResolver;
+                    import android.net.Uri;
+                    import android.os.ParcelFileDescriptor;
+
+                    class ParcelFileDescriptorTest {
+                        ContentProviderClient client;
+                        ContentResolver resolver;
+                        Uri uri;
+                        ParcelFileDescriptor fileField;
+
+                        void error1() {
+                            client.openFile(uri, "mode", null); // Warn
+                            resolver.openFile(uri, "mode", null); // Warn
+                            resolver.openFileDescriptor(uri, "mode", null); // Warn
+                        }
+
+                        void ok1() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            file.close();
+                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                            file2.close();
+                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            file3.close();
+                        }
+
+                        void ok2() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            file.closeWithError("msg");
+                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                            file2.closeWithError("msg");
+                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            file3.closeWithError("msg");
+                        }
+
+                        void ok3() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            unknown(file);
+                            ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null); // OK
+                            unknown(file2);
+                            ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            unknown(file3);
+                        }
+
+                        void ok4() {
+                            fileField = client.openFile(uri, "mode", null); // OK
+                            fileField = resolver.openFile(uri, "mode", null); // OK
+                            fileField = resolver.openFileDescriptor(uri, "mode", null); // OK
+                        }
+
+                        void ok5() {
+                            try (ParcelFileDescriptor file = client.openFile(uri, "mode", null)) { // OK
+                                file.getStatSize();
+                            }
+                            try (ParcelFileDescriptor file2 = resolver.openFile(uri, "mode", null)) { // OK
+                                file2.getStatSize();
+                            }
+                            try (ParcelFileDescriptor file3 = resolver.openFileDescriptor(uri, "mode", null)) { // OK
+                                file3.getStatSize();
+                            }
+                        }
+
+                        ParcelFileDescriptor ok6() {
+                            ParcelFileDescriptor file = client.openFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        ParcelFileDescriptor ok7() {
+                            ParcelFileDescriptor file = resolver.openFile(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        ParcelFileDescriptor ok8() {
+                            ParcelFileDescriptor file = resolver.openFileDescriptor(uri, "mode", null); // OK
+                            return file;
+                        }
+
+                        void unknown(ParcelFileDescriptor file) {
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
+    }
+
+    fun testOpenStreams() {
+
+        val expected =
+            """
+            src/test/pkg/OpenStreamsTest.java:15: Warning: This InputStream should be freed up after use with #close() [Recycle]
+                    resolver.openInputStream(uri); // Warn
+                             ~~~~~~~~~~~~~~~
+            src/test/pkg/OpenStreamsTest.java:16: Warning: This OutputStream should be freed up after use with #close() [Recycle]
+                    resolver.openOutputStream(uri); // Warn
+                             ~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.ContentResolver;
+                    import android.net.Uri;
+                    import java.io.InputStream;
+                    import java.io.OutputStream;
+
+                    class OpenStreamsTest {
+                        ContentResolver resolver;
+                        Uri uri;
+                        InputStream inputStreamField;
+                        InputStream outputStreamField;
+
+                        void error1() {
+                            resolver.openInputStream(uri); // Warn
+                            resolver.openOutputStream(uri); // Warn
+                        }
+
+                        void ok1() {
+                            InputStream inputStream = resolver.openInputStream(uri); // OK
+                            inputStream.close();
+                            OutputStream outputStream = resolver.openOutputStream(uri); // OK
+                            outputStream.close();
+                        }
+
+                        void ok2() {
+                            InputStream inputStream = resolver.openInputStream(uri); // OK
+                            unknown(inputStream);
+                            OutputStream outputStream = resolver.openOutputStream(uri); // OK
+                            unknown(outputStream);
+                        }
+
+                        void ok3() {
+                            inputStreamField = resolver.openInputStream(uri); // OK
+                            outputStreamField = resolver.openOutputStream(uri); // OK
+                        }
+
+                        void ok4() {
+                            try (InputStream inputStream = resolver.openInputStream(uri)) { // OK
+                                inputStream.read();
+                            }
+                            try (OutputStream outputStream = resolver.openOutputStream(uri)) { // OK
+                                outputStream.flush();
+                            }
+                        }
+
+                        ParcelFileDescriptor ok5() {
+                            InputStream inputStream = resolver.openInputStream(uri); // OK
+                            return inputStream;
+                        }
+
+                        ParcelFileDescriptor ok6() {
+                            OutputStream outputStream = resolver.openOutputStream(uri);
+                            return outputStream;
+                        }
+
+                        void unknown(InputStream inputStream) {
+                        }
+
+                        void unknown(OutputStream outputStream) {
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
     }
 
     private val dialogFragment = java(

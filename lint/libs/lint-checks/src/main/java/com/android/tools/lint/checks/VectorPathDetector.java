@@ -152,7 +152,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
                         length);
         Incident incident =
                 new Incident(PATH_LENGTH, attribute, context.getValueLocation(attribute), message);
-        context.report(incident, minSdkLessThan(21));
+        context.report(incident);
     }
 
     private int countPathLength(String value) {

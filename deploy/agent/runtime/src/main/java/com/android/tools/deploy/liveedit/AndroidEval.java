@@ -267,6 +267,20 @@ class AndroidEval implements Eval {
 
     @NonNull
     @Override
+    public Value invokeInterface(
+            @NonNull Value target,
+            MethodDescription methodDesc,
+            @NonNull List<? extends Value> args) {
+        // In invokeinterface, Method lookup should not start from the method desc owner but from
+        // the target object canonical name.
+        String owner = target.obj().getClass().getName();
+        MethodDescription md =
+                new MethodDescription(owner, methodDesc.getName(), methodDesc.getDesc());
+        return invokeMethod(target, md, args);
+    }
+
+    @NonNull
+    @Override
     public Value invokeMethod(
             @NonNull Value target,
             MethodDescription methodDesc,
@@ -312,6 +326,7 @@ class AndroidEval implements Eval {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
+            // Static method are inherited, the lookup must be recursive starting from the owner.
             Method method = methodLookup(owner, methodName, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
