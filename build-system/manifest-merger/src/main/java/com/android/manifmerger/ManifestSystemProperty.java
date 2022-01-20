@@ -200,6 +200,28 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
             XmlElement profileable =
                     ManifestSystemProperty.createOrGetProfileable(
                             actionRecorder, document, applicationElement.get().getXml());
+            ManifestSystemProperty.addToElementInAndroidNS(
+                    this, actionRecorder, value, profileable);
+        }
+    },
+    /**
+     * Enabled attribute set for Profileable
+     *
+     * @see <a href="https://developer.android.com/guide/topics/manifest/profileable-element">
+     *     https://developer.android.com/guide/topics/manifest/profileable-element</a>
+     */
+    ENABLED {
+        @Override
+        public void addTo(
+                @NonNull ActionRecorder actionRecorder,
+                @NonNull XmlDocument document,
+                @NonNull String value) {
+            // Assume there is always an application element.
+            Optional<XmlElement> applicationElement =
+                    document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
+            XmlElement profileable =
+                    ManifestSystemProperty.createOrGetProfileable(
+                            actionRecorder, document, applicationElement.get().getXml());
             ManifestSystemProperty.addToElementInAndroidNS(this,
                     actionRecorder,
                     value,

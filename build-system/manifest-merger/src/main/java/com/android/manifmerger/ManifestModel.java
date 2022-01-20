@@ -541,10 +541,14 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
         PROFILEABLE(
                 MergeType.MERGE,
                 PROVIDER_KEY_RESOLVER,
+                // The profileable android:shell attribute added in SDK 29.
                 AttributeModel.newModel("shell")
                         .setDefaultValue("true")
                         .setMergingPolicy(AttributeModel.NO_MERGING_POLICY),
-                AttributeModel.newModel("enable")),
+                // The profileable android:enabled attribute added in SDK 30.
+                AttributeModel.newModel("enabled")
+                        .setDefaultValue("true")
+                        .setMergingPolicy(AttributeModel.NO_MERGING_POLICY)),
 
         /**
          * Provider (contained in application or queries) <br>

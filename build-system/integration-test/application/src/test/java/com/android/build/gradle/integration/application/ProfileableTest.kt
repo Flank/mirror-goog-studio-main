@@ -135,6 +135,7 @@ class ProfileableTest {
             arrayListOf(
                 "        E: application (line=11)",
                 "            E: profileable (line=12)",
+                "              A: http://schemas.android.com/apk/res/android:enabled(0x0101000e)=true",
                 "              A: http://schemas.android.com/apk/res/android:shell(0x01010594)=true"
             )
         )
