@@ -149,9 +149,6 @@ abstract class MergeResources : NewIncrementalTask() {
     @get:Input
     abstract val useAndroidX: Property<Boolean>
 
-    @get:Nested
-    abstract val sourceSetInputs: SourceSetInputs
-
     /**
      * Set of absolute paths to resource directories that are located outside the root project
      * directory when data binding / view binding is enabled.
@@ -879,8 +876,6 @@ abstract class MergeResources : NewIncrementalTask() {
                         .artifacts
                         .get(InternalArtifactType.MICRO_APK_RES)
                 )
-            task.sourceSetInputs.initialise(creationConfig, includeDependencies)
-
             task.renderscriptGeneratedResDir.setDisallowChanges(
                 creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES))
 
@@ -890,7 +885,6 @@ abstract class MergeResources : NewIncrementalTask() {
 
             task.resourcesComputer.initFromVariantScope(
                 creationConfig,
-                task.sourceSetInputs,
                 microApk,
                 libraryArtifacts,
                 relativeLocalResources

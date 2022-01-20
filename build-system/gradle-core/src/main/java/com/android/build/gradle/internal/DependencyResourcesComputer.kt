@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
-import com.android.build.gradle.tasks.SourceSetInputs
 import com.android.builder.core.BuilderConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
@@ -209,7 +208,6 @@ abstract class DependencyResourcesComputer {
 
     fun initFromVariantScope(
         creationConfig: ComponentCreationConfig,
-        sourceSetInputs: SourceSetInputs,
         microApkResDir: FileCollection,
         libraryDependencies: ArtifactCollection?,
         relativeLocalResources: Boolean,
@@ -233,7 +231,9 @@ abstract class DependencyResourcesComputer {
         }
         resources.disallowChanges()
 
-        extraGeneratedResFolders.fromDisallowChanges(sourceSetInputs.extraGeneratedResDir)
+        extraGeneratedResFolders.fromDisallowChanges(
+            creationConfig.variantData.extraGeneratedResFolders
+        )
 
 
         if (creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES).isPresent) {
