@@ -46,10 +46,8 @@ const std::string kStdlib_debugProbesKt =
 const std::string kMeta_inf_version_path =
     "META-INF/kotlinx_coroutines_core.version";
 
-// TODO(b/182023904) replace version number with 1.6.0,
-// once the new version is released sometimes in October
 const SemanticVersion kCoroutines_min_supported_version = {
-    .major = 1, .minor = 5, .patch = 2};
+    .major = 1, .minor = 6, .patch = 0};
 
 // Class required by dex::Writer to allocate and free space for new instrumented
 // class
@@ -228,9 +226,6 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   return instrumentedClass;
 }
 
-// TODO(b/182023182) make sure `setInstalledStatically$kotlinx_coroutines_core`
-// will be the final name, when they release kotlinx-coroutines-core
-// 1.6 in October
 /**
  * Try to set
  * kotlinx.coroutines.debug.AgentInstallationType#setInstalledStatically$kotlinx_coroutines_core
