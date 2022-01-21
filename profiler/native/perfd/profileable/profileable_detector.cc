@@ -71,31 +71,40 @@ set<K> GetKeys(const unordered_map<K, V> map) {
 
 }  // namespace
 
+// Attempt to run ART method sampling as a way to check if the given process
+// is profileable.
 bool ProfileableChecker::Check(int32_t pid, const string& package_name) const {
   BashCommandRunner tester{"/system/bin/cmd", true};
   std::ostringstream oss;
-  oss << "activity profile start --sampling 1 " << package_name
+  // Start method sampling at the sample interval of 30 minutes. We don't need
+  // the data; we just check if the command would succeed. (The command line
+  // argument is in microseconds. The maximum acceptable value is
+  // 2,147,483,647).
+  oss << "activity profile start --sampling 1800000000 " << package_name
       << " /data/local/tmp/profileable_reporter.tmp 2>/dev/null";
   bool start_succeeded = tester.Run(oss.str(), nullptr);
-
   if (!start_succeeded) return false;
 
-  // NonBlockingCommandRunner::Run() returns false if it cannot fork a process
-  // to invoke the command. If so, try up to 5 times as the best effort. If
-  // still unsuccessful, log the failure as the app would remain in the method
-  // sampling mode which will make ART ignore the next method tracing/sampling
-  // start request.
+  // BashCommandRunner::Run() returns false if it cannot invoke the command. If
+  // so, try up to 5 times as the best effort. If still unsuccessful, log the
+  // failure as the app would remain in the method sampling mode which will make
+  // ART ignore the next method tracing/sampling start request.
+  //
+  // Choose BashCommandRunner over NonBlockingCommandRunner because the timing
+  // of the former's execution is more predictable. We want to stop the sampling
+  // quickly to minimize the interference with the app's startup performance.
+  // The promptness of process discovery is relatively secondary.
   int try_count = 0;
   bool stop_succeeded = true;
   do {
-    NonBlockingCommandRunner stop{"/system/bin/cmd", true};
-    const char* process_args[] = {"activity", "profile", "stop",
-                                  package_name.c_str(), nullptr};
-    stop_succeeded = stop.Run(process_args, nullptr);
+    BashCommandRunner stopper{"/system/bin/cmd", true};
+    oss.str("");
+    oss << "activity profile stop " << package_name;
+    stop_succeeded = stopper.Run(oss.str(), nullptr);
     try_count++;
   } while (!stop_succeeded && try_count < kProfileStopTryTimesLimit);
   if (!stop_succeeded) {
-    Log::V(Log::Tag::PROFILER, "Failed to stop method sampling for %s",
+    Log::W(Log::Tag::PROFILER, "Failed to stop method sampling for %s",
            package_name.c_str());
   }
   // The app is profileable regardless of whether the stop succeeded.
