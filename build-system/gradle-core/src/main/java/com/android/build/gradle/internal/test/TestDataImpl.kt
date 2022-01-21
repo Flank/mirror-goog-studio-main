@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.test
 
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
@@ -26,7 +25,6 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import java.io.File
 
@@ -42,7 +40,6 @@ class TestDataImpl(
     namespace,
     testConfig,
     testConfig,
-    testConfig.variantSources,
     testApkDir,
     testedApksDir
 ) {
