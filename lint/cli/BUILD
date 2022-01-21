@@ -93,8 +93,10 @@ iml_module(
     ],
 )
 
+load("//tools/base/bazel:jvm_import.bzl", "jvm_import")
+
 # managed by go/iml_to_build
-java_import(
+jvm_import(
     name = "lint-cli-psi-prebuilts",
     # do not sort: must match IML order
     jars = [

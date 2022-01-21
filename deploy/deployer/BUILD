@@ -146,29 +146,31 @@ coverage_java_test(
     ],
 )
 
+load("//tools/base/bazel:jvm_import.bzl", "jvm_import")
+
 # managed by go/iml_to_build
-java_import(
+jvm_import(
     name = "deploy_java_proto",
     jars = ["//tools/base/deploy/proto:deploy_java_proto.jar"],
     visibility = ["//visibility:public"],
 )
 
 # managed by go/iml_to_build
-java_import(
+jvm_import(
     name = "libjava_version",
     jars = ["//tools/base/deploy/deployer:libjava_version.jar"],
     visibility = ["//visibility:public"],
 )
 
 # managed by go/iml_to_build
-java_import(
+jvm_import(
     name = "fake_device_proto",
     jars = ["//tools/base/deploy/installer/tests:fake_device_proto.jar"],
     visibility = ["//visibility:public"],
 )
 
 # managed by go/iml_to_build
-java_import(
+jvm_import(
     name = "libjava_sites",
     jars = ["//tools/base/deploy/sites:libjava_sites.jar"],
     visibility = ["//visibility:public"],
