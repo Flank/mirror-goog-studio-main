@@ -27,6 +27,11 @@ import com.android.tools.idea.wizard.template.impl.activities.composeActivity.sr
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.ui.themeKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.ui.typeKt
 
+internal const val COMPOSE_UI_VERSION = "1.1.0-rc01"
+internal const val COMPOSE_MATERIAL_VERSION = "1.1.0-rc01"
+internal const val COMPOSE_MATERIAL3_VERSION = "1.0.0-alpha02"
+internal const val COMPOSE_KOTLIN_COMPILER_VERSION = "1.1.0-rc01"
+
 fun RecipeExecutor.composeActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
@@ -38,18 +43,20 @@ fun RecipeExecutor.composeActivityRecipe(
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
 
-  val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
-  setExtVar(composeVersionVarName, "1.1.0-rc01")
+  val composeUiVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_ui_version")
+  setExtVar(composeUiVersionVarName, COMPOSE_UI_VERSION)
 
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
-  addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}",
-                configuration = "debugImplementation")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
   addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.1")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-manifest:\${$composeVersionVarName}", configuration="debugImplementation")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeVersionVarName}", configuration="androidTestImplementation")
+  // Note: Compose versioning is per group. "androidx.compose.ui:ui" group has its own variable
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeUiVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeUiVersionVarName}",
+                configuration = "debugImplementation")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeUiVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-manifest:\${$composeUiVersionVarName}", configuration="debugImplementation")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeUiVersionVarName}", configuration="androidTestImplementation")
+  addDependency(mavenCoordinate = "androidx.compose.material:material:$COMPOSE_MATERIAL_VERSION")
+
   generateManifest(
     moduleData = moduleData,
     activityClass = activityClass,
@@ -78,7 +85,7 @@ fun RecipeExecutor.composeActivityRecipe(
   requireJavaVersion("1.8", true)
   setBuildFeature("compose", true)
   // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName")
+  setComposeOptions(kotlinCompilerExtensionVersion = COMPOSE_KOTLIN_COMPILER_VERSION)
 
   open(srcOut.resolve("${activityClass}.kt"))
 }
