@@ -30,7 +30,7 @@ import com.android.tools.idea.wizard.template.impl.activities.composeActivity.sr
 internal const val COMPOSE_UI_VERSION = "1.1.0-rc01"
 internal const val COMPOSE_MATERIAL_VERSION = "1.1.0-rc01"
 internal const val COMPOSE_MATERIAL3_VERSION = "1.0.0-alpha02"
-internal const val COMPOSE_KOTLIN_COMPILER_VERSION = "1.1.0-rc01"
+internal const val COMPOSE_KOTLIN_COMPILER_VERSION = "1.1.0-rc02"
 
 fun RecipeExecutor.composeActivityRecipe(
   moduleData: ModuleTemplateData,
