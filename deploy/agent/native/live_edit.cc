@@ -37,8 +37,8 @@ namespace {
 // The format expected for class_name is com/example/ClassName$InnerClass.
 void PrimeClass(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& class_name) {
   if (primed_classes.find(class_name) == primed_classes.end()) {
-    TransformCache cache = DisabledTransformCache();
-    Instrumenter instrumenter(jvmti, jni, cache, false);
+    auto cache = std::make_unique<DisabledTransformCache>();
+    Instrumenter instrumenter(jvmti, jni, std::move(cache), false);
 
     const StubTransform stub(class_name);
     instrumenter.Instrument(stub);

@@ -47,6 +47,7 @@ class TransformCache {
  public:
   explicit TransformCache(const std::string& cache_path = "UNINITIALIZED")
       : cache_path_(cache_path) {}
+  virtual ~TransformCache() = default;
   virtual void Init();
 
   virtual bool ReadClass(const std::string& class_name,
@@ -62,6 +63,7 @@ class TransformCache {
 class DisabledTransformCache : public TransformCache {
  public:
   explicit DisabledTransformCache() : TransformCache() {}
+  virtual ~DisabledTransformCache() = default;
   void Init() override {}
 
   bool ReadClass(const std::string& class_name,
