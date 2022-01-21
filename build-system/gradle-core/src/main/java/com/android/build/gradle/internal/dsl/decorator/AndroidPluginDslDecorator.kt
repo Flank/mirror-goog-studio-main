@@ -49,6 +49,7 @@ import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.Split
 import com.android.build.api.dsl.Splits
 import com.android.build.api.dsl.StoreArchive
+import com.android.build.api.dsl.ViewBinding
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AarMetadataImpl
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
@@ -76,6 +77,7 @@ import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.ResourcesPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.SplitOptions
+import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import org.gradle.api.JavaVersion
 
 /** The list of all the supported property types for the production AGP */
@@ -125,6 +127,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(SigningConfig::class.java, com.android.build.gradle.internal.dsl.SigningConfigImpl::class.java),
     SupportedPropertyType.Block(Split::class.java, SplitOptions::class.java),
     SupportedPropertyType.Block(Splits::class.java, com.android.build.gradle.internal.dsl.Splits::class.java),
+    SupportedPropertyType.Block(ViewBinding::class.java, ViewBindingOptionsImpl::class.java),
 )
 
 /**

@@ -210,6 +210,22 @@ interface CommonExtension<
     fun dataBinding(action: DataBinding.() -> Unit)
 
     /**
+     * Specifies options for the
+     * [View Binding Library](https://developer.android.com/topic/libraries/view-binding/index.html).
+     *
+     * For more information about the properties you can configure in this block, see [ViewBinding]
+     */
+    val viewBinding: ViewBinding
+
+    /**
+     * Specifies options for the
+     * [View Binding Library](https://developer.android.com/topic/libraries/view-binding/index.html).
+     *
+     * For more information about the properties you can configure in this block, see [ViewBinding]
+     */
+    fun viewBinding(action: ViewBinding.() -> Unit)
+
+    /**
      * Configure the gathering of code-coverage from tests.
      *
      * This is replaced by [testCoverage].

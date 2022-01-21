@@ -58,6 +58,7 @@ interface InternalCommonExtension<
     override val compileOptions: CompileOptionsImpl
 
     override val dataBinding: DataBindingOptionsImpl
+    override val viewBinding: ViewBindingOptionsImpl
     override val jacoco: JacocoOptionsImpl
     override val lintOptions: LintOptionsImpl
     override val packagingOptions: PackagingOptionsImpl
@@ -80,6 +81,7 @@ interface InternalCommonExtension<
     fun compileOptions(action: Action<CompileOptionsImpl>)
     fun composeOptions(action: Action<ComposeOptions>)
     fun dataBinding(action: Action<DataBindingOptionsImpl>)
+    fun viewBinding(action: Action<ViewBindingOptionsImpl>)
     fun externalNativeBuild(action: Action<ExternalNativeBuildImpl>)
     fun installation(action: Action<Installation>)
     fun jacoco(action: Action<JacocoOptionsImpl>)

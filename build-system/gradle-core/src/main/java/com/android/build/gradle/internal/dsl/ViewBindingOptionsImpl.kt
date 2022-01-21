@@ -17,28 +17,35 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.ViewBinding
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.BooleanOption
+import java.util.function.Supplier
 import javax.inject.Inject
 
 /** DSL object for configuring view binding options.  */
-open class ViewBindingOptionsImpl @Inject constructor(
-    private val features: BuildFeatures,
+abstract class ViewBindingOptionsImpl @Inject constructor(
+    private val features: Supplier<BuildFeatures>,
     private val dslServices: DslServices
-) : ViewBindingOptions {
+) : ViewBindingOptions, ViewBinding {
 
-    /** Whether to enable data binding.  */
-    override var isEnabled: Boolean
+    override var enable: Boolean
         get() {
-            val bool = features.viewBinding
+            val bool = features.get().viewBinding
             if (bool != null) {
                 return bool
             }
             return dslServices.projectOptions[BooleanOption.BUILD_FEATURE_VIEWBINDING]
         }
         set(value) {
-            features.viewBinding = value
+            features.get().viewBinding = value
+        }
+
+    /** Whether to enable view binding.  */
+    override var isEnabled: Boolean
+        get() = enable
+        set(value) {
+            enable = value
         }
 }

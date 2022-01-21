@@ -101,6 +101,7 @@ class GroovyExtensionsTest {
             "com.android.build.gradle.internal.dsl.AdbOptions" -> "com.android.build.api.dsl.AdbOptions"
             "com.android.build.gradle.internal.dsl.BundleOptions" -> "com.android.build.api.dsl.Bundle"
             "com.android.build.gradle.internal.dsl.DataBindingOptions" -> "com.android.build.api.dsl.DataBinding"
+            "com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl" -> "com.android.build.api.dsl.ViewBinding"
             "com.android.build.gradle.internal.dsl.DefaultConfig" -> "DefaultConfigT"
             "com.android.build.gradle.internal.dsl.ExternalNativeBuild" -> "com.android.build.api.dsl.ExternalNativeBuild"
             "com.android.build.gradle.internal.dsl.LintOptions" -> "com.android.build.api.dsl.LintOptions"
