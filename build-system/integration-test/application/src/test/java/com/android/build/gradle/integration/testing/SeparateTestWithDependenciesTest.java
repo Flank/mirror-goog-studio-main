@@ -2,7 +2,6 @@ package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
@@ -28,8 +27,6 @@ public class SeparateTestWithDependenciesTest {
     public void checkAppContainsAllDependentClasses()
             throws Exception {
         project.executor()
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assemble");
         try (Apk apk = project.getSubproject("app").getApk("debug")) {
             TruthHelper.assertThatApk(apk)

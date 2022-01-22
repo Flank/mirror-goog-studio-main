@@ -469,9 +469,7 @@ public class PackagingOptionsFilteringTest {
         addJavaRes(lib, "androidTest", c0, "foo.testExclude");
         addJavaRes(lib, "androidTest", c0, "foo.testKeep");
 
-        // http://b/149978740 - disable dependency info in order to run with configuration caching
         app.executor()
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("assemble", "assembleDebugAndroidTest");
 
         assertThat(app.getApk(DEBUG).getFile()).exists();

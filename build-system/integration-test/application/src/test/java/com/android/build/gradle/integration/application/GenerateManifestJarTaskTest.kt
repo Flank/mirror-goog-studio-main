@@ -28,8 +28,6 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
             .addGradleProperties(
                     "${BooleanOption.GENERATE_MANIFEST_CLASS.propertyName}=$enableManifestClass")
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     @Before

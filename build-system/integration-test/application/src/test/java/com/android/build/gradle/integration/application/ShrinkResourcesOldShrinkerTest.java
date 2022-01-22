@@ -71,8 +71,6 @@ public class ShrinkResourcesOldShrinkerTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("shrink")
-                    // http://b/149978740
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Parameterized.Parameters(name = "bundle={0} apkCreatorType={1} useRTxt={2}")

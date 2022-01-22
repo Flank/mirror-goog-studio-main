@@ -230,14 +230,10 @@ class PrecompileRemoteResourcesTest {
     @Test
     fun testIntegrationWithResourceShrinker() {
         project.executor()
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":publishedLib:assembleRelease")
 
         project.executor()
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":app:assembleRelease")
 

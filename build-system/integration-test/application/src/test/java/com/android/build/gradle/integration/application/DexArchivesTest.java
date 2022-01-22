@@ -156,8 +156,6 @@ public class DexArchivesTest {
     public void testForReleaseVariants() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor()
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("assembleRelease");
 
         assertThat(result.getTask(":dexBuilderRelease")).didWork();

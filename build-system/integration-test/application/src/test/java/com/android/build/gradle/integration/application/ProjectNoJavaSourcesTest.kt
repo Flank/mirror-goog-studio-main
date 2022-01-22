@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -89,11 +88,6 @@ class ProjectNoJavaSourcesTest(val testProject: MinimalSubProject) {
     }
 
     private fun executor() : GradleTaskExecutor {
-        return if (testProject.plugin == "com.android.application") {
-            // http://b/149978740
-             project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-        } else {
-             project.executor()
-        }
+        return project.executor()
     }
 }

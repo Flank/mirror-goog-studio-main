@@ -43,8 +43,6 @@ public class WearSimpleUnbundledTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("simpleMicroApp")
-                    // http://b/149978740 and http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Before

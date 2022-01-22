@@ -86,17 +86,11 @@ class ApplicationIdTest {
 
     @Test
     fun checkApplicationIdRelease() {
-        project.executor()
-            // http://b/149978740 and http://b/146208910
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run("assembleF1Release")
+        project.executor().run("assembleF1Release")
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
             .hasApplicationId("com.example.applicationidtest.default.f1")
 
-        project.executor()
-            // http://b/149978740 and http://b/146208910
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run("assembleF1Release")
+        project.executor().run("assembleF1Release")
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
             .hasApplicationId("com.example.applicationidtest.default.f1")
     }

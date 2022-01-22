@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,11 +14,6 @@ public class SeparateTestWithMinificationButNoObfuscationTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    // http://b/149978740
-                    .addGradleProperties(
-                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
-                                    + "="
-                                    + false)
                     .fromTestProject("separateTestWithMinificationButNoObfuscation")
                     .create();
 

@@ -39,8 +39,6 @@ public class NoCruncherTest {
             GradleTestProject.builder()
                     .withName("noPngCrunch")
                     .fromTestProject("noPngCrunch")
-                    // http://b/149978740
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Test

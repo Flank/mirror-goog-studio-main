@@ -66,8 +66,6 @@ class GradlePluginMemoryLeakTest {
         GradleTestProject
             .builder()
             .fromTestApp(app)
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .withMetaspace(METASPACE)
             .create()
 

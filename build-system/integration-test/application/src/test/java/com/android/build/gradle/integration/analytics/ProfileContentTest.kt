@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
-import com.android.build.gradle.options.BooleanOption
 import com.android.Version
 import com.android.testutils.TestUtils
 import com.google.common.collect.Iterables
@@ -44,8 +43,6 @@ class ProfileContentTest {
     @get:Rule
     var project = GradleTestProject.builder()
             .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-            // http://b/149978740
-            .addGradleProperties(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.propertyName + "=false")
             .enableProfileOutput()
             .create()
 

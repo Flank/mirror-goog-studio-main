@@ -65,9 +65,6 @@ class CoreLibraryDesugarDynamicFeatureTest {
     val project = GradleTestProject.builder()
         .withAdditionalMavenRepo(mavenRepo)
         .fromTestApp(setUpTestProject())
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // http://b/149978740
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     private fun setUpTestProject(): TestProject {

@@ -522,8 +522,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testL8TaskInvocationForBundleReleaseBuild() {
-        // http://b/149978740, unable to disable even with a flag
-        val build = executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run(":app:bundleRelease")
+        val build = executor().run(":app:bundleRelease")
         Truth.assertThat(build.didWorkTasks).contains(":app:l8DexDesugarLibRelease")
     }
 
@@ -619,9 +618,7 @@ class CoreLibraryDesugarTest {
             it.classes.keys.any { it.startsWith("Lj$/") }
         }
 
-
-    // http://b/149978740 - disable dependency info in apks in order to run with configuration caching
-    private fun executor() = project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+    private fun executor() = project.executor()
 
     companion object {
         private const val APP_MODULE = ":app"

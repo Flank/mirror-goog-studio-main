@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.builder.model.v2.ide.SyncIssue
@@ -27,8 +26,6 @@ class BasicModelV2Test: ModelComparator() {
     @get:Rule
     val project = builder()
         .fromTestProject("basic")
-        // http://b/149978740 and http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Test

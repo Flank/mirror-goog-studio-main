@@ -49,8 +49,6 @@ class SpecialCharactersBasicTest(projectName: String) {
             FileUtils.copyDirectory(originalProjectPath, projectCopyPath)
 
             return GradleTestProject.builder()
-                // http://b/149978740
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .fromDir(projectCopyPath)
                 .create()
         } catch(err: java.io.IOException) {

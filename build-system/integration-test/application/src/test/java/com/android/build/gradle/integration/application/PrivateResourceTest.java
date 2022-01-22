@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,10 +40,7 @@ public class PrivateResourceTest {
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException {
-        project.executor()
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                .run("clean", "assemble");
+        project.executor().run("clean", "assemble");
     }
 
     @AfterClass

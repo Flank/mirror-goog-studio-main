@@ -84,8 +84,6 @@ class DynamicAppSigningConfigTest {
 
         val result =
             project.executor()
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
                 .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)

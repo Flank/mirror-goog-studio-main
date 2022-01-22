@@ -164,8 +164,6 @@ class NoOpIncrementalBuildMinifyTest {
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-        // http://b/149978740 and http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Before

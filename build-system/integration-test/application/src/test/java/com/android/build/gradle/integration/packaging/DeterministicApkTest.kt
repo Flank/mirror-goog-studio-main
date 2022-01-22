@@ -64,8 +64,6 @@ class DeterministicApkTest(
     var project =
         GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .addFile(TestSourceFile("src/main/resources/foo.txt", "foo${System.lineSeparator()}"))
             .create()
 
