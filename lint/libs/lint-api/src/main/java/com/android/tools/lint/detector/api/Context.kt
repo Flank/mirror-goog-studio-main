@@ -203,16 +203,8 @@ open class Context(
                     LocationType.DEFAULT -> context.getLocation(node)
                     LocationType.ALL -> context.getLocation(node)
                     LocationType.NAME -> context.getNameLocation(node)
-                    LocationType.CALL_WITH_ARGUMENTS -> context.getCallLocation(
-                        node as UCallExpression,
-                        includeReceiver = false,
-                        includeArguments = true
-                    )
-                    LocationType.CALL_WITH_RECEIVER -> context.getCallLocation(
-                        node as UCallExpression,
-                        includeReceiver = true,
-                        includeArguments = false
-                    )
+                    // At the PSI level we don't support fine-grained tuning of receiver/arguments
+                    LocationType.CALL_WITH_ARGUMENTS, LocationType.CALL_WITH_RECEIVER -> context.getLocation(node)
                     LocationType.VALUE -> error("$type not supported for ${node.javaClass}")
                 }
             }

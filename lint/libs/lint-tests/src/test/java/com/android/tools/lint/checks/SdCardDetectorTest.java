@@ -211,7 +211,8 @@ public class SdCardDetectorTest extends AbstractCheckTest {
         lint().files(
                         java(
                                 ""
-                                        // THIS ERROR IS INTENTIONAL
+                                        // THIS ERROR IS INTENTIONAL (but does not appear to be
+                                        // suppressible in IntelliJ)
                                         + "\ufeffpackage test.pkg;\n"
                                         + "\n"
                                         + "public class Utf8BomTest {\n"
@@ -502,6 +503,44 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expectClean();
+    }
+
+    public void testMultiPart() {
+        // Make sure that when we have a single UAST class coming from multiple separate source
+        // files,
+        // when lint visits each of those source files, it does not visit parts of the class that
+        // came
+        // from other sources, which would mean reporting the same issues multiple times. This is
+        // now handled in UElementVisitor.acceptSameFile.
+        lint().files(
+                        kotlin(
+                                        "src/test/pkg/file1.kt",
+                                        ""
+                                                + "@file:JvmMultifileClass\n"
+                                                + "@file:JvmName(\"Test\")\n"
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "fun test1() {\n"
+                                                + "    val p = \"/sdcard/path\"\n"
+                                                + "}\n")
+                                .indented(),
+                        kotlin(
+                                        "src/test/pkg/file2.kt",
+                                        ""
+                                                + "@file:JvmMultifileClass\n"
+                                                + "@file:JvmName(\"Test\")\n"
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "fun test2() {\n"
+                                                + "}\n")
+                                .indented())
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/file1.kt:6: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                                + "    val p = \"/sdcard/path\"\n"
+                                + "             ~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
     }
 
     // We've recently removed the large file limit (look for PersistentFSConstants)

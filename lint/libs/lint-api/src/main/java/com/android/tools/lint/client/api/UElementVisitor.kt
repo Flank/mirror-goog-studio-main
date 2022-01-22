@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlScannerConstants
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
 import com.android.tools.lint.detector.api.interprocedural.CallGraphVisitor
@@ -133,7 +134,6 @@ internal class UElementVisitor constructor(
     private val superClassDetectors = HashMap<String, MutableList<VisitingDetector>>(40)
     private val annotationHandler: AnnotationHandler?
     private val callGraphDetectors = ArrayList<SourceCodeScanner>()
-    private var importedResources = false
 
     init {
         allDetectors = ArrayList(detectors.size)
@@ -244,62 +244,52 @@ internal class UElementVisitor constructor(
 
             val client = context.client
             try {
-                context.setJavaFile(uFile.sourcePsi) // needed for getLocation
+                val sourcePsi = uFile.sourcePsi
+                context.setJavaFile(sourcePsi) // needed for getLocation
                 context.uastFile = uFile
 
-                client.runReadAction(
-                    Runnable {
-                        for (v in allDetectors) {
-                            v.setContext(context)
-                            v.detector.beforeCheckFile(context)
-                        }
+                client.runReadAction {
+                    for (v in allDetectors) {
+                        v.setContext(context)
+                        v.detector.beforeCheckFile(context)
                     }
-                )
-
-                if (!superClassDetectors.isEmpty()) {
-                    client.runReadAction(
-                        Runnable {
-                            val visitor = SuperclassPsiVisitor(context)
-                            uFile.accept(visitor)
-                        }
-                    )
                 }
 
-                if (!methodDetectors.isEmpty() ||
-                    !resourceFieldDetectors.isEmpty() ||
-                    !constructorDetectors.isEmpty() ||
-                    !referenceDetectors.isEmpty() ||
+                if (superClassDetectors.isNotEmpty()) {
+                    client.runReadAction {
+                        val visitor = SuperclassPsiVisitor(context)
+                        uFile.acceptSourceFile(visitor)
+                    }
+                }
+
+                if (methodDetectors.isNotEmpty() ||
+                    resourceFieldDetectors.isNotEmpty() ||
+                    constructorDetectors.isNotEmpty() ||
+                    referenceDetectors.isNotEmpty() ||
                     annotationHandler != null
                 ) {
-                    client.runReadAction(
-                        Runnable {
-                            // TODO: Do we need to break this one up into finer grain locking units
-                            val visitor = DelegatingPsiVisitor(context)
-                            uFile.accept(visitor)
-                        }
-                    )
+                    client.runReadAction {
+                        // TODO: Do we need to break this one up into finer grain locking units
+                        val visitor = DelegatingPsiVisitor(context)
+                        uFile.acceptSourceFile(visitor)
+                    }
                 } else {
                     // Note that the DelegatingPsiVisitor is a subclass of DispatchPsiVisitor
                     // so the above includes the below as well (through super classes)
-                    if (!nodePsiTypeDetectors.isEmpty()) {
-                        client.runReadAction(
-                            Runnable {
-                                // TODO: Do we need to break this one up into finer grain locking units
-                                val visitor = DispatchPsiVisitor()
-                                uFile.accept(visitor)
-                            }
-                        )
+                    if (nodePsiTypeDetectors.isNotEmpty()) {
+                        client.runReadAction {
+                            val visitor = DispatchPsiVisitor()
+                            uFile.acceptSourceFile(visitor)
+                        }
                     }
                 }
 
-                client.runReadAction(
-                    Runnable {
-                        for (v in allDetectors) {
-                            ProgressManager.checkCanceled()
-                            v.detector.afterCheckFile(context)
-                        }
+                client.runReadAction {
+                    for (v in allDetectors) {
+                        ProgressManager.checkCanceled()
+                        v.detector.afterCheckFile(context)
                     }
-                )
+                }
             } finally {
                 context.setJavaFile(null)
                 context.uastFile = null
@@ -315,7 +305,7 @@ internal class UElementVisitor constructor(
         projectContext: Context,
         allContexts: List<JavaContext>
     ) {
-        if (!allContexts.isEmpty() && allDetectors.stream()
+        if (allContexts.isNotEmpty() && allDetectors.stream()
             .anyMatch { it.uastScanner.isCallGraphRequired() }
         ) {
             val callGraph = projectContext.client.runReadAction(
@@ -323,14 +313,12 @@ internal class UElementVisitor constructor(
                     generateCallGraph(projectContext, parser, allContexts)
                 }
             )
-            if (callGraph != null && !callGraphDetectors.isEmpty()) {
+            if (callGraph != null && callGraphDetectors.isNotEmpty()) {
                 for (scanner in callGraphDetectors) {
-                    projectContext.client.runReadAction(
-                        Runnable {
-                            ProgressManager.checkCanceled()
-                            scanner.analyzeCallGraph(projectContext, callGraph)
-                        }
-                    )
+                    projectContext.client.runReadAction {
+                        ProgressManager.checkCanceled()
+                        scanner.analyzeCallGraph(projectContext, callGraph)
+                    }
                 }
             }
         }
@@ -968,6 +956,7 @@ internal class UElementVisitor constructor(
             return super.visitWhileExpression(node)
         }
 
+        @Suppress("UnstableApiUsage")
         override fun visitYieldExpression(node: UYieldExpression): Boolean {
             val list = nodePsiTypeDetectors[UYieldExpression::class.java]
             if (list != null) {
@@ -986,10 +975,10 @@ internal class UElementVisitor constructor(
      */
     private inner class DelegatingPsiVisitor constructor(private val mContext: JavaContext) :
         DispatchPsiVisitor() {
-        private val mVisitResources: Boolean = !resourceFieldDetectors.isEmpty()
-        private val mVisitMethods: Boolean = !methodDetectors.isEmpty()
-        private val mVisitConstructors: Boolean = !constructorDetectors.isEmpty()
-        private val mVisitReferences: Boolean = !referenceDetectors.isEmpty()
+        private val mVisitResources: Boolean = resourceFieldDetectors.isNotEmpty()
+        private val mVisitMethods: Boolean = methodDetectors.isNotEmpty()
+        private val mVisitConstructors: Boolean = constructorDetectors.isNotEmpty()
+        private val mVisitReferences: Boolean = referenceDetectors.isNotEmpty()
         private var aliasedImports = false
 
         override fun visitImportStatement(node: UImportStatement): Boolean {
