@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,16 +23,19 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class JavaImport extends BazelRule {
+public class JvmImport extends BazelRule {
     private Set<String> jars = new LinkedHashSet<>();
 
-    public JavaImport(Package pkg, String name) {
+    public JvmImport(Package pkg, String name) {
         super(pkg, name);
     }
 
     @Override
     public void update() throws IOException {
-        CallStatement statement = getCallStatement("java_import", name);
+        CallStatement statement = getCallStatement("jvm_import", name);
+        if (getLoad(statement) == null) {
+            addLoad("//tools/base/bazel:jvm_import.bzl", statement);
+        }
         CallExpression call = statement.getCall();
 
         call.setArgument("jars", jars);
