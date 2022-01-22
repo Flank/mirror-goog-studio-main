@@ -6,7 +6,8 @@ def _jvm_import(ctx):
         fail("cannot specify multiple jars when srcjar attribute is present")
 
     for jar in ctx.files.jars:
-        compile_jar = ctx.actions.declare_file("compiletime_" + jar.basename, sibling = jar)
+        filename = "%s/compiletime_%s" % (jar.dirname, jar.basename)
+        compile_jar = ctx.actions.declare_file(filename)
         args = ctx.actions.args()
         args.add_all(["--jar", jar, "--out", compile_jar])
 
@@ -32,7 +33,10 @@ def _jvm_import(ctx):
             source_jar = source_jar,
         ))
 
-    return [java_common.merge(infos)]
+    return [
+        DefaultInfo(files = depset(ctx.files.jars)),
+        java_common.merge(infos),
+    ]
 
 jvm_import = rule(
     doc = """
