@@ -24,6 +24,7 @@ import com.android.tools.lint.Reporter
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.getErrorLines
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiAssertStatement
@@ -85,7 +86,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         .toSet()
 
     // Check resolve issues
-    root.accept(object : AbstractUastVisitor() {
+    root.acceptSourceFile(object : AbstractUastVisitor() {
         private fun ignoredImport(s: String): Boolean {
             // Allow missing R classes, since they are well
             // understood and typically not relevant to fully

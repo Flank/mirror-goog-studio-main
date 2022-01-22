@@ -29,8 +29,10 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiVariable
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBlockExpression
+import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -47,7 +49,9 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getContainingUMethod
+import org.jetbrains.uast.internal.acceptList
 import org.jetbrains.uast.toUElementOfType
+import org.jetbrains.uast.visitor.UastVisitor
 
 class UastLintUtils {
     companion object {
@@ -212,7 +216,7 @@ class UastLintUtils {
                         value = finder.currentValue
 
                         if (value == null && finder.lastAssignment != null) {
-                            // Special return value: variable was assigned but we don't know
+                            // Special return value: variable was assigned, but we don't know
                             // the value
                             return LAST_ASSIGNMENT_VALUE_UNKNOWN
                         }
@@ -508,4 +512,61 @@ fun UElement.isBelow(parent: UElement, strict: Boolean = false): Boolean {
         curr = curr.uastParent
     }
     return false
+}
+
+/**
+ * Like [UFile.accept], but in the case of multi-file classes (where
+ * multiple source files containing top level declarations are annotated
+ * with `@JvmMultifileClass`, all naming the same target class) the
+ * [UFile] will contain functions and properties from *different* files.
+ * Since lint is visiting each source file, that means it would visit
+ * these methods multiple times, since they're included in the single
+ * large [UFile] built up for each individual source file fragment.
+ *
+ * This method will visit a [UFile], but will limit itself to visiting
+ * just the parts corresponding to the source file that the [UFile] was
+ * constructed from.
+ */
+fun UFile.acceptSourceFile(visitor: UastVisitor) {
+    val sourcePsi = this.sourcePsi
+    if (sourcePsi is KtFile &&
+        sourcePsi.annotationEntries.any { it.shortName.toString() == "JvmMultifileClass" }
+    ) {
+        acceptMultiFileClass(visitor)
+    } else {
+        accept(visitor)
+    }
+}
+
+/**
+ * Visits a multi-file class, limiting itself to just the parts from the
+ * same source file as the root node.
+ *
+ * This method basically mirrors the implementation of [UFile.accept]
+ * and [UClass.accept], except that it specifically looks for
+ * declarations that seem to have been merged in from a different source
+ * file than the origin one at the top level, and it then skips those.
+ */
+private fun UFile.acceptMultiFileClass(visitor: UastVisitor) {
+    val targetFile = sourcePsi.virtualFile
+    if (visitor.visitFile(this)) return
+
+    //noinspection ExternalAnnotations
+    uAnnotations.acceptList(visitor)
+    imports.acceptList(visitor)
+
+    for (uClass in classes) {
+        if (visitor.visitClass(uClass)) return
+        //noinspection ExternalAnnotations
+        uClass.uAnnotations.acceptList(visitor)
+        for (declaration in uClass.uastDeclarations) {
+            val declarationFile = declaration.sourcePsi?.containingFile?.virtualFile
+            if (declarationFile == null || declarationFile == targetFile) {
+                declaration.accept(visitor)
+            }
+        }
+        visitor.afterVisitClass(uClass)
+    }
+
+    visitor.afterVisitFile(this)
 }
