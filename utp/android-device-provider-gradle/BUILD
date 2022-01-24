@@ -9,7 +9,7 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.utp:android-device-provider-gradle:" + BASE_VERSION,
-    resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto/src/main/resources/",
+    resource_strip_prefix = "tools/base/utp/android-device-provider-gradle/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
