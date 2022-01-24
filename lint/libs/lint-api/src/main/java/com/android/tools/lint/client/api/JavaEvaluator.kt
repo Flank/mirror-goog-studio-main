@@ -478,9 +478,6 @@ class JavaEvaluator {
         includeName: Boolean,
         includeReturn: Boolean
     ): String? {
-        assert(!includeName) // not yet tested
-        assert(!includeReturn) // not yet tested
-
         val signature = StringBuilder()
 
         if (includeName) {
