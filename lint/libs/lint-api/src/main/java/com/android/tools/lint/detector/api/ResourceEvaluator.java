@@ -70,6 +70,7 @@ import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.UastCallKind;
 import org.jetbrains.uast.UastFacade;
 
@@ -724,15 +725,27 @@ public class ResourceEvaluator {
             if (annotation != null) {
                 UExpression unit = annotation.findAttributeValue("unit");
                 if (unit instanceof UReferenceExpression) {
+                    String name = null;
                     PsiElement resolved = ((UReferenceExpression) unit).resolve();
                     if (resolved instanceof PsiNamedElement) {
-                        String name = ((PsiNamedElement) resolved).getName();
-                        if ("DP".equals(name)) {
-                            return DIMENSION_DP_MARKER_TYPE;
-                        } else if ("SP".equals(name)) {
-                            return DIMENSION_SP_MARKER_TYPE;
+                        name = ((PsiNamedElement) resolved).getName();
+                    } else {
+                        UElement leaf = UastLintUtilsKt.findSelector(unit);
+                        if (leaf instanceof USimpleNameReferenceExpression) {
+                            name = ((USimpleNameReferenceExpression) leaf).getIdentifier();
                         }
-                        // else: default to PX (DIMENSION_MARKER_TYPE)
+                    }
+                    if ("DP".equals(name)) {
+                        return DIMENSION_DP_MARKER_TYPE;
+                    } else if ("SP".equals(name)) {
+                        return DIMENSION_SP_MARKER_TYPE;
+                    } else if ("PX".equals(name)) {
+                        return DIMENSION_MARKER_TYPE;
+                    } else {
+                        // If we can't resolve the symbol, don't just assume it's a @Px since that
+                        // can lead to
+                        // problems like issue 216139975
+                        return null;
                     }
                 } else if (unit instanceof ULiteralExpression) {
                     Object value = ((ULiteralExpression) unit).getValue();
@@ -748,6 +761,13 @@ public class ResourceEvaluator {
                                 return DIMENSION_MARKER_TYPE;
                             case 2:
                                 return DIMENSION_SP_MARKER_TYPE;
+                            default:
+                                // If it's some other number, it must be a future-added new unit
+                                // type that this
+                                // version of lint doesn't understand; don't process this as a
+                                // resource type
+                                // since it can lead to incorrect comparisons
+                                return null;
                         }
                     }
                 }
