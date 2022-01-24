@@ -22,7 +22,7 @@ import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
 
-public class WatchFace extends AppComponent {
+public class WatchFace extends WearComponent {
 
     public static class ShellCommand {
         public static final String SHOW_WATCH_FACE =
@@ -62,8 +62,7 @@ public class WatchFace extends AppComponent {
             runShellCommand(debug_command, receiver);
         }
         String command = getStartWatchFaceCommand();
-        logger.info("$ adb shell " + command);
-        runShellCommand(command, receiver);
+        runStartCommand(command, receiver, logger);
     }
 
     private void validate(String extraFlags) throws DeployerException {

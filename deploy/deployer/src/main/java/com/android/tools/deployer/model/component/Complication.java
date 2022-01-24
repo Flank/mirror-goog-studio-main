@@ -24,7 +24,7 @@ import com.android.tools.manifest.parser.components.ManifestAppComponentInfo;
 import com.android.utils.ILogger;
 import java.util.Locale;
 
-public class Complication extends AppComponent {
+public class Complication extends WearComponent {
 
     public static class ShellCommand {
 
@@ -64,8 +64,7 @@ public class Complication extends AppComponent {
             runShellCommand(debug_command, receiver);
         }
         String command = getAddComplicationCommand(params);
-        logger.info("$ adb shell " + command);
-        runShellCommand(command, receiver);
+        runStartCommand(command, receiver, logger);
     }
 
     @NonNull

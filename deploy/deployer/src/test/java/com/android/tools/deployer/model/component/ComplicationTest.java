@@ -18,18 +18,15 @@ package com.android.tools.deployer.model.component;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.NullOutputReceiver;
-import com.android.ddmlib.ShellCommandUnresponsiveException;
-import com.android.ddmlib.TimeoutException;
-import com.android.tools.deployer.DeployerException;
 import com.android.tools.deployer.TestLogger;
 import com.android.tools.manifest.parser.XmlNode;
 import com.android.tools.manifest.parser.components.ManifestAppComponentInfo;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -37,10 +34,8 @@ import org.mockito.Mockito;
 public class ComplicationTest {
 
     @Test
-    public void testCommandSendToDevice()
-            throws DeployerException, ShellCommandUnresponsiveException,
-                    AdbCommandRejectedException, IOException, TimeoutException {
-        IDevice device = Mockito.mock(IDevice.class);
+    public void testCommandSendToDevice() throws Exception {
+        IDevice device = mockDevice(request -> "Broadcast completed: result=1");
         ManifestAppComponentInfo info =
                 new ManifestAppComponentInfo(new XmlNode(), "com.example.myApp") {
                     @Override
@@ -66,10 +61,8 @@ public class ComplicationTest {
     }
 
     @Test
-    public void testCommandSendToDeviceDebug()
-            throws DeployerException, ShellCommandUnresponsiveException,
-                    AdbCommandRejectedException, IOException, TimeoutException {
-        IDevice device = Mockito.mock(IDevice.class);
+    public void testCommandSendToDeviceDebug() throws Exception {
+        IDevice device = mockDevice(request -> "Broadcast completed: result=1");
         InOrder inOrderDevice = Mockito.inOrder(device);
 
         ManifestAppComponentInfo info =
@@ -104,5 +97,27 @@ public class ComplicationTest {
                         any(IShellOutputReceiver.class),
                         eq(15L),
                         eq(TimeUnit.SECONDS));
+    }
+
+    private static IDevice mockDevice(Function<String, String> shellCommandReplies)
+            throws Exception {
+        IDevice device = Mockito.mock(IDevice.class);
+        Mockito.doAnswer(
+                        invocation -> {
+                            String request = invocation.getArgument(0) + "\n";
+                            IShellOutputReceiver receiver = invocation.getArgument(1);
+                            byte[] bytes =
+                                    shellCommandReplies
+                                            .apply(request)
+                                            .getBytes(StandardCharsets.UTF_8);
+                            receiver.addOutput(bytes, 0, bytes.length);
+                            receiver.flush();
+                            return null;
+                        })
+                .when(device)
+                .executeShellCommand(
+                        Mockito.anyString(), Mockito.any(), Mockito.anyLong(), Mockito.any());
+
+        return device;
     }
 }
