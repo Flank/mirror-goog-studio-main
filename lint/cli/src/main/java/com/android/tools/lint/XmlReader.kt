@@ -481,6 +481,7 @@ class XmlReader(
         var replacement: String? = null
         var shortenNames = false
         var reformat = false
+        var imports: List<String>? = null
         var displayName: String? = null
         var familyName: String? = null
         var robot = false
@@ -497,6 +498,7 @@ class XmlReader(
                 ATTR_REPLACEMENT -> replacement = value
                 ATTR_SHORTEN_NAMES -> shortenNames = true
                 ATTR_REFORMAT -> reformat = true
+                ATTR_IMPORTS -> imports = value.split(",")
                 ATTR_DESCRIPTION -> displayName = value
                 ATTR_FAMILY -> familyName = value
                 ATTR_INDEPENDENT -> independent = true
@@ -518,6 +520,7 @@ class XmlReader(
             .with(replacement ?: "")
             .shortenNames(shortenNames)
             .reformat(reformat)
+            .apply { imports?.let { this.imports(*it.toTypedArray()) } }
             .autoFix(robot, independent)
             .build()
     }

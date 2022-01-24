@@ -339,6 +339,7 @@ class Incident(
         val secondary2 = other.location.secondary
         val secondFile1 = secondary1?.file
         val secondFile2 = secondary2?.file
+        val nullableIntComparator: Comparator<Int> = Comparator.nullsLast<Int?>(Comparator.naturalOrder())
         return ComparisonChain.start()
             .compare(issue.category, other.issue.category)
             .compare(
@@ -362,16 +363,14 @@ class Incident(
             )
             // This handles the case where you have a huge XML document without newlines,
             // such that all the errors end up on the same line.
-            .compare(
-                col1,
-                col2,
-                Comparator.nullsLast(Comparator.naturalOrder())
-            )
+            .compare(col1, col2, nullableIntComparator)
             .compare(
                 secondFile1,
                 secondFile2,
                 Comparator.nullsLast(Comparator.naturalOrder())
             )
+            .compare(location.end?.line, other.location.end?.line, nullableIntComparator)
+            .compare(location.end?.column, other.location.end?.column, nullableIntComparator)
             .result()
     }
 

@@ -161,28 +161,28 @@ class AnnotationHandlerTest {
             """
             src/test/pkg/JavaUsage.java:7: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     new JavaApi().method1();
-                                  ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/JavaUsage.java:8: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     new JavaApi().method2();
-                                  ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/JavaUsage.java:9: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     new KotlinApi().method1();
-                                    ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/JavaUsage.java:10: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     new KotlinApi().method2();
-                                    ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:7: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     JavaApi().method1()
-                              ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:8: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     JavaApi().method2()
-                              ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:9: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     KotlinApi().method1()
-                                ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:10: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     KotlinApi().method2()
-                                ~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~
             8 errors, 0 warnings
             """
         )
@@ -326,13 +326,13 @@ class AnnotationHandlerTest {
                     ~~~~~~~~~~~~~~~
             src/test/pkg/JavaUsage.java:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
                     new KotlinApi().method();
-                                    ~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
                     KotlinApi().method()
                     ~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
                     KotlinApi().method()
-                                ~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/KotlinUsage.kt:6: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                     method2()
                     ~~~~~~~~~
@@ -416,10 +416,10 @@ class AnnotationHandlerTest {
                         ~~~~~~~~
             src/test/usage/JavaUsage.java:12: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(innerApi.method()); // ERROR 3A and 3B
-                                 ~~~~~~~~
+                        ~~~~~~~~~~~~~~~~~
             src/test/usage/JavaUsage.java:12: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(innerApi.method()); // ERROR 3A and 3B
-                                 ~~~~~~~~
+                        ~~~~~~~~~~~~~~~~~
             src/test/usage/JavaUsage.java:13: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(method());          // ERROR 4A and 4B
                         ~~~~~~~~
@@ -440,10 +440,10 @@ class AnnotationHandlerTest {
                         ~~~~~~~~
             src/test/usage/KotlinUsage.kt:12: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.method())     // ERROR 7A and 7B
-                                 ~~~~~~~~
+                        ~~~~~~~~~~~~~~~~~
             src/test/usage/KotlinUsage.kt:12: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.method())     // ERROR 7A and 7B
-                                 ~~~~~~~~
+                        ~~~~~~~~~~~~~~~~~
             src/test/usage/KotlinUsage.kt:13: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(method())              // ERROR 8A and 8B
                         ~~~~~~~~
@@ -703,6 +703,7 @@ class AnnotationHandlerTest {
 
     @Test
     fun test195014464() {
+        @Suppress("MemberVisibilityCanBePrivate")
         lint().files(
             kotlin(
                 """
