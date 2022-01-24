@@ -20,4 +20,7 @@ enum class SourceType(name: String) {
 
     JAVA("java"),
     RES("res"),
+    ASSETS("assets"),
+    JNI_LIBS("jniLibs"),
+    SHADERS("shaders")
 }

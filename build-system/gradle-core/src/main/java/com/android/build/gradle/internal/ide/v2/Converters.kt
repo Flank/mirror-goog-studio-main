@@ -20,6 +20,7 @@ import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.dsl.Lint
+import com.android.build.api.variant.impl.AbstractSourceDirectoriesImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -209,22 +210,21 @@ internal fun DefaultAndroidSourceSet.convert(
 ) = SourceProviderImpl(
     name = name,
     manifestFile = manifestFile,
-    javaDirectories = sources.java.variantSourcesForModel {
-              it.shouldBeAddedToIdeModel
-    },
+    javaDirectories = variantSourcesForModel(sources.java),
     kotlinDirectories = kotlinDirectories,
     resourcesDirectories = resourcesDirectories,
     aidlDirectories = if (features.aidl) aidlDirectories else null,
     renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,
-    resDirectories = if (features.androidResources) sources.res.variantSourcesForModel {
-        it.shouldBeAddedToIdeModel
-    } else null,
-    assetsDirectories = assetsDirectories,
-    jniLibsDirectories = jniLibsDirectories,
-    shadersDirectories = if (features.shaders) shadersDirectories else null,
+    resDirectories = if (features.androidResources) variantSourcesForModel(sources.res) else null,
+    assetsDirectories = variantSourcesForModel(sources.assets),
+    jniLibsDirectories = variantSourcesForModel(sources.jniLibs),
+    shadersDirectories = sources.shaders?.let { variantSourcesForModel(it) },
     mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
     customDirectories = customDirectories,
 )
+
+private fun variantSourcesForModel(sourceDirectories: AbstractSourceDirectoriesImpl) =
+    sourceDirectories.variantSourcesForModel { it.shouldBeAddedToIdeModel }
 
 internal fun AndroidResources.convert() = AaptOptionsImpl(
     namespacing = if (namespaced) REQUIRED else DISABLED

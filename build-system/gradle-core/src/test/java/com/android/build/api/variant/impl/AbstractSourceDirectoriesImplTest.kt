@@ -135,5 +135,8 @@ internal class AbstractSourceDirectoriesImplTest {
             override fun addSource(directoryEntry: DirectoryEntry) {
                 listOfSources.add(directoryEntry)
             }
+
+            override fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean): List<File> =
+                emptyList()
         }
 }

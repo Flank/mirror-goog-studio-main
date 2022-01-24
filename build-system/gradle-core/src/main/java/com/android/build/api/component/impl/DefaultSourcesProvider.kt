@@ -30,7 +30,34 @@ interface DefaultSourcesProvider {
     val java: List<DirectoryEntry>
 
     /**
-     * the list of sources [DirectoryEntry] for android resources.
+     * the list of sources [DirectoryEntries] for android resources.
+     *
+     * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on.
      */
     val res: List<DirectoryEntries>
+
+    /**
+     * the list of [DirectoryEntries] for assets.
+     *
+     * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on.
+     */
+    val assets: List<DirectoryEntries>
+
+    /**
+     * the list of [DirectoryEntries] for jni libraries.
+     *
+     * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on.
+     */
+    val jniLibs: List<DirectoryEntries>
+
+    /**
+     * the list of [DirectoryEntries] for shaders or null if the feature is disabled.
+     *
+     * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on.
+     */
+    val shaders: List<DirectoryEntries>?
 }

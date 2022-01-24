@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.api.variant.impl.AbstractSourceDirectoriesImpl;
 import com.android.build.api.variant.impl.SourcesImpl;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.v2.CustomSourceDirectory;
@@ -84,25 +85,23 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
             @NonNull SourceProvider sourceProvider, @NonNull SourcesImpl variantSources) {
         this.name = sourceProvider.getName();
         this.manifestFile = sourceProvider.getManifestFile();
-        this.javaDirs =
-                variantSources
-                        .getJava()
-                        .variantSourcesForModel$gradle_core(
-                                directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
+        this.javaDirs = getSourcesForIdeModel(variantSources.getJava());
         this.kotlinDirs = sourceProvider.getKotlinDirectories();
         this.resourcesDirs = sourceProvider.getResourcesDirectories();
         this.aidlDirs = sourceProvider.getAidlDirectories();
         this.rsDirs = sourceProvider.getRenderscriptDirectories();
         this.resDirs =
-                variantSources
-                        .getRes()
-                        .variantSourcesForModel$gradle_core(
-                                directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
-        this.assetsDirs = sourceProvider.getAssetsDirectories();
-        this.libsDirs = sourceProvider.getJniLibsDirectories();
-        this.shaderDirs = sourceProvider.getShadersDirectories();
+                getSourcesForIdeModel(variantSources.getRes());
+        this.assetsDirs = getSourcesForIdeModel(variantSources.getAssets());
+        this.libsDirs = getSourcesForIdeModel(variantSources.getJniLibs());
+        this.shaderDirs = getSourcesForIdeModel(variantSources.getShaders());
         this.mlModelsDirs = sourceProvider.getMlModelsDirectories();
         this.customDirectories = sourceProvider.getCustomDirectories();
+    }
+
+    private Collection<File> getSourcesForIdeModel(AbstractSourceDirectoriesImpl sourceDirectories) {
+        return sourceDirectories.variantSourcesForModel$gradle_core(
+                directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
     }
 
     @NonNull

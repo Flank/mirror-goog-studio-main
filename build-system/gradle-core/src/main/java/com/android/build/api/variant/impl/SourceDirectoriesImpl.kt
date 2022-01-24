@@ -45,7 +45,7 @@ class SourceDirectoriesImpl(
 
     // For compatibility with the old variant API, we must allow reading the content of this list
     // before it is finalized.
-    private val variantSources = variantServices.newListPropertyForInternalUse(
+    protected val variantSources = variantServices.newListPropertyForInternalUse(
         type = DirectoryEntry::class.java,
     )
 
@@ -80,7 +80,7 @@ class SourceDirectoriesImpl(
     /*
      * Internal API that can only be used by the model.
      */
-    internal fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File> {
+    override fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File> {
         val files = mutableListOf<File>()
         variantSources.get()
             .filter { filter.invoke(it) }

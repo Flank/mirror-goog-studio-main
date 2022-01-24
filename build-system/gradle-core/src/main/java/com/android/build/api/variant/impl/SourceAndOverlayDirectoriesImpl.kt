@@ -25,7 +25,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.util.PatternFilterable
 import java.io.File
 
-class SourceAndOverlayDirectoriesImpl(
+open class SourceAndOverlayDirectoriesImpl(
     _name: String,
     projectDirectory: Directory,
     private val variantServices: VariantServices,
@@ -36,7 +36,7 @@ class SourceAndOverlayDirectoriesImpl(
     // For compatibility with the old variant API, we must allow reading the content of this list
     // before it is finalized.
     @Suppress("UNCHECKED_CAST")
-    private val variantSources: ListProperty<DirectoryEntries> =
+    protected val variantSources: ListProperty<DirectoryEntries> =
         variantServices.newListPropertyForInternalUse(DirectoryEntries::class.java)
 
     // this will contain all the directories
@@ -91,7 +91,7 @@ class SourceAndOverlayDirectoriesImpl(
     /*
      * Internal API that can only be used by the model.
      */
-    internal fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File> {
+    override fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File> {
         val files = mutableListOf<File>()
         variantSources.get()
             .map { it.directoryEntries}

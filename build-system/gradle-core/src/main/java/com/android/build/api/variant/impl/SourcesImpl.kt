@@ -74,6 +74,56 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.res)
         }
 
+    override val assets: AssetSourceDirectoriesImpl
+        get() = AssetSourceDirectoriesImpl(
+            SourceType.ASSETS.name,
+            projectDirectory,
+            variantServices,
+            variantSourceSet?.assets?.filter
+        ).also { sourceDirectoriesImpl ->
+
+            defaultSourceProvider.assets.run {
+                forEach {
+                    sourceDirectoriesImpl.addSources(it)
+                }
+            }
+            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.assets)
+        }
+
+    override val jniLibs: AssetSourceDirectoriesImpl
+        get() = AssetSourceDirectoriesImpl(
+            SourceType.JNI_LIBS.name,
+            projectDirectory,
+            variantServices,
+            variantSourceSet?.jniLibs?.filter
+        ).also { sourceDirectoriesImpl ->
+
+            defaultSourceProvider.jniLibs.run {
+                forEach {
+                    sourceDirectoriesImpl.addSources(it)
+                }
+            }
+            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.jniLibs)
+        }
+
+    override val shaders: AssetSourceDirectoriesImpl?
+        get() = defaultSourceProvider.shaders?.let { listOfDirectoryEntries ->
+            AssetSourceDirectoriesImpl(
+                SourceType.SHADERS.name,
+                projectDirectory,
+                variantServices,
+                variantSourceSet?.shaders?.filter
+            ).also { sourceDirectoriesImpl ->
+
+                listOfDirectoryEntries.run {
+                    forEach {
+                        sourceDirectoriesImpl.addSources(it)
+                    }
+                }
+                resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.shaders)
+            }
+        }
+
     internal val extras: NamedDomainObjectContainer<SourceDirectoriesImpl> by lazy {
         variantServices.domainObjectContainer(
             SourceDirectoriesImpl::class.java,

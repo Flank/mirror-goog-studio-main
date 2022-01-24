@@ -327,9 +327,6 @@ class VariantSources internal constructor(
     val jniSourceList: Collection<File>
         get() = getSourceFiles{ obj: SourceProvider -> obj.cDirectories }
 
-    val resSourceList: List<DirectoryEntries>
-        get() = getSourceList { sourceProvider -> sourceProvider.resDirectories }
-
     fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<DirectoryEntries> {
         return sortedSourceProviders.map { sourceProvider ->
             DirectoryEntries(

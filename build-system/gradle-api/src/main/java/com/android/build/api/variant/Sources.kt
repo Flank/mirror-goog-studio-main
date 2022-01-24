@@ -37,6 +37,22 @@ interface Sources {
     val res: SourceAndOverlayDirectories
 
     /**
+     * Access to the Android assets sources folders.
+     */
+    val assets: SourceAndOverlayDirectories
+
+    /**
+     * Access to the JNI libraries folders
+     */
+    val jniLibs: SourceAndOverlayDirectories
+
+    /**
+     * Access to the shaders sources folders if [com.android.build.api.dsl.BuildFeatures.shaders]
+     * is true otherwise null
+     */
+    val shaders: SourceAndOverlayDirectories?
+
+    /**
      * Access (and potentially creates) a new [SourceDirectories] for a custom source type that can
      * be referenced by its [name].
      *

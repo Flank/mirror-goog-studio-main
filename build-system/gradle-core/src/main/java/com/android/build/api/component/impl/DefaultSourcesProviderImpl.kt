@@ -34,6 +34,18 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         get() = component.defaultJavaSources()
     override val res: List<DirectoryEntries>
         get() = component.defaultResSources()
+    override val assets: List<DirectoryEntries>
+        get() = component.defaultAssetsSources()
+
+    override val jniLibs: List<DirectoryEntries>
+        get() = component.variantSources.getSourceList {
+                sourceProvider -> sourceProvider.jniLibsDirectories
+        }
+
+    override val shaders: List<DirectoryEntries>?
+        get() = if (component.buildFeatures.shaders) component.variantSources.getSourceList {
+                sourceProvider -> sourceProvider.shadersDirectories
+        } else null
 
     /**
      * Computes the default java sources: source sets and generated sources.
@@ -113,7 +125,9 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
     private fun ComponentImpl.defaultResSources(): List<DirectoryEntries> {
         val sourceDirectories = mutableListOf<DirectoryEntries>()
 
-        sourceDirectories.addAll(variantSources.resSourceList)
+        sourceDirectories.addAll(
+            variantSources.getSourceList { sourceProvider -> sourceProvider.resDirectories }
+        )
 
         val generatedFolders = mutableListOf<DirectoryEntry>()
         if (buildFeatures.renderScript) {
@@ -138,4 +152,7 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
 
         return Collections.unmodifiableList(sourceDirectories)
     }
+
+    private fun ComponentImpl.defaultAssetsSources(): List<DirectoryEntries> =
+        variantSources.getSourceList { sourceProvider -> sourceProvider.assetsDirectories }
 }

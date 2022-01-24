@@ -52,6 +52,41 @@ open class AnalyticsEnabledSources @Inject constructor(
                 objectFactory)
         }
 
+    override val assets: SourceAndOverlayDirectories
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_ASSETS_ACCESS_VALUE
+            return objectFactory.newInstance(
+                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                delegate.assets,
+                stats,
+                objectFactory)
+        }
+
+    override val jniLibs: SourceAndOverlayDirectories
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_JNI_ACCESS_VALUE
+            return objectFactory.newInstance(
+                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                delegate.jniLibs,
+                stats,
+                objectFactory)
+        }
+
+    override val shaders: SourceAndOverlayDirectories?
+        get() =
+            delegate.shaders?.also {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.SOURCES_SHADERS_ACCESS_VALUE
+                objectFactory.newInstance(
+                    AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                    it,
+                    stats,
+                    objectFactory)
+            }
+
+
     override fun getByName(name: String): SourceDirectories {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.SOURCES_EXTRAS_ACCESS_VALUE
