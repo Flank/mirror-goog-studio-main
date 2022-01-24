@@ -17,9 +17,6 @@
 @file:JvmName("AndroidProjectUtils")
 package com.android.build.gradle.integration.common.utils
 
-import com.android.build.gradle.integration.common.fixture.getExtraSourceProviderContainer
-import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.builder.core.VariantType
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.BuildTypeContainer
@@ -27,7 +24,6 @@ import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.Variant
 import com.android.builder.model.VariantBuildInformation
-import java.io.File
 
 /**
  * Returns a Variant object from a given name
@@ -84,60 +80,4 @@ fun AndroidProject.findTestedBuildType(): String? {
             .map { it.buildType }
             .findAny()
             .orElse(null)
-}
-
-@JvmOverloads
-fun AndroidProject.testDefaultSourceSets(
-    projectDir: File,
-    /**
-     * Lambda returning the expected test source sets for a given build type name.
-     * Default implementation handles the default case for debug/release
-     */
-    buildTypeTestSourceSetProvider: (String) -> Collection<String> = {
-        when (it) {
-            "debug" -> listOf(AndroidProject.ARTIFACT_ANDROID_TEST, AndroidProject.ARTIFACT_UNIT_TEST)
-            "release" -> listOf(AndroidProject.ARTIFACT_UNIT_TEST)
-            else -> throw RuntimeException("unexpected build type")
-        }
-    }
-) {
-
-    // test the main source provider
-    SourceProviderHelper(name, projectDir,
-            "main", defaultConfig.sourceProvider)
-            .test()
-
-    // test the main androidTest source provider
-    val androidTestSourceProviders = defaultConfig.getExtraSourceProviderContainer(
-            AndroidProject.ARTIFACT_ANDROID_TEST)
-
-    SourceProviderHelper(
-            name,
-            projectDir,
-            VariantType.ANDROID_TEST_PREFIX,
-            androidTestSourceProviders.sourceProvider)
-            .test()
-
-    // test the source provider for the build types
-    val buildTypes = buildTypes
-    TruthHelper.assertThat(buildTypes).named("build types").hasSize(2)
-
-    for (btContainer in buildTypes) {
-        SourceProviderHelper(
-                name,
-                projectDir,
-                btContainer.buildType.name,
-                btContainer.sourceProvider)
-                .test()
-
-        // For every build type there's the unit test source provider and the android test
-        // one (optional).
-        val extraSourceProviderNames = btContainer
-                .extraSourceProviders
-                .map { it.artifactName }
-                .toSet()
-
-        TruthHelper.assertThat(extraSourceProviderNames)
-            .containsExactlyElementsIn(buildTypeTestSourceSetProvider(btContainer.buildType.name))
-    }
 }
