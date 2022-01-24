@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android'
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.sample.kotlin_source_leak"
     compileSdkVersion rootProject.latestCompileSdk
 
 	// Set source sets to match the layout of Eclipse based projects

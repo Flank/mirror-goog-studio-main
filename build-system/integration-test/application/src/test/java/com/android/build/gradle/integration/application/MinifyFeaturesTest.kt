@@ -225,9 +225,9 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
                         """)
         .withFile(
             "src/main/AndroidManifest.xml",
+            // language=XML
             """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                      package="com.example.baseModule">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="app_name">
                         <activity android:name=".Main"
                                   android:label="app_name">
@@ -351,10 +351,10 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
                 """)
         .withFile(
             "src/main/AndroidManifest.xml",
+            // language=XML
             """<?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="com.example.otherFeature1">
+                    xmlns:dist="http://schemas.android.com/apk/distribution">
 
                     <dist:module dist:onDemand="true"
                                  dist:title="@string/otherFeature1">
@@ -465,10 +465,10 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
         """)
         .withFile(
             "src/main/AndroidManifest.xml",
+            // language=XML
             """<?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="com.example.otherFeature2">
+                    xmlns:dist="http://schemas.android.com/apk/distribution">
 
                     <dist:module dist:onDemand="true"
                                  dist:title="@string/otherFeature2">

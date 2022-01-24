@@ -46,6 +46,9 @@ public class LintVitalTest {
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
@@ -64,7 +67,7 @@ public class LintVitalTest {
 
         File manifest = project.file("src/main/AndroidManifest.xml");
         TestFileUtils.searchAndReplace(
-                manifest, "package=", "android:debuggable=\"true\"\npackage=");
+                manifest, "<application", "<application android:debuggable=\"true\"");
     }
 
     /**

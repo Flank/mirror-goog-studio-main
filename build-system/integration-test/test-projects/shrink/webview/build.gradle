@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+  namespace "com.android.tests.shrink.webview"
   compileSdkVersion rootProject.latestCompileSdk
   buildToolsVersion = rootProject.buildToolsVersion
 

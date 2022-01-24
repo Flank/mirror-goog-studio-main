@@ -7,6 +7,7 @@ apply plugin: 'com.android.application'
 // Adapted from https://github.com/googlesamples/android-vulkan-tutorials/tree/master/tutorial05_triangle
 
 android {
+    namespace "com.google.vulkan.tutorials.five"
     compileSdkVersion rootProject.latestCompileSdk
 
     defaultConfig {

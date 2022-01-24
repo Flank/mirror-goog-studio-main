@@ -4,9 +4,10 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.android.tests.basic"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-    
+
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -24,7 +25,7 @@ android {
 dependencies {
     api files('jar1.jar')
     api files('jar2.jar')
-    
+
     androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
     androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

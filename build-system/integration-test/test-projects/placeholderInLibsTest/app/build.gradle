@@ -2,6 +2,7 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.example.manifest_merger_example"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

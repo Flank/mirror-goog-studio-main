@@ -3,6 +3,7 @@ apply from: "../../commonLocalRepo.gradle"
 apply plugin: 'com.android.library'
 
 android {
+    namespace "com.android.tests.basic.lib"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

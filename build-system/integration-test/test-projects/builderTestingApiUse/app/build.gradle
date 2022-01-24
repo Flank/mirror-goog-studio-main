@@ -6,6 +6,8 @@ project.ext.fakeServer = new com.android.tests.basic.buildscript.FakeServer()
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.android.tests.testprojecttest.app"
+    testNamespace "com.android.tests.testprojecttest.test"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

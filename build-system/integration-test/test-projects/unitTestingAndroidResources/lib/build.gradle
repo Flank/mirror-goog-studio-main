@@ -19,6 +19,7 @@ apply from: "../../commonHeader.gradle"
 apply plugin: 'com.android.library'
 
 android {
+    namespace "com.android.tests.lib"
     compileSdkVersion rootProject.latestCompileSdk
 }
 

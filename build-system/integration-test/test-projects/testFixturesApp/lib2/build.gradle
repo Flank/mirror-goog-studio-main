@@ -19,6 +19,7 @@ plugins {
 }
 
 android {
+    namespace "com.example.lib2"
     compileSdkVersion rootProject.latestCompileSdk
 }
 

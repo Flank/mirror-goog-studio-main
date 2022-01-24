@@ -18,14 +18,13 @@ package com.android.build.gradle.integration.manifest
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -60,12 +59,18 @@ class RewriteLocalLibraryResourceNamespaceTest {
             """.trimIndent()
         )
 
+        // change library namespace
+        TestFileUtils.searchAndReplace(
+            libProject.buildFile,
+            "com.example.android.multiproject.library.base",
+            "com.example.android.multiproject.library"
+        )
+
         libProject.file("src/main/AndroidManifest.xml").delete()
         FileUtils.createFile(
             libProject.file("src/main/AndroidManifest.xml"),
             """
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="com.example.android.multiproject.library">
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                 <application>
                     <activity android:name=".LibraryActivity"
                                   android:label="@string/app_name"/>

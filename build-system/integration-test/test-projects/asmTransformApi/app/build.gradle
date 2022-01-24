@@ -6,6 +6,7 @@ plugins {
 }
 
 android {
+    namespace "com.example.myapplication"
     dynamicFeatures = [":feature"]
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion

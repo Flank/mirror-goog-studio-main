@@ -68,7 +68,7 @@ public class LintKotlinTest {
         assertThat(result.getStdout()).contains("Lint found 9 errors, 4 warnings. First failure:");
         assertThat(result.getStdout())
                 .contains(
-                        "AndroidManifest.xml:6: Error: Class referenced "
+                        "AndroidManifest.xml:5: Error: Class referenced "
                                 + "in the manifest, com.example.android.lint.kotlin.MainActivity, "
                                 + "was not found in the project or the libraries [MissingClass]");
 

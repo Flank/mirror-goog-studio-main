@@ -42,6 +42,7 @@ class BasicKotlinDslTest {
             }
 
             android {
+                namespace = "com.example.app"
                 compileSdkVersion(${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION})
 
                 buildTypes {

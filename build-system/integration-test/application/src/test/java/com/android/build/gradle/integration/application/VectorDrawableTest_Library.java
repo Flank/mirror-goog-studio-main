@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.ApkSubject.asser
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
@@ -67,9 +66,10 @@ public class VectorDrawableTest_Library {
                             new MultiModuleTestProject(
                                     ImmutableMap.of(
                                             ":app",
-                                            HelloWorldApp.forPlugin("com.android.application"),
+                                            HelloWorldApp.forPluginWithNamespace(
+                                                    "com.android.application", "com.example.app"),
                                             ":lib",
-                                            new EmptyAndroidTestApp("com.example.lib"))))
+                                            HelloWorldApp.noBuildFile())))
                     .create();
 
     @Before
@@ -96,6 +96,9 @@ public class VectorDrawableTest_Library {
                         + "        apply plugin: \"com.android.library\"\n"
                         + "\n"
                         + "        android {\n"
+                        + "            namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "            compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

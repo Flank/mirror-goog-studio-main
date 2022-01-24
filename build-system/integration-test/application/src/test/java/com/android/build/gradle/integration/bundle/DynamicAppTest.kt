@@ -627,11 +627,6 @@ class DynamicAppTest {
 
         val appProject = project.getSubproject(":app")
         TestFileUtils.searchAndReplace(
-            File(appProject.mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
-        TestFileUtils.searchAndReplace(
             File(appProject.mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
             "<dist:module dist:instant=\"true\" /> <application>"
@@ -698,11 +693,6 @@ class DynamicAppTest {
         var jsonFile = getJsonFile(27)
 
         val appProject = project.getSubproject(":app")
-        TestFileUtils.searchAndReplace(
-            File(appProject.mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
         TestFileUtils.searchAndReplace(
             File(appProject.mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",

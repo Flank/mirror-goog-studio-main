@@ -95,6 +95,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
+    namespace "${HelloWorldApp.NAMESPACE}"
     compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
     buildToolsVersion '${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}'
 }

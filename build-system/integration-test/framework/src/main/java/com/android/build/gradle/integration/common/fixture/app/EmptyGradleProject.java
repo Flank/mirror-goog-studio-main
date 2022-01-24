@@ -18,25 +18,10 @@ package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 
-/** An empty app. */
-public class EmptyAndroidTestApp extends GradleProject {
+/** An empty gradle project. */
+public class EmptyGradleProject extends GradleProject {
 
-    public EmptyAndroidTestApp() {
-
-    }
-
-    public EmptyAndroidTestApp(String packageName) {
-        TestSourceFile manifest = new TestSourceFile("src/main", "AndroidManifest.xml",
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "        package=\"" + packageName + "\"\n" +
-                "        android:versionCode=\"1\"\n" +
-                "        android:versionName=\"1.0\">\n" +
-                "    <application/>\n" +
-                "</manifest>\n");
-
-        addFiles(manifest);
-    }
+    public EmptyGradleProject() {}
 
     @Override
     public boolean containsFullBuildScript() {

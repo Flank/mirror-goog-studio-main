@@ -47,11 +47,6 @@ class ModelInstantAppCompatibleTest {
     @Test
     fun testBuildModelForInstantAppWithDynamicFeatures() {
         TestFileUtils.searchAndReplace(
-            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
-        TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
             "<dist:module dist:instant=\"true\" /> <application>"
@@ -84,11 +79,6 @@ class ModelInstantAppCompatibleTest {
 
     @Test
     fun testBuildModelForInstantAppWithManifestWithInvalidCharacters() {
-        TestFileUtils.searchAndReplace(
-            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
@@ -129,11 +119,6 @@ class ModelInstantAppCompatibleTest {
             "</manifest>\n<!-- This is a comment. -->"
         )
         TestFileUtils.searchAndReplace(
-            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
-        TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
             "<dist:module dist:instant=\"true\" /> <application>"
@@ -171,18 +156,8 @@ class ModelInstantAppCompatibleTest {
     fun testBuildModelForInstantAppWithDynamicFeaturesAndBuildTypeManifestOverlay() {
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
-        TestFileUtils.searchAndReplace(
-            File(buildTypeProject.mainSrcDir.parent, "/AndroidManifest.xml"),
             "</manifest",
             "<dist:module dist:instant=\"false\" /> </manifest"
-        )
-        TestFileUtils.searchAndReplace(
-            File(buildTypeProject.mainSrcDir.parentFile.parent, "/debug/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
         )
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parentFile.parent, "/debug/AndroidManifest.xml"),
@@ -207,11 +182,6 @@ class ModelInstantAppCompatibleTest {
 
     @Test
     fun testBuildModelForInstantAppWithDynamicFeaturesAndFlavorManifestOverlay() {
-        TestFileUtils.searchAndReplace(
-            File(flavorProject.mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
         TestFileUtils.searchAndReplace(
             File(flavorProject.mainSrcDir.parent, "/AndroidManifest.xml"),
             "<application",
@@ -247,8 +217,8 @@ class ModelInstantAppCompatibleTest {
     fun testBuildModelForInstantAppWithDynamicFeaturesWithNonstandardNamespace() {
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:apkd=\"http://schemas.android.com/apk/distribution\" package="
+            "xmlns:dist",
+            "xmlns:apkd"
         )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
@@ -304,11 +274,6 @@ class ModelInstantAppCompatibleTest {
     @Test
     fun testBuildModelForInstantAppWithDynamicFeaturesWithIncorrectNamespace() {
         TestFileUtils.searchAndReplace(
-            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
-        TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
             "<dist:module android:instant=\"true\" /> <application>"
@@ -336,11 +301,6 @@ class ModelInstantAppCompatibleTest {
     @Test
     fun testBuildModelForInstantAppWithDynamicFeaturesWithoutInstantTag() {
         TestFileUtils.searchAndReplace(
-            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
-        TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
             "<dist:module dist:instant=\"true\" /> <application>"
@@ -363,11 +323,6 @@ class ModelInstantAppCompatibleTest {
 
     @Test
     fun testBuildModelForInstantAppWithDynamicFeaturesWithInvalidInstantValue() {
-        TestFileUtils.searchAndReplace(
-            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
-            "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
-        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",

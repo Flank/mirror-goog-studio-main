@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace "com.test.composite3.mylibrary"
     compileSdkVersion rootProject.ext.latestCompileSdk
 
     defaultConfig {

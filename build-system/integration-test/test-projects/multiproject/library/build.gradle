@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace "com.example.android.multiproject.library"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
@@ -13,7 +14,7 @@ android {
 dependencies {
     api project(':baseLibrary')
     api project(':util')
-    
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
     androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"

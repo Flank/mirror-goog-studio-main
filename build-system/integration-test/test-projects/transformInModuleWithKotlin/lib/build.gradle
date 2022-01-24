@@ -4,6 +4,7 @@ apply from: "../../commonLocalRepo.gradle"
 
 
 android {
+    namespace "com.android.tests.libstest.lib"
     resourcePrefix 'lib_'
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion

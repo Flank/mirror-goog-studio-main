@@ -21,6 +21,7 @@ apply plugin: 'kotlin-android'
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.example.android.lint.kotlin"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

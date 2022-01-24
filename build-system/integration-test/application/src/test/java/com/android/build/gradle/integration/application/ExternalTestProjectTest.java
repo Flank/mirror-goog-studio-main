@@ -45,25 +45,33 @@ public class ExternalTestProjectTest {
         // app1 module
         File app1 = new File(rootFile, "app1");
         HelloWorldApp.noBuildFile().write(app1, null);
-        TestFileUtils.appendToFile(new File(app1, "build.gradle"),
+        TestFileUtils.appendToFile(
+                new File(app1, "build.gradle"),
                 "apply plugin: 'com.android.application'\n"
-                + "\n"
-                + "android {\n"
-                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
-                + "}\n"
-                + "\n"
-                + "task testJar(type: Jar, dependsOn: 'assembleRelease') {\n"
-                + "\n"
-                + "}\n"
-                + "\n"
-                + "configurations {\n"
-                + "    testLib\n"
-                + "}\n"
-                + "\n"
-                + "artifacts {\n"
-                + "    testLib testJar\n"
-                + "}\n");
+                        + "\n"
+                        + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "}\n"
+                        + "\n"
+                        + "task testJar(type: Jar, dependsOn: 'assembleRelease') {\n"
+                        + "\n"
+                        + "}\n"
+                        + "\n"
+                        + "configurations {\n"
+                        + "    testLib\n"
+                        + "}\n"
+                        + "\n"
+                        + "artifacts {\n"
+                        + "    testLib testJar\n"
+                        + "}\n");
 
         // app2 module
         File app2 = new File(rootFile, "app2");
@@ -78,6 +86,9 @@ public class ExternalTestProjectTest {
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

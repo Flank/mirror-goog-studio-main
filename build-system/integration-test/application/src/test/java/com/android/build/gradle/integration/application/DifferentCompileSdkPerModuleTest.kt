@@ -41,8 +41,8 @@ class DifferentCompileSdkPerModuleTest {
 
     @Before
     fun setUp() {
-        setupLibrary(":libA", "19")
-        setupLibrary(":libB", "24").also {
+        setupLibrary(":libA", "19", "com.example.androidLibA")
+        setupLibrary(":libB", "24", "com.example.androidLibB").also {
             it.file("src/main/java/libA").mkdirs()
             Files.asCharSink(
                 it.file("src/main/java/libA/TestClass.java"),
@@ -59,7 +59,7 @@ class DifferentCompileSdkPerModuleTest {
                     |}
                 """.trimMargin())
         }
-        setupLibrary(":libC", "23")
+        setupLibrary(":libC", "23", "com.example.androidLibC")
     }
 
     @Test
@@ -78,19 +78,23 @@ class DifferentCompileSdkPerModuleTest {
             model.onlyModelMap[":libC"]?.bootClasspath?.first()).contains("android-23")
     }
 
-    private fun setupLibrary(name: String, compileSdkVersion: String): GradleTestProject {
+    private fun setupLibrary(
+        name: String,
+        compileSdkVersion: String,
+        namespace: String
+    ): GradleTestProject {
         return project.getSubproject(name).also { project ->
             project.buildFile.also {
-            val currentBuild = it.readText()
-            it.writeText(
-                """
-                |apply plugin: 'com.android.library'
-                |android {
-                |   compileSdkVersion $compileSdkVersion
-                |}
-            """.trimMargin()
-            )
-        }
+                it.writeText(
+                    """
+                    |apply plugin: 'com.android.library'
+                    |android {
+                    |    namespace "$namespace"
+                    |    compileSdkVersion $compileSdkVersion
+                    |}
+                    |""".trimMargin()
+                )
+            }
         }
 
     }

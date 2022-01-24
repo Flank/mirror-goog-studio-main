@@ -23,6 +23,7 @@ plugins {
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.example.feature"
     compileSdkVersion rootProject.latestCompileSdk
 
     defaultConfig {

@@ -116,9 +116,9 @@ class CompileLibraryResourcesTest {
         )
         .withFile(
             "src/main/AndroidManifest.xml",
+            // language=XML
             """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.app" >
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="app_name" android:icon="@mipmap/ic_launcher">
                         <activity android:name="MainActivity"
                                   android:label="app_name">

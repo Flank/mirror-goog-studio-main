@@ -1,6 +1,6 @@
 > AndroidProject:
    - namespace             = "com.android.tests.basic"
-   - androidTestNamespace  = "com.android.tests.basic.debug.test"
+   - androidTestNamespace  = "com.android.tests.basic.test"
    - testFixturesNamespace = (null)
    - resourcePrefix        = (null)
    - dynamicFeatures       = []

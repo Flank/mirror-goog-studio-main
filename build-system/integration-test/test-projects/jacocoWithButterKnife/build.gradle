@@ -5,6 +5,7 @@ apply from: "../commonLocalRepo.gradle"
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.test.jacoco.annotation"
     compileSdkVersion rootProject.ext.latestCompileSdk
     buildToolsVersion = rootProject.ext.buildToolsVersion
 

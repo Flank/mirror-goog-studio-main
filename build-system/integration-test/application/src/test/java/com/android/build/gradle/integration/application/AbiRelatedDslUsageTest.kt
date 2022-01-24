@@ -46,6 +46,7 @@ class AbiRelatedDslUsageTest {
         TestFileUtils.appendToFile(project.buildFile, "\n" +
                 "apply plugin: 'com.android.application'\n" +
                 "android {\n" +
+                "    namespace \"${HelloWorldApp.NAMESPACE}\"\n" +
                 "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
                 "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
                 "    defaultConfig {\n" +
@@ -92,6 +93,7 @@ class AbiRelatedDslUsageTest {
         TestFileUtils.appendToFile(project.buildFile, "\n" +
                 "apply plugin: 'com.android.application'\n" +
                 "android {\n" +
+                "    namespace \"${HelloWorldApp.NAMESPACE}\"\n" +
                 "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
                 "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
                 "    defaultConfig {\n" +
@@ -128,6 +130,7 @@ class AbiRelatedDslUsageTest {
         TestFileUtils.appendToFile(project.buildFile, "\n" +
                 "apply plugin: 'com.android.application'\n" +
                 "android {\n" +
+                "    namespace \"${HelloWorldApp.NAMESPACE}\"\n" +
                 "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
                 "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
                 "    defaultConfig {\n" +

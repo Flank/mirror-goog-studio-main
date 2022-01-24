@@ -22,6 +22,7 @@ apply from: "../commonLocalRepo.gradle"
 
 model {
     android {
+        namespace "android.databinding.testapp"
         compileSdkVersion = rootProject.latestCompileSdk
         buildToolsVersion = rootProject.buildToolsVersion
         defaultConfig {

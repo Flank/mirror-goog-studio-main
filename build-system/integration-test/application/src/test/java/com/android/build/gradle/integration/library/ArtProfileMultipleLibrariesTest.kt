@@ -19,9 +19,8 @@ package com.android.build.gradle.integration.library
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.aabEntryName
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.aarEntryName
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.apkEntryName
@@ -44,17 +43,29 @@ class ArtProfileMultipleLibrariesTest {
     @get:Rule
     val tempFolder = TemporaryFolder()
 
+    private val app =
+        HelloWorldApp.forPluginWithNamespace("com.android.application", "com.example.app")
+    private val lib1 =
+        HelloWorldApp.forPluginWithNamespace("com.android.library", "com.example.lib1")
+    private val lib2 =
+        HelloWorldApp.forPluginWithNamespace("com.android.library", "com.example.lib2")
+    private val lib3 =
+        HelloWorldApp.forPluginWithNamespace("com.android.library", "com.example.lib3")
+
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(
-        HelloWorldLibraryApp(
-            mapOf(
-                ":app" to EmptyAndroidTestApp(),
-                ":lib1" to HelloWorldApp.noBuildFile("com.example.lib1"),
-                ":lib2" to HelloWorldApp.noBuildFile("com.example.lib2"),
-                ":lib3" to HelloWorldApp.noBuildFile("com.example.lib3"),
-            )
-        )
-    ).create()
+    val project =
+        GradleTestProject.builder()
+            .fromTestApp(
+                MultiModuleTestProject.builder()
+                    .subproject(":app", app)
+                    .subproject(":lib1", lib1)
+                    .subproject(":lib2", lib2)
+                    .subproject(":lib3", lib3)
+                    .dependency(app, lib1)
+                    .dependency(app, lib2)
+                    .dependency(app, lib3)
+                    .build()
+            ).create()
 
     @Test
     fun testMultipleLibraryArtProfileMerging() {

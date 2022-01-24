@@ -70,6 +70,7 @@ class DynamicAppLegacyMultidexTest {
             |apply plugin: 'com.android.dynamic-feature'
             |
             |android {
+            |  namespace 'foo.feature'
             |  compileSdkVersion rootProject.latestCompileSdk
             |  defaultConfig {
             |    minSdkVersion 18
@@ -101,8 +102,7 @@ class DynamicAppLegacyMultidexTest {
             it.writeText(
                 """
                 |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                |         xmlns:dist="http://schemas.android.com/apk/distribution"
-                |    package="foo.feature">
+                |         xmlns:dist="http://schemas.android.com/apk/distribution">
                 |    <dist:module dist:onDemand="true" dist:title="@string/app_name">
                 |        <dist:fusing dist:include="false" />
                 |    </dist:module>

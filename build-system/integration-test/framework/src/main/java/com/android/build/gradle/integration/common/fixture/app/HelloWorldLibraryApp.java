@@ -21,8 +21,6 @@ import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
 /**
  * Simple test application with an Android library that prints "hello world!".
@@ -34,21 +32,13 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
     }
 
     public HelloWorldLibraryApp() {
-        this(
+        super(
                 ImmutableMap.of(
-                        ":app", new EmptyAndroidTestApp(), ":lib", HelloWorldApp.noBuildFile()));
-    }
+                        ":app",
+                        HelloWorldApp.noBuildFile("com.example.app"),
+                        ":lib",
+                        HelloWorldApp.noBuildFile()));
 
-    public HelloWorldLibraryApp(Map<String, ? extends TestProject> projectMap) {
-        super(projectMap);
-
-        StringBuilder projectDependencies = new StringBuilder();
-        projectMap.forEach(
-                (BiConsumer<String, TestProject>)
-                        (s, testProject) -> {
-                            if (s.equals(":app")) return;
-                            projectDependencies.append("    implementation project('" + s + "')\n");
-                        });
         GradleProject app = (GradleProject) getSubproject(":app");
         app.addFile(
                 new TestSourceFile(
@@ -56,11 +46,12 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                         "apply plugin: 'com.android.application'\n"
                                 + "\n"
                                 + "dependencies {\n"
-                                + projectDependencies.toString()
+                                + "    implementation project(':lib')"
                                 + "}\n"
                                 + "\n"
                                 + "android {\n"
-                                + "     compileSdkVersion "
+                                + "    namespace \"com.example.app\"\n"
+                                + "    compileSdkVersion "
                                 + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                                 + "\n"
                                 + "    defaultConfig {\n"
@@ -69,40 +60,42 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                                 + "}\n"));
 
         // Create AndroidManifest.xml that uses the Activity from the library.
-        app.addFile(new TestSourceFile("src/main", "AndroidManifest.xml",
-"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-"<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-"      package=\"com.example.app\"\n" +
-"      android:versionCode=\"1\"\n" +
-"      android:versionName=\"1.0\">\n" +
-"\n" +
-"    <application android:label=\"@string/app_name\">\n" +
-"        <activity\n" +
-"            android:name=\"com.example.helloworld.HelloWorld\"\n" +
-"            android:label=\"@string/app_name\">\n" +
-"            <intent-filter>\n" +
-"                <action android:name=\"android.intent.action.MAIN\" />\n" +
-"                <category android:name=\"android.intent.category.LAUNCHER\" />\n" +
-"            </intent-filter>\n" +
-"        </activity>\n" +
-"    </application>\n" +
-"</manifest>\n"));
+        app.replaceFile(
+                new TestSourceFile(
+                        "src/main",
+                        "AndroidManifest.xml",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "      android:versionCode=\"1\"\n"
+                                + "      android:versionName=\"1.0\">\n"
+                                + "\n"
+                                + "    <application android:label=\"@string/app_name\">\n"
+                                + "        <activity\n"
+                                + "            android:name=\""
+                                + HelloWorldApp.NAMESPACE
+                                + ".HelloWorld\"\n"
+                                + "            android:label=\"@string/app_name\">\n"
+                                + "            <intent-filter>\n"
+                                + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                + "            </intent-filter>\n"
+                                + "        </activity>\n"
+                                + "    </application>\n"
+                                + "</manifest>\n"));
 
-        projectMap.forEach(
-                (BiConsumer<String, TestProject>)
-                        (s, testProject) -> {
-                            if (s.equals(":app")) return;
-                            GradleProject lib = (GradleProject) getSubproject(s);
-                            lib.addFile(
-                                    new TestSourceFile(
-                                            "build.gradle",
-                                            "apply plugin: 'com.android.library'\n"
-                                                    + "\n"
-                                                    + "android {\n"
-                                                    + "     compileSdkVersion "
-                                                    + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                                    + "\n"
-                                                    + "}\n"));
-                        });
+        GradleProject lib = (GradleProject) getSubproject(":lib");
+        lib.addFile(
+                new TestSourceFile(
+                        "build.gradle",
+                        "apply plugin: 'com.android.library'\n"
+                                + "\n"
+                                + "android {\n"
+                                + "    namespace \""
+                                + HelloWorldApp.NAMESPACE
+                                + "\"\n"
+                                + "    compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "}\n"));
     }
 }

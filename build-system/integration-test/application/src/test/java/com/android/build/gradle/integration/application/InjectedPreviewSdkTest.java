@@ -39,6 +39,9 @@ public class InjectedPreviewSdkTest {
                 "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion 'android-O'\n"
                         + "\n"
                         + "    defaultConfig {\n"

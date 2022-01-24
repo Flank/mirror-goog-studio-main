@@ -46,9 +46,9 @@ class DependenciesReportDslTest {
         .appendToBuild("android.dynamicFeatures = [':feature']")
     val feature = MinimalSubProject.dynamicFeature("com.example.test").apply {
         replaceFile(TestSourceFile("src/main/AndroidManifest.xml",
+            // language=XML
             """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    |        xmlns:dist="http://schemas.android.com/apk/distribution"
-                    |        package="com.example.test">
+                    |        xmlns:dist="http://schemas.android.com/apk/distribution">
                     |    <dist:module> <dist:fusing dist:include="true"/>
                     |        <dist:delivery>
                     |           <dist:install-time/>

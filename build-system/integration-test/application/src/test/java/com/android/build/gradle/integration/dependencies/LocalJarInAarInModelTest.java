@@ -63,6 +63,9 @@ public class LocalJarInAarInModelTest {
                         + "apply plugin: \"com.android.application\"\n"
                         + "\n"
                         + "android {\n"
+                        + "  namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "  compileSdkVersion "
                         + DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
@@ -76,7 +79,11 @@ public class LocalJarInAarInModelTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "  api \"com.android.support:support-v4:24.0.0" // we need to use this version as later versions don't use internal jars under libs/ anymore
+                        + "  api \"com.android.support:support-v4:24.0.0" // we need to use this
+                        // version as later
+                        // versions don't use
+                        // internal jars under
+                        // libs/ anymore
                         + "\"\n"
                         + "}\n");
     }

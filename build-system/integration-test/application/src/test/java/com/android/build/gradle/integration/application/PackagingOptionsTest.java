@@ -22,7 +22,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.EmptyGradleProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -43,7 +43,7 @@ import org.junit.Test;
 public class PackagingOptionsTest {
 
     // Projects to create jar files.
-    private static GradleProject jarProject1 = new EmptyAndroidTestApp();
+    private static GradleProject jarProject1 = new EmptyGradleProject();
 
     static {
         jarProject1.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));
@@ -51,7 +51,7 @@ public class PackagingOptionsTest {
         jarProject1.addFile(new TestSourceFile("META-INF/proguard", "rules.pro", "# none"));
     }
 
-    private static GradleProject jarProject2 = new EmptyAndroidTestApp();
+    private static GradleProject jarProject2 = new EmptyGradleProject();
 
     static {
         jarProject2.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));
@@ -91,6 +91,9 @@ public class PackagingOptionsTest {
                         + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

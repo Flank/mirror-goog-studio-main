@@ -40,9 +40,9 @@ class DifferentNdkPerModuleTest {
 
     @Before
     fun setUp() {
-        setupLibrary(":libA", "19")
-        setupLibrary(":libB", "24")
-        setupLibrary(":libC", "23")
+        setupLibrary(":libA", "19", "com.example.androidLibA")
+        setupLibrary(":libB", "24", "com.example.androidLibB")
+        setupLibrary(":libC", "23", "com.example.androidLibC")
     }
 
     @Test
@@ -61,13 +61,18 @@ class DifferentNdkPerModuleTest {
             model.onlyModelMap[":libC"]?.ndkVersion).isEqualTo("23")
     }
 
-    private fun setupLibrary(name: String, ndkVersion: String): GradleTestProject {
+    private fun setupLibrary(
+        name: String,
+        ndkVersion: String,
+        namespace: String
+    ): GradleTestProject {
         return project.getSubproject(name).also { project ->
             project.buildFile.also {
                 it.writeText(
                     """
                 |apply plugin: 'com.android.library'
                 |android {
+                |   namespace "$namespace"
                 |   compileSdkVersion 24
                 |   ndkVersion "$ndkVersion"
                 |}

@@ -109,6 +109,7 @@ tasks.withType(JavaCompile) {
 }
 
 android {
+    namespace "${HelloWorldApp.NAMESPACE}"
     defaultConfig.minSdkVersion 14
     compileSdkVersion $DEFAULT_COMPILE_SDK_VERSION
     lintOptions.checkReleaseBuilds = false

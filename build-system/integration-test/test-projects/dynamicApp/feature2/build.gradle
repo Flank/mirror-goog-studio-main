@@ -3,6 +3,7 @@ apply plugin: 'com.android.dynamic-feature'
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.example.feature2"
     compileSdkVersion rootProject.latestCompileSdk
 
     defaultConfig {

@@ -238,6 +238,6 @@ public class GenFolderApiTest {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
-                .isEqualTo("8b4af814210eae6f0846499b489f52ec0b65ea0e");
+                .isEqualTo("c2e49283aa5e2852fec0afbe8fd4c42197a24d28");
     }
 }

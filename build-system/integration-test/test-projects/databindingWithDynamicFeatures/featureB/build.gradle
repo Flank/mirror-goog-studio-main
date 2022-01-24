@@ -17,6 +17,7 @@
 apply plugin: 'com.android.dynamic-feature'
 
 android {
+    namespace "com.example.featureB"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {

@@ -17,11 +17,10 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
@@ -40,9 +39,7 @@ public class InjectedDensityTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(new EmptyAndroidTestApp("com.example.app.densities"))
-                    .create();
+            GradleTestProject.builder().fromTestApp(MinimalSubProject.Companion.app()).create();
 
     @Rule
     public Expect expect = Expect.createAndEnableStackTrace();
@@ -54,6 +51,7 @@ public class InjectedDensityTest {
                         + "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "android {\n"
+                        + "    namespace \"com.example.app\"\n"
                         + "    compileSdkVersion rootProject.latestCompileSdk\n"
                         + "    buildToolsVersion = rootProject.buildToolsVersion\n"
                         + "    defaultConfig {\n"

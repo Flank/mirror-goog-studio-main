@@ -221,9 +221,9 @@ class CoreLibraryDesugarDynamicFeatureTest {
                     }
             """.trimIndent())
         .apply { replaceFile(TestSourceFile("src/main/AndroidManifest.xml",
+            // language=XML
             """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    |        xmlns:dist="http://schemas.android.com/apk/distribution"
-                    |        package="com.example.app.dynamic.feature">
+                    |        xmlns:dist="http://schemas.android.com/apk/distribution">
                     |    <dist:module dist:onDemand="true">
                     |        <dist:fusing dist:include="true" />
                     |    </dist:module>

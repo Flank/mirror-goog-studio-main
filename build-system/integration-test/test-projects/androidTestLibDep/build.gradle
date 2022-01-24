@@ -15,6 +15,7 @@ dependencies {
 }
 
 android {
+    namespace "com.android.tests.libdeps"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

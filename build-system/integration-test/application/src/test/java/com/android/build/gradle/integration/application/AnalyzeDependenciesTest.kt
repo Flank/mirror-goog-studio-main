@@ -56,6 +56,9 @@ class AnalyzeDependenciesTest {
 
     private val app = MinimalSubProject.app("com.example.app")
             .appendToBuild("""
+
+                android.namespace "com.example.app"
+
                 dependencies {
                 implementation project(path: ':usedClassLocalLib')
                 implementation project(path: ':unUsedLocalLib')
@@ -72,8 +75,7 @@ class AnalyzeDependenciesTest {
                     //language=XML
                     """
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                                  xmlns:tools="http://schemas.android.com/tools"
-                                  package="com.example.app">
+                                  xmlns:tools="http://schemas.android.com/tools">
                             <application>
                                 <receiver android:name=".MyReceiver"
                                           android:label="app">
@@ -88,11 +90,11 @@ class AnalyzeDependenciesTest {
             .withFile("src/main/java/com/example/app/MyClass.java",
                     // language=JAVA
                 """package com.example.app;
-                
+
                 import com.android.build.gradle.integration.application.AnalyzeDependenciesTest.UsedClass;
                 import com.android.build.gradle.integration.application.testData.EnumClass;
                 import com.example.usedclasslocallib.UsedClassLocalLib;
-                
+
                 public class MyClass {
                     public static final EnumClass enumClass = EnumClass.ONE;
                     void testUsedAarClass() {
