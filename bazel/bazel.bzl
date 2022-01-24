@@ -74,14 +74,18 @@ def _iml_module_jar_impl(
         java_runtime_deps,
         form_deps,
         exports,
-        friends,
-        module_name):
+        friend_jars,
+        module_name,
+        use_ijar):
     jars = []
+    ijars = []
     sourcepath = []
     forms = []
 
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
+    kotlin_ijar = ctx.actions.declare_file(name + ".kotlin-ijar.jar") if kotlin_srcs and use_ijar else None
+    full_ijar = ctx.actions.declare_file(name + ".merged-ijar-iml.jar") if use_ijar else None
 
     # Kotlin
     kotlin_providers = []
@@ -91,12 +95,15 @@ def _iml_module_jar_impl(
             name = module_name,
             srcs = java_srcs + kotlin_srcs,
             deps = java_deps,
-            friends = friends,
+            friend_jars = friend_jars,
             out = kotlin_jar,
+            out_ijar = kotlin_ijar,
             jre = ctx.files._bootclasspath,
             transitive_classpath = False,  # Matches JPS.
         )]
         jars += [kotlin_jar]
+        if use_ijar:
+            ijars += [kotlin_ijar]
 
     # Resources.
     plugin = None
@@ -122,6 +129,7 @@ def _iml_module_jar_impl(
             java_toolchain = java_toolchain,
             host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase),
             sourcepath = sourcepath,
+            # TODO(b/216385876) After updating to Bazel 5.0, use enable_compile_jar_action = use_ijar,
         )
 
         # Forms
@@ -162,6 +170,15 @@ def _iml_module_jar_impl(
                 execution_requirements = {"supports-workers": "1"},
             )
 
+            if use_ijar:
+                ijars += [java_common.run_ijar(
+                    actions = ctx.actions,
+                    jar = java_jar,
+                    java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
+                )]
+        elif use_ijar:
+            ijars += [java_output.ijar for java_output in java_provider.outputs.jars]
+
         jars += [java_jar]
 
     if form_srcs and not java_srcs:
@@ -174,17 +191,18 @@ def _iml_module_jar_impl(
         allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
-    # Create an ijar to improve javac compilation avoidance.
-    ijar = java_common.run_ijar(
-        actions = ctx.actions,
-        jar = output_jar,
-        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
-    )
+    if use_ijar:
+        run_singlejar(
+            ctx = ctx,
+            jars = ijars,
+            out = full_ijar,
+            allow_duplicates = True,
+        )
 
     providers = []
     providers = [JavaInfo(
         output_jar = output_jar,
-        compile_jar = ijar,
+        compile_jar = full_ijar or output_jar,
         deps = java_deps,
         runtime_deps = java_runtime_deps,
     )]
@@ -271,9 +289,14 @@ def _iml_module_impl(ctx):
         java_runtime_deps = [dep[JavaInfo] for dep in ctx.attr.runtime_deps],
         form_deps = form_deps,
         exports = exports,
-        friends = [],
+        friend_jars = [],
         module_name = module_name,
+        use_ijar = True,
     )
+
+    friend_jars = [java_output.ijar for java_output in main_provider.outputs.jars]
+    for test_friend in ctx.attr.test_friends:
+        friend_jars += [java_output.ijar for java_output in test_friend[JavaInfo].outputs.jars]
 
     test_provider, test_forms, _ = _iml_module_jar_impl(
         ctx = ctx,
@@ -289,8 +312,9 @@ def _iml_module_impl(ctx):
         java_runtime_deps = [],  # Runtime deps already inherited from prod module.
         form_deps = test_form_deps,
         exports = exports + test_exports,
-        friends = [ctx.outputs.production_jar] + ctx.files.test_friends,
+        friend_jars = friend_jars,
         module_name = module_name,
+        use_ijar = False,
     )
 
     return struct(
@@ -359,6 +383,11 @@ _iml_module_ = rule(
             default = Label("//tools/base/bazel:kotlinc"),
             cfg = "host",
             executable = True,
+        ),
+        "_jvm_abi_gen": attr.label(
+            default = Label("//prebuilts/tools/common/m2:jvm-abi-gen-plugin"),
+            cfg = "host",
+            allow_single_file = [".jar"],
         ),
         "_bootclasspath": attr.label(
             default = Label("@bazel_tools//tools/jdk:platformclasspath"),
