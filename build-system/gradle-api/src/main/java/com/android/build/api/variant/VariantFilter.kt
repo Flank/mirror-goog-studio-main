@@ -22,6 +22,7 @@ import com.android.builder.model.ProductFlavor
  * Interface for variant control, allowing to query a variant for some base
  * data and allowing to disable some variants.
  */
+@Deprecated("Use AndroidComponentsExtension.beforeVariants API to disable specific variants")
 interface VariantFilter {
 
     /**
