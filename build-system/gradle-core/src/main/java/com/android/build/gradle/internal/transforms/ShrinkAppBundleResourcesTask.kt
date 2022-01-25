@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
@@ -38,12 +39,15 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import java.io.File
 import java.nio.file.Files
 import javax.inject.Inject
 
@@ -74,6 +78,11 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val featureSetMetadata: RegularFileProperty
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val mappingFileSrc: RegularFileProperty
+
     override fun doTaskAction() {
         val modules = FeatureSetMetadata.load(featureSetMetadata.get().asFile)
             .featureNameToNamespaceMap + ("base" to baseNamespace.get())
@@ -81,9 +90,13 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
         workerExecutor.noIsolation().submit(ShrinkAppBundleResourcesAction::class.java) {
             it.originalBundle.set(originalBundle)
             it.shrunkBundle.set(shrunkBundle)
-            it.report.set(shrunkBundle.get().asFile.resolveSibling("resources.txt"))
             it.modules.set(modules)
             it.usePreciseShrinking.set(usePreciseShrinking)
+            if (mappingFileSrc.isPresent) {
+                mappingFileSrc.get().asFile.parentFile?.let { logDir ->
+                    it.report.set(File(logDir, "resources.txt"));
+                }
+            }
         }
     }
 
@@ -113,6 +126,11 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FEATURE_SET_METADATA,
                 task.featureSetMetadata
+            )
+
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                SingleArtifact.OBFUSCATION_MAPPING_FILE,
+                task.mappingFileSrc
             )
         }
     }
@@ -200,7 +218,7 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
 
     private val originalBundleFile by lazy { parameters.originalBundle.get().asFile }
     private val shrunkBundleFile by lazy { parameters.shrunkBundle.get().asFile }
-    private val reportFile by lazy { parameters.report.get().asFile }
+    private val reportFile by lazy { parameters.report.orNull?.asFile }
 
     companion object {
         private fun toKbString(size: Long): String {
