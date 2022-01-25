@@ -146,9 +146,11 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
                 parameters.requiresInitialConversionToProto.set(true)
             }
 
-            parameters.reportFile.set(
-                File(directory.asFile, "resources-$variantName.txt")
-            )
+            if (mappingFileSrc.isPresent) {
+                mappingFileSrc.get().asFile.parentFile?.let {
+                    parameters.reportFile.set(File(it, "resources.txt"));
+                }
+            }
 
             parameters.dex.set(dex)
             parameters.mappingFileSrc.set(mappingFileSrc)
@@ -292,7 +294,7 @@ abstract class ShrinkProtoResourcesAction @Inject constructor() :
                 graphBuilders = listOf(graphBuilder),
                 debugReporter = LoggerAndFileDebugReporter(
                     logger,
-                    parameters.reportFile.get().asFile
+                    parameters.reportFile.orNull?.asFile
                 ),
                 supportMultipackages = false,
                 usePreciseShrinking = parameters.usePreciseShrinking.get()
