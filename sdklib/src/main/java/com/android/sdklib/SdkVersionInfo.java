@@ -28,14 +28,14 @@ public class SdkVersionInfo {
      * updated for a new release. This number is used as a baseline and any more recent platforms
      * found can be used to increase the highest known number.
      */
-    public static final int HIGHEST_KNOWN_API = 31;
+    public static final int HIGHEST_KNOWN_API = 32;
 
     /**
      * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms.
      *
      * <p>Make sure to keep this in sync with the value in TestUtils.
      */
-    public static final int HIGHEST_KNOWN_STABLE_API = 31;
+    public static final int HIGHEST_KNOWN_STABLE_API = 32;
 
     /**
      * The lowest active API level in the ecosystem. This number will change over time as the
@@ -213,6 +213,8 @@ public class SdkVersionInfo {
                 return "R";
             case 31:
                 return "S";
+            case 32:
+                return "T";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -264,8 +266,10 @@ public class SdkVersionInfo {
             case 29: return "Q";
             case 30: return "R";
             case 31: return "S";
-            // If you add more versions here, also update #getCodeName and
-            // #HIGHEST_KNOWN_API
+            case 32:
+                return "T";
+                // If you add more versions here, also update #getCodeName and
+                // #HIGHEST_KNOWN_API
         }
 
         return null;
