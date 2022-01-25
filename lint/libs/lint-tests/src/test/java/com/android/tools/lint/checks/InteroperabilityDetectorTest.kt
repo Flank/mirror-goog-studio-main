@@ -144,6 +144,41 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
         ).issues(InteroperabilityDetector.LAMBDA_LAST).run().expectClean()
     }
 
+    fun testInheritedMethods() {
+        // 213362704: Skip flagging overridden methods
+        // For both lambda-should-be-last and name-is-kotlin-keyword, don't flag APIs that
+        // are inherited where you don't have the ability to rename it anyway.
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                @SuppressWarnings("LambdaLast")
+                public class Parent {
+                    public void error1(Runnable run, int x) { } // Suppressed, don't flag
+                    public void error2(SamInterface sam, int x) { } // Suppressed, don't flag
+                    public void fun() { } // Suppressed, don't flag
+
+                    public interface SamInterface {
+                        void samMethod();
+                        @Override String toString();
+                        default void other() {  }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public class Child extends Parent {
+                    @Override public void error1(Runnable run, int x) { } // Override, don't flag
+                    @Override public void error2(SamInterface sam, int x) { } // Override, don't flag
+                    @Override public void fun() { } // Override, don't flag
+                }
+                """
+            ).indented(),
+        ).issues(InteroperabilityDetector.LAMBDA_LAST).run().expectClean()
+    }
+
     fun testNullness() {
         lint().files(
             java(

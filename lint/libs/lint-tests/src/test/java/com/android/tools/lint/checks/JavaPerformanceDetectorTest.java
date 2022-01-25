@@ -619,6 +619,8 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        val myStringMap = HashMap<Long, String>()\n"
                                         + "    }\n"
                                         + "}\n"))
+                // lazy initialization in onDraw using a when statement is unlikely
+                .skipTestModes(TestMode.IF_TO_WHEN)
                 .run()
                 .expectInlinedMessages(true);
     }

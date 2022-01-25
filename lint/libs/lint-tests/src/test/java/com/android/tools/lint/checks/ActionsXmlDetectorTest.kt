@@ -720,7 +720,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             """
             res/xml/actions.xml:3: Error: The parameter missingParameter is not defined as a <parameter-mapping> element below [ValidActionsXml]
                     <fulfillment urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong,missingParameter,url}">
-                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             res/xml/actions.xml:10: Error: The parameter extraParameter is not present in the urlTemplate [ValidActionsXml]
                         <parameter-mapping
                          ~~~~~~~~~~~~~~~~~
@@ -788,7 +788,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             """
             res/xml/actions.xml:3: Error: The parameters destLat and destLong are not defined as <parameter-mapping> elements below [ValidActionsXml]
                 <fulfillment urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
-                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )

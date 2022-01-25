@@ -203,56 +203,103 @@ src/test/pkg/ColorTest.java:11: Error: Expected a color resource id (R.color.) b
     }
 
     fun testPx() {
-        val expected =
-            """
-src/test/pkg/PxTest.java:22: Error: Should pass resolved pixel dimension instead of resource id here: getResources().getDimension*(actualSize) [ResourceAsColor]
-        setDimension2(actualSize); // ERROR
-                      ~~~~~~~~~~
-src/test/pkg/PxTest.java:23: Error: Should pass resolved pixel dimension instead of resource id here: getResources().getDimension*(getDimension1()) [ResourceAsColor]
-        setDimension2(getDimension1()); // ERROR
-                      ~~~~~~~~~~~~~~~
-src/test/pkg/PxTest.java:16: Error: Expected a dimension resource id (R.dimen.) but received a pixel integer [ResourceType]
-        setDimension1(actualSize); // ERROR
-                      ~~~~~~~~~~
-src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.dimen.) but received a pixel integer [ResourceType]
-        setDimension1(getDimension2()); // ERROR
-                      ~~~~~~~~~~~~~~~
-4 errors, 0 warnings
-"""
         lint().files(
             java(
-                "src/test/pkg/PxTest.java",
                 """
                 package test.pkg;
-                import androidx.annotation.Px;
+
+                import static androidx.annotation.Dimension.DP;
+                import static androidx.annotation.Dimension.PX;
+                import static androidx.annotation.Dimension.SP;
+
                 import androidx.annotation.DimenRes;
+                import androidx.annotation.Dimension;
+                import androidx.annotation.Px;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class PxTest {
-                    @DimenRes
-                    public abstract int getDimension1();
-                    public abstract void setDimension1(@DimenRes int dimension);
-                    @Px
-                    public abstract int getDimension2();
-                    public abstract void setDimension2(@Px int dimension);
+                    @DimenRes public abstract int getDimensionId();
+                    public abstract void setDimensionId(@DimenRes int dimension);
+
+                    @Px public abstract int getDimensionPx();
+                    public abstract void setDimensionPx(@Px int dimension);
+
+                    public abstract void setDimension(@Dimension int dimension); // alias for @Px
+                    public abstract void setDimensionPx2(@Dimension(unit = PX) int dimension); // alias for @Px
+                    public abstract void setDimensionDp(@Dimension(unit = DP) int dimension);
+                    @Dimension(unit = SP) public abstract int getDimensionSp();
+                    public abstract void setDimensionSp(@Dimension(unit = SP) int dimension);
 
                     public void test1() {
-                        int actualSize = getDimension2();
-                        setDimension1(actualSize); // ERROR
-                        setDimension1(getDimension2()); // ERROR
-                        setDimension1(getDimension1()); // OK
+                        int actualSize = getDimensionPx();
+                        setDimensionId(actualSize);       // @Px to @DimenRes: ERROR 1
+                        setDimensionId(getDimensionPx()); // @Px to @DimenRes: ERROR 2
+                        setDimensionId(getDimensionId()); // @DimenRes to @DimenRes: OK 1
                     }
+
                     public void test2() {
-                        int actualSize = getDimension1();
-                        setDimension2(actualSize); // ERROR
-                        setDimension2(getDimension1()); // ERROR
-                        setDimension2(getDimension2()); // OK
+                        int actualSize = getDimensionId();
+                        setDimensionPx(actualSize);       // @DimenRes to @Px: ERROR 3
+                        setDimensionPx(getDimensionId()); // @DimenRes to @Px: ERROR 4
+                        setDimensionPx(getDimensionPx()); // @Px to @Px: OK 2
+                    }
+
+                    public void test3() {
+                        setDimension(getDimensionPx());    // @Px to @Dimension: OK 3
+                        setDimensionPx2(getDimensionPx()); // @Px to @Dimension(PX): OK 4
+                        setDimensionDp(getDimensionPx());  // @Px to @Dimension(DP): ERROR 5
+                        setDimensionSp(getDimensionPx());  // @Px to @Dimension(SP): ERROR 6
+                        setDimensionSp(getDimensionSp());  // @Dimension(SP) to @Dimension(SP): OK 5
+                        setDimensionDp(getDimensionSp());  // @Dimension(SP) to @Dimension(DP): ERROR 7
+                        setDimensionPx(getDimensionSp());  // @Dimension(SP) to @Px: ERROR 8
+                        setDimension(getDimensionId());    // @DimenRes to @Dimension: ERROR 9
+                    }
+
+                    public void binaryTest(android.app.Notification.BubbleMetadata builder,
+                                           android.widget.ProgressBar progressBar) {
+                        progressBar.setMaxHeight( // annotated @PX
+                                builder.getDesiredHeight() // annotated @DP  // ERROR 10
+                        );
                     }
                 }
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected)
+        ).allowDuplicates().run().expect(
+            """
+            src/test/pkg/PxTest.java:27: Error: Expected a dimension resource id (R.dimen.) but received a pixel integer [ResourceType]
+                    setDimensionId(actualSize);       // @Px to @DimenRes: ERROR 1
+                                   ~~~~~~~~~~
+            src/test/pkg/PxTest.java:28: Error: Expected a dimension resource id (R.dimen.) but received a pixel integer [ResourceType]
+                    setDimensionId(getDimensionPx()); // @Px to @DimenRes: ERROR 2
+                                   ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:34: Error: Should pass resolved pixel dimension instead of resource id here: getResources().getDimension*(actualSize) [ResourceType]
+                    setDimensionPx(actualSize);       // @DimenRes to @Px: ERROR 3
+                                   ~~~~~~~~~~
+            src/test/pkg/PxTest.java:35: Error: Should pass resolved pixel dimension instead of resource id here: getResources().getDimension*(getDimensionId()) [ResourceType]
+                    setDimensionPx(getDimensionId()); // @DimenRes to @Px: ERROR 4
+                                   ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:42: Error: Mismatched @Dimension units here; expected density-independent (dp) integer but received a pixel integer [ResourceType]
+                    setDimensionDp(getDimensionPx());  // @Px to @Dimension(DP): ERROR 5
+                                   ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:43: Error: Mismatched @Dimension units here; expected a scale-independent (sp) integer but received a pixel integer [ResourceType]
+                    setDimensionSp(getDimensionPx());  // @Px to @Dimension(SP): ERROR 6
+                                   ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:45: Error: Mismatched @Dimension units here; expected density-independent (dp) integer but received a scale-independent (sp) integer [ResourceType]
+                    setDimensionDp(getDimensionSp());  // @Dimension(SP) to @Dimension(DP): ERROR 7
+                                   ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:46: Error: Mismatched @Dimension units here; expected a pixel integer but received a scale-independent (sp) integer [ResourceType]
+                    setDimensionPx(getDimensionSp());  // @Dimension(SP) to @Px: ERROR 8
+                                   ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:47: Error: Should pass resolved pixel dimension instead of resource id here: getResources().getDimension*(getDimensionId()) [ResourceType]
+                    setDimension(getDimensionId());    // @DimenRes to @Dimension: ERROR 9
+                                 ~~~~~~~~~~~~~~~~
+            src/test/pkg/PxTest.java:53: Error: Mismatched @Dimension units here; expected a pixel integer but received density-independent (dp) integer [ResourceType]
+                            builder.getDesiredHeight() // annotated @DP  // ERROR 10
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            10 errors, 0 warnings
+            """
+        )
     }
 
     fun testPx2() {

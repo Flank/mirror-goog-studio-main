@@ -609,6 +609,89 @@ public class ManifestMerger2SmallTest {
 
         assertTrue(mergingReport.getResult().isSuccess());
         Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals(
+                ".activityOne",
+                xmlDocument
+                        .getElementsByTagName("activity")
+                        .item(0)
+                        .getAttributes()
+                        .item(0)
+                        .getNodeValue());
+        assertEquals(
+                "com.foo.bar.example.activityTwo",
+                xmlDocument
+                        .getElementsByTagName("activity")
+                        .item(1)
+                        .getAttributes()
+                        .item(0)
+                        .getNodeValue());
+        assertEquals(
+                ".activityThree",
+                xmlDocument
+                        .getElementsByTagName("activity")
+                        .item(2)
+                        .getAttributes()
+                        .item(0)
+                        .getNodeValue());
+        assertEquals(
+                "com.foo.example",
+                xmlDocument
+                        .getElementsByTagName("activity")
+                        .item(3)
+                        .getAttributes()
+                        .item(0)
+                        .getNodeValue());
+        assertEquals(
+                ".applicationOne",
+                xmlDocument
+                        .getElementsByTagName("application")
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS("http://schemas.android.com/apk/res/android", "name")
+                        .getNodeValue());
+        assertEquals(
+                ".myBackupAgent",
+                xmlDocument
+                        .getElementsByTagName("application")
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS("http://schemas.android.com/apk/res/android", "backupAgent")
+                        .getNodeValue());
+    }
+
+    /**
+     * Test to ensure that the fully qualified class name extraction uses the namespace specified by
+     * {@link ManifestMerger2.Invoker#setNamespace(String)} if it's called.
+     *
+     * <p>In this test, the "com.foo.bar.example" namespace specified via the manifest's package
+     * attribute is overridden by the "com.foo.example" namespace set on the Invoker.
+     */
+    @Test
+    public void testFqcnsExtractionWithNamespace() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "    <activity t:name=\"com.foo.bar.example.activityTwo\"/>\n"
+                        + "    <activity t:name=\"com.foo.example.activityThree\"/>\n"
+                        + "    <activity t:name=\"com.foo.example\"/>"
+                        + "    <application t:name=\".applicationOne\" "
+                        + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testFcqnsExtraction", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .setNamespace("com.foo.example")
+                        .withFeatures(Feature.EXTRACT_FQCNS)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals(".activityOne",
                 xmlDocument.getElementsByTagName("activity").item(0).getAttributes()
                         .item(0).getNodeValue());

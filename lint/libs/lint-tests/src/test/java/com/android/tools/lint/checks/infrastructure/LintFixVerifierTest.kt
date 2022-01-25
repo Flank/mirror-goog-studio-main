@@ -41,6 +41,8 @@ import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
+import org.junit.Assert.assertTrue
+import org.junit.ComparisonFailure
 import org.junit.Test
 import java.io.File
 import java.util.EnumSet
@@ -272,6 +274,30 @@ class LintFixVerifierTest {
                 +         }
                 """
             )
+    }
+
+    @Test
+    fun testIdeCompatibleSorting() {
+        val fix1 = LintFix.create().replace().text("Item 1").with("Value 1").build()
+        val fix2 = LintFix.create().replace().text("Item 2").with("Value 2").build()
+        val fix3 = LintFix.create().replace().text("Item 3").with("Value 3").build()
+        val fix4 = LintFix.create().replace().text("Item 4").with("Value 4").build()
+        val fix5 = LintFix.create().replace().text("Item 5").with("Value 5").build()
+
+        // Ok: fully alphabetical
+        LintFixVerifier.ensureIdeCompatibleSorting(listOf(fix1, fix2, fix3, fix4, fix5))
+
+        // Ok: First item doesn't have to be in alphabetical order
+        LintFixVerifier.ensureIdeCompatibleSorting(listOf(fix5, fix2, fix3, fix4))
+
+        try {
+            // Error: the rest must be alphabetical
+            LintFixVerifier.ensureIdeCompatibleSorting(listOf(fix5, fix2, fix3, fix4, fix1))
+        } catch (e: ComparisonFailure) {
+            val message = e.message ?: e.toString()
+            assertTrue(message.contains("lint.allowNonAlphabeticalFixOrder"))
+            assertTrue(message.contains("Replace with Value 1"))
+        }
     }
 
     class ClassVerificationFailureDetector : Detector(), SourceCodeScanner {

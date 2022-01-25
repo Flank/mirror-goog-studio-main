@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.isKotlinHardKeyword
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiMethod
@@ -71,7 +72,7 @@ class ArgumentReorderingTestMode : UastSourceTransformationTestMode(
         clientData: MutableMap<String, Any>
     ): MutableList<Edit> {
         val edits = mutableListOf<Edit>()
-        root.accept(object : EditVisitor() {
+        root.acceptSourceFile(object : EditVisitor() {
             override fun visitCallExpression(node: UCallExpression): Boolean {
                 val resolved = node.resolve()
                 if (resolved is PsiMethod && node.valueArguments.size > 1) {

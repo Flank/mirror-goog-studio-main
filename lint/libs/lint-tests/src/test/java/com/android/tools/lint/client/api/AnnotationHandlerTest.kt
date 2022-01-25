@@ -966,7 +966,7 @@ class AnnotationHandlerTest {
         }
 
         override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
-            return true
+            return type != AnnotationUsageType.DEFINITION
         }
 
         override fun visitAnnotationUsage(

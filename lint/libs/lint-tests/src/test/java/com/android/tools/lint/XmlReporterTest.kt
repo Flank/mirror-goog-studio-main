@@ -103,7 +103,7 @@ class XmlReporterTest {
         lint().files(sampleManifest, sampleLayout)
             .issues(ManifestDetector.USES_SDK, HardcodedValuesDetector.ISSUE)
             .run()
-            .expectXml(xmlPrologue + expected.trimIndent() + "\n")
+            .expectXml(xmlPrologue + expected.trimIndent())
     }
 
     @Test
@@ -155,7 +155,6 @@ class XmlReporterTest {
 
     @Test
     fun testFullPathsWithDescriptions() {
-        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
         checkFullPaths(
             describeSuggestions = true,
             expected =
@@ -232,6 +231,7 @@ class XmlReporterTest {
             .clientFactory(factory)
             .testModes(TestMode.PARTIAL)
             .rootDirectory(rootDirectory)
+            .stripRoot(false)
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
@@ -287,7 +287,7 @@ class XmlReporterTest {
         )
             .issues(TypographyDetector.FRACTIONS)
             .run()
-            .expectXml(xmlPrologue + expected.trimIndent() + "\n")
+            .expectXml(xmlPrologue + expected.trimIndent())
     }
 
     @Test

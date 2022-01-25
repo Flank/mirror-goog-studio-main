@@ -124,6 +124,14 @@ this:
 val maxCount = MAX_COUNT.getValue(context.configuration)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If you want to find the most applicable configuration for a given
+source file, use
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
+val configuration = context.findConfiguration(context.file)
+val maxCount = MAX_COUNT.getValue(configuration)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ## Files
 
 Note that there is a special `Option` type for files and paths:
@@ -131,7 +139,83 @@ Note that there is a special `Option` type for files and paths:
 `StringOption` if you are planning on configuring files, because in the
 case of paths, users will want to specify paths relative to the
 location of the `lint.xml` file where the path is defined. For
-`FileOption` lint is aware of this and will convert the path string as
-necessary.
+`FileOption` lint is aware of this and will convert the relative path
+string as necessary.
+
+## Constraints
+
+Note that the integer and float options allow you to specify a valid
+range for the configured value -- a minimum (inclusive) and a maximum
+(exclusive):
+
+This range will be included with the option documentation, such as in
+“**duration** (default is 1.5): Expected duration in seconds. Must be
+at least 0.0 and less than 15.0.”
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
+private val DURATION_OPTION = FloatOption(
+    name = "duration",
+    description = "Expected duration",
+    defaultValue = 1.5f,
+    min = 0f,
+    max = 15f
+)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It will also be checked at runtime, and if the configured value is
+outside of the range, lint will report an error and pinpoint the
+location in the invalid `lint.xml` file:
+
+```text
+lint.xml:4: Error: duration: Must be less than 15.0 [LintError]
+        <option name="duration" value="100.0" />
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 errors, 0 warnings
+```
+
+## Testing Options
+
+When writing a lint unit test, you can easily configure specific values
+for your detector options. On the `lint()` test task, you can call
+`configureOption(option, value)`. There are a number of overloads for
+this method, so you can reference the option by its string name, or
+passing in the option instance, and if you do, you can pass in strings,
+integers, booleans, floats and files as values. Here's an example:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
+lint().files(
+    kotlin("fun test() { println("Hello World.") }")
+)
+.configureOption(MAX_COUNT, 150)
+.run()
+.expectClean()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## Supporting Lint 4.2, 7.0 and 7.1
+
+The `Option` support is new in 7.2. If your lint check still needs to
+work with older versions of lint, you can bypass the option
+registration, and just read option values directly from the
+configuration.
+
+First, find the configuration as shown above, and then instead of
+calling `Option.getValue`, call `getOption` on the configuration:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
+val option: String? = configuration.getOption(ISSUE, "maxCount")
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `getOption` method returns a `String`. For numbers and booleans,
+the coniguration also provides lookups which will convert the value to
+a number or boolean respectively: `getOptionAsInt`,
+`getOptionAsBoolean`, and most importantly, `getOptionAsFile`. If you
+are looking up paths, be sure to use `getOptionAsFile` since it has the
+important attribute that it allows paths to be relative to the
+configuration file where the (possibly inherited) value was defined,
+which is what users expect when editing `lint.xml` files.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
+val option = configuration.getOptionAsInt(ISSUE, "maxCount", 100)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 <!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://morgan3d.github.io/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

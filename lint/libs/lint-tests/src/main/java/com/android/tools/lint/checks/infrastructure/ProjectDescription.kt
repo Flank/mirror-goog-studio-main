@@ -22,6 +22,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.LibraryReferenceTestFile
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.utils.NullLogger
 import com.google.common.base.Joiner
 import org.junit.Assert
@@ -382,6 +383,28 @@ class ProjectDescription : Comparable<ProjectDescription> {
                 fail("One or more compiled source files were missing class file encodings")
             } else {
                 CompiledSourceFile.createFiles(projectDir, compiled)
+            }
+
+            if (configuredOptions != null) {
+                if (testFiles.any { it.targetRelativePath == "lint.xml" }) {
+                    fail("Cannot combine lint.xml with `configureOption`; add options as <option> elements in your custom lint.xml instead")
+                }
+                val sb = StringBuilder()
+                sb.append("<lint>\n")
+                for ((key, value) in configuredOptions) {
+                    for (issue in issues) {
+                        for (option in issue.getOptions()) {
+                            if (option.name == key) {
+                                sb.append("    <issue id=\"${issue.id}\">\n")
+                                sb.append("        <option name=\"$key\" value=\"$value\" />\n")
+                                sb.append("    </issue>\n")
+                            }
+                        }
+                    }
+                }
+                sb.append("</lint>")
+                val config = xml("lint.xml", sb.toString())
+                config.createFile(projectDir)
             }
         }
 

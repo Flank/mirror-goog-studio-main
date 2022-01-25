@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.utils.PositionXmlParser.CONTENT_KEY;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -28,10 +30,13 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
+import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import javax.xml.parsers.ParserConfigurationException;
+import kotlin.io.FilesKt;
+import kotlin.text.StringsKt;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -57,8 +62,14 @@ public class LintCliXmlParser extends XmlParser {
             throws IOException, SAXException, ParserConfigurationException {
         CharSequence xml = client.readFile(file);
         if (xml.length() == 0) {
-            // I/O error - returns "" instead of null
-            throw new IOException();
+            // client.readFile doesn't throw an exception on I/O error, it returns "".
+            // Try reading it again, this time possibly getting the IO exception which we'll
+            // pass on to the callers.
+            xml = FilesKt.readText(file, Charsets.UTF_8);
+            if (StringsKt.isBlank(xml)) {
+                // SAX would eventually throw an exception anyway, but it's much less readable
+                throw new SAXException("XML file is empty; not a valid document: " + file);
+            }
         }
 
         Document document = PositionXmlParser.parse(xml.toString());
@@ -211,16 +222,40 @@ public class LintCliXmlParser extends XmlParser {
         if (start == null || end == null) {
             return location;
         }
-        int totalLength = end.getOffset() - start.getOffset();
-        int length = node.getValue().length();
-        int delta = totalLength - 1 - length;
-        int startOffset = start.getOffset() + delta;
-        int startColumn = start.getColumn() + delta;
+
+        String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
+        if (contents == null) {
+            return location;
+        }
+
+        // With access to the source, look at the source to figure out the true
+        // range; we can't just look at the value string and take its length since
+        // in source form you can refer to characters by entities or html escapes,
+        // so if the value is for example "a > b" we don't know if the source is
+        // "a > b" or "a &gt; b", and they have different lengths.
+        int valueStartOffset = start.getOffset();
+        int documentLength = contents.length();
+        while (valueStartOffset < documentLength) {
+            char c = contents.charAt(valueStartOffset++);
+            if (c == '"' || c == '\'') {
+                break;
+            }
+        }
+        char valueQuote = contents.charAt(valueStartOffset - 1); // " or '
+        int valueEndOffset = valueStartOffset + 1;
+        while (contents.charAt(valueEndOffset) != valueQuote) {
+            valueEndOffset++;
+        }
+        int lineStart = contents.lastIndexOf('\n', valueStartOffset) + 1;
+        // We can't have newlines in the value attribute: begins and ends on the same
+        // line
+        int line = start.getLine();
+        int startColumn = valueStartOffset - lineStart;
+        int endColumn = valueEndOffset - lineStart;
         return Location.create(
                         location.getFile(),
-                        new DefaultPosition(start.getLine(), startColumn, startOffset),
-                        new DefaultPosition(
-                                end.getLine(), startColumn + length, startOffset + length))
+                        new DefaultPosition(line, startColumn, valueStartOffset),
+                        new DefaultPosition(line, endColumn, valueEndOffset))
                 .withSource(node);
     }
 
@@ -273,7 +308,7 @@ public class LintCliXmlParser extends XmlParser {
         return PositionXmlParser.getPosition(node).getEndOffset();
     }
 
-    /* Handle for creating DOM positions cheaply and returning full fledged locations later */
+    /* Handle for creating DOM positions cheaply and returning full-fledged locations later */
     private static class LocationHandle implements Handle {
         private final LintCliXmlParser parser;
         private final File file;

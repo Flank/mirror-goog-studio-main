@@ -512,10 +512,10 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         val root = getRoot(incident)
         val uri = if (root != null && isParent(root, file)) {
             uriBaseId = SRC_DIR_VAR
-            client.getDisplayPath(root, file, false).escapeJson()
+            client.getDisplayPath(root, file, false).replace('\\', '/').escapeJson()
         } else if (isParent(home, file)) {
             uriBaseId = USER_HOME_VAR
-            client.getDisplayPath(home, file, false).escapeJson()
+            client.getDisplayPath(home, file, false).replace('\\', '/').escapeJson()
         } else {
             uriBaseId = null
             getFileUri(file).escapeJson()

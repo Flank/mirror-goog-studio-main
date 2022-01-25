@@ -503,7 +503,6 @@ private fun ModelSnapshotter<out AbstractArtifact>.snapshotBaseArtifact() {
     item("compileTaskName", AbstractArtifact::compileTaskName)
     item("assembleTaskName", AbstractArtifact::assembleTaskName)
     valueList("classesFolders", AbstractArtifact::classesFolders) { it?.sorted() }
-    valueList("additionalClassesFolders", AbstractArtifact::additionalClassesFolders) { it?.sorted() }
     list("ideSetupTaskNames", AbstractArtifact::ideSetupTaskNames)
     valueList("generatedSourceFolders", AbstractArtifact::generatedSourceFolders) { it?.sorted() }
 }

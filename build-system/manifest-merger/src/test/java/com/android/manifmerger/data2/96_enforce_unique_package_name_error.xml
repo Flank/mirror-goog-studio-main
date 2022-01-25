@@ -75,5 +75,5 @@ package="com.example.test" >
 
 @errors
 
-ERROR:Package name 'com.example.lib1' used in: ManifestMerger2Test1_lib1.xml, ManifestMerger2Test2_lib2.xml.
+ERROR:Namespace 'com.example.lib1' used in: ManifestMerger2Test1_lib1.xml, ManifestMerger2Test2_lib2.xml.
 ERROR:Validation failed, exiting

@@ -315,7 +315,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "}\n"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected).expectFixDiffs(
+        ).allowNonAlphabeticalFixOrder(true).run().expect(expected).expectFixDiffs(
             """
             Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_INDEFINITE:
             @@ -27 +27
@@ -1740,7 +1740,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect(
+        ).allowNonAlphabeticalFixOrder(true).run().expect(
             """
             src/test/pkg/ExactAlarmTest.java:7: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
                     alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
@@ -2012,5 +2012,35 @@ class TypedefDetectorTest : AbstractCheckTest() {
             ),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun test167750517() {
+        // Make sure we handle specifically allowed constants as well
+        // 167750517: @IntDef doesn't support negative values?
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.IntDef
+
+                @IntDef(1, 0, -1, 42)
+                @Retention(AnnotationRetention.SOURCE)
+                annotation class Thing
+
+                @Thing const val MINUS_ONE = -1
+                @Thing const val ZERO = 0
+                @Thing const val ONE = 1
+                @Thing const val ANSWER = 42
+                @Thing const val HUNDRED = 100
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/Thing.kt:11: Error: Must be one of: 1, 0, -1, 42 [WrongConstant]
+            @Thing const val HUNDRED = 100
+                                       ~~~
+            1 errors, 0 warnings
+            """
+        )
     }
 }

@@ -327,10 +327,21 @@ abstract class LintClient {
      * the content of the file.
      */
     open fun getXmlDocument(file: File, contents: CharSequence? = null): Document? {
-        return if (contents?.isNotBlank() == true) {
-            xmlParser.parseXml(contents, file)
-        } else {
-            xmlParser.parseXml(file)
+        return try {
+            if (contents?.isNotBlank() == true) {
+                xmlParser.parseXml(contents, file)
+            } else {
+                xmlParser.parseXml(file)
+            }
+        } catch (exception: Exception) {
+            val message = exception.message ?: "${exception.javaClass.simpleName} attempting to read and parse $file"
+            report(
+                client = this,
+                issue = IssueRegistry.LINT_ERROR,
+                message = TextFormat.TEXT.convertTo(message, TextFormat.RAW), // ensure \ paths are escaped etc
+                file = file
+            )
+            null
         }
     }
 
@@ -621,7 +632,7 @@ abstract class LintClient {
 
     /**
      * Returns the most recent platform (e.g. something like the target
-     * for $ANDROID_HOME/platforms/android-30)
+     * for $ANDROID_HOME/platforms/android-31)
      */
     open fun getLatestSdkTarget(minApi: Int = 1, includePreviews: Boolean = true): IAndroidTarget? {
         return getPlatformLookup()?.getLatestSdkTarget(minApi, includePreviews)

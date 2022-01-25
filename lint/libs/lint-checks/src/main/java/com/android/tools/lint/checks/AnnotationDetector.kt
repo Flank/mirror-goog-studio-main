@@ -279,8 +279,12 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                         )
                     }
                 }
+                GRAVITY_INT_ANNOTATION.isEquals(type) -> {
+                    // Check that @GravityInt applies to the right type
+                    checkTargetType(annotation, type, TYPE_INT, TYPE_LONG)
+                }
                 COLOR_INT_ANNOTATION.isEquals(type) -> {
-                    // Check that ColorInt applies to the right type
+                    // Check that @ColorInt applies to the right type
                     checkTargetType(annotation, type, TYPE_INT, TYPE_LONG)
                 }
                 DIMENSION_ANNOTATION.isEquals(type) || PX_ANNOTATION.isEquals(type) -> {
@@ -291,9 +295,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                     // Make sure IntDef constants are unique
                     ensureUniqueValues(annotation)
                 }
-                PERMISSION_ANNOTATION.isEquals(type) ||
-                    PERMISSION_ANNOTATION_READ.isEquals(type) ||
-                    PERMISSION_ANNOTATION_WRITE.isEquals(type) -> {
+                PERMISSION_ANNOTATION.isEquals(type) -> {
                     // Check that if there are no arguments, this is specified on a parameter,
                     // and conversely, on methods and fields there is a valid argument.
                     val parent = skipParenthesizedExprUp(annotation.uastParent)
@@ -373,7 +375,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                 val location = context.getLocation(annotation)
                 context.report(ANNOTATION_USAGE, annotation, location, "Must specify an API level", fix)
             } else {
-                val apiLevel = getApiLevel(context, annotation)
+                val apiLevel = getApiLevel(context, annotation, REQUIRES_API_ANNOTATION.newName())
                 val minSdk = context.project.minSdk
                 val targetApi = getTargetApi(annotation.uastParent?.uastParent)
                 val max = max(minSdk, targetApi)
@@ -1243,3 +1245,5 @@ const val GUAVA_VISIBLE_FOR_TESTING = "com.google.common.annotations.VisibleForT
 @JvmField val PERMISSION_ANNOTATION: AndroidxName = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresPermission")
 @JvmField val PERMISSION_ANNOTATION_READ: AndroidxName = AndroidxName.of(PERMISSION_ANNOTATION, "Read")
 @JvmField val PERMISSION_ANNOTATION_WRITE: AndroidxName = AndroidxName.of(PERMISSION_ANNOTATION, "Write")
+@JvmField val REQUIRES_FEATURE_ANNOTATION: AndroidxName = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresFeature")
+@JvmField val GRAVITY_INT_ANNOTATION: AndroidxName = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "GravityInt")

@@ -423,7 +423,7 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
      * the [location] is the platforms/ folder containing all the
      * platform metadata; the [buildTargetHash] is the string which
      * corresponds to the compileSdkVersion as a string (e.g. if you
-     * specify 30 it will be interpreted as "android-30", and if you
+     * specify 30 it will be interpreted as "android-31", and if you
      * specify "android-R" it will be used as is). The [version] is
      * the API level and optionally code name for previews. For normal
      * SDK releases, [platform] is true, and for add-ons it's false.

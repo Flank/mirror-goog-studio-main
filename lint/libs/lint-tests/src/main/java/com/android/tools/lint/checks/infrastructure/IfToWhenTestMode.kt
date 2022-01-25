@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
@@ -72,7 +73,7 @@ class IfToWhenTestMode : UastSourceTransformationTestMode(
         }
         val seen = LinkedHashSet<PsiElement>()
         val edits = mutableListOf<Edit>()
-        root.accept(object : EditVisitor() {
+        root.acceptSourceFile(object : EditVisitor() {
             override fun visitIfExpression(node: UIfExpression): Boolean {
                 if (node.getParentOfType<UIfExpression>() == null) {
                     rewriteIfElse(node)

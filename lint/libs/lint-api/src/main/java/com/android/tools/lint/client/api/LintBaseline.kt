@@ -190,7 +190,7 @@ class LintBaseline(
                 "%1\$d errors/warnings were listed in the " +
                     "baseline file (%2\$s) but not found in the project; perhaps they have " +
                     "been fixed?",
-                fixedCount, getDisplayPath(client, project, baselineFile)
+                fixedCount, TextFormat.TEXT.convertTo(getDisplayPath(client, project, baselineFile), TextFormat.RAW)
             )
             if (LintClient.isGradle && project.buildModule != null &&
                 project.buildModule?.lintOptions?.checkDependencies == false
@@ -741,11 +741,12 @@ class LintBaseline(
             baselineDisplayPath: String
         ): String {
             val counts = describeCounts(errors, warnings, comma = false, capitalize = true)
+            val escapedPath = TextFormat.TEXT.convertTo(baselineDisplayPath, TextFormat.RAW)
             // Keep in sync with isFilteredMessage() below
             return if (errors + warnings == 1) {
-                "$counts was filtered out because it is listed in the baseline file, $baselineDisplayPath\n"
+                "$counts was filtered out because it is listed in the baseline file, $escapedPath\n"
             } else {
-                "$counts were filtered out because they are listed in the baseline file, $baselineDisplayPath\n"
+                "$counts were filtered out because they are listed in the baseline file, $escapedPath\n"
             }
         }
 

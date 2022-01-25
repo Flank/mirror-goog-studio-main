@@ -23,13 +23,19 @@ import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.util.PathString
 import com.android.tools.lint.client.api.ConfigurationHierarchy.Companion.getLintXmlFile
 import com.android.tools.lint.client.api.LintClient.Companion.report
+import com.android.tools.lint.detector.api.BooleanOption
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.FileOption
+import com.android.tools.lint.detector.api.FloatOption
 import com.android.tools.lint.detector.api.Incident
+import com.android.tools.lint.detector.api.IntOption
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Option
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.StringOption
 import com.android.utils.SdkUtils
 import com.android.utils.iterator
 import com.google.common.annotations.Beta
@@ -339,6 +345,80 @@ open class LintXmlConfiguration protected constructor(
     ): String? {
         getLocalOption(issue, name, default)?.let { return it }
         return parent?.getOption(issue, name, default) ?: default
+    }
+
+    private fun reportOptionValidationError(option: Option, message: String) {
+        val alreadyWarned = warnedOptions ?: HashSet<Option>().also { warnedOptions = it }
+        if (!alreadyWarned.add(option)) {
+            return
+        }
+
+        val location = getLocation { element ->
+            element.tagName == TAG_OPTION && element.getAttribute(ATTR_NAME) == option.name &&
+                (element.parentNode as? Element)?.getAttribute(ATTR_ID) == option.issue.id
+        }
+
+        report(
+            client = client,
+            issue = IssueRegistry.LINT_ERROR,
+            message = message,
+            location = location
+        )
+    }
+
+    override fun getOption(option: Option): Any? {
+        getLocalOption(option.issue, option.name, null)?.let { valueString ->
+            return when (option) {
+                is StringOption -> valueString
+                is BooleanOption -> {
+                    when {
+                        valueString.equals(VALUE_TRUE, true) -> true
+                        valueString.equals(VALUE_FALSE, true) -> false
+                        else -> {
+                            // Validate here on read instead of when the XML file is initially parsed because
+                            // we don't know the associated Issue to look up options for during lint.xml parsing
+                            // (for third party loaded lint checks)
+                            reportOptionValidationError(option, "Option value must be `true` or `false` (was $valueString)")
+                            option.defaultValue
+                        }
+                    }
+                }
+                is IntOption -> {
+                    try {
+                        val value = valueString.toInt()
+                        if (value < option.min || value >= option.max) {
+                            reportOptionValidationError(option, "${option.name}: ${option.rangeAsString()}")
+                        }
+                        value
+                    } catch (e: NumberFormatException) {
+                        reportOptionValidationError(option, "${option.name} must be an integer (was $valueString)")
+                        option.defaultValue
+                    }
+                }
+                is FloatOption -> {
+                    try {
+                        val value = valueString.toFloat()
+                        if (value < option.min || value >= option.max) {
+                            reportOptionValidationError(option, "${option.name}: ${option.rangeAsString()}")
+                        }
+                        value
+                    } catch (e: NumberFormatException) {
+                        reportOptionValidationError(option, "${option.name} must be a float (was $valueString)")
+                        option.defaultValue
+                    }
+                }
+                is FileOption -> {
+                    val file = File(valueString.replace('/', File.separatorChar))
+                    if (file.isAbsolute) {
+                        file
+                    } else {
+                        val parent = configFile.parentFile ?: return file
+                        File(parent, file.path)
+                    }
+                }
+            }
+        }
+        return parent?.getOption(option)
     }
 
     override fun getOptionAsFile(
@@ -689,6 +769,12 @@ open class LintXmlConfiguration protected constructor(
             for (element in document) {
                 if (filter(element)) {
                     return parser.getLocation(configFile, element)
+                }
+                for (child in element) {
+                    // Also support nested children of issues: <ignore>, <option>, etc
+                    if (filter(child)) {
+                        return parser.getLocation(configFile, child)
+                    }
                 }
             }
         }
@@ -1594,6 +1680,19 @@ open class LintXmlConfiguration protected constructor(
         private const val ATTR_BASELINE = "baseline"
         private val RES_PATH_START = "res" + File.separatorChar
         private val RES_PATH_START_LEN = RES_PATH_START.length
+
+        /**
+         * Options we've already generated validation warnings for.
+         * We have to keep track of these such that we don't spam the
+         * output with repeated warnings because these validations
+         * are done when options are *read* rather when the XML
+         * file is parsed; this is necessary because at lint.xml
+         * parsing time we still don't have access to the issue
+         * registries, and it's quite likely that some of these options
+         * correspond to detectors loaded dynamically (e.g. 3rd
+         * party lint checks) so we don't yet know the constraints.
+         */
+        var warnedOptions: MutableSet<Option>? = null
 
         /**
          * Creates a new [LintXmlConfiguration] for the given lint

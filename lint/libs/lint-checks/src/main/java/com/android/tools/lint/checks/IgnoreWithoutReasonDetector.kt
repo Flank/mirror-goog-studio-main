@@ -17,18 +17,18 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_VALUE
-import com.android.tools.lint.client.api.UElementHandler
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
 import java.util.EnumSet
 
@@ -56,49 +56,48 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
         )
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> =
-        listOf(UAnnotation::class.java)
+    override fun applicableAnnotations(): List<String> = listOf("org.junit.Ignore")
 
-    override fun createUastHandler(context: JavaContext): UElementHandler =
-        IgnoreAnnotationVisitor(context)
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean = type == AnnotationUsageType.DEFINITION
 
-    internal class IgnoreAnnotationVisitor(private val context: JavaContext) : UElementHandler() {
-        override fun visitAnnotation(node: UAnnotation) {
-            if (node.qualifiedName != "org.junit.Ignore") {
-                return
-            }
-            val element = node.uastParent ?: return
-            val source = element.sourcePsi
-            if (source is KtObjectDeclaration && source.isCompanion()) {
-                return
-            }
+    override fun visitAnnotationUsage(
+        context: JavaContext,
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
+    ) {
+        val node = annotationInfo.annotation
+        val parent = node.uastParent ?: return
+        val source = parent.sourcePsi
+        if (source is KtObjectDeclaration && source.isCompanion()) {
+            return
+        }
 
-            val attribute = node.findAttributeValue(ATTR_VALUE)
-            val hasDescription =
-                attribute != null &&
-                    run {
-                        val value =
-                            ConstantEvaluator.evaluate(context, attribute) as? String
-                        value != null && value.isNotBlank() && value != "TODO"
-                    }
-            if (!hasDescription) {
-                val fix =
-                    if (attribute == null || node.attributeValues.isEmpty()) {
-                        LintFix.create()
-                            .name("Give reason")
-                            .replace()
-                            .end()
-                            .with("(\"TODO\")")
-                            .select("TODO")
-                            .build()
-                    } else {
-                        null
-                    }
-                context.report(
-                    ISSUE, element, context.getLocation(node),
-                    "Test is ignored without giving any explanation", fix
-                )
-            }
+        val attribute = node.findAttributeValue(ATTR_VALUE)
+        val hasDescription =
+            attribute != null &&
+                run {
+                    val value =
+                        ConstantEvaluator.evaluate(context, attribute) as? String
+                    value != null && value.isNotBlank() && value != "TODO"
+                }
+        if (!hasDescription) {
+            val fix =
+                if (attribute == null || node.attributeValues.isEmpty()) {
+                    fix()
+                        .name("Give reason")
+                        .replace()
+                        .end()
+                        .with("(\"TODO\")")
+                        .select("TODO")
+                        .build()
+                } else {
+                    null
+                }
+            context.report(
+                ISSUE, parent, context.getLocation(node),
+                "Test is ignored without giving any explanation", fix
+            )
         }
     }
 }

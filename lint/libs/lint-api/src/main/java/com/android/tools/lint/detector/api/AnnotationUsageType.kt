@@ -17,6 +17,24 @@
 package com.android.tools.lint.detector.api
 
 enum class AnnotationUsageType {
+    /**
+     * An actual annotation on an element. For example, if a detector
+     * registers an interest in `androidx.annotation.RequiresApi`, then
+     * it will be notified of the element `@RequiresApi(31)` on a method
+     * definition.
+     *
+     * For backwards compatibility, this is not one of the included
+     * by default annotation usage types, so you should override
+     * [SourceCodeScanner.isApplicableAnnotationUsage], as in
+     *
+     * ```
+     * override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+     *     return type == AnnotationUsageType.DEFINITION || super.isApplicableAnnotationUsage(type)
+     * }
+     * ```
+     */
+    DEFINITION,
+
     /** A call to a method where the method itself was annotated. */
     METHOD_CALL,
 

@@ -71,8 +71,6 @@ class LintResourceRepositoryTest {
 
     @Test
     fun testRepository() {
-        TestUtils.disableIfOnWindowsWithBazel() // b/73709727
-
         checkRepository(
             xml(
                 "res/values/test.xml",
@@ -203,14 +201,14 @@ class LintResourceRepositoryTest {
                     "  @id/name (value) config=default source=/app/res/values/duplicates.xml;  \n" +
                     "  @layout/activity_main (file) config=default source=/app/res/layout/activity_main.xml;  /app/res/layout/activity_main.xml\n" +
                     "  @plurals/my_plural (value) config=default source=/app/res/values/duplicates.xml;  [one=@string/hello1,few=@string/hello2,other=@string/hello3]\n" +
-                    "  @string/js_dialog_title (value) config=default source=/app/res/values/test.xml;  På siden på \"\${TITLE}\" står der: raw:\"På siden på \\\"<xliff:g id=\"TITLE\">%s</xliff:g>\\\" står der:\"\n" +
+                    "  @string/js_dialog_title (value) config=default source=/app/res/values/test.xml;  På siden på \"\${TITLE}\" står der: raw:\"På siden på \\\"<xliff:g id=\"TITLE\">%s</xliff:g>\\\" står der:\"\n".dos2unix() +
                     "  @string/string1 (value) config=default source=/app/res/values/test.xml;  String 1\n" +
                     "  @string/string2 (value) config=default source=/app/res/values/test.xml;  String 2\n" +
                     "  @style/MyStyle (value) config=default source=/app/res/values/duplicates.xml;  parent=ResourceReference{namespace=apk/res/android, type=style, name=Theme.Holo.Light.DarkActionBar} [android:layout_margin,android:layout_marginLeft,android:layout_marginTop,android:layout_marginBottom]\n" +
                     "  @style/MyStyle.Another (value) config=default source=/app/res/values/duplicates.xml;  parent=ResourceReference{namespace=apk/res-auto, type=style, name=MyStyle} [android:layout_margin]\n" +
                     "  @style/Notification.Header (value) config=default source=/app/res/values/styles.xml;  parent=null [paddingTop,paddingBottom,gravity]\n" +
                     "  @styleable/ContentFrame (value) config=default source=/app/res/values/duplicates.xml;  {[][][stateUnspecified=0,stateUnchanged=1][floating=0,atThumb=1,aboveThumb=2]}\n",
-                repository.prettyPrint(root)
+                repository.prettyPrint(root).dos2unix()
             )
 
             fun indexInEscaped(s: String, char: Char, from: Int = 0): Int {
@@ -530,6 +528,7 @@ class LintResourceRepositoryTest {
 
     private fun checkRepository(
         vararg files: TestFile,
+        includeAgpRepository: Boolean = true,
         assertions: (String, ResourceRepository, File) -> Unit
     ) {
         val root = temporaryFolder.root
@@ -538,10 +537,10 @@ class LintResourceRepositoryTest {
         val res = File(dir, "res")
 
         val client = LintCliClient(LintClient.CLIENT_UNIT_TESTS)
-        val standardRepo = TestLintClient.getResources(
+        val standardRepo = if (includeAgpRepository) TestLintClient.getResources(
             ResourceNamespace.RES_AUTO, null,
             listOf(Pair("app", listOf(res))), true
-        )
+        ) else null
 
         val lintRepo = LintResourceRepository.createFromFolder(
             client, sequenceOf(res), null, null,
@@ -550,11 +549,12 @@ class LintResourceRepositoryTest {
 
         for (
             pair in sequenceOf(
-                Pair("Backed by XML (using AGP resource repositories)", standardRepo),
+                if (standardRepo != null) Pair("Backed by XML (using AGP resource repositories)", standardRepo) else null,
                 Pair("Backed by serialization", deserialize(serialize(lintRepo))),
                 Pair("Backed by XML (using lint's folder processor)", lintRepo)
             )
         ) {
+            pair ?: continue
             assertions(pair.first, pair.second, root)
         }
     }
@@ -572,6 +572,36 @@ class LintResourceRepositoryTest {
         val pathVariables = PathVariables()
         pathVariables.add("ROOT", temporaryFolder.root)
         return pathVariables
+    }
+
+    @Test
+    fun testEmptyAndHiddenFiles() {
+        checkRepository(
+            xml(
+                "res/values/test.xml",
+                """
+                    <resources>
+                        <string name="string1">String 1</string>
+                    </resources>
+                    """
+            ).indented(),
+            xml(
+                "res/values/.ignore.xml",
+                """
+                    <resources>
+                        <string name="ignore">Ignore</string>
+                    </resources>
+                    """
+            ).indented(),
+            xml("res/values/empty.xml", ""),
+            includeAgpRepository = false
+        ) { _, repository, root ->
+            assertEquals(
+                "namespace:apk/res-auto\n" +
+                    "  @string/string1 (value) config=default source=/app/res/values/test.xml;  String 1\n",
+                repository.prettyPrint(root).dos2unix()
+            )
+        }
     }
 
     @Test

@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAssertStatement
 import com.intellij.psi.PsiVariable
@@ -95,7 +96,7 @@ class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : UastSo
         clientData: MutableMap<String, Any>
     ): MutableList<Edit> {
         val edits = mutableListOf<Edit>()
-        root.accept(object : EditVisitor() {
+        root.acceptSourceFile(object : EditVisitor() {
             override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
                 parenthesize(node)
                 return super.visitBinaryExpression(node)

@@ -632,17 +632,19 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
                 </lint>
                 """
             ).indented(),
-            xml(
-                "lint-override.xml",
-                """
-                <lint>
-                    <issue id="SdCardPath" severity="error" />
-                </lint>
-                """
-            ).indented(),
             gradle("") // Trigger src/main/java source sets
         )
             .useTestConfiguration(false)
+            .overrideConfig(
+                xml(
+                    "lint-override.xml",
+                    """
+                    <lint>
+                        <issue id="SdCardPath" severity="error" />
+                    </lint>
+                    """
+                ).indented(),
+            )
             .issues(SdCardDetector.ISSUE).run().expect(
                 """
                 src/main/kotlin/test/pkg/MyTest.kt:3: Error: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]

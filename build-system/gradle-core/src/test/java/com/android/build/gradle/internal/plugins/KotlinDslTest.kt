@@ -112,8 +112,8 @@ class KotlinDslTest {
         android.compileSdkVersion(29)
         assertThat(android.compileSdk).isEqualTo(29)
 
-        android.compileSdkVersion("android-30")
-        assertThat(android.compileSdk).isEqualTo(30)
+        android.compileSdkVersion("android-31")
+        assertThat(android.compileSdk).isEqualTo(31)
 
         android.compileSdkVersion("android-S")
         assertThat(android.compileSdkPreview).isEqualTo("S")

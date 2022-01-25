@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDisjunctionType
@@ -104,7 +105,7 @@ class FullyQualifyNamesTestMode : UastSourceTransformationTestMode(
         // directly this sometimes led to double-prefixing symbols.
         val editMap = mutableMapOf<Int, Edit>()
 
-        root.accept(object : TypeVisitor(context, source) {
+        root.acceptSourceFile(object : TypeVisitor(context, source) {
             override fun checkClassReference(node: UElement, cls: PsiClass, offset: Int, name: String) {
                 val fqn = cls.qualifiedName ?: return
                 editMap[offset] = replace(offset, offset + name.length, fqn)
