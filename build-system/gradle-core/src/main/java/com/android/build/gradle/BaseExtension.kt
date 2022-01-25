@@ -290,6 +290,7 @@ abstract class BaseExtension protected constructor(
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.")
     }
 
+    @Deprecated("Use AndroidComponentsExtension.beforeVariants API to disable specific variants")
     open fun variantFilter(variantFilter: Action<VariantFilter>) {
         this.variantFilter = variantFilter
     }
