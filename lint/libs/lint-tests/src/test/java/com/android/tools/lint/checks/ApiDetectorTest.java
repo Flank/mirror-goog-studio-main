@@ -7678,6 +7678,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "4 errors, 0 warnings");
     }
 
+    public void testMethodReturns() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package android.annotation;\n"
+                                        + "import static java.lang.annotation.ElementType.*;\n"
+                                        + "import java.lang.annotation.*;\n"
+                                        + "@Target({TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE})\n"
+                                        + "public @interface RequiresApi {\n"
+                                        + "    int value() default 1;\n"
+                                        + "    int api() default 1;\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package android.provider;\n"
+                                        + "import android.annotation.RequiresApi;\n"
+                                        + "public class MediaProvider {\n"
+                                        + "    @RequiresApi(32)\n"
+                                        + "    private String getExternalStorageProviderAuthorityFromDocumentsContract() {\n"
+                                        + "        return null;\n"
+                                        + "    }\n"
+                                        + "}"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,
