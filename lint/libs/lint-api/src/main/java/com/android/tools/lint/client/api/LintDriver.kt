@@ -3779,7 +3779,7 @@ class LintDriver(
             throwable: Throwable,
             sb: StringBuilder,
             skipFrames: Int = 0,
-            maxFrames: Int = 8
+            maxFrames: Int = 100
         ) {
             val stackTrace = throwable.stackTrace
             var count = 0
