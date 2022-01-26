@@ -19,6 +19,8 @@ package com.android.tools.agent.appinspection.testutils
 import android.os.Looper
 import org.junit.rules.ExternalResource
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * Applying this rule creates a thread that will be set up as the main
@@ -38,11 +40,15 @@ class MainLooperRule : ExternalResource() {
                 finishedLatch.countDown()
             }, "MainLooperThread"
         ).start()
-        preparedLatch.await()
+        if (!preparedLatch.await(10, TimeUnit.SECONDS)) {
+            throw TimeoutException("Looper didn't start up. Maybe it hung on a previous test.")
+        }
     }
 
     override fun after() {
         Looper.getMainLooper().quit()
-        finishedLatch.await()
+        if (!finishedLatch.await(10, TimeUnit.SECONDS)) {
+            throw TimeoutException("Looper didn't shut down, future tests may fail.")
+        }
     }
 }
