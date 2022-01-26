@@ -141,16 +141,16 @@ class AndroidXJetifierMatrixTest {
                 .with(BooleanOption.ENABLE_JETIFIER, false)
                 .ignoreSyncIssues().fetchAndroidProjects()
         expectSyncIssue(
-                model,
-                IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
-                IssueReporter.Severity.ERROR,
-                message = "Configuration `debugRuntimeClasspath` contains AndroidX dependencies, but the `android.useAndroidX` property is not enabled, which may cause runtime issues.\n" +
-                        "Set `android.useAndroidX=true` in the `gradle.properties` file and retry.\n" +
-                        "The following AndroidX dependencies are detected:\n" +
-                        "debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION\n" +
-                        "debugRuntimeClasspath -> depends-on-androidx:lib2:1.0 -> androidx.collection:collection:$ANDROIDX_VERSION",
-                data = "debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION," +
-                        "debugRuntimeClasspath -> depends-on-androidx:lib2:1.0 -> androidx.collection:collection:$ANDROIDX_VERSION"
+            model,
+            IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
+            IssueReporter.Severity.ERROR,
+            message = "Configuration `:debugRuntimeClasspath` contains AndroidX dependencies, but the `android.useAndroidX` property is not enabled, which may cause runtime issues.\n" +
+                    "Set `android.useAndroidX=true` in the `gradle.properties` file and retry.\n" +
+                    "The following AndroidX dependencies are detected:\n" +
+                    ":debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION\n" +
+                    ":debugRuntimeClasspath -> depends-on-androidx:lib2:1.0 -> androidx.collection:collection:$ANDROIDX_VERSION",
+            data = ":debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION," +
+                    ":debugRuntimeClasspath -> depends-on-androidx:lib2:1.0 -> androidx.collection:collection:$ANDROIDX_VERSION"
         )
     }
 
@@ -190,17 +190,17 @@ class AndroidXJetifierMatrixTest {
                 .with(BooleanOption.ENABLE_JETIFIER, false)
                 .ignoreSyncIssues().fetchAndroidProjects()
         expectSyncIssue(
-                model,
-                IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
-                IssueReporter.Severity.WARNING,
-                message = "Your project has set `android.useAndroidX=true`, but configuration `debugRuntimeClasspath` still contains legacy support libraries, which may cause runtime issues.\n" +
-                        "This behavior will not be allowed in Android Gradle plugin 8.0.\n" +
-                        "Please use only AndroidX dependencies or set `android.enableJetifier=true` in the `gradle.properties` file to migrate your project to AndroidX (see https://developer.android.com/jetpack/androidx/migrate for more info).\n" +
-                        "The following legacy support libraries are detected:\n" +
-                        "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION\n" +
-                        "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION",
-                data = "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION," +
-                        "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION"
+            model,
+            IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
+            IssueReporter.Severity.WARNING,
+            message = "Your project has set `android.useAndroidX=true`, but configuration `:debugRuntimeClasspath` still contains legacy support libraries, which may cause runtime issues.\n" +
+                    "This behavior will not be allowed in Android Gradle plugin 8.0.\n" +
+                    "Please use only AndroidX dependencies or set `android.enableJetifier=true` in the `gradle.properties` file to migrate your project to AndroidX (see https://developer.android.com/jetpack/androidx/migrate for more info).\n" +
+                    "The following legacy support libraries are detected:\n" +
+                    ":debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION\n" +
+                    ":debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION",
+            data = ":debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION," +
+                    ":debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION"
         )
     }
 
