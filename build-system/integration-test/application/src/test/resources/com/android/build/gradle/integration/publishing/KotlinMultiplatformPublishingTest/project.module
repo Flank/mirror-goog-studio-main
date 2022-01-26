@@ -1,0 +1,94 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.example",
+    "module": "project",
+    "version": "0.1.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "{GRADLE_VERSION}"
+    }
+  },
+  "variants": [
+    {
+      "name": "metadataApiElements",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "files": [
+        {
+          "name": "project-metadata-0.1.2.jar",
+          "url": "project-0.1.2.jar",
+          "size": {SIZE},
+          "sha512": "{DIGEST}",
+          "sha256": "{DIGEST}",
+          "sha1": "{DIGEST}",
+          "md5": "{DIGEST}"
+        }
+      ]
+    },
+    {
+      "name": "debugApiElements-published",
+      "attributes": {
+        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "com.android.build.api.attributes.BuildTypeAttr": "debug",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../project-android-debug/0.1.2/project-android-debug-0.1.2.module",
+        "group": "com.example",
+        "module": "project-android-debug",
+        "version": "0.1.2"
+      }
+    },
+    {
+      "name": "debugRuntimeElements-published",
+      "attributes": {
+        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "com.android.build.api.attributes.BuildTypeAttr": "debug",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../project-android-debug/0.1.2/project-android-debug-0.1.2.module",
+        "group": "com.example",
+        "module": "project-android-debug",
+        "version": "0.1.2"
+      }
+    },
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../project-android/0.1.2/project-android-0.1.2.module",
+        "group": "com.example",
+        "module": "project-android",
+        "version": "0.1.2"
+      }
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../project-android/0.1.2/project-android-0.1.2.module",
+        "group": "com.example",
+        "module": "project-android",
+        "version": "0.1.2"
+      }
+    }
+  ]
+}

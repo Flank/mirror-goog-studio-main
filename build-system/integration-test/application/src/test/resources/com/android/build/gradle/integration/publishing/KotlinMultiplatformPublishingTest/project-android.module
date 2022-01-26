@@ -1,0 +1,75 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../project/0.1.2/project-0.1.2.module",
+    "group": "com.example",
+    "module": "project",
+    "version": "0.1.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "{GRADLE_VERSION}"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "{KOTLIN_VERSION}"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "project-release.aar",
+          "url": "project-android-0.1.2.aar",
+          "size": {SIZE},
+          "sha512": "{DIGEST}",
+          "sha256": "{DIGEST}",
+          "sha1": "{DIGEST}",
+          "md5": "{DIGEST}"
+        }
+      ]
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "{KOTLIN_VERSION}"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "project-release.aar",
+          "url": "project-android-0.1.2.aar",
+          "size": {SIZE},
+          "sha512": "{DIGEST}",
+          "sha256": "{DIGEST}",
+          "sha1": "{DIGEST}",
+          "md5": "{DIGEST}"
+        }
+      ]
+    }
+  ]
+}
