@@ -32,6 +32,10 @@ public abstract class WearComponent extends AppComponent {
     public static class ShellCommand {
         public static final String GET_WEAR_DEBUG_SURFACE_VERSION =
                 "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation version";
+        public static final String DEBUG_SURFACE_SET_DEBUG_APP =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-debug-app --ecn component"; // + component name
+
+        public static final String AM_SET_DEBUG_APP = "am set-debug-app -w";
     }
 
     public static final class CommandResultReceiver extends MultiLineReceiver {
@@ -66,6 +70,49 @@ public abstract class WearComponent extends AppComponent {
             @NonNull ManifestAppComponentInfo info,
             @NonNull ILogger logger) {
         super(device, appId, info, logger);
+    }
+    public static class DebugCommandReceiver extends MultiLineReceiver {
+        private final @NotNull Pattern exceptionPattern = Pattern.compile("(Exception)");
+        private boolean exceptionStatus = false;
+        public boolean hasException() {
+            return exceptionStatus;
+        }
+
+        @Override
+        public void processNewLines(@NotNull String[] lines) {
+            for (String line : lines) {
+                Matcher matcher = exceptionPattern.matcher(line);
+                if (matcher.find()) {
+                    exceptionStatus = true;
+                }
+            }
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+    }
+
+    protected void setUpAmDebugApp()
+            throws DeployerException {
+        DebugCommandReceiver amReceiver = new DebugCommandReceiver();
+        runShellCommand(String.format("%s '%s'", ShellCommand.AM_SET_DEBUG_APP, appId), amReceiver);
+        if (amReceiver.hasException()) {
+            throw DeployerException.componentActivationException(
+                    "Activity Manager failed to set up the app for debugging.");
+        }
+    }
+
+    // Set up the app for debugging in the DebugSurface so that timeouts of SysUi and WCS can be
+    // increased accordingly (see go/wear-service-debug-timeout).
+    protected void setUpDebugSurfaceDebugApp() throws DeployerException {
+        CommandResultReceiver surfaceReceiver = new CommandResultReceiver();
+        runShellCommand(String.format("%s '%s'", ShellCommand.DEBUG_SURFACE_SET_DEBUG_APP, appId),
+                        surfaceReceiver);
+        if (surfaceReceiver.resultCode != CommandResultReceiver.SUCCESS_CODE) {
+            this.logger.warning("Warning: Debug Surface failed to set the debug app.");
+        }
     }
 
     protected void runStartCommand(

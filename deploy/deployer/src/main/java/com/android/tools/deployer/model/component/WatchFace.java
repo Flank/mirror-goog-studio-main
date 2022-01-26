@@ -35,8 +35,6 @@ public class WatchFace extends WearComponent {
                 "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation unset-watchface";
     }
 
-    static final String DEBUG_COMMAND = "am set-debug-app -w";
-
     public WatchFace(
             @NonNull ManifestServiceInfo info,
             @NonNull String appId,
@@ -57,9 +55,9 @@ public class WatchFace extends WearComponent {
                     activationMode.equals(Mode.DEBUG) ? "for debug" : "");
 
         if (activationMode.equals(Mode.DEBUG)) {
-            String debug_command = DEBUG_COMMAND + " '" + appId + "'";
-            logger.info("$ adb shell " + debug_command);
-            runShellCommand(debug_command, receiver);
+            setUpAmDebugApp();
+            // Watch faces are independent of SysUI and WCS implementations so setting the debug app
+            // in the Debug Surface as in case of the other surfaces is redundant.
         }
         String command = getStartWatchFaceCommand();
         runStartCommand(command, receiver, logger);
