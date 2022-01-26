@@ -73,6 +73,7 @@ import com.android.tools.lint.checks.VersionChecks.Companion.codeNameToApi
 import com.android.tools.lint.checks.VersionChecks.Companion.getVersionCheckConditional
 import com.android.tools.lint.checks.VersionChecks.Companion.isPrecededByVersionCheckExit
 import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
@@ -662,8 +663,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
-        return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type) ||
-            type == AnnotationUsageType.DEFINITION
+        return when (type) {
+            AnnotationUsageType.METHOD_CALL,
+            AnnotationUsageType.METHOD_REFERENCE,
+            AnnotationUsageType.FIELD_REFERENCE,
+            AnnotationUsageType.CLASS_REFERENCE,
+            AnnotationUsageType.ANNOTATION_REFERENCE,
+            AnnotationUsageType.EXTENDS,
+            AnnotationUsageType.DEFINITION -> true
+            else -> false
+        }
     }
 
     override fun inheritAnnotation(annotation: String): Boolean {
@@ -2510,12 +2519,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 fqcn == SDK_SUPPRESS_ANNOTATION ||
                 fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION ||
                 fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
-                fqcn == TARGET_API // with missing imports
+                fqcn == TARGET_API || // with missing imports
+                fqcn.startsWith(AndroidPlatformAnnotations.PLATFORM_ANNOTATIONS_PREFIX) &&
+                isTargetAnnotation(AndroidPlatformAnnotations.toAndroidxAnnotation(fqcn))
         }
 
         private fun isRequiresApiAnnotation(fqcn: String): Boolean {
             return REQUIRES_API_ANNOTATION.isEquals(fqcn) ||
-                fqcn == "RequiresApi" // With missing imports
+                fqcn == "RequiresApi" || // With missing imports
+                fqcn.startsWith(AndroidPlatformAnnotations.PLATFORM_ANNOTATIONS_PREFIX) &&
+                isRequiresApiAnnotation(AndroidPlatformAnnotations.toAndroidxAnnotation(fqcn))
         }
 
         /**
