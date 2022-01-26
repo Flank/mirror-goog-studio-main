@@ -50,18 +50,35 @@ class ResolutionResultUtilsTest {
     @Test
     fun `test getModuleComponents()`() {
         val foundModuleComponents = resolutionResult
-                .getModuleComponents { it.module == "c" }
-                .map { it.id.displayName }
+            .getModuleComponents { it.module == "c" }
+            .map { it.id.displayName }
         assertThat(foundModuleComponents).containsExactly("c:c:1")
     }
 
     @Test
-    fun `test getPathFromRoot()`() {
-        val moduleComponent = resolutionResult.getModuleComponents { it.module == "c" }.single()
-        val pathFromRoot = moduleComponent.getPathFromRoot().getPathString()
-        assertThat(
-                pathFromRoot == "root:root:1 -> c:c:1"
-                        || pathFromRoot == "root:root:1 -> a:a:1 -> c:c:1"
-        ).isTrue()
+    fun `test getPathToComponent()`() {
+        val component = resolutionResult.getModuleComponents { it.module == "c" }.single()
+        val pathToComponent = resolutionResult.getPathToComponent(component).getPathString()
+        assertThat(pathToComponent).isEqualTo("root:root:1 -> c:c:1")
+    }
+
+    /** Regression test for bug 184406667. */
+    @Test
+    fun `test getPathToComponent() with cyclic dependencies`() {
+        // Create this cyclic dependency graph: root -> a -> b -> c -> a
+        val root = createModuleComponent("root", "root", "1")
+        val a = createModuleComponent("a", "a", "1")
+        val b = createModuleComponent("b", "b", "1")
+        val c = createModuleComponent("c", "c", "1")
+        addDependencyEdge(a, b)
+        addDependencyEdge(b, c)
+        addDependencyEdge(c, a)
+        // Add this edge at the end so that the cycle appears first, which makes it easier for an
+        // incorrect algorithm to run into an infinite loop.
+        addDependencyEdge(root, a)
+        resolutionResult = FakeResolutionResult(root)
+
+        val pathToComponent = resolutionResult.getPathToComponent(c).getPathString()
+        assertThat(pathToComponent).isEqualTo("root:root:1 -> a:a:1 -> b:b:1 -> c:c:1")
     }
 }
