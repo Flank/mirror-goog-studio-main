@@ -76,11 +76,12 @@ set<K> GetKeys(const unordered_map<K, V> map) {
 bool ProfileableChecker::Check(int32_t pid, const string& package_name) const {
   BashCommandRunner tester{"/system/bin/cmd", true};
   std::ostringstream oss;
-  // Start method sampling at the sample interval of 30 minutes. We don't need
+  // Start method sampling at the sample interval of 1 second. We don't need
   // the data; we just check if the command would succeed. (The command line
   // argument is in microseconds. The maximum acceptable value is
-  // 2,147,483,647).
-  oss << "activity profile start --sampling 1800000000 " << package_name
+  // 2,147,483,647. However, a very long interval such as 30 minutes may
+  // add overhead to the process and system which leads to ANR.)
+  oss << "activity profile start --sampling 1000000 " << package_name
       << " /data/local/tmp/profileable_reporter.tmp 2>/dev/null";
   bool start_succeeded = tester.Run(oss.str(), nullptr);
   if (!start_succeeded) return false;
