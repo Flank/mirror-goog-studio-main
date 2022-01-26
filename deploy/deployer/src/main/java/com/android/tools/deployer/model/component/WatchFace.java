@@ -37,15 +37,12 @@ public class WatchFace extends AppComponent {
 
     static final String DEBUG_COMMAND = "am set-debug-app -w";
 
-    @NonNull private final ILogger logger;
-
     public WatchFace(
             @NonNull ManifestServiceInfo info,
             @NonNull String appId,
             @NonNull IDevice device, @NonNull ILogger logger
     ) {
-        super(device, appId, info);
-        this.logger = logger;
+        super(device, appId, info, logger);
     }
 
     @Override

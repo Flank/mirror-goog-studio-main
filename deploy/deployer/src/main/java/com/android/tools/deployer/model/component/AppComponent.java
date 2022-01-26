@@ -24,16 +24,19 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestAppComponentInfo;
+import com.android.utils.ILogger;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AppComponent {
 
-    protected final IDevice device;
+    @NonNull protected final IDevice device;
 
-    protected final String appId;
+    @NonNull protected final String appId;
 
-    protected final ManifestAppComponentInfo info;
+    @NonNull protected final ManifestAppComponentInfo info;
+
+    @NonNull protected final ILogger logger;
 
     // The timeout is quite large to accommodate ARM emulators.
     private final long SHELL_TIMEOUT = 15;
@@ -44,17 +47,22 @@ public abstract class AppComponent {
         return getFQEscapedName(appId, info.getQualifiedName());
     }
 
-    protected AppComponent(IDevice device, String appId, ManifestAppComponentInfo info) {
+    protected AppComponent(
+            @NonNull IDevice device,
+            @NonNull String appId,
+            @NonNull ManifestAppComponentInfo info,
+            @NonNull ILogger logger) {
         this.device = device;
         this.appId = appId;
         this.info = info;
+        this.logger = logger;
     }
 
     public abstract void activate(
             @NonNull String extraFlags, Mode activationMode, @NonNull IShellOutputReceiver receiver)
             throws DeployerException;
 
-    protected void runShellCommand(String command, IShellOutputReceiver receiver)
+    protected void runShellCommand(@NonNull String command, @NonNull IShellOutputReceiver receiver)
             throws DeployerException {
         try {
             device.executeShellCommand(command, receiver, SHELL_TIMEOUT, SHELL_TIMEUNIT);
