@@ -69,8 +69,12 @@ class HttpUrlTest {
         inspectorRule.inspector.onReceiveCommand(NetworkInspectorProtocol.Command.newBuilder()
             .apply {
                 interceptCommandBuilder.apply {
-                    url = FAKE_URL.toExternalForm()
-                    responseBody = "InterceptedBody"
+                    interceptRuleAddedBuilder.apply {
+                        ruleBuilder.apply {
+                            url = FAKE_URL.toExternalForm()
+                            responseBody = "InterceptedBody"
+                        }
+                    }
                 }
             }
             .build()

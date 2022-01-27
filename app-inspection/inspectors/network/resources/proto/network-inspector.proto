@@ -89,8 +89,29 @@ message StartInspectionCommand {
 }
 
 message InterceptCommand {
-    string url = 1;
+    oneof union {
+        InterceptRuleAdded intercept_rule_added = 1;
+        InterceptRuleUpdated intercept_rule_updated = 2;
+        InterceptRuleRemoved intercept_rule_removed = 3;
+    }
+}
 
+message InterceptRuleAdded {
+    int32 rule_id = 1;
+    InterceptRule rule = 2;
+}
+
+message InterceptRuleUpdated {
+    int32 rule_id = 1;
+    InterceptRule rule = 2;
+}
+
+message InterceptRuleRemoved {
+    int32 rule_id = 1;
+}
+
+message InterceptRule {
+    string url = 1;
     string response_body = 2;
 }
 
