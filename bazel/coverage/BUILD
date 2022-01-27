@@ -905,6 +905,7 @@ coverage_report(
         "//tools/adt/idea/utp:utp_tests",
         "//tools/adt/idea/wear-pairing:intellij.android.wear-pairing.tests_tests",
         "//tools/adt/idea/whats-new-assistant:whats-new-assistant-test_tests",
+        "//tools/adt/idea/wizard:intellij.android.wizard.tests_tests",
         "//tools/adt/idea/wizard-model:intellij.android.wizard.model_tests",
         "//tools/analytics-library/crash:analytics-crash_tests",
         "//tools/analytics-library/crash:tools.analytics-crash_tests.test",
