@@ -13,335 +13,284 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.SdkConstants.FD_RES_VALUES;
-import static com.android.build.gradle.internal.TaskManager.MergeType.MERGE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
-import static com.android.ide.common.resources.AndroidAaptIgnoreKt.ANDROID_AAPT_IGNORE;
-import static com.google.common.base.Preconditions.checkState;
-
-import android.databinding.tool.LayoutXmlProcessor;
-import android.databinding.tool.util.RelativizableFile;
-import android.databinding.tool.writer.JavaFileWriter;
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.gradle.internal.DependencyResourcesComputer;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
-import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.databinding.MergingFileLookup;
-import com.android.build.gradle.internal.errors.MessageReceiverImpl;
-import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.Aapt2Input;
-import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
-import com.android.build.gradle.internal.services.BuildServicesKt;
-import com.android.build.gradle.internal.tasks.Blocks;
-import com.android.build.gradle.internal.tasks.NewIncrementalTask;
-import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.model.VectorDrawablesOptions;
-import com.android.builder.png.VectorDrawableRenderer;
-import com.android.ide.common.blame.MergingLog;
-import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService;
-import com.android.ide.common.resources.FileValidity;
-import com.android.ide.common.resources.GeneratedResourceSet;
-import com.android.ide.common.resources.MergedResourceWriter;
-import com.android.ide.common.resources.MergedResourceWriterRequest;
-import com.android.ide.common.resources.MergingException;
-import com.android.ide.common.resources.NoOpResourcePreprocessor;
-import com.android.ide.common.resources.RelativeResourceUtils;
-import com.android.ide.common.resources.ResourceCompilationService;
-import com.android.ide.common.resources.ResourceMerger;
-import com.android.ide.common.resources.ResourcePreprocessor;
-import com.android.ide.common.resources.ResourceSet;
-import com.android.ide.common.resources.SingleFileProcessor;
-import com.android.ide.common.vectordrawable.ResourcesNotSupportedException;
-import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.android.resources.Density;
-import com.android.utils.FileUtils;
-import com.android.utils.ILogger;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import javax.xml.bind.JAXBException;
-import org.gradle.api.GradleException;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.SetProperty;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.work.FileChange;
-import org.gradle.work.InputChanges;
+import android.databinding.tool.LayoutXmlProcessor
+import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
+import android.databinding.tool.util.RelativizableFile
+import android.databinding.tool.writer.JavaFileWriter
+import com.android.SdkConstants
+import com.android.build.gradle.internal.DependencyResourcesComputer
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.databinding.MergingFileLookup
+import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.res.namespaced.NamespaceRemover
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER
+import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.Blocks
+import com.android.build.gradle.internal.tasks.NewIncrementalTask
+import com.android.build.gradle.internal.tasks.Workers.withGradleWorkers
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.SyncOptions
+import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
+import com.android.builder.png.VectorDrawableRenderer
+import com.android.ide.common.blame.MergingLog
+import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
+import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService
+import com.android.ide.common.resources.FileValidity
+import com.android.ide.common.resources.GeneratedResourceSet
+import com.android.ide.common.resources.MergedResourceWriter
+import com.android.ide.common.resources.MergedResourceWriterRequest
+import com.android.ide.common.resources.MergingException
+import com.android.ide.common.resources.NoOpResourcePreprocessor
+import com.android.ide.common.resources.ResourceCompilationService
+import com.android.ide.common.resources.ResourceMerger
+import com.android.ide.common.resources.ResourcePreprocessor
+import com.android.ide.common.resources.ResourceSet
+import com.android.ide.common.resources.SingleFileProcessor
+import com.android.ide.common.resources.getIdentifiedSourceSetMap
+import com.android.ide.common.vectordrawable.ResourcesNotSupportedException
+import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.resources.Density
+import com.android.utils.FileUtils
+import com.android.utils.ILogger
+import com.google.common.base.Preconditions
+import com.google.common.collect.Iterables
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
+import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.FileChange
+import org.gradle.work.InputChanges
+import java.io.File
+import java.io.IOException
+import java.util.Locale
+import java.util.function.Supplier
+import java.util.stream.Collectors
+import javax.xml.bind.JAXBException
 
 @CacheableTask
-public abstract class MergeResources extends NewIncrementalTask {
+abstract class MergeResources : NewIncrementalTask() {
     // ----- PUBLIC TASK API -----
-
-    /** Directory to write the merged resources to */
-    @OutputDirectory
-    @Optional
-    public abstract DirectoryProperty getGeneratedPngsOutputDir();
+    /** Directory to write the merged resources to  */
+    @get:Optional
+    @get:OutputDirectory
+    abstract val generatedPngsOutputDir: DirectoryProperty
 
     // ----- PRIVATE TASK API -----
-
     /**
      * Optional file to write any publicly imported resource types and names to
      */
-    private boolean processResources;
+    @get:Input
+    var processResources = false
+        private set
 
-    private boolean crunchPng;
+    @get:Input
+    var crunchPng = false
+        private set
 
-    private List<ResourceSet> processedInputs;
+    private var processedInputs: MutableList<ResourceSet> = mutableListOf()
+    private val fileValidity = FileValidity<ResourceSet>()
+    private var disableVectorDrawables = false
 
-    private final FileValidity<ResourceSet> fileValidity = new FileValidity<>();
+    @get:Input
+    var isVectorSupportLibraryUsed = false
+        private set
 
-    private boolean disableVectorDrawables;
+    @get:Input
+    var generatedDensities: Collection<String>? = null
+        private set
+    private var mergedNotCompiledResourcesOutputDirectory: File? = null
+    private var precompileDependenciesResources = false
+    private var flags: Set<Flag>? = null
 
-    private boolean vectorSupportLibraryIsUsed;
+    @get:Nested
+    abstract val resourcesComputer: DependencyResourcesComputer
 
-    private Collection<String> generatedDensities;
+    @get:Input
+    abstract val dataBindingEnabled: Property<Boolean>
 
-    @Nullable private File mergedNotCompiledResourcesOutputDirectory;
+    @get:Input
+    abstract val viewBindingEnabled: Property<Boolean>
 
-    private boolean precompileDependenciesResources;
+    @get:Optional
+    @get:Input
+    abstract val namespace: Property<String>
 
-    private ImmutableSet<Flag> flags;
+    @get:Optional
+    @get:Input
+    abstract val useAndroidX: Property<Boolean>
 
-    @Nested
-    public abstract DependencyResourcesComputer getResourcesComputer();
-
-    @Input
-    public abstract Property<Boolean> getDataBindingEnabled();
-
-    @Input
-    public abstract Property<Boolean> getViewBindingEnabled();
-
-    @Input
-    @Optional
-    public abstract Property<String> getNamespace();
-
-    @Input
-    @Optional
-    public abstract Property<Boolean> getUseAndroidX();
-
-    @Nested
-    public abstract SourceSetInputs getSourceSetInputs();
+    @get:Nested
+    abstract val sourceSetInputs: SourceSetInputs
 
     /**
-     * Set of absolute paths to resource directories that are located outside of the root project
+     * Set of absolute paths to resource directories that are located outside the root project
      * directory when data binding / view binding is enabled.
      *
-     * <p>These absolute paths appear in the layout info files generated by data binding, so we have
+     *
+     * These absolute paths appear in the layout info files generated by data binding, so we have
      * to mark them as @Input to ensure build correctness. (If this set is not empty, this task is
      * still cacheable but not relocatable.)
      *
-     * <p>If data binding / view binding is not enabled, this set is empty as it won't be used.
+     *
+     * If data binding / view binding is not enabled, this set is empty as it won't be used.
      */
-    @Input
-    public abstract SetProperty<String> getResourceDirsOutsideRootProjectDir();
+    @get:Input
+    abstract val resourceDirsOutsideRootProjectDir: SetProperty<String>
 
-    @Input
-    public abstract Property<Boolean> getRelativePathsEnabled();
+    @get:Input
+    abstract val relativePathsEnabled: Property<Boolean>
 
-    @Input
-    public abstract Property<Boolean> getPseudoLocalesEnabled();
+    @get:Input
+    abstract val pseudoLocalesEnabled: Property<Boolean>
 
-    @Internal
-    public abstract Property<Aapt2ThreadPoolBuildService> getAapt2ThreadPoolBuildService();
+    @get:Internal
+    abstract val aapt2ThreadPoolBuildService: Property<Aapt2ThreadPoolBuildService>
 
-    @Nested
-    public abstract Aapt2Input getAapt2();
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract DirectoryProperty getRenderscriptGeneratedResDir();
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    @get:InputFiles
+    abstract val renderscriptGeneratedResDir: DirectoryProperty
 
-    @NonNull
-    private static ResourceCompilationService getResourceProcessor(
-            @NonNull MergeResources mergeResourcesTask,
-            ImmutableSet<Flag> flags,
-            boolean processResources,
-            Aapt2Input aapt2Input) {
-        // If we received the flag for removing namespaces we need to use the namespace remover to
-        // process the resources.
-        if (flags.contains(Flag.REMOVE_RESOURCE_NAMESPACES)) {
-            return NamespaceRemover.INSTANCE;
-        }
+    @get:Internal
+    val aaptWorkerFacade: WorkerExecutorFacade
+        get() = withGradleWorkers(projectPath.get(), path, workerExecutor, analyticsService)
 
-        // If we're not removing namespaces and there's no need to compile the resources, return a
-        // no-op resource processor.
-        if (!processResources) {
-            return CopyToOutputDirectoryResourceCompilationService.INSTANCE;
-        }
+    @get:Optional
+    @get:OutputDirectory
+    abstract val dataBindingLayoutInfoOutFolder: DirectoryProperty
+    private var errorFormatMode: ErrorFormatMode? = null
 
-        return new WorkerExecutorResourceCompilationService(
-                mergeResourcesTask.getProjectPath(),
-                mergeResourcesTask.getPath(),
-                mergeResourcesTask.getWorkerExecutor(),
-                mergeResourcesTask.getAnalyticsService(),
-                aapt2Input);
-    }
+    @get:Internal
+    abstract val aaptEnv: Property<String?>
 
-    @Internal
-    @NonNull
-    public WorkerExecutorFacade getAaptWorkerFacade() {
-        return Workers.INSTANCE.withGradleWorkers(getProjectPath().get(), getPath(), getWorkerExecutor(), getAnalyticsService());
-    }
+    @get:Internal
+    abstract val projectRootDir: DirectoryProperty
 
-    @NonNull
-    @OutputDirectory
-    @Optional
-    public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
-
-    private SyncOptions.ErrorFormatMode errorFormatMode;
-
-    @Internal
-    public abstract Property<String> getAaptEnv();
-
-    @Internal
-    public abstract DirectoryProperty getProjectRootDir();
-
-    protected void doFullTaskAction() throws IOException, JAXBException {
-        ResourcePreprocessor preprocessor = getPreprocessor();
-        File incrementalFolder = getIncrementalFolder().get().getAsFile();
+    @Throws(IOException::class, JAXBException::class)
+    protected fun doFullTaskAction() {
+        val preprocessor = preprocessor
+        val incrementalFolder = incrementalFolder.get().asFile
 
         // this is full run, clean the previous outputs
-        File destinationDir = getOutputDir().get().getAsFile();
-        FileUtils.cleanOutputDir(destinationDir);
-        if (getDataBindingLayoutInfoOutFolder().isPresent()) {
+        val destinationDir = outputDir.get().asFile
+        FileUtils.cleanOutputDir(destinationDir)
+        if (dataBindingLayoutInfoOutFolder.isPresent) {
             FileUtils.deleteDirectoryContents(
-                    getDataBindingLayoutInfoOutFolder().get().getAsFile());
+                dataBindingLayoutInfoOutFolder.get().asFile
+            )
         }
-
-        List<ResourceSet> resourceSets =
-                getConfiguredResourceSets(preprocessor, getAaptEnv().getOrNull());
+        val resourceSets = getConfiguredResourceSets(preprocessor, aaptEnv.orNull)
 
         // create a new merger and populate it with the sets.
-        ResourceMerger merger = new ResourceMerger(getMinSdk().get());
-        MergingLog mergingLog = null;
-        if (getBlameLogOutputFolder().isPresent()) {
-            File blameLogFolder = getBlameLogOutputFolder().get().getAsFile();
-            FileUtils.cleanOutputDir(blameLogFolder);
-            mergingLog = new MergingLog(blameLogFolder);
+        val merger = ResourceMerger(minSdk.get())
+        var mergingLog: MergingLog? = null
+        if (blameLogOutputFolder.isPresent) {
+            val blameLogFolder = blameLogOutputFolder.get().asFile
+            FileUtils.cleanOutputDir(blameLogFolder)
+            mergingLog = MergingLog(blameLogFolder)
         }
-
-        try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
-                ResourceCompilationService resourceCompiler =
-                        getResourceProcessor(
-                                this,
-                                flags,
-                                processResources,
-                                getAapt2())) {
-
-            SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
-
-            Blocks.recordSpan(
-                    getPath(),
-                    GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_1,
-                    getAnalyticsService().get(),
-                    () -> {
-                        for (ResourceSet resourceSet : resourceSets) {
-                            resourceSet.loadFromFiles(new LoggerWrapper(getLogger()));
-                            merger.addDataSet(resourceSet);
+        try {
+            aaptWorkerFacade.use { workerExecutorFacade ->
+                getResourceProcessor(
+                    this,
+                    flags,
+                    processResources,
+                    aapt2
+                ).use { resourceCompiler ->
+                    val dataBindingLayoutProcessor = maybeCreateLayoutProcessor()
+                    Blocks.recordSpan<MergingException>(
+                        path,
+                        GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_1,
+                        analyticsService.get()
+                    ) {
+                        for (resourceSet in resourceSets) {
+                            resourceSet.loadFromFiles(LoggerWrapper(logger))
+                            merger.addDataSet(resourceSet)
                         }
-                    });
+                    }
+                    val publicFile = if (publicFile.isPresent) publicFile.get().asFile else null
+                    val sourceSetPaths =
+                        getRelativeSourceSetMap(resourceSets, destinationDir, incrementalFolder)
+                    val writer = MergedResourceWriter(
+                        MergedResourceWriterRequest(
+                            workerExecutor = workerExecutorFacade,
+                            rootFolder = destinationDir,
+                            publicFile = publicFile,
+                            blameLog = mergingLog,
+                            preprocessor = preprocessor,
+                            resourceCompilationService = resourceCompiler,
+                            temporaryDirectory = incrementalFolder,
+                            dataBindingExpressionRemover = dataBindingLayoutProcessor,
+                            notCompiledOutputDirectory = mergedNotCompiledResourcesOutputDirectory,
+                            pseudoLocalesEnabled = pseudoLocalesEnabled.get(),
+                            crunchPng = crunchPng,
+                            moduleSourceSets = sourceSetPaths
+                        )
+                    )
+                    Blocks.recordSpan<MergingException>(
+                        path,
+                        GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_2,
+                        analyticsService.get()
+                    ) { merger.mergeData(writer, false /*doCleanUp*/) }
+                    Blocks.recordSpan<JAXBException>(
+                        path,
+                        GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_3,
+                        analyticsService.get()
+                    ) { dataBindingLayoutProcessor?.end() }
 
-            File publicFile =
-                    getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
-
-            Map<String, String> sourceSetPaths =
-                    getRelativeSourceSetMap(resourceSets, destinationDir, incrementalFolder);
-
-            MergedResourceWriter writer =
-                    new MergedResourceWriter(
-                            new MergedResourceWriterRequest(
-                                    workerExecutorFacade,
-                                    destinationDir,
-                                    publicFile,
-                                    mergingLog,
-                                    preprocessor,
-                                    resourceCompiler,
-                                    incrementalFolder,
-                                    dataBindingLayoutProcessor,
-                                    mergedNotCompiledResourcesOutputDirectory,
-                                    getPseudoLocalesEnabled().get(),
-                                    getCrunchPng(),
-                                    sourceSetPaths));
-
-            Blocks.recordSpan(
-                    getPath(),
-                    GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_2,
-                    getAnalyticsService().get(),
-                    () -> merger.mergeData(writer, false /*doCleanUp*/));
-
-            Blocks.recordSpan(
-                    getPath(),
-                    GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_3,
-                    getAnalyticsService().get(),
-                    () -> {
-                        if (dataBindingLayoutProcessor != null) {
-                            dataBindingLayoutProcessor.end();
-                        }
-                    });
-
-            // No exception? Write the known state.
-            Blocks.recordSpan(
-                    getPath(),
-                    GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_4,
-                    getAnalyticsService().get(),
-                    () -> merger.writeBlobTo(incrementalFolder, writer, false));
-        } catch (Exception e) {
+                    // No exception? Write the known state.
+                    Blocks.recordSpan<MergingException>(
+                        path,
+                        GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_4,
+                        analyticsService.get()
+                    ) { merger.writeBlobTo(incrementalFolder, writer, false) }
+                }
+            }
+        } catch (e: Exception) {
             MergingException.findAndReportMergingException(
-                    e, new MessageReceiverImpl(errorFormatMode, getLogger()));
+                e, MessageReceiverImpl(errorFormatMode!!, logger)
+            )
             try {
-                throw e;
-            } catch (MergingException mergingException) {
-                merger.cleanBlob(incrementalFolder);
-                throw new ResourceException(mergingException.getMessage(), mergingException);
+                throw e
+            } catch (mergingException: MergingException) {
+                merger.cleanBlob(incrementalFolder)
+                throw ResourceException(mergingException.message, mergingException)
             }
         } finally {
-            cleanup();
+            cleanup()
         }
     }
 
@@ -349,410 +298,412 @@ public abstract class MergeResources extends NewIncrementalTask {
      * Check if the changed file is filtered out from the input to be compiled in compile library
      * resources task, if it is then it should be ignored.
      */
-    private boolean isFilteredOutLibraryResource(File changedFile) {
-        FileCollection localLibraryResources = getResourcesComputer().getLibrarySourceSets();
-        File parentFile = changedFile.getParentFile();
-        if (parentFile.getName().startsWith(FD_RES_VALUES)) {
-            return false;
+    private fun isFilteredOutLibraryResource(changedFile: File): Boolean {
+        val localLibraryResources: FileCollection = resourcesComputer.librarySourceSets
+        val parentFile = changedFile.parentFile
+        if (parentFile.name.startsWith(SdkConstants.FD_RES_VALUES)) {
+            return false
         }
-        for (File resDir : localLibraryResources.getFiles()) {
-            if (parentFile.getAbsolutePath().startsWith(resDir.getAbsolutePath())) {
-                return true;
+        for (resDir in localLibraryResources.files) {
+            if (parentFile.absolutePath.startsWith(resDir.absolutePath)) {
+                return true
             }
         }
-        return false;
+        return false
     }
 
-    @Override
-    public void doTaskAction(@NonNull InputChanges changedInputs) {
-        if (!changedInputs.isIncremental()) {
+    override fun doTaskAction(inputChanges: InputChanges) {
+        if (!inputChanges.isIncremental) {
             try {
-                getLogger().info("[MergeResources] Inputs are non-incremental full task action.");
-                doFullTaskAction();
-            } catch (IOException | JAXBException e) {
-                throw new RuntimeException(e);
+                logger.info("[MergeResources] Inputs are non-incremental full task action.")
+                doFullTaskAction()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            } catch (e: JAXBException) {
+                throw RuntimeException(e)
             }
-            return;
+            return
         }
-
-        ResourcePreprocessor preprocessor = getPreprocessor();
-        File incrementalFolder = getIncrementalFolder().get().getAsFile();
-
-        List<FileChange> thisProjectResourceChanges = new ArrayList<>();
-        for (DependencyResourcesComputer.ResourceSourceSetInput input:
-                getResourcesComputer().getResources().get().values()) {
-            Iterable<FileChange> changes =
-                    changedInputs.getFileChanges(input.getSourceDirectories());
-            Iterables.addAll(thisProjectResourceChanges, changes);
+        val preprocessor = preprocessor
+        val incrementalFolder = incrementalFolder.get().asFile
+        val thisProjectResourceChanges: List<FileChange> = ArrayList()
+        for (input in resourcesComputer.resources.get().values) {
+            val changes: Iterable<FileChange> =
+                inputChanges.getFileChanges(input.sourceDirectories)
+            Iterables.addAll(thisProjectResourceChanges, changes)
         }
-
-        Iterable<FileChange> libraryResourceChanges =
-                changedInputs.getFileChanges(getResourcesComputer().getLibrarySourceSets());
+        val libraryResourceChanges = inputChanges.getFileChanges(
+            resourcesComputer.librarySourceSets
+        )
         if (!thisProjectResourceChanges.iterator().hasNext()
-                && !libraryResourceChanges.iterator().hasNext()) {
-            return;
+            && !libraryResourceChanges.iterator().hasNext()
+        ) {
+            return
         }
         // create a merger and load the known state.
-        ResourceMerger merger = new ResourceMerger(getMinSdk().get());
+        val merger = ResourceMerger(minSdk.get())
         try {
             if (!merger.loadFromBlob(
-                    incrementalFolder, true /*incrementalState*/, getAaptEnv().getOrNull())) {
-                getLogger()
-                        .info("[MergeResources] Blob cannot be loaded causing a full task action.");
-                doFullTaskAction();
-                return;
+                    incrementalFolder, true /*incrementalState*/, aaptEnv.orNull
+                )
+            ) {
+                logger
+                    .info("[MergeResources] Blob cannot be loaded causing a full task action.")
+                doFullTaskAction()
+                return
             }
-
-            for (ResourceSet resourceSet : merger.getDataSets()) {
-                resourceSet.setPreprocessor(preprocessor);
+            for (resourceSet in merger.dataSets) {
+                resourceSet.setPreprocessor(preprocessor)
             }
-
-            List<ResourceSet> resourceSets =
-                    getConfiguredResourceSets(preprocessor, getAaptEnv().getOrNull());
+            val resourceSets = getConfiguredResourceSets(preprocessor, aaptEnv.orNull)
 
             // compare the known state to the current sets to detect incompatibility.
             // This is in case there's a change that's too hard to do incrementally. In this case
             // we'll simply revert to full build.
             if (!merger.checkValidUpdate(resourceSets)) {
-                getLogger().info("Changed Resource sets: full task run!");
-                doFullTaskAction();
-                return;
+                logger.info("Changed Resource sets: full task run!")
+                doFullTaskAction()
+                return
             }
 
             // The incremental process is the following:
             // Loop on all the changed files, find which ResourceSet it belongs to, then ask
             // the resource set to update itself with the new file.
-            for (FileChange entry : thisProjectResourceChanges) {
+            for (entry in thisProjectResourceChanges) {
                 if (!precompileDependenciesResources
-                        || !isFilteredOutLibraryResource(entry.getFile())) {
+                    || !isFilteredOutLibraryResource(entry.file)
+                ) {
                     if (!tryUpdateResourceSetsWithChangedFile(merger, entry)) {
-                        doFullTaskAction();
-                        return;
+                        doFullTaskAction()
+                        return
                     }
                 }
             }
-            for (FileChange entry : libraryResourceChanges) {
+            for (entry in libraryResourceChanges) {
                 if (!precompileDependenciesResources
-                        || !isFilteredOutLibraryResource(entry.getFile())) {
+                    || !isFilteredOutLibraryResource(entry.file)
+                ) {
                     if (!tryUpdateResourceSetsWithChangedFile(merger, entry)) {
-                        doFullTaskAction();
-                        return;
+                        doFullTaskAction()
+                        return
                     }
                 }
             }
+            val mergingLog = if (blameLogOutputFolder.isPresent) MergingLog(
+                blameLogOutputFolder.get().asFile
+            ) else null
+            aaptWorkerFacade.use { workerExecutorFacade ->
+                getResourceProcessor(
+                    this,
+                    flags,
+                    processResources,
+                    aapt2
+                ).use { resourceCompiler ->
+                    val dataBindingLayoutProcessor = maybeCreateLayoutProcessor()
+                    val publicFile = if (publicFile.isPresent) publicFile.get().asFile else null
+                    val destinationDir = outputDir.get().asFile
+                    val sourceSetPaths =
+                        getRelativeSourceSetMap(resourceSets, destinationDir, incrementalFolder)
+                    val writer = MergedResourceWriter(
+                        MergedResourceWriterRequest(
+                            workerExecutorFacade,
+                            destinationDir,
+                            publicFile,
+                            mergingLog,
+                            preprocessor,
+                            resourceCompiler,
+                            incrementalFolder,
+                            dataBindingLayoutProcessor,
+                            mergedNotCompiledResourcesOutputDirectory,
+                            pseudoLocalesEnabled.get(),
+                            crunchPng,
+                            sourceSetPaths
+                        )
+                    )
+                    merger.mergeData(writer, false /*doCleanUp*/)
+                    dataBindingLayoutProcessor?.end()
 
-            MergingLog mergingLog =
-                    getBlameLogOutputFolder().isPresent()
-                            ? new MergingLog(getBlameLogOutputFolder().get().getAsFile())
-                            : null;
-
-            try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
-                    ResourceCompilationService resourceCompiler =
-                            getResourceProcessor(
-                                    this,
-                                    flags,
-                                    processResources,
-                                    getAapt2())) {
-
-                SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
-
-                File publicFile =
-                        getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
-                File destinationDir = getOutputDir().get().getAsFile();
-                Map<String, String> sourceSetPaths =
-                        getRelativeSourceSetMap(resourceSets, destinationDir, incrementalFolder);
-
-                MergedResourceWriter writer =
-                        new MergedResourceWriter(
-                                new MergedResourceWriterRequest(
-                                        workerExecutorFacade,
-                                        destinationDir,
-                                        publicFile,
-                                        mergingLog,
-                                        preprocessor,
-                                        resourceCompiler,
-                                        incrementalFolder,
-                                        dataBindingLayoutProcessor,
-                                        mergedNotCompiledResourcesOutputDirectory,
-                                        getPseudoLocalesEnabled().get(),
-                                        getCrunchPng(),
-                                        sourceSetPaths));
-
-                merger.mergeData(writer, false /*doCleanUp*/);
-
-                if (dataBindingLayoutProcessor != null) {
-                    dataBindingLayoutProcessor.end();
+                    // No exception? Write the known state.
+                    merger.writeBlobTo(incrementalFolder, writer, false)
                 }
-
-                // No exception? Write the known state.
-                merger.writeBlobTo(incrementalFolder, writer, false);
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
             MergingException.findAndReportMergingException(
-                    e, new MessageReceiverImpl(errorFormatMode, getLogger()));
+                e, MessageReceiverImpl(errorFormatMode!!, logger)
+            )
             try {
-                throw e;
-            } catch (MergingException mergingException) {
-                merger.cleanBlob(incrementalFolder);
-                throw new ResourceException(mergingException.getMessage(), mergingException);
-            } catch (Exception runTimeException) {
-                throw new RuntimeException(runTimeException);
+                throw e
+            } catch (mergingException: MergingException) {
+                merger.cleanBlob(incrementalFolder)
+                throw ResourceException(mergingException.message, mergingException)
+            } catch (runTimeException: Exception) {
+                throw RuntimeException(runTimeException)
             }
         } finally {
-            cleanup();
+            cleanup()
         }
     }
 
-    private boolean tryUpdateResourceSetsWithChangedFile(ResourceMerger merger, FileChange entry)
-            throws MergingException {
-        File changedFile = entry.getFile();
-
-        merger.findDataSetContaining(changedFile, fileValidity);
-        if (fileValidity.getStatus() == FileValidity.FileStatus.UNKNOWN_FILE) {
-            getLogger()
-                    .info(
-                            "[MergeResources] "
-                                    + changedFile.getAbsolutePath()
-                                    + " has an unknown file status, requiring full task run.");
-            return false;
-        } else if (fileValidity.getStatus() == FileValidity.FileStatus.VALID_FILE) {
+    @Throws(MergingException::class)
+    private fun tryUpdateResourceSetsWithChangedFile(
+        merger: ResourceMerger,
+        entry: FileChange
+    ): Boolean {
+        val changedFile = entry.file
+        merger.findDataSetContaining(changedFile, fileValidity)
+        if (fileValidity.status == FileValidity.FileStatus.UNKNOWN_FILE) {
+            logger
+                .info(
+                    "[MergeResources] "
+                            + changedFile.absolutePath
+                            + " has an unknown file status, requiring full task run."
+                )
+            return false
+        } else if (fileValidity.status == FileValidity.FileStatus.VALID_FILE) {
             if (!fileValidity
-                    .getDataSet()
+                    .dataSet
                     .updateWith(
-                            fileValidity.getSourceFile(),
-                            changedFile,
-                            IncrementalChangesUtils.toSerializable(entry.getChangeType()),
-                            new LoggerWrapper(getLogger()))) {
-                getLogger()
-                        .info(
-                                String.format(
-                                        "[MergeResources] Failed to process %s event! "
-                                                + "Requires full task run",
-                                        entry.getChangeType()));
-                return false;
+                        fileValidity.sourceFile,
+                        changedFile,
+                        entry.changeType.toSerializable(),
+                        LoggerWrapper(logger)
+                    )
+            ) {
+                logger
+                    .info(
+                        String.format(
+                            "[MergeResources] Failed to process %s event! "
+                                    + "Requires full task run",
+                            entry.changeType
+                        )
+                    )
+                return false
             }
         }
-        return true;
+        return true
     }
 
-    @NonNull
-    private Map<String, String> getRelativeSourceSetMap(
-            List<ResourceSet> resourceSets, File destinationDir, File incrementalFolder) {
-        if (!getRelativePathsEnabled().get()) {
-            return Collections.emptyMap();
+    private fun getRelativeSourceSetMap(
+        resourceSets: List<ResourceSet>, destinationDir: File, incrementalFolder: File
+    ): Map<String, String> {
+        if (!relativePathsEnabled.get()) {
+            return emptyMap()
         }
-        List<File> sourceSets = Lists.newArrayList();
-        for (ResourceSet sourceSet : resourceSets) {
-            sourceSets.addAll(sourceSet.getSourceFiles());
+        val sourceSets: MutableList<File> =
+            resourceSets.flatMap(ResourceSet::getSourceFiles).toMutableList()
+
+        if (generatedPngsOutputDir.isPresent) {
+            sourceSets.add(generatedPngsOutputDir.get().asFile)
         }
-        if (getGeneratedPngsOutputDir().isPresent()) {
-            sourceSets.add(getGeneratedPngsOutputDir().get().getAsFile());
-        }
-        sourceSets.add(destinationDir);
-        sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_MERGED_DOT_DIR));
-        sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_STRIPPED_DOT_DIR));
-        return RelativeResourceUtils.getIdentifiedSourceSetMap(
-                sourceSets, getNamespace().get(), getProjectPath().get());
+        sourceSets.add(destinationDir)
+        sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_MERGED_DOT_DIR))
+        sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_STRIPPED_DOT_DIR))
+        return getIdentifiedSourceSetMap(sourceSets, namespace.get(), projectPath.get())
     }
 
-    @Nullable
-    private SingleFileProcessor maybeCreateLayoutProcessor() {
-        if (!getDataBindingEnabled().get() && !getViewBindingEnabled().get()) {
-            return null;
+    private fun maybeCreateLayoutProcessor(): SingleFileProcessor? {
+        if (!dataBindingEnabled.get() && !viewBindingEnabled.get()) {
+            return null
         }
-
-        LayoutXmlProcessor.OriginalFileLookup fileLookup;
-        if (getBlameLogOutputFolder().isPresent()) {
-            fileLookup = new MergingFileLookup(getBlameLogOutputFolder().get().getAsFile());
+        val fileLookup: OriginalFileLookup = if (blameLogOutputFolder.isPresent) {
+            MergingFileLookup(blameLogOutputFolder.get().asFile)
         } else {
-            fileLookup = file -> null;
+            OriginalFileLookup { null }
         }
+        val processor = LayoutXmlProcessor(
+            namespace.get(),
+            object : JavaFileWriter() {
+                // These methods are not supposed to be used, they are here only because
+                // the superclass requires an implementation of it.
+                // Whichever is calling this method is probably using it incorrectly
+                // (see stacktrace).
+                override fun writeToFile(canonicalName: String, contents: String) {
+                    throw UnsupportedOperationException(
+                        "Not supported in this mode"
+                    )
+                }
 
-        final LayoutXmlProcessor processor =
-                new LayoutXmlProcessor(
-                        getNamespace().get(),
-                        new JavaFileWriter() {
-                            // These methods are not supposed to be used, they are here only because
-                            // the superclass requires an implementation of it.
-                            // Whichever is calling this method is probably using it incorrectly
-                            // (see stacktrace).
-                            @Override
-                            public void writeToFile(String canonicalName, String contents) {
-                                throw new UnsupportedOperationException(
-                                        "Not supported in this mode");
-                            }
+                override fun deleteFile(canonicalName: String) {
+                    throw UnsupportedOperationException(
+                        "Not supported in this mode"
+                    )
+                }
+            },
+            fileLookup,
+            useAndroidX.get()
+        )
+        return object : SingleFileProcessor {
 
-                            @Override
-                            public void deleteFile(String canonicalName) {
-                                throw new UnsupportedOperationException(
-                                        "Not supported in this mode");
-                            }
-                        },
-                        fileLookup,
-                        getUseAndroidX().get());
-
-        return new SingleFileProcessor() {
-
-            private LayoutXmlProcessor getProcessor() {
-                return processor;
-            }
-
-            @Override
-            public boolean processSingleFile(
-                    @NonNull File inputFile,
-                    @NonNull File outputFile,
-                    @Nullable Boolean inputFileIsFromDependency)
-                    throws Exception {
+            @Throws(Exception::class)
+            override fun processSingleFile(
+                inputFile: File,
+                outputFile: File,
+                inputFileIsFromDependency: Boolean?
+            ): Boolean {
                 // Data binding doesn't need/want to process layout files that come
                 // from dependencies (see bug 132637061).
-                if (inputFileIsFromDependency == Boolean.TRUE) {
-                    return false;
+                if (inputFileIsFromDependency === java.lang.Boolean.TRUE) {
+                    return false
                 }
 
                 // For cache relocatability, we want to use relative paths, but we
                 // can do that only for resource files that are located within the
                 // root project directory.
-                File rootProjectDir = getProjectRootDir().getAsFile().get();
-                RelativizableFile normalizedInputFile;
+                val rootProjectDir = projectRootDir.asFile.get()
+                val normalizedInputFile: RelativizableFile
                 if (FileUtils.isFileInDirectory(inputFile, rootProjectDir)) {
                     // Check that the input file's absolute path has NOT been
                     // annotated as @Input via this task's
                     // getResourceDirsOutsideRootProjectDir() input file property.
-                    checkState(
-                            !resourceIsInResourceDirs(
-                                    inputFile, getResourceDirsOutsideRootProjectDir().get()),
-                            inputFile.getAbsolutePath() + " should not be annotated as @Input");
+                    Preconditions.checkState(
+                        !resourceIsInResourceDirs(
+                            inputFile, resourceDirsOutsideRootProjectDir.get()
+                        ),
+                        inputFile.absolutePath + " should not be annotated as @Input"
+                    )
 
                     // The base directory of the relative path has to be the root
                     // project directory, not the current project directory, because
                     // the consumer on the IDE side relies on that---see bug
                     // 128643036.
-                    normalizedInputFile =
-                            RelativizableFile.fromAbsoluteFile(
-                                    inputFile.getCanonicalFile(), rootProjectDir);
-                    checkState(normalizedInputFile.getRelativeFile() != null);
+                    normalizedInputFile = RelativizableFile.fromAbsoluteFile(
+                        inputFile.canonicalFile, rootProjectDir
+                    )
+                    Preconditions.checkState(normalizedInputFile.relativeFile != null)
                 } else {
                     // Check that the input file's absolute path has been annotated
                     // as @Input via this task's
                     // getResourceDirsOutsideRootProjectDir() input file property.
-                    checkState(
-                            resourceIsInResourceDirs(
-                                    inputFile, getResourceDirsOutsideRootProjectDir().get()),
-                            inputFile.getAbsolutePath() + " is not annotated as @Input");
-
+                    Preconditions.checkState(
+                        resourceIsInResourceDirs(
+                            inputFile, resourceDirsOutsideRootProjectDir.get()
+                        ),
+                        inputFile.absolutePath + " is not annotated as @Input"
+                    )
                     normalizedInputFile =
-                            RelativizableFile.fromAbsoluteFile(inputFile.getCanonicalFile(), null);
-                    checkState(normalizedInputFile.getRelativeFile() == null);
+                        RelativizableFile.fromAbsoluteFile(inputFile.canonicalFile, null)
+                    Preconditions.checkState(normalizedInputFile.relativeFile == null)
                 }
-                return getProcessor()
-                        .processSingleFile(
-                                normalizedInputFile,
-                                outputFile,
-                                getViewBindingEnabled().get(),
-                                getDataBindingEnabled().get());
+                return processor
+                    .processSingleFile(
+                        normalizedInputFile,
+                        outputFile,
+                        viewBindingEnabled.get(),
+                        dataBindingEnabled.get()
+                    )
             }
 
             /**
              * Returns `true` if the given resource file is located inside one of the resource
              * directories.
              */
-            private boolean resourceIsInResourceDirs(
-                    @NonNull File resFile, @NonNull Set<String> resDirs) {
-                return resDirs.stream()
-                        .anyMatch(resDir -> FileUtils.isFileInDirectory(resFile, new File(resDir)));
+            private fun resourceIsInResourceDirs(
+                resFile: File, resDirs: Set<String>
+            ): Boolean {
+                return resDirs.any { resDir: String ->
+                        FileUtils.isFileInDirectory(
+                            resFile,
+                            File(resDir)
+                        )
+                    }
             }
 
-            @Override
-            public void processRemovedFile(File file) {
-                getProcessor().processRemovedFile(file);
+            override fun processRemovedFile(file: File) {
+                processor.processRemovedFile(file)
             }
 
-            @Override
-            public void processFileWithNoDataBinding(@NonNull File file) {
-                getProcessor().processFileWithNoDataBinding(file);
+            override fun processFileWithNoDataBinding(file: File) {
+                processor.processFileWithNoDataBinding(file)
             }
 
-            @Override
-            public void end() throws JAXBException {
-                getProcessor()
-                        .writeLayoutInfoFiles(
-                                getDataBindingLayoutInfoOutFolder().get().getAsFile());
+            @Throws(JAXBException::class)
+            override fun end() {
+                processor
+                    .writeLayoutInfoFiles(
+                        dataBindingLayoutInfoOutFolder.get().asFile
+                    )
             }
-        };
+        }
     }
 
-    private static class MergeResourcesVectorDrawableRenderer extends VectorDrawableRenderer {
-
-        public MergeResourcesVectorDrawableRenderer(
-                int minSdk,
-                boolean supportLibraryIsUsed,
-                File outputDir,
-                Collection<Density> densities,
-                Supplier<ILogger> loggerSupplier) {
-            super(minSdk, supportLibraryIsUsed, outputDir, densities, loggerSupplier);
-        }
-
-        @Override
-        public void generateFile(@NonNull File toBeGenerated, @NonNull File original)
-                throws IOException {
+    private class MergeResourcesVectorDrawableRenderer(
+        minSdk: Int,
+        supportLibraryIsUsed: Boolean,
+        outputDir: File?,
+        densities: Collection<Density>?,
+        loggerSupplier: Supplier<ILogger?>?
+    ) : VectorDrawableRenderer(
+        minSdk,
+        supportLibraryIsUsed,
+        outputDir!!,
+        densities!!,
+        loggerSupplier!!
+    ) {
+        @Throws(IOException::class)
+        override fun generateFile(toBeGenerated: File, original: File) {
             try {
-                super.generateFile(toBeGenerated, original);
-            } catch (ResourcesNotSupportedException e) {
+                super.generateFile(toBeGenerated, original)
+            } catch (e: ResourcesNotSupportedException) {
                 // Add gradle-specific error message.
-                throw new GradleException(
-                        String.format(
-                                "Can't process attribute %1$s=\"%2$s\": references to other"
-                                        + " resources are not supported by build-time PNG"
-                                        + " generation.\n"
-                                        + "%3$s\n"
-                                        + "See http://developer.android.com/tools/help/vector-asset-studio.html"
-                                        + " for details.",
-                                e.getName(),
-                                e.getValue(),
-                                getPreprocessingReasonDescription(original)));
+                throw GradleException(
+                    String.format(
+                        """
+                    Can't process attribute %1${"$"}s="%2${"$"}s": references to other resources are not supported by build-time PNG generation.
+                    %3${"$"}s
+                    See http://developer.android.com/tools/help/vector-asset-studio.html for details.
+                    """.trimIndent(),
+                        e.name,
+                        e.value,
+                        getPreprocessingReasonDescription(original)
+                    )
+                )
             }
         }
-    }
+    }// If the user doesn't want any PNGs, leave the XML file alone as well.
 
     /**
      * Only one pre-processor for now. The code will need slight changes when we add more.
      */
-    @NonNull
-    private ResourcePreprocessor getPreprocessor() {
-        if (disableVectorDrawables) {
-            // If the user doesn't want any PNGs, leave the XML file alone as well.
-            return NoOpResourcePreprocessor.INSTANCE;
+    private val preprocessor: ResourcePreprocessor
+        get() {
+            if (disableVectorDrawables) {
+                // If the user doesn't want any PNGs, leave the XML file alone as well.
+                return NoOpResourcePreprocessor.INSTANCE
+            }
+            val densities: Collection<Density> =
+                generatedDensities!!.stream().map { value: String? -> Density.getEnum(value) }
+                    .collect(Collectors.toList())
+            return MergeResourcesVectorDrawableRenderer(
+                minSdk.get(),
+                isVectorSupportLibraryUsed,
+                generatedPngsOutputDir.get().asFile,
+                densities,
+                LoggerWrapper.supplierFor(MergeResources::class.java)
+            )
         }
 
-        Collection<Density> densities =
-                getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
-
-        return new MergeResourcesVectorDrawableRenderer(
-                getMinSdk().get(),
-                vectorSupportLibraryIsUsed,
-                this.getGeneratedPngsOutputDir().get().getAsFile(),
-                densities,
-                LoggerWrapper.supplierFor(MergeResources.class));
-    }
-
-    @NonNull
-    private List<ResourceSet> getConfiguredResourceSets(
-            ResourcePreprocessor preprocessor, @Nullable String aaptEnv) {
+    private fun getConfiguredResourceSets(
+        preprocessor: ResourcePreprocessor, aaptEnv: String?
+    ): List<ResourceSet> {
         // It is possible that this get called twice in case the incremental run fails and reverts
-        // back to full task run. Because the cached ResourceList is modified we don't want
+        // to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
-        if (processedInputs == null) {
-            processedInputs = getResourcesComputer().compute(
+        if (processedInputs.isEmpty()) {
+            processedInputs.addAll(
+                resourcesComputer.compute(
                     precompileDependenciesResources,
                     aaptEnv,
-                    getRenderscriptGeneratedResDir());
-            List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
-
-            for (ResourceSet resourceSet : processedInputs) {
-                resourceSet.setPreprocessor(preprocessor);
-                ResourceSet generatedSet = new GeneratedResourceSet(resourceSet, aaptEnv);
-                resourceSet.setGeneratedSet(generatedSet);
-                generatedSets.add(generatedSet);
+                    renderscriptGeneratedResDir
+                )
+            )
+            val generatedSets: MutableList<ResourceSet> = ArrayList(
+                processedInputs.size
+            )
+            for (resourceSet in processedInputs) {
+                resourceSet.setPreprocessor(preprocessor)
+                val generatedSet: ResourceSet = GeneratedResourceSet(resourceSet, aaptEnv)
+                resourceSet.setGeneratedSet(generatedSet)
+                generatedSets.add(generatedSet)
             }
 
             // We want to keep the order of the inputs. Given inputs:
@@ -766,117 +717,79 @@ public abstract class MergeResources extends NewIncrementalTask {
             // (lib, app debug, app main)
             // We will get:
             // (lib generated, lib, app debug generated, app debug, app main generated, app main)
-            for (int i = 0; i < generatedSets.size(); ++i) {
-                processedInputs.add(2 * i, generatedSets.get(i));
+            for (i in generatedSets.indices) {
+                processedInputs.add(2 * i, generatedSets[i])
             }
         }
-
-        return processedInputs;
+        return processedInputs
     }
 
     /**
      * Releases resource sets not needed anymore, otherwise they will waste heap space for the
      * duration of the build.
      *
-     * <p>This might be called twice when an incremental build falls back to a full one.
+     *
+     * This might be called twice when an incremental build falls back to a full one.
      */
-    private void cleanup() {
-        fileValidity.clear();
-        processedInputs = null;
+    private fun cleanup() {
+        fileValidity.clear()
+        processedInputs.clear()
     }
 
-    @OutputDirectory
-    public abstract DirectoryProperty getOutputDir();
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
 
-    @Input
-    public boolean getCrunchPng() {
-        return crunchPng;
-    }
-
-    @Input
-    public boolean getProcessResources() {
-        return processResources;
-    }
-
-    @Optional
-    @OutputFile
-    public abstract RegularFileProperty getPublicFile();
+    @get:OutputFile
+    @get:Optional
+    abstract val publicFile: RegularFileProperty
 
     // the optional blame output folder for the case where the task generates it.
-    @OutputDirectory
-    @Optional
-    public abstract DirectoryProperty getBlameLogOutputFolder();
+    @get:Optional
+    @get:OutputDirectory
+    abstract val blameLogOutputFolder: DirectoryProperty
 
-    @Input
-    public Collection<String> getGeneratedDensities() {
-        return generatedDensities;
-    }
-
-    @Input
-    public abstract Property<Integer> getMinSdk();
-
-    @Input
-    public boolean isVectorSupportLibraryUsed() {
-        return vectorSupportLibraryIsUsed;
-    }
-
-    @Nullable
-    @OutputDirectory
-    @Optional
-    public abstract DirectoryProperty getMergedNotCompiledResourcesOutputDirectory();
-
-    @Input
-    public String getFlags() {
-        return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
-    }
+    @get:Input
+    abstract val minSdk: Property<Int>
 
     @OutputDirectory
     @Optional
-    public abstract DirectoryProperty getIncrementalFolder();
+    abstract fun getMergedNotCompiledResourcesOutputDirectory(): DirectoryProperty?
+    @Input
+    fun getFlags(): String {
+        return flags!!.stream().map { obj: Flag -> obj.name }
+            .sorted().collect(Collectors.joining(","))
+    }
 
-    public static class CreationAction
-            extends VariantTaskCreationAction<MergeResources, ComponentCreationConfig> {
-        @NonNull private final TaskManager.MergeType mergeType;
-        @Nullable private final File mergedNotCompiledOutputDirectory;
-        private final boolean includeDependencies;
-        private final boolean processResources;
-        private final boolean processVectorDrawables;
-        @NonNull private final ImmutableSet<Flag> flags;
-        private final boolean isLibrary;
+    @get:Optional
+    @get:OutputDirectory
+    abstract val incrementalFolder: DirectoryProperty
 
-        public CreationAction(
-                @NonNull ComponentCreationConfig creationConfig,
-                @NonNull TaskManager.MergeType mergeType,
-                @Nullable File mergedNotCompiledOutputDirectory,
-                boolean includeDependencies,
-                boolean processResources,
-                @NonNull ImmutableSet<Flag> flags,
-                boolean isLibrary) {
-            super(creationConfig);
-            this.mergeType = mergeType;
-            this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
-            this.includeDependencies = includeDependencies;
-            this.processResources = processResources;
-            this.processVectorDrawables = flags.contains(Flag.PROCESS_VECTOR_DRAWABLES);
-            this.flags = flags;
-            this.isLibrary = isLibrary;
+    class CreationAction(
+        creationConfig: ComponentCreationConfig,
+        private val mergeType: TaskManager.MergeType,
+        private val mergedNotCompiledOutputDirectory: File?,
+        private val includeDependencies: Boolean,
+        private val processResources: Boolean,
+        flags: Set<Flag>,
+        isLibrary: Boolean
+    ) : VariantTaskCreationAction<MergeResources, ComponentCreationConfig>(creationConfig) {
+        private val processVectorDrawables: Boolean
+        private val flags: Set<Flag>
+        private val isLibrary: Boolean
+
+        init {
+            processVectorDrawables = flags.contains(Flag.PROCESS_VECTOR_DRAWABLES)
+            this.flags = flags
+            this.isLibrary = isLibrary
         }
 
-        @NonNull
-        @Override
-        public String getName() {
-            return computeTaskName(mergeType.name().toLowerCase(Locale.ENGLISH), "Resources");
-        }
+        override val name: String
+            get() = computeTaskName(mergeType.name.toLowerCase(Locale.ENGLISH), "Resources")
+        override val type: Class<MergeResources>
+            get() = MergeResources::class.java
 
-        @NonNull
-        @Override
-        public Class<MergeResources> getType() {
-            return MergeResources.class;
-        }
-
-        @Override
-        public void handleProvider(@NonNull TaskProvider<MergeResources> taskProvider) {
-            super.handleProvider(taskProvider);
+        override fun handleProvider(taskProvider: TaskProvider<MergeResources>) {
+            super.handleProvider(taskProvider)
             // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
             // MergeResources tasks sharing the same task type (MergeResources) and CreationAction
             // code: packageResources with mergeType == PACKAGE, and mergeResources with
@@ -884,221 +797,221 @@ public abstract class MergeResources extends NewIncrementalTask {
             // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
             // finally registered in the current scope.
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
-            creationConfig.getTaskContainer().setMergeResourcesTask(taskProvider);
-
-            ArtifactsImpl artifacts = creationConfig.getArtifacts();
-            artifacts.setInitialProvider(taskProvider, MergeResources::getOutputDir)
-                    .on(mergeType.getOutputType());
-
+            creationConfig.taskContainer.mergeResourcesTask = taskProvider
+            val artifacts = creationConfig.artifacts
+            artifacts.setInitialProvider(taskProvider) { obj: MergeResources -> obj.outputDir }
+                .on(mergeType.outputType)
             if (mergedNotCompiledOutputDirectory != null) {
-                artifacts.setInitialProvider(taskProvider, MergeResources::getMergedNotCompiledResourcesOutputDirectory)
-                        .atLocation(mergedNotCompiledOutputDirectory.getPath())
-                        .on(MERGED_NOT_COMPILED_RES.INSTANCE);
+                artifacts.setInitialProvider(taskProvider) { obj: MergeResources -> obj.getMergedNotCompiledResourcesOutputDirectory()!! }
+                    .atLocation(mergedNotCompiledOutputDirectory.path)
+                    .on(MERGED_NOT_COMPILED_RES)
             }
-
-            artifacts.setInitialProvider(taskProvider, MergeResources::getDataBindingLayoutInfoOutFolder)
-                    .withName("out")
-                    .on(
-                            mergeType == MERGE
-                                    ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE.INSTANCE
-                                    : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE);
+            artifacts.setInitialProvider(taskProvider) { obj: MergeResources -> obj.dataBindingLayoutInfoOutFolder }
+                .withName("out")
+                .on(
+                    if (mergeType === TaskManager.MergeType.MERGE) DATA_BINDING_LAYOUT_INFO_TYPE_MERGE else DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
+                )
 
             // only the full run with dependencies generates the blame folder
             if (includeDependencies) {
-                artifacts.setInitialProvider(taskProvider, MergeResources::getBlameLogOutputFolder)
-                        .withName("out")
-                        .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE);
+                artifacts.setInitialProvider(taskProvider) { obj: MergeResources -> obj.blameLogOutputFolder }
+                    .withName("out")
+                    .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER)
             }
 
             // use public API instead of setInitialProvider to ensure that the task name is embedded
             // in the created directory path.
             artifacts
-                    .use(taskProvider)
-                    .wiredWith(MergeResources::getIncrementalFolder)
-                    .toCreate(InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER.INSTANCE);
-
-            VectorDrawablesOptions vectorDrawablesOptions =
-                    creationConfig.getVariantDslInfo().getVectorDrawables();
-            boolean disableVectorDrawables = !processVectorDrawables
-                    || vectorDrawablesOptions.getGeneratedDensities() == null;
+                .use(taskProvider)
+                .wiredWith { obj: MergeResources -> obj.incrementalFolder }
+                .toCreate(MERGED_RES_INCREMENTAL_FOLDER)
+            val vectorDrawablesOptions = creationConfig.variantDslInfo.vectorDrawables
+            val disableVectorDrawables = (!processVectorDrawables
+                    || vectorDrawablesOptions.generatedDensities == null)
             if (!disableVectorDrawables) {
                 artifacts.setInitialProvider(
-                        taskProvider, MergeResources::getGeneratedPngsOutputDir
-                ).atLocation(creationConfig.getPaths()
-                                .getGeneratedResourcesDir("pngs")
-                                .get()
-                                .getAsFile()
-                                .getAbsolutePath())
-                        .on(InternalArtifactType.GENERATED_PNGS_RES.INSTANCE);
+                    taskProvider
+                ) { obj: MergeResources -> obj.generatedPngsOutputDir }.atLocation(
+                    creationConfig.paths
+                        .getGeneratedResourcesDir("pngs")
+                        .get()
+                        .asFile
+                        .absolutePath
+                )
+                    .on(InternalArtifactType.GENERATED_PNGS_RES)
             }
         }
 
-        @Override
-        public void configure(@NonNull MergeResources task) {
-            super.configure(task);
-
-            VariantScope variantScope = creationConfig.getVariantScope();
-
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getNamespace(), creationConfig.getNamespace());
-            task.getMinSdk()
-                    .set(
-                            task.getProject()
-                                    .provider(
-                                            () -> creationConfig.getMinSdkVersion().getApiLevel()));
-            task.getMinSdk().disallowChanges();
-
-            task.processResources = processResources;
-            task.crunchPng = variantScope.isCrunchPngs();
-
-            VectorDrawablesOptions vectorDrawablesOptions =
-                    creationConfig.getVariantDslInfo().getVectorDrawables();
-            task.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
+        override fun configure(task: MergeResources) {
+            super.configure(task)
+            val variantScope = creationConfig.variantScope
+            task.namespace.setDisallowChanges(creationConfig.namespace)
+            task.minSdk
+                .setDisallowChanges(
+                    task.project
+                        .provider { creationConfig.minSdkVersion.apiLevel })
+            task.processResources = processResources
+            task.crunchPng = variantScope.isCrunchPngs
+            val vectorDrawablesOptions = creationConfig.variantDslInfo.vectorDrawables
+            task.generatedDensities = vectorDrawablesOptions.generatedDensities
             if (task.generatedDensities == null) {
-                task.generatedDensities = Collections.emptySet();
+                task.generatedDensities = emptySet()
             }
-
             task.disableVectorDrawables =
-                    !processVectorDrawables || task.generatedDensities.isEmpty();
+                !processVectorDrawables || task.generatedDensities!!.isEmpty()
 
             // TODO: When support library starts supporting gradients (http://b/62421666), remove
             // the vectorSupportLibraryIsUsed field and set disableVectorDrawables when
             // the getUseSupportLibrary method returns TRUE.
-            task.vectorSupportLibraryIsUsed =
-                    Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
-
-            ArtifactCollection libraryArtifacts =
-                    includeDependencies
-                            ? creationConfig
-                                    .getVariantDependencies()
-                                    .getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
-                            : null;
-
-            FileCollection microApk =
+            task.isVectorSupportLibraryUsed =
+                java.lang.Boolean.TRUE == vectorDrawablesOptions.useSupportLibrary
+            val libraryArtifacts = if (includeDependencies) creationConfig
+                .variantDependencies
+                .getArtifactCollection(
+                    ConsumedConfigType.RUNTIME_CLASSPATH,
+                    ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.ANDROID_RES
+                ) else null
+            val microApk: FileCollection = creationConfig
+                .services
+                .fileCollection(
                     creationConfig
-                            .getServices()
-                            .fileCollection(
-                                    creationConfig
-                                            .getArtifacts()
-                                            .get(InternalArtifactType.MICRO_APK_RES.INSTANCE));
-            task.getSourceSetInputs().initialise(creationConfig, includeDependencies);
+                        .artifacts
+                        .get(InternalArtifactType.MICRO_APK_RES)
+                )
+            task.sourceSetInputs.initialise(creationConfig, includeDependencies)
 
-            task.getRenderscriptGeneratedResDir().set(creationConfig.getArtifacts().get(
-                    InternalArtifactType.RENDERSCRIPT_GENERATED_RES.INSTANCE));
-            task.getRenderscriptGeneratedResDir().disallowChanges();
+            task.renderscriptGeneratedResDir.setDisallowChanges(
+                creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES))
 
-            boolean relativeLocalResources = !processResources ||
-                    creationConfig.getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP);
+            val relativeLocalResources = !processResources ||
+                    creationConfig.services
+                        .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]
 
-            task.getResourcesComputer().initFromVariantScope(
-                    creationConfig, task.getSourceSetInputs(), microApk, libraryArtifacts, relativeLocalResources);
-
-            final BuildFeatureValues features = creationConfig.getBuildFeatures();
-            final boolean isDataBindingEnabled = features.getDataBinding();
-            boolean isViewBindingEnabled = features.getViewBinding();
-
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getDataBindingEnabled(), isDataBindingEnabled);
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getViewBindingEnabled(), isViewBindingEnabled);
-
+            task.resourcesComputer.initFromVariantScope(
+                creationConfig,
+                task.sourceSetInputs,
+                microApk,
+                libraryArtifacts,
+                relativeLocalResources
+            )
+            val features = creationConfig.buildFeatures
+            val isDataBindingEnabled = features.dataBinding
+            val isViewBindingEnabled = features.viewBinding
+            task.dataBindingEnabled.setDisallowChanges(isDataBindingEnabled)
+            task.viewBindingEnabled.setDisallowChanges(isViewBindingEnabled)
             if (isDataBindingEnabled || isViewBindingEnabled) {
-                HasConfigurableValuesKt.setDisallowChanges(
-                        task.getUseAndroidX(),
-                        creationConfig
-                                .getServices()
-                                .getProjectOptions()
-                                .get(BooleanOption.USE_ANDROID_X));
+                task.useAndroidX.setDisallowChanges(
+                    creationConfig
+                        .services
+                        .projectOptions[BooleanOption.USE_ANDROID_X]
+                )
             }
-
-            task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
-
-            task.getPseudoLocalesEnabled().set(creationConfig.getPseudoLocalesEnabled());
-            task.getPseudoLocalesEnabled().disallowChanges();
-            task.flags = flags;
-
-            task.errorFormatMode =
-                    SyncOptions.getErrorFormatMode(
-                            creationConfig.getServices().getProjectOptions());
-
+            task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory
+            task.pseudoLocalesEnabled.setDisallowChanges(creationConfig.pseudoLocalesEnabled)
+            task.flags = flags
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(
+                creationConfig.services.projectOptions
+            )
             task.precompileDependenciesResources =
-                    mergeType.equals(MERGE)
-                            && !isLibrary
-                            && creationConfig.isPrecompileDependenciesResourcesEnabled();
+                (mergeType == TaskManager.MergeType.MERGE && !isLibrary
+                        && creationConfig.isPrecompileDependenciesResourcesEnabled)
+            task.resourceDirsOutsideRootProjectDir
+                .set(
+                    task.project
+                        .provider {
+                            getResourcesDirsOutsideRoot(
+                                task,
+                                isDataBindingEnabled,
+                                isViewBindingEnabled
+                            )
+                        })
+            task.resourceDirsOutsideRootProjectDir.disallowChanges()
+            task.dependsOn(creationConfig.taskContainer.resourceGenTask)
 
-            task.getResourceDirsOutsideRootProjectDir()
-                    .set(
-                            task.getProject()
-                                    .provider(
-                                            () ->
-                                                    getResourcesDirsOutsideRoot(
-                                                            task,
-                                                            isDataBindingEnabled,
-                                                            isViewBindingEnabled)));
-            task.getResourceDirsOutsideRootProjectDir().disallowChanges();
-
-            task.dependsOn(creationConfig.getTaskContainer().getResourceGenTask());
-
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getAapt2ThreadPoolBuildService(),
-                    BuildServicesKt.getBuildService(
-                            creationConfig.getServices().getBuildServiceRegistry(),
-                            Aapt2ThreadPoolBuildService.class));
-            creationConfig.getServices().initializeAapt2Input(task.getAapt2());
-            task.getAaptEnv()
-                    .set(
-                            creationConfig
-                                    .getServices()
-                                    .getGradleEnvironmentProvider()
-                                    .getEnvVariable(ANDROID_AAPT_IGNORE));
-            task.getProjectRootDir().set(task.getProject().getRootDir());
-
-            task.getRelativePathsEnabled()
-                    .set(
-                            creationConfig
-                                    .getServices()
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP));
+            task.aapt2ThreadPoolBuildService.setDisallowChanges(
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    Aapt2ThreadPoolBuildService::class.java
+                )
+            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
+            task.aaptEnv
+                .set(
+                    creationConfig
+                        .services
+                        .gradleEnvironmentProvider
+                        .getEnvVariable(ANDROID_AAPT_IGNORE)
+                )
+            task.projectRootDir.set(task.project.rootDir)
+            task.relativePathsEnabled
+                .set(
+                    creationConfig
+                        .services
+                        .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]
+                )
         }
 
-        @NonNull
-        private static Set<String> getResourcesDirsOutsideRoot(
-                @NonNull MergeResources task,
-                boolean isDataBindingEnabled,
-                boolean isViewBindingEnabled)
-                throws IOException {
-            Set<String> resourceDirsOutsideRootProjectDir = new HashSet<>();
-            if (!isDataBindingEnabled && !isViewBindingEnabled) {
-                // This set is used only when data binding / view binding is enabled
-                return resourceDirsOutsideRootProjectDir;
-            }
+        companion object {
+            @Throws(IOException::class)
+            private fun getResourcesDirsOutsideRoot(
+                task: MergeResources,
+                isDataBindingEnabled: Boolean,
+                isViewBindingEnabled: Boolean
+            ): Set<String> {
+                val resourceDirsOutsideRootProjectDir: MutableSet<String> = HashSet()
+                if (!isDataBindingEnabled && !isViewBindingEnabled) {
+                    // This set is used only when data binding / view binding is enabled
+                    return resourceDirsOutsideRootProjectDir
+                }
 
-            // In this task, data binding doesn't process layout files that come from dependencies
-            // (see the code at processSingleFile()). Therefore, we'll look at resources in the
-            // current sub-project only (via task.getLocalResources()). These resources are usually
-            // located inside the root project directory, but some of them may come from custom
-            // resource sets that are outside of the root project directory, so we need to collect
-            // the latter set.
-            File rootProjectDir = task.getProject().getRootDir();
-            for (DependencyResourcesComputer.ResourceSourceSetInput resourceSourceSet : task.getResourcesComputer()
-                    .getResources()
-                    .get()
-                    .values()) {
-                for (File resDir : resourceSourceSet.getSourceDirectories().getFiles()) {
-                    if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
-                        resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
+                // In this task, data binding doesn't process layout files that come from dependencies
+                // (see the code at processSingleFile()). Therefore, we'll look at resources in the
+                // current subproject only (via task.getLocalResources()). These resources are usually
+                // located inside the root project directory, but some of them may come from custom
+                // resource sets that are outside the root project directory, so we need to collect
+                // the latter set.
+                val rootProjectDir = task.project.rootDir
+                for (resourceSourceSet in task.resourcesComputer.resources.get().values) {
+                    for (resDir in resourceSourceSet.sourceDirectories.files) {
+                        if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
+                            resourceDirsOutsideRootProjectDir.add(resDir.canonicalPath)
+                        }
                     }
                 }
+                return resourceDirsOutsideRootProjectDir
             }
-
-            return resourceDirsOutsideRootProjectDir;
         }
     }
 
-    public enum Flag {
-        REMOVE_RESOURCE_NAMESPACES,
-        PROCESS_VECTOR_DRAWABLES,
+    enum class Flag {
+        REMOVE_RESOURCE_NAMESPACES, PROCESS_VECTOR_DRAWABLES
+    }
+
+    companion object {
+        private fun getResourceProcessor(
+            mergeResourcesTask: MergeResources,
+            flags: Set<Flag>?,
+            processResources: Boolean,
+            aapt2Input: Aapt2Input
+        ): ResourceCompilationService {
+            // If we received the flag for removing namespaces we need to use the namespace remover to
+            // process the resources.
+            if (flags!!.contains(Flag.REMOVE_RESOURCE_NAMESPACES)) {
+                return NamespaceRemover
+            }
+
+            // If we're not removing namespaces and there's no need to compile the resources, return a
+            // no-op resource processor.
+            return if (!processResources) {
+                CopyToOutputDirectoryResourceCompilationService
+            } else WorkerExecutorResourceCompilationService(
+                mergeResourcesTask.projectPath,
+                mergeResourcesTask.path,
+                mergeResourcesTask.workerExecutor,
+                mergeResourcesTask.analyticsService,
+                aapt2Input
+            )
+        }
     }
 }

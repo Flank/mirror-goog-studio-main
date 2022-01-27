@@ -440,7 +440,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             createGenerateResValuesTask(testFixturesComponent)
 
-            val flags: ImmutableSet<MergeResources.Flag?> =
+            val flags: Set<MergeResources.Flag> =
                 if (globalConfig.namespacedAndroidResources) {
                     Sets.immutableEnumSet(
                         MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
@@ -973,7 +973,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createMergeResourcesTask(
             creationConfig: ComponentCreationConfig,
             processResources: Boolean,
-            flags: ImmutableSet<MergeResources.Flag?>) {
+            flags: Set<MergeResources.Flag>) {
         val alsoOutputNotCompiledResources = (creationConfig.variantType.isApk
                 && !creationConfig.variantType.isForTesting
                 && creationConfig.useResourceShrinker())
@@ -1026,7 +1026,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             includeDependencies: Boolean,
             processResources: Boolean,
             alsoOutputNotCompiledResources: Boolean,
-            flags: ImmutableSet<MergeResources.Flag?>,
+            flags: Set<MergeResources.Flag>,
             taskProviderCallback: TaskProviderCallback<MergeResources>?
     ): TaskProvider<MergeResources> {
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
