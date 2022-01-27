@@ -4,6 +4,11 @@ androidx/databinding/databinding-adapters
   R.txt
   classes.jar
   classes.jar:META-INF/androidx.databinding_baseAdapters.version
+  classes.jar:androidx/
+  classes.jar:androidx/databinding/
+  classes.jar:androidx/databinding/adapters/
+  classes.jar:androidx/databinding/library/
+  classes.jar:androidx/databinding/library/baseAdapters/
   data-binding-base-class-log/
   data-binding-base-class-log/androidx.databinding.library.baseAdapters-binding_classes.json
   data-binding/
@@ -19,8 +24,12 @@ androidx/databinding/databinding-ktx
   META-INF/com/android/build/gradle/aar-metadata.properties
   R.txt
   classes.jar
+  classes.jar:META-INF/
   classes.jar:META-INF/androidx.databinding_databindingKtx.version
   classes.jar:META-INF/databindingKtx_release.kotlin_module
+  classes.jar:androidx/
+  classes.jar:androidx/databinding/
+  classes.jar:androidx/databinding/ktx/
 
 androidx/databinding/databinding-runtime
   AndroidManifest.xml
@@ -28,6 +37,9 @@ androidx/databinding/databinding-runtime
   R.txt
   classes.jar
   classes.jar:META-INF/androidx.databinding_library.version
+  classes.jar:androidx/
+  classes.jar:androidx/databinding/
+  classes.jar:androidx/databinding/library/
   proguard.txt
   res/
   res/values/
@@ -40,6 +52,8 @@ androidx/databinding/viewbinding
   R.txt
   classes.jar
   classes.jar:META-INF/androidx.databinding_viewbinding.version
+  classes.jar:androidx/
+  classes.jar:androidx/viewbinding/
 
 com/android/databinding/adapters
   AndroidManifest.xml
@@ -47,6 +61,14 @@ com/android/databinding/adapters
   R.txt
   classes.jar
   classes.jar:META-INF/com.android.databinding_baseAdapters.version
+  classes.jar:android/
+  classes.jar:android/databinding/
+  classes.jar:android/databinding/adapters/
+  classes.jar:com/
+  classes.jar:com/android/
+  classes.jar:com/android/databinding/
+  classes.jar:com/android/databinding/library/
+  classes.jar:com/android/databinding/library/baseAdapters/
   data-binding-base-class-log/
   data-binding-base-class-log/com.android.databinding.library.baseAdapters-binding_classes.json
   data-binding/
@@ -63,6 +85,12 @@ com/android/databinding/library
   R.txt
   classes.jar
   classes.jar:META-INF/com.android.databinding_library.version
+  classes.jar:android/
+  classes.jar:android/databinding/
+  classes.jar:com/
+  classes.jar:com/android/
+  classes.jar:com/android/databinding/
+  classes.jar:com/android/databinding/library/
   proguard.txt
   res/
   res/values/
@@ -75,3 +103,5 @@ com/android/databinding/viewbinding
   R.txt
   classes.jar
   classes.jar:META-INF/com.android.databinding_viewbinding.version
+  classes.jar:android/
+  classes.jar:android/viewbinding/
