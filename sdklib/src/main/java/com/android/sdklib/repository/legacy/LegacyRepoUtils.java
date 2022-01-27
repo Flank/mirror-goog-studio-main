@@ -96,9 +96,11 @@ public class LegacyRepoUtils {
 
             assert androidVersion != null;
             details.setApiLevel(androidVersion.getApiLevel());
+            details.setBaseExtension(androidVersion.isBaseExtension());
+            details.setExtensionLevel(androidVersion.getExtensionLevel());
             details.setCodename(androidVersion.getCodename());
-            DetailsTypes.PlatformDetailsType.LayoutlibType layoutLib = repoFactory
-              .createLayoutlibType();
+            DetailsTypes.PlatformDetailsType.LayoutlibType layoutLib =
+                    repoFactory.createLayoutlibType();
             layoutLib.setApi(layoutLibVersion);
             details.setLayoutlib(layoutLib);
             return (TypeDetails) details;
@@ -109,6 +111,8 @@ public class LegacyRepoUtils {
             details.setAbi(desc.getPath());
             assert androidVersion != null;
             details.setApiLevel(androidVersion.getApiLevel());
+            details.setBaseExtension(androidVersion.isBaseExtension());
+            details.setExtensionLevel(androidVersion.getExtensionLevel());
             details.setCodename(androidVersion.getCodename());
             IdDisplay tagIdDisplay = desc.getTag();
             if (tagIdDisplay != null) {
@@ -145,9 +149,12 @@ public class LegacyRepoUtils {
             }
             assert androidVersion != null;
             details.setApiLevel(androidVersion.getApiLevel());
+            details.setBaseExtension(androidVersion.isBaseExtension());
+            details.setExtensionLevel(androidVersion.getExtensionLevel());
             details.setCodename(androidVersion.getCodename());
             if (!addonLibraries.isEmpty()) {
-                DetailsTypes.AddonDetailsType.Libraries librariesType = addonFactory.createLibrariesType();
+                DetailsTypes.AddonDetailsType.Libraries librariesType =
+                        addonFactory.createLibrariesType();
                 List<Library> libraries = librariesType.getLibrary();
                 for (OptionalLibrary addonLib : addonLibraries) {
                     Library lib = sdkFactory.createLibraryType();
@@ -174,6 +181,8 @@ public class LegacyRepoUtils {
             DetailsTypes.SourceDetailsType details = repoFactory.createSourceDetailsType();
             assert androidVersion != null;
             details.setApiLevel(androidVersion.getApiLevel());
+            details.setBaseExtension(androidVersion.isBaseExtension());
+            details.setExtensionLevel(androidVersion.getExtensionLevel());
             details.setCodename(androidVersion.getCodename());
             return (TypeDetails) details;
         } else if (desc.getType() == PkgType.PKG_EXTRA) {
