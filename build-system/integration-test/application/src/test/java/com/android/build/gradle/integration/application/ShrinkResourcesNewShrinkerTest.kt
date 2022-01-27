@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PNG
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_CONVERTED_TO_BINARY_XML
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_XML
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
@@ -206,6 +207,9 @@ class ShrinkResourcesNewShrinkerTest {
                 "res/layout/unused1.xml",
                 "res/layout/unused2.xml"
         )
+        // Ensure that report file is created and near mapping file
+        assertThat(project.file("build/outputs/mapping/release/mapping.txt")).exists()
+        assertThat(project.file("build/outputs/mapping/release/resources.txt")).exists()
     }
 
     @Test
@@ -422,6 +426,16 @@ class ShrinkResourcesNewShrinkerTest {
             it.containsFileWithContent("base/res/raw/keep.xml", TINY_PROTO_XML)
             it.containsFileWithContent("base/res/drawable/unused5.9.png", TINY_9PNG)
         }
+
+        // Ensure that report file is created and near mapping file
+        assertThat(
+            projectWithDynamicFeatureModules.getSubproject("base")
+                .file("build/outputs/mapping/release/mapping.txt")
+        ).exists()
+        assertThat(
+            projectWithDynamicFeatureModules.getSubproject("base")
+                .file("build/outputs/mapping/release/resources.txt")
+        ).exists()
     }
 
     private fun diffFiles(
