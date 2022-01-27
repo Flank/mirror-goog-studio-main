@@ -29,6 +29,11 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class WearComponent extends AppComponent {
 
+    public static class ShellCommand {
+        public static final String GET_WEAR_DEBUG_SURFACE_VERSION =
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation version";
+    }
+
     public static final class CommandResultReceiver extends MultiLineReceiver {
         public static final int SUCCESS_CODE = 1;
 
