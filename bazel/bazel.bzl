@@ -131,6 +131,9 @@ def _iml_module_jar_impl(
             sourcepath = sourcepath,
             # TODO(b/216385876) After updating to Bazel 5.0, use enable_compile_jar_action = use_ijar,
         )
+        if use_ijar:
+            # Note: we exclude formc output from ijars, since formc does not generate APIs used downstream.
+            ijars += [java_output.ijar for java_output in java_provider.outputs.jars]
 
         # Forms
         if form_srcs:
@@ -169,15 +172,6 @@ def _iml_module_jar_impl(
                 executable = ctx.executable._formc,
                 execution_requirements = {"supports-workers": "1"},
             )
-
-            if use_ijar:
-                ijars += [java_common.run_ijar(
-                    actions = ctx.actions,
-                    jar = java_jar,
-                    java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
-                )]
-        elif use_ijar:
-            ijars += [java_output.ijar for java_output in java_provider.outputs.jars]
 
         jars += [java_jar]
 
