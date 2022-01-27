@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.Deflater;
 
 public class Sources {
 
@@ -34,6 +35,13 @@ public class Sources {
 
     public static Source from(Path path, @NonNull String name, int compressionLevel)
             throws IOException {
+        if (Files.isDirectory(path)) {
+            // Make sure the entry name is '/' terminated
+            if (!name.endsWith("/")) {
+                name += "/";
+            }
+            return new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
+        }
         if (Files.size(path) > LARGE_LIMIT) {
             return new LargeFileSource(path, name, compressionLevel);
         } else {
