@@ -116,7 +116,6 @@ def kotlin_test(
         lint_is_test_sources = True,
         visibility = visibility,
         friends = friends,
-        enable_compile_jar_action = False,
     )
 
     coverage_java_test(
@@ -182,7 +181,6 @@ def kotlin_library(
         compress_resources = False,
         testonly = False,
         stdlib = "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
-        enable_compile_jar_action = True,
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -200,10 +198,6 @@ def kotlin_library(
         exclusions: Files to exclude from the generated pom file.
         lint_*: Lint configuration arguments
         module_name: The kotlin module name.
-        enable_compile_jar_action: Enables header compilation or ijar creation. If set to False,
-            it forces use of the full class jar in the compilation classpaths of any dependants.
-            Doing so is intended for use by non-library targets such as binaries that do not
-            have dependants.
     """
 
     kotlins = [src for src in srcs if src.endswith(".kt")]
@@ -231,7 +225,6 @@ def kotlin_library(
         javacopts = final_javacopts if javas else None,
         testonly = testonly,
         stdlib = stdlib,
-        enable_compile_jar_action = enable_compile_jar_action,
         **kwargs
     )
 
@@ -258,7 +251,7 @@ def _kotlin_library_impl(ctx):
     kotlin_srcs = ctx.files.kotlin_srcs
     source_jars = ctx.files.source_jars
     name = ctx.label.name
-    use_ijar = ctx.attr.enable_compile_jar_action
+    use_ijar = not ctx.attr.testonly
 
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs or source_jars else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
@@ -392,7 +385,6 @@ _kotlin_library = rule(
             providers = [JavaInfo],
         ),
         "stdlib": attr.label(),
-        "enable_compile_jar_action": attr.bool(),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_bootclasspath": attr.label(
