@@ -42,6 +42,7 @@ import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.JarFileIssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
@@ -1205,6 +1206,12 @@ open class LintCliClient : LintClient {
     ) {
         if (IssueRegistry.isDeletedIssueId(id)) {
             // Recently deleted, but avoid complaining about leftover configuration
+            return
+        }
+        if (JarFileIssueRegistry.isRejectedIssueId(id)) {
+            // Issue was not loaded (perhaps incompatible with this version of lint);
+            // we're already complaining about that, so don't also complain that
+            // it's an "unknown" issue
             return
         }
         val message = Configuration.getUnknownIssueIdErrorMessage(id, registry)

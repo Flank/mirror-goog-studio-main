@@ -103,6 +103,12 @@ private constructor(
         private var cache: MutableMap<File, SoftReference<JarFileIssueRegistry>>? = null
 
         /**
+         * Known issue id's we've ignored because the implemented was
+         * incompatible
+         */
+        private var rejectedIssueIds: MutableSet<String>? = null
+
+        /**
          * Loads custom rules from the given list of jar files and
          * returns a list of [JarFileIssueRegistry} instances.
          *
@@ -297,18 +303,21 @@ private constructor(
                             if (reportErrors(driver)) {
                                 val message =
                                     """
-Library lint checks out of date.
+Library lint checks out of date;
+these checks **will be skipped**!
 
 Lint found an issue registry (`$className`)
 which was compiled against an older version of lint
-than this one.
-
-This often works just fine, but some basic verification
-shows that the lint check jar references (for example)
-the following API which is no longer valid in this
-version of lint:
+than this one. This is usually fine, but not in this
+case; some basic verification shows that the lint
+check jar references (for example) the following API
+which is no longer valid in this version of lint:
 ${verifier.describeFirstIncompatibleReference()}
 (Referenced from ${verifier.getReferenceClassFile()})
+
+Therefore, this lint check library is **not** included
+in analysis. This affects the following lint checks:
+${issues.map(Issue::id).joinToString(if (issues.size > 5) "\n" else ",") { "`$it`" }}
 
 Recompile the checks against the latest version, or if
 this is a check bundled with a third-party library, see
@@ -322,6 +331,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                     message = message, file = jarFile, project = currentProject, driver = driver
                                 )
                             }
+                            recordRejectedIssues(issues)
                             return null
                         } else if (verifier.hasPackageConflict()) {
                             if (reportErrors(driver)) {
@@ -331,6 +341,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                     message = message, file = jarFile, project = currentProject, driver = driver
                                 )
                             }
+                            recordRejectedIssues(issues)
                             return null
                         }
                         // Not returning here: try to run the checks
@@ -348,6 +359,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                         message = message, file = jarFile, project = currentProject, driver = driver
                                     )
                                 }
+                                recordRejectedIssues(issues)
                                 return null
                             } else if (api >= CURRENT_API) {
                                 val verifier = verify(client, jarFile)
@@ -355,18 +367,20 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                     if (reportErrors(driver)) {
                                         val message =
                                             """
-Requires newer lint.
+Requires newer lint; these checks **will be skipped**!
 
 Lint found an issue registry (`$className`)
 which was compiled against a newer version of lint
-than this one.
-
-This often works just fine, but some basic verification
-shows that the lint check jar references (for example)
-the following API which is not valid in the version of
-lint which is running:
+than this one. This is usually fine, but not in this
+case; some basic verification shows that the lint
+check jar references (for example) the following API
+which is not valid in the version of lint which is running:
 ${verifier.describeFirstIncompatibleReference()}
 (Referenced from ${verifier.getReferenceClassFile()})
+
+Therefore, this lint check library is **not** included
+in analysis. This affects the following lint checks:
+${issues.map(Issue::id).joinToString(if (issues.size > 5) "\n" else ",") { "`$it`" }}
 
 To use this lint check, upgrade to a more recent version
 of lint.
@@ -379,6 +393,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                             message = message, file = jarFile, project = currentProject, driver = driver
                                         )
                                     }
+                                    recordRejectedIssues(issues)
                                     return null
                                 } else if (verifier.hasPackageConflict()) {
                                     if (reportErrors(driver)) {
@@ -388,6 +403,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                             message = message, file = jarFile, project = currentProject, driver = driver
                                         )
                                     }
+                                    recordRejectedIssues(issues)
                                     return null
                                 }
                             }
@@ -456,6 +472,16 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                 }
                 null
             }
+        }
+
+        /** Is the given [issueId] the id of an issue which was rejected as incompatible */
+        fun isRejectedIssueId(issueId: String): Boolean {
+            return rejectedIssueIds?.contains(issueId) ?: false
+        }
+
+        private fun recordRejectedIssues(issues: List<Issue>) {
+            val rejectedIssues = rejectedIssueIds ?: HashSet<String>().also { rejectedIssueIds = it }
+            issues.forEach { rejectedIssues.add(it.id) }
         }
 
         private fun getPackagingConflictMessage(className: String, verifier: LintJarVerifier): String {

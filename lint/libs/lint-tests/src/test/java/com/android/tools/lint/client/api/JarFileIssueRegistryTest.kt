@@ -579,20 +579,28 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             .allowObsoleteLintChecks(false)
             .issueIds("MyIssueId")
             .run()
+            // Note how the "This affects the following lint checks"
+            // list is empty below; that's because we're passing in
+            // an issue registry which doesn't actually have any valid
+            // issues for it. This won't be the case in a real issue registry.
+            // Actually listing the issue id's is tested in a different
+            // test below (search for "This affects".)
             .expectContains(
                 """
-                lint.jar: Warning: Requires newer lint.
+                lint.jar: Warning: Requires newer lint; these checks will be skipped!
 
                 Lint found an issue registry (test.pkg.MyIssueRegistry)
                 which was compiled against a newer version of lint
-                than this one.
-
-                This often works just fine, but some basic verification
-                shows that the lint check jar references (for example)
-                the following API which is not valid in the version of
-                lint which is running:
+                than this one. This is usually fine, but not in this
+                case; some basic verification shows that the lint
+                check jar references (for example) the following API
+                which is not valid in the version of lint which is running:
                 com.android.tools.lint.detector.api.DeletedInterface
                 (Referenced from test/pkg/Helper.class)
+
+                Therefore, this lint check library is not included
+                in analysis. This affects the following lint checks:
+
 
                 To use this lint check, upgrade to a more recent version
                 of lint.
@@ -789,7 +797,18 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
 
                 </resources>
                 """
-            ).indented()
+            ).indented(),
+            // Reference <MyIssueId> from a lint.xml file; this would normally result
+            // in an UnknownIssueId error, but since it's referenced from a rejected
+            // issue registry, we want to make sure we *don't* flag this
+            xml(
+                "lint.xml",
+                """
+                <lint>
+                    <issue id="MyIssueId" severity="error" />
+                </lint>
+                """
+            ).indented(),
         )
             .clientFactory { createGlobalLintJarClient(lintJar) }
             .testModes(TestMode.DEFAULT)
@@ -798,18 +817,21 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             .run()
             .expectContains(
                 """
-                lint.jar: Warning: Library lint checks out of date.
+                lint.jar: Warning: Library lint checks out of date;
+                these checks will be skipped!
 
                 Lint found an issue registry (test.pkg.MyIssueRegistry)
                 which was compiled against an older version of lint
-                than this one.
-
-                This often works just fine, but some basic verification
-                shows that the lint check jar references (for example)
-                the following API which is no longer valid in this
-                version of lint:
+                than this one. This is usually fine, but not in this
+                case; some basic verification shows that the lint
+                check jar references (for example) the following API
+                which is no longer valid in this version of lint:
                 com.android.tools.lint.detector.api.DeletedInterface
                 (Referenced from test/pkg/Incompatible1.class)
+
+                Therefore, this lint check library is not included
+                in analysis. This affects the following lint checks:
+                MyIssueId
 
                 Recompile the checks against the latest version, or if
                 this is a check bundled with a third-party library, see
@@ -821,7 +843,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             )
             .expectMatches(
                 """
-                .*/app/lint\Q.jar: Warning: Library lint checks out of date.
+                .*/app/lint\Q.jar: Warning: Library lint checks out of date;
+                these checks will be skipped!
 
                 Lint found an issue registry (test.pkg.MyIssueRegistry)
                 which was compiled against an older version of lint

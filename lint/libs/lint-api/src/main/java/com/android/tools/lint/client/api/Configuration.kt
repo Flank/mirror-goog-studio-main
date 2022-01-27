@@ -450,11 +450,16 @@ abstract class Configuration(
                 return
             } else if (IssueRegistry.isDeletedIssueId(id)) {
                 // Recently deleted, but avoid complaining about leftover configuration
-                null
+                return
+            } else if (JarFileIssueRegistry.isRejectedIssueId(id)) {
+                // Issue was not loaded (perhaps incompatible with this version of lint);
+                // we're already complaining about that, so don't also complain that
+                // it's an "unknown" issue
+                return
             } else {
                 getUnknownIssueIdErrorMessage(id, issueRegistry)
             }
-                ?: return
+
         if (driver != null) {
             val severity = getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID)
             if (severity !== Severity.IGNORE) {
