@@ -18,9 +18,11 @@ package com.android.build.api.variant.impl
 
 enum class SourceType(name: String) {
 
-    JAVA("java"),
-    RES("res"),
+    AIDL("aidl"),
     ASSETS("assets"),
+    JAVA("java"),
     JNI_LIBS("jniLibs"),
-    SHADERS("shaders")
+    ML_MODELS("mlModels"),
+    RES("res"),
+    SHADERS("shaders"),
 }

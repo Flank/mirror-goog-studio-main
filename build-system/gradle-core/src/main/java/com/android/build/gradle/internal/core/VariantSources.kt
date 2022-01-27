@@ -249,69 +249,6 @@ class VariantSources internal constructor(
     }
 
     /**
-     * Returns the dynamic list of [AssetSet] based on the configuration, for a particular
-     * property of [SourceProvider].
-     *
-     *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
-     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in an
-     * asset merger
-     *
-     * @param function the function that return a collection of file based on the SourceProvider.
-     * this is usually a method reference on SourceProvider
-     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
-     * @return a list ResourceSet.
-     */
-    fun getSourceFilesAsAssetSets(
-        function: Function<SourceProvider, Collection<File>>,
-        aaptEnv: String?
-    ): List<AssetSet> {
-        val assetSets = mutableListOf<AssetSet>()
-
-        val mainResDirs = function.apply(defaultSourceProvider)
-        // the main + generated asset folders are in the same AssetSet
-        var assetSet = AssetSet(BuilderConstants.MAIN, aaptEnv)
-        assetSet.addSources(mainResDirs)
-        assetSets.add(assetSet)
-        // the list of flavor must be reversed to use the right overlay order.
-        for (n in flavorSourceProviders.indices.reversed()) {
-            val sourceProvider = flavorSourceProviders[n]
-            val flavorResDirs = function.apply(sourceProvider)
-            // we need the same of the flavor config, but it's in a different list.
-            // This is fine as both list are parallel collections with the same number of items.
-            assetSet = AssetSet(sourceProvider.name, aaptEnv)
-            assetSet.addSources(flavorResDirs)
-            assetSets.add(assetSet)
-        }
-
-        // multiflavor specific overrides flavor
-        multiFlavorSourceProvider?.let {
-            val variantResDirs = function.apply(it)
-            assetSet = AssetSet(multiFlavorSourceProvider.name, aaptEnv)
-            assetSet.addSources(variantResDirs)
-            assetSets.add(assetSet)
-        }
-
-        // build type overrides flavors
-        if (buildTypeSourceProvider != null) {
-            val typeResDirs = function.apply(buildTypeSourceProvider)
-            assetSet = AssetSet(buildTypeSourceProvider.name, aaptEnv)
-            assetSet.addSources(typeResDirs)
-            assetSets.add(assetSet)
-        }
-
-        // variant specific overrides all
-        variantSourceProvider?.let {
-            val variantResDirs = function.apply(it)
-            assetSet = AssetSet(variantSourceProvider.name, aaptEnv)
-            assetSet.addSources(variantResDirs)
-            assetSets.add(assetSet)
-        }
-
-        return assetSets
-    }
-
-    /**
      * Returns all the renderscript source folder from the main config, the flavors and the build
      * type.
      *
@@ -319,13 +256,6 @@ class VariantSources internal constructor(
      */
     val renderscriptSourceList: Collection<File>
         get() = getSourceFiles{ obj: SourceProvider -> obj.renderscriptDirectories }
-
-    val aidlSourceList: Collection<File>
-        get() = getSourceFiles { obj: SourceProvider -> obj.aidlDirectories }
-
-
-    val jniSourceList: Collection<File>
-        get() = getSourceFiles{ obj: SourceProvider -> obj.cDirectories }
 
     fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<DirectoryEntries> {
         return sortedSourceProviders.map { sourceProvider ->

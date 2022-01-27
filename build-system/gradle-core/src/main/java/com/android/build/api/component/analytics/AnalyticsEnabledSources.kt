@@ -85,7 +85,28 @@ open class AnalyticsEnabledSources @Inject constructor(
                     stats,
                     objectFactory)
             }
+    override val mlModels: SourceAndOverlayDirectories
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_ML_MODELS_ACCESS_VALUE
+            return objectFactory.newInstance(
+                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                delegate.mlModels,
+                stats,
+                objectFactory)
+        }
 
+
+    override val aidl: SourceDirectories?
+        get() = delegate.aidl?.also {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_AIDL_ACCESS_VALUE
+            objectFactory.newInstance(
+                AnalyticsEnabledSourceDirectories::class.java,
+                it,
+                stats,
+                objectFactory)
+        }
 
     override fun getByName(name: String): SourceDirectories {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

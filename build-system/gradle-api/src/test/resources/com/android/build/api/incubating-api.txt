@@ -807,10 +807,12 @@ com.android.build.api.variant.SourceAndOverlayDirectories.getAll: org.gradle.api
 com.android.build.api.variant.SourceDirectories implements com.android.build.api.variant.AbstractSourceDirectories
 com.android.build.api.variant.SourceDirectories.getAll: org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.Directory>> ()
 com.android.build.api.variant.Sources
+com.android.build.api.variant.Sources.getAidl: com.android.build.api.variant.SourceDirectories ()
 com.android.build.api.variant.Sources.getAssets: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.Sources.getByName: com.android.build.api.variant.SourceDirectories (java.lang.String)
 com.android.build.api.variant.Sources.getJava: com.android.build.api.variant.SourceDirectories ()
 com.android.build.api.variant.Sources.getJniLibs: com.android.build.api.variant.SourceAndOverlayDirectories ()
+com.android.build.api.variant.Sources.getMlModels: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.Sources.getRes: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.Sources.getShaders: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component

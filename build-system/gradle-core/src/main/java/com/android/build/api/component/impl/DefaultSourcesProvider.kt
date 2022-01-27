@@ -60,4 +60,17 @@ interface DefaultSourcesProvider {
      * overridden by the 2nd one and so on.
      */
     val shaders: List<DirectoryEntries>?
+
+    /**
+     * the list of sources [DirectoryEntry] for AIDL or null if the feature is disabled.
+     */
+    val aidl: List<DirectoryEntry>?
+
+    /**
+     * the list of [DirectoryEntries] for machine learning models.
+     *
+     * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on.
+     */
+    val mlModels: List<DirectoryEntries>
 }

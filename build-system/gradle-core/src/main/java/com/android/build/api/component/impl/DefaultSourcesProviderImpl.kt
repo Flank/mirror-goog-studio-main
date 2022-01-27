@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
+import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.compiling.BuildConfigType
@@ -47,6 +48,35 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
                 sourceProvider -> sourceProvider.shadersDirectories
         } else null
 
+    override val aidl: List<DirectoryEntry>?
+        get() = if (component.buildFeatures.aidl) {
+            flattenSourceProviders { sourceSet -> sourceSet.aidl }
+        } else null
+
+    override val mlModels: List<DirectoryEntries>
+        get() = component.variantSources.getSourceList { sourceProvider ->
+            sourceProvider.mlModelsDirectories
+        }
+
+    private fun flattenSourceProviders(
+        sourceDirectory: (sourceSet: AndroidSourceSet) -> AndroidSourceDirectorySet
+    ): List<DirectoryEntry> {
+        val sourceSets = mutableListOf<DirectoryEntry>()
+        for (sourceProvider in component.variantSources.sortedSourceProviders) {
+            val sourceSet = sourceProvider as AndroidSourceSet
+            for (srcDir in sourceDirectory(sourceSet).srcDirs) {
+                sourceSets.add(
+                    FileBasedDirectoryEntryImpl(
+                        name = sourceSet.name,
+                        directory = srcDir,
+                        filter = sourceDirectory(sourceSet).filter,
+                    )
+                )
+            }
+        }
+        return sourceSets
+    }
+
     /**
      * Computes the default java sources: source sets and generated sources.
      * For access to the final list of java sources, use [com.android.build.api.variant.Sources]
@@ -58,19 +88,9 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         val sourceSets = mutableListOf<DirectoryEntry>()
 
         // First the actual source folders.
-        val providers = variantSources.sortedSourceProviders
-        for (provider in providers) {
-            val sourceSet = provider as AndroidSourceSet
-            for (srcDir in sourceSet.java.srcDirs) {
-                sourceSets.add(
-                    FileBasedDirectoryEntryImpl(
-                        name = sourceSet.name,
-                        directory = srcDir,
-                        filter = (provider as AndroidSourceSet).java.filter,
-                    )
-                )
-            }
-        }
+        sourceSets.addAll(
+            flattenSourceProviders { sourceSet -> sourceSet.java }
+        )
 
         // for the other, there's no duplicate so no issue.
         if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_SOURCE) {

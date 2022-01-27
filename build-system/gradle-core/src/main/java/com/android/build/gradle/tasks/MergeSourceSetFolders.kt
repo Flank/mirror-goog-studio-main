@@ -512,21 +512,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-
-            val variantSources = creationConfig.variantSources
-            val mlModelsDirFunction =
-                Function<SourceProvider, Collection<File>> { it.mlModelsDirectories }
-            task.aaptEnv.setDisallowChanges(creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
-                ANDROID_AAPT_IGNORE
-            ))
-            task.assetSets.setDisallowChanges(task.project.provider {
-                variantSources.getSourceFilesAsAssetSets(mlModelsDirFunction, task.aaptEnv.forUseAtConfigurationTime().orNull)
-            })
-            task.sourceFolderInputs.from(Callable {
-                variantSources.getSourceFiles(
-                    mlModelsDirFunction
-                )
-            })
+            super.configureWithAssets(task, creationConfig.sources.mlModels)
         }
     }
 }

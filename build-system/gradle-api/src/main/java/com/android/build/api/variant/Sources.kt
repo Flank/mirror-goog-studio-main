@@ -53,6 +53,17 @@ interface Sources {
     val shaders: SourceAndOverlayDirectories?
 
     /**
+     * Access to the machine learning models folders.
+     */
+    val mlModels: SourceAndOverlayDirectories
+
+    /**
+     * Access to the aidl sources folders if [com.android.build.api.dsl.BuildFeatures.aidl]
+     * is true otherwise null
+     */
+    val aidl: SourceDirectories?
+
+    /**
      * Access (and potentially creates) a new [SourceDirectories] for a custom source type that can
      * be referenced by its [name].
      *

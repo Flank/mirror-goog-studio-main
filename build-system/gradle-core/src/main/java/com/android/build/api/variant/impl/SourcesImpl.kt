@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.DefaultSourcesProvider
+import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.api.AndroidSourceDirectorySet
@@ -121,6 +122,34 @@ class SourcesImpl(
                     }
                 }
                 resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.shaders)
+            }
+        }
+
+    override val mlModels: AssetSourceDirectoriesImpl
+        get() = AssetSourceDirectoriesImpl(
+            SourceType.ML_MODELS.name,
+            projectDirectory,
+            variantServices,
+            variantSourceSet?.mlModels?.filter
+        ).also { sourceDirectoriesImpl ->
+            defaultSourceProvider.mlModels.run {
+                forEach {
+                    sourceDirectoriesImpl.addSources(it)
+                }
+            }
+            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.mlModels)
+        }
+
+    override val aidl: SourceDirectories?
+        get() = defaultSourceProvider.aidl?.let { defaultAidlDirectories ->
+            SourceDirectoriesImpl(
+                SourceType.AIDL.name,
+                projectDirectory,
+                variantServices,
+                variantSourceSet?.aidl?.filter
+            ).also { sourceDirectoriesImpl ->
+                sourceDirectoriesImpl.addSources(defaultAidlDirectories)
+                resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.aidl)
             }
         }
 
