@@ -36,6 +36,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,16 +73,23 @@ public class UnitTestingModelTest {
         Truth.assertThat(unitTestMetadata.getType()).isEqualTo(ArtifactMetaData.TYPE_JAVA);
 
         for (Variant variant : model.getVariants()) {
+            List<File> expectedAdditionalClassesFolders = new ArrayList<>();
+            expectedAdditionalClassesFolders.add(
+                    new File(
+                            ArtifactTypeUtil.getOutputDir(
+                                    InternalArtifactType
+                                            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                                            .INSTANCE,
+                                    project.getSubproject("app").getBuildDir()),
+                            variant.getName() + "/" + FN_R_CLASS_JAR)
+            );
+            expectedAdditionalClassesFolders.add(project.file("app/build/tmp/kotlin-classes/"
+                    + variant.getName()));
+            if (variant.getBuildType().equals("release")) {
+                expectedAdditionalClassesFolders.add(project.file("app/build/kotlinToolingMetadata"));
+            }
             Truth.assertThat(variant.getMainArtifact().getAdditionalClassesFolders())
-                    .containsExactly(
-                            new File(
-                                    ArtifactTypeUtil.getOutputDir(
-                                            InternalArtifactType
-                                                    .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                                                    .INSTANCE,
-                                            project.getSubproject("app").getBuildDir()),
-                                    variant.getName() + "/" + FN_R_CLASS_JAR),
-                            project.file("app/build/tmp/kotlin-classes/" + variant.getName()));
+                    .containsExactlyElementsIn(expectedAdditionalClassesFolders);
 
             List<JavaArtifact> unitTestArtifacts =
                     variant.getExtraJavaArtifacts()

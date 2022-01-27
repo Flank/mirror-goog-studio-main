@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gradle.tooling.BuildLauncher;
@@ -67,7 +68,16 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
     }
 
     public GradleTaskExecutor withEnvironmentVariables(Map<String, String> env) {
-        this.env = ImmutableMap.copyOf(env);
+        HashMap<String, String> myEnv;
+        if (this.env == null) {
+            // If specifying some env vars, make sure to copy the existing one first.
+            myEnv = new HashMap<>(System.getenv());
+        } else {
+            myEnv = new HashMap<>(this.env);
+        }
+        myEnv.putAll(env);
+
+        this.env = ImmutableMap.copyOf(myEnv);
         return this;
     }
 

@@ -18,8 +18,8 @@
     {
       "name": "debugApiElements-published",
       "attributes": {
-        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
         "com.android.build.api.attributes.BuildTypeAttr": "debug",
+        "org.gradle.category": "library",
         "org.gradle.usage": "java-api",
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
@@ -47,8 +47,8 @@
     {
       "name": "debugRuntimeElements-published",
       "attributes": {
-        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
         "com.android.build.api.attributes.BuildTypeAttr": "debug",
+        "org.gradle.category": "library",
         "org.gradle.usage": "java-runtime",
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
@@ -58,7 +58,13 @@
           "module": "kotlin-stdlib-jdk8",
           "version": {
             "requires": "{KOTLIN_VERSION}"
-          }
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            }
+          ]
         }
       ],
       "files": [

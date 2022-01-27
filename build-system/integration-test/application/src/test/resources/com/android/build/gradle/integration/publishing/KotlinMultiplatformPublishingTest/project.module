@@ -17,6 +17,7 @@
     {
       "name": "metadataApiElements",
       "attributes": {
+        "org.gradle.category": "library",
         "org.gradle.usage": "kotlin-api",
         "org.jetbrains.kotlin.platform.type": "common"
       },
@@ -35,8 +36,8 @@
     {
       "name": "debugApiElements-published",
       "attributes": {
-        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
         "com.android.build.api.attributes.BuildTypeAttr": "debug",
+        "org.gradle.category": "library",
         "org.gradle.usage": "java-api",
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
@@ -50,8 +51,8 @@
     {
       "name": "debugRuntimeElements-published",
       "attributes": {
-        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
         "com.android.build.api.attributes.BuildTypeAttr": "debug",
+        "org.gradle.category": "library",
         "org.gradle.usage": "java-runtime",
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
@@ -65,7 +66,7 @@
     {
       "name": "releaseApiElements-published",
       "attributes": {
-        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "org.gradle.category": "library",
         "org.gradle.usage": "java-api",
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
@@ -79,7 +80,7 @@
     {
       "name": "releaseRuntimeElements-published",
       "attributes": {
-        "com.android.build.api.attributes.AgpVersionAttr": "{AGP_Version}",
+        "org.gradle.category": "library",
         "org.gradle.usage": "java-runtime",
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
