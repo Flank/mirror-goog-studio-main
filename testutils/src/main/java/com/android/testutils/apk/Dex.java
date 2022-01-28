@@ -90,7 +90,7 @@ public final class Dex {
         }
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (DexBackedStringReference stringReference :
-                DexUtils.loadDex(fileBytesSupplier.get()).getStrings()) {
+                DexUtils.loadDex(fileBytesSupplier.get()).getStringReferences()) {
             builder.add(stringReference.getString());
         }
         return strings = builder.build();
@@ -101,11 +101,11 @@ public final class Dex {
     }
 
     public int getFieldCount() {
-        return DexUtils.loadDex(fileBytesSupplier.get()).getFieldCount();
+        return DexUtils.loadDex(fileBytesSupplier.get()).getFieldSection().size();
     }
 
     public int getMethodCount() {
-        return DexUtils.loadDex(fileBytesSupplier.get()).getMethodCount();
+        return DexUtils.loadDex(fileBytesSupplier.get()).getMethodSection().size();
     }
 
     @Override

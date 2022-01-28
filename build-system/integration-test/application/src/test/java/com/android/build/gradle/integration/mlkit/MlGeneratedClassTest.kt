@@ -26,6 +26,7 @@ import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
 import org.jf.dexlib2.iface.reference.MethodReference
 import org.jf.dexlib2.immutable.ImmutableMethod
+import org.jf.dexlib2.immutable.ImmutableMethodParameter
 import org.jf.dexlib2.immutable.util.ParamUtil
 import org.junit.Before
 import org.junit.Rule
@@ -395,11 +396,12 @@ class MlGeneratedClassTest {
             return ImmutableMethod(
                 model,
                 "newInstance",
-                ParamUtil.parseParamString(CONTEXT),
+                ImmutableMethodParameter.immutableListOf(ParamUtil.parseParamString(CONTEXT)),
                 model,
                 0,
                 null,
-                null
+                null,
+		null
             )
         }
 
@@ -407,11 +409,12 @@ class MlGeneratedClassTest {
             return ImmutableMethod(
                 model,
                 "newInstance",
-                ParamUtil.parseParamString(CONTEXT+ MODEL_OPTIONS),
+                ImmutableMethodParameter.immutableListOf(ParamUtil.parseParamString(CONTEXT+ MODEL_OPTIONS)),
                 model,
                 0,
                 null,
-                null
+                null,
+		null
             )
         }
 
@@ -423,11 +426,12 @@ class MlGeneratedClassTest {
             return ImmutableMethod(
                 definingClass,
                 "process",
-                ParamUtil.parseParamString(params),
+                ImmutableMethodParameter.immutableListOf(ParamUtil.parseParamString(params)),
                 returnType,
                 0,
                 null,
-                null
+                null,
+		null
             )
         }
 
@@ -439,7 +443,8 @@ class MlGeneratedClassTest {
                 "V",
                 0,
                 null,
-                null
+                null,
+		null
             )
         }
 
@@ -462,7 +467,8 @@ class MlGeneratedClassTest {
                 returnType,
                 0,
                 null,
-                null
+                null,
+		null
             )
         }
     }

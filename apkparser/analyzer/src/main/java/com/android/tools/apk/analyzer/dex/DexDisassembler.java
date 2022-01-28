@@ -28,6 +28,7 @@ import java.util.stream.StreamSupport;
 import org.jf.baksmali.Adaptors.ClassDefinition;
 import org.jf.baksmali.Adaptors.MethodDefinition;
 import org.jf.baksmali.BaksmaliOptions;
+import org.jf.baksmali.formatter.BaksmaliWriter;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.DexFile;
@@ -106,10 +107,11 @@ public class DexDisassembler {
         ClassDefinition classDefinition = new ClassDefinition(options, classDef);
 
         StringWriter writer = new StringWriter(1024);
-        try (IndentingWriter iw = new IndentingWriter(writer)) {
+
+        try (BaksmaliWriter iw = new BaksmaliWriter(new IndentingWriter(writer))) {
             MethodImplementation methodImpl = method.getImplementation();
             if (methodImpl == null) {
-                MethodDefinition.writeEmptyMethodTo(iw, method, options);
+                MethodDefinition.writeEmptyMethodTo(iw, method, classDefinition);
             } else {
                 MethodDefinition methodDefinition =
                         new MethodDefinition(classDefinition, method, methodImpl);
@@ -132,7 +134,7 @@ public class DexDisassembler {
         ClassDefinition classDefinition = new ClassDefinition(options, classDef.get());
 
         StringWriter writer = new StringWriter(1024);
-        try (IndentingWriter iw = new IndentingWriter(writer)) {
+        try (BaksmaliWriter iw = new BaksmaliWriter(new IndentingWriter(writer))) {
             classDefinition.writeTo(iw);
         }
         return writer.toString().replace("\r", "");
@@ -140,7 +142,7 @@ public class DexDisassembler {
 
     private static DexFile rewriteDexFile(@NonNull DexFile dexFile, @NonNull ProguardMap map) {
         DexRewriter rewriter = getRewriter(map);
-        return rewriter.rewriteDexFile(dexFile);
+        return rewriter.getDexFileRewriter().rewrite(dexFile);
     }
 
     @NonNull

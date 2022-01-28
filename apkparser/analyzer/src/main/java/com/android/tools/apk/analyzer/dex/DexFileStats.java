@@ -45,7 +45,7 @@ public class DexFileStats {
                 definedMethodCount += Iterables.size(dexBackedClassDef.getMethods());
             }
             classesCount += classes.size();
-            methodCount += dexFile.getMethodCount();
+            methodCount += dexFile.getMethodSection().size();
         }
 
         return new DexFileStats(classesCount, definedMethodCount, methodCount);

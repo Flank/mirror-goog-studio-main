@@ -339,28 +339,28 @@ public class ApkAnalyzerImplTest {
     public void dexPackagesTest() throws IOException {
         impl.dexPackages(apk, null, null, null, null, false, false, null);
         assertEquals(
-                "P d 3\t7\t380\t<TOTAL>\n"
-                        + "P d 3\t4\t306\tcom\n"
-                        + "P d 3\t4\t306\tcom.example\n"
-                        + "P d 3\t4\t306\tcom.example.helloworld\n"
-                        + "C d 3\t4\t306\tcom.example.helloworld.HelloWorld\n"
-                        + "M d 1\t1\t69\tcom.example.helloworld.HelloWorld <clinit>()\n"
-                        + "M d 1\t1\t55\tcom.example.helloworld.HelloWorld <init>()\n"
-                        + "M d 1\t1\t72\tcom.example.helloworld.HelloWorld void onCreate(android.os.Bundle)\n"
-                        + "M r 0\t1\t26\tcom.example.helloworld.HelloWorld void setContentView(int)\n"
+                "P d 3\t7\t270\t<TOTAL>\n"
+                        + "P d 3\t4\t246\tcom\n"
+                        + "P d 3\t4\t246\tcom.example\n"
+                        + "P d 3\t4\t246\tcom.example.helloworld\n"
+                        + "C d 3\t4\t246\tcom.example.helloworld.HelloWorld\n"
+                        + "M d 1\t1\t57\tcom.example.helloworld.HelloWorld <clinit>()\n"
+                        + "M d 1\t1\t43\tcom.example.helloworld.HelloWorld <init>()\n"
+                        + "M d 1\t1\t54\tcom.example.helloworld.HelloWorld void onCreate(android.os.Bundle)\n"
+                        + "M r 0\t1\t8\tcom.example.helloworld.HelloWorld void setContentView(int)\n"
                         + "F d 0\t0\t18\tcom.example.helloworld.HelloWorld java.util.concurrent.atomic.AtomicIntegerFieldUpdater hw\n"
                         + "F d 0\t0\t10\tcom.example.helloworld.HelloWorld int volAtomicVarKept\n"
-                        + "P r 0\t2\t46\tandroid\n"
-                        + "P r 0\t2\t46\tandroid.app\n"
-                        + "C r 0\t2\t46\tandroid.app.Activity\n"
-                        + "M r 0\t1\t20\tandroid.app.Activity <init>()\n"
-                        + "M r 0\t1\t26\tandroid.app.Activity void onCreate(android.os.Bundle)\n"
-                        + "P r 0\t1\t28\tjava\n"
-                        + "P r 0\t1\t28\tjava.util\n"
-                        + "P r 0\t1\t28\tjava.util.concurrent\n"
-                        + "P r 0\t1\t28\tjava.util.concurrent.atomic\n"
-                        + "C r 0\t1\t28\tjava.util.concurrent.atomic.AtomicIntegerFieldUpdater\n"
-                        + "M r 0\t1\t28\tjava.util.concurrent.atomic.AtomicIntegerFieldUpdater java.util.concurrent.atomic.AtomicIntegerFieldUpdater newUpdater(java.lang.Class,java.lang.String)\n",
+                        + "P r 0\t2\t16\tandroid\n"
+                        + "P r 0\t2\t16\tandroid.app\n"
+                        + "C r 0\t2\t16\tandroid.app.Activity\n"
+                        + "M r 0\t1\t8\tandroid.app.Activity <init>()\n"
+                        + "M r 0\t1\t8\tandroid.app.Activity void onCreate(android.os.Bundle)\n"
+                        + "P r 0\t1\t8\tjava\n"
+                        + "P r 0\t1\t8\tjava.util\n"
+                        + "P r 0\t1\t8\tjava.util.concurrent\n"
+                        + "P r 0\t1\t8\tjava.util.concurrent.atomic\n"
+                        + "C r 0\t1\t8\tjava.util.concurrent.atomic.AtomicIntegerFieldUpdater\n"
+                        + "M r 0\t1\t8\tjava.util.concurrent.atomic.AtomicIntegerFieldUpdater java.util.concurrent.atomic.AtomicIntegerFieldUpdater newUpdater(java.lang.Class,java.lang.String)\n",
                 baos.toString());
     }
 
