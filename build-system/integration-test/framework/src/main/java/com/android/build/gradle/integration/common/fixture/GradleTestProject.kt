@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.testprojects.TestProj
 import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.truth.forEachLine
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.plugins.VersionCheckPlugin
 import com.android.build.gradle.options.BooleanOption
@@ -633,6 +634,7 @@ ext {
     buildToolsVersion = '%1${"$"}s'
     latestCompileSdk = %2${"$"}s
     kotlinVersion = '%4${"$"}s'
+    composeVersion = '%5${"$"}s'
 }
 allprojects {
     ${generateProjectRepoScript()}
@@ -641,7 +643,8 @@ allprojects {
             DEFAULT_BUILD_TOOL_VERSION,
             compileSdkVersion,
             false,
-            kotlinVersion
+            kotlinVersion,
+            TaskManager.COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION,
         )
         if (APPLY_DEVICEPOOL_PLUGIN) {
             result += """
