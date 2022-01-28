@@ -247,3 +247,5 @@ Deprecated from AGP 7.2.0
   * com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
   * com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
   * com.android.build.api.variant.VariantBuilder.setUnitTestEnabled: void (boolean)
+Deprecated from AGP 7.3.0
+  * com.android.build.api.variant.Sources.getRenderscript: com.android.build.api.variant.SourceDirectories ()

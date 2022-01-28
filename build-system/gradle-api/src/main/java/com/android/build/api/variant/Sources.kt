@@ -64,6 +64,13 @@ interface Sources {
     val aidl: SourceDirectories?
 
     /**
+     * Access to the renderscript sources folders if
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is true otherwise null.
+     */
+    @get:Deprecated("renderscript is deprecated and will be removed in a future release.")
+    val renderscript: SourceDirectories?
+
+    /**
      * Access (and potentially creates) a new [SourceDirectories] for a custom source type that can
      * be referenced by its [name].
      *

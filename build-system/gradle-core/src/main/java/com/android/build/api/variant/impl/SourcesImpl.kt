@@ -153,6 +153,19 @@ class SourcesImpl(
             }
         }
 
+    override val renderscript: SourceDirectories?
+        get() = defaultSourceProvider.renderscript?.let { defaultRenderscriptDirectories ->
+            SourceDirectoriesImpl(
+                SourceType.RENDERSCRIPT.name,
+                projectDirectory,
+                variantServices,
+                variantSourceSet?.renderscript?.filter
+            ).also { sourceDirectoriesImpl ->
+                sourceDirectoriesImpl.addSources(defaultRenderscriptDirectories)
+                resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.renderscript)
+            }
+        }
+
     internal val extras: NamedDomainObjectContainer<SourceDirectoriesImpl> by lazy {
         variantServices.domainObjectContainer(
             SourceDirectoriesImpl::class.java,

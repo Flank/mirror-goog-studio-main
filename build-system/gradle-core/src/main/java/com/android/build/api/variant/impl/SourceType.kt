@@ -23,6 +23,7 @@ enum class SourceType(name: String) {
     JAVA("java"),
     JNI_LIBS("jniLibs"),
     ML_MODELS("mlModels"),
+    RENDERSCRIPT("renderscript"),
     RES("res"),
     SHADERS("shaders"),
 }

@@ -342,7 +342,8 @@ abstract class RenderscriptCompile : NdkTask() {
             task.optimLevel.setDisallowChanges(renderscript.optimLevel)
 
             task.sourceDirs =
-                creationConfig.services.fileCollection(Callable { variantSources.renderscriptSourceList })
+                creationConfig.services.fileCollection(Callable {
+                    creationConfig.sources.renderscript?.all })
             task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )

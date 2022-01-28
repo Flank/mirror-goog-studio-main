@@ -73,4 +73,9 @@ interface DefaultSourcesProvider {
      * overridden by the 2nd one and so on.
      */
     val mlModels: List<DirectoryEntries>
+
+    /**
+     * the list of sources [DirectoryEntry] for renderscript or null if the feature is disabled.
+     */
+    val renderscript: List<DirectoryEntry>?
 }

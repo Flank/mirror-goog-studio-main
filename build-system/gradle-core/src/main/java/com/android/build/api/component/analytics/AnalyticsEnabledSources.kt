@@ -108,6 +108,17 @@ open class AnalyticsEnabledSources @Inject constructor(
                 objectFactory)
         }
 
+    override val renderscript: SourceDirectories?
+        get() = delegate.renderscript?.also {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_RENDERSCRIPT_ACCESS_VALUE
+            objectFactory.newInstance(
+                AnalyticsEnabledSourceDirectories::class.java,
+                it,
+                stats,
+                objectFactory)
+        }
+
     override fun getByName(name: String): SourceDirectories {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.SOURCES_EXTRAS_ACCESS_VALUE

@@ -58,6 +58,11 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
             sourceProvider.mlModelsDirectories
         }
 
+    override val renderscript: List<DirectoryEntry>?
+        get() = if (component.buildFeatures.renderScript) {
+            flattenSourceProviders { sourceSet -> sourceSet.renderscript }
+        } else null
+
     private fun flattenSourceProviders(
         sourceDirectory: (sourceSet: AndroidSourceSet) -> AndroidSourceDirectorySet
     ): List<DirectoryEntry> {

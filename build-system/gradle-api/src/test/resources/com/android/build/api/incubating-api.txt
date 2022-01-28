@@ -813,6 +813,7 @@ com.android.build.api.variant.Sources.getByName: com.android.build.api.variant.S
 com.android.build.api.variant.Sources.getJava: com.android.build.api.variant.SourceDirectories ()
 com.android.build.api.variant.Sources.getJniLibs: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.Sources.getMlModels: com.android.build.api.variant.SourceAndOverlayDirectories ()
+com.android.build.api.variant.Sources.getRenderscript: com.android.build.api.variant.SourceDirectories ()
 com.android.build.api.variant.Sources.getRes: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.Sources.getShaders: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
