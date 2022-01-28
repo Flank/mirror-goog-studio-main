@@ -1171,4 +1171,15 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
         name = Source.directoryName(name);
         Assert.assertTrue("Directorize name", Source.isNameDirectory(name));
     }
+
+    @Test
+    public void testDoubleDirectoryAdd() throws Exception {
+        Path cwd = temporaryFolder.newFolder().toPath();
+        Path archPath = getTestPath("testDirectory.zip");
+        String dirName = Source.directoryName("dir");
+        try (ZipArchive archive = new ZipArchive(archPath)) {
+            archive.add(Sources.from(cwd, dirName, Deflater.NO_COMPRESSION));
+            archive.add(Sources.from(cwd, dirName, Deflater.NO_COMPRESSION));
+        }
+    }
 }
