@@ -133,7 +133,7 @@ def _iml_module_jar_impl(
         )
         if use_ijar:
             # Note: we exclude formc output from ijars, since formc does not generate APIs used downstream.
-            ijars += [java_output.ijar for java_output in java_provider.outputs.jars]
+            ijars += java_provider.compile_jars.to_list()
 
         # Forms
         if form_srcs:
@@ -288,9 +288,9 @@ def _iml_module_impl(ctx):
         use_ijar = True,
     )
 
-    friend_jars = [java_output.ijar for java_output in main_provider.outputs.jars]
+    friend_jars = main_provider.compile_jars.to_list()
     for test_friend in ctx.attr.test_friends:
-        friend_jars += [java_output.ijar for java_output in test_friend[JavaInfo].outputs.jars]
+        friend_jars += test_friend[JavaInfo].compile_jars.to_list()
 
     test_provider, test_forms, _ = _iml_module_jar_impl(
         ctx = ctx,
