@@ -1163,4 +1163,12 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
             Assert.assertTrue("Directory entry test1", entry.isDirectory());
         }
     }
+
+    @Test
+    public void testDirectoryName() throws Exception {
+        String name = "directory";
+        Assert.assertFalse("DirectoryName detection", Source.isNameDirectory(name));
+        name = Source.directoryName(name);
+        Assert.assertTrue("Directorize name", Source.isNameDirectory(name));
+    }
 }

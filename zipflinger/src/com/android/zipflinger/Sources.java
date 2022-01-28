@@ -36,9 +36,8 @@ public class Sources {
     public static Source from(Path path, @NonNull String name, int compressionLevel)
             throws IOException {
         if (Files.isDirectory(path)) {
-            // Make sure the entry name is '/' terminated
-            if (!name.endsWith("/")) {
-                name += "/";
+            if (!Source.isNameDirectory(name)) {
+                name = Source.directoryName(name);
             }
             return new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
         }
