@@ -59,11 +59,6 @@ abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncreme
             mergedTestResultPbFile.outputStream().use {
                 resultMerger.result.writeTo(it)
             }
-            logger.lifecycle(
-                "\nTest results saved as ${mergedTestResultPbFile.toURI()}.\n" +
-                "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                "From File from the menu bar and importing test-result.pb."
-            )
         }
     }
 
