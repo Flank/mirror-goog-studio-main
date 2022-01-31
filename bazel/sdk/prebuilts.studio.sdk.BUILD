@@ -34,8 +34,8 @@ filegroup(
 
 filegroup(
     name = "build-tools/latest/aidl",
-    srcs = glob(
-        include = ["*/build-tools/30.0.3/aidl"],
+    srcs = sdk_glob(
+        include = ["build-tools/30.0.3/aidl"],
     ),
     visibility = ["//visibility:public"],
 )
@@ -196,8 +196,8 @@ filegroup(
 
 filegroup(
     name = "platforms/latest/framework.aidl",
-    srcs = glob(
-        include = ["*/platforms/android-31/framework.aidl"],
+    srcs = sdk_glob(
+        include = ["platforms/android-31/framework.aidl"],
     ),
     visibility = ["//visibility:public"],
 )

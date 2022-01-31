@@ -52,6 +52,7 @@ public class MissingIdDetector extends LayoutDetector {
                                     + "\n"
                                     + "* Supply the `android:id` attribute with a unique ID.\n"
                                     + "* Supply the `android:tag` attribute with a unique string.\n"
+                                    + "\n"
                                     + "If you provide neither of the previous two, the system uses the ID of the "
                                     + "container view.",
                             Category.CORRECTNESS,

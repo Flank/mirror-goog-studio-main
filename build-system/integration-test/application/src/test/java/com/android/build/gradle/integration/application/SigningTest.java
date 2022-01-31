@@ -26,11 +26,9 @@ import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
-import com.android.apksig.ApkVerifier.IssueWithParams;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -59,10 +57,8 @@ import com.android.tools.build.apkzlib.sign.DigestAlgorithm;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Before;
@@ -137,6 +133,9 @@ public class SigningTest {
                         + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
@@ -184,7 +183,6 @@ public class SigningTest {
                         + "    }\n"
                         + "}"
                         + "");
-
     }
 
     @Test

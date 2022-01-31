@@ -30,14 +30,16 @@ package com.android.build.gradle.integration.common.fixture.app;
  */
 public class KotlinHelloWorldApp extends HelloWorldApp {
 
-    public static final String APP_ID = "com.example.helloworld";
+    public static final String NAMESPACE = "com.example.helloworld";
 
     @Override
     protected TestSourceFile getSource() {
         return new TestSourceFile(
-                "src/main/kotlin/com/example/helloworld",
+                "src/main/kotlin/" + NAMESPACE.replace('.', '/'),
                 "HelloWorld.kt",
-                "package com.example.helloworld\n"
+                "package "
+                        + NAMESPACE
+                        + "\n"
                         + "\n"
                         + "import android.app.Activity\n"
                         + "import android.os.Bundle\n"
@@ -78,6 +80,9 @@ public class KotlinHelloWorldApp extends HelloWorldApp {
                                 + "apply plugin: 'kotlin-android'\n"
                                 + "apply from: '../commonLocalRepo.gradle'\n"
                                 + "android {\n"
+                                + "    namespace \""
+                                + NAMESPACE
+                                + "\"\n"
                                 + "    compileSdkVersion rootProject.latestCompileSdk\n"
                                 + "    buildToolsVersion = rootProject.buildToolsVersion\n"
                                 + "    defaultConfig {\n"

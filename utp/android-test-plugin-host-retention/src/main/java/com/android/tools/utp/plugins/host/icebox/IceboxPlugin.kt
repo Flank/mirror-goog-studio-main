@@ -163,14 +163,14 @@ class IceboxPlugin @VisibleForTesting constructor(
         val testClass = testResult.testCase.testClass
         val testMethod = testResult.testCase.testMethod
         val ext = when (iceboxPluginConfig.snapshotCompression) {
-            Compression.NONE -> "tar"
-            Compression.TARGZ -> "tar.gz"
-            Compression.UNRECOGNIZED -> "tar"
+            Compression.NONE -> ""
+            Compression.TARGZ -> ".tar.gz"
+            Compression.UNRECOGNIZED -> ""
         }
         val emulatorSnapshotName = "${snapshotNamePrefix}$failureSnapshotId"
         val snapshotFile = File(
                 outputDir.absolutePath,
-                "snapshot-$testClass-$testMethod-$emulatorSnapshotName.$ext"
+                "snapshot-$testClass-$testMethod-$emulatorSnapshotName$ext"
         )
         iceboxCaller.fetchSnapshot(
                 snapshotFile,

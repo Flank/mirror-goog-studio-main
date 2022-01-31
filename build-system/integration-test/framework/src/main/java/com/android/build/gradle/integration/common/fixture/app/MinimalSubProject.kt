@@ -33,7 +33,7 @@ class MinimalSubProject private constructor(
     val addCompileAndSdkVersionToBuildFile: Boolean = false,
     val addVersionCodeToBuildFile: Boolean = false,
     val addManifestFile: Boolean = false,
-    val packageName: String?
+    val namespace: String?
 ) :
     GradleProject(path) {
 
@@ -46,14 +46,13 @@ class MinimalSubProject private constructor(
         if (addVersionCodeToBuildFile) {
             buildScript += "\nandroid.defaultConfig.versionCode 1\n"
         }
+        namespace?.let { buildScript += "\nandroid.namespace \"$it\"\n"}
         addFile(TestSourceFile("build.gradle", buildScript))
 
         if (addManifestFile) {
-            checkNotNull(packageName) { "packageName must be provided when addManifestFile=true" }
             val manifest = """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                         xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="$packageName">
+                         xmlns:dist="http://schemas.android.com/apk/distribution">
                     <application />
                 </manifest>""".trimMargin()
             addFile(TestSourceFile("src/main/AndroidManifest.xml", manifest))
@@ -82,59 +81,59 @@ class MinimalSubProject private constructor(
     companion object {
 
         @JvmOverloads
-        fun app(packageName: String = "com.example.app", projectPath: String = "app"): MinimalSubProject {
+        fun app(namespace: String = "com.example.app", projectPath: String = "app"): MinimalSubProject {
             return MinimalSubProject(
                 path = projectPath,
                 plugin = "com.android.application",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = true,
                 addManifestFile = true,
-                packageName = packageName
+                namespace = namespace
             )
         }
 
         @JvmOverloads
-        fun lib(packageName: String = "com.example.lib", projectPath: String = "lib"): MinimalSubProject {
+        fun lib(namespace: String = "com.example.lib", projectPath: String = "lib"): MinimalSubProject {
             return MinimalSubProject(
                 path = projectPath,
                 plugin = "com.android.library",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = true,
-                packageName = packageName
+                namespace = namespace
             )
         }
 
-        fun feature(packageName: String): MinimalSubProject {
+        fun feature(namespace: String): MinimalSubProject {
             return MinimalSubProject(
                 path = null,
                 plugin = "com.android.feature",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = true,
-                packageName = packageName
+                namespace = namespace
             )
         }
 
-        fun dynamicFeature(packageName: String): MinimalSubProject {
+        fun dynamicFeature(namespace: String): MinimalSubProject {
             return MinimalSubProject(
                 path = null,
                 plugin = "com.android.dynamic-feature",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = true,
-                packageName = packageName
+                namespace = namespace
             )
         }
 
-        fun test(packageName: String): MinimalSubProject {
+        fun test(namespace: String): MinimalSubProject {
             return MinimalSubProject(
                 path = null,
                 plugin = "com.android.test",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = true,
-                packageName = packageName
+                namespace = namespace
             )
         }
 
@@ -145,7 +144,7 @@ class MinimalSubProject private constructor(
                 addCompileAndSdkVersionToBuildFile = false,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = false,
-                packageName = null
+                namespace = null
             )
         }
 
@@ -156,7 +155,7 @@ class MinimalSubProject private constructor(
                 addCompileAndSdkVersionToBuildFile = false,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = false,
-                packageName = null
+                namespace = null
             )
         }
 
@@ -167,7 +166,7 @@ class MinimalSubProject private constructor(
                 addCompileAndSdkVersionToBuildFile = false,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = false,
-                packageName = null
+                namespace = null
             )
         }
     }

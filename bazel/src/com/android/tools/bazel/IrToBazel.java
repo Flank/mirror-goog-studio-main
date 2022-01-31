@@ -23,7 +23,7 @@ import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.FileGroup;
 import com.android.tools.bazel.model.ImlModule;
-import com.android.tools.bazel.model.JavaImport;
+import com.android.tools.bazel.model.JvmImport;
 import com.android.tools.bazel.model.JavaLibrary;
 import com.android.tools.bazel.model.Package;
 import com.android.tools.bazel.model.UnmanagedRule;
@@ -61,11 +61,11 @@ public class IrToBazel {
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
-        Map<IrLibrary, JavaImport> imports = Maps.newHashMap();
+        Map<IrLibrary, JvmImport> imports = Maps.newHashMap();
         Map<String, FileGroup> groups = Maps.newHashMap();
         Map<IrModule, ImlModule> rules = new HashMap<>();
         Map<String, UnmanagedRule> unmanaged = new HashMap<>();
-        Map<String, JavaImport> reuse = Maps.newHashMap();
+        Map<String, JvmImport> reuse = Maps.newHashMap();
 
         // 1st pass: Creation.
         for (IrModule bazelModule : bazelProject.modules) {
@@ -154,7 +154,7 @@ public class IrToBazel {
                             "intellij-updater", "studio-sdk-updater"
                     );
                     IrLibrary library = (IrLibrary) dependency.dependency;
-                    JavaImport javaImport = imports.get(library);
+                    JvmImport javaImport = imports.get(library);
                     if (javaImport == null) {
                         Map.Entry<String, String> unmanagedEntry = null;
                         for (Map.Entry<String, String> entry : UNMANAGED.entrySet()) {
@@ -238,14 +238,14 @@ public class IrToBazel {
                             }
                             javaImport = reuse.get(key);
                             if (javaImport == null) {
-                                javaImport = new JavaImport(pkg, libName);
+                                javaImport = new JvmImport(pkg, libName);
                                 for (String src : sources.get(0)) {
                                     javaImport.addJar(src);
                                 }
                                 reuse.put(key, javaImport);
                             }
                         } else {
-                            javaImport = new JavaImport(libPackage, libName);
+                            javaImport = new JvmImport(libPackage, libName);
                             // General case
                             for (int i = 0; i < pkgs.size(); i++) {
                                 Package pkg = pkgs.get(i);

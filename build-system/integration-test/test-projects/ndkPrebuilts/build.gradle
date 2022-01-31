@@ -4,6 +4,7 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.example.hellojni.app"
     // Set to a version that does not support 64-bits (b.android.com/237833)
     compileSdkVersion 19
     buildToolsVersion = rootProject.buildToolsVersion

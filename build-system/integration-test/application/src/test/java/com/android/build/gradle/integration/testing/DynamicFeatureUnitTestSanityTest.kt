@@ -40,13 +40,13 @@ import org.junit.Test
 class DynamicFeatureUnitTestSanityTest {
 
     private fun MinimalSubProject.withMarkerJavaFile(
-        name: String = packageName!!.substringAfterLast('.').usLocaleCapitalize(),
+        name: String = namespace!!.substringAfterLast('.').usLocaleCapitalize(),
         expression: String = "\"$name\""
     ): MinimalSubProject =
         withFile(
-            "src/main/java/${packageName!!.replace('.', '/')}/$name.java",
+            "src/main/java/${namespace!!.replace('.', '/')}/$name.java",
             """
-                package $packageName;
+                package $namespace;
                 public class $name {
                     public static String getName() {
                         return $expression;

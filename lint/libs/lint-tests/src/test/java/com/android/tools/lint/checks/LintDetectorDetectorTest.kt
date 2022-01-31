@@ -391,6 +391,9 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:61: Warning: The issue summary should be capitalized [LintImplTextFormat]
                                 briefDescription = "checks MyLintDetector.",
                                                     ~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetector.kt:63: Warning: Multi-line issue explanation strings will interpret line separators as hard breaks, and this looks like a continuation of the same paragraph. Consider using  at the end of the previous line to indicate that the lines should be joined, or add a blank line between unrelated sentences, or suppress this issue type here. [LintImplTextFormat]
+                                    Some description here.
+                                    ~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyKotlinLintDetector.kt:64: Warning: "foo.bar.baz(args)" looks like a call; surround with backtics in string to display as symbol, e.g. `foo.bar.baz(args)` [LintImplTextFormat]
                                     Here's a call: foo.bar.baz(args).
                                                    ~~~~~~~~~~~~~~~~~
@@ -475,7 +478,7 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
                 class MyIssueRegistry : IssueRegistry() {
                       ~~~~~~~~~~~~~~~
-                27 errors, 15 warnings
+                27 errors, 16 warnings
                 """
             )
             .expectFixDiffs(

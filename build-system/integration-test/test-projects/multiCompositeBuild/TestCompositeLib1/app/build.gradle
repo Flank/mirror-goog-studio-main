@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 //apply plugin: 'kotlin-android-extensions'
 
 android {
+    namespace "com.test.composite1"
     compileSdkVersion rootProject.ext.latestCompileSdk
     defaultConfig {
         applicationId "com.test.composite1"

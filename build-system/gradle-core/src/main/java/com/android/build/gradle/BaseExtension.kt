@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
+import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
@@ -129,7 +130,7 @@ abstract class BaseExtension protected constructor(
     abstract val composeOptions: ComposeOptions
 
     abstract override val dataBinding: DataBindingOptions
-    abstract val viewBinding: ViewBindingOptions
+    abstract val viewBinding: ViewBindingOptionsImpl
 
     override var defaultPublishConfig: String = "release"
         set(_) {
@@ -237,10 +238,7 @@ abstract class BaseExtension protected constructor(
      *
      * For more information about the properties you can configure in this block, see [ViewBindingOptions].
      */
-    fun viewBinding(action: Action<ViewBindingOptions>) {
-        checkWritability()
-        action.execute(viewBinding)
-    }
+    abstract fun viewBinding(action: Action<ViewBindingOptionsImpl>)
 
     fun deviceProvider(deviceProvider: DeviceProvider) {
         checkWritability()

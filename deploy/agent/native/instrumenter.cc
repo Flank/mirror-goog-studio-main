@@ -272,7 +272,7 @@ bool Instrumenter::ApplyCachedTransforms(
   std::vector<std::vector<dex::u4>> cached_classes;
   for (const auto& transform : transforms) {
     std::vector<dex::u4> dex;
-    if (!cache_.ReadClass(transform->GetClassName(), &dex)) {
+    if (!cache_->ReadClass(transform->GetClassName(), &dex)) {
       return false;
     }
     cached_classes.emplace_back(std::move(dex));
@@ -335,7 +335,7 @@ bool Instrumenter::ApplyTransforms(
     // RetransformClasses causes the Agent_ClassFileLoadHook callback to
     // populate last_class_bytes.
     if (caching_enabled_) {
-      cache_.WriteClass(transforms[i]->GetClassName(), last_class_bytes);
+      cache_->WriteClass(transforms[i]->GetClassName(), last_class_bytes);
     }
   }
 
@@ -377,9 +377,6 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     return true;
   }
 
-  auto cache = TransformCache(instrument_jar_path + ".cache");
-  Instrumenter instrumenter(jvmti, jni, cache);
-
   bool success = false;
   if (overlay_swap) {
     JniClass version(jni, "android/os/Build$VERSION");
@@ -393,12 +390,17 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     } else {
       res_manager = &kResourcesManagerPostAPI31;
     }
+    auto cache =
+        std::make_unique<TransformCache>(instrument_jar_path + ".cache");
+    Instrumenter instrumenter(jvmti, jni, std::move(cache));
     success = instrumenter.Instrument(
         {&kApplicationLoadersTransform, &kThreadTransform,
          &kDexPathListTransform, &kLoadedApkTransform, res_manager});
   } else {
     // Disable caching for non-overlay swap, as the cache directory gets cleared
     // on installation.
+    auto cache = std::make_unique<DisabledTransformCache>();
+    Instrumenter instrumenter(jvmti, jni, std::move(cache));
     instrumenter.SetCachingEnabled(false);
     success = instrumenter.Instrument(
         {&kActivityThreadTransform, &kDexPathListElementTransform});

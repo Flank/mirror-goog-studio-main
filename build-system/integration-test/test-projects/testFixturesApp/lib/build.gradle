@@ -20,6 +20,7 @@ plugins {
 }
 
 android {
+    namespace "com.example.lib"
     compileSdkVersion rootProject.latestCompileSdk
     testFixtures {
         enable true

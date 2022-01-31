@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
+  namespace "com.android.tests.basic"
   compileSdkVersion rootProject.latestCompileSdk
-    buildToolsVersion = rootProject.buildToolsVersion
+  buildToolsVersion = rootProject.buildToolsVersion
 
-    publishNonDefault true
-    generatePureSplits true
+  publishNonDefault true
+  generatePureSplits true
 
   defaultConfig {
     versionCode 12

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c90a9b9f2cb1a36586315f666b6e73fa7abfcfb0a68e31ec262ce31239580637
+4c49699d435fe73f67dda57f28040c5a74dacc47fc5f3f72490d9ada128a09bc
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -177,6 +177,7 @@ com.android.build.api.dsl.CommonExtension.getLint: com.android.build.api.dsl.Lin
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<? extends ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.api.dsl.CommonExtension.getViewBinding: com.android.build.api.dsl.ViewBinding ()
 com.android.build.api.dsl.CommonExtension.installation: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Installation, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.productFlavors: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>, kotlin.Unit>)
@@ -186,6 +187,7 @@ com.android.build.api.dsl.CommonExtension.setCompileSdkExtension: void (java.lan
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.viewBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ViewBinding, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.CompileOptions.getEncoding: java.lang.String ()
 com.android.build.api.dsl.CompileOptions.getSourceCompatibility: org.gradle.api.JavaVersion ()
@@ -289,6 +291,9 @@ com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension$DefaultImpls
 com.android.build.api.dsl.VariantDimension.getJavaCompileOptions: com.android.build.api.dsl.JavaCompileOptions ()
 com.android.build.api.dsl.VariantDimension.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
+com.android.build.api.dsl.ViewBinding
+com.android.build.api.dsl.ViewBinding.getEnable: boolean ()
+com.android.build.api.dsl.ViewBinding.setEnable: void (boolean)
 com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
 com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassContext, org.objectweb.asm.ClassVisitor)
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()

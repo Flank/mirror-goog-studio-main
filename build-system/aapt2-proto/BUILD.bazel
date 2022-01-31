@@ -6,7 +6,8 @@ maven_library(
     name = "aapt2-proto",
     srcs = [],
     bundled_deps = [
-        ":aapt2-proto-with-notice",
+        "//prebuilts/tools/common/aapt/protos",
+        ":notice",
     ],
     coordinates = "com.android.tools.build:aapt2-proto:" + BUILD_VERSION + "-" + AAPT2_VERSION,
     visibility = ["//visibility:public"],
@@ -15,10 +16,9 @@ maven_library(
     ],
 )
 
-# This is here just to merge the NOTICE file into the prebuilt proto jar.
+# This is here to merge the NOTICE file into the aapt2-proto jar.
 java_library(
-    name = "aapt2-proto-with-notice",
-    resource_jars = ["//prebuilts/tools/common/aapt/protos"],
+    name = "notice",
     resource_strip_prefix = "tools/base/build-system/aapt2-proto",
     resources = ["NOTICE"],
 )

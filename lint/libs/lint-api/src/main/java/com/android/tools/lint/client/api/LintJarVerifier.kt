@@ -26,7 +26,7 @@ import org.objectweb.asm.ClassReader.SKIP_DEBUG
 import org.objectweb.asm.ClassReader.SKIP_FRAMES
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes.ASM7
+import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
 import java.io.File
 import java.lang.Byte
@@ -45,7 +45,7 @@ import java.util.jar.JarFile
  * Given a lint jar file, checks to see if the jar file looks compatible
  * with the current version of lint.
  */
-class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
+class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
     /**
      * Is the class with the given [internal] class name part of an API
      * we want to check for validity?
@@ -191,7 +191,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
     /** The first conflicting package found */
     private var packageConflict: String? = null
 
-    private val methodVisitor = object : MethodVisitor(ASM7) {
+    private val methodVisitor = object : MethodVisitor(ASM9) {
         override fun visitMethodInsn(
             opcode: Int,
             owner: String,

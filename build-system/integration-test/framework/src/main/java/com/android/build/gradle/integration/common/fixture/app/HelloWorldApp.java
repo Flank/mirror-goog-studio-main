@@ -36,16 +36,16 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
  */
 public class HelloWorldApp extends GradleProject {
 
-    public static final String APP_ID = "com.example.helloworld";
+    public static final String NAMESPACE = "com.example.helloworld";
 
-    private final String appId;
+    private final String namespace;
 
     protected TestSourceFile getSource() {
         return new TestSourceFile(
-                "src/main/java/" + appId.replace('.', '/'),
+                "src/main/java/" + namespace.replace('.', '/'),
                 "HelloWorld.java",
                 "package "
-                        + appId
+                        + namespace
                         + ";\n"
                         + "\n"
                         + "import android.app.Activity;\n"
@@ -97,9 +97,6 @@ public class HelloWorldApp extends GradleProject {
                 "AndroidManifest.xml",
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "      package=\""
-                        + appId
-                        + "\"\n"
                         + "      android:versionCode=\"1\"\n"
                         + "      android:versionName=\"1.0\">\n"
                         + "\n"
@@ -117,10 +114,10 @@ public class HelloWorldApp extends GradleProject {
 
     protected TestSourceFile getAndroidTestSource() {
         return new TestSourceFile(
-                "src/androidTest/java/" + appId.replace('.', '/'),
+                "src/androidTest/java/" + namespace.replace('.', '/'),
                 "HelloWorldTest.java",
                 "package "
-                        + appId
+                        + namespace
                         + ";\n"
                         + "\n"
                         + "import android.support.test.filters.MediumTest;\n"
@@ -156,11 +153,11 @@ public class HelloWorldApp extends GradleProject {
     }
 
     protected HelloWorldApp() {
-        this(APP_ID);
+        this(NAMESPACE);
     }
 
-    protected HelloWorldApp(String appId) {
-        this.appId = appId;
+    protected HelloWorldApp(String namespace) {
+        this.namespace = namespace;
         addFiles(
                 getSource(),
                 getResValuesSource(),
@@ -169,12 +166,12 @@ public class HelloWorldApp extends GradleProject {
                 getAndroidTestSource());
     }
 
-    protected HelloWorldApp(String appId, String plugin) {
-        this(appId, plugin, TestVersions.SUPPORT_LIB_MIN_SDK);
+    protected HelloWorldApp(String namespace, String plugin) {
+        this(namespace, plugin, TestVersions.SUPPORT_LIB_MIN_SDK);
     }
 
-    protected HelloWorldApp(String appId, String plugin, int minSdkVersion) {
-        this(appId);
+    protected HelloWorldApp(String namespace, String plugin, int minSdkVersion) {
+        this(namespace);
 
         TestSourceFile buildFile =
                 new TestSourceFile(
@@ -188,6 +185,9 @@ public class HelloWorldApp extends GradleProject {
                                 + "    defaultConfig.minSdkVersion "
                                 + minSdkVersion
                                 + "\n"
+                                + "    namespace \""
+                                + namespace
+                                + "\"\n"
                                 + "    compileSdkVersion "
                                 + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                                 + "\n"
@@ -205,19 +205,23 @@ public class HelloWorldApp extends GradleProject {
     }
 
     public static HelloWorldApp noBuildFile() {
-        return new HelloWorldApp(APP_ID);
+        return new HelloWorldApp(NAMESPACE);
     }
 
-    public static HelloWorldApp noBuildFile(String appId) {
-        return new HelloWorldApp(appId);
+    public static HelloWorldApp noBuildFile(String namespace) {
+        return new HelloWorldApp(namespace);
     }
 
     public static HelloWorldApp forPlugin(String plugin) {
-        return new HelloWorldApp(APP_ID, plugin);
+        return new HelloWorldApp(NAMESPACE, plugin);
+    }
+
+    public static HelloWorldApp forPluginWithNamespace(String plugin, String namespace) {
+        return new HelloWorldApp(namespace, plugin);
     }
 
     public static HelloWorldApp forPluginWithMinSdkVersion(String plugin, int minSdkVersion) {
-        return new HelloWorldApp(APP_ID, plugin, minSdkVersion);
+        return new HelloWorldApp(NAMESPACE, plugin, minSdkVersion);
     }
 
     @Override

@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace "com.android.tools.test.checkB"
     compileSdkVersion rootProject.ext.latestCompileSdk
 
     defaultConfig {

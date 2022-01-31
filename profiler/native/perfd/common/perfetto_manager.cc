@@ -239,6 +239,9 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   config.add_data_sources()->mutable_config()->set_name(
       "android.surfaceflinger.frametimeline");
 
+  // Perfetto SDK TrackEvent API
+  config.add_data_sources()->mutable_config()->set_name("track_event");
+
   return config;
 }
 

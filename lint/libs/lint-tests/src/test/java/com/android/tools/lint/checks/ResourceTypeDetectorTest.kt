@@ -2354,4 +2354,42 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             """
         )
     }
+
+    fun testDimensions216139975() {
+        // Regression test for issue 216139975
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.content.Context;
+                import androidx.annotation.Dimension;
+
+                public class Test {
+                    static void calculateTabViewContentBounds(Context tabView, @Dimension(unit = Dimension.DP) int minWidth) {
+                        int minWidthPx = (int) ViewUtils.dpToPx(tabView, minWidth);
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import android.content.Context;
+                import android.content.res.Resources;
+                import android.util.TypedValue;
+
+                class ViewUtils {
+                    public static float dpToPx(Context context,
+                          // Note that we don't import Dimension properly, so we should get a resolve error here
+                          // to deliberately test that we don't fall back to a @Px assumption
+                          @androidx.annotation.Dimension(unit = androidx.annotation.Dimension.UNKNOWN) int dp) {
+                        Resources r = context.getResources();
+                        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics());
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

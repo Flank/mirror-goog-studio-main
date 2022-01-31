@@ -15,7 +15,6 @@
   ~ limitations under the License.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.android.tests.basic">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application  android:name="android.support.multidex.MultiDexApplication" />
 </manifest>

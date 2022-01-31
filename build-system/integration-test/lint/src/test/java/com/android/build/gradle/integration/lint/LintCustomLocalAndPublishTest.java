@@ -52,8 +52,8 @@ public class LintCustomLocalAndPublishTest {
         project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
 
         String libexpected =
-                        ""
-                        + "build.gradle:16: Warning: Unknown issue id \"UnitTestLintCheck\". Did you mean 'UnitTestLintCheck2' (Custom Lint Check) ? [UnknownIssueId]\n"
+                ""
+                        + "build.gradle:17: Warning: Unknown issue id \"UnitTestLintCheck\". Did you mean 'UnitTestLintCheck2' (Custom Lint Check) ? [UnknownIssueId]\n"
                         + "        checkOnly 'UnitTestLintCheck'\n"
                         + "                   ~~~~~~~~~~~~~~~~~\n"
                         + "\n"
@@ -95,7 +95,7 @@ public class LintCustomLocalAndPublishTest {
 
         String appExpected =
                 ""
-                        + "build.gradle:15: Warning: Unknown issue id \"UnitTestLintCheck2\". Did you mean:\n"
+                        + "build.gradle:16: Warning: Unknown issue id \"UnitTestLintCheck2\". Did you mean:\n"
                         + "'UnitTestLintCheck' (Custom Lint Check)\n"
                         + "'UnitTestLintCheck3' (Custom Lint Check)\n"
                         + "? [UnknownIssueId]\n"
@@ -110,7 +110,7 @@ public class LintCustomLocalAndPublishTest {
                         + File.separator
                         + "main"
                         + File.separator
-                        + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck from com.example.google.lintpublish]\n"
+                        + "AndroidManifest.xml:10: Error: Should not specify <activity>. [UnitTestLintCheck from com.example.google.lintpublish]\n"
                         + "        <activity android:name=\".MainActivity\">\n"
                         + "        ^\n"
                         + "\n"

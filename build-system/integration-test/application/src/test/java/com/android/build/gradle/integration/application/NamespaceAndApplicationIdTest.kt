@@ -134,17 +134,6 @@ class NamespaceAndApplicationIdTest {
              """
         )
 
-        // Update the namespace of the test R class until b/176931684 is fixed.
-        val testClass =
-            project.getSubproject(":app")
-                .file("src/androidTest/java/com/example/app/test/MyTestClass.java")
-        assertThat(testClass).exists()
-        TestFileUtils.searchAndReplace(
-            testClass,
-            "com.example.app.test.R",
-            "com.example.applicationId.test.R"
-        )
-
         project.execute(":app:assembleDebug", ":app:assembleAndroidTest")
         assertThatApk(project.getSubproject(":app").getApk(DEBUG))
             .hasApplicationId("com.example.applicationId")
@@ -163,17 +152,6 @@ class NamespaceAndApplicationIdTest {
                 android.defaultConfig.testApplicationId "com.example.testApplicationId"
             """)
 
-        // Update the namespace of the test R class until b/176931684 is fixed.
-        val testClass =
-            project.getSubproject(":app")
-                .file("src/androidTest/java/com/example/app/test/MyTestClass.java")
-        assertThat(testClass).exists()
-        TestFileUtils.searchAndReplace(
-            testClass,
-            "com.example.app.test.R",
-            "com.example.testApplicationId.R"
-        )
-
         project.execute(":app:assembleDebug", ":app:assembleAndroidTest")
         assertThatApk(project.getSubproject(":app").getApk(DEBUG))
             .hasApplicationId("com.example.app")
@@ -191,6 +169,11 @@ class NamespaceAndApplicationIdTest {
         // testApplicationId (and no namespace is specified)
         FileUtils.deleteIfExists(
             project.getSubproject(":test").file("src/main/AndroidManifest.xml")
+        )
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":test").buildFile,
+            "android.namespace \"com.example.test\"",
+            ""
         )
         project.getSubproject(":test").buildFile.appendText(
             """
@@ -252,17 +235,6 @@ class NamespaceAndApplicationIdTest {
                 android.defaultConfig.applicationId "com.example.applicationId"
                 android.defaultConfig.testApplicationId "com.example.testApplicationId"
             """)
-
-        // Update the namespace of the test R class until b/176931684 is fixed.
-        val testClass =
-            project.getSubproject(":app")
-                .file("src/androidTest/java/com/example/app/test/MyTestClass.java")
-        assertThat(testClass).exists()
-        TestFileUtils.searchAndReplace(
-            testClass,
-            "com.example.app.test.R",
-            "com.example.testApplicationId.R"
-        )
 
         project.execute(":app:assembleDebug", "app:assembleAndroidTest")
         assertThatApk(project.getSubproject(":app").getApk(DEBUG))

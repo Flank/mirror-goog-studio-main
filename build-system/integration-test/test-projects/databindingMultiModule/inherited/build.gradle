@@ -17,6 +17,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace "android.databinding.multimodule.inherited"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {

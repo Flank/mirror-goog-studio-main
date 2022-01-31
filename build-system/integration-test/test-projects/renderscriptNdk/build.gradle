@@ -31,6 +31,7 @@ dependencies {
 }
 
 android {
+    namespace "com.example.android.basicrenderscript"
     compileSdkVersion rootProject.latestCompileSdk
 
     buildToolsVersion rootProject.buildToolsVersion

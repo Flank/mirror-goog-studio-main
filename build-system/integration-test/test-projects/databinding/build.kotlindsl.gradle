@@ -21,6 +21,7 @@ plugins {
 }
 
 android {
+    namespace = "android.databinding.testapp"
     compileSdkVersion(rootProject.ext["latestCompileSdk"] as Int)
     defaultConfig.minSdkVersion(rootProject.ext["supportLibMinSdk"].toString())
     buildFeatures {

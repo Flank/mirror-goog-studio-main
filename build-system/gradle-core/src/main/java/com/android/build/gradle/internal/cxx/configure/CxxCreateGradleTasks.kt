@@ -138,6 +138,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                         val variant = variantMap.getValue(task.representative.variant.variantName)
                         val configureTask = taskFactory.register(createCxxConfigureTask(
                             globalConfig,
+                            variant,
                             task.representative,
                             name))
                         // Make sure any prefab configurations are generated first

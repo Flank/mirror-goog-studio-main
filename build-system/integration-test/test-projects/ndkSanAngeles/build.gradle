@@ -6,6 +6,7 @@ apply plugin: 'com.android.application'
 project.ext['android.useDeprecatedNdk'] = true
 
 android {
+    namespace "com.example.SanAngeles"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

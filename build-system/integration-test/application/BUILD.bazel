@@ -495,7 +495,6 @@ gradle_integration_test(
     shard_count = 10,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     #keep sorted
     tags = [
-        "manual",  # TODO(b/203802678): Re-enable this test when fixed.
         "no_test_mac",  # b/69151132
     ],
     deps = TEST_DEPS,

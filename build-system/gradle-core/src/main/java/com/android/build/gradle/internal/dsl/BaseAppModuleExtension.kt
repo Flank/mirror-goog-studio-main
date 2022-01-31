@@ -20,7 +20,6 @@ import com.android.build.api.dsl.ComposeOptions
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.services.DslServices
@@ -56,13 +55,6 @@ open class BaseAppModuleExtension(
         get() = publicExtensionImpl.productFlavors as NamedDomainObjectContainer<ProductFlavor>
     override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
         get() = publicExtensionImpl.sourceSets
-
-    override val viewBinding: ViewBindingOptions =
-        dslServices.newInstance(
-            ViewBindingOptionsImpl::class.java,
-            publicExtensionImpl.buildFeatures,
-            dslServices
-        )
 
     override val composeOptions: ComposeOptions = publicExtensionImpl.composeOptions
 

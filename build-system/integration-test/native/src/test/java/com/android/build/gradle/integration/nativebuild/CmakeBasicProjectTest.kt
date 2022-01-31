@@ -16,13 +16,17 @@
 
 package com.android.build.gradle.integration.nativebuild
 
+import com.android.SdkConstants.CURRENT_PLATFORM
+import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.getCmakeVersionFolder
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.assertEqualsMultiline
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.enableCxxStructuredLogging
@@ -50,11 +54,24 @@ import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
-import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
+import com.android.build.gradle.internal.cxx.os.bat
 import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
+import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NINJA_EXECUTABLE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PLATFORM
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PLATFORM_SYSTEM_VERSION
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_SO_OUTPUT_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_CPP_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_C_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
@@ -71,13 +88,21 @@ import org.junit.runners.Parameterized
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
+import kotlin.random.Random
 import java.util.zip.GZIPInputStream
 
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
 class CmakeBasicProjectTest(
-    private val cmakeVersionInDsl: String
+    private val cmakeVersionInDsl: String,
+    private val mode: Mode
 ) {
+    enum class Mode(val taskNameTag : String, val buildFolderTag : String) {
+        CMake("CMake", "cmake"),
+        Ninja("Ninja", "ninja"),
+        NinjaRedirect("Ninja", "ninja")
+    }
+
     @Rule
     @JvmField
     val project = GradleTestProject.builder()
@@ -88,9 +113,13 @@ class CmakeBasicProjectTest(
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0}")
+        @Parameterized.Parameters(name = "version={0} mode={1}")
         @JvmStatic
-        fun data() = arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION)
+        fun data() = cartesianOf(
+            arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
+            Mode.values())
+        // Shuffle helps find problems earlier by not grouping similar cases with each other
+        .toList().shuffled(Random(192))
     }
 
     @Before
@@ -101,44 +130,201 @@ class CmakeBasicProjectTest(
         TestFileUtils.appendToFile(project.buildFile, moduleBody("CMakeLists.txt"))
     }
 
-    private fun moduleBody(
-        cmakeListsPath : String
-    ) : String = ("""
-        apply plugin: 'com.android.application'
-
-        android {
-            compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
-            buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
-            ndkPath "${project.ndkPath}"
-            defaultConfig {
-              externalNativeBuild {
-                  cmake {
-                    abiFilters.addAll("armeabi-v7a", "x86_64");
-                    cFlags.addAll("-DTEST_C_FLAG", "-DTEST_C_FLAG_2")
-                    cppFlags.addAll("-DTEST_CPP_FLAG")
-                  }
-              }
-            }
-            externalNativeBuild {
-              cmake {
-                path "$cmakeListsPath"
-                version "$cmakeVersionInDsl"
-              }
-            }
-
-          // -----------------------------------------------------------------------
-          // See b/131857476
-          // -----------------------------------------------------------------------
-          applicationVariants.all { variant ->
-            for (def task : variant.getExternalNativeBuildTasks()) {
-                println("externalNativeBuild objFolder = " + task.objFolder)
-                println("externalNativeBuild soFolder = " + task.soFolder)
-            }
-          }
-
-          // ------------------------------------------------------------------------
+    private fun moduleBody(cmakeListsPath: String) =
+        when (mode) {
+            Mode.CMake -> moduleBodyCmake(cmakeListsPath)
+            Mode.Ninja -> moduleBodyNinja(cmakeListsPath)
+            Mode.NinjaRedirect -> moduleBodyNinjaRedirect(cmakeListsPath)
         }
-    """.trimIndent())
+
+    // Map from version in DSL to physical folder in prebuilts
+    private val cmakeFolderVersion = when(cmakeVersionInDsl) {
+        "3.6.0" -> "3.6.4111459"
+        "3.10.2" -> "3.10.2.4988404"
+        else -> cmakeVersionInDsl
+    }
+
+    private val cmakeExe = getCmakeVersionFolder(cmakeFolderVersion)
+        .resolve("bin/cmake").absolutePath
+
+    private val nativeBuildSystem : String get() =
+        when (mode) {
+            Mode.CMake -> "CMAKE"
+            Mode.Ninja -> "NINJA"
+            Mode.NinjaRedirect -> "NINJA"
+        }
+
+    private fun moduleBodyCmake(
+        cmakeListsPath: String
+    ): String {
+        return """
+            apply plugin: 'com.android.application'
+
+            android {
+                compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
+                ndkPath "${project.ndkPath}"
+                defaultConfig {
+                  externalNativeBuild {
+                      cmake {
+                        abiFilters.addAll("armeabi-v7a", "x86_64");
+                        cFlags.addAll("-DTEST_C_FLAG", "-DTEST_C_FLAG_2")
+                        cppFlags.addAll("-DTEST_CPP_FLAG")
+                      }
+                  }
+                }
+                externalNativeBuild {
+                  cmake {
+                    path "$cmakeListsPath"
+                    version "$cmakeVersionInDsl"
+                  }
+                }
+
+              // -----------------------------------------------------------------------
+              // See b/131857476
+              // -----------------------------------------------------------------------
+              applicationVariants.all { variant ->
+                for (def task : variant.getExternalNativeBuildTasks()) {
+                    println("externalNativeBuild objFolder = " + task.objFolder)
+                    println("externalNativeBuild soFolder = " + task.soFolder)
+                }
+              }
+
+              // ------------------------------------------------------------------------
+            }
+        """.trimIndent()
+    }
+
+    private fun moduleBodyNinja(
+        cmakeListsPath: String
+    ): String {
+        return """
+            apply plugin: 'com.android.application'
+
+            android {
+                compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
+                ndkPath "${project.ndkPath}"
+                defaultConfig {
+                    externalNativeBuild {
+                      experimentalProperties["ninja.path"] = "$cmakeListsPath"
+                      experimentalProperties["ninja.configure"] = "${cmakeExe.replace("\\", "\\\\")}"
+                      experimentalProperties["ninja.arguments"] = [
+                              "-B\${NDK_BUILD_ROOT.ref}",
+                              "-DANDROID_ABI=\${NDK_ABI.ref}",
+                              "-DANDROID_NDK=\${NDK_MODULE_NDK_DIR.ref}",
+                              "-DANDROID_PLATFORM=\${NDK_PLATFORM.ref}",
+                              "-DCMAKE_ANDROID_ARCH_ABI=\${NDK_ABI.ref}",
+                              "-DCMAKE_ANDROID_NDK=\${NDK_MODULE_NDK_DIR.ref}",
+                              "-DCMAKE_BUILD_TYPE=\${NDK_VARIANT_OPTIMIZATION_TAG.ref}",
+                              "-DCMAKE_CXX_FLAGS=\${NDK_VARIANT_CPP_FLAGS.ref}",
+                              "-DCMAKE_C_FLAGS=\${NDK_VARIANT_C_FLAGS.ref}",
+                              "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                              "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=\${NDK_SO_OUTPUT_DIR.ref}",
+                              "-DCMAKE_MAKE_PROGRAM=\${NDK_MODULE_NINJA_EXECUTABLE.ref}",
+                              "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=\${NDK_SO_OUTPUT_DIR.ref}",
+                              "-DCMAKE_SYSTEM_NAME=Android",
+                              "-DCMAKE_SYSTEM_VERSION=\${NDK_PLATFORM_SYSTEM_VERSION.ref}",
+                              "-DCMAKE_TOOLCHAIN_FILE=\${NDK_CMAKE_TOOLCHAIN.ref}",
+                              "-GNinja",
+                              "-H\${ENV_THIS_FILE_DIR.ref}",
+                          ]
+                      experimentalProperties["ninja.abiFilters"] = ["armeabi-v7a", "x86_64"];
+                      experimentalProperties["ninja.cFlags"] = ["-DTEST_C_FLAG", "-DTEST_C_FLAG_2"];
+                      experimentalProperties["ninja.cppFlags"] = ["-DTEST_CPP_FLAG"];
+                  }
+                }
+            }
+        """.trimIndent()
+    }
+
+    /**
+     * This version of build.gradle creates a script that does the actual CMake build in another
+     * (redirected) folder.
+     */
+    private fun moduleBodyNinjaRedirect(
+        cmakeListsPath: String
+    ): String {
+        val script = project.buildFile.resolveSibling("configure-script$bat")
+        val scriptsBuildRoot = project.buildDir.parentFile.parentFile.resolve("script-build-root")
+        scriptsBuildRoot.mkdirs()
+        when(CURRENT_PLATFORM) {
+            PLATFORM_WINDOWS -> script.writeText(
+                """
+                    set ABI=%1
+                    set ABI_BUILD_ROOT=$scriptsBuildRoot\%2\%1
+                    set BUILD_NINJA_TXT=%3\build.ninja.txt
+                    shift && shift &&  shift
+                    md %ABI_BUILD_ROOT%
+                    echo %ABI_BUILD_ROOT%\build.ninja > %BUILD_NINJA_TXT%
+                    set COMMAND=$cmakeExe -B%ABI_BUILD_ROOT% -DANDROID_ABI=%ABI%
+                    set COMMAND=%COMMAND% %1 %2 %3 %4 %5 %6 %7 %8 %9
+                    shift && shift && shift && shift && shift && shift && shift && shift && shift
+                    set COMMAND=%COMMAND% %1 %2 %3 %4 %5 %6 %7 %8 %9
+                    shift && shift && shift && shift && shift && shift && shift && shift && shift
+                    set COMMAND=%COMMAND% %1 %2 %3 %4 %5 %6 %7 %8 %9
+                    %COMMAND%
+                """.trimIndent()
+            )
+            else -> {
+                script.writeText(
+                    """
+                    ABI=$1
+                    ABI_BUILD_ROOT=$scriptsBuildRoot/$2/$1
+                    BUILD_NINJA_TXT=$3/build.ninja.txt
+                    shift
+                    shift
+                    shift
+                    mkdir -p ${'$'}ABI_BUILD_ROOT
+                    echo ${'$'}ABI_BUILD_ROOT/build.ninja > ${'$'}BUILD_NINJA_TXT
+
+                    $cmakeExe -B${'$'}ABI_BUILD_ROOT -DANDROID_ABI=${'$'}ABI "$@"
+                """.trimIndent()
+                )
+                script.setExecutable(true)
+            }
+        }
+
+        return """
+            apply plugin: 'com.android.application'
+
+            android {
+                compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
+                ndkPath "${project.ndkPath}"
+                defaultConfig {
+                    externalNativeBuild {
+                      experimentalProperties["ninja.abiFilters"] = ["armeabi-v7a", "x86_64"];
+                      experimentalProperties["ninja.cFlags"] = ["-DTEST_C_FLAG", "-DTEST_C_FLAG_2"];
+                      experimentalProperties["ninja.cppFlags"] = ["-DTEST_CPP_FLAG"];
+                      experimentalProperties["ninja.path"] = "$cmakeListsPath"
+                      experimentalProperties["ninja.configure"] = "configure-script"
+                      experimentalProperties["ninja.arguments"] = [
+                              "\${NDK_ABI.ref}",
+                              "\${NDK_VARIANT_NAME.ref}",
+                              "\${NDK_BUILD_ROOT.ref}",
+                              "-DANDROID_NDK=\${NDK_MODULE_NDK_DIR.ref}",
+                              "-DANDROID_PLATFORM=\${NDK_PLATFORM.ref}",
+                              "-DCMAKE_ANDROID_ARCH_ABI=\${NDK_ABI.ref}",
+                              "-DCMAKE_ANDROID_NDK=\${NDK_MODULE_NDK_DIR.ref}",
+                              "-DCMAKE_BUILD_TYPE=\${NDK_VARIANT_OPTIMIZATION_TAG.ref}",
+                              "-DCMAKE_CXX_FLAGS=\${NDK_VARIANT_CPP_FLAGS.ref}",
+                              "-DCMAKE_C_FLAGS=\${NDK_VARIANT_C_FLAGS.ref}",
+                              "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                              "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=\${NDK_SO_OUTPUT_DIR.ref}",
+                              "-DCMAKE_MAKE_PROGRAM=\${NDK_MODULE_NINJA_EXECUTABLE.ref}",
+                              "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=\${NDK_SO_OUTPUT_DIR.ref}",
+                              "-DCMAKE_SYSTEM_NAME=Android",
+                              "-DCMAKE_SYSTEM_VERSION=\${NDK_PLATFORM_SYSTEM_VERSION.ref}",
+                              "-DCMAKE_TOOLCHAIN_FILE=\${NDK_CMAKE_TOOLCHAIN.ref}",
+                              "-GNinja",
+                              "-H\${ENV_THIS_FILE_DIR.ref}",
+                          ]
+                  }
+                }
+            }
+        """.trimIndent()
+    }
 
     /**
      * Helper function that controls arguments when running a task
@@ -170,7 +356,7 @@ class CmakeBasicProjectTest(
     // Regression test for b/184060944
     @Test
     fun `ninja verbosity respects CMAKE_VERBOSE_MAKEFILE=1`() {
-        Assume.assumeFalse(cmakeVersionInDsl == "3.6.0") // We don't control this for fork CMake
+        Assume.assumeTrue(mode == Mode.CMake && cmakeVersionInDsl != "3.6.0")
         TestFileUtils.appendToFile(
             project.buildFile,
             """
@@ -189,6 +375,7 @@ class CmakeBasicProjectTest(
     // See b/159434435
     @Test
     fun `bug 159434435 -C flag passed to CMake via arguments`() {
+        if (mode != Mode.CMake) return // This is a CMake-only test
         val properties = project.buildFile.resolveSibling("Properties.cmake")
         properties.writeText("")
         val path = properties.absolutePath.replace("\\", "/")
@@ -213,6 +400,7 @@ class CmakeBasicProjectTest(
 
     @Test
     fun `ensure CMake arguments have macros expanded`() {
+        if (mode != Mode.CMake) return // This is a CMake-only test
         TestFileUtils.appendToFile(
             project.buildFile,
             """
@@ -339,22 +527,23 @@ class CmakeBasicProjectTest(
         val fooPath = abi.soFolder.resolve("libfoo.so")
         assertThat(fooPath).doesNotExist()
 
-        val json = abi.jsonFile
+        val json = abi.miniConfigFile
         assertThat(json).isFile()
 
         val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, null)
         val library = config
-                .libraries
-                .asSequence()
-                .filter { it.key.contains("bar") }
-                .single()
-                .value
+            .libraries
+            .asSequence()
+            .filter { it.key.contains("bar") }
+            .single()
+            .value
         assertThat(library.runtimeFiles).containsExactly(fooPath)
     }
 
     // See b/131857476
     @Test
     fun checkModuleBodyReferencesObjAndSo() {
+        if (mode != Mode.CMake) return
         // Checks for whether module body has references to objFolder and soFolder
         Truth.assertThat(moduleBody("CMakeLists.txt")).contains(".objFolder")
         Truth.assertThat(moduleBody("CMakeLists.txt")).contains(".soFolder")
@@ -367,12 +556,12 @@ class CmakeBasicProjectTest(
      */
     @Test
     fun `clean should not trigger stale CMake folder deletion`() {
-        runTasks("buildCMakeDebug")
+        runTasks("build${mode.taskNameTag}Debug")
         val abi = project.recoverExistingCxxAbiModels().first()
         assertThat(abi.ninjaDepsFile.isFile).isTrue()
         runTasks("clean")
         assertThat(abi.ninjaDepsFile.isFile).isTrue()
-        runTasks("configureCMakeDebug")
+        runTasks("configure${mode.taskNameTag}Debug")
         assertThat(abi.ninjaDepsFile.isFile).isTrue()
     }
 
@@ -404,25 +593,42 @@ class CmakeBasicProjectTest(
         TruthHelper.assertThatNativeLib(lib).isStripped()
     }
 
-    private val expectedBuildProducts =
-        """
-        {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-        {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-        {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
-        {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
-        """.trimIndent()
+    private fun expectedBuildProducts() : String {
+        // Mode.NinjaRedirect doesn't have .o files because they are built in an external folder
+        return (if (mode == Mode.NinjaRedirect) """
+                {PROJECT}/build/intermediates/${mode.buildFolderTag}/debug/obj/armeabi-v7a/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/${mode.buildFolderTag}/debug/obj/x86_64/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
+                {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
+            """
+        else """
+               {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+               {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+               {PROJECT}/build/intermediates/${mode.buildFolderTag}/debug/obj/armeabi-v7a/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/${mode.buildFolderTag}/debug/obj/x86_64/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
+               {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
+               """)
+            .trimIndent()
+            .split("\n")
+            .sortedBy { it }
+            .joinToString("\n")
+    }
 
     @Test
     fun `build product golden locations`() {
         project.execute("assembleDebug")
-        val golden = project.goldenBuildProducts()
-        Truth.assertThat(golden).isEqualTo(expectedBuildProducts)
+        assertEqualsMultiline(
+            project.goldenBuildProducts(),
+            expectedBuildProducts())
     }
 
     @Test
@@ -436,22 +642,48 @@ class CmakeBasicProjectTest(
             """.trimIndent()
         )
         project.execute("assembleDebug")
-        val golden = project.goldenBuildProducts()
-        Truth.assertThat(golden).isEqualTo(expectedBuildProducts)
+        assertEqualsMultiline(
+            project.goldenBuildProducts(),
+            expectedBuildProducts())
     }
 
     @Test
     fun `configuration build command golden flags`() {
         val golden = project.goldenConfigurationFlags(Abi.X86_64)
-                // Special fix for NDKs <= r16
-                .replace(
-            "-DCMAKE_SYSTEM_VERSION=21",
-            "-DCMAKE_SYSTEM_VERSION=16")
-                .replace(
-            "-DANDROID_PLATFORM=android-21",
-            "-DANDROID_PLATFORM=android-16")
-        println(golden)
-        Truth.assertThat(golden).isEqualTo("""
+            // Special fix for NDKs <= r16
+            .replace(
+                "-DCMAKE_SYSTEM_VERSION=21",
+                "-DCMAKE_SYSTEM_VERSION=16")
+            .replace(
+                "-DANDROID_PLATFORM=android-21",
+                "-DANDROID_PLATFORM=android-16")
+        if (mode == Mode.NinjaRedirect) {
+            assertEqualsMultiline(golden,
+                """
+                -DANDROID_NDK={NDK}
+                -DANDROID_PLATFORM=android-16
+                -DCMAKE_ANDROID_ARCH_ABI=x86_64
+                -DCMAKE_ANDROID_NDK={NDK}
+                -DCMAKE_BUILD_TYPE=Debug
+                -DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG
+                -DCMAKE_C_FLAGS=-DTEST_C_FLAG -DTEST_C_FLAG_2
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+                -DCMAKE_LIBRARY_OUTPUT_DIRECTORY={PROJECT}/build/intermediates/{DEBUG}/obj/x86_64
+                -DCMAKE_MAKE_PROGRAM={NINJA}
+                -DCMAKE_RUNTIME_OUTPUT_DIRECTORY={PROJECT}/build/intermediates/{DEBUG}/obj/x86_64
+                -DCMAKE_SYSTEM_NAME=Android
+                -DCMAKE_SYSTEM_VERSION=16
+                -DCMAKE_TOOLCHAIN_FILE={NDK}/build/cmake/android.toolchain.cmake
+                -G{Generator}
+                -H{PROJECT}
+                debug
+                x86_64
+                {PROJECT}/.cxx/{DEBUG}/x86_64
+            """.trimIndent())
+            return
+        }
+        assertEqualsMultiline(golden,
+            """
             -B{PROJECT}/.cxx/{DEBUG}/x86_64
             -DANDROID_ABI=x86_64
             -DANDROID_NDK={NDK}
@@ -514,7 +746,7 @@ class CmakeBasicProjectTest(
          < abis
       < release
    < variants
-   - nativeBuildSystem       = CMAKE
+   - nativeBuildSystem       = $nativeBuildSystem
    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
@@ -559,7 +791,7 @@ class CmakeBasicProjectTest(
          < abis
       < release
    < variants
-   - nativeBuildSystem       = CMAKE
+   - nativeBuildSystem       = $nativeBuildSystem
    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
@@ -613,7 +845,7 @@ class CmakeBasicProjectTest(
          < abis
       < release
    < variants
-   - nativeBuildSystem       = CMAKE
+   - nativeBuildSystem       = $nativeBuildSystem
    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}

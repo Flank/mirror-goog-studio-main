@@ -66,7 +66,7 @@ class IteratorDetector : Detector(), SourceCodeScanner {
                 instead of `c.spliterator()`.
 
                 Instead of `c.stream()` or `c.parallelStream()`, use \
-                `java.util.stream.StreamSupport.stream(spliterator, false)` to construct a
+                `java.util.stream.StreamSupport.stream(spliterator, false)` to construct a \
                 (nonparallel) Stream from such a `Spliterator`.
 
                 **For Vector:**

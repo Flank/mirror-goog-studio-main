@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
+import com.android.build.gradle.integration.common.fixture.app.EmptyGradleProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
@@ -49,7 +49,7 @@ class D8DesugaringConnectedTest {
                     ":app",
                     HelloWorldApp.noBuildFile(),
                     ":lib",
-                    EmptyAndroidTestApp()
+                    EmptyGradleProject()
                 )
             )
         )
@@ -65,6 +65,7 @@ class D8DesugaringConnectedTest {
                 apply from: "../../commonLocalRepo.gradle"
 
                 android {
+                    namespace "${HelloWorldApp.NAMESPACE}"
                     compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
 
                     defaultConfig {

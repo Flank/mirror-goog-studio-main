@@ -20,7 +20,8 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
-import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.COMPOSE_MATERIAL3_KOTLIN_VERSION
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.COMPOSE_KOTLIN_COMPILER_VERSION
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.COMPOSE_UI_VERSION
 import com.android.tools.idea.wizard.template.impl.activities.composeWearActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.composeWearActivity.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.composeWearActivity.src.app_package.theme.colorKt
@@ -38,14 +39,15 @@ fun RecipeExecutor.composeWearActivityRecipe(
     defaultPreview: String
 ) {
     val (_, srcOut, resOut, manifestOut) = moduleData
-    addAllKotlinDependencies(moduleData, COMPOSE_MATERIAL3_KOTLIN_VERSION)
+    addAllKotlinDependencies(moduleData)
 
     val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
     val wearComposeVersionVarName =
         getDependencyVarName("androidx.wear.compose:compose-material", "wear_compose_version")
-    setExtVar(composeVersionVarName, "1.1.0-rc01")
+    setExtVar(composeVersionVarName, COMPOSE_UI_VERSION)
     setExtVar(wearComposeVersionVarName, "1.0.0-alpha11")
 
+    // Note: Compose versioning is per group. "androidx.compose.ui:ui" group has its own variable
     addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
     addDependency(mavenCoordinate = "androidx.wear.compose:compose-material:\${$wearComposeVersionVarName}")
     addDependency(mavenCoordinate = "androidx.wear.compose:compose-foundation:\${$wearComposeVersionVarName}")
@@ -102,7 +104,7 @@ fun RecipeExecutor.composeWearActivityRecipe(
     requireJavaVersion("1.8", true)
     setBuildFeature("compose", true)
     // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-    setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName")
+    setComposeOptions(kotlinCompilerExtensionVersion = COMPOSE_KOTLIN_COMPILER_VERSION)
 
     open(srcOut.resolve("${activityClass}.kt"))
 }

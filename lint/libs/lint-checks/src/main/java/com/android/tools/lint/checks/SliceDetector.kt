@@ -77,7 +77,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
             id = "Slices",
             briefDescription = "Slices",
             explanation = """
-            This check analyzes usages of the Slices API and offers suggestions based
+            This check analyzes usages of the Slices API and offers suggestions based \
             on best practices.
             """,
             category = Category.CORRECTNESS,

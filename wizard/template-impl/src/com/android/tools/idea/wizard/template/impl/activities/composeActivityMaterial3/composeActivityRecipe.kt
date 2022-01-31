@@ -16,18 +16,18 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3
 
-import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.COMPOSE_KOTLIN_COMPILER_VERSION
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.COMPOSE_MATERIAL3_VERSION
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.COMPOSE_UI_VERSION
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.res.values.themesXml
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.colorKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.themeKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.typeKt
-
-const val COMPOSE_MATERIAL3_KOTLIN_VERSION = "1.6.0"
 
 fun RecipeExecutor.composeActivityRecipe(
   moduleData: ModuleTemplateData,
@@ -38,20 +38,21 @@ fun RecipeExecutor.composeActivityRecipe(
   defaultPreview: String
 ) {
   val (_, srcOut, resOut, _) = moduleData
-  addAllKotlinDependencies(moduleData, COMPOSE_MATERIAL3_KOTLIN_VERSION)
+  addAllKotlinDependencies(moduleData)
 
-  val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
-  setExtVar(composeVersionVarName, "1.1.0-rc01")
+  val composeUiVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
+  setExtVar(composeUiVersionVarName, COMPOSE_UI_VERSION)
 
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
-  addDependency(mavenCoordinate = "androidx.compose.material3:material3:1.0.0-alpha02")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}",
-                configuration = "debugImplementation")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
   addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.1")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-manifest:\${$composeVersionVarName}", configuration="debugImplementation")
-  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeVersionVarName}", configuration="androidTestImplementation")
+  // Note: Compose versioning is per group. "androidx.compose.ui:ui" group has its own variable
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeUiVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeUiVersionVarName}",
+                configuration = "debugImplementation")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeUiVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-manifest:\${$composeUiVersionVarName}", configuration="debugImplementation")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeUiVersionVarName}", configuration="androidTestImplementation")
+  addDependency(mavenCoordinate = "androidx.compose.material3:material3:$COMPOSE_MATERIAL3_VERSION")
   generateManifest(
     moduleData = moduleData,
     activityClass = activityClass,
@@ -79,7 +80,7 @@ fun RecipeExecutor.composeActivityRecipe(
   requireJavaVersion("1.8", true)
   setBuildFeature("compose", true)
   // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName")
+  setComposeOptions(kotlinCompilerExtensionVersion = COMPOSE_KOTLIN_COMPILER_VERSION)
 
   open(srcOut.resolve("${activityClass}.kt"))
 }

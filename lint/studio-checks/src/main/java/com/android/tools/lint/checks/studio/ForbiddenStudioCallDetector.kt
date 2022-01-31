@@ -58,9 +58,9 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
             id = "NoNioFilesCopy",
             briefDescription = "Do not use `java.nio.file.Files.copy(Path, Path)`",
             explanation = """
-                `java.nio.file.Files.copy(Path, Path)` propagates the readonly bit
-                on Windows, this can result in a file that can't be overwritten the
-                next time. Instead, use `FileUtils.copyFile(Path, Path)` or Kotlin's
+                `java.nio.file.Files.copy(Path, Path)` propagates the readonly bit \
+                on Windows, this can result in a file that can't be overwritten the \
+                next time. Instead, use `FileUtils.copyFile(Path, Path)` or Kotlin's \
                 `File#copyTo(File)`.
                 """,
             category = CORRECTNESS,

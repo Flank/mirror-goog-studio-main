@@ -315,7 +315,7 @@ public class ManifestMergingTest {
         FileUtils.deleteRecursivelyIfExists(new File(srcFolder, "debug"));
         FileUtils.deleteRecursivelyIfExists(new File(srcFolder, "f1"));
         FileUtils.deleteRecursivelyIfExists(new File(srcFolder, "f1Debug"));
-        for (int i = 30; i <= 36; ++i) {
+        for (int i = 31; i <= 37; ++i) {
             TestFileUtils.replaceLine(navigation.getSubproject("app").getBuildFile(), i, "");
         }
 
@@ -430,11 +430,6 @@ public class ManifestMergingTest {
 
     @Test
     public void checkNamespaceFromDsl() throws Exception {
-        TestFileUtils.appendToFile(
-                flavors.getBuildFile(),
-                "android {\n    namespace \"com.android.tests.flavors\"\n}\n");
-        File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
-        TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
         GradleBuildResult buildResult = flavors.executor().run("clean", "assembleF1FaDebug");
         Truth.assertThat(buildResult.getDidWorkTasks()).contains(":processF1FaDebugManifest");
         assertThat(
@@ -444,23 +439,18 @@ public class ManifestMergingTest {
     }
 
     @Test
-    public void checkNoAvailablePackageName() throws Exception {
-        File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
-        TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
+    public void checkNoAvailableNamespace() throws Exception {
+        TestFileUtils.searchAndReplace(
+                flavors.getBuildFile(), "namespace \"com.android.tests.flavors\"", "");
         GradleBuildResult buildResult =
                 flavors.executor().expectFailure().run("clean", "assembleF1FaDebug");
-        Truth.assertThat(buildResult.getFailureMessage()).contains("Package Name not found");
+        Truth.assertThat(buildResult.getFailureMessage()).contains("namespace not specified");
     }
 
     // an integration test to make sure using tool:ignore_warning doesn't cause any failures
     @Test
     public void checkUseIgnoreWarning() throws Exception {
         File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
-        TestFileUtils.searchAndReplace(
-                appManifest,
-                "package=\"com.android.tests.flavors\">",
-                "xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "      package=\"com.android.tests.flavors\">");
         TestFileUtils.searchAndReplace(
                 appManifest,
                 "<application\n"

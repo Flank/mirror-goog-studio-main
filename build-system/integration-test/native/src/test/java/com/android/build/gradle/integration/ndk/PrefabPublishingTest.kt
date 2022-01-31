@@ -317,6 +317,7 @@ class PrefabPublishingTest(
             }
 
             android {
+                namespace "com.example.foo"
                 compileSdkVersion rootProject.latestCompileSdk
                 buildToolsVersion = rootProject.buildToolsVersion
 
@@ -448,6 +449,7 @@ class PrefabPublishingTest(
             }
 
             android {
+                namespace "com.example.foo"
                 compileSdkVersion rootProject.latestCompileSdk
                 buildToolsVersion = rootProject.buildToolsVersion
 

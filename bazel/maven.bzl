@@ -3,7 +3,7 @@ load(":coverage.bzl", "coverage_baseline")
 load(":kotlin.bzl", "kotlin_library")
 load(":merge_archives.bzl", "run_singlejar")
 load(":utils.bzl", "is_release")
-load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
+load(":jvm_import.bzl", "jvm_import")
 
 def generate_pom(
         ctx,
@@ -264,18 +264,12 @@ def maven_artifact(
     )
 
 def _maven_import_impl(ctx):
+    jars = []
     infos = []
-    for jar in ctx.files.jars:
-        ijar = java_common.run_ijar(
-            actions = ctx.actions,
-            jar = jar,
-            java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
-        )
-        infos.append(JavaInfo(
-            output_jar = jar,
-            compile_jar = ijar,
-            deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.exports],
-        ))
+    for java_dep in ctx.attr.java_deps:
+        info = java_dep[JavaInfo]
+        infos.append(info)
+        jars.extend([java_out.class_jar for java_out in info.outputs.jars])
 
     infos += [dep[JavaInfo] for dep in ctx.attr.exports]
 
@@ -289,7 +283,7 @@ def _maven_import_impl(ctx):
     files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
 
     names = []
-    for jar in ctx.files.jars:
+    for jar in jars:
         name = jar.basename
         if jar.extension:
             name = jar.basename[:-len(jar.extension) - 1]
@@ -297,7 +291,7 @@ def _maven_import_impl(ctx):
 
     return struct(
         providers = [
-            DefaultInfo(files = depset(ctx.files.jars)),
+            DefaultInfo(files = depset(jars)),
             MavenInfo(
                 pom = ctx.file.pom,
                 files = files,
@@ -312,9 +306,25 @@ def _maven_import_impl(ctx):
     )
 
 _maven_import = rule(
+    doc = """
+Imports java dependencies to be used by Maven rules.
+
+Args:
+  java_deps: The list of java deps provided by this target.
+  files: A list of maven files to make available.
+  deps: The list of Maven deps required by this target.
+  repo_path: A path prefix used for all files.
+  repo_root_path: unused.
+  exports: Maven deps to make available to users of this rule.
+  parent: A Maven dep to make available to users of this rule.
+  pom: The Maven pom file.
+  notice: A notice file to make available to users of this rule.
+  original_deps: Additional targets to provide to users of this rule.
+  srcjar: unused.
+    """,
     implementation = _maven_import_impl,
     attrs = {
-        "jars": attr.label_list(allow_files = True),
+        "java_deps": attr.label_list(providers = [JavaInfo]),
         "files": attr.label_list(allow_files = True),
         "deps": attr.label_list(providers = [MavenInfo]),
         "exports": attr.label_list(providers = [MavenInfo]),
@@ -323,33 +333,49 @@ _maven_import = rule(
         "parent": attr.label(),
         "pom": attr.label(allow_single_file = True),
         "notice": attr.label(allow_single_file = True),
-        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "original_deps": attr.label_list(),
         "srcjar": attr.label(allow_files = True),
     },
 )
 
-# A java_import rule extended with pom and parent attributes for maven libraries.
 def maven_import(
         name,
-        pom,
-        classifiers = [],
-        visibility = None,
         jars = [],
-        repo_path = "",
+        deps = [],
         repo_root_path = "",
-        parent = None,
-        classified_only = False,
+        repo_path = "",
+        classifiers = [],
         **kwargs):
+    """Imports jars with a pom and parent attributes for use with Maven rules.
+
+    A jvm_import target, ${name}_jars, is generated to import all jars.
+
+    Files at repo_root_path and repo_path are included in the _maven_import target.
+    This includes the NOTICE file.
+
+    Args:
+        name: The name for the maven_import target.
+        jars: The list of jars to import.
+        deps: The list of deps the imported jars depend on.
+        repo_root_path: The root repository path, for globbing additional files.
+        repo_path: A subpath under repo_root_path, for globbing additional files.
+        classifiers: unused.
+        **kwargs: See arguments for _maven_import.
+    """
+    import_name = name + "_jars"
+    jvm_import(
+        name = import_name,
+        jars = jars,
+        deps = deps,
+    )
+
     artifact_dir = _get_artifact_dir(repo_root_path, repo_path)
     _maven_import(
         name = name,
-        visibility = visibility,
-        jars = jars,
-        pom = pom,
+        java_deps = [":" + import_name],
+        deps = deps,
         repo_path = repo_path,
         repo_root_path = repo_root_path,
-        parent = parent,
         files = native.glob(
             include = [artifact_dir + "**"],
             exclude = [artifact_dir + "**/" + exclude for exclude in _REPO_GLOB_EXCLUDES],

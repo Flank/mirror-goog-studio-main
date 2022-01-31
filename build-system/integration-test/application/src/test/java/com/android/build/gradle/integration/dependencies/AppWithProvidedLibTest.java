@@ -59,17 +59,14 @@ public class AppWithProvidedLibTest {
                                 + "apply from: \"../../commonLocalRepo.gradle\"\n"
                                 + "\n"
                                 + "android {\n"
+                                + "    namespace 'com.example.android.multiproject.library.base'\n"
                                 + "    compileSdkVersion rootProject.latestCompileSdk\n"
                                 + "\n"
                                 + "}\n");
         final File mainFolder = new File(libFolder, "src/main");
         FileUtils.mkdirs(mainFolder);
         Files.asCharSink(new File(mainFolder, "AndroidManifest.xml"), Charsets.UTF_8)
-                .write(
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "      package=\"com.example.android.multiproject.library.base\">\n"
-                                + "</manifest>\n");
+                .write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + "<manifest />\n");
 
         TestFileUtils.appendToFile(project.getSettingsFile(), "\ninclude 'library'");
         TestFileUtils.appendToFile(

@@ -1,6 +1,7 @@
 apply plugin: 'com.android.test'
 
 android {
+    namespace "com.android.tests.basic.test"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

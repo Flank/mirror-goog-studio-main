@@ -35,6 +35,7 @@ public class DeviceState {
     private final List<String> mLogcatMessages = new ArrayList<>();
     private final Map<Integer, ClientState> mClients = new HashMap<>();
     private final Map<Integer, PortForwarder> mPortForwarders = new HashMap<>();
+    private final Map<Integer, PortForwarder> mReversePortForwarders = new HashMap<>();
     private final FakeAdbServer mServer;
     private final HostConnectionType mHostConnectionType;
 
@@ -193,6 +194,13 @@ public class DeviceState {
         }
     }
 
+    @NonNull
+    public ImmutableMap<Integer, PortForwarder> getAllReversePortForwarders() {
+        synchronized (mReversePortForwarders) {
+            return ImmutableMap.copyOf(mReversePortForwarders);
+        }
+    }
+
     public boolean addPortForwarder(@NonNull PortForwarder forwarder, boolean noRebind) {
         synchronized (mPortForwarders) {
             if (noRebind) {
@@ -207,15 +215,41 @@ public class DeviceState {
         }
     }
 
+    public boolean addReversePortForwarder(@NonNull PortForwarder forwarder, boolean noRebind) {
+        synchronized (mReversePortForwarders) {
+            if (noRebind) {
+                return mReversePortForwarders.computeIfAbsent(
+                                forwarder.getSource().mPort, port -> forwarder)
+                        == forwarder;
+            } else {
+                // Just overwrite the previous forwarder.
+                mReversePortForwarders.put(forwarder.getSource().mPort, forwarder);
+                return true;
+            }
+        }
+    }
+
     public boolean removePortForwarder(int hostPort) {
         synchronized (mPortForwarders) {
             return mPortForwarders.remove(hostPort) != null;
         }
     }
 
+    public boolean removeReversePortForwarder(int hostPort) {
+        synchronized (mReversePortForwarders) {
+            return mReversePortForwarders.remove(hostPort) != null;
+        }
+    }
+
     public void removeAllPortForwarders() {
         synchronized (mPortForwarders) {
             mPortForwarders.clear();
+        }
+    }
+
+    public void removeAllReversePortForwarders() {
+        synchronized (mReversePortForwarders) {
+            mReversePortForwarders.clear();
         }
     }
 

@@ -83,7 +83,7 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   const int buffer_size_kb = 32000;
   perfetto::protos::TraceConfig config =
       PerfettoManager::BuildFtraceConfig(app_name, buffer_size_kb);
-  EXPECT_EQ(config.data_sources().size(), 6);
+  EXPECT_EQ(config.data_sources().size(), 7);
   // Assume the format of the config, perfetto doesn't care about the order but
   // for the test we assume its order so we don't need to search for data.
 
@@ -117,6 +117,8 @@ TEST(PerfettoManagerTest, ValidateConfig) {
             "android.surfaceflinger.frame");
   EXPECT_EQ(config.data_sources()[5].config().name(),
             "android.surfaceflinger.frametimeline");
+  // Perfetto SDK TrackEvent API
+  EXPECT_EQ(config.data_sources()[6].config().name(), "track_event");
 }
 
 TEST(PerfettoManagerTest, ValidateShutdownErrors) {

@@ -120,7 +120,7 @@ class IssueReporterLoggingEnvironment private constructor(
             BUG -> {
                 internals?.cxxDiagnosticCodes?.add(message.diagnosticCode)
                 val sb = StringBuilder(message.text())
-                sb.append("Please refer to bug https://b.corp.google.com/issues/${message.diagnosticCode} for more information.\n")
+                sb.append("Please refer to bug https://issuetracker.google.com/${message.diagnosticCode} for more information.\n")
                 if (cxxFolder != null) {
                     sb.append("If possible, please also attach a zipped copy of $cxxFolder to the bug to assist in diagnosing the issue.\n")
                 }

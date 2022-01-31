@@ -45,6 +45,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import com.android.tools.lint.checks.infrastructure.use
 
 /**
  * Most of the evaluator is tested indirectly via all the lint unit
@@ -75,6 +76,7 @@ class DefaultJavaEvaluatorTest {
 
     @Test
     fun testCallAssignmentRanges() {
+        @Suppress("RemoveRedundantCallsOfConversionMethods")
         lint().files(
             java(
                 """
@@ -387,6 +389,71 @@ class DefaultJavaEvaluatorTest {
                 1 errors, 0 warnings
                 """
             )
+    }
+
+    @Test
+    fun testGetMethodDescriptor() {
+        val sb = StringBuilder()
+        listOf(
+            java(
+                """
+            import java.util.List;
+            class Test {
+              void test() { }
+              int test(int a, int[] b, int[][] c, boolean d, float e, double f, long g, short h, char z) { return -1; }
+              List<char[]> test2(List<List<String>> list) { return null; }
+              class Inner {
+                Inner(int i) { }
+                void inner() { }
+              }
+            }
+            """
+            ).indented()
+        ).use(temporaryFolder, TestUtils.getSdk().toFile()) { context ->
+            val evaluator = context.evaluator
+            context.uastFile?.accept(object : AbstractUastVisitor() {
+                private fun addMethod(node: PsiMethod) {
+                    val text = node.text
+                    sb.append(text.substringBefore('{').trim()).append(":\n")
+                    sb.append("simple: ")
+                    sb.append(evaluator.getMethodDescription(method = node, includeName = false, includeReturn = false)).append("\n")
+                    sb.append("full:   ")
+                    sb.append(evaluator.getMethodDescription(method = node, includeName = true, includeReturn = true)).append("\n\n")
+                }
+                override fun visitMethod(node: UMethod): Boolean {
+                    addMethod(node.javaPsi)
+                    return super.visitMethod(node)
+                }
+                override fun visitCallExpression(node: UCallExpression): Boolean {
+                    node.resolve()?.let { addMethod(it) }
+                    return super.visitCallExpression(node)
+                }
+            })
+        }
+        assertEquals(
+            """
+            void test():
+            simple: ()
+            full:   test()V
+
+            int test(int a, int[] b, int[][] c, boolean d, float e, double f, long g, short h, char z):
+            simple: (I[I[[IZFDJSC)
+            full:   test(I[I[[IZFDJSC)I
+
+            List<char[]> test2(List<List<String>> list):
+            simple: (Ljava.util.List;)
+            full:   test2(Ljava.util.List;)Ljava.util.List;
+
+            Inner(int i):
+            simple: (I)
+            full:   LTest;<init>(I)V
+
+            void inner():
+            simple: ()
+            full:   inner()V
+            """.trimIndent().trim(),
+            sb.toString().trim()
+        )
     }
 
     class MethodMatchesDetector : Detector(), Detector.UastScanner {

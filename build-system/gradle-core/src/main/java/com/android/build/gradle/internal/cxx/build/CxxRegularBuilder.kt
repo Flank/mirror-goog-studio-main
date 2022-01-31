@@ -340,7 +340,8 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             // that the log file is written.
             //
             // There's no existing way to track C++ build time for ndk-build.
-            if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
+            if (variant.module.buildSystem == NativeBuildSystem.CMAKE ||
+                variant.module.buildSystem == NativeBuildSystem.NINJA) {
                 // Lazy because we only need to generate if the user has requested
                 // chrome tracing or structured logging.
                 val attributions by lazy {

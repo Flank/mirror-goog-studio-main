@@ -39,15 +39,12 @@ public class Complication extends AppComponent {
 
     private static final String DEBUG_COMMAND = "am set-debug-app -w";
 
-    @NonNull private final ILogger logger;
-
     public Complication(
             @NonNull ManifestAppComponentInfo info,
             @NonNull String appId,
             @NonNull IDevice device,
             @NonNull ILogger logger) {
-        super(device, appId, info);
-        this.logger = logger;
+        super(device, appId, info, logger);
     }
 
     @Override

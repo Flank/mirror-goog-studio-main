@@ -5,6 +5,7 @@ apply from: "../commonLocalRepo.gradle"
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.example.app"
     compileSdkVersion rootProject.latestCompileSdk
 
     defaultConfig {

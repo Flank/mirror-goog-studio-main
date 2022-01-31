@@ -66,6 +66,10 @@ class Application(android_label: String?, android_name: String?) : Tag("applicat
     fun attr_android_backupAgent(value: String) {
         attributes["android:backupAgent"] = value
     }
+
+    fun attr_android_localeConfig(value: String) {
+        attributes["android:localeConfig"] = value
+    }
 }
 
 class Activity(android_name: String?, android_exported: Boolean?) : Tag("activity") {

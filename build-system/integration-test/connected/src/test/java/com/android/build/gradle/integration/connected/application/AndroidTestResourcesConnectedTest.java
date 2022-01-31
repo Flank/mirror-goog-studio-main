@@ -51,6 +51,9 @@ public class AndroidTestResourcesConnectedTest {
                 "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

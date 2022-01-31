@@ -23,6 +23,7 @@ import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.Installation
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestCoverage
+import com.android.build.api.dsl.ViewBinding
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -287,6 +288,21 @@ abstract class CommonExtensionImpl<
 
     override fun dataBinding(action: Action<DataBindingOptions>) {
         action.execute(dataBinding)
+    }
+
+    override val viewBinding: ViewBindingOptionsImpl
+        get() = dslServices.newDecoratedInstance(
+            ViewBindingOptionsImpl::class.java,
+            Supplier { buildFeatures },
+            dslServices
+        )
+
+    override fun viewBinding(action: Action<ViewBindingOptionsImpl>) {
+        action.execute(viewBinding)
+    }
+
+    override fun viewBinding(action: ViewBinding.() -> Unit) {
+        action.invoke(viewBinding)
     }
 
     override fun defaultConfig(action: Action<com.android.build.gradle.internal.dsl.DefaultConfig>) {

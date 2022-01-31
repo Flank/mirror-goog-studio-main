@@ -135,7 +135,7 @@ class IceboxPluginTest {
         testSuiteResult = TestSuiteResult.getDefaultInstance()
         snapshotFile = File(
                 tempFolder.root,
-                "snapshot-$testClass-$testMethod-failure0.tar"
+                "snapshot-$testClass-$testMethod-failure0"
         )
         snapshotFileCompressed = File(
                 tempFolder.root,
@@ -237,9 +237,7 @@ class IceboxPluginTest {
                 mockIceboxCaller.fetchSnapshot(any(), any(), any())
         ).thenAnswer { invocation ->
             val file = invocation.getArgument(0, File::class.java)
-            file.outputStream().use {
-                it.write(1)
-            }
+            file.mkdir()
             Unit
         }
         iceboxPlugin.configure(config = config)
@@ -252,7 +250,7 @@ class IceboxPluginTest {
         }?.sourcePath?.path
         assertThat(infoFilePath).isNotNull()
         assertThat(IceboxOutput.parseFrom(File(infoFilePath).inputStream()).appPackage).isEqualTo(appPackage)
-        assertThat(snapshotFile.exists()).isTrue()
+        assertThat(snapshotFile.isDirectory()).isTrue()
         iceboxPlugin.afterAll(testSuiteResult, mockDeviceController)
         verify(mockIceboxCaller, times(1)).shutdownGrpc()
     }

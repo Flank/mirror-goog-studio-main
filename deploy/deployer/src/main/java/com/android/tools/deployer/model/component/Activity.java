@@ -25,16 +25,11 @@ import com.android.utils.ILogger;
 
 public class Activity extends AppComponent {
 
-
-    @NonNull
-    private final ILogger logger;
-
     public Activity(@NonNull ManifestActivityInfo info,
             @NonNull String appId,
             @NonNull IDevice device,
             @NonNull ILogger logger) {
-        super(device, appId, info);
-        this.logger = logger;
+        super(device, appId, info, logger);
     }
 
     @Override

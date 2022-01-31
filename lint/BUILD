@@ -68,9 +68,9 @@ iml_module(
     ],
     # do not sort: must match IML order
     deps = [
+        "//tools/adt/idea/.idea/libraries:asm-tools",
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
-        "//tools/adt/idea/.idea/libraries:asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/lint:studio.android.sdktools.lint-model[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",

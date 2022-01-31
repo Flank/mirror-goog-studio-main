@@ -20,6 +20,7 @@ apply plugin: 'com.android.library'
 apply from: "../commonLocalRepo.gradle"
 
 android {
+    namespace "android.databinding.testapp"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig.minSdkVersion rootProject.supportLibMinSdk

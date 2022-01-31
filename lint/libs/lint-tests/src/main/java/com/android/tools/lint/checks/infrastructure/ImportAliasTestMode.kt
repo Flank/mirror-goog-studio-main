@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
@@ -77,7 +78,7 @@ class ImportAliasTestMode : UastSourceTransformationTestMode(
         val imported = mutableSetOf<String>()
         val aliasNames = linkedMapOf<String, String>()
 
-        root.accept(object : FullyQualifyNamesTestMode.TypeVisitor(context, source) {
+        root.acceptSourceFile(object : FullyQualifyNamesTestMode.TypeVisitor(context, source) {
             override fun visitImportStatement(node: UImportStatement): Boolean {
                 val ktImportDirective = node.sourcePsi as? KtImportDirective
                 if (ktImportDirective != null && !node.isOnDemand &&

@@ -186,7 +186,6 @@ public class ProjectTest extends AbstractCheckTest {
     public void testDependsOn1() {
         List<Project> projects =
                 lint().files(
-                                projectProperties(),
                                 manifest().minSdk(14),
                                 jar("libs/android-support-v4.jar") // just a placeholder
                                 )
@@ -201,7 +200,6 @@ public class ProjectTest extends AbstractCheckTest {
     public void testDependsOn2() {
         List<Project> projects =
                 lint().files(
-                                projectProperties(),
                                 manifest().minSdk(14),
                                 jar("libs/support-v4-13.0.0-f5279ca6f213451a9dfb870f714ce6e6.jar")
                                 // just a placeholder

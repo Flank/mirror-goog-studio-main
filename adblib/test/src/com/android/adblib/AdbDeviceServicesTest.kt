@@ -25,7 +25,6 @@ import com.android.adblib.utils.AdbProtocolUtils
 import com.android.adblib.utils.MultiLineShellCollector
 import com.android.adblib.utils.ResizableBuffer
 import com.android.adblib.utils.TextShellCollector
-import com.android.adblib.utils.TimeoutTracker
 import com.android.fakeadbserver.DeviceFileState
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.devicecommandhandlers.SyncCommandHandler
@@ -82,7 +81,7 @@ class AdbDeviceServicesTest {
         }
 
         // Assert
-        Assert.assertNull(collector.transportId)
+        Assert.assertNull(deviceSelector.transportId)
         val expectedOutput = """
             # This is some build info
             # This is more build info
@@ -267,7 +266,7 @@ class AdbDeviceServicesTest {
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val errorInputChannel = object : AdbInputChannel {
             private var firstCall = true
-            override suspend fun read(buffer: ByteBuffer, timeout: TimeoutTracker): Int {
+            override suspend fun read(buffer: ByteBuffer, timeout: Long, unit: TimeUnit): Int {
                 if (firstCall) {
                     firstCall = false
                     buffer.put('a'.toByte())
@@ -319,7 +318,7 @@ class AdbDeviceServicesTest {
         val testInputChannel = object : AdbInputChannel {
             val lineCount = 10
             var currentLineIndex = 0
-            override suspend fun read(buffer: ByteBuffer, timeout: TimeoutTracker): Int {
+            override suspend fun read(buffer: ByteBuffer, timeout: Long, unit: TimeUnit): Int {
                 // Wait until we are given "go-go"
                 inputOutputCoordinator.receive()
 
@@ -388,7 +387,7 @@ class AdbDeviceServicesTest {
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val slowInputChannel = object : AdbInputChannel {
             var firstCall = true
-            override suspend fun read(buffer: ByteBuffer, timeout: TimeoutTracker): Int {
+            override suspend fun read(buffer: ByteBuffer, timeout: Long, unit: TimeUnit): Int {
                 return if (firstCall) {
                     firstCall = false
                     delay(10)
@@ -433,7 +432,7 @@ class AdbDeviceServicesTest {
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val slowInputChannel = object : AdbInputChannel {
             var callCount = 0
-            override suspend fun read(buffer: ByteBuffer, timeout: TimeoutTracker): Int {
+            override suspend fun read(buffer: ByteBuffer, timeout: Long, unit: TimeUnit): Int {
                 // In total, this will take 20 * 10 = 200 msec, but each call is less
                 // than the inactivity timeout of 100 msec we use for the test
                 return if (callCount < 20) {
@@ -483,7 +482,7 @@ class AdbDeviceServicesTest {
         }
 
         // Assert
-        Assert.assertNull(shellV2Result.transportId)
+        Assert.assertNull(deviceSelector.transportId)
         val expectedOutput = """
             # This is some build info
             # This is more build info
@@ -531,7 +530,7 @@ class AdbDeviceServicesTest {
         }
 
         // Assert
-        Assert.assertNull(shellV2Result.transportId)
+        Assert.assertNull(deviceSelector.transportId)
         val expectedStdout = """
             This is some text with
             split in multiple lines
@@ -546,8 +545,14 @@ class AdbDeviceServicesTest {
 
         """.trimIndent()
 
-        Assert.assertEquals(expectedStdout, AdbProtocolUtils.byteBufferToString(shellV2Result.stdout))
-        Assert.assertEquals(expectedStderr, AdbProtocolUtils.byteBufferToString(shellV2Result.stderr))
+        Assert.assertEquals(
+            expectedStdout,
+            AdbProtocolUtils.byteBufferToString(shellV2Result.stdout)
+        )
+        Assert.assertEquals(
+            expectedStderr,
+            AdbProtocolUtils.byteBufferToString(shellV2Result.stderr)
+        )
         Assert.assertEquals(10, shellV2Result.exitCode)
     }
 
@@ -655,12 +660,18 @@ class AdbDeviceServicesTest {
     // Checks public contract of the ShellCommandOutputElement.*.toString methods.
     @Test
     fun testShellCommandOutputElement() {
-        assertEquals("contents",
-                     ShellCommandOutputElement.StdoutLine("contents").toString())
-        assertEquals("contents",
-                     ShellCommandOutputElement.StderrLine("contents").toString())
-        assertEquals("42",
-                     ShellCommandOutputElement.ExitCode(42).toString())
+        assertEquals(
+            "contents",
+            ShellCommandOutputElement.StdoutLine("contents").toString()
+        )
+        assertEquals(
+            "contents",
+            ShellCommandOutputElement.StderrLine("contents").toString()
+        )
+        assertEquals(
+            "42",
+            ShellCommandOutputElement.ExitCode(42).toString()
+        )
     }
 
     @Test
@@ -701,7 +712,7 @@ class AdbDeviceServicesTest {
         Assert.assertNotNull(fakeDevice.getFile(filePath))
         fakeDevice.getFile(filePath)?.run {
             Assert.assertEquals(filePath, path)
-            Assert.assertEquals(fileMode.modeBits, permission.toInt())
+            Assert.assertEquals(fileMode.modeBits, permission)
             Assert.assertEquals(fileDate.toMillis() / 1_000, modifiedDate.toLong())
             Assert.assertEquals(fileBytes.size, bytes.size)
         }
@@ -745,7 +756,7 @@ class AdbDeviceServicesTest {
         Assert.assertNotNull(fakeDevice.getFile(filePath))
         fakeDevice.getFile(filePath)?.run {
             Assert.assertEquals(filePath, path)
-            Assert.assertEquals(fileMode.modeBits, permission.toInt())
+            Assert.assertEquals(fileMode.modeBits, permission)
             Assert.assertEquals(fileDate.toMillis() / 1_000, modifiedDate.toLong())
             Assert.assertEquals(fileBytes.size, bytes.size)
         }
@@ -768,7 +779,7 @@ class AdbDeviceServicesTest {
         val progress = TestSyncProgress()
         val slowInputChannel = object : AdbInputChannel {
             var firstCall = true
-            override suspend fun read(buffer: ByteBuffer, timeout: TimeoutTracker): Int {
+            override suspend fun read(buffer: ByteBuffer, timeout: Long, unit: TimeUnit): Int {
                 return if (firstCall) {
                     firstCall = false
                     buffer.putInt(5)
@@ -896,7 +907,7 @@ class AdbDeviceServicesTest {
         Assert.assertNotNull(fakeDevice.getFile(filePath))
         fakeDevice.getFile(filePath)?.run {
             Assert.assertEquals(filePath, path)
-            Assert.assertEquals(fileMode.modeBits, permission.toInt())
+            Assert.assertEquals(fileMode.modeBits, permission)
             Assert.assertEquals(fileDate.toMillis() / 1_000, modifiedDate.toLong())
             Assert.assertArrayEquals(fileBytes, bytes)
         }
@@ -908,7 +919,7 @@ class AdbDeviceServicesTest {
         Assert.assertNotNull(fakeDevice.getFile(filePath2))
         fakeDevice.getFile(filePath2)?.run {
             Assert.assertEquals(filePath2, path)
-            Assert.assertEquals(fileMode2.modeBits, permission.toInt())
+            Assert.assertEquals(fileMode2.modeBits, permission)
             Assert.assertEquals(fileDate2.toMillis() / 1_000, modifiedDate.toLong())
             Assert.assertArrayEquals(fileBytes2, bytes)
         }
@@ -932,7 +943,7 @@ class AdbDeviceServicesTest {
         fakeDevice.createFile(
             DeviceFileState(
                 filePath,
-                fileMode.modeBits.toString(),
+                fileMode.modeBits,
                 (fileDate.toMillis() / 1_000).toInt(),
                 fileBytes
             )
@@ -978,7 +989,7 @@ class AdbDeviceServicesTest {
         fakeDevice.createFile(
             DeviceFileState(
                 filePath,
-                fileMode.modeBits.toString(),
+                fileMode.modeBits,
                 (fileDate.toMillis() / 1_000).toInt(),
                 fileBytes
             )
@@ -994,7 +1005,7 @@ class AdbDeviceServicesTest {
         fakeDevice.createFile(
             DeviceFileState(
                 filePath2,
-                fileMode2.modeBits.toString(),
+                fileMode2.modeBits,
                 (fileDate2.toMillis() / 1_000).toInt(),
                 fileBytes2
             )
@@ -1085,7 +1096,7 @@ class AdbDeviceServicesTest {
         Assert.assertNotNull(fakeDevice.getFile(filePath))
         fakeDevice.getFile(filePath)?.run {
             Assert.assertEquals(filePath, path)
-            Assert.assertEquals(fileMode.modeBits, permission.toInt())
+            Assert.assertEquals(fileMode.modeBits, permission)
             Assert.assertEquals(fileDate.toMillis() / 1_000, modifiedDate.toLong())
             Assert.assertArrayEquals(fileBytes, bytes)
         }
@@ -1150,7 +1161,7 @@ class AdbDeviceServicesTest {
         fakeDevice.createFile(
             DeviceFileState(
                 filePath,
-                fileMode.modeBits.toString(),
+                fileMode.modeBits,
                 (fileDate.toMillis() / 1_000).toInt(),
                 fileBytes
             )
@@ -1197,14 +1208,14 @@ class AdbDeviceServicesTest {
         fakeDevice.createFile(
             DeviceFileState(
                 filePath,
-                fileMode.modeBits.toString(),
+                fileMode.modeBits,
                 (fileDate.toMillis() / 1_000).toInt(),
                 fileBytes
             )
         )
         val progress = TestSyncProgress()
         val outputChannel = object : AdbOutputChannel {
-            override suspend fun write(buffer: ByteBuffer, timeout: TimeoutTracker): Int {
+            override suspend fun write(buffer: ByteBuffer, timeout: Long, unit: TimeUnit): Int {
                 throw MyTestException("this stream simulates an error writing to local storage")
             }
 
@@ -1226,6 +1237,175 @@ class AdbDeviceServicesTest {
 
         // Assert
         Assert.fail() // Should not be reached
+    }
+
+    @Test
+    fun testReverseForward() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        val port = runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(),
+                SocketSpec.Tcp(4000)
+            )
+        }
+
+        // Assert
+        Assert.assertTrue(port != null && port.toInt() > 0)
+    }
+
+    @Test
+    fun testReverseForwardNoRebind() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        val port = runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(),
+                SocketSpec.Tcp(4000)
+            )
+        }?.toIntOrNull() ?: throw AssertionError("Port should have been an integer")
+
+        // Act
+        exceptionRule.expect(AdbFailResponseException::class.java)
+        runBlocking {
+            deviceServices.reverseForward(
+                DeviceSelector.any(),
+                SocketSpec.Tcp(port),
+                SocketSpec.Tcp(4000),
+                rebind = false
+            )
+        }
+
+        // Assert
+        Assert.fail()
+    }
+
+    @Test
+    fun testReverseForwardRebind() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        val port = runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(),
+                SocketSpec.Tcp(4000)
+            )
+        }?.toIntOrNull() ?: throw AssertionError("Port should have been an integer")
+
+        // Act
+        val port2 = runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(port),
+                SocketSpec.Tcp(4000),
+                rebind = true
+            )
+        }
+
+        // Assert
+        Assert.assertNull(port2)
+    }
+
+    @Test
+    fun testReverseKillForward() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        val port = runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(),
+                SocketSpec.Tcp(4000)
+            )
+        } ?: throw Exception("`forward` command should have returned a port")
+        Assert.assertEquals(1, fakeDevice.allReversePortForwarders.size)
+
+        // Act
+        runBlocking {
+            deviceServices.reverseKillForward(
+                deviceSelector,
+                SocketSpec.Tcp(port.toInt())
+            )
+        }
+
+        // Assert
+        Assert.assertEquals(0, fakeDevice.allReversePortForwarders.size)
+    }
+
+    @Test
+    fun testReverseKillForwardAll() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(),
+                SocketSpec.Tcp(4000)
+            )
+        }
+        Assert.assertEquals(1, fakeDevice.allReversePortForwarders.size)
+
+        // Act
+        runBlocking {
+            deviceServices.reverseKillForwardAll(deviceSelector)
+        }
+
+        // Assert
+        Assert.assertEquals(0, fakeDevice.allPortForwarders.size)
+    }
+
+    @Test
+    fun testReverseListForward() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        runBlocking {
+            deviceServices.reverseForward(
+                deviceSelector,
+                SocketSpec.Tcp(1000),
+                SocketSpec.Tcp(4000)
+            )
+        }
+        Assert.assertEquals(1, fakeDevice.allReversePortForwarders.size)
+
+        // Act
+        val reverseList = runBlocking {
+            deviceServices.reverseListForward(deviceSelector)
+        }
+
+        // Assert
+        Assert.assertEquals(1, reverseList.size)
+        Assert.assertEquals(0, reverseList.errors.size)
+        reverseList[0].let { forwardEntry ->
+            Assert.assertEquals("UsbFfs", forwardEntry.transportName)
+            Assert.assertEquals("tcp:1000", forwardEntry.remote.toQueryString())
+            Assert.assertEquals("tcp:4000", forwardEntry.local.toQueryString())
+        }
     }
 
     open class TestSyncProgress : SyncProgress {
@@ -1258,7 +1438,12 @@ class AdbDeviceServicesTest {
     private fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
         val host = registerCloseable(TestingAdbLibHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
-        val session = AdbLibSession.create(host, channelProvider, Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS))
+        val session =
+            AdbLibSession.create(
+                host,
+                channelProvider,
+                Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
+            )
         return session.deviceServices
     }
 
@@ -1279,10 +1464,8 @@ class AdbDeviceServicesTest {
     class ByteBufferShellCollector : ShellCollector<ByteBuffer> {
 
         private val buffer = ResizableBuffer()
-        var transportId: Long? = null
 
-        override suspend fun start(collector: FlowCollector<ByteBuffer>, transportId: Long?) {
-            this.transportId = transportId
+        override suspend fun start(collector: FlowCollector<ByteBuffer>) {
         }
 
         override suspend fun collect(collector: FlowCollector<ByteBuffer>, stdout: ByteBuffer) {
@@ -1298,10 +1481,8 @@ class AdbDeviceServicesTest {
 
         private val stdoutBuffer = ResizableBuffer()
         private val stderrBuffer = ResizableBuffer()
-        private var transportId: Long? = null
 
-        override suspend fun start(collector: FlowCollector<ShellV2Result>, transportId: Long?) {
-            this.transportId = transportId
+        override suspend fun start(collector: FlowCollector<ShellV2Result>) {
         }
 
         override suspend fun collectStdout(
@@ -1324,7 +1505,6 @@ class AdbDeviceServicesTest {
         ) {
             val result =
                 ShellV2Result(
-                    transportId,
                     stdoutBuffer.forChannelWrite(),
                     stderrBuffer.forChannelWrite(),
                     exitCode
@@ -1334,7 +1514,6 @@ class AdbDeviceServicesTest {
     }
 
     class ShellV2Result(
-        val transportId: Long?,
         val stdout: ByteBuffer,
         val stderr: ByteBuffer,
         val exitCode: Int

@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.ATTR_VALUE
+import com.android.SdkConstants.KOTLIN_SUPPRESS
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.fromPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
@@ -30,6 +31,7 @@ import com.android.tools.lint.detector.api.AnnotationOrigin.OUTER_CLASS
 import com.android.tools.lint.detector.api.AnnotationOrigin.PACKAGE
 import com.android.tools.lint.detector.api.AnnotationOrigin.PARAMETER
 import com.android.tools.lint.detector.api.AnnotationOrigin.PROPERTY_DEFAULT
+import com.android.tools.lint.detector.api.AnnotationOrigin.SELF
 import com.android.tools.lint.detector.api.AnnotationOrigin.VARIABLE
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
@@ -38,6 +40,7 @@ import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_LHS
 import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_RHS
 import com.android.tools.lint.detector.api.AnnotationUsageType.BINARY
 import com.android.tools.lint.detector.api.AnnotationUsageType.CLASS_REFERENCE
+import com.android.tools.lint.detector.api.AnnotationUsageType.DEFINITION
 import com.android.tools.lint.detector.api.AnnotationUsageType.EQUALITY
 import com.android.tools.lint.detector.api.AnnotationUsageType.EXTENDS
 import com.android.tools.lint.detector.api.AnnotationUsageType.FIELD_REFERENCE
@@ -511,7 +514,7 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
                         // Some annotations should not be treated as inherited though
                         // the hierarchy: if that's the case for this annotation in
                         // this scanner, check whether it's inherited and if so, skip it
-                        if (!scanner.inheritAnnotation(signature) && info.isInherited()) {
+                        if (type != DEFINITION && !scanner.inheritAnnotation(signature) && info.isInherited()) {
                             continue
                         }
                         scanner.visitAnnotationUsage(context, argument, info, usageInfo)
@@ -646,9 +649,18 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
     fun visitAnnotation(context: JavaContext, annotation: UAnnotation) {
         // Check annotation references; these are a form of method call
         val qualifiedName = annotation.qualifiedName
-        if (qualifiedName == null || qualifiedName.startsWith("java.") ||
-            SUPPORT_ANNOTATIONS_PREFIX.isPrefix(qualifiedName)
-        ) {
+        if (qualifiedName == null || qualifiedName.startsWith("java.") || qualifiedName == KOTLIN_SUPPRESS) {
+            return
+        }
+
+        val selfInfo = AnnotationInfo(annotation, qualifiedName, annotation.sourcePsi ?: annotation.javaPsi, SELF)
+        checkAnnotations(context, annotation, DEFINITION, null as PsiElement?, listOf(selfInfo))
+
+        if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(qualifiedName)) {
+            // Don't waste time resolving and looking up methods for the known androidx annotations
+            // since we know we don't have annotations on the actual annotation attributes there
+            // (except for @IntRange on @RequiresApi but that isn't an interesting attribute
+            // for detectors to listen to; we enforce usage there in AnnotationDetector)
             return
         }
 

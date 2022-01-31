@@ -13,6 +13,7 @@ dependencies {
 }
 
 android {
+    namespace "com.example.android.multiproject"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 }

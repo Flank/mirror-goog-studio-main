@@ -12,6 +12,7 @@ dependencies {
 }
 
 android {
+    namespace "com.android.tests.extractannotations"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

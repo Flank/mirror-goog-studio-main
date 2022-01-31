@@ -149,9 +149,9 @@ class IceboxCallerImpl public constructor(
         logcatParser.stop()
         try {
             val snapshotFormat = when (snapshotCompression) {
-                Compression.NONE -> SnapshotPackage.Format.TAR
+                Compression.NONE -> SnapshotPackage.Format.DIRECTORY
                 Compression.TARGZ -> SnapshotPackage.Format.TARGZ
-                Compression.UNRECOGNIZED -> SnapshotPackage.Format.TAR
+                Compression.UNRECOGNIZED -> SnapshotPackage.Format.DIRECTORY
             }
             logger.info(
                     "Pulling snapshot ${snapshotFile.name} from device. This may take a while."

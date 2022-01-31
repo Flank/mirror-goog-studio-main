@@ -49,6 +49,7 @@ public class LibWithProvidedLocalJarTest {
                         + "apply plugin: \"com.android.library\"\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace 'com.android.tests.libWithProvidedLocalJar'\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

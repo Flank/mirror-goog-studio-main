@@ -20,6 +20,7 @@
 
 #include <jvmti.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -62,13 +63,14 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
 
 class Instrumenter {
  public:
-  Instrumenter(jvmtiEnv* jvmti, JNIEnv* jni, const TransformCache& cache,
+  Instrumenter(jvmtiEnv* jvmti, JNIEnv* jni,
+               std::unique_ptr<TransformCache> cache,
                bool caching_enable = true)
       : jvmti_(jvmti),
         jni_(jni),
-        cache_(cache),
+        cache_(std::move(cache)),
         caching_enabled_(caching_enable) {
-    cache_.Init();
+    cache_->Init();
   }
 
   bool Instrument(const Transform& transform) const;
@@ -80,7 +82,7 @@ class Instrumenter {
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
 
-  TransformCache cache_;
+  std::unique_ptr<TransformCache> cache_;
   bool caching_enabled_;
 
   bool ApplyCachedTransforms(

@@ -4,7 +4,6 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
@@ -12,7 +11,6 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalTestExtension
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
-import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.builder.core.LibraryRequest
@@ -52,13 +50,6 @@ open class TestExtension(
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslServices.domainObjectSet(ApplicationVariant::class.java)
-
-    override val viewBinding: ViewBindingOptions =
-        dslServices.newInstance(
-            ViewBindingOptionsImpl::class.java,
-            publicExtensionImpl.buildFeatures,
-            dslServices
-        )
 
     /**
      * The list of Application variants. Since the collections is built after evaluation, it

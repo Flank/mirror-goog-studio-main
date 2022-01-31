@@ -495,7 +495,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                     If a class is referenced in the manifest or in a layout file, it must \
                     also exist in the project (or in one of the libraries included by the \
                     project. This check helps uncover typos in registration names, or \
-                    attempts to rename or move classes without updating the XML references
+                    attempts to rename or move classes without updating the XML references \
                     properly.
                     """,
                 category = Category.CORRECTNESS,

@@ -52,7 +52,7 @@ class FileComparisonDetector : Detector(), SourceCodeScanner {
             id = "FileComparisons",
             briefDescription = "Invalid File Comparisons",
             explanation = """
-                Never call `equals` (or worse, `==`) on a `java.io.File`:
+                Never call `equals` (or worse, `==`) on a `java.io.File`: \
                 this will not do the right thing on case insensitive file systems.
 
                 Always call `equals` instead of identity equals on VirtualFiles.
@@ -67,10 +67,10 @@ class FileComparisonDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+    override fun getApplicableUastTypes(): List<Class<out UElement>> =
         listOf(UBinaryExpression::class.java, UCallExpression::class.java)
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
+    override fun createUastHandler(context: JavaContext): UElementHandler {
         return object : UElementHandler() {
             override fun visitCallExpression(node: UCallExpression) {
                 if (node.methodName == "equals")

@@ -45,9 +45,9 @@ class ShortNameCacheDetector : Detector(), SourceCodeScanner {
             id = "ShortNamesCache",
             briefDescription = "PsiShortNamesCaches which abort processing",
             explanation = """
-                The various `process` methods in PsiShortNamesCache take a boolean
-                return value. If you return "false" from this method, you're saying
-                that cache processing should not continue. This will break other name caches,
+                The various `process` methods in PsiShortNamesCache take a boolean \
+                return value. If you return "false" from this method, you're saying \
+                that cache processing should not continue. This will break other name caches, \
                 which for example happened with http://b/152432842.
             """,
             category = Category.CORRECTNESS,

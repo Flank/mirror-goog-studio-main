@@ -557,7 +557,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         ProjectDescription library =
                 project(
                                 mLibraryManifest,
-                                projectProperties().library(true).compileSdk(14),
+                                projectProperties().library(true),
                                 mLibraryCode,
                                 mLibraryStrings)
                         .name("LibraryProject");

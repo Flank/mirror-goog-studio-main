@@ -269,7 +269,6 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
 
     fun testMissingLayoutAttribute() {
         lint().files(
-            projectProperties().compileSdk(10),
             manifest().minSdk(5).targetSdk(17),
             xml(
                 "res/layout/rtl.xml",

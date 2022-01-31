@@ -478,9 +478,6 @@ class JavaEvaluator {
         includeName: Boolean,
         includeReturn: Boolean
     ): String? {
-        assert(!includeName) // not yet tested
-        assert(!includeReturn) // not yet tested
-
         val signature = StringBuilder()
 
         if (includeName) {
@@ -773,7 +770,10 @@ class JavaEvaluator {
         inHierarchy: Boolean = false
     ): List<UAnnotation>
 
-    @Deprecated("Use getAllUAnnotations instead", replaceWith = ReplaceWith("getAllUAnnotations(owner, inHierarchy)"))
+    @Deprecated(
+        "Use getAnnotations() instead; consider providing a parent",
+        replaceWith = ReplaceWith("getAnnotations(owner, inHierarchy)")
+    )
     abstract fun getAllAnnotations(
         owner: PsiModifierListOwner,
         inHierarchy: Boolean

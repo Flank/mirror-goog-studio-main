@@ -44,7 +44,6 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
         FileUtils.writeToFile(androidManifest,
                 //language=XML
                 """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  package="com.example.helloworld"
                   android:versionCode="1"
                   android:versionName="1.0">
 

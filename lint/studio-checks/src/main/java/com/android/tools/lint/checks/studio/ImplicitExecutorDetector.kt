@@ -44,12 +44,12 @@ class ImplicitExecutorDetector : Detector(), SourceCodeScanner {
             id = "ImplicitExecutor",
             briefDescription = "Using an implicitly chosen Executor",
             explanation = """
-                Not specifying an Executor for running callbacks is a common source of threading
-                issues, resulting in too much work running on the UI thread or the shared
+                Not specifying an Executor for running callbacks is a common source of threading \
+                issues, resulting in too much work running on the UI thread or the shared \
                 ForkJoinPool used by the IDE for highlighting.
 
-                In Android Studio, always specify the executor for running callbacks. As explained
-                in the documentation for `ListenableFuture.addCallback`, try to avoid
+                In Android Studio, always specify the executor for running callbacks. As explained \
+                in the documentation for `ListenableFuture.addCallback`, try to avoid \
                 `directExecutor()`.
 
                 For more, see `go/do-not-freeze`.

@@ -59,9 +59,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     public void testTarget14WithRtl() {
-        lint().files(projectProperties().compileSdk(17), mMinsdk5targetsdk14, mRtl)
-                .run()
-                .expectClean();
+        lint().files(mMinsdk5targetsdk14, mRtl).run().expectClean();
     }
 
     public void testTarget17WithRtl() {
@@ -79,7 +77,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml: Warning: The project references RTL attributes, but does not explicitly enable or disable RTL support with android:supportsRtl in the manifest [RtlEnabled]\n"
                         + "0 errors, 4 warnings\n";
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest(
                                 ""
                                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -92,7 +89,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     public void testTarget14() {
-        lint().files(projectProperties().compileSdk(17), mMinsdk5targetsdk14).run().expectClean();
+        lint().files(mMinsdk5targetsdk14).run().expectClean();
     }
 
     public void testUseStart() {
@@ -108,7 +105,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:gravity=\"right\"\n"
                         + "                         ~~~~~\n"
                         + "0 errors, 3 warnings\n";
-        lint().files(projectProperties().compileSdk(17), manifest().minSdk(5).targetSdk(17), mRtl)
+        lint().files(manifest().minSdk(5).targetSdk(17), mRtl)
                 .issues(RtlDetector.USE_START)
                 .run()
                 .expect(expected);
@@ -127,10 +124,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:gravity=\"right\"\n"
                         + "                         ~~~~~\n"
                         + "0 errors, 3 warnings\n";
-        lint().files(projectProperties().compileSdk(17), mMin17rtl, mRtl)
-                .issues(RtlDetector.USE_START)
-                .run()
-                .expect(expected);
+        lint().files(mMin17rtl, mRtl).issues(RtlDetector.USE_START).run().expect(expected);
     }
 
     public void testRelativeLayoutInOld() {
@@ -164,10 +158,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:layout_alignRight=\"@id/cancel\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 9 warnings\n";
-        lint().files(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(5).targetSdk(17),
-                        mRelative)
+        lint().files(manifest().minSdk(5).targetSdk(17), mRelative)
                 .issues(RtlDetector.USE_START)
                 .run()
                 .expect(expected);
@@ -204,10 +195,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:layout_alignRight=\"@id/cancel\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 9 warnings\n";
-        lint().files(projectProperties().compileSdk(17), mMin17rtl, mRelative)
-                .issues(RtlDetector.USE_START)
-                .run()
-                .expect(expected);
+        lint().files(mMin17rtl, mRelative).issues(RtlDetector.USE_START).run().expect(expected);
     }
 
     public void testRelativeLayoutCompat() {
@@ -242,7 +230,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "9 errors, 0 warnings\n";
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
                                 "res/layout/relative.xml",
@@ -354,7 +341,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
 
     public void testRelativeCompatOk() {
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
                                 "res/layout/relative.xml",
@@ -428,7 +414,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
 
     public void testTarget17NoRtl() {
         lint().files(
-                        projectProperties().compileSdk(17),
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -453,10 +438,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     public void testRtlQuickFixBelow17() {
-        lint().files(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(16).targetSdk(17),
-                        mRtlQuickFixed)
+        lint().files(manifest().minSdk(16).targetSdk(17), mRtlQuickFixed)
                 .issues(RtlDetector.USE_START)
                 .run()
                 .verifyFixes()
@@ -485,10 +467,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     public void testRtlQuickFix17() {
-        lint().files(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(17).targetSdk(17),
-                        mRtlQuickFixed)
+        lint().files(manifest().minSdk(17).targetSdk(17), mRtlQuickFixed)
                 .issues(RtlDetector.USE_START)
                 .run()
                 .expect(
@@ -549,7 +528,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
         // In batch mode things work fine -- we look up the supportsRtl flag,
         // but in incremental mode we need to look at the merged manifest
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest(
                                 ""
                                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -584,7 +562,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "                      ~~~~\n"
                         + "0 errors, 2 warnings\n";
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         java(
                                 ""
@@ -638,7 +615,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
     public void testNullLocalName() {
         // Regression test for attribute with null local name
         lint().files(
-                        projectProperties().compileSdk(10),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
                                 "res/layout/rtl.xml",
@@ -666,10 +642,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:paddingRight=\"120dip\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
-        lint().files(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(5).targetSdk(17),
-                        mRelative)
+        lint().files(manifest().minSdk(5).targetSdk(17), mRelative)
                 .issues(RtlDetector.SYMMETRY)
                 .run()
                 .expect(expected);
@@ -687,7 +660,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
                                 "res/layout/symmetry.xml",
@@ -732,7 +704,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "            ~~~~~~~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings";
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
                                 "res/layout/spinner.xml",

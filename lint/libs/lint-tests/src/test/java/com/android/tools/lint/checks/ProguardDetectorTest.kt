@@ -71,19 +71,17 @@ class ProguardDetectorTest : AbstractCheckTest() {
     }
 
     fun testSilent() {
-        lint().files(mProguard4, projectProperties().compileSdk(3)).run().expectClean()
+        lint().files(mProguard4).run().expectClean()
     }
 
     fun testSilent2() {
-        lint().files(mProguard4, projectProperties().compileSdk(3)).run().expectClean()
+        lint().files(mProguard4).run().expectClean()
     }
 
     fun testSplit() {
         lint().files(
             mProguard4,
-            projectProperties()
-                .compileSdk(3)
-                .property("proguard.config", "proguard.cfg")
+            projectProperties().property("proguard.config", "proguard.cfg")
         ).run().expect(
             """
             proguard.cfg:14: Warning: Local ProGuard configuration contains general Android configuration: Inherit these settings instead? Modify project.properties to define proguard.config=${"$"}{sdk.dir}/tools/proguard/proguard-android.txt:proguard.cfg and then keep only project-specific configuration here [ProguardSplit]

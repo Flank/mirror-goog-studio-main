@@ -26,8 +26,11 @@ private const val FORWARD_LINE_PATTERN =
  * Input example
  *
  *  ```
- *     adb-939AX05XBZ-vWgJpq	_adb-tls-connect._tcp.	192.168.1.86:39149
- *     adb-939AX05XBZ-vWgJpq	_adb-tls-pairing._tcp.	192.168.1.86:37313
+ *      HT75B1A00212 tcp:51222 tcp:5000
+ *      HT75B1A00212 tcp:51227 tcp:5001
+ *      HT75B1A00212 tcp:51232 tcp:5002
+ *      HT75B1A00212 tcp:51239 tcp:5003
+ *      HT75B1A00212 tcp:51244 tcp:5004
  *  ```
  */
 internal class ForwardSocketListParser {

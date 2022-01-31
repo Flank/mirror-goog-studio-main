@@ -40,16 +40,16 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
             id = "CommonForkJoinPool",
             briefDescription = "Using common Fork Join Pool",
             explanation = """
-                Using the common ForkJoinPool can lead to freezes because in many cases
+                Using the common ForkJoinPool can lead to freezes because in many cases \
                 the set of threads is very low.
 
-                For Android Studio, either use the IntelliJ application pool:
-                `com.intellij.openapi.application.Application#executeOnPooledThread`.
-                Or, for long running operations, prefer the
+                For Android Studio, either use the IntelliJ application pool: \
+                `com.intellij.openapi.application.Application#executeOnPooledThread`. \
+                Or, for long running operations, prefer the \
                 `AppExecutorUtil.getAppExecutorService()` executor.
 
-                For the Android Gradle Plugin use
-                `com.android.build.gradle.internal.tasks.Workers.preferWorkers` or
+                For the Android Gradle Plugin use \
+                `com.android.build.gradle.internal.tasks.Workers.preferWorkers` or \
                 `com.android.build.gradle.internal.tasks.Workers.preferThreads`
 
                 For more, see `go/do-not-freeze`.
@@ -68,13 +68,13 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
             explanation = """
                 Using new Fork Join Pools should be limited to very specific use cases.
 
-                For Android Studio, when possible, prefer using the IntelliJ application pool:
-                `com.intellij.openapi.application.Application#executeOnPooledThread`.
-                Or, for long running operations, prefer the
+                For Android Studio, when possible, prefer using the IntelliJ application pool: \
+                `com.intellij.openapi.application.Application#executeOnPooledThread`. \
+                Or, for long running operations, prefer the \
                 `AppExecutorUtil.getAppExecutorService()` executor.
 
-                For the Android Gradle Plugin use
-                `com.android.build.gradle.internal.tasks.Workers.preferWorkers` or
+                For the Android Gradle Plugin use \
+                `com.android.build.gradle.internal.tasks.Workers.preferWorkers` or \
                 `com.android.build.gradle.internal.tasks.Workers.preferThreads`
 
                 For more, see `go/do-not-freeze`.

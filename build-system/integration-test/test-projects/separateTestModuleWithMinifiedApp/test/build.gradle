@@ -19,6 +19,7 @@ apply plugin: 'com.android.test'
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.android.tests.basic.test"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

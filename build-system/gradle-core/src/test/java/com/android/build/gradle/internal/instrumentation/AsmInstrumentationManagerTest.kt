@@ -28,6 +28,7 @@ import com.android.testutils.TestUtils
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,7 +36,10 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ARETURN
 import org.objectweb.asm.Opcodes.ASM7
@@ -72,6 +76,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
     private val apiVersion: Int = ASM7
     private val androidJar = TestUtils.resolvePlatformPath("android.jar").toFile()
+    private val classesCache = ClassesDataCache()
 
     private lateinit var classesHierarchyResolver: ClassesHierarchyResolver
     private lateinit var inputDir: File
@@ -99,7 +104,8 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java
         )
 
-        val builder = ClassesHierarchyResolver.Builder(ClassesDataCache()).addDependenciesSources(androidJar)
+        val builder = ClassesHierarchyResolver.Builder(classesCache)
+            .addDependenciesSources(androidJar)
 
         if (testMode == TestMode.DIR) {
             TestInputsGenerator.pathWithClasses(inputDir.toPath(), srcClasses)
@@ -116,6 +122,11 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         }
 
         classesHierarchyResolver = builder.build()
+    }
+
+    @After
+    fun tearDown() {
+        classesCache.close()
     }
 
     private fun AsmInstrumentationManager.instrument(inputDir: File, outputDir: File) {
@@ -560,6 +571,158 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
         assertThat(classContent.count { it.contains("MAXSTACK = $invalidMaxsValue") }).isEqualTo(0)
         assertThat(classContent.count { it.contains("MAXLOCALS = $invalidMaxsValue") }).isEqualTo(0)
+    }
+
+    @Test
+    fun testInstrumentingJava6ClassesWithRETInstructionWithComputeFramesMode() {
+        val className = "com.android.build.gradle.internal.instrumentation.ClassWithRetInstruction"
+        val classByteArray = getJava6ClassWithRETInstructions(className)
+        if (testMode == TestMode.JAR) {
+            val jarFile = inputDir.listFiles()!!.first()
+            val newJarFile = File(inputDir, "classesWithJava6ByteCode.jar")
+
+            ZipOutputStream(BufferedOutputStream(FileOutputStream(newJarFile))).use { outputJar ->
+                outputJar.setLevel(Deflater.NO_COMPRESSION)
+                ZipFile(jarFile).use { inputJar ->
+                    val entries = inputJar.entries()
+                    while (entries.hasMoreElements()) {
+                        val oldEntry = entries.nextElement()
+                        val byteArray = ByteStreams.toByteArray(inputJar.getInputStream(oldEntry))
+                        val entry = ZipEntry(oldEntry.name)
+                        outputJar.putNextEntry(entry)
+                        outputJar.write(byteArray)
+                        outputJar.closeEntry()
+                    }
+                }
+
+                val classWithRetInstructionEntry = ZipEntry(
+                    className.replace('.', '/') + DOT_CLASS
+                )
+                outputJar.putNextEntry(classWithRetInstructionEntry)
+                outputJar.write(classByteArray)
+                outputJar.closeEntry()
+            }
+
+            classesCache.close()
+            FileUtils.delete(jarFile)
+            classesHierarchyResolver =
+                ClassesHierarchyResolver.Builder(classesCache)
+                    .addDependenciesSources(androidJar, newJarFile)
+                    .build()
+        } else {
+            FileUtils.join(inputDir,className.replace('.', File.separatorChar) + DOT_CLASS).apply {
+                parentFile.mkdirs()
+                writeBytes(classByteArray)
+            }
+        }
+
+        AsmInstrumentationManager(
+            listOf(
+                getConfiguredVisitorFactory(FirstVisitorAnnotationAddingFactory::class.java)
+            ),
+            apiVersion,
+            classesHierarchyResolver,
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES,
+            emptySet()
+        ).instrument(inputDir, outputDir)
+
+        val instrumentedClassesLoader = if (testMode == TestMode.DIR) {
+            InstrumentedClassesLoader(
+                arrayOf(outputDir.toURI().toURL()),
+                this::class.java.classLoader
+            )
+        } else {
+            InstrumentedClassesLoader(
+                arrayOf(outputDir.listFiles()!!.first().toURI().toURL()),
+                this::class.java.classLoader
+            )
+        }
+
+        checkInstrumentedClassAnnotatedMethods(
+            instrumentedClassesLoader = instrumentedClassesLoader,
+            className = className,
+            expectedAnnotatedMethods = listOf(
+                "f1" to listOf(FirstVisitorAnnotation::class.java.name)
+            )
+        )
+    }
+
+    private fun getJava6ClassWithRETInstructions(className: String): ByteArray {
+        /*
+            public class ClassWithRetInstruction implements I {
+                @Override
+                public void f1() { }
+
+                public void method() {
+                    try {}
+                    finally {}
+                }
+            }
+
+         */
+        val cw = ClassWriter(Opcodes.ASM7)
+
+        cw.visit(
+            Opcodes.V1_6,
+            Opcodes.ACC_PUBLIC,
+            className.replace('.', '/'),
+            null,
+            "java/lang/Object",
+            arrayOf(Type.getInternalName(I::class.java))
+        )
+
+        var mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null)
+        mv.visitCode()
+        mv.visitVarInsn(Opcodes.ALOAD, 0)
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)
+        mv.visitInsn(Opcodes.RETURN)
+        mv.visitMaxs(1, 1)
+        mv.visitEnd()
+
+        mv = cw.visitMethod(ACC_PUBLIC, "f1", "()V", null, null)
+        mv.visitCode()
+        mv.visitInsn(Opcodes.RETURN)
+        mv.visitMaxs(0, 1)
+        mv.visitEnd()
+
+        mv = cw.visitMethod(ACC_PUBLIC, "method", "()V", null, null)
+        mv.visitCode()
+        val L0 = Label()
+        val L1 = Label()
+        val L2 = Label()
+        val L3 = Label()
+        val L4 = Label()
+        val L5 = Label()
+        val L6 = Label()
+        val L7 = Label()
+        val L8 = Label()
+        val L9 = Label()
+        mv.visitTryCatchBlock(L0, L1, L1, null)
+        mv.visitTryCatchBlock(L2, L3, L1, null)
+        mv.visitLabel(L0)
+        mv.visitLabel(L4)
+        mv.visitJumpInsn(Opcodes.GOTO, L2)
+        mv.visitLabel(L1)
+        mv.visitVarInsn(Opcodes.ASTORE, 2)
+        mv.visitJumpInsn(Opcodes.JSR, L5)
+        mv.visitLabel(L6)
+        mv.visitVarInsn(Opcodes.ALOAD, 2)
+        mv.visitInsn(Opcodes.ATHROW)
+        mv.visitLabel(L5)
+        mv.visitVarInsn(Opcodes.ASTORE, 1)
+        mv.visitLabel(L7)
+        mv.visitLabel(L8)
+        mv.visitVarInsn(Opcodes.RET, 1)
+        mv.visitLabel(L2)
+        mv.visitJumpInsn(Opcodes.JSR, L5)
+        mv.visitLabel(L3)
+        mv.visitInsn(Opcodes.RETURN)
+        mv.visitLabel(L9)
+        mv.visitInsn(Opcodes.RETURN)
+        mv.visitMaxs(1, 3)
+        mv.visitEnd()
+
+        return cw.toByteArray()
     }
 
     class InstrumentedClassesLoader(urls: Array<URL>, parent: ClassLoader) :

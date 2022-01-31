@@ -34,6 +34,9 @@ public class OptionalLibraryTest {
                 "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
@@ -42,7 +45,6 @@ public class OptionalLibraryTest {
                         + "'\n"
                         + "    useLibrary 'foo'\n"
                         + "}");
-
 
         ModelContainer<AndroidProject> container =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();
@@ -61,6 +63,9 @@ public class OptionalLibraryTest {
                 "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
@@ -102,6 +107,9 @@ public class OptionalLibraryTest {
                 "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

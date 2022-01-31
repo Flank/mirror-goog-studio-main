@@ -3,6 +3,8 @@ apply from: "../../commonHeader.gradle"
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.android.tests.testprojecttest.app"
+    testNamespace "com.android.tests.testprojecttest.test"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

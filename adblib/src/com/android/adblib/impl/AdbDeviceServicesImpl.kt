@@ -8,13 +8,15 @@ import com.android.adblib.AdbInputChannel
 import com.android.adblib.AdbLibHost
 import com.android.adblib.AdbLibSession
 import com.android.adblib.DeviceSelector
+import com.android.adblib.ReverseSocketList
 import com.android.adblib.ShellCollector
 import com.android.adblib.ShellV2Collector
+import com.android.adblib.SocketSpec
 import com.android.adblib.forwardTo
 import com.android.adblib.impl.services.AdbServiceRunner
+import com.android.adblib.impl.services.OkayDataExpectation
 import com.android.adblib.utils.ResizableBuffer
-import com.android.adblib.utils.TimeoutTracker
-import com.android.adblib.utils.TimeoutTracker.Companion.INFINITE
+import com.android.adblib.impl.TimeoutTracker.Companion.INFINITE
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -30,6 +32,7 @@ internal class AdbDeviceServicesImpl(
     private val timeout: Long,
     private val unit: TimeUnit
 ) : AdbDeviceServices {
+    private val myReverseSocketListParser = ReverseSocketListParser()
 
     private val host: AdbLibHost
         get() = session.host
@@ -49,7 +52,7 @@ internal class AdbDeviceServicesImpl(
         // itself can take an arbitrary amount of time.
         val tracker = TimeoutTracker(host.timeProvider, timeout, unit)
         val workBuffer = serviceRunner.newResizableBuffer()
-        val (channel, transportId) = serviceRunner.switchToTransport(device, workBuffer, tracker)
+        val channel = serviceRunner.switchToTransport(device, workBuffer, tracker)
         channel.use {
             // We switched the channel to the right transport (i.e. device), now send the service request
             val service = getShellServiceString(ShellProtocol.V1, command)
@@ -71,7 +74,6 @@ internal class AdbDeviceServicesImpl(
                     channel,
                     workBuffer,
                     service,
-                    transportId,
                     bufferSize,
                     shellCollector,
                     this@flow
@@ -82,6 +84,62 @@ internal class AdbDeviceServicesImpl(
 
     override suspend fun sync(device: DeviceSelector): AdbDeviceSyncServices {
         return AdbDeviceSyncServicesImpl.open(serviceRunner, device, timeout, unit)
+    }
+
+    override suspend fun reverseListForward(device: DeviceSelector): ReverseSocketList {
+        // ADB Host code, service handler:
+        // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/adb.cpp;l=986
+        // ADB client code:
+        // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/client/commandline.cpp;l=1876
+        val tracker = TimeoutTracker(host.timeProvider, timeout, unit)
+        val service = "reverse:list-forward"
+        val data = serviceRunner.runDaemonQuery(device, service, tracker)
+        return myReverseSocketListParser.parse(data)
+    }
+
+    override suspend fun reverseForward(
+        device: DeviceSelector,
+        remote: SocketSpec,
+        local: SocketSpec,
+        rebind: Boolean
+    ): String? {
+        val tracker = TimeoutTracker(host.timeProvider, timeout, unit)
+        val service = "reverse:forward:" +
+                (if (rebind) "" else "norebind:") +
+                remote.toQueryString() +
+                ";" +
+                local.toQueryString()
+        return serviceRunner.runDaemonQuery2(device, service, tracker, OkayDataExpectation.OPTIONAL)
+    }
+
+    override suspend fun reverseKillForward(device: DeviceSelector, remote: SocketSpec) {
+        // ADB Host code, service handler:
+        // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/adb.cpp;l=1006
+        // ADB client code:
+        // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/client/commandline.cpp;l=1895
+        val tracker = TimeoutTracker(host.timeProvider, timeout, unit)
+        val service = "reverse:killforward:${remote.toQueryString()}"
+        serviceRunner.runDaemonQuery2(
+            device,
+            service,
+            tracker,
+            OkayDataExpectation.NOT_EXPECTED
+        )
+    }
+
+    override suspend fun reverseKillForwardAll(device: DeviceSelector) {
+        // ADB Host code, service handler:
+        // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/adb.cpp;l=996
+        // ADB client code:
+        // https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/client/commandline.cpp;l=1895
+        val tracker = TimeoutTracker(host.timeProvider, timeout, unit)
+        val service = "reverse:killforward-all"
+        serviceRunner.runDaemonQuery2(
+            device,
+            service,
+            tracker,
+            OkayDataExpectation.NOT_EXPECTED
+        )
     }
 
     override fun <T> shellV2(
@@ -96,7 +154,7 @@ internal class AdbDeviceServicesImpl(
         // itself can take an arbitrary amount of time.
         val tracker = TimeoutTracker(host.timeProvider, timeout, unit)
         val workBuffer = serviceRunner.newResizableBuffer()
-        val (channel, transportId) = serviceRunner.switchToTransport(device, workBuffer, tracker)
+        val channel = serviceRunner.switchToTransport(device, workBuffer, tracker)
         channel.use {
             // We switched the channel to the right transport (i.e. device), now send the service request
             val localService = getShellServiceString(ShellProtocol.V2, command)
@@ -120,7 +178,6 @@ internal class AdbDeviceServicesImpl(
                     channel,
                     workBuffer,
                     localService,
-                    transportId,
                     shellCollector,
                     this@flow
                 )
@@ -132,20 +189,19 @@ internal class AdbDeviceServicesImpl(
         channel: AdbChannel,
         workBuffer: ResizableBuffer,
         service: String,
-        transportId: Long?,
         bufferSize: Int,
         shellCollector: ShellCollector<T>,
         flowCollector: FlowCollector<T>
     ) {
         host.logger.debug { "\"${service}\" - Collecting messages from shell command output" }
-        shellCollector.start(flowCollector, transportId)
+        shellCollector.start(flowCollector)
         while (true) {
             host.logger.verbose { "\"${service}\" - Waiting for next message from shell command output" }
 
             // Note: We use an infinite timeout here as shell commands can take arbitrary amount
             //       of time to execute and produce output.
             workBuffer.clear()
-            val byteCount = channel.read(workBuffer.forChannelRead(bufferSize), INFINITE)
+            val byteCount = channel.read(workBuffer.forChannelRead(bufferSize))
             if (byteCount < 0) {
                 // We are done reading from this channel
                 break
@@ -164,12 +220,11 @@ internal class AdbDeviceServicesImpl(
         channel: AdbChannel,
         workBuffer: ResizableBuffer,
         service: String,
-        transportId: Long?,
         shellCollector: ShellV2Collector<T>,
         flowCollector: FlowCollector<T>
     ) {
         host.logger.debug { "\"${service}\" - Waiting for next shell protocol packet" }
-        shellCollector.start(flowCollector, transportId)
+        shellCollector.start(flowCollector)
         val shellProtocol = ShellV2ProtocolHandler(channel, workBuffer)
 
         while (true) {
@@ -232,10 +287,6 @@ internal class AdbDeviceServicesImpl(
         stdInput: AdbInputChannel,
         bufferSize: Int
     ) {
-        // Note: We use an infinite timeout here, as the only wait to end this request is to close
-        //       the underlying ADB socket channel, or for `stdin` to reach EOF. This is by design.
-        val timeout = INFINITE
-
         val workBuffer = serviceRunner.newResizableBuffer()
         val shellProtocol = ShellV2ProtocolHandler(deviceChannel, workBuffer)
 
@@ -244,14 +295,16 @@ internal class AdbDeviceServicesImpl(
             val buffer = shellProtocol.prepareWriteBuffer(bufferSize)
 
             // Read data from stdin
-            val byteCount = stdInput.read(buffer, timeout)
+            // Note: We use an infinite timeout here, as the only wait to end this request is to close
+            //       the underlying ADB socket channel, or for `stdin` to reach EOF. This is by design.
+            val byteCount = stdInput.read(buffer)
             if (byteCount < 0) {
                 // EOF, job is finished
-                shellProtocol.writePreparedBuffer(ShellV2PacketKind.CLOSE_STDIN, timeout)
+                shellProtocol.writePreparedBuffer(ShellV2PacketKind.CLOSE_STDIN)
                 break
             }
             // Buffer contains packet header + data
-            shellProtocol.writePreparedBuffer(ShellV2PacketKind.STDIN, timeout)
+            shellProtocol.writePreparedBuffer(ShellV2PacketKind.STDIN)
         }
     }
 

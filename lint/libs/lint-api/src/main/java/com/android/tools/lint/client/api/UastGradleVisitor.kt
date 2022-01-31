@@ -20,6 +20,7 @@ import com.android.tools.lint.detector.api.GradleContext
 import com.android.tools.lint.detector.api.GradleScanner
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.getMethodName
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
@@ -36,7 +37,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() {
     override fun visitBuildScript(context: GradleContext, detectors: List<GradleScanner>) {
         val uastFile = javaContext.uastFile ?: return
-        uastFile.accept(
+        uastFile.acceptSourceFile(
             object : AbstractUastVisitor() {
                 override fun visitCallExpression(node: UCallExpression): Boolean {
                     handleMethodCall(node, detectors, context)

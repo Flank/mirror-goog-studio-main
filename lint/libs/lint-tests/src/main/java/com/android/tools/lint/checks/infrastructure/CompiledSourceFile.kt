@@ -405,7 +405,7 @@ internal class CompiledSourceFile(
             // go through all the class files, load their bytecode, and see if the source
             // file attribute corresponds to our source file.
             val reader = ClassReader(bytes)
-            val classNode = ClassNode(Opcodes.ASM7)
+            val classNode = ClassNode(Opcodes.ASM9)
             reader.accept(classNode, 0)
             val className = classNode.name
             val pkgEnd = className.lastIndexOf('/')

@@ -150,7 +150,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                                     + "\"Other platforms use an explicit back button with label to allow the user "
                                     + "to navigate up the application's hierarchy. Instead, Android uses the main "
                                     + "action bar's app icon for hierarchical navigation and the navigation bar's "
-                                    + "back button for temporal navigation.\""
+                                    + "back button for temporal navigation.\"\n"
                                     + "\n"
                                     + "This check is not very sophisticated (it just looks for buttons with the "
                                     + "label \"Back\"), so it is disabled by default to not trigger on common "

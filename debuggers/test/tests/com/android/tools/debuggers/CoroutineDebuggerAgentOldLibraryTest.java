@@ -47,6 +47,10 @@ public class CoroutineDebuggerAgentOldLibraryTest extends AgentTestBase {
 
         android.triggerMethod(ACTIVITY_CLASS, "dumpCoroutinesNoAgent");
         Assert.assertTrue(
+                android.waitForInput(
+                        "The version of kotlinx-coroutines-core used by the app is not supported. Should be 1.6.0 or higher.",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
                 android.waitForInput("Debug probes are not installed", RETURN_VALUE_TIMEOUT));
     }
 }

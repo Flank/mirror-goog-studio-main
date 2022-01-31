@@ -2595,7 +2595,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 `targetSdkVersion` the work can be nontrivial.
 
                 To update your `targetSdkVersion`, follow the steps from \
-                "Meeting Google Play requirements for target API level",
+                "Meeting Google Play requirements for target API level", \
                 https://developer.android.com/distribute/best-practices/develop/target-sdk.html
                 """,
             category = Category.COMPLIANCE,
@@ -2622,7 +2622,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 your app to run on older Android versions (down to the `minSdkVersion`).
 
                 To update your `targetSdkVersion`, follow the steps from \
-                "Meeting Google Play requirements for target API level",
+                "Meeting Google Play requirements for target API level", \
                 https://developer.android.com/distribute/best-practices/develop/target-sdk.html
                 """,
             category = Category.COMPLIANCE,
@@ -2731,7 +2731,7 @@ open class GradleDetector : Detector(), GradleScanner {
             briefDescription = "Annotation Processor on Compile Classpath",
             explanation = """
                This dependency is identified as an annotation processor. Consider adding it to the \
-               processor path using `annotationProcessor` instead of including it to the
+               processor path using `annotationProcessor` instead of including it to the \
                compile path.
             """,
             category = Category.PERFORMANCE,

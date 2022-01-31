@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 apply from: "../../commonLocalRepo.gradle"
 
 android {
+    namespace "com.android.tests.libstest.app"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {

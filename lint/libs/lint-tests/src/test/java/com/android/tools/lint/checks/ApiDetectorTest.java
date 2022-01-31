@@ -1258,7 +1258,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/foo/bar/ApiCallTest5.java:21: Error: Call requires API level 11 (current min is 2): android.view.View#combineMeasuredStates [NewApi]\n"
                         + "        ApiCallTest5.combineMeasuredStates(0, 0);\n"
                         + "                     ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "4 errors, 0 warnings\n";
+                        + "src/foo/bar/ApiCallTest5.java:14: Warning: Unnecessary; SDK_INT is always >= 2 [ObsoleteSdkInt]\n"
+                        + "    @TargetApi(2)\n"
+                        + "    ~~~~~~~~~~~~~\n"
+                        + "4 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(2),
@@ -2348,6 +2351,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "                    ~~~~~~~~~~~~~~~~~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), projectProperties().compileSdk(3), mApiCallTest11)
+                // We need the ApiDetector to observe compileSdkVersion < 11
+                // (it doesn't actually need access to the older android.jar)
+                .requireCompileSdk(false)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2367,14 +2373,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "  SimpleDateFormat format = new SimpleDateFormat(\"cc yyyy-MM-dd\");\n"
                         + "                                                 ~~\n"
                         + "3 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(4), projectProperties().compileSdk(19), mApiCallTest12)
+        lint().files(manifest().minSdk(4), mApiCallTest12)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
     }
 
     public void testDateFormatOk() {
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mApiCallTest12)
+        lint().files(manifest().minSdk(10), mApiCallTest12)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -2489,7 +2495,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
-                        projectProperties().compileSdk(19),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -2627,7 +2632,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        <item name=\"android:actionBarStyle\">...</item>\n"
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2)
+        lint().files(manifest().minSdk(10), mStyles2)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2641,7 +2646,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/values-v9: Warning: This folder configuration (v9) is unnecessary; minSdkVersion is 10. Merge all the resources in this folder into values. [ObsoleteSdkInt]\n"
                         + "1 errors, 1 warnings\n";
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class)
+        lint().files(manifest().minSdk(10), mStyles2_class)
                 .checkMessage(this::checkReportedError)
                 .skipTestModes(PARTIAL)
                 .run()
@@ -2649,14 +2654,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testStyleDeclarationInV11() {
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class2)
+        lint().files(manifest().minSdk(10), mStyles2_class2)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
     }
 
     public void testStyleDeclarationInV14() {
-        lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class3)
+        lint().files(manifest().minSdk(10), mStyles2_class3)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -2675,7 +2680,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
-                        projectProperties().compileSdk(19),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -2769,6 +2773,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class FragmentActivity extends Activity {\n"
                                         + "}\n"))
                 .checkMessage(this::checkReportedError)
+                // We need the ApiDetector to observe compileSdkVersion < 11 for the Override error
+                // (it doesn't actually need access to the older android.jar)
+                .requireCompileSdk(false)
                 .run()
                 .expect(expected);
     }
@@ -2792,7 +2799,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(4),
-                        projectProperties().compileSdk(19),
                         java(
                                 "src/test/pkg/ApiCallTest13.java",
                                 ""
@@ -4534,6 +4540,78 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testUnnecessaryRequiresApi() {
+        lint().files(
+                        manifest().minSdk(28),
+                        java(
+                                "src/test/pkg/ApiDetectorTest2.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "import androidx.test.filters.SdkSuppress;\n"
+                                        + "import org.robolectric.annotation.Config;\n"
+                                        // https://issuetracker.google.com/74130329:
+                                        + "import android.annotation.TargetApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(api=24)\n"
+                                        + "@TargetApi(api=24)\n"
+                                        + "@Config(minSdk=24)\n"
+                                        + "@SdkSuppress(minSdkVersion = 24)\n"
+                                        + "public class MyClass {\n"
+                                        + "}"),
+                        // https://issuetracker.google.com/37140910:
+                        xml(
+                                "res/drawable/vector.xml",
+                                "<vector xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "tools:targetApi='21' />\n"),
+                        xml(
+                                "res/drawable/vector_ok.xml",
+                                "<vector xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "tools:targetApi='30' />\n"),
+                        sdkSuppressStub,
+                        roboElectricConfigStub,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/ApiDetectorTest2.java:8: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@RequiresApi(api=24)\n"
+                                + "~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiDetectorTest2.java:9: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@TargetApi(api=24)\n"
+                                + "~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiDetectorTest2.java:10: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@Config(minSdk=24)\n"
+                                + "~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiDetectorTest2.java:11: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]\n"
+                                + "@SdkSuppress(minSdkVersion = 24)\n"
+                                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/drawable/vector.xml:2: Warning: Unnecessary; SDK_INT is always >= 21 [ObsoleteSdkInt]\n"
+                                + "tools:targetApi='21' />\n"
+                                + "~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 5 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 8: Delete @RequiresApi:\n"
+                                + "@@ -8 +8\n"
+                                + "- @RequiresApi(api=24)\n"
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 9: Delete @RequiresApi:\n"
+                                + "@@ -9 +9\n"
+                                + "- @TargetApi(api=24)\n"
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 10: Delete @RequiresApi:\n"
+                                + "@@ -10 +10\n"
+                                + "- @Config(minSdk=24)\n"
+                                + "Fix for src/test/pkg/ApiDetectorTest2.java line 11: Delete @RequiresApi:\n"
+                                + "@@ -11 +11\n"
+                                + "- @SdkSuppress(minSdkVersion = 24)\n"
+                                + "Fix for res/drawable/vector.xml line 2: Delete tools:targetApi:\n"
+                                + "@@ -2 +2\n"
+                                + "- tools:targetApi='21' />\n"
+                                + "+  />");
+    }
+
     public void testRequiresApi() {
         String expected =
                 ""
@@ -4649,24 +4727,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    @RequiresApi(30)\n"
                                         + "    fun requires30() { }\n"
                                         + "}"),
-                        java(
-                                ""
-                                        + "package org.robolectric.annotation;\n"
-                                        + "public @interface Config {\n"
-                                        + "    int minSdk() default 1;\n"
-                                        + "    int maxSdk() default -1;\n"
-                                        + "}\n"),
-                        java(
-                                ""
-                                        + "package androidx.test.filters;\n"
-                                        + "import java.lang.annotation.*;\n"
-                                        + "@Retention(RetentionPolicy.RUNTIME)\n"
-                                        + "@Target({ElementType.TYPE, ElementType.METHOD})\n"
-                                        + "public @interface SdkSuppress {\n"
-                                        + "    int minSdkVersion() default 1;\n"
-                                        + "    int maxSdkVersion() default Integer.MAX_VALUE;\n"
-                                        + "    String codeName() default \"unset\";\n"
-                                        + "}"),
+                        roboElectricConfigStub,
+                        sdkSuppressStub,
                         SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
@@ -5893,18 +5955,12 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#map [NewApi]\n"
                                 + "        return list.stream().map((Function<String, Object>) s -> \n"
                                 + "                             ~~~\n"
-                                + "src/test/pkg/Used.java:9: Error: Cast to Function requires API level 24 (current min is 15) [NewApi]\n"
-                                + "        return list.stream().map((Function<String, Object>) s -> \n"
-                                + "                                 ^\n"
                                 + "src/test/pkg/Used.java:10: Error: Call requires API level 24 (current min is 15): java.util.stream.Collectors#toList [NewApi]\n"
                                 + "                fromNullable(s)).collect(Collectors.toList());\n"
                                 + "                                                    ~~~~~~\n"
                                 + "src/test/pkg/Used.java:10: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#collect [NewApi]\n"
                                 + "                fromNullable(s)).collect(Collectors.toList());\n"
                                 + "                                 ~~~~~~~\n"
-                                + "src/test/pkg/Used.java:10: Error: Cast to Collector requires API level 24 (current min is 15) [NewApi]\n"
-                                + "                fromNullable(s)).collect(Collectors.toList());\n"
-                                + "                                         ~~~~~~~~~~~~~~~~~~~\n"
                                 + "src/test/pkg/Used.java:14: Error: Call requires API level 24 (current min is 15): java.util.Collection#stream [NewApi]\n"
                                 + "        list.stream().map(new Function<String, Object>() {\n"
                                 + "             ~~~~~~\n"
@@ -5914,7 +5970,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Used.java:14: Error: Class requires API level 24 (current min is 15): java.util.function.Function [NewApi]\n"
                                 + "        list.stream().map(new Function<String, Object>() {\n"
                                 + "                              ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "9 errors, 0 warnings");
+                                + "7 errors, 0 warnings");
     }
 
     public void testKotlinArgumentsInConstructorDelegation() {
@@ -7479,7 +7535,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/main/kotlin/test/pkg/Point.kt:28: Error: Call requires API level 28 (current min is 21): minus [NewApi]\n"
                                 + "    println(p1 - 1L) // ERROR\n"
                                 + "               ~\n"
-                                + "13 errors, 0 warnings");
+                                + "src/main/kotlin/test/pkg/Point.kt:51: Warning: Unnecessary; SDK_INT is always >= 5 [ObsoleteSdkInt]\n"
+                                + "    @RequiresApi(5)\n"
+                                + "    ~~~~~~~~~~~~~~~\n"
+                                + "13 errors, 1 warnings");
     }
 
     public void testSparseArrayDesugared() {
@@ -7561,6 +7620,86 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "}\n"
                                                 + "\n")
                                 .indented())
+                .run()
+                .expectClean();
+    }
+
+    public void testCast214271281() {
+        // 214271281: Not useful finding for JavaAndKotlinLint:NewApi: Cast to `Collector`…
+        lint().files(
+                        java(""
+                                        + "package org.apache.logging.log4j.core.appender;\n"
+                                        + "\n"
+                                        + "import org.apache.logging.log4j.core.Appender;\n"
+                                        + "import org.apache.logging.log4j.core.config.AppenderControl;\n"
+                                        + "\n"
+                                        + "import java.util.List;\n"
+                                        + "import java.util.stream.Collectors;\n"
+                                        + "\n"
+                                        + "public class AsyncAppenderEventDispatcher {\n"
+                                        + "    private List<AppenderControl> appenders;\n"
+                                        + "    List<Appender> getAppenders() {\n"
+                                        + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented(),
+                        java(""
+                                        + "package org.apache.logging.log4j.core.config;\n"
+                                        + "\n"
+                                        + "import org.apache.logging.log4j.core.Appender;\n"
+                                        + "\n"
+                                        + "public class AppenderControl {\n"
+                                        + "    public Appender getAppender() {\n"
+                                        + "        return null;\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented(),
+                        java(""
+                                        + "package org.apache.logging.log4j.core;\n"
+                                        + "\n"
+                                        + "public interface Appender {\n"
+                                        + "}\n")
+                                .indented())
+                .run()
+                .expect(
+                        ""
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.Collection#stream [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                         ~~~~~~\n"
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.stream.Collectors#toList [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                                                                                       ~~~~~~\n"
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.stream.Stream#collect [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                                                                    ~~~~~~~\n"
+                                + "src/org/apache/logging/log4j/core/appender/AsyncAppenderEventDispatcher.java:12: Error: Call requires API level 24 (current min is 1): java.util.stream.Stream#map [NewApi]\n"
+                                + "        return appenders.stream().map(AppenderControl::getAppender).collect(Collectors.toList());\n"
+                                + "                                  ~~~\n"
+                                + "4 errors, 0 warnings");
+    }
+
+    public void testMethodReturns() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package android.annotation;\n"
+                                        + "import static java.lang.annotation.ElementType.*;\n"
+                                        + "import java.lang.annotation.*;\n"
+                                        + "@Target({TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE})\n"
+                                        + "public @interface RequiresApi {\n"
+                                        + "    int value() default 1;\n"
+                                        + "    int api() default 1;\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package android.provider;\n"
+                                        + "import android.annotation.RequiresApi;\n"
+                                        + "public class MediaProvider {\n"
+                                        + "    @RequiresApi(32)\n"
+                                        + "    private String getExternalStorageProviderAuthorityFromDocumentsContract() {\n"
+                                        + "        return null;\n"
+                                        + "    }\n"
+                                        + "}"))
                 .run()
                 .expectClean();
     }
@@ -8269,5 +8408,26 @@ public class ApiDetectorTest extends AbstractCheckTest {
                             + "    dependencies {\n"
                             + "        classpath 'com.android.tools.build:gradle:2.3.1'\n"
                             + "    }\n"
+                            + "}");
+
+    private static TestFile roboElectricConfigStub =
+            java(
+                    ""
+                            + "package org.robolectric.annotation;\n"
+                            + "public @interface Config {\n"
+                            + "    int minSdk() default 1;\n"
+                            + "    int maxSdk() default -1;\n"
+                            + "}\n");
+    private static TestFile sdkSuppressStub =
+            java(
+                    ""
+                            + "package androidx.test.filters;\n"
+                            + "import java.lang.annotation.*;\n"
+                            + "@Retention(RetentionPolicy.RUNTIME)\n"
+                            + "@Target({ElementType.TYPE, ElementType.METHOD})\n"
+                            + "public @interface SdkSuppress {\n"
+                            + "    int minSdkVersion() default 1;\n"
+                            + "    int maxSdkVersion() default Integer.MAX_VALUE;\n"
+                            + "    String codeName() default \"unset\";\n"
                             + "}");
 }

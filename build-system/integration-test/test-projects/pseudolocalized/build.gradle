@@ -4,6 +4,7 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.android.tests.basic"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion rootProject.buildToolsVersion
 

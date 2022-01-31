@@ -9,10 +9,13 @@ import com.android.adblib.AdbLibSession
 import com.android.adblib.AdbOutputChannel
 import com.android.adblib.AdbProtocolErrorException
 import com.android.adblib.DeviceSelector
+import com.android.adblib.createChannel
+import com.android.adblib.readExactly
+import com.android.adblib.writeExactly
 import com.android.adblib.thisLogger
 import com.android.adblib.utils.AdbProtocolUtils
 import com.android.adblib.utils.ResizableBuffer
-import com.android.adblib.utils.TimeoutTracker
+import com.android.adblib.impl.TimeoutTracker
 import com.android.adblib.utils.closeOnException
 import com.android.adblib.utils.withOrder
 import java.io.EOFException
@@ -177,7 +180,59 @@ internal class AdbServiceRunner(val session: AdbLibSession, private val channelP
         workBuffer.clear()
         workBuffer.appendString(serviceRequest, AdbProtocolUtils.ADB_CHARSET)
 
+        logger.debug { "\"${service}\" - sending service request string, timeout=$timeout" }
         return channel.writeExactly(workBuffer.forChannelWrite(), timeout)
+    }
+
+    /**
+     * Executes a [query] on the ADB Daemon of the given [device][DeviceSelector]
+     */
+    suspend fun runDaemonQuery(
+        device: DeviceSelector,
+        query: String,
+        timeout: TimeoutTracker
+    ): String {
+        return runDaemonQuery(device, query, timeout, OkayDataExpectation.EXPECTED)
+            ?: throw AdbProtocolErrorException("Data segment expected after OKAY response")
+    }
+
+    /**
+     * Executes a [query] on the ADB Daemon of the given [device][DeviceSelector]
+     */
+    suspend fun runDaemonQuery(
+        device: DeviceSelector,
+        query: String,
+        timeout: TimeoutTracker,
+        okayData: OkayDataExpectation
+    ): String? {
+        val workBuffer = newResizableBuffer()
+        val channel = switchToTransport(device, workBuffer, timeout)
+        return channel.use {
+            sendAbdServiceRequest(channel, workBuffer, query, timeout)
+            consumeOkayFailResponse(channel, workBuffer, timeout)
+            readOkayFailString(channel, workBuffer, query, timeout, okayData)
+        }
+    }
+
+    /**
+     * Executes a [query] on the ADB Daemon of the given [device][DeviceSelector]
+     */
+    suspend fun runDaemonQuery2(
+        device: DeviceSelector,
+        query: String,
+        timeout: TimeoutTracker,
+        okayData: OkayDataExpectation
+    ): String? {
+        val workBuffer = newResizableBuffer()
+        val channel = switchToTransport(device, workBuffer, timeout)
+        return channel.use {
+            sendAbdServiceRequest(channel, workBuffer, query, timeout)
+            // We receive 2 OKAY answers from the ADB Host: 1st OKAY is connect, 2nd OKAY is status.
+            // See https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/adb.cpp;l=1058
+            consumeOkayFailResponse(channel, workBuffer, timeout)
+            consumeOkayFailResponse(channel, workBuffer, timeout)
+            readOkayFailString(channel, workBuffer, query, timeout, okayData)
+        }
     }
 
     /**
@@ -322,15 +377,14 @@ internal class AdbServiceRunner(val session: AdbLibSession, private val channelP
         deviceSelector: DeviceSelector,
         workBuffer: ResizableBuffer,
         timeout: TimeoutTracker
-    ): Pair<AdbChannel, Long?> {
+    ): AdbChannel {
         val transportPrefix = deviceSelector.transportPrefix
-        var transportId: Long? = null
         startHostQuery(workBuffer, transportPrefix, timeout).closeOnException { channel ->
             if (deviceSelector.responseContainsTransportId) {
-                transportId = consumeTransportId(channel, workBuffer, timeout)
+                deviceSelector.transportId = consumeTransportId(channel, workBuffer, timeout)
             }
             logger.debug { "ADB transport was switched to \"${transportPrefix}\", timeout left is $timeout" }
-            return Pair(channel, transportId)
+            return channel
         }
     }
 

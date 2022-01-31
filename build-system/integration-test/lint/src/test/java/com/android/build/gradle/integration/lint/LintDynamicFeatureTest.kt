@@ -238,8 +238,8 @@ class LintDynamicFeatureTest {
             project.getSubproject(":feature1").file("src/main/AndroidManifest.xml")
         TestFileUtils.searchAndReplace(
             featureManifest,
-            "package=",
-            "android:debuggable=\"true\"\npackage="
+            "<application>",
+            "<application android:debuggable=\"true\">"
         )
 
         val failureMessage =

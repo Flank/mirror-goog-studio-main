@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiEllipsisType
@@ -90,7 +91,7 @@ class TypeAliasTestMode : UastSourceTransformationTestMode(
         // in this compilation unit as well, such that we can list them on the bottom
         val newAliases = linkedMapOf<String, String>()
 
-        root.accept(object : FullyQualifyNamesTestMode.TypeVisitor(context, source) {
+        root.acceptSourceFile(object : FullyQualifyNamesTestMode.TypeVisitor(context, source) {
             private fun getTypeAlias(typeText: String): String {
                 val packageMap = aliasesPerPackage[pkg]
                     ?: linkedMapOf<String, String>().also { aliasesPerPackage[pkg] = it }

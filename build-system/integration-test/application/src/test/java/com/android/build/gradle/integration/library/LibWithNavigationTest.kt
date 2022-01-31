@@ -31,8 +31,8 @@ class LibWithNavigationTest {
         MinimalSubProject.lib("com.example.library")
             .withFile(
                 "src/main/AndroidManifest.xml",
-                """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.library">
+                // language=XML
+                """<manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:name="library">
                         <activity android:name=".MainActivity">
                             <nav-graph android:value="@navigation/nav1" />

@@ -44,6 +44,7 @@ public class ProguardDetector extends Detector {
                             "Using obsolete ProGuard configuration",
                             "Using `-keepclasseswithmembernames` in a proguard config file is not "
                                     + "correct; it can cause some symbols to be renamed which should not be.\n"
+                                    + "\n"
                                     + "Earlier versions of ADT used to create proguard.cfg files with the "
                                     + "wrong format. Instead of `-keepclasseswithmembernames` use "
                                     + "`-keepclasseswithmembers`, since the old flags also implies "

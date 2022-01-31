@@ -5,9 +5,10 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 android {
+    namespace "com.android.tests.overlay2"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-    
+
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

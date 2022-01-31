@@ -3,7 +3,7 @@ package com.android.build.gradle.integration.library;
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.EmptyGradleProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -23,7 +23,7 @@ import org.junit.Test;
 public class ProguardAarPackagingTest {
 
     public static GradleProject testApp = HelloWorldApp.noBuildFile();
-    public static GradleProject libraryInJar = new EmptyAndroidTestApp();
+    public static GradleProject libraryInJar = new EmptyGradleProject();
 
     static {
         TestSourceFile oldHelloWorld = testApp.getFileByName("HelloWorld.java");
@@ -83,6 +83,9 @@ public class ProguardAarPackagingTest {
                         + "}\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

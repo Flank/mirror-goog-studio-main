@@ -619,6 +619,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 if (string.isNotEmpty()) {
                     checkLintString(it, string)
                     checkTrimIndent(it)
+                    checkContinuations(it, string)
                 }
             }
 
@@ -1016,6 +1017,75 @@ class LintDetectorDetector : Detector(), UastScanner {
             }
         }
 
+        /**
+         * For a lint issue explanation, makes sure we're properly
+         * joining lines with a backslash.
+         */
+        private fun checkContinuations(argument: UExpression, string: String) {
+            val lines = string.split("\n")
+            var preformat = false
+            for (i in 0 until lines.size - 1) {
+                val line = lines[i].trim()
+                if (line.isEmpty()) {
+                    continue
+                } else if (line.startsWith("```")) {
+                    preformat = !preformat
+                    continue
+                } else if (preformat || line.endsWith("\\")) {
+                    continue
+                } else if (!line.endsWith("\\")) {
+                    val next = lines[i + 1].trim()
+                    if (!impliesNewLine(line, next)) {
+                        val fallback = context.getLocation(argument)
+                        val location = getStringLocation(argument, line, fallback)
+                        context.report(
+                            TEXT_FORMAT, argument, location,
+                            "Multi-line issue explanation strings will interpret line separators as hard breaks, and this " +
+                                "looks like a continuation of the same paragraph. Consider using \\ at the end of the previous " +
+                                "line to indicate that the lines should be joined, or add a blank line between unrelated " +
+                                "sentences, or suppress this issue type here."
+                        )
+                        return
+                    }
+                }
+            }
+        }
+
+        /**
+         * Returns true if the given [line] looks like it implies a
+         * new paragraph from the [previous] line. For example, if the
+         * previous line ends with ":", the next line is probably a new
+         * line. Similarly, if the line starts with a list bullet, or a
+         * preformatted text block, etc.
+         */
+        private fun impliesNewLine(previous: String, line: String): Boolean {
+            // If the next line is blank, it's a new paragraph
+            if (line.isEmpty()) {
+                return true
+            }
+
+            // If the previous line ends with ":", it's a new paragraph
+            if (previous.endsWith(":")) {
+                return true
+            }
+
+            // If the next line is a list item, such as
+            //   - this
+            //   * this
+            //   1. this
+            //   (1) this
+            if (line.startsWith("-") ||
+                line.startsWith("*") ||
+                line.startsWith("```") ||
+                line.first() == '(' && line.matches(Regex("""\([0-9A-Za-z.]+\).*""")) ||
+                line.first().isDigit() && line.matches(Regex("""\d+\..*"""))
+            ) {
+                return true
+            }
+
+            return false
+        }
+
         private fun checkLintString(argument: UExpression, string: String) {
             // Validate URLs in the string
             checkUrls(argument, string)
@@ -1397,7 +1467,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 id = "LintImplPsiEquals",
                 briefDescription = "Comparing PsiElements with Equals",
                 explanation = """
-                    You should never compare two PSI elements for equality with `equals`;
+                    You should never compare two PSI elements for equality with `equals`; \
                     use `isEquivalentTo(PsiElement)` instead.
                     """,
                 category = CUSTOM_LINT_CHECKS,
@@ -1540,7 +1610,7 @@ class LintDetectorDetector : Detector(), UastScanner {
 
                     To designate a unit test as the documentation example for an issue, \
                     name the test `testDocumentationExample`, or if your detector reports \
-                    multiple issues, `testDocumentationExample`<Id>, such as
+                    multiple issues, `testDocumentationExample`<Id>, such as \
                     `testDocumentationExampleMyId`.
                     """,
                 category = CUSTOM_LINT_CHECKS,

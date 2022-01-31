@@ -5,6 +5,7 @@ dependencies {
 }
 
 android {
+    namespace "com.example.android.tictactoe"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {

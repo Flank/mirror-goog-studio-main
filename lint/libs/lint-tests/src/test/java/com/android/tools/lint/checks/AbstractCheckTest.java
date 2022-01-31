@@ -98,6 +98,11 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
 
         task.addTestModes(PLATFORM_ANNOTATIONS_TEST_MODE);
 
+        // Make sure we have access to compileSdkVersions specified by tests; if not,
+        // there's potential flakiness differences based on which SDKs are available
+        // when tests are running in the IDE when it's not using specific prebuilts.
+        task.requireCompileSdk();
+
         task.testName(this.getClass().getSimpleName() + "_" + getName());
 
         task.checkMessage(

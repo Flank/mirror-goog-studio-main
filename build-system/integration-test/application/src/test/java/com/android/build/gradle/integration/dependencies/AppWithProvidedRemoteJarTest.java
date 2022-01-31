@@ -52,6 +52,7 @@ public class AppWithProvidedRemoteJarTest {
                         + "apply from: '../commonLocalRepo.gradle'\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace 'com.android.tests.libWithProvidedLocalJar'\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

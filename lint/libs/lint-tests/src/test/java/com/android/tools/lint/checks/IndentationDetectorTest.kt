@@ -490,4 +490,91 @@ class IndentationDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testBrokenTestModeOffsets() {
+        // Multi-file classes create a single UAST file which points into separate
+        // source files (see UFile.acceptSameFile); this would trip up the source test
+        // mode transformers. Here's a test case which threw exceptions in that scenario
+        // before it was fixed.
+        lint().files(
+            kotlin(
+                "src/file1.kt",
+                """
+                @file:JvmMultifileClass
+                @file:JvmName("FlowKt")
+                package test.pkg
+
+                fun test1(b: Boolean) {
+                    if (true)
+                        println("test")
+                }
+                """
+            ).indented(),
+            kotlin(
+                "src/file2.kt",
+                """
+                @file:JvmMultifileClass
+                @file:JvmName("FlowKt")
+                package test.pkg
+
+                fun test2(b: Boolean) {
+                    // (true)
+                    println("test")
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testMultiPart() {
+        // This is a carefully constructed test case to reproduce a bug similar to the one observed in
+        // https://issuetracker.google.com/215741972
+        // Basically, we create a single class ("Test") from two separate .kt files. In test2, we have
+        // an if statement followed by a second statement; the indentation checker looks to see if that
+        // second statement (which is not nested) is also indented, which would be an error. However,
+        // because UAST constructs a single AST file for these two functions, if we just visit the
+        // functions, we might actually be looking at source PSI elements in a different file than the
+        // one we intended to analyze. And in this case, when we visit file1 (and use the source code
+        // for file1), we'll also come across file2, and we'll get to the if statement there. When we
+        // get to the statement following the if statement, and we look up its offsets, if we looked at
+        // the right file, we'd see that it's not indented. However, because the sources we consult
+        // is actually for file 1, we'll look at the offsets there, so we'll look at the indentation of
+        // the corresponding region in file1, and we'll see an indent and report it as an error, even
+        // though those sources are totally unrelated (and the indentation is fine because in that case
+        // we've placed braces around the statements).
+        //
+        // The fix here is actually in UElementVisitor; we should only be visiting the AST parts
+        // related to the current source file.
+        lint().files(
+            kotlin(
+                "src/file1.kt",
+                """
+                @file:JvmMultifileClass
+                @file:JvmName("Test")
+                package test.pkg
+
+                fun test1(b: Boolean) {
+                    if (true) { // 1
+                        println("test1a")
+                        println("test1b")
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                "src/file2.kt",
+                """
+                @file:JvmMultifileClass
+                @file:JvmName("Test")
+                package test.pkg
+
+                fun test2(b: Boolean) {
+                    if (true) // file 2
+                        println("test2a")
+                    println("test2b")
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }

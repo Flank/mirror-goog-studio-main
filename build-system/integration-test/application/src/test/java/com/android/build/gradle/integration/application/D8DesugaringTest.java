@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.EmptyGradleProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -61,19 +61,20 @@ public class D8DesugaringTest {
     public GradleTestProject project;
 
     public D8DesugaringTest(boolean withDexingArtifactTransform) {
-        project = GradleTestProject.builder()
-                .fromTestApp(
-                        new MultiModuleTestProject(
-                                ImmutableMap.of(
-                                        ":app",
-                                        HelloWorldApp.noBuildFile(),
-                                        ":lib",
-                                        new EmptyAndroidTestApp())))
-                .addGradleProperties(
-                        BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
-                                + "="
-                                + withDexingArtifactTransform)
-                .create();
+        project =
+                GradleTestProject.builder()
+                        .fromTestApp(
+                                new MultiModuleTestProject(
+                                        ImmutableMap.of(
+                                                ":app",
+                                                HelloWorldApp.noBuildFile(),
+                                                ":lib",
+                                                new EmptyGradleProject())))
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
+                                        + "="
+                                        + withDexingArtifactTransform)
+                        .create();
     }
 
     @Before
@@ -86,6 +87,9 @@ public class D8DesugaringTest {
                         + "apply from: \"../../commonLocalRepo.gradle\"\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"

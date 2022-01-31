@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace "noapkrebuilt.tests.android.com.b220425"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion rootProject.buildToolsVersion
     defaultConfig {

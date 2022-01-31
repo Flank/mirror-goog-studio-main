@@ -75,7 +75,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                             "InvalidUsesTagAttribute",
                             "Invalid `name` attribute for `uses` element",
                             "The <uses> element in `<automotiveApp>` should contain a "
-                                    + "valid value for the `name` attribute.\n"
+                                    + "valid value for the `name` attribute. "
                                     + "Valid values are `media`, `notification`, or `sms`.",
                             Category.CORRECTNESS,
                             6,
@@ -93,6 +93,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                                     + "`android.service.media.MediaBrowserService` with an "
                                     + "`intent-filter` for the action `android.media.browse.MediaBrowserService` "
                                     + "to be able to browse and play media.\n"
+                                    + "\n"
                                     + "To do this, add\n"
                                     + "```xml\n"
                                     + "`<intent-filter>`\n"
@@ -114,8 +115,9 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                             "MissingIntentFilterForMediaSearch",
                             "Missing MEDIA_PLAY_FROM_SEARCH intent-filter",
                             "To support voice searches on Android Auto, you should also register an "
-                                    + "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`"
-                                    + ".\nTo do this, add\n"
+                                    + "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`.\n"
+                                    + "\n"
+                                    + "To do this, add\n"
                                     + "```xml\n"
                                     + "`<intent-filter>`\n"
                                     + "    `<action android:name=\"android.media.action.MEDIA_PLAY_FROM_SEARCH\" />`\n"
@@ -135,8 +137,8 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                             "MissingOnPlayFromSearch",
                             "Missing `onPlayFromSearch`",
                             "To support voice searches on Android Auto, in addition to adding an "
-                                    + "`intent-filter` for the action `onPlayFromSearch`,"
-                                    + " you also need to override and implement "
+                                    + "`intent-filter` for the action `onPlayFromSearch`, "
+                                    + "you also need to override and implement "
                                     + "`onPlayFromSearch(String query, Bundle bundle)`",
                             Category.CORRECTNESS,
                             6,

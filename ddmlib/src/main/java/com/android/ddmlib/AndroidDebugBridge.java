@@ -292,6 +292,44 @@ public class AndroidDebugBridge {
         HandleViewDebug.register(monitorThread);
     }
 
+    /**
+     * Notify {@link AndroidDebugBridge} that options have been modified. This method will re-init
+     * adb if it has already been initialized, and restart if a bridge has been connected just prior
+     * to this call.
+     *
+     * @return true if options have been successfully changed and reflected in the
+     *     reinitialize/restarted state (if it was in such state prior to calling this method), or
+     *     false otherwise
+     */
+    public static synchronized boolean optionsChanged(
+            @NonNull AdbInitOptions options,
+            @NonNull String osLocation,
+            boolean forceNewBridge,
+            long terminateTimeout,
+            long initTimeout,
+            @NonNull TimeUnit unit) {
+        if (!sInitialized) {
+            return true;
+        }
+
+        boolean bridgeNeedsRestart = getBridge() != null;
+        if (bridgeNeedsRestart) {
+            if (!disconnectBridge(terminateTimeout, unit)) {
+                Log.e(DDMS, "Could not disconnect bridge prior to restart when options changed.");
+                return false;
+            }
+        }
+        terminate();
+        init(options);
+        if (bridgeNeedsRestart) {
+            if (createBridge(osLocation, forceNewBridge, initTimeout, unit) == null) {
+                Log.e(DDMS, "Could not recreate the bridge after options changed.");
+                return false;
+            }
+        }
+        return true;
+    }
+
     @VisibleForTesting
     public static void enableFakeAdbServerMode(int port) {
         Preconditions.checkState(

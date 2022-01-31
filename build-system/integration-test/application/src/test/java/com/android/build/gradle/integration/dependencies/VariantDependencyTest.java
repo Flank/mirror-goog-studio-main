@@ -77,6 +77,9 @@ public class VariantDependencyTest {
                         + "}\n"
                         + "\n"
                         + "android {\n"
+                        + "    namespace \""
+                        + HelloWorldApp.NAMESPACE
+                        + "\"\n"
                         + "    compileSdkVersion "
                         + DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
