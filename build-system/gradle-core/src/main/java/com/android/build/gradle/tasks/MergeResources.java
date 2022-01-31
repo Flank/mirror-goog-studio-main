@@ -495,10 +495,8 @@ public abstract class MergeResources extends NewIncrementalTask {
             } catch (MergingException mergingException) {
                 merger.cleanBlob(incrementalFolder);
                 throw new ResourceException(mergingException.getMessage(), mergingException);
-            } catch (JAXBException | IOException runTimeException) {
+            } catch (Exception runTimeException) {
                 throw new RuntimeException(runTimeException);
-            } catch (Exception exception) {
-                exception.printStackTrace();
             }
         } finally {
             cleanup();
