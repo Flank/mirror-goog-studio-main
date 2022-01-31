@@ -258,3 +258,38 @@ fun RecipeExecutor.addSecretsGradlePlugin() {
     addClasspathDependency("com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:+", minRev = "2.0.0")
     applyPlugin("com.google.android.libraries.mapsplatform.secrets-gradle-plugin", "+", minRev = "2.0.0")
 }
+
+fun RecipeExecutor.generateMaterial3Themes(themeName: String, resOut: File) {
+  // The contents of the themes are common with following files to have appropriate themes when
+  // an Activity is created under a flavor
+  // com.android.tools.idea.npw.module.recipes.androidModule.res.values.androidModuleThemesMaterial3
+  // com.android.tools.idea.npw.module.recipes.androidModule.res.values_night.androidModuleThemesMaterial3
+  // com.android.tools.idea.npw.module.recipes.androidModule.res.values_v29.androidModuleThemesMaterial3V29
+  save("""<resources xmlns:tools="http://schemas.android.com/tools">
+  <!-- Base application theme. -->
+  <style name="Base.${themeName}" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Customize your light theme here. -->
+    <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+  </style>
+
+  <style name="$themeName" parent="Base.${themeName}" />
+</resources>""", resOut.resolve("values/themes.xml"))
+
+  save(  """<resources xmlns:tools="http://schemas.android.com/tools">
+  <!-- Base application theme. -->
+  <style name="Base.${themeName}" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Customize your dark theme here. -->
+    <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+  </style>
+</resources>""", resOut.resolve("values-night/themes.xml"))
+
+  save("""<resources xmlns:tools="http://schemas.android.com/tools">
+  <style name="$themeName" parent="Base.${themeName}">
+    <!-- Transparent system bars for edge-to-edge. -->
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+  </style>
+</resources>""", resOut.resolve("values-v29/themes.xml"))
+
+}
