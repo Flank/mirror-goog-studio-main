@@ -877,21 +877,21 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).skipTestModes(TestMode.PARTIAL).run().expect(
+        ).issues(AnnotationDetector.ANNOTATION_USAGE, ApiDetector.OBSOLETE_SDK).skipTestModes(TestMode.PARTIAL).run().expect(
             """
             src/test/pkg/WrongUsages.java:6: Error: Must specify an API level [SupportAnnotationUsage]
                 @RequiresApi // ERROR 1: Misses API level
                 ~~~~~~~~~~~~
-            src/test/pkg/WrongUsages.java:9: Warning: The API level is already known to be at least 15 from the minSdkVersion [SupportAnnotationUsage]
+            src/test/pkg/WrongUsages.java:9: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]
                 @RequiresApi(14) // ERROR 2: Already known to be at least 15 from minSdkVersion
                 ~~~~~~~~~~~~~~~~
-            src/test/pkg/WrongUsages.java:12: Warning: The API level is already known to be at least 15 from the minSdkVersion [SupportAnnotationUsage]
+            src/test/pkg/WrongUsages.java:12: Warning: Unnecessary; SDK_INT is always >= 15 [ObsoleteSdkInt]
                 @RequiresApi(15) // ERROR 3: Already known to be at least 15 from minSdkVersion
                 ~~~~~~~~~~~~~~~~
-            src/test/pkg/WrongUsages.java:15: Warning: The API level is already known to be at least 15 from the minSdkVersion [SupportAnnotationUsage]
+            src/test/pkg/WrongUsages.java:15: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]
                 @RequiresApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH) // ERROR 3: Already known to be at least 15 from minSdkVersion
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/WrongUsages.java:20: Warning: The API level is already known to be at least 20 here from outer annotations [SupportAnnotationUsage]
+            src/test/pkg/WrongUsages.java:20: Warning: Unnecessary; SDK_INT is always >= 15 [ObsoleteSdkInt]
                     @RequiresApi(15) // ERROR 4: Already known to be at least 20 from outer annotation
                     ~~~~~~~~~~~~~~~~
             1 errors, 4 warnings
@@ -902,19 +902,19 @@ class AnnotationDetectorTest : AbstractCheckTest() {
             @@ -6 +6
             -     @RequiresApi // ERROR 1: Misses API level
             +     @RequiresApi([TODO]|) // ERROR 1: Misses API level
-            Fix for src/test/pkg/WrongUsages.java line 9: Delete annotation:
+            Fix for src/test/pkg/WrongUsages.java line 9: Delete @RequiresApi:
             @@ -9 +9
             -     @RequiresApi(14) // ERROR 2: Already known to be at least 15 from minSdkVersion
             +      // ERROR 2: Already known to be at least 15 from minSdkVersion
-            Fix for src/test/pkg/WrongUsages.java line 12: Delete annotation:
+            Fix for src/test/pkg/WrongUsages.java line 12: Delete @RequiresApi:
             @@ -12 +12
             -     @RequiresApi(15) // ERROR 3: Already known to be at least 15 from minSdkVersion
             +      // ERROR 3: Already known to be at least 15 from minSdkVersion
-            Fix for src/test/pkg/WrongUsages.java line 15: Delete annotation:
+            Fix for src/test/pkg/WrongUsages.java line 15: Delete @RequiresApi:
             @@ -15 +15
             -     @RequiresApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH) // ERROR 3: Already known to be at least 15 from minSdkVersion
             +      // ERROR 3: Already known to be at least 15 from minSdkVersion
-            Fix for src/test/pkg/WrongUsages.java line 20: Delete annotation:
+            Fix for src/test/pkg/WrongUsages.java line 20: Delete @RequiresApi:
             @@ -20 +20
             -         @RequiresApi(15) // ERROR 4: Already known to be at least 20 from outer annotation
             +          // ERROR 4: Already known to be at least 20 from outer annotation
