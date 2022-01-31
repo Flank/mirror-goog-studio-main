@@ -38,17 +38,17 @@ class DeprecationReporterImplTest {
         DEPRECATED(
             "android.deprecated.option",
             false,
-            Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_7_0)
+            Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_8_0)
         ),
         DEPRECATED_OPTIONAL(
             "android.deprecated.optional.option",
             null,
-            Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_7_0)
+            Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_8_0)
         ),
         REMOVED(
             "android.removed.option",
             false,
-            Option.Status.Removed(Version.VERSION_7_0, "Extra message.")
+            Option.Status.Removed(Version.VERSION_8_0, "Extra message.")
         ),
         ;
         override fun parse(value: Any): Boolean = parseBoolean(propertyName, value)
@@ -98,7 +98,7 @@ class DeprecationReporterImplTest {
         assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.deprecated.option=true' is deprecated.\n" +
                     "The current default is 'false'.\n" +
-                    "It will be removed in version 7.0 of the Android Gradle plugin."
+                    "It will be removed in version 8.0 of the Android Gradle plugin."
         )
     }
 
@@ -110,7 +110,7 @@ class DeprecationReporterImplTest {
         assertThat(issueReporter.warnings).containsExactly(
             "The option 'android.removed.option' is deprecated.\n" +
                     "The current default is 'false'.\n" +
-                    "It was removed in version 7.0 of the Android Gradle plugin.\n" +
+                    "It was removed in version 8.0 of the Android Gradle plugin.\n" +
                     "Extra message."
         )
     }
@@ -122,7 +122,7 @@ class DeprecationReporterImplTest {
         assertThat(issueReporter.errors).containsExactly(
             "The option 'android.removed.option' is deprecated.\n" +
                     "The current default is 'false'.\n" +
-                    "It was removed in version 7.0 of the Android Gradle plugin.\n" +
+                    "It was removed in version 8.0 of the Android Gradle plugin.\n" +
                     "Extra message."
         )
         assertThat(issueReporter.warnings).isEmpty()
@@ -152,7 +152,7 @@ class DeprecationReporterImplTest {
             """
             The option 'android.removed.option' is deprecated.
             The current default is 'false'.
-            It was removed in version 7.0 of the Android Gradle plugin.
+            It was removed in version 8.0 of the Android Gradle plugin.
             Extra message.
             """.trimIndent()
         )
@@ -164,12 +164,12 @@ class DeprecationReporterImplTest {
             """
                 The option setting 'android.deprecated.option=true' is deprecated.
                 The current default is 'false'.
-                It will be removed in version 7.0 of the Android Gradle plugin.
+                It will be removed in version 8.0 of the Android Gradle plugin.
             """.trimIndent(),
             """
                 The option 'android.removed.option' is deprecated.
                 The current default is 'false'.
-                It was removed in version 7.0 of the Android Gradle plugin.
+                It was removed in version 8.0 of the Android Gradle plugin.
                 Extra message.
             """.trimIndent()
         )
@@ -183,7 +183,7 @@ class DeprecationReporterImplTest {
         assertThat(issueReporter.warnings).containsExactly(
             """
                 The option setting 'android.deprecated.optional.option=true' is deprecated.
-                It will be removed in version 7.0 of the Android Gradle plugin.
+                It will be removed in version 8.0 of the Android Gradle plugin.
             """.trimIndent()
         )
     }

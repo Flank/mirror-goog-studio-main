@@ -52,7 +52,6 @@ interface DeprecationReporter {
          */
         private val additionalMessage: String? = null
     ) {
-        VERSION_7_0(Version.VERSION_7_0),
         VERSION_8_0(Version.VERSION_8_0),
 
         // Obsolete dx Dex Options
@@ -60,17 +59,15 @@ interface DeprecationReporter {
                 "Gradle plugin optimizes dexing automatically."),
 
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT(Version.VERSION_7_0),
-
-        ENABLE_R8(Version.VERSION_7_0, "You will no longer be able to disable R8"),
+        TASK_ACCESS_VIA_VARIANT(Version.VERSION_8_0),
 
         USE_PROPERTIES(
-            Version.VERSION_7_0,
+            Version.VERSION_8_0,
             "Gradle Properties must be used to change Variant information."
         ),
 
         LINT_CHECK_ONLY(
-            Version.VERSION_7_0,
+            Version.VERSION_8_0,
             "`check` has been renamed to `checkOnly` to make it clear that it " +
                     "will turn off all other checks than those explicitly listed. If that is " +
                     "what you actually intended, use `checkOnly`; otherwise switch to `enable`."
