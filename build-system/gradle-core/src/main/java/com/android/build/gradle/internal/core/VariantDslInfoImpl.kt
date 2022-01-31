@@ -1201,6 +1201,19 @@ open class VariantDslInfoImpl internal constructor(
                 services.projectOptions[StringOption.PROFILING_MODE]
             ).isProfileable
             val fromBuildType = (buildTypeObj as? ApplicationBuildType)?.isProfileable
+            // When profileable is enabled from the profilingMode option, it ensures all profileable
+            // features are supported, therefore the compileSdk => 30.
+            val minProfileableSdk = 30
+            val compileSdk = extension.compileSdk ?: minProfileableSdk
+            if ((fromProfilingModeOption == true || fromBuildType == true)
+                && compileSdk < minProfileableSdk
+            ) {
+                services.issueReporter.reportError(IssueReporter.Type.COMPILE_SDK_VERSION_TOO_LOW,
+                    """'profileable' is enabled with compile SDK <30.
+                        Recommended action: If possible, upgrade compileSdk from ${minSdkVersion.apiLevel} to 30."""
+                        .trimIndent()
+                )
+            }
             return when {
                 fromProfilingModeOption != null -> {
                     fromProfilingModeOption

@@ -83,6 +83,7 @@ abstract class IssueReporter {
         JCENTER_IS_DEPRECATED(SyncIssue.TYPE_JCENTER_IS_DEPRECATED),
         AGP_USED_JAVA_VERSION_TOO_LOW(SyncIssue.TYPE_AGP_USED_JAVA_VERSION_TOO_LOW),
         COMPILE_SDK_VERSION_TOO_HIGH(SyncIssue.TYPE_COMPILE_SDK_VERSION_TOO_HIGH),
+        COMPILE_SDK_VERSION_TOO_LOW(SyncIssue.TYPE_COMPILE_SDK_VERSION_TOO_LOW),
     }
 
     protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)
