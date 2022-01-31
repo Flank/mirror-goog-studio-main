@@ -160,6 +160,8 @@ interface AndroidProjectBuilder {
      */
     fun defaultCompileSdk()
 
+    fun aarMetadata(action: AarMetadataBuilder.() -> Unit)
+
     fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit)
 
     fun testFixtures(action: TestFixturesBuilder.() -> Unit)
@@ -184,6 +186,12 @@ interface AndroidComponentsBuilder {
 interface Config {
     var manifest: String
     var dependencies: MutableList<String>
+}
+
+interface AarMetadataBuilder {
+    var minAgpVersion: String?
+    var minCompileSdk: Int?
+    var minCompileSdkExtension: Int?
 }
 
 interface BuildFeaturesBuilder {
