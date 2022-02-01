@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint
 
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
@@ -43,7 +44,8 @@ class MultiProjectHtmlReporter(
     @Throws(IOException::class)
     override fun write(
         stats: LintStats,
-        issues: List<Incident>
+        issues: List<Incident>,
+        registry: IssueRegistry
     ) {
         val projectToIncidents: MutableMap<Project, MutableList<Incident>> = HashMap()
         for (incident in issues) {
@@ -111,7 +113,7 @@ class MultiProjectHtmlReporter(
             }
             reporter.title = String.format("Lint Report for %1\$s", relative)
             reporter.setStripPrefix(relative)
-            reporter.write(stats, projectIssues)
+            reporter.write(stats, projectIssues, registry)
             projects.add(
                 ProjectEntry(fileName, projectErrorCount, projectWarningCount, relative)
             )

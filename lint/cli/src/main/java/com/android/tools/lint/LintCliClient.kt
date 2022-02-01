@@ -352,7 +352,7 @@ open class LintCliClient : LintClient {
                     XmlFileType.BASELINE
                 )
                 reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
-                reporter.write(stats, definiteIncidents)
+                reporter.write(stats, definiteIncidents, driver.registry)
                 // With --write-reference-baseline we continue even if the baseline was written
                 if (outputBaselineFile == null) {
                     System.err.println(getBaselineCreationMessage(file))
@@ -383,7 +383,7 @@ open class LintCliClient : LintClient {
             println("Lint found $count. First failure:")
             val reporter = Reporter.createTextReporter(this, LintCliFlags(), null, writer, false)
             reporter.setWriteStats(false)
-            reporter.write(stats, listOf(definiteIncidents.first { it.severity.isError }))
+            reporter.write(stats, listOf(definiteIncidents.first { it.severity.isError }), driver.registry)
         }
 
         return if (flags.isSetExitCode) if (hasErrors) ERRNO_ERRORS else ERRNO_SUCCESS else ERRNO_SUCCESS
@@ -398,7 +398,7 @@ open class LintCliClient : LintClient {
      */
     protected open fun writeReports(stats: LintStats) {
         for (reporter in flags.reporters) {
-            reporter.write(stats, definiteIncidents)
+            reporter.write(stats, definiteIncidents, driver.registry)
         }
     }
 

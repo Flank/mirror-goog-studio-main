@@ -744,7 +744,7 @@ public class TestLintClient extends LintCliClient {
     public String writeOutput(List<Incident> incidents) throws IOException {
         LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
         for (Reporter reporter : getFlags().getReporters()) {
-            reporter.write(stats, incidents);
+            reporter.write(stats, incidents, driver.getRegistry());
         }
 
         output.append(writer.toString());

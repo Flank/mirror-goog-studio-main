@@ -54,7 +54,7 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                         }
                         return registry
                     }
-                    protected set(registry) {
+                    set(registry) {
                         super.registry = registry
                     }
             }
@@ -102,7 +102,7 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
             val incidents: MutableList<Incident> = ArrayList()
             incidents.add(incident1)
             incidents.add(incident2)
-            reporter.write(create(0, 2), incidents)
+            reporter.write(create(0, 2), incidents, client.registry!!)
             var report = File(dir, "index.html").readText()
 
             // Replace the timestamp to make golden file comparison work

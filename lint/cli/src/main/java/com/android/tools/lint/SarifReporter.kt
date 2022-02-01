@@ -26,6 +26,7 @@ import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
 import com.android.repository.Revision
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Incident
@@ -111,7 +112,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     @Throws(IOException::class)
-    override fun write(stats: LintStats, incidents: List<Incident>) {
+    override fun write(stats: LintStats, incidents: List<Incident>, registry: IssueRegistry) {
         var indent = 0
         writer.indent(indent++).write("{\n")
         writer.indent(indent)

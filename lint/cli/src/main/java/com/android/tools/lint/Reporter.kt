@@ -100,6 +100,7 @@ import com.android.tools.lint.checks.WatchFaceEditorDetector
 import com.android.tools.lint.checks.WearStandaloneAppDetector
 import com.android.tools.lint.checks.WrongCallDetector
 import com.android.tools.lint.checks.WrongCaseDetector
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
@@ -150,12 +151,14 @@ abstract class Reporter protected constructor(
      *
      * @param stats the vital statistics for the lint report
      * @param incidents the incidents to be reported @throws IOException
-     *     if an error occurs
+     *     if an error occurs @param registry the issue
+     *     registry for all issues used during analysis
      */
     @Throws(IOException::class)
     abstract fun write(
         stats: LintStats,
-        incidents: List<Incident>
+        incidents: List<Incident>,
+        registry: IssueRegistry
     )
 
     /**

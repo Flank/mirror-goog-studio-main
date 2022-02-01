@@ -309,7 +309,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
             val incidents = listOf(
                 Incident(IssueRegistry.LINT_ERROR, "\n" + message, location)
             )
-            reporter.write(LintStats(1, 0), incidents)
+            reporter.write(LintStats(1, 0), incidents, driver.registry)
             var output: String = writer.toString()
             for ((dir, desc) in task.dirToProjectDescription) {
                 output = output.replace(dir.path, desc.name)

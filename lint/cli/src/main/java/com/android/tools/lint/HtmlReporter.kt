@@ -17,8 +17,8 @@ package com.android.tools.lint
 
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.tools.lint.MultiProjectHtmlReporter.ProjectEntry
-import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.IssueRegistry.Companion.AOSP_VENDOR
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
@@ -30,19 +30,13 @@ import com.android.tools.lint.detector.api.describeCounts
 import com.android.utils.HtmlBuilder
 import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
-import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
 import com.google.common.collect.Maps
-import com.google.common.io.Files
-import java.io.BufferedWriter
 import java.io.File
 import java.io.IOException
 import java.io.Writer
-import java.util.ArrayList
-import java.util.Comparator
 import java.util.Date
-import java.util.HashSet
 import kotlin.math.max
 import kotlin.math.min
 
@@ -66,21 +60,18 @@ class HtmlReporter(
     private var highlighter: LintSyntaxHighlighter? = null
 
     init {
-        writer = BufferedWriter(
-            Files.newWriter(
-                output,
-                Charsets.UTF_8
-            )
-        )
+        writer = output.bufferedWriter()
         this.flags = flags
     }
 
     override fun write(
         stats: LintStats,
-        incidents: List<Incident>
+        incidents: List<Incident>,
+        registry: IssueRegistry
     ) {
-        val missing = computeMissingIssues(incidents)
+        val missing = computeMissingIssues(registry, incidents)
         val related = computeIssueLists(incidents)
+        val extra = computeExtraIssues(registry)
         startReport(stats)
         writeNavigationHeader(stats) {
             append(
@@ -105,7 +96,7 @@ class HtmlReporter(
                 "Overview",
                 true,
                 "OverviewCard",
-                appender = { writeOverview(related, missing.size) }
+                appender = { writeOverview(related, missing.size, extra.size) }
             )
             var previousCategory: Category? = null
             for (warnings in related) {
@@ -118,9 +109,8 @@ class HtmlReporter(
                 }
                 writeIssueCard(warnings)
             }
-            if (!client.isCheckingSpecificIssues) {
-                writeMissingIssues(missing)
-            }
+            writeExtraIssues(extra)
+            writeMissingIssues(missing)
             writeSuppressIssuesCard()
         } else {
             writeCard(
@@ -361,7 +351,7 @@ class HtmlReporter(
 
             val issueVendor = issue.vendor ?: issue.registry?.vendor
             issueVendor?.let { vendor ->
-                if (vendor != IssueRegistry.AOSP_VENDOR) {
+                if (vendor != AOSP_VENDOR) {
                     append("<div class=\"vendor\">\n")
                     vendor.describeInto(sb!!, TextFormat.HTML)
                     append("</div>\n") // class=vendor
@@ -495,7 +485,9 @@ document.getElementById(id).style.display = 'none';
     private fun writeIssueMetadata(
         issue: Issue,
         disabledBy: String?,
-        hide: Boolean
+        hide: Boolean,
+        includeSuppressInfo: Boolean = true,
+        includeVendorInfo: Boolean = false,
     ) {
         append("<div class=\"metadata\">")
         if (disabledBy != null) {
@@ -568,7 +560,8 @@ document.getElementById(id).style.display = 'none';
             }
             append("</div>")
         }
-        if (client.registry is BuiltinIssueRegistry) {
+        val vendor = issue.vendor ?: issue.registry?.vendor
+        if (vendor === AOSP_VENDOR) {
             if (hasAutoFix(issue)) {
                 append(
                     "Note: This issue has an associated quickfix operation in Android Studio and IntelliJ IDEA."
@@ -576,20 +569,39 @@ document.getElementById(id).style.display = 'none';
                 append("<br>\n")
             }
         }
-        append(
-            String.format(
-                "To suppress this error, use the issue id \"%1\$s\" as explained in the " +
-                    "%2\$sSuppressing Warnings and Errors%3\$s section.",
-                issue.id, "<a href=\"#SuppressInfo\">", "</a>"
+        if (includeSuppressInfo) {
+            append(
+                String.format(
+                    "To suppress this error, use the issue id \"%1\$s\" as explained in the " +
+                        "%2\$sSuppressing Warnings and Errors%3\$s section.",
+                    issue.id, "<a href=\"#SuppressInfo\">", "</a>"
+                )
             )
-        )
+        }
+        if (includeVendorInfo && vendor != null && vendor != AOSP_VENDOR) {
+            append("<div class=\"vendor\">\n")
+            vendor.describeInto(sb!!, TextFormat.HTML)
+            append("</div>\n") // class=vendor
+        }
         append("<br/>\n")
         append("<br/>")
         append("</div>") // class=moreinfo
         append("\n</div>\n") // class=explanation
     }
 
-    private fun computeMissingIssues(incidents: List<Incident>): Map<Issue, String> {
+    /**
+     * Returns the list of extra issues that were included in analysis
+     * (those that are not built in).
+     */
+    private fun computeExtraIssues(registry: IssueRegistry): List<Issue> {
+        val issues = registry.issues
+        return issues.filter { issue ->
+            val vendor = issue.vendor ?: issue.registry?.vendor
+            vendor != AOSP_VENDOR
+        }
+    }
+
+    private fun computeMissingIssues(registry: IssueRegistry, incidents: List<Incident>): Map<Issue, String> {
         val projects: MutableSet<Project> = HashSet()
         val seen: MutableSet<Issue> = HashSet()
         for (incident in incidents) {
@@ -598,7 +610,7 @@ document.getElementById(id).style.display = 'none';
         }
         val cliConfiguration = client.configurations.fallback
         val map: MutableMap<Issue, String> = Maps.newHashMap()
-        val issues = client.registry?.issues ?: return map
+        val issues = registry.issues
         for (issue in issues) {
             if (!seen.contains(issue)) {
                 if (client.isSuppressed(issue)) {
@@ -630,7 +642,7 @@ document.getElementById(id).style.display = 'none';
     }
 
     private fun writeMissingIssues(missing: Map<Issue, String>) {
-        if (!client.isCheckingSpecificIssues) {
+        if (!client.isCheckingSpecificIssues && missing.isNotEmpty()) {
             append("\n<a name=\"MissingIssues\"></a>\n")
             writeCard(
                 title = "Disabled Checks",
@@ -660,17 +672,55 @@ document.getElementById(id).style.display = 'none';
                     append("<div class=\"issueSeparator\"></div>\n")
                     append("</div>\n")
                     val disabledBy = missing[issue]
-                    writeIssueMetadata(issue, disabledBy, false)
+                    writeIssueMetadata(issue, disabledBy, hide = false, includeSuppressInfo = false, includeVendorInfo = false)
                     append("</div>\n")
                 }
-                append("</div>") // SuppressedIssues
+                append("</div>\n") // SuppressedIssues
+            }
+        }
+    }
+
+    private fun writeExtraIssues(extra: List<Issue>) {
+        if (!client.isCheckingSpecificIssues && extra.isNotEmpty()) {
+            append("\n<a name=\"ExtraIssues\"></a>\n")
+            writeCard(
+                title = "Included Additional Checks",
+                dismissible = true,
+                cardId = "ExtraIssuesCard",
+                actions = listOf(Action("List Issues", "IncludedIssues", "reveal"))
+            ) {
+                append(
+                    """
+                    This card lists all the extra checks run by lint, provided from libraries,
+                    build configuration and extra flags. This is included to help you verify
+                    whether a particular check is included in analysis when configuring builds.
+                    (Note that the list does not include the hundreds of built-in checks into lint,
+                    only additional ones.)
+
+                    """.trimIndent()
+                )
+                append("<div id=\"IncludedIssues\" style=\"display: none;\">")
+                append("<br/><br/>")
+                for (issue in extra.sorted()) {
+                    append("<div class=\"issue\">\n")
+
+                    // Explain this issue
+                    append("<div class=\"id\">")
+                    append(issue.id)
+                    append("<div class=\"issueSeparator\"></div>\n")
+                    append("</div>\n")
+                    writeIssueMetadata(issue, null, hide = false, includeSuppressInfo = false, includeVendorInfo = true)
+                    append("</div>\n")
+                }
+                append("</div>\n") // ExtraIssues
             }
         }
     }
 
     private fun writeOverview(
         related: List<List<Incident>>,
-        missingCount: Int
+        missingCount: Int,
+        extraCount: Int
     ) {
         // Write issue id summary
         append("<table class=\"overview\">\n")
@@ -713,13 +763,21 @@ document.getElementById(id).style.display = 'none';
             append(issue.getBriefDescription(TextFormat.HTML))
             append("</td></tr>\n")
         }
+        if (extraCount > 0 && !client.isCheckingSpecificIssues) {
+            append("<tr><td></td>")
+            append("<td class=\"categoryColumn\">")
+            append("<a href=\"#ExtraIssues\">")
+            append(String.format("Included Additional Checks (%1\$d)", extraCount))
+            append("</a>\n")
+            append("</td></tr>\n")
+        }
         if (missingCount > 0 && !client.isCheckingSpecificIssues) {
             append("<tr><td></td>")
             append("<td class=\"categoryColumn\">")
             append("<a href=\"#MissingIssues\">")
             append(String.format("Disabled Checks (%1\$d)", missingCount))
             append("</a>\n")
-            append("</td></tr>")
+            append("</td></tr>\n")
         }
         append("</table>\n")
         append("<br/>")

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint
 
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Incident
 import java.io.File
@@ -68,7 +69,7 @@ class XmlReporter constructor(
     }
 
     @Throws(IOException::class)
-    override fun write(stats: LintStats, incidents: List<Incident>) {
+    override fun write(stats: LintStats, incidents: List<Incident>, registry: IssueRegistry) {
         val writer = output?.bufferedWriter() ?: return
         val xmlWriter = XmlWriter(client, type, writer)
 

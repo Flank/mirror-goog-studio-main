@@ -72,7 +72,8 @@ class TextReporter(
     @Throws(IOException::class)
     override fun write(
         stats: LintStats,
-        issues: List<Incident>
+        issues: List<Incident>,
+        registry: IssueRegistry
     ) {
         val abbreviate = !flags.isShowEverything
         val output = StringBuilder(issues.size * 200)
