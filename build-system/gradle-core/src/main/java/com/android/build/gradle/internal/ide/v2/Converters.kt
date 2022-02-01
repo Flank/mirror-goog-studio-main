@@ -211,7 +211,7 @@ internal fun DefaultAndroidSourceSet.convert(
     name = name,
     manifestFile = manifestFile,
     javaDirectories = variantSourcesForModel(sources.java),
-    kotlinDirectories = kotlinDirectories,
+    kotlinDirectories = variantSourcesForModel(sources.kotlin),
     resourcesDirectories = resourcesDirectories,
     aidlDirectories = if (features.aidl) aidlDirectories else null,
     renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,

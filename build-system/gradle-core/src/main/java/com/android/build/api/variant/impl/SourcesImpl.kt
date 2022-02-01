@@ -21,6 +21,7 @@ import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.api.AndroidSourceDirectorySet
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -60,8 +61,24 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.java)
         }
 
-    override val res: SourceAndOverlayDirectoriesImpl =
-        SourceAndOverlayDirectoriesImpl(
+    override val kotlin: SourceDirectoriesImpl =
+        SourceDirectoriesImpl(
+            SourceType.KOTLIN.name,
+            projectDirectory,
+            variantServices,
+            null,
+        ).also { sourceDirectoriesImpl ->
+
+            defaultSourceProvider.kotlin.run {
+                sourceDirectoriesImpl.addSources(this)
+            }
+            resetVariantSourceSet(
+                sourceDirectoriesImpl,
+                variantSourceSet?.kotlin as DefaultAndroidSourceDirectorySet?)
+        }
+
+    override val res: ResSourceDirectoriesImpl =
+        ResSourceDirectoriesImpl(
             SourceType.RES.name,
             projectDirectory,
             variantServices,

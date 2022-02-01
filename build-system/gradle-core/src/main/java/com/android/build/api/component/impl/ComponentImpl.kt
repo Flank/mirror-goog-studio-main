@@ -146,7 +146,7 @@ abstract class ComponentImpl(
 
     override val sources: SourcesImpl by lazy {
         SourcesImpl(
-            DefaultSourcesProviderImpl(this),
+            DefaultSourcesProviderImpl(this, variantSources),
             internalServices.projectInfo.projectDirectory,
             internalServices,
             variantSources.variantSourceProvider,

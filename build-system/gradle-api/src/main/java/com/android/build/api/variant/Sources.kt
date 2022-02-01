@@ -32,6 +32,11 @@ interface Sources {
     val java: SourceDirectories
 
     /**
+     * Access ot the Kotlin source folders.
+     */
+    val kotlin: SourceDirectories
+
+    /**
      * Access to the Android resources sources folders.
      */
     val res: SourceAndOverlayDirectories

@@ -20,6 +20,7 @@ enum class SourceType(name: String) {
 
     AIDL("aidl"),
     ASSETS("assets"),
+    KOTLIN("kotlin"),
     JAVA("java"),
     JNI_LIBS("jniLibs"),
     ML_MODELS("mlModels"),

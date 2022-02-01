@@ -36,7 +36,7 @@ open class SourceAndOverlayDirectoriesImpl(
     // For compatibility with the old variant API, we must allow reading the content of this list
     // before it is finalized.
     @Suppress("UNCHECKED_CAST")
-    protected val variantSources: ListProperty<DirectoryEntries> =
+    protected val  variantSources: ListProperty<DirectoryEntries> =
         variantServices.newListPropertyForInternalUse(DirectoryEntries::class.java)
 
     // this will contain all the directories

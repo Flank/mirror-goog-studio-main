@@ -104,7 +104,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val buildFeatures: BuildFeatureValues
     val variantScope: VariantScope
     val variantDslInfo: VariantDslInfo
-    val variantSources: VariantSources
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
     val sources: SourcesImpl
@@ -114,7 +113,15 @@ interface ComponentCreationConfig : ComponentIdentity {
     val services: TaskCreationServices
 
     /**
-     * Access to the glabal task creation configuration
+     * DO NOT USE, this is still present to support ModelBuilder v1 code that should be deleted
+     * soon. Instead, use [sources] API.
+     */
+
+    val variantSources: VariantSources
+
+
+    /**
+     * Access to the global task creation configuration
      */
     val global: GlobalTaskCreationConfig
 

@@ -224,9 +224,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             // ResourceSets from main and generated directories of default, flavors,
             // multiflavor and buildtype sources (if they exist).
             // TODO(lukeedgar) Use merged resources.
-            task.resourceSourceSets.from(Callable {
-                creationConfig.variantSources.getSourceFiles(resDirFunction)
-            })
+            task.resourceSourceSets.from(creationConfig.sources.res.all)
 
             creationConfig
                     .artifacts

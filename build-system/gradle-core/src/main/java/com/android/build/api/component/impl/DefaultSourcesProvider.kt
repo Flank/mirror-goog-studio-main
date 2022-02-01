@@ -30,6 +30,11 @@ interface DefaultSourcesProvider {
     val java: List<DirectoryEntry>
 
     /**
+     * the list of sources [DirectoryEntry] for kotlin
+     */
+    val kotlin: List<DirectoryEntry>
+
+    /**
      * the list of sources [DirectoryEntries] for android resources.
      *
      * The [List] is ordered in ascending order of importance, meaning the first set is meant to be

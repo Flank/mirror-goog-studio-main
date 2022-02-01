@@ -73,7 +73,11 @@ abstract class SourceJarTask : Jar(), VariantAwareTask {
             task.isPreserveFileTimestamps = false
 
             val javaSource = computeJavaSource(creationConfig, task.project)
-            val kotlinSource = computeKotlinSource(task.project)
+            val kotlinSource = task.project.files(
+                creationConfig.sources.kotlin.all
+            ).asFileTree.matching(
+                PatternSet().include("**/*.kt")
+            )
 
             task.from(javaSource, kotlinSource)
 
@@ -88,13 +92,6 @@ abstract class SourceJarTask : Jar(), VariantAwareTask {
             task.archiveFileName.set(outputFile.name)
             task.destinationDirectory.set(outputFile.parentFile)
             task.archiveExtension.set(SdkConstants.EXT_JAR)
-        }
-
-        private fun computeKotlinSource(project: Project): FileTree {
-            val sources = Callable {
-                listOf(creationConfig.variantSources.getSourceFiles { it.kotlinDirectories} ) }
-            val kotlinSourceFilter = PatternSet().include("**/*.kt")
-            return project.files(sources).asFileTree.matching(kotlinSourceFilter)
         }
     }
 }

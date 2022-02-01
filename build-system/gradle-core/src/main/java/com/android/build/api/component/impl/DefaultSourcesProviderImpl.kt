@@ -22,29 +22,55 @@ import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.compiling.BuildConfigType
+import com.android.builder.model.SourceProvider
 import java.util.Collections
+import java.io.File
 
 /**
  * Computes the default sources for all [com.android.build.api.variant.impl.SourceType]s.
  */
-class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesProvider {
+class DefaultSourcesProviderImpl(
+    val component: ComponentImpl,
+    val variantSources: VariantSources,
+): DefaultSourcesProvider {
 
     override val java: List<DirectoryEntry>
         get() = component.defaultJavaSources()
+
+    override val kotlin: List<DirectoryEntry>
+        get() {
+            val sourceSets = mutableListOf<DirectoryEntry>()
+            for (sourceProvider in variantSources.sortedSourceProviders) {
+                val sourceSet = sourceProvider as AndroidSourceSet
+                for (srcDir in (sourceSet.kotlin as DefaultAndroidSourceDirectorySet).srcDirs) {
+                    sourceSets.add(
+                        FileBasedDirectoryEntryImpl(
+                            name = sourceSet.name,
+                            directory = srcDir,
+                            filter = null,
+                        )
+                    )
+                }
+            }
+            return sourceSets
+        }
+
     override val res: List<DirectoryEntries>
         get() = component.defaultResSources()
     override val assets: List<DirectoryEntries>
-        get() = component.defaultAssetsSources()
+        get() = defaultAssetsSources()
 
     override val jniLibs: List<DirectoryEntries>
-        get() = component.variantSources.getSourceList {
+        get() = getSourceList {
                 sourceProvider -> sourceProvider.jniLibsDirectories
         }
 
     override val shaders: List<DirectoryEntries>?
-        get() = if (component.buildFeatures.shaders) component.variantSources.getSourceList {
+        get() = if (component.buildFeatures.shaders) getSourceList {
                 sourceProvider -> sourceProvider.shadersDirectories
         } else null
 
@@ -54,7 +80,7 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         } else null
 
     override val mlModels: List<DirectoryEntries>
-        get() = component.variantSources.getSourceList { sourceProvider ->
+        get() = getSourceList { sourceProvider ->
             sourceProvider.mlModelsDirectories
         }
 
@@ -67,7 +93,7 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         sourceDirectory: (sourceSet: AndroidSourceSet) -> AndroidSourceDirectorySet
     ): List<DirectoryEntry> {
         val sourceSets = mutableListOf<DirectoryEntry>()
-        for (sourceProvider in component.variantSources.sortedSourceProviders) {
+        for (sourceProvider in variantSources.sortedSourceProviders) {
             val sourceSet = sourceProvider as AndroidSourceSet
             for (srcDir in sourceDirectory(sourceSet).srcDirs) {
                 sourceSets.add(
@@ -151,7 +177,7 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         val sourceDirectories = mutableListOf<DirectoryEntries>()
 
         sourceDirectories.addAll(
-            variantSources.getSourceList { sourceProvider -> sourceProvider.resDirectories }
+            getSourceList { sourceProvider -> sourceProvider.resDirectories }
         )
 
         val generatedFolders = mutableListOf<DirectoryEntry>()
@@ -178,6 +204,20 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         return Collections.unmodifiableList(sourceDirectories)
     }
 
-    private fun ComponentImpl.defaultAssetsSources(): List<DirectoryEntries> =
-        variantSources.getSourceList { sourceProvider -> sourceProvider.assetsDirectories }
+    private fun defaultAssetsSources(): List<DirectoryEntries> =
+        getSourceList { sourceProvider -> sourceProvider.assetsDirectories }
+
+    private fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<DirectoryEntries> {
+        return variantSources.sortedSourceProviders.map { sourceProvider ->
+            DirectoryEntries(
+                sourceProvider.name,
+                action(sourceProvider).map { directory ->
+                    FileBasedDirectoryEntryImpl(
+                        sourceProvider.name,
+                        directory,
+                    )
+                }
+            )
+        }
+    }
 }

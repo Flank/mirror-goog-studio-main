@@ -95,7 +95,7 @@ class VariantSources internal constructor(
      *
      * @return a list of source provider
      */
-    val sortedSourceProviders: List<SourceProvider>
+    val  sortedSourceProviders: List<SourceProvider>
         get() {
             val providers: MutableList<SourceProvider> =
                 Lists.newArrayListWithExpectedSize(flavorSourceProviders.size + 4)
@@ -141,137 +141,7 @@ class VariantSources internal constructor(
         }.toSet()
     }
 
-    /**
-     * Returns the dynamic list of [ResourceSet] for the source folders only.
-     *
-     *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
-     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
-     * Resource merger
-     *
-     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
-     * @return a list ResourceSet.
-     */
-    fun getResourceSets(
-        sources: SourceAndOverlayDirectoriesImpl,
-        validateEnabled: Boolean,
-        aaptEnv: String?,
-        directoryPropertyCreator: () -> DirectoryProperty
-    ): List<ResourceSet> {
-        val resourceSets: MutableList<ResourceSet> =
-            Lists.newArrayList()
-        val mainResDirs =
-            defaultSourceProvider.resDirectories
-        // the main + generated res folders are in the same ResourceSet
-        var resourceSet = ResourceSet(
-            BuilderConstants.MAIN, ResourceNamespace.RES_AUTO, null, validateEnabled, aaptEnv
-        )
-        resourceSet.addSources(mainResDirs)
-        resourceSets.add(resourceSet)
-        // the list of flavor must be reversed to use the right overlay order.
-        for (n in flavorSourceProviders.indices.reversed()) {
-            val sourceProvider = flavorSourceProviders[n]
-            val flavorResDirs = sourceProvider.resDirectories
-
-            // we need the same of the flavor config, but it's in a different list.
-            // This is fine as both list are parallel collections with the same number of items.
-            resourceSet = ResourceSet(
-                sourceProvider.name,
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled,
-                aaptEnv
-            )
-            resourceSet.addSources(flavorResDirs)
-            resourceSets.add(resourceSet)
-        }
-        // multiflavor specific overrides flavor
-        multiFlavorSourceProvider?.let {
-            val variantResDirs = it.resDirectories
-            resourceSet = ResourceSet(
-                multiFlavorSourceProvider.name,
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled,
-                aaptEnv
-            )
-            resourceSet.addSources(variantResDirs)
-            resourceSets.add(resourceSet)
-        }
-
-        // build type overrides the flavors
-        buildTypeSourceProvider?.let {
-            val typeResDirs = it.resDirectories
-            resourceSet = ResourceSet(
-                buildTypeSourceProvider.name,
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled,
-                aaptEnv
-            )
-            resourceSet.addSources(typeResDirs)
-            resourceSets.add(resourceSet)
-        }
-
-        // variant specific overrides all
-        variantSourceProvider?.let {
-            val variantResDirs = it.resDirectories
-            resourceSet = ResourceSet(
-                variantSourceProvider.name,
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled,
-                aaptEnv
-            )
-            resourceSet.addSources(variantResDirs)
-            resourceSets.add(resourceSet)
-        }
-
-        val userAddedFolders: List<File> = sources.getVariantSources().get().map {
-            it.directoryEntries
-                .filter { it.isUserAdded }
-                .map { it.asFiles(directoryPropertyCreator).get().asFile }
-        }.flatten()
-
-        if (userAddedFolders.isNotEmpty()) {
-            resourceSet = ResourceSet(
-                "user_added",
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled,
-                aaptEnv
-            )
-            resourceSet.addSources(userAddedFolders)
-            resourceSets.add(resourceSet)
-        }
-
-        return resourceSets
-    }
-
-    /**
-     * Returns all the renderscript source folder from the main config, the flavors and the build
-     * type.
-     *
-     * @return a list of folders.
-     */
-    val renderscriptSourceList: Collection<File>
-        get() = getSourceFiles{ obj: SourceProvider -> obj.renderscriptDirectories }
-
-    fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<DirectoryEntries> {
-        return sortedSourceProviders.map { sourceProvider ->
-            DirectoryEntries(
-                sourceProvider.name,
-                action(sourceProvider).map { directory ->
-                    FileBasedDirectoryEntryImpl(
-                        sourceProvider.name,
-                        directory,
-                    )
-                }
-            )
-        }
-    }
-
-    /**
+     /**
      * Returns a map af all customs source directories registered. Key is the source set name as
      * registered by the user. Value is also a map of source set name to list of folders registered
      * for this source set.

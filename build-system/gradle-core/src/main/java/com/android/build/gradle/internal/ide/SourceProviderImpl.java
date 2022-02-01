@@ -86,7 +86,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.name = sourceProvider.getName();
         this.manifestFile = sourceProvider.getManifestFile();
         this.javaDirs = getSourcesForIdeModel(variantSources.getJava());
-        this.kotlinDirs = sourceProvider.getKotlinDirectories();
+        this.kotlinDirs = getSourcesForIdeModel(variantSources.getKotlin());
         this.resourcesDirs = sourceProvider.getResourcesDirectories();
         this.aidlDirs = sourceProvider.getAidlDirectories();
         this.rsDirs = sourceProvider.getRenderscriptDirectories();
