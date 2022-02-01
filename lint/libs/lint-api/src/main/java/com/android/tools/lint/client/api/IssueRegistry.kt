@@ -26,7 +26,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.editDistance
 import com.android.tools.lint.detector.api.isApplicableTo
-import com.google.common.annotations.Beta
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import java.util.ArrayList
@@ -42,7 +41,6 @@ import java.util.HashSet
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class IssueRegistry
 protected constructor() {
     /**

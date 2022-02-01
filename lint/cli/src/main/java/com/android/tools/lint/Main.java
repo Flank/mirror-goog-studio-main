@@ -65,7 +65,6 @@ import com.android.tools.lint.model.LintModelVariant;
 import com.android.tools.lint.model.PathVariables;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.intellij.pom.java.LanguageLevel;
@@ -107,7 +106,6 @@ import org.xml.sax.SAXException;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 public class Main {
     static final int MAX_LINE_WIDTH = 78;
     private static final String ARG_ENABLE = "--enable";

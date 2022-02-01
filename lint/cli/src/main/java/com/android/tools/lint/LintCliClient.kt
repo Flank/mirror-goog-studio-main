@@ -76,7 +76,6 @@ import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.utils.CharSequences
 import com.android.utils.StdLogger
-import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Splitter
 import com.google.common.collect.Sets
@@ -121,7 +120,6 @@ import kotlin.math.max
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class LintCliClient : LintClient {
     constructor(clientName: String) : super(clientName) {
         flags = LintCliFlags()

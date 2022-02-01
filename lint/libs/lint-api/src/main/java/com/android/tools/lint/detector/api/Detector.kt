@@ -22,7 +22,6 @@ import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
-import com.google.common.annotations.Beta
 import com.intellij.psi.JavaElementVisitor
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -69,7 +68,6 @@ import java.util.EnumSet
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class Detector {
     /**
      * See [com.android.tools.lint.detector.api.SourceCodeScanner]; this

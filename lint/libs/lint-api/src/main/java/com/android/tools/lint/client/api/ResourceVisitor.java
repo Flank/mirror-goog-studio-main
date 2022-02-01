@@ -22,7 +22,6 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
-import com.google.common.annotations.Beta;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -56,7 +55,6 @@ import org.w3c.dom.NodeList;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 class ResourceVisitor {
     private final Map<String, List<XmlScanner>> elementToCheck = new HashMap<>();
     private final Map<String, List<XmlScanner>> attributeToCheck = new HashMap<>();

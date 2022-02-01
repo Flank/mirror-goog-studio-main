@@ -25,7 +25,6 @@ import com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD
 import com.android.tools.lint.detector.api.Location.SearchDirection.EOL_BACKWARD
 import com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD
 import com.android.tools.lint.detector.api.Location.SearchHints
-import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
@@ -45,7 +44,6 @@ import java.io.File
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class ClassContext(
     /** the driver running through the checks */
     driver: LintDriver,

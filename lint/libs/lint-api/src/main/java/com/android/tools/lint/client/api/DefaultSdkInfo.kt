@@ -61,7 +61,6 @@ import com.android.SdkConstants.VIEW_STUB
 import com.android.SdkConstants.VIEW_SWITCHER
 import com.android.SdkConstants.WEB_VIEW
 import com.android.SdkConstants.WIDGET_PKG_PREFIX
-import com.google.common.annotations.Beta
 
 /**
  * Default simple implementation of an [SdkInfo]
@@ -69,7 +68,6 @@ import com.google.common.annotations.Beta
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 internal class DefaultSdkInfo : SdkInfo() {
     override fun getParentViewName(name: String): String? {
         val rawType = getRawType(name) ?: return null

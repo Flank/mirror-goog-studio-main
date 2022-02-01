@@ -67,7 +67,6 @@ import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelModuleType;
 import com.android.tools.lint.model.LintModelNamespacingMode;
 import com.android.tools.lint.model.LintModelVariant;
-import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -98,7 +97,6 @@ import org.w3c.dom.NodeList;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 public class Project {
     protected final LintClient client;
     protected final File dir;

@@ -31,7 +31,6 @@ import com.android.tools.lint.client.api.LintDriver.DriverMode
 import com.android.tools.lint.client.api.SdkInfo
 import com.android.utils.CharSequences
 import com.android.utils.CharSequences.indexOf
-import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiElement
@@ -55,7 +54,6 @@ import java.util.HashSet
  * *NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class Context(
     /** The driver running through the checks. */
     val driver: LintDriver,

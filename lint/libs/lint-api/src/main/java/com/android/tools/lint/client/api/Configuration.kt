@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.guessGradleLocation
-import com.google.common.annotations.Beta
 import java.io.File
 
 /**
@@ -38,7 +37,6 @@ import java.io.File
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class Configuration(
     val configurations: ConfigurationHierarchy
 ) {

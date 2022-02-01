@@ -38,7 +38,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.StringOption
 import com.android.utils.SdkUtils
 import com.android.utils.iterator
-import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
 import org.w3c.dom.Element
 import org.xmlpull.v1.XmlPullParser
@@ -136,7 +135,6 @@ import kotlin.math.max
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class LintXmlConfiguration protected constructor(
     configurations: ConfigurationHierarchy,
     val configFile: File,

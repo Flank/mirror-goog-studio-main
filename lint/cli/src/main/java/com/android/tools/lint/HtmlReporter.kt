@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.describeCounts
 import com.android.utils.HtmlBuilder
 import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
-import com.google.common.annotations.Beta
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
@@ -53,7 +52,6 @@ import kotlin.math.min
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class HtmlReporter(
     client: LintCliClient,
     output: File,

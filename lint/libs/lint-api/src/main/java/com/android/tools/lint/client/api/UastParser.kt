@@ -18,7 +18,6 @@ package com.android.tools.lint.client.api
 
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
-import com.google.common.annotations.Beta
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -36,7 +35,6 @@ import java.io.File
  * **NOTE: This is not public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class UastParser {
 
     /**

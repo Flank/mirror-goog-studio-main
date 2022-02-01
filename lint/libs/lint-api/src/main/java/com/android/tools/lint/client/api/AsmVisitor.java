@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Detector;
-import com.google.common.annotations.Beta;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,7 +53,6 @@ import org.objectweb.asm.tree.MethodNode;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 class AsmVisitor {
     /**
      * Number of distinct node types specified in {@link AbstractInsnNode}. Sadly there isn't a

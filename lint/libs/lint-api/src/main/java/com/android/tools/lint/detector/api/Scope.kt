@@ -29,7 +29,6 @@ import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE
 import com.android.SdkConstants.OLD_PROGUARD_FILE
 import com.android.SdkConstants.RES_FOLDER
-import com.google.common.annotations.Beta
 import java.util.EnumSet
 
 /**
@@ -41,7 +40,6 @@ import java.util.EnumSet
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 enum class Scope {
     /**
      * The analysis only considers a single XML resource file at a time.

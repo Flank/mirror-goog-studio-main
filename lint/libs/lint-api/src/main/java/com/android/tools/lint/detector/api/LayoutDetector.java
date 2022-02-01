@@ -18,7 +18,6 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
-import com.google.common.annotations.Beta;
 
 /**
  * Abstract class specifically intended for layout detectors which provides some common utility
@@ -27,7 +26,6 @@ import com.google.common.annotations.Beta;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 public abstract class LayoutDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {

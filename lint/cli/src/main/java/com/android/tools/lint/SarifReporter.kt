@@ -40,7 +40,6 @@ import com.android.tools.lint.detector.api.getFileUri
 import com.android.tools.lint.detector.api.isParent
 import com.android.utils.SdkUtils
 import com.android.utils.SdkUtils.isBitmapFile
-import com.google.common.annotations.Beta
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
 import java.io.BufferedWriter
@@ -68,7 +67,6 @@ import kotlin.text.Charsets.UTF_8
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class SarifReporter
 
 /**

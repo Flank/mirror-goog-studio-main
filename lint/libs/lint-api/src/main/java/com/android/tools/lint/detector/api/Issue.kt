@@ -21,7 +21,6 @@ import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.TextFormat.RAW
-import com.google.common.annotations.Beta
 import java.util.ArrayList
 import java.util.EnumSet
 
@@ -38,7 +37,6 @@ import java.util.EnumSet
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class Issue private constructor(
     /**
      * Returns the unique id of this issue. These should not change
