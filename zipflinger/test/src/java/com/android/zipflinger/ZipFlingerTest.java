@@ -1149,11 +1149,7 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
 
         Path archPath = getTestPath("testDirectory.zip");
         try (ZipArchive archive = new ZipArchive(archPath)) {
-            archive.add(
-                    Sources.from(
-                            newFolder,
-                            cwd.relativize(newFolder).toString(),
-                            Deflater.NO_COMPRESSION));
+            archive.add(Sources.dir(cwd.relativize(newFolder).toString()));
         }
 
         try (ZipRepo repo = new ZipRepo(archPath)) {
@@ -1178,8 +1174,8 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
         Path archPath = getTestPath("testDirectory.zip");
         String dirName = Source.directoryName("dir");
         try (ZipArchive archive = new ZipArchive(archPath)) {
-            archive.add(Sources.from(cwd, dirName, Deflater.NO_COMPRESSION));
-            archive.add(Sources.from(cwd, dirName, Deflater.NO_COMPRESSION));
+            archive.add(Sources.dir(dirName));
+            archive.add(Sources.dir(dirName));
         }
     }
 }

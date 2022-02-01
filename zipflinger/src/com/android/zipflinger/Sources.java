@@ -33,14 +33,15 @@ public class Sources {
         return from(file.toPath(), name, compressionLevel);
     }
 
+    public static Source dir(@NonNull String name) throws IOException {
+        if (!Source.isNameDirectory(name)) {
+            name = Source.directoryName(name);
+        }
+        return new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
+    }
+
     public static Source from(Path path, @NonNull String name, int compressionLevel)
             throws IOException {
-        if (Files.isDirectory(path)) {
-            if (!Source.isNameDirectory(name)) {
-                name = Source.directoryName(name);
-            }
-            return new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
-        }
         if (Files.size(path) > LARGE_LIMIT) {
             return new LargeFileSource(path, name, compressionLevel);
         } else {
