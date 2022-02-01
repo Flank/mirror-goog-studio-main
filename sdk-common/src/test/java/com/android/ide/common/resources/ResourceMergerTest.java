@@ -2069,6 +2069,25 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals("21st foo", fooContents);
     }
 
+    @Test
+    public void testNestedCommentsAreRemoved() throws Exception {
+        ResourceSet resourceSet = createResourceSet("commentedResources");
+        resourceSet.addSource(
+                TestResources.getDirectory(getClass(), "/testData/resources/commentedResources"));
+        resourceSet.loadFromFiles(new RecordingLogger());
+
+        ResourceMerger resourceMerger = new ResourceMerger(21);
+        MergedResourceWriter consumer = getConsumer();
+        resourceMerger.addDataSet(resourceSet);
+        resourceMerger.mergeData(consumer, false);
+
+        File wroteRoot = consumer.getRootFolder();
+        assertThat(wroteRoot.isDirectory()).isTrue();
+        File writtenValues = new File(wroteRoot, "values" + File.separator + "values.xml");
+        String contents = Files.toString(writtenValues, Charset.defaultCharset());
+        assertThat(contents).doesNotContain("Comment at depth 1");
+        assertThat(contents).doesNotContain("Comment at depth 2");
+    }
 
     // create a fake consumer
     private static class FakeMergeConsumer implements MergeConsumer<ResourceMergerItem> {
