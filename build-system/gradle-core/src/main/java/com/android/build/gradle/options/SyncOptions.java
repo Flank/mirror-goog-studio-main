@@ -19,7 +19,6 @@ package com.android.build.gradle.options;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
-import org.gradle.api.Project;
 
 public final class SyncOptions {
 
@@ -62,7 +61,6 @@ public final class SyncOptions {
      * the behavior changes. This reflects the mode to use.
      *
      * @param options the project options
-     * @param project the project instance
      * @return an integer or null if we are not in model-only mode.
      * @see AndroidProject#MODEL_LEVEL_0_ORIGINAL
      * @see AndroidProject#MODEL_LEVEL_1_SYNC_ISSUE
@@ -70,19 +68,9 @@ public final class SyncOptions {
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
      */
     @Nullable
-    public static Integer buildModelOnlyVersion(
-            @NonNull ProjectOptions options, @NonNull Project project) {
-        // LintModuleLoader sets IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION through
-        // project.getExtensions().getExtraProperties(), so we need to get that value using the same
-        // way. It also means this integer option is not compatible with configuration caching for
-        // now and configuration cache might not be invalidated when this option value changes.
-        Object revision =
-                project.getExtensions()
-                        .getExtraProperties()
-                        .getProperties()
-                        .get(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION.getPropertyName());
-        if (revision != null) {
-            return IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION.parse(revision);
+    public static Integer buildModelOnlyVersion(@NonNull ProjectOptions options) {
+        if (options.get(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION) != null) {
+            return options.get(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION);
         }
 
         if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)) {
