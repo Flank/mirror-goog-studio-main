@@ -214,7 +214,7 @@ public class SdkVersionInfo {
             case 31:
                 return "S";
             case 32:
-                return "T";
+                return "Sv2";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -267,7 +267,7 @@ public class SdkVersionInfo {
             case 30: return "R";
             case 31: return "S";
             case 32:
-                return "T";
+                return "Sv2";
                 // If you add more versions here, also update #getCodeName and
                 // #HIGHEST_KNOWN_API
         }
