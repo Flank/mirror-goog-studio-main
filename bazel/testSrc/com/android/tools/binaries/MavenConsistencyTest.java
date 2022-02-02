@@ -18,17 +18,16 @@ package com.android.tools.binaries;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class MavenConsistencyTest {
     @Rule
@@ -53,7 +52,7 @@ public class MavenConsistencyTest {
                         data,
                         false,
                         remoteRepos,
-                        false);
+                        true);
         generator.run();
 
         String checkedInOutputFile = System.getenv("MAVEN_OUTPUT_FILE");

@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +42,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -164,7 +164,7 @@ public class LocalMavenRepositoryGenerator {
             );
         }
         repositories.add(remoteRepository);
-        repo = new CustomMavenRepository(this.repoPath.toString(), repositories);
+        repo = new CustomMavenRepository(this.repoPath.toString(), repositories, verbose);
     }
 
     public void run() throws Exception {
@@ -557,8 +557,9 @@ public class LocalMavenRepositoryGenerator {
         private final List<RemoteRepository> repositories;
         private final ModelBuilder modelBuilder;
 
-        public CustomMavenRepository(String repoPath, List<RemoteRepository> repositories) {
-            system = CustomAetherUtils.newRepositorySystem();
+        public CustomMavenRepository(
+                String repoPath, List<RemoteRepository> repositories, boolean verbose) {
+            system = CustomAetherUtils.newRepositorySystem(verbose);
             session = CustomAetherUtils.newSession(system, repoPath);
             this.repositories = repositories;
             modelBuilder = new DefaultModelBuilderFactory().newInstance();
@@ -695,13 +696,14 @@ public class LocalMavenRepositoryGenerator {
      */
     private static class CustomAetherUtils {
 
-        public static RepositorySystem newRepositorySystem() {
+        public static RepositorySystem newRepositorySystem(boolean verbose) {
             DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
             locator.addService(
                     RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
             locator.addService(TransporterFactory.class, FileTransporterFactory.class);
             locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-            locator.setService(VersionRangeResolver.class, CustomVersionRangeResolver.class);
+            locator.setServices(
+                    VersionRangeResolver.class, new CustomVersionRangeResolver(verbose));
 
             // Note that, if any of the inputs transitively depend on an artifact using a version
             // range, the default version range resolver will not be able to resolve the version,
@@ -745,6 +747,11 @@ public class LocalMavenRepositoryGenerator {
      * uses the filesystem to load all the available versions.
      */
     private static class CustomVersionRangeResolver extends DefaultVersionRangeResolver {
+        private final boolean verbose;
+
+        private CustomVersionRangeResolver(boolean verbose) {
+            this.verbose = verbose;
+        }
 
         @Override
         public VersionRangeResult resolveVersionRange(
@@ -769,6 +776,16 @@ public class LocalMavenRepositoryGenerator {
 
                 VersionRange.Bound lower = versionConstraint.getRange().getLowerBound();
                 VersionRange.Bound upper = versionConstraint.getRange().getUpperBound();
+                if (verbose) {
+                    String lowerRange =
+                            lower.isInclusive() ? "[" : "(" + lower.getVersion().toString();
+                    String upperRange =
+                            upper.getVersion().toString() + (upper.isInclusive() ? "]" : ")");
+                    System.out.printf(
+                            "Resolving ranged artifact: %s ; ranges = %s, %s\n",
+                            request.getArtifact(), lowerRange, upperRange);
+                }
+
                 // When version is [v], the constraint is parsed to be the range [v,v]. It's
                 // easy to identify this, and return a single constraint.
                 // This is the behavior documented in VersionRangeResolver interface, but
@@ -782,9 +799,11 @@ public class LocalMavenRepositoryGenerator {
                     result.addVersion(versionConstraint.getRange().getLowerBound().getVersion());
                     return result;
                 }
-
                 // Add support to resolve only if pointing locally
                 for (RemoteRepository repository : request.getRepositories()) {
+                    if (verbose) {
+                        System.out.println("Checking repository: " + repository.getUrl());
+                    }
                     if (!repository.getUrl().startsWith("file://")) {
                         // Ignore non-local repositories.
                         continue;
@@ -797,6 +816,11 @@ public class LocalMavenRepositoryGenerator {
                     File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
                     File[] versions = artifactPath.listFiles();
                     if (versions != null) {
+                        if (verbose) {
+                            System.out.println(
+                                    "Found version files for artifact: "
+                                            + Arrays.toString(versions));
+                        }
                         for (File version : versions) {
                             if (!version.isDirectory()) {
                                 continue;
@@ -805,6 +829,9 @@ public class LocalMavenRepositoryGenerator {
                                 Version parsedVersion = versionScheme.parseVersion(version.getName());
                                 if (versionConstraint.containsVersion(parsedVersion)) {
                                     result.addVersion(parsedVersion);
+                                    if (verbose) {
+                                        System.out.println("Added version: " + parsedVersion);
+                                    }
                                 }
                             } catch (InvalidVersionSpecificationException e) {
                                 // Ignore invalid versions.
