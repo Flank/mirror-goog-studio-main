@@ -38,12 +38,14 @@ import java.util.List;
 public class LintDriverTest extends AbstractCheckTest {
     @SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
     public void testClassEntryCompare() {
-        ClassEntry c0 = new ClassEntry(new File("/a1/Foo.class"), null, null, null);
-        ClassEntry c1 = new ClassEntry(new File("/a1/Foo.clazz"), null, null, null);
-        ClassEntry c2 = new ClassEntry(new File("/a1/Foo$Inner1.class"), null, null, null);
-        ClassEntry c3 = new ClassEntry(new File("/a1/Foo$Inner1$Inner.class"), null, null, null);
-        ClassEntry c4 = new ClassEntry(new File("/a2/Foo$Inner2.clas"), null, null, null);
-        ClassEntry c5 = new ClassEntry(new File("/a2/Foo$Inner2.class"), null, null, null);
+        File binDir = new File(".");
+        byte[] bytes = new byte[0];
+        ClassEntry c0 = new ClassEntry(new File("/a1/Foo.class"), null, binDir, bytes);
+        ClassEntry c1 = new ClassEntry(new File("/a1/Foo.clazz"), null, binDir, bytes);
+        ClassEntry c2 = new ClassEntry(new File("/a1/Foo$Inner1.class"), null, binDir, bytes);
+        ClassEntry c3 = new ClassEntry(new File("/a1/Foo$Inner1$Inner.class"), null, binDir, bytes);
+        ClassEntry c4 = new ClassEntry(new File("/a2/Foo$Inner2.clas"), null, binDir, bytes);
+        ClassEntry c5 = new ClassEntry(new File("/a2/Foo$Inner2.class"), null, binDir, bytes);
 
         List<ClassEntry> expected = Arrays.asList(c0, c1, c2, c3, c4, c5);
         List<ClassEntry> list = new ArrayList<>(expected);
@@ -61,8 +63,10 @@ public class LintDriverTest extends AbstractCheckTest {
 
     @SuppressWarnings("ConstantConditions")
     public void testClassEntryCompareContract() {
-        ClassEntry c0 = new ClassEntry(new File("abcde"), null, null, null);
-        ClassEntry c1 = new ClassEntry(new File("abcde"), null, null, null);
+        File binDir = new File(".");
+        byte[] bytes = new byte[0];
+        ClassEntry c0 = new ClassEntry(new File("abcde"), null, binDir, bytes);
+        ClassEntry c1 = new ClassEntry(new File("abcde"), null, binDir, bytes);
         assertTrue(c0.compareTo(c1) <= 0);
         assertTrue(c1.compareTo(c0) <= 0);
     }

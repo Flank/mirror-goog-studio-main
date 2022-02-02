@@ -13,307 +13,291 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.client.api
 
-package com.android.tools.lint.client.api;
+import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.DOT_JAR
+import com.android.SdkConstants.DOT_SRCJAR
+import com.google.common.collect.Maps
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.Opcodes.ASM9
+import java.io.File
+import java.io.IOException
+import java.util.zip.ZipFile
+import kotlin.math.min
 
-import static com.android.SdkConstants.DOT_CLASS;
-import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.DOT_SRCJAR;
-import static org.objectweb.asm.Opcodes.ASM9;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
-import com.google.common.io.ByteStreams;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-
-/** A class, present either as a .class file on disk, or inside a .jar file. */
-class ClassEntry implements Comparable<ClassEntry> {
-    public final File file;
-    public final File jarFile;
-    public final File binDir;
-    public final byte[] bytes;
-
-    @VisibleForTesting
-    ClassEntry(
-            @NonNull File file,
-            @Nullable File jarFile,
-            @NonNull File binDir,
-            @NonNull byte[] bytes) {
-        super();
-        this.file = file;
-        this.jarFile = jarFile;
-        this.binDir = binDir;
-        this.bytes = bytes;
-    }
-
-    @NonNull
-    public String path() {
-        if (jarFile != null) {
-            return jarFile.getPath() + ':' + file.getPath();
+/**
+ * A class, present either as a .class file on disk, or inside a .jar
+ * file.
+ */
+class ClassEntry(
+    val file: File,
+    val jarFile: File?,
+    val binDir: File,
+    val bytes: ByteArray
+) : Comparable<ClassEntry> {
+    fun path(): String {
+        return if (jarFile != null) {
+            jarFile.path + ':' + file.path
         } else {
-            return file.getPath();
+            file.path
         }
     }
 
-    @Override
-    public int compareTo(@NonNull ClassEntry other) {
-        String p1 = file.getPath();
-        String p2 = other.file.getPath();
-        int m1 = p1.length();
-        int m2 = p2.length();
-        if (m1 == m2 && p1.equals(p2)) {
-            return 0;
+    override fun compareTo(other: ClassEntry): Int {
+        val p1 = file.path
+        val p2 = other.file.path
+        val m1 = p1.length
+        val m2 = p2.length
+        if (m1 == m2 && p1 == p2) {
+            return 0
         }
-        int m = Math.min(m1, m2);
-
-        for (int i = 0; i < m; i++) {
-            char c1 = p1.charAt(i);
-            char c2 = p2.charAt(i);
+        val m = min(m1, m2)
+        for (i in 0 until m) {
+            val c1 = p1[i]
+            val c2 = p2[i]
             if (c1 != c2) {
-                if (c1 == '.') {
-                    return -1;
-                } else if (c2 == '.') {
-                    return 1;
-                } else {
-                    return c1 - c2;
+                return when {
+                    c1 == '.' -> -1
+                    c2 == '.' -> 1
+                    else -> c1 - c2
                 }
             }
         }
-
-        return (m == m1) ? -1 : 1;
+        return if (m == m1) -1 else 1
     }
 
-    @Override
-    public String toString() {
-        return file.getPath();
+    override fun toString(): String {
+        return file.path
     }
 
     /**
-     * Creates a list of class entries from the given class path.
-     *
-     * @param client the client to report errors to and to use to read files
-     * @param classPath the class path (directories and jar files) to scan
-     * @param sort if true, sort the results
-     * @return the list of class entries, never null.
+     * Visitor skimming classes and initializing a map of super classes
      */
-    @NonNull
-    public static List<ClassEntry> fromClassPath(
-            @NonNull LintClient client, @NonNull List<File> classPath, boolean sort) {
-        if (!classPath.isEmpty()) {
-            List<ClassEntry> libraryEntries = new ArrayList<>(64);
-            addEntries(client, libraryEntries, classPath);
-            if (sort) {
-                Collections.sort(libraryEntries);
-            }
-            return libraryEntries;
-        } else {
-            return Collections.emptyList();
-        }
-    }
-
-    /**
-     * Creates a list of class entries from the given class path and specific set of files within
-     * it.
-     *
-     * @param client the client to report errors to and to use to read files
-     * @param classFiles the specific set of class files to look for
-     * @param classFolders the list of class folders to look in (to determine the package root)
-     * @param sort if true, sort the results
-     * @return the list of class entries, never null.
-     */
-    @NonNull
-    public static List<ClassEntry> fromClassFiles(
-            @NonNull LintClient client,
-            @NonNull List<File> classFiles,
-            @NonNull List<File> classFolders,
-            boolean sort) {
-        List<ClassEntry> entries = new ArrayList<>(classFiles.size());
-
-        if (!classFolders.isEmpty()) {
-            for (File file : classFiles) {
-                String path = file.getPath();
-                if (file.isFile() && path.endsWith(DOT_CLASS)) {
-                    try {
-                        byte[] bytes = client.readBytes(file);
-                        for (File dir : classFolders) {
-                            if (path.startsWith(dir.getPath())) {
-                                entries.add(new ClassEntry(file, null /* jarFile*/, dir, bytes));
-                                break;
-                            }
-                        }
-                    } catch (IOException e) {
-                        client.log(e, null);
-                    }
-                }
-            }
-
-            if (sort && !entries.isEmpty()) {
-                Collections.sort(entries);
-            }
-        }
-
-        return entries;
-    }
-
-    /**
-     * Given a classpath, add all the class files found within the directories and inside jar files
-     */
-    private static void addEntries(
-            @NonNull LintClient client,
-            @NonNull List<ClassEntry> entries,
-            @NonNull List<File> classPath) {
-        for (File classPathEntry : classPath) {
-            String name = classPathEntry.getName();
-            if (name.endsWith(DOT_JAR)) {
-                //noinspection UnnecessaryLocalVariable
-                File jarFile = classPathEntry;
-                if (!jarFile.exists()) {
-                    continue;
-                }
-                try (ZipFile jar = new ZipFile(jarFile)) {
-                    Enumeration<? extends ZipEntry> enumeration = jar.entries();
-                    while (enumeration.hasMoreElements()) {
-                        ZipEntry entry = enumeration.nextElement();
-                        if (entry.getName().endsWith(DOT_CLASS)) {
-                            try (InputStream is = jar.getInputStream(entry)) {
-                                byte[] bytes = ByteStreams.toByteArray(is);
-                                File file = new File(entry.getName());
-                                entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
-                            } catch (Throwable e) {
-                                client.log(e, null);
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    client.log(e, "Could not read jar file contents from %1$s", jarFile);
-                }
-            } else if (classPathEntry.isDirectory()) {
-                //noinspection UnnecessaryLocalVariable
-                File binDir = classPathEntry;
-                List<File> classFiles = new ArrayList<>();
-                addClassFiles(binDir, classFiles);
-
-                for (File file : classFiles) {
-                    try {
-                        byte[] bytes = client.readBytes(file);
-                        entries.add(new ClassEntry(file, null /* jarFile*/, binDir, bytes));
-                    } catch (IOException e) {
-                        client.log(e, null);
-                    }
-                }
-            } else if (!name.endsWith(DOT_SRCJAR)) {
-                client.log(null, "Ignoring class path entry %1$s", classPathEntry);
-            }
-        }
-    }
-
-    /** Adds in all the .class files found recursively in the given directory */
-    private static void addClassFiles(@NonNull File dir, @NonNull List<File> classFiles) {
-        // Process the resource folder
-        File[] files = dir.listFiles();
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                if (file.isFile() && file.getName().endsWith(DOT_CLASS)) {
-                    classFiles.add(file);
-                } else if (file.isDirectory()) {
-                    // Recurse
-                    addClassFiles(file, classFiles);
-                }
-            }
-        }
-    }
-
-    /**
-     * Creates a super class map (from class to its super class) for the given set of entries
-     *
-     * @param client the client to report errors to and to use to access files
-     * @param libraryEntries the set of library entries to consult
-     * @param classEntries the set of class entries to consult
-     * @return a map from name to super class internal names
-     */
-    @NonNull
-    public static Map<String, String> createSuperClassMap(
-            @NonNull LintClient client,
-            @NonNull List<ClassEntry> libraryEntries,
-            @NonNull List<ClassEntry> classEntries) {
-        int size = libraryEntries.size() + classEntries.size();
-        Map<String, String> map = Maps.newHashMapWithExpectedSize(size);
-        SuperclassVisitor visitor = new SuperclassVisitor(map);
-        addSuperClasses(client, visitor, libraryEntries);
-        addSuperClasses(client, visitor, classEntries);
-        return map;
-    }
-
-    /**
-     * Creates a super class map (from class to its super class) for the given set of entries
-     *
-     * @param client the client to report errors to and to use to access files
-     * @param entries the set of library entries to consult
-     * @return a map from name to super class internal names
-     */
-    @NonNull
-    public static Map<String, String> createSuperClassMap(
-            @NonNull LintClient client, @NonNull List<ClassEntry> entries) {
-        Map<String, String> map = Maps.newHashMapWithExpectedSize(entries.size());
-        SuperclassVisitor visitor = new SuperclassVisitor(map);
-        addSuperClasses(client, visitor, entries);
-        return map;
-    }
-
-    /** Adds in all the super classes found for the given class entries into the given map */
-    private static void addSuperClasses(
-            @NonNull LintClient client,
-            @NonNull SuperclassVisitor visitor,
-            @NonNull List<ClassEntry> entries) {
-        for (ClassEntry entry : entries) {
-            try {
-                ClassReader reader = new ClassReader(entry.bytes);
-                int flags =
-                        ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
-                reader.accept(visitor, flags);
-            } catch (Throwable t) {
-                client.log(
-                        null,
-                        "Error processing %1$s: broken class file? (%2$s)",
-                        entry.path(),
-                        t.getMessage());
-            }
-        }
-    }
-
-    /** Visitor skimming classes and initializing a map of super classes */
-    private static class SuperclassVisitor extends ClassVisitor {
-        private final Map<String, String> mMap;
-
-        SuperclassVisitor(Map<String, String> map) {
-            super(ASM9);
-            mMap = map;
-        }
-
-        @Override
-        public void visit(
-                int version,
-                int access,
-                String name,
-                String signature,
-                String superName,
-                String[] interfaces) {
+    private class SuperclassVisitor constructor(private val map: MutableMap<String, String>) : ClassVisitor(ASM9) {
+        override fun visit(
+            version: Int,
+            access: Int,
+            name: String,
+            signature: String?,
+            superName: String?,
+            interfaces: Array<String>?
+        ) {
             // Record super class in the map (but don't waste space on java.lang.Object)
-            if (superName != null && !"java/lang/Object".equals(superName)) {
-                mMap.put(name, superName);
+            if (superName != null && "java/lang/Object" != superName) {
+                map[name] = superName
+            }
+        }
+    }
+
+    companion object {
+        /**
+         * Creates a list of class entries from the given class path.
+         *
+         * @param client the client to report errors to and to use to
+         *     read files
+         * @param classPath the class path (directories and jar files)
+         *     to scan
+         * @param sort if true, sort the results
+         * @return the list of class entries, never null.
+         */
+        fun fromClassPath(
+            client: LintClient,
+            classPath: List<File>,
+            sort: Boolean
+        ): List<ClassEntry> {
+            return if (classPath.isNotEmpty()) {
+                val libraryEntries: MutableList<ClassEntry> = ArrayList(64)
+                addEntries(client, libraryEntries, classPath)
+                if (sort) {
+                    libraryEntries.sort()
+                }
+                libraryEntries
+            } else {
+                emptyList()
+            }
+        }
+
+        /**
+         * Creates a list of class entries from the given class path and
+         * specific set of files within it.
+         *
+         * @param client the client to report errors to and to use to
+         *     read files
+         * @param classFiles the specific set of class files to look for
+         * @param classFolders the list of class folders to look in (to
+         *     determine the package root)
+         * @param sort if true, sort the results
+         * @return the list of class entries, never null.
+         */
+        fun fromClassFiles(
+            client: LintClient,
+            classFiles: List<File>,
+            classFolders: List<File>,
+            sort: Boolean
+        ): List<ClassEntry> {
+            val entries: MutableList<ClassEntry> = ArrayList(classFiles.size)
+            if (classFolders.isNotEmpty()) {
+                for (file in classFiles) {
+                    val path = file.path
+                    if (file.isFile && path.endsWith(DOT_CLASS)) {
+                        try {
+                            val bytes = client.readBytes(file)
+                            for (dir in classFolders) {
+                                if (path.startsWith(dir.path)) {
+                                    entries.add(ClassEntry(file, null, dir, bytes))
+                                    break
+                                }
+                            }
+                        } catch (e: IOException) {
+                            client.log(e, null)
+                        }
+                    }
+                }
+                if (sort && entries.isNotEmpty()) {
+                    entries.sort()
+                }
+            }
+            return entries
+        }
+
+        /**
+         * Given a classpath, add all the class files found within the
+         * directories and inside jar files
+         */
+        private fun addEntries(
+            client: LintClient,
+            entries: MutableList<ClassEntry>,
+            classPath: List<File>
+        ) {
+            for (classPathEntry in classPath) {
+                val name = classPathEntry.name
+                if (name.endsWith(DOT_JAR)) {
+                    if (!classPathEntry.exists()) {
+                        continue
+                    }
+                    try {
+                        ZipFile(classPathEntry).use { jar ->
+                            val enumeration = jar.entries()
+                            while (enumeration.hasMoreElements()) {
+                                val entry = enumeration.nextElement()
+                                if (entry.name.endsWith(DOT_CLASS)) {
+                                    try {
+                                        jar.getInputStream(entry).use { stream ->
+                                            val bytes = stream.readBytes()
+                                            val file = File(entry.name)
+                                            entries.add(ClassEntry(file, classPathEntry, classPathEntry, bytes))
+                                        }
+                                    } catch (e: Throwable) {
+                                        client.log(e, null)
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: IOException) {
+                        client.log(e, "Could not read jar file contents from %1\$s", classPathEntry)
+                    }
+                } else if (classPathEntry.isDirectory) {
+                    val classFiles: MutableList<File> = ArrayList()
+                    addClassFiles(classPathEntry, classFiles)
+                    for (file in classFiles) {
+                        try {
+                            val bytes = client.readBytes(file)
+                            entries.add(ClassEntry(file, null, classPathEntry, bytes))
+                        } catch (e: IOException) {
+                            client.log(e, null)
+                        }
+                    }
+                } else if (!name.endsWith(DOT_SRCJAR)) {
+                    client.log(null, "Ignoring class path entry %1\$s", classPathEntry)
+                }
+            }
+        }
+
+        /**
+         * Adds in all the .class files found recursively in the given
+         * directory
+         */
+        private fun addClassFiles(dir: File, classFiles: MutableList<File>) {
+            // Process the resource folder
+            val files = dir.listFiles() ?: return
+            if (files.isNotEmpty()) {
+                for (file in files) {
+                    if (file.isFile && file.name.endsWith(DOT_CLASS)) {
+                        classFiles.add(file)
+                    } else if (file.isDirectory) {
+                        // Recurse
+                        addClassFiles(file, classFiles)
+                    }
+                }
+            }
+        }
+
+        /**
+         * Creates a super class map (from class to its super class) for
+         * the given set of entries
+         *
+         * @param client the client to report errors to and to use to
+         *     access files
+         * @param libraryEntries the set of library entries to consult
+         * @param classEntries the set of class entries to consult
+         * @return a map from name to super class internal names
+         */
+        fun createSuperClassMap(
+            client: LintClient,
+            libraryEntries: List<ClassEntry>,
+            classEntries: List<ClassEntry>
+        ): Map<String, String> {
+            val size = libraryEntries.size + classEntries.size
+            val map: MutableMap<String, String> = Maps.newHashMapWithExpectedSize(size)
+            val visitor = SuperclassVisitor(map)
+            addSuperClasses(client, visitor, libraryEntries)
+            addSuperClasses(client, visitor, classEntries)
+            return map
+        }
+
+        /**
+         * Creates a super class map (from class to its super class) for
+         * the given set of entries
+         *
+         * @param client the client to report errors to and to use to
+         *     access files
+         * @param entries the set of library entries to consult
+         * @return a map from name to super class internal names
+         */
+        fun createSuperClassMap(
+            client: LintClient,
+            entries: List<ClassEntry>
+        ): Map<String, String> {
+            val map: MutableMap<String, String> = Maps.newHashMapWithExpectedSize(entries.size)
+            val visitor = SuperclassVisitor(map)
+            addSuperClasses(client, visitor, entries)
+            return map
+        }
+
+        /**
+         * Adds in all the super classes found for the given class
+         * entries into the given map
+         */
+        private fun addSuperClasses(
+            client: LintClient,
+            visitor: SuperclassVisitor,
+            entries: List<ClassEntry>
+        ) {
+            for (entry in entries) {
+                try {
+                    val reader = ClassReader(entry.bytes)
+                    val flags = ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+                    reader.accept(visitor, flags)
+                } catch (t: Throwable) {
+                    client.log(
+                        null,
+                        "Error processing %1\$s: broken class file? (%2\$s)",
+                        entry.path(),
+                        t.message!!
+                    )
+                }
             }
         }
     }

@@ -1691,11 +1691,12 @@ class LintDriver(
             }
         }
 
-        val entries = ClassEntry.fromClassFiles(client, classFiles, classFolders, true)
         val classDetectors = scopeDetectors[Scope.CLASS_FILE]
-        if (classDetectors != null && classDetectors.isNotEmpty() && entries.isNotEmpty()) {
-            entries.sort()
-            runClassDetectors(classDetectors, entries, project, main, fromLibrary = false)
+        if (classDetectors != null && classDetectors.isNotEmpty()) {
+            val entries = ClassEntry.fromClassFiles(client, classFiles, classFolders, true)
+            if (entries.isNotEmpty()) {
+                runClassDetectors(classDetectors, entries, project, main, fromLibrary = false)
+            }
         }
     }
 
