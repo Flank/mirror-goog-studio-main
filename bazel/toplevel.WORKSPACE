@@ -385,6 +385,7 @@ local_maven_repository(
         "com.android.tools.lint:lint-gradle:26.5.0",
         "com.android.tools.lint:lint-gradle:27.0.0",
         "com.android.tools.lint:lint-gradle:27.1.0",
+        "com.android.tools.metalava:metalava:1.0.0-alpha04",
         "com.crashlytics.sdk.android:crashlytics:2.6.8",
         "com.facebook.testing.screenshot:core:0.2.3",
         "com.github.bumptech.glide:glide:4.11.0",
