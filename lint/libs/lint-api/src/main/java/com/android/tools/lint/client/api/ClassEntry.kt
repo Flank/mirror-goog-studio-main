@@ -22,6 +22,7 @@ import com.google.common.collect.Maps
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.tree.ClassNode
 import java.io.File
 import java.io.IOException
 import java.util.zip.ZipFile
@@ -72,6 +73,14 @@ class ClassEntry(
         return file.path
     }
 
+    fun visit(client: LintClient, flags: Int = 0): ClassNode? {
+        return visit(client, jarFile ?: file, file.path, bytes, ClassNode(), flags) as? ClassNode
+    }
+
+    fun visit(client: LintClient, visitor: ClassVisitor, flags: Int = 0): ClassVisitor? {
+        return visit(client, jarFile ?: file, file.path, bytes, visitor, flags)
+    }
+
     /**
      * Visitor skimming classes and initializing a map of super classes
      */
@@ -99,20 +108,16 @@ class ClassEntry(
          *     read files
          * @param classPath the class path (directories and jar files)
          *     to scan
-         * @param sort if true, sort the results
          * @return the list of class entries, never null.
          */
         fun fromClassPath(
             client: LintClient,
-            classPath: List<File>,
-            sort: Boolean
+            classPath: List<File>
         ): List<ClassEntry> {
             return if (classPath.isNotEmpty()) {
                 val libraryEntries: MutableList<ClassEntry> = ArrayList(64)
                 addEntries(client, libraryEntries, classPath)
-                if (sort) {
-                    libraryEntries.sort()
-                }
+                libraryEntries.sort()
                 libraryEntries
             } else {
                 emptyList()
@@ -128,14 +133,12 @@ class ClassEntry(
          * @param classFiles the specific set of class files to look for
          * @param classFolders the list of class folders to look in (to
          *     determine the package root)
-         * @param sort if true, sort the results
          * @return the list of class entries, never null.
          */
         fun fromClassFiles(
             client: LintClient,
             classFiles: List<File>,
-            classFolders: List<File>,
-            sort: Boolean
+            classFolders: List<File>
         ): List<ClassEntry> {
             val entries: MutableList<ClassEntry> = ArrayList(classFiles.size)
             if (classFolders.isNotEmpty()) {
@@ -155,7 +158,7 @@ class ClassEntry(
                         }
                     }
                 }
-                if (sort && entries.isNotEmpty()) {
+                if (entries.isNotEmpty()) {
                     entries.sort()
                 }
             }
@@ -285,19 +288,53 @@ class ClassEntry(
             visitor: SuperclassVisitor,
             entries: List<ClassEntry>
         ) {
+            val flags = ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
             for (entry in entries) {
-                try {
-                    val reader = ClassReader(entry.bytes)
-                    val flags = ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-                    reader.accept(visitor, flags)
-                } catch (t: Throwable) {
-                    client.log(
-                        null,
-                        "Error processing %1\$s: broken class file? (%2\$s)",
-                        entry.path(),
-                        t.message!!
-                    )
+                entry.visit(client, visitor, flags)
+            }
+        }
+
+        /**
+         * Visits the given [bytes] array with the given [visitor]
+         * using the specified ASM [flags], and if there's a problem
+         * reports the problem to the given [client] referencing the
+         * given class file [file] (which could be a jar file, in which
+         * case the specific class file inside the jar file is given by
+         * [relative]). If the file is inside a `.jar` file, the path
+         * should be the relative file within the path (because it will
+         * specially be interpreted to see if it's a multi release jar
+         * file).
+         */
+        fun visit(
+            client: LintClient,
+            file: File,
+            relative: String?,
+            bytes: ByteArray,
+            visitor: ClassVisitor,
+            flags: Int = 0
+        ): ClassVisitor? {
+            return try {
+                val reader = ClassReader(bytes)
+                reader.accept(visitor, flags)
+                visitor
+            } catch (t: Throwable) {
+                // Unsupported class file format? If it's coming from a multi-release file (see https://openjdk.java.net/jeps/238)
+                // we don't want to complain
+                val message = t.message ?: t.toString()
+                if (relative != null &&
+                    t is IllegalArgumentException && message.startsWith("Unsupported class file") &&
+                    (relative.startsWith("META-INF/versions/") || relative.startsWith("META-INF\\versions\\"))
+                ) {
+                    return null
                 }
+
+                client.log(
+                    null,
+                    "Error processing %1\$s: broken class file? (%2\$s)",
+                    file.path + if (relative != null) ":$relative" else "",
+                    message
+                )
+                null
             }
         }
     }

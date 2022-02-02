@@ -29,7 +29,6 @@ import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,7 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import kotlin.io.FilesKt;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.CapitalizeDecapitalizeKt;
 
 /**
  * A utility class which provides unit test file descriptions
@@ -193,6 +194,7 @@ public class TestFiles {
         return new TestFile.BinaryTestFile(to, producer);
     }
 
+    @NonNull
     public static String toBase64(@NonNull byte[] bytes) {
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return "\"\"\n+ \""
@@ -267,12 +269,44 @@ public class TestFiles {
         }
     }
 
-    public static String toBase64(@NonNull File file) throws IOException {
-        return toBase64(Files.toByteArray(file));
+    @NonNull
+    public static String toBase64(@NonNull File file) {
+        return toBase64(FilesKt.readBytes(file));
     }
 
-    public static String toBase64gzip(@NonNull File file) throws IOException {
-        return toBase64gzip(Files.toByteArray(file));
+    @NonNull
+    public static String toBase64gzip(@NonNull File file) {
+        return toBase64gzip(FilesKt.readBytes(file));
+    }
+
+    @NonNull
+    public static String toHexBytes(@NonNull File file) {
+        return toHexBytes(FilesKt.readBytes(file));
+    }
+
+    /** Creates the string to initialize a {@link #hexBytes(String, String)} test file with. */
+    @NonNull
+    public static String toHexBytes(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        int column = 0;
+        sb.append('"');
+        for (byte b : bytes) {
+            int i = b & 0xFF;
+            String hex = Integer.toHexString(i);
+            hex = CapitalizeDecapitalizeKt.toUpperCaseAsciiOnly(hex);
+            if (hex.length() == 1) {
+                sb.append('0');
+            }
+            sb.append(hex);
+
+            column += 2;
+            if (column > 60) {
+                sb.append("\\n\" +\n\"");
+                column = 0;
+            }
+        }
+        sb.append('"');
+        return sb.toString();
     }
 
     /**
@@ -338,6 +372,45 @@ public class TestFiles {
         }
 
         byte[] finalBytes = bytes;
+        return new TestFile.BytecodeProducer() {
+            @NonNull
+            @Override
+            public byte[] produce() {
+                return finalBytes;
+            }
+        };
+    }
+
+    /**
+     * Decodes hex byte strings into the original byte array. To create this data, use {@link
+     * #toHexBytes(File)} or {@link #toHexBytes(byte[])}, for example via
+     *
+     * <pre>{@code assertEquals("", toHexBytes(new File("path/to/your.class")));}</pre>
+     *
+     * Normally you'll be using {@link #base64gzip(String, String)} test files, since these are much
+     * more compact. The main use case for hex byte files is very clearly seeing the binary contents
+     * in the test description, and perhaps modifying these slightly (for example, to deliberately
+     * change a field in a file format like a class file.)
+     */
+    @NonNull
+    public static TestFile.BinaryTestFile hexBytes(@NonNull String to, @NonNull String encoded) {
+        return new TestFile.BinaryTestFile(to, getByteProducerForHexBytes(encoded));
+    }
+
+    /**
+     * Creates a bytecode producer which takes an encoded hex bytes string and returns the decoded
+     * byte array.
+     */
+    @NonNull
+    public static TestFile.ByteProducer getByteProducerForHexBytes(@NonNull String encoded) {
+        encoded = encoded.replace(" ", "").replace("\n", "").replace("\t", "");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        for (int i = 0; i < encoded.length(); i += 2) {
+            int b = Integer.parseInt(encoded.substring(i, i + 2), 16);
+            out.write(b);
+        }
+
+        byte[] finalBytes = out.toByteArray();
         return new TestFile.BytecodeProducer() {
             @NonNull
             @Override

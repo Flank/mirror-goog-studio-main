@@ -1636,8 +1636,7 @@ class LintDriver(
         }
 
         val classFolders = project.javaClassFolders
-        val classEntries: List<ClassEntry>
-        classEntries = if (classFolders.isEmpty()) {
+        val classEntries: List<ClassEntry> = if (classFolders.isEmpty()) {
             // This should be a lint error only if there are source files
             val hasSourceFiles: Boolean = project.javaSourceFolders.any { folder -> folder.walk().any { it.isFile } }
             if (hasSourceFiles) {
@@ -1654,7 +1653,7 @@ class LintDriver(
             }
             emptyList()
         } else {
-            ClassEntry.fromClassPath(client, classFolders, true)
+            ClassEntry.fromClassPath(client, classFolders)
         }
 
         // Actually run the detectors. Libraries should be called before the main classes.
@@ -1662,7 +1661,7 @@ class LintDriver(
         val libraryDetectors = scopeDetectors[Scope.JAVA_LIBRARIES]
         if (libraryDetectors != null && libraryDetectors.isNotEmpty()) {
             val libraries = project.getJavaLibraries(false)
-            val libraryEntries = ClassEntry.fromClassPath(client, libraries, true)
+            val libraryEntries = ClassEntry.fromClassPath(client, libraries)
             runClassDetectors(libraryDetectors, libraryEntries, project, main, fromLibrary = true)
         }
 
@@ -1693,7 +1692,7 @@ class LintDriver(
 
         val classDetectors = scopeDetectors[Scope.CLASS_FILE]
         if (classDetectors != null && classDetectors.isNotEmpty()) {
-            val entries = ClassEntry.fromClassFiles(client, classFiles, classFolders, true)
+            val entries = ClassEntry.fromClassFiles(client, classFiles, classFolders)
             if (entries.isNotEmpty()) {
                 runClassDetectors(classDetectors, entries, project, main, fromLibrary = false)
             }
@@ -1731,19 +1730,7 @@ class LintDriver(
             }
             prev = entry
 
-            val reader: ClassReader
-            val classNode: ClassNode
-            try {
-                reader = ClassReader(entry.bytes)
-                classNode = ClassNode()
-                reader.accept(classNode, 0 /* flags */)
-            } catch (t: Throwable) {
-                client.log(
-                    null,
-                    "Error processing ${entry.path()}: broken class file? ($t)"
-                )
-                continue
-            }
+            val classNode = entry.visit(client) ?: continue
 
             var peek: ClassNode?
             while (true) {
@@ -1859,19 +1846,17 @@ class LintDriver(
                 return null
             }
 
-            try {
-                val bytes = client.readBytes(classFile)
-                val reader = ClassReader(bytes)
-                val classNode = ClassNode()
-                reader.accept(classNode, flags)
-
-                return classNode
+            val bytes = try {
+                client.readBytes(classFile)
             } catch (t: Throwable) {
                 client.log(
                     null,
-                    "Error processing ${classFile.path}: broken class file? ($t)"
+                    "Error reading ${classFile.path}: ${t.message}"
                 )
+                return null
             }
+
+            return ClassEntry.visit(client, classFile, null, bytes, ClassNode(), flags) as? ClassNode
         }
 
         return null

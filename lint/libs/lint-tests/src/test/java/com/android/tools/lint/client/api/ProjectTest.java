@@ -18,13 +18,11 @@ package com.android.tools.lint.client.api;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.UnusedResourceDetector;
+import com.android.tools.lint.checks.infrastructure.LoggingTestLintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -95,7 +93,7 @@ public class ProjectTest extends AbstractCheckTest {
     }
 
     public void testNonCanonicalPaths() {
-        TestClient client = new TestClient();
+        LoggingTestLintClient client = new LoggingTestLintClient();
         // path which should trigger IO exception in File.canonicalFile
         File dir = new File("project/\u0000");
         Project project1 = Project.create(client, dir, dir);
@@ -105,7 +103,7 @@ public class ProjectTest extends AbstractCheckTest {
     }
 
     public void testInvalidLibraryReferences1() {
-        TestClient client = new TestClient();
+        LoggingTestLintClient client = new LoggingTestLintClient();
         File dir = new File("project");
         Project project1 = Project.create(client, dir, dir);
         client.registerProject(dir, project1);
@@ -118,7 +116,7 @@ public class ProjectTest extends AbstractCheckTest {
     }
 
     public void testInvalidLibraryReferences2() {
-        TestClient client = new TestClient();
+        LoggingTestLintClient client = new LoggingTestLintClient();
         File dir1 = new File("project1");
         File dir2 = new File("project2");
         Project project1 = Project.create(client, dir1, dir1);
@@ -139,7 +137,7 @@ public class ProjectTest extends AbstractCheckTest {
     }
 
     public void testOkLibraryReferences() {
-        TestClient client = new TestClient();
+        LoggingTestLintClient client = new LoggingTestLintClient();
         File dir1 = new File("project1");
         File dir2 = new File("project2");
         File dir3 = new File("project3");
@@ -161,26 +159,6 @@ public class ProjectTest extends AbstractCheckTest {
         assertEquals(1, project2.getAllLibraries().size());
         assertSame(project3, project2.getAllLibraries().get(0));
         assertTrue(project3.getAllLibraries().isEmpty());
-    }
-
-    private class TestClient extends TestLintClient {
-        @SuppressWarnings("StringBufferField")
-        private StringBuilder mLog = new StringBuilder();
-
-        @Override
-        public void log(
-                @NonNull Severity severity,
-                @Nullable Throwable exception,
-                @Nullable String format,
-                @Nullable Object... args) {
-            assertNotNull(format);
-            mLog.append(severity.getDescription()).append(": ");
-            mLog.append(String.format(format, args));
-        }
-
-        public String getLoggedOutput() {
-            return mLog.toString();
-        }
     }
 
     public void testDependsOn1() {
