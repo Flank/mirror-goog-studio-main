@@ -31,7 +31,6 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -312,15 +311,15 @@ public class Deployer {
         }
     }
 
-    private boolean installCoroutineDebugger(String packageName, List<Apk> apk)
-            throws DeployerException {
-        Deploy.Arch arch = AdbClient.getArchForAbi(adb.getAbiForApks(apk));
+    private boolean installCoroutineDebugger(String packageName, List<Apk> apk) {
         try {
+            Deploy.Arch arch = AdbClient.getArchForAbi(adb.getAbiForApks(apk));
             Deploy.InstallCoroutineAgentResponse response =
                     installer.installCoroutineAgent(packageName, arch);
             return response.getStatus() == Deploy.InstallCoroutineAgentResponse.Status.OK;
-        } catch (IOException e) {
-            throw DeployerException.installerIoException(e);
+        } catch (Exception e) {
+            logger.warning(e.getMessage());
+            return false;
         }
     }
 
