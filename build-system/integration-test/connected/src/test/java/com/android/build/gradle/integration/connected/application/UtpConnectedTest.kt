@@ -24,6 +24,9 @@ import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import com.google.testing.platform.plugin.android.info.host.proto.AndroidTestDeviceInfoProto.AndroidTestDeviceInfo
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
+import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import org.junit.Before
@@ -124,6 +127,10 @@ class UtpConnectedTest {
         assertThat(project.file(testResultPbPath)).exists()
         assertThat(project.file(aggTestResultPbPath)).exists()
 
+        val deviceInfo = getDeviceInfo(project.file(aggTestResultPbPath))
+        assertThat(deviceInfo).isNotNull()
+        assertThat(deviceInfo?.name).isEqualTo("emulator-5554")
+
         // Run the task again after clean. This time the task configuration is
         // restored from the configuration cache. We expect no crashes.
         project.executor().run("clean")
@@ -137,6 +144,25 @@ class UtpConnectedTest {
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
         assertThat(project.file(aggTestResultPbPath)).exists()
+    }
+
+    private fun getDeviceInfo(aggTestResultPb: File): AndroidTestDeviceInfo? {
+        val testSuiteResult = aggTestResultPb.inputStream().use {
+            TestSuiteResult.parseFrom(it)
+        }
+        return testSuiteResult.testResultList.asSequence()
+            .flatMap { testResult ->
+                testResult.outputArtifactList
+            }
+            .filter { artifact ->
+                artifact.label.label == "device-info" && artifact.label.namespace == "android"
+            }
+            .map { artifact ->
+                File(artifact.sourcePath.path).inputStream().use {
+                    AndroidTestDeviceInfo.parseFrom(it)
+                }
+            }
+            .firstOrNull()
     }
 
     @Test
