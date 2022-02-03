@@ -183,6 +183,28 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
         }
     },
     /**
+     * Test_only attribute for the application.
+     *
+     * @see <a
+     *     href="https://developer.android.com/guide/topics/manifest/application-element#testOnly">
+     *     https://developer.android.com/guide/topics/manifest/application-element#testOnly</a>
+     */
+    TEST_ONLY {
+        @Override
+        public void addTo(
+                @NonNull ActionRecorder actionRecorder,
+                @NonNull XmlDocument document,
+                @NonNull String value) {
+            XmlElement msp =
+                    createOrGetElementInManifest(
+                            actionRecorder,
+                            document,
+                            ManifestModel.NodeTypes.APPLICATION,
+                            "application injection requested");
+            addToElementInAndroidNS(this, actionRecorder, value, msp);
+        }
+    },
+    /**
      * Shell attribute set for Profileable
      *
      * @see <a href="https://developer.android.com/guide/topics/manifest/profileable-element">

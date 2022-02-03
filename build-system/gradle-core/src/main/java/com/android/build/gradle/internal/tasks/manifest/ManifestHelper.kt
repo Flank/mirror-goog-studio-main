@@ -214,6 +214,7 @@ private fun setInjectableValues(
     if (profileable) {
         invoker.setOverride(ManifestSystemProperty.SHELL, "true")
         invoker.setOverride(ManifestSystemProperty.ENABLED, "true")
+        invoker.setOverride(ManifestSystemProperty.TEST_ONLY, "true")
     }
 }
 
