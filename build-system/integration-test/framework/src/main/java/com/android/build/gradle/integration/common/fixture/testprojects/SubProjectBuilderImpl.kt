@@ -124,7 +124,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
             sb.append("artifacts.add(\"default\", file('$fileName'))\n")
         }
 
-        android?.writeBuildFile(sb)
+        android?.writeBuildFile(sb, plugins)
         androidComponents?.writeBuildFile(sb)
 
         dependencies.writeBuildFile(sb, projectDir)

@@ -34,6 +34,8 @@ internal class AndroidProjectBuilderImpl(
     override var minSdkCodename: String? = null
     override var targetProjectPath: String? = null
 
+    override val dynamicFeatures: MutableSet<String> = mutableSetOf()
+
     private val buildFeatures = BuildFeaturesBuilderImpl()
     private val testFixtures = TestFixturesBuilderImpl()
     private val main: Config? = ConfigImpl(this, "main")
@@ -93,7 +95,7 @@ internal class AndroidProjectBuilderImpl(
         }
     }
 
-    fun writeBuildFile(sb: StringBuilder) {
+    fun writeBuildFile(sb: StringBuilder, appliedPlugins: Collection<PluginType>) {
         val minSdkVersion = minSdk?.toString()
             ?: minSdkCodename?.let { "\"$it\""}
             ?: SUPPORT_LIB_MIN_SDK.toString()
@@ -184,6 +186,18 @@ internal class AndroidProjectBuilderImpl(
 
         targetProjectPath?.let {
             sb.append("    targetProjectPath = \"$it\"\n")
+        }
+
+        if (dynamicFeatures.isNotEmpty()) {
+            if (!appliedPlugins.contains(PluginType.ANDROID_APP)) {
+                throw RuntimeException("Dynamic Features declared in project with plugins: ${appliedPlugins.joinToString { it.id }}")
+            }
+
+            sb.append("    dynamicFeatures += [${dynamicFeatures.joinToString(
+                separator = ",",
+                prefix = "\"",
+                postfix = "\"",
+            )}]\n")
         }
 
         sb.append("}\n") // ANDROID
