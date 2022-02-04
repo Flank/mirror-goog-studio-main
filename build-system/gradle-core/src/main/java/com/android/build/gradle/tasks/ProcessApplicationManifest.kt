@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MER
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
+import com.android.build.gradle.internal.ide.dependencies.getIdString
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
@@ -475,7 +476,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         @JvmStatic
         fun getArtifactName(artifact: ResolvedArtifactResult): String {
             return when(val id = artifact.id.componentIdentifier) {
-                is ProjectComponentIdentifier -> id.projectPath
+                is ProjectComponentIdentifier -> id.getIdString()
                 is ModuleComponentIdentifier -> "${id.group}:${id.module}:${id.version}"
                 is OpaqueComponentArtifactIdentifier -> id.displayName
                 is ExtraComponentIdentifier -> id.displayName
