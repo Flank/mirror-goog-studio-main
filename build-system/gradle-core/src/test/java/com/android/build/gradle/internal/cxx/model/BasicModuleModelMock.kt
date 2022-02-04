@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.NinjaLocator
@@ -319,7 +319,7 @@ open class BasicModuleModelMock {
     }
 
     init {
-        val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
+        val ndkFolder = join(sdkDir, "ndk", NDK_DEFAULT_VERSION)
         val meta = join(ndkFolder, "meta")
         meta.mkdirs()
         cmakeDir.mkdirs()
@@ -398,7 +398,7 @@ open class BasicModuleModelMock {
         val ndkInfo = NdkR19Info(ndkFolder)
         doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
         doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
-        doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
+        doReturn(Revision.parseRevision(NDK_DEFAULT_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
             .findCmakePath(any(), any(), any(), any(), any())
 

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_ABI
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
@@ -200,7 +200,7 @@ enum class Macro(
         description = "Folder of the current Android NDK.",
         environment = GRADLE,
         tag = "moduleNdkDir",
-        example = "${NDK_PROJECT_SDK_DIR.ref}/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION",
+        example = "${NDK_PROJECT_SDK_DIR.ref}/ndk/$NDK_DEFAULT_VERSION",
         cmakeProperties = listOf(ANDROID_NDK, CMAKE_ANDROID_NDK),
         bind = CxxModuleModel::ndkFolder),
     NDK_CMAKE_TOOLCHAIN(
@@ -237,19 +237,19 @@ enum class Macro(
         description = "Version of NDK.",
         environment = GRADLE,
         tag = "moduleNdkVersion",
-        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION,
+        example = NDK_DEFAULT_VERSION,
         bind = CxxModuleModel::ndkVersion),
     NDK_MODULE_NDK_VERSION_MAJOR(
         description = "Version number major part.",
         environment = GRADLE,
         tag = "moduleNdkVersionMajor",
-        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[0],
+        example = NDK_DEFAULT_VERSION.split(".")[0],
         bind = CxxModuleModel::ndkMajorVersion),
     NDK_MODULE_NDK_VERSION_MINOR(
         description = "Version number minor part.",
         environment = GRADLE,
         tag = "moduleNdkVersionMinor",
-        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[1],
+        example = NDK_DEFAULT_VERSION.split(".")[1],
         bind = CxxModuleModel::ndkMinorVersion),
     NDK_MODULE_DIR(
         description = "Folder of the module level build.gradle.",

@@ -2930,6 +2930,12 @@ public final class SdkConstants {
      */
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "7.0.3";
 
+    /**
+     * The version of NDK to use as default. If no specific version of NDK is specified in
+     * build.gradle then this is the version that will be used.
+     */
+    public static final String NDK_DEFAULT_VERSION = "21.4.7075529";
+
     /** use api or implementation */
     @Deprecated public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
     /** use api or implementation */

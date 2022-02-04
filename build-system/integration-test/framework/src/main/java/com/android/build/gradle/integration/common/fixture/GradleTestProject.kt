@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.truth.forEachLine
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.TaskManager
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.plugins.VersionCheckPlugin
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.ToolsRevisionUtils
@@ -73,6 +72,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.regex.Pattern
 import java.util.stream.Collectors
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 
 /**
  * JUnit4 test rule for integration test.
@@ -133,7 +133,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         val DEFAULT_COMPILE_SDK_VERSION: String
         @JvmField
         val DEFAULT_BUILD_TOOL_VERSION: String
-        const val DEFAULT_NDK_SIDE_BY_SIDE_VERSION: String = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+        const val DEFAULT_NDK_SIDE_BY_SIDE_VERSION: String = NDK_DEFAULT_VERSION
         @JvmField
         val APPLY_DEVICEPOOL_PLUGIN = System.getenv("APPLY_DEVICEPOOL_PLUGIN")?.toBoolean() ?: false
         val USE_LATEST_NIGHTLY_GRADLE_VERSION = System.getenv("USE_GRADLE_NIGHTLY")?.toBoolean() ?: false

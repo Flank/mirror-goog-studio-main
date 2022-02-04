@@ -140,12 +140,12 @@ Name of the gradle module.
 
 ## ${ndk.moduleNdkDir}
 Folder of the current Android NDK.
-- example: ${ndk.projectSdkDir}/ndk/21.4.7075529
+- example: ${ndk.projectSdkDir}/ndk/[Current NDK Version]
 - environment: android-gradle
 
 ## ${ndk.moduleNdkVersion}
 Version of NDK.
-- example: 21.4.7075529
+- example: [Current NDK Version]
 - environment: android-gradle
 
 ## ${ndk.moduleNdkVersionMajor}

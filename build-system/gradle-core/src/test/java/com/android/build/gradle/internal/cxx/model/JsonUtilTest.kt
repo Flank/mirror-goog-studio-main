@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -30,7 +30,7 @@ class JsonUtilTest {
             assertThat(json).isEqualTo(writtenBackJson)
             assertThat(writtenBackAbi.cxxBuildFolder.parentFile.parentFile.parentFile.path).endsWith(".cxx")
             assertThat(writtenBackAbi.variant.module.ndkVersion.toString()).isEqualTo(
-                ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+                NDK_DEFAULT_VERSION
             )
         }
     }
