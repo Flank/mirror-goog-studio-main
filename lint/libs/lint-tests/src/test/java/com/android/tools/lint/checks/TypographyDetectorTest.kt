@@ -300,4 +300,40 @@ class TypographyDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testCdata216979742() {
+        lint().files(
+            xml(
+                "res/values/strings.xml",
+                """
+                <resources>
+                    <string name="url_text"><![CDATA[<a href="%1＄s">See docs</a>]]></string>
+                    <string name="other">
+                    <![CDATA[
+                      This panel describes some of the new features and behavior changes
+                      included in this update.
+
+                      To open this panel again later, select "What's New in Android Studio"
+                      from the main menu.
+                      ]]>
+                    </string>
+                </resources>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/values/strings.xml:4: Warning: Replace apostrophe (') with typographic apostrophe (’, &#8217;) ? [TypographyQuotes]
+                <![CDATA[
+                  ^
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for res/values/strings.xml line 4: Replace with ’:
+            @@ -8 +8
+            -       To open this panel again later, select "What's New in Android Studio"
+            +       To open this panel again later, select "What’s New in Android Studio"
+            """
+        )
+    }
 }
