@@ -614,6 +614,44 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testUnexpectedSwitchConstantInOpenTypedef() {
+        // Regression test for 216746694
+        // Don't flag unexpected constants in open typedefs
+        // 	The switch check should look for unexpected constants in case statements
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                public class Test {
+                    private static final int MY_CONSTANT = 5;
+                    public void measure(@PlaybackStateCompat.State int mode) {
+                        switch (mode) {
+                            case MY_CONSTANT: // OK
+                            case 42: // OK
+                                break;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.IntDef;
+
+                public class PlaybackStateCompat {
+                    @IntDef(open = true, value = {STATE_NONE, STATE_STOPPED})
+                    public @interface State { }
+                    public static final int STATE_NONE = 0;
+                    public static final int STATE_STOPPED = 1;
+                }"""
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     fun testMissingSwitchConstantsWithElse() {
         // Regression test for
         // 117854168: Wrong lint warning used for PlaybackStateCompat.STATE_* constants
