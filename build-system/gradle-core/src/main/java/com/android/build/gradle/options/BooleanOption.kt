@@ -119,7 +119,6 @@ enum class BooleanOption(
 
     BUILD_FEATURE_MLMODELBINDING("android.defaults.buildfeatures.mlmodelbinding", false, ApiStage.Experimental),
     ENABLE_PROFILE_JSON("android.enableProfileJson", false, FeatureStage.Experimental),
-    WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn", false, FeatureStage.Experimental),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow", false, FeatureStage.Experimental),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices", false, FeatureStage.Experimental),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck", false, FeatureStage.Experimental),
@@ -229,6 +228,11 @@ enum class BooleanOption(
 
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
+    WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION(
+        "android.dependencyResolutionAtConfigurationTime.warn",
+        true,
+        FeatureStage.SoftlyEnforced(VERSION_8_0)
+    ),
 
     /* -------------------
      * DEPRECATED FEATURES
