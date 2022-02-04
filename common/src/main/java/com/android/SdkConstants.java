@@ -780,16 +780,6 @@ public final class SdkConstants {
     public static final String CLASS_FRAMELAYOUT =
             "android.widget." + CLASS_NAME_FRAMELAYOUT;
     public static final String CLASS_ADAPTER = "android.widget.Adapter";
-    public static final String CLASS_PREFERENCE = "android.preference.Preference";
-    public static final AndroidxName CLASS_PREFERENCE_ANDROIDX =
-            AndroidxName.of("android.support.v7.preference.", "Preference");
-    public static final String CLASS_NAME_PREFERENCE_SCREEN = "PreferenceScreen";
-    public static final String CLASS_PREFERENCES =
-            "android.preference." + CLASS_NAME_PREFERENCE_SCREEN;
-    public static final String CLASS_PREFERENCE_GROUP =
-            "android.preference.PreferenceGroup";
-    public static final AndroidxName CLASS_PREFERENCE_GROUP_ANDROIDX =
-            AndroidxName.of("android.support.v7.preference.", "PreferenceGroup");
     public static final String CLASS_PARCELABLE = "android.os.Parcelable";
     public static final String CLASS_PARCEL = "android.os.Parcel";
     public static final String CLASS_FRAGMENT = "android.app.Fragment";
@@ -844,9 +834,6 @@ public final class SdkConstants {
             AndroidxName.of("android.support.v7.widget.", "CardView");
     public static final AndroidxName CLASS_ACTION_MENU_VIEW =
             AndroidxName.of("android.support.v7.widget.", "ActionMenuView");
-
-    public static final AndroidxName CLASS_SUPPORT_PREFERENCE_SCREEN =
-            AndroidxName.of("android.support.v7.preference.", "PreferenceScreen");
 
     public static final String CLASS_FRAGMENT_CONTAINER_VIEW =
             "androidx.fragment.app.FragmentContainerView";
@@ -1229,7 +1216,6 @@ public final class SdkConstants {
     // Tags: XML
     public static final String TAG_HEADER = "header";
     public static final String TAG_APPWIDGET_PROVIDER = "appwidget-provider";
-    public static final String TAG_PREFERENCE_SCREEN = "PreferenceScreen";
 
     // Tags: Layouts
     public static final String VIEW_TAG = "view";
