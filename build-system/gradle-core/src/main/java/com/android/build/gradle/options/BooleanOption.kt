@@ -147,7 +147,6 @@ enum class BooleanOption(
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
 
     ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false, FeatureStage.Experimental),
-    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.Experimental),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
 
     // Marked as stable to avoid reporting deprecation twice.
@@ -227,6 +226,9 @@ enum class BooleanOption(
         true,
         FeatureStage.SoftlyEnforced(VERSION_8_0)
     ),
+
+    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
 
     /* -------------------
      * DEPRECATED FEATURES
