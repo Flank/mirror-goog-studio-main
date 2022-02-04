@@ -73,6 +73,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.intellij.psi.CommonClassNames;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
@@ -94,6 +97,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.kotlin.psi.KtCallExpression;
+import org.jetbrains.kotlin.psi.KtExpression;
+import org.jetbrains.kotlin.psi.KtStringTemplateEntry;
+import org.jetbrains.kotlin.psi.KtValueArgument;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULiteralExpression;
@@ -1487,7 +1494,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     }
                     for (int i = 1; i <= count; i++) {
                         int argumentIndex = i + argIndex;
-                        PsiType type = args.get(argumentIndex).getExpressionType();
+                        UExpression expression = args.get(argumentIndex);
+                        PsiType type = expression.getExpressionType();
+                        if (isInStringExpression(call, expression)) {
+                            type = getStringType(context, expression);
+                        }
                         if (type != null) {
                             boolean valid = true;
                             String formatType = getFormatArgumentType(s, i);
@@ -1635,6 +1646,50 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Returns true if the given expression in UAST is really a String inside a template expression.
+     * This works around a bug in UAST, described in
+     * https://issuetracker.google.com/217570491#comment2.
+     */
+    private boolean isInStringExpression(
+            @NonNull UCallExpression call, @NonNull UExpression expression) {
+        PsiElement sourcePsi = expression.getSourcePsi();
+        if (sourcePsi == null) {
+            return false;
+        }
+        PsiElement parent = sourcePsi.getParent();
+        if (!(parent instanceof KtStringTemplateEntry)) {
+            return false;
+        }
+        PsiElement stringElement = parent.getParent();
+        PsiElement callPsi = call.getSourcePsi();
+        if (callPsi instanceof KtCallExpression) {
+            for (KtValueArgument argument : ((KtCallExpression) callPsi).getValueArguments()) {
+                KtExpression valueExpression = argument.getArgumentExpression();
+                if (valueExpression == stringElement) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    private PsiType getStringType(JavaContext context, UExpression expression) {
+        PsiElement element = expression.getSourcePsi();
+        if (element == null) {
+            return null;
+        }
+        JavaPsiFacade facade = JavaPsiFacade.getInstance(element.getProject());
+        PsiClass javaLangClass =
+                facade.findClass(CommonClassNames.JAVA_LANG_STRING, element.getResolveScope());
+        if (javaLangClass != null) {
+            return context.getEvaluator().getClassType(javaLangClass);
+        } else {
+            return null;
         }
     }
 

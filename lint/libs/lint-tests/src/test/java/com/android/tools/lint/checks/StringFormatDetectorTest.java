@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.StringFormatDetector.isLocaleSpecific;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestMode;
@@ -2099,6 +2100,44 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "<resources>\n"
                                         + "    <string name=\"nontrivial1\">%s %h</string>\n"
                                         + "    <string name=\"nontrivial2\">%s %2d</string>\n"
+                                        + "</resources>\n"
+                                        + "\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void test217570491() {
+        // Regression test for https://issuetracker.google.com/217570491
+        lint().files(
+                        rClass("test.pkg", "@string/test"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "import android.util.Log\n"
+                                        + "class MyActivity : android.app.Activity {\n"
+                                        + "  fun ok1() {\n"
+                                        + "    val someInt = 123\n"
+                                        + "    val test = getString(R.string.test, someInt.toString())\n"
+                                        + "    Log.d(\"AppLog\", \"test:$test\")\n"
+                                        + "  }\n"
+                                        + "\n"
+                                        + "  fun ok2() {\n"
+                                        + "    val someInt = 123\n"
+                                        + "    val test = getString(R.string.test, \"$someInt\")\n"
+                                        + "    Log.d(\"AppLog\", \"test:$test\")\n"
+                                        + "  }\n"
+                                        + "  fun ok3() {\n"
+                                        + "    val someInt = 123\n"
+                                        + "    val test = getString(R.string.test, \"${if (true) someInt else 0}\")\n"
+                                        + "    Log.d(\"AppLog\", \"test:$test\")\n"
+                                        + "  }\n"
+                                        + "}"),
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "    <string name=\"test\">test: %1$s</string>\n"
                                         + "</resources>\n"
                                         + "\n"))
                 .run()
