@@ -18,11 +18,10 @@
 
 package com.android.ide.common.resources
 
-import com.android.tools.build.gradle.internal.profile.BooleanOption
 import java.io.File
 import java.io.IOException
-import java.net.URLDecoder
-import java.net.URLEncoder
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
 import kotlin.IllegalStateException
 
 private const val separator: String = ":/"
@@ -57,12 +56,14 @@ fun getRelativeSourceSetPath(resourceFile: File, moduleSourceSets: Map<String, S
  */
 fun relativeResourcePathToAbsolutePath(
     relativePath: String,
-    sourceSetPathMap: Map<String, String>): String {
-    return relativeResourcePathToAbsolutePath(sourceSetPathMap)(relativePath)
+    sourceSetPathMap: Map<String, String>,
+    fileSystem: FileSystem = FileSystems.getDefault()): String {
+    return relativeResourcePathToAbsolutePath(sourceSetPathMap, fileSystem)(relativePath)
 }
 
 fun relativeResourcePathToAbsolutePath(
-    sourceSetPathMap: Map<String, String>
+    sourceSetPathMap: Map<String, String>,
+    fileSystem: FileSystem = FileSystems.getDefault()
 ): (String) -> String {
     return { relativePath: String ->
         if (sourceSetPathMap.none()) {
@@ -81,12 +82,17 @@ fun relativeResourcePathToAbsolutePath(
         val sourceSetPrefix = relativePath.substring(0, separatorIndex)
         val resourcePathFromSourceSet =
             relativePath.substring(separatorIndex + separator.lastIndex, relativePath.length)
+        val systemRelativePath = if ("/" != fileSystem.separator) {
+            resourcePathFromSourceSet.replace("/", fileSystem.separator)
+        } else {
+            resourcePathFromSourceSet
+        }
         val absolutePath = sourceSetPathMap[sourceSetPrefix]
             ?: throw NoSuchElementException(
                 """Unable to get absolute path from $relativePath
                        because $sourceSetPrefix is not key in sourceSetPathMap."""
             )
-        "$absolutePath$resourcePathFromSourceSet"
+        "$absolutePath$systemRelativePath"
     }
 }
 

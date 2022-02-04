@@ -17,12 +17,15 @@
 package com.android.ide.common.resources
 
 import com.android.utils.FileUtils
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 
 /**
  * Tests for [com.android.ide.common.resources.RelativeResourceUtils].
@@ -120,14 +123,33 @@ class RelativeResourcesUtilsTest {
     }
 
     @Test
-    fun `test should convert relative path format to absolute path format`() {
+    fun `test should convert relative path format to absolute path format on linux`() {
         val sourceSetPathMap =
-                mapOf("com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main")
+            mapOf("com.foobar.myproject.app-0" to "/a/b/c/d/myproject/src/main")
         val testRelativePath = "com.foobar.myproject.app-0:/res/layout/activity_map_tv.xml"
-        val expectedAbsolutePath = "/usr/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml"
+        val expectedAbsolutePath =
+            "/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml"
+        val relativeResourcePathToAbsolutePath = relativeResourcePathToAbsolutePath(
+            testRelativePath,
+            sourceSetPathMap,
+            Jimfs.newFileSystem(Configuration.unix())
+        )
+        assertThat(relativeResourcePathToAbsolutePath).isEqualTo(expectedAbsolutePath)
+    }
 
-        assertThat(relativeResourcePathToAbsolutePath(testRelativePath, sourceSetPathMap))
-                .isEqualTo(expectedAbsolutePath)
+    @Test
+    fun `test should convert relative path format to absolute path format on windows`() {
+        val sourceSetPathMap =
+            mapOf("com.foobar.myproject.app-0" to "C:\\a\\b\\c\\d\\myproject\\src\\main")
+        val testRelativePath = "com.foobar.myproject.app-0:/res/layout/activity_map_tv.xml"
+        val expectedAbsolutePath =
+            "C:\\a\\b\\c\\d\\myproject\\src\\main\\res\\layout\\activity_map_tv.xml"
+        val relativeResourcePathToAbsolutePath = relativeResourcePathToAbsolutePath(
+            testRelativePath,
+            sourceSetPathMap,
+            Jimfs.newFileSystem(Configuration.windows())
+        )
+        assertThat(relativeResourcePathToAbsolutePath).isEqualTo(expectedAbsolutePath)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -189,4 +211,5 @@ class RelativeResourcesUtilsTest {
                 "/usr/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml")
         ).isFalse()
     }
+
 }
