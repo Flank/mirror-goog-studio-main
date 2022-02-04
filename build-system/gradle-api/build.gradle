@@ -1,19 +1,7 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-
-configurations {
-    additionalDokkaClasspath
-}
-
-// Add buildscript repositories directly to this project as Dokka tries to resolve dependencies
-// using these repositories. If it fails, it tries to do so using the parent project which is
-// deprecated in Gradle 6.0 and will be removed in 7.0.
-buildscript {
-    repositories {
-        maven { url "$rootDir/../prebuilts/tools/common/m2/repository" }
-    }
-}
+apply plugin: 'com.android.tools.metalava'
 
 dependencies {
     implementation project(':base:builder-test-api')

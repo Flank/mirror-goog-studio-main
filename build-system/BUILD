@@ -498,3 +498,33 @@ gradle_build(
     tasks = [":base:gradle-api:dackkaZip"],
     visibility = ["//visibility:public"],
 )
+
+maven_repository(
+    name = "metalava_tool",
+    artifacts = [
+        "@maven//:com.android.tools.metalava.metalava_1.0.0-alpha04",
+    ],
+)
+
+gradle_build(
+    name = "android_gradle_plugin_metalava_api",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    data = [
+        "//prebuilts/studio/jdk",
+        "//prebuilts/tools/common/dackka",
+    ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    output_file = "apis.zip",
+    output_file_source = "dist/apis.zip",
+    repos = [
+        "//tools/base:agp_dependencies",
+        "//tools/base:agp_artifacts",
+        ":metalava_tool",
+    ],
+    tags = ["no_windows"],  # TODO(b/202837927) Investigate getting metalava to run on windows
+    tasks = [":base:gradle-api:distMetalavaApiZip"],
+    visibility = ["//visibility:public"],
+)
