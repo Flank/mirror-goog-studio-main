@@ -92,7 +92,6 @@ class BooleanOptionTest {
                 BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT,
                 BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES,
                 BooleanOption.ENABLE_EXTRACT_ANNOTATIONS,
-                BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS,
                 BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES,
                 BooleanOption.BUILD_ONLY_TARGET_ABI,
                 BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE,

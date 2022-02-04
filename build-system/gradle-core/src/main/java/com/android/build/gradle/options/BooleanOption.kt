@@ -25,6 +25,7 @@ import com.android.build.gradle.options.Version.VERSION_4_2
 import com.android.build.gradle.options.Version.VERSION_7_0
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget.VERSION_8_0
 import com.android.build.gradle.options.Version.VERSION_7_2
+import com.android.build.gradle.options.Version.VERSION_7_3
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY
@@ -148,7 +149,6 @@ enum class BooleanOption(
     ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false, FeatureStage.Experimental),
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.Experimental),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
-    ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true, FeatureStage.Experimental),
 
     // Marked as stable to avoid reporting deprecation twice.
     CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies", true, FeatureStage.Experimental),
@@ -442,6 +442,16 @@ enum class BooleanOption(
 
     /** Whether to use lint's partial analysis functionality. */
     USE_LINT_PARTIAL_ANALYSIS("android.enableParallelLint", true, FeatureStage.Enforced(VERSION_7_2)),
+
+    ENABLE_AAPT2_WORKER_ACTIONS(
+        "android.enableAapt2WorkerActions",
+        true,
+        FeatureStage.Enforced(
+            VERSION_7_3,
+            "AAPT2 worker actions have been used unconditionally since Android Gradle Plugin 3.3"
+        )
+    ),
+
 
     /* ----------------
      * REMOVED FEATURES
