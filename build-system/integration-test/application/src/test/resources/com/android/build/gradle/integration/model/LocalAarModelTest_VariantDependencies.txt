@@ -2,11 +2,11 @@
    - name                 = "debug"
    - mainArtifact:
       - compileDependencies:
-         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
             - dependencies = "*visited*"
       - unresolvedDependencies = []
    > androidTestArtifact:
@@ -14,7 +14,7 @@
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies    = []
@@ -25,16 +25,16 @@
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
-               - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+               - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
                   - dependencies = "*visited*"
-         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
             - dependencies = "*visited*"
       - unresolvedDependencies = []
    < unitTestArtifact
@@ -81,13 +81,13 @@
          - lintJar            = (null)
          - androidLibraryData = (null)
       < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
-      > __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
+      > __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
          - type        = ANDROID_LIBRARY
          - artifact    = {PROJECT}/lib/lib.aar{F}
          - projectInfo = (null)
          > libraryInfo:
             - group          = "__wrapped_aars__"
-            - name           = ":|:lib"
+            - name           = ":lib"
             - version        = "unspecified"
             - isTestFixtures = false
             - buildType      = (null)
@@ -112,6 +112,6 @@
             - publicResources     = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/public.txt{!}
             - symbolFile          = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/R.txt{!}
          < androidLibraryData
-      < __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified
+      < __wrapped_aars__|:lib|unspecified||project:lib:unspecified
    < libraries
 < VariantDependencies

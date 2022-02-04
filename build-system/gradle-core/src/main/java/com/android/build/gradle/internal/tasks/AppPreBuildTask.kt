@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.ide.dependencies.getIdString
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -127,7 +128,7 @@ private fun getAndroidDependencies(artifactView: ArtifactCollection): Set<String
 
 private fun ResolvedArtifactResult.toIdString(): String? {
     return when (val id = id.componentIdentifier) {
-        is ProjectComponentIdentifier -> id.projectPath
+        is ProjectComponentIdentifier -> id.getIdString()
         is ModuleComponentIdentifier -> id.toString()
         is OpaqueComponentArtifactIdentifier -> {
             // skip those for now.
