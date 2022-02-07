@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.appinspection
 
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.GuardedBy
@@ -244,6 +245,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                                 try {
                                     startCapturing(roots.getValue(toAdd))
                                 } catch (t: Throwable) {
+                                    Log.w("layinsp", t)
                                     connection.sendEvent {
                                         errorEvent =
                                             LayoutInspectorViewProtocol.ErrorEvent.newBuilder()
@@ -564,6 +566,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             }.get()
         }
         catch (exception: ExecutionException) {
+            Log.w("layinsp", exception)
             callback.reply {
                 startFetchResponse = StartFetchResponse.newBuilder().apply {
                     error = exception.cause?.message ?: "Unknown error"
