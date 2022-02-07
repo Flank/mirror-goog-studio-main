@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.utils
 
+import com.android.sdklib.AndroidVersion
 import java.util.regex.Pattern
 
 
@@ -64,11 +65,10 @@ fun parseTargetHash(targetHash : String): CompileData  {
 }
 
 fun validatePreviewTargetValue(value: String): String? =
-    if (PREVIEW_PATTERN.matcher(value).matches()) {
+    if (AndroidVersion.PREVIEW_PATTERN.matcher(value).matches()) {
         value
     } else null
 
 private val API_PATTERN: Pattern = Pattern.compile("^android-([0-9]+)(-ext(\\d+))?$")
-private val FULL_PREVIEW_PATTERN: Pattern = Pattern.compile("^android-([A-Z][0-9A-Za-z]*)$")
-private val PREVIEW_PATTERN: Pattern = Pattern.compile("^[A-Z][0-9A-Za-z]*$")
+private val FULL_PREVIEW_PATTERN: Pattern = Pattern.compile("^android-([A-Z][0-9A-Za-z_]*)$")
 private val ADDON_PATTERN: Pattern = Pattern.compile("^(.+):(.+):(\\d+)$")

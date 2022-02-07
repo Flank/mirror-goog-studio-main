@@ -43,9 +43,17 @@ internal class SdkUtilsKtTest {
             CompileData(codeName = "Rv2")
         )
 
+        // Test that underscores are allowed in code names
+        Truth.assertThat(parseTargetHash("android-O_MR1")).isEqualTo(
+            CompileData(codeName = "O_MR1")
+        )
+
         Truth.assertThat(validatePreviewTargetValue("android-Rv2")).isNull()
 
         Truth.assertThat(validatePreviewTargetValue("Rv2")).isEqualTo("Rv2")
+
+        // Test that underscores are allowed in code names
+        Truth.assertThat(validatePreviewTargetValue("O_MR1")).isEqualTo("O_MR1")
     }
 
     @Test
