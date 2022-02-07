@@ -767,9 +767,12 @@ com.android.build.api.variant.BundleConfig.addMetadataFile: void (java.lang.Stri
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.getAnnotationProcessorConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getCompileClasspath: org.gradle.api.file.FileCollection ()
+com.android.build.api.variant.Component.getCompileConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getInstrumentation: com.android.build.api.variant.Instrumentation ()
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
+com.android.build.api.variant.Component.getRuntimeConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getSources: com.android.build.api.variant.Sources ()
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder

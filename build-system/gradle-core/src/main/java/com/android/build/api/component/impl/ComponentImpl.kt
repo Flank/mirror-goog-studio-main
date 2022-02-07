@@ -101,7 +101,7 @@ abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
     final override val variantDslInfo: VariantDslInfo,
-    override val variantDependencies: VariantDependencies,
+    final override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
     override val artifacts: ArtifactsImpl,
@@ -180,6 +180,13 @@ abstract class ComponentImpl(
             generatedBytecodeKey = null
         )
     }
+
+    override val compileConfiguration = variantDependencies.compileClasspath
+
+    override val runtimeConfiguration = variantDependencies.runtimeClasspath
+
+    override val annotationProcessorConfiguration =
+        variantDependencies.annotationProcessorConfiguration
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

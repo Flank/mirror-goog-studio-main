@@ -30,6 +30,8 @@ import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
 import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.FileCollection
 import org.jetbrains.kotlin.gradle.utils.`is`
 import org.junit.Rule
 import org.junit.Test
@@ -253,4 +255,59 @@ class AnalyticsEnabledComponentTest {
         Mockito.verify(delegate, times(1))
             .sources
     }
+
+    @Test
+    fun getCompileClasspath() {
+        val compileClasspath = Mockito.mock(FileCollection::class.java)
+        Mockito.`when`(delegate.compileClasspath).thenReturn(compileClasspath)
+        Truth.assertThat(proxy.compileClasspath).isEqualTo(compileClasspath)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.COMPILE_CLASSPATH_VALUE)
+        Mockito.verify(delegate, times(1)).compileClasspath
+    }
+
+    @Test
+    fun getCompileConfiguration() {
+        val compileConfiguration = Mockito.mock(Configuration::class.java)
+        Mockito.`when`(delegate.compileConfiguration).thenReturn(compileConfiguration)
+        Truth.assertThat(proxy.compileConfiguration).isEqualTo(compileConfiguration)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.COMPILE_CONFIGURATION_VALUE)
+        Mockito.verify(delegate, times(1)).compileConfiguration
+    }
+
+    @Test
+    fun getRuntimeConfiguration() {
+        val runtimeConfiguration = Mockito.mock(Configuration::class.java)
+        Mockito.`when`(delegate.runtimeConfiguration).thenReturn(runtimeConfiguration)
+        Truth.assertThat(proxy.runtimeConfiguration).isEqualTo(runtimeConfiguration)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.RUNTIME_CONFIGURATION_VALUE)
+        Mockito.verify(delegate, times(1)).runtimeConfiguration
+    }
+
+    @Test
+    fun getAnnotationProcessorConfiguration() {
+        val annotationProcessorConfiguration = Mockito.mock(Configuration::class.java)
+        Mockito.`when`(delegate.annotationProcessorConfiguration)
+            .thenReturn(annotationProcessorConfiguration)
+        Truth.assertThat(proxy.annotationProcessorConfiguration)
+            .isEqualTo(annotationProcessorConfiguration)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.ANNOTATION_PROCESSOR_CONFIGURATION_VALUE)
+        Mockito.verify(delegate, times(1)).annotationProcessorConfiguration
+    }
+
 }
