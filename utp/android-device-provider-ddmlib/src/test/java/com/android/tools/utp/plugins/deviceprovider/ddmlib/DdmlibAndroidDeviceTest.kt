@@ -16,29 +16,37 @@
 
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
+import com.android.ddmlib.AvdData
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.MultiLineReceiver
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
 import com.google.common.truth.Truth.assertThat
+import com.google.common.util.concurrent.Futures
 import com.google.testing.platform.api.device.Device
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.junit.MockitoJUnit
 
 /**
  * Unit tests for [DdmlibAndroidDevice].
  */
 class DdmlibAndroidDeviceTest {
 
+    @get:Rule val mockitoJUnitRule = MockitoJUnit.rule()
+
     @Mock
     private lateinit var mockIDevice: IDevice
+    @Mock
+    private lateinit var mockAvdData: AvdData
 
     @Before
-    fun setup() {
-        initMocks(this)
+    fun setUpMocks() {
+        `when`(mockIDevice.avdData).thenReturn(Futures.immediateFuture(mockAvdData))
+        `when`(mockAvdData.name).thenReturn("mockAvdName")
     }
 
     @Test
@@ -52,15 +60,12 @@ class DdmlibAndroidDeviceTest {
 
     @Test
     fun virtualDevice() {
-        val emulatorName = "A good name"
         `when`(mockIDevice.isEmulator).thenReturn(true)
-        `when`(mockIDevice.avdName).thenReturn(emulatorName)
 
         val device = DdmlibAndroidDevice(mockIDevice)
 
         assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
-        assertThat(device.avdName).isEqualTo(emulatorName)
-        assertThat(device.properties.avdName).isEqualTo(emulatorName)
+        assertThat(device.properties.avdName).isEqualTo("mockAvdName")
     }
 
     @Test

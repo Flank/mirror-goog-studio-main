@@ -17,8 +17,11 @@
 package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
+import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.utils.immutableMapBuilder
+import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.model.v2.CustomSourceDirectory
@@ -291,19 +294,28 @@ class VariantSources internal constructor(
      * @return a list of folders.
      */
     val renderscriptSourceList: Collection<File>
-        get() = getSourceFiles(
-            Function { obj: SourceProvider -> obj.renderscriptDirectories }
-        )
+        get() = getSourceFiles{ obj: SourceProvider -> obj.renderscriptDirectories }
 
     val aidlSourceList: Collection<File>
-        get() = getSourceFiles(
-            Function { obj: SourceProvider -> obj.aidlDirectories }
-        )
+        get() = getSourceFiles { obj: SourceProvider -> obj.aidlDirectories }
+
 
     val jniSourceList: Collection<File>
-        get() = getSourceFiles(
-            Function { obj: SourceProvider -> obj.cDirectories }
-        )
+        get() = getSourceFiles{ obj: SourceProvider -> obj.cDirectories }
+
+    val resSourceList: List<Collection<DirectoryEntry>>
+        get() = getSourceList { sourceProvider -> sourceProvider.resDirectories }
+
+    fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<Collection<DirectoryEntry>> {
+        return sortedSourceProviders.map { sourceProvider ->
+            action(sourceProvider).map { directory ->
+                FileBasedDirectoryEntryImpl(
+                    sourceProvider.name,
+                    directory,
+                )
+            }
+        }
+    }
 
     /**
      * Returns a map af all customs source directories registered. Key is the source set name as

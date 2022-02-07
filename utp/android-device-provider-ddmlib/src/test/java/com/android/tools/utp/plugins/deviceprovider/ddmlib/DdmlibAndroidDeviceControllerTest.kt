@@ -16,6 +16,7 @@
 
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
+import com.android.ddmlib.AvdData
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.InstallException
 import com.android.ddmlib.MultiLineReceiver
@@ -24,6 +25,7 @@ import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
 import com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceController.DdmlibAndroidDeviceControllerErrorCode
 import com.google.common.truth.Truth.assertThat
+import com.google.common.util.concurrent.Futures
 import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.core.error.UtpException
 import com.google.testing.platform.proto.api.core.PathProto
@@ -60,6 +62,8 @@ class DdmlibAndroidDeviceControllerTest {
     @Mock
     private lateinit var mockDevice: IDevice
     @Mock
+    private lateinit var mockAvdData: AvdData
+    @Mock
     private lateinit var mockApkPackageNameResolver: ApkPackageNameResolver
 
     private lateinit var artifactNonAndroidApk: TestArtifactProto.Artifact
@@ -80,6 +84,8 @@ class DdmlibAndroidDeviceControllerTest {
 
     @Before
     fun setUp() {
+        `when`(mockDevice.avdData).thenReturn(Futures.immediateFuture(mockAvdData))
+        `when`(mockAvdData.name).thenReturn("mockAvdName")
         `when`(mockDevice.serialNumber).thenReturn("serial-1234")
         `when`(mockDevice.version).thenReturn(AndroidVersion(22))
         `when`(mockApkPackageNameResolver.getPackageNameFromApk(anyString()))

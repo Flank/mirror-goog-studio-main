@@ -103,6 +103,7 @@ sdk_jar_prefix_to_zip_location = {
     "prebuilts/r8/": "",
     "prebuilts/tools/common/m2/repository/": "external/",
     "../maven/repo/": "external/",
+    "../maven/repository/": "external/",
     "prebuilts/tools/common/": "external/",
     "tools/external/": "external/",
     "tools/base/": "",

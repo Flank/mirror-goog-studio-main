@@ -19,6 +19,7 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 fun checkNonProgressEvent(
     eventQueue: ArrayBlockingQueue<ByteArray>, block: (LayoutInspectorViewProtocol.Event) -> Unit
@@ -35,7 +36,7 @@ fun checkNextEventMatching(
     val startTime = System.currentTimeMillis()
     var found = false
     while (startTime + TimeUnit.SECONDS.toMillis(10) > System.currentTimeMillis()) {
-        val bytes = eventQueue.take()
+        val bytes = eventQueue.poll(10, TimeUnit.SECONDS) ?: throw TimeoutException()
         val event = LayoutInspectorViewProtocol.Event.parseFrom(bytes)
         if (!condition(event)) {
             // skip events that don't meet the condition

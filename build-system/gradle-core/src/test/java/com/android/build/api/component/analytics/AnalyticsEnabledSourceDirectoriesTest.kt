@@ -21,15 +21,8 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import groovy.lang.Closure
-import org.gradle.api.Task
 import org.gradle.api.file.Directory
-import org.gradle.api.file.FileTree
-import org.gradle.api.file.FileTreeElement
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.specs.Spec
-import org.gradle.api.tasks.TaskProvider
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
@@ -37,7 +30,6 @@ import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
-import java.io.File
 
 class AnalyticsEnabledSourceDirectoriesTest {
     @get:Rule
@@ -64,34 +56,5 @@ class AnalyticsEnabledSourceDirectoriesTest {
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).all
-    }
-
-    @Test
-    fun testAdd() {
-        abstract class CustomTask: Task {
-            abstract val output: Property<Directory>
-        }
-        @Suppress("UNCHECKED_CAST")
-        val taskProvider = Mockito.mock(TaskProvider::class.java) as TaskProvider<CustomTask>
-
-        proxy.add(taskProvider, CustomTask::output)
-
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_ADD_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .add(taskProvider, CustomTask::output)
-    }
-
-    @Test
-    fun testAddSrcDir() {
-        val file = Mockito.mock(File::class.java)
-        proxy.addSrcDir("/path/to/directory")
-
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.SOURCES_DIRECTORIES_SRC_DIR_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .addSrcDir("/path/to/directory")
     }
 }

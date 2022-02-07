@@ -354,4 +354,35 @@ class ExportedFlagDetectorTest : AbstractCheckTest() {
         """
         )
     }
+
+    fun testNonLaunchable() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="foo.bar2"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                    <uses-sdk
+                        android:minSdkVersion="23"
+                        android:targetSdkVersion="31" />
+                    <application>
+                        <activity
+                            android:name=".activities.JustSpeakPreferencesActivity"
+                            android:exported="false"
+                            android:label="@string/justspeak_preferences_title"
+                            android:launchMode="singleTop"
+                            android:theme="@style/Theme.GoogleMaterial3.DayNight.NoActionBar"
+                            android:taskAffinity="com.google.android.apps.accessibility.voiceaccess.SettingsAffinity" >
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.accessibilityservice.SERVICE_SETTINGS" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }

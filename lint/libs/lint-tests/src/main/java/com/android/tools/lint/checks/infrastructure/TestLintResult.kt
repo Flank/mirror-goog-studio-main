@@ -862,7 +862,7 @@ class TestLintResult internal constructor(
                 client.flags.isFullPath = true
             }
             val stats = LintStats.create(incidents, null as LintBaseline?)
-            reporter.write(stats, incidents)
+            reporter.write(stats, incidents, state.client.registry ?: client.driver.registry)
             val actual = normalizeOutput(Files.asCharSource(file, Charsets.UTF_8).read())
             val defaultState = states[defaultMode]!!
             val transformed = task.stripRoot(defaultState.rootDir, transformer.transform(actual))

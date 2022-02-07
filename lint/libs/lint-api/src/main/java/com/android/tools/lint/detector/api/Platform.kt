@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.detector.api
 
-import com.google.common.annotations.Beta
 import java.util.EnumSet
 
 /**
@@ -29,7 +28,6 @@ import java.util.EnumSet
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 enum class Platform {
     /**
      * The analysis applies only to Android sources. Issues with this

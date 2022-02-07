@@ -38,7 +38,8 @@ Prevent silent overwrite:
 =========================
 It is by design that Zipflinger throws an exception when attempting to overwrite an entry in an archive.
 By asking developer to aknowledge an overwrite by first deleting an entry, this mecanism has allowed to
-surface many bugs.
+surface many bugs. Note that adding a folder entry that is already in an archive does not result in an
+error. Instead the duplicate is ignored.
 
 ## ZipArchive
 ZipArchive is the interface to create/read/write an archive. Typically an user will provide the path

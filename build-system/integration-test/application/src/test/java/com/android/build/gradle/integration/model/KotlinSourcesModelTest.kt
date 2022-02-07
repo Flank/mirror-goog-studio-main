@@ -18,9 +18,6 @@ package com.android.build.gradle.integration.model
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
-import com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -45,8 +42,9 @@ class KotlinSourcesModelTest {
             }
         """.trimIndent())
 
-        val model: AndroidProject = project.model().fetchAndroidProjects().onlyModel
-        assertThat(model.defaultConfig.sourceProvider.kotlinDirectories)
+        val basicProject =
+            project.modelV2().fetchModels().container.singleProjectInfo.basicAndroidProject!!
+        assertThat(basicProject.mainSourceSet!!.sourceProvider.kotlinDirectories)
                 .containsExactly(
                         project.file("src/main/kotlinDir"),
                         project.file("src/main/java"),
@@ -69,8 +67,9 @@ class KotlinSourcesModelTest {
             }
         """.trimIndent())
 
-        val model: AndroidProject = project.model().fetchAndroidProjects().onlyModel
-        assertThat(model.defaultConfig.sourceProvider.kotlinDirectories)
+        val basicProject =
+            project.modelV2().fetchModels().container.singleProjectInfo.basicAndroidProject!!
+        assertThat(basicProject.mainSourceSet!!.sourceProvider.kotlinDirectories)
                 .containsExactly(
                         project.file("src/main/kotlinDir"),
                         project.file("src/main/java"),
@@ -103,16 +102,17 @@ class KotlinSourcesModelTest {
             """.trimIndent())
         }
 
-        val model: AndroidProject = project.model().fetchAndroidProjects().onlyModel
+        val basicProject =
+            project.modelV2().fetchModels().container.singleProjectInfo.basicAndroidProject!!
         val deviceTestsKotlinDirs =
-                model.defaultConfig.extraSourceProviders.single { it.artifactName==ARTIFACT_ANDROID_TEST }.sourceProvider.kotlinDirectories
+                basicProject.mainSourceSet!!.androidTestSourceProvider!!.kotlinDirectories
         assertThat(deviceTestsKotlinDirs)
                 .containsExactly(
                         project.file("src/androidTest/java"),
                         project.file("src/androidAndroidTest/kotlin"),
                 )
         val unitTestsKotlinDirs =
-                model.defaultConfig.extraSourceProviders.single { it.artifactName==ARTIFACT_UNIT_TEST }.sourceProvider.kotlinDirectories
+            basicProject.mainSourceSet!!.unitTestSourceProvider!!.kotlinDirectories
         assertThat(unitTestsKotlinDirs)
                 .containsExactly(
                         project.file("src/test/java"),
@@ -120,5 +120,4 @@ class KotlinSourcesModelTest {
                         project.file("src/androidTest/kotlin"),
                 )
     }
-
 }

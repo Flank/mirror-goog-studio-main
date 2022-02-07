@@ -23,7 +23,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
 import com.android.utils.SdkUtils
-import com.google.common.annotations.Beta
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
 import java.io.File
@@ -36,7 +35,6 @@ import java.io.Writer
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class TextReporter(
     client: LintCliClient,
     private val flags: LintCliFlags,
@@ -74,7 +72,8 @@ class TextReporter(
     @Throws(IOException::class)
     override fun write(
         stats: LintStats,
-        issues: List<Incident>
+        issues: List<Incident>,
+        registry: IssueRegistry
     ) {
         val abbreviate = !flags.isShowEverything
         val output = StringBuilder(issues.size * 200)

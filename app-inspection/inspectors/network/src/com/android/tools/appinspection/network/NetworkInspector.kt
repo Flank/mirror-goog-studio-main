@@ -43,6 +43,13 @@ import java.util.List
 
 private const val POLL_INTERVAL_MS = 500L
 private const val MULTIPLIER_FACTOR = 1000 / POLL_INTERVAL_MS
+private val INTERCEPT_COMMAND_RESPONSE =
+    NetworkInspectorProtocol.Response.newBuilder().apply {
+        interceptResponse =
+            NetworkInspectorProtocol.InterceptResponse.getDefaultInstance()
+    }
+        .build()
+        .toByteArray()
 
 class NetworkInspector(
     connection: Connection,
@@ -83,21 +90,39 @@ class NetworkInspector(
                 }
             }
             command.hasInterceptCommand() -> {
-                interceptionService.addRule(
-                    BodyInterceptionRule(
-                        UrlInterceptionCriteria(command.interceptCommand.url),
-                        command.interceptCommand.responseBody.toByteArray()
-                    )
-                )
-                System.err.println("INSPECTOR: Added intercept rule.")
-                callback.reply(
-                    NetworkInspectorProtocol.Response.newBuilder().apply {
-                        interceptResponse =
-                            NetworkInspectorProtocol.InterceptResponse.getDefaultInstance()
+                val interceptCommand = command.interceptCommand
+                when {
+                    interceptCommand.hasInterceptRuleAdded() -> {
+                        val interceptRuleAdded = interceptCommand.interceptRuleAdded
+                        val rule = interceptRuleAdded.rule
+                        interceptionService.addRule(
+                            interceptRuleAdded.ruleId,
+                            BodyInterceptionRule(
+                                interceptCommand.interceptRuleAdded.ruleId,
+                                UrlInterceptionCriteria(rule.url),
+                                rule.responseBody.toByteArray()
+                            )
+                        )
+                        callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
-                        .build()
-                        .toByteArray()
-                )
+                    interceptCommand.hasInterceptRuleUpdated() -> {
+                        val interceptRuleUpdated = interceptCommand.interceptRuleAdded
+                        val rule = interceptRuleUpdated.rule
+                        interceptionService.addRule(
+                            interceptRuleUpdated.ruleId,
+                            BodyInterceptionRule(
+                                interceptCommand.interceptRuleAdded.ruleId,
+                                UrlInterceptionCriteria(rule.url),
+                                rule.responseBody.toByteArray()
+                            )
+                        )
+                        callback.reply(INTERCEPT_COMMAND_RESPONSE)
+                    }
+                    interceptCommand.hasInterceptRuleRemoved() -> {
+                        interceptionService.removeRule(interceptCommand.interceptRuleRemoved.ruleId)
+                        callback.reply(INTERCEPT_COMMAND_RESPONSE)
+                    }
+                }
             }
         }
     }

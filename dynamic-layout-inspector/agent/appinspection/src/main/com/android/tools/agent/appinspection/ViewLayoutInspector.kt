@@ -16,14 +16,8 @@
 
 package com.android.tools.agent.appinspection
 
-import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.view.View
 import android.view.WindowManager
-import android.view.inspector.WindowInspector
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.inspection.Connection
@@ -43,7 +37,6 @@ import com.android.tools.agent.appinspection.proto.createPropertyGroup
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
-import com.android.tools.agent.shared.FoldObserver
 import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BitmapType
 import kotlinx.coroutines.CompletableDeferred
@@ -56,10 +49,7 @@ import kotlinx.coroutines.launch
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldOrientation
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.SpecialAngles.*
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesCommand
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.LayoutEvent
@@ -85,7 +75,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
@@ -102,34 +91,8 @@ class ViewLayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_
 class ViewLayoutInspector(connection: Connection, private val environment: InspectorEnvironment) :
     Inspector(connection) {
 
-    @VisibleForTesting
-    var foldObserver: FoldObserver? = null
-
-    @VisibleForTesting
+    @property:VisibleForTesting
     var basicExecutorFactory = { body: (Runnable) -> Unit -> Executor { body(it) } }
-
-    // During setup fold events can be triggered by both the angle sensor and the androidx.window
-    // library. We want to send exactly one event during setup, so track whether that's happened.
-    private var sentInitialFoldEvent = false
-
-    // If we've sent fold information and then the fold state later becomes null, we need to
-    // send an event to studio saying we've gone into non-folding mode (e.g. the device is
-    // closed).
-    private var isFoldActive = false
-
-    init {
-        try {
-            // Since FoldObserverImpl has to be built without jarjar so as to interact with the
-            // app's androidx.coroutines objects, it can't be a declared dependency of this,
-            // and so has to be invoked through reflection.
-            val foldObserverClass =
-                Class.forName("com.android.tools.agent.nojarjar.FoldObserverImpl")
-            this.foldObserver = foldObserverClass?.getConstructor(Any::class.java)
-                ?.newInstance(::sendFoldStateEvent) as FoldObserver?
-        } catch (e: Exception) {
-            // couldn't instantiate, probably because library isn't found.
-        }
-    }
 
     private var checkpoint: ProgressCheckpoint = ProgressCheckpoint.NOT_STARTED
         set(value) {
@@ -175,204 +138,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         val scale: Float = 1.0f
     )
 
-    /**
-     * A class which provides [checkRoots] for checking to see if the roots view IDs have changed
-     * since a previous check. Any time roots or added or removed, this class will generate and
-     * send a [WindowRootsEvent].
-     *
-     * While the framework informs us about most screen changes, sometimes a dialog can close
-     * without us being informed, so [start] is provided to spin up a background thread that checks
-     * occasionally. So even though [checkRoots] can be called directly, we still have a backup to
-     * handle updates that the system doesn't tell us about.
-     */
-    private inner class RootsDetector {
-        private var quit = AtomicBoolean(false)
-        private var checkRootsThread: Thread? = null
-
-        /**
-         * A snapshot of the current list of view root IDs.
-         *
-         * We'll occasionally check against these against the current list of roots, generating an
-         * event if they've ever changed.
-         */
-        var lastRootIds = emptySet<Long>()
-
-        /**
-         * Clear the state of this detector.
-         *
-         * After calling this function, it should be equivalent to this class after it was first
-         * instantiated.
-         */
-        fun reset() {
-            stop()
-            lastRootIds = emptySet()
-        }
-
-        /**
-         * Start running a thread which will periodically call [checkRoots].
-         *
-         * If the thread is still running from a previous call to [start], it will be stopped,
-         * state cleared, and restarted. There is no need to call [reset] yourself if calling this
-         * method, in other words.
-         */
-        fun start() {
-            reset()
-
-            checkRootsThread = ThreadUtils.newThread {
-                while (!quit.get()) {
-                    checkRoots()
-                    Thread.sleep(200)
-                }
-            }.also {
-                it.start()
-            }
-        }
-
-        /**
-         * Stop the thread if started by [start]. This method blocks until the thread has finished.
-         */
-        fun stop() {
-            checkRootsThread?.let { thread ->
-                quit.set(true)
-                thread.join()
-                quit.set(false)
-                checkRootsThread = null
-            }
-        }
-
-        /**
-         * This method checks to see if any views were added or removed since the last time it was
-         * called.
-         *
-         * If anything did change, this method will sends a [WindowRootsEvent] to the host to inform
-         * them. It will also stop any stale roots from capturing and, depending on
-         * [InspectorState.fetchContinuously], may start capturing new roots.
-         */
-        @Synchronized
-        fun checkRoots() {
-            val currRoots = getRootViewsOnMainThread()
-            if (quit.get()) {
-                // We're quitting and cancelled the roots request.
-                return
-            }
-            currRoots.values.firstOrNull()?.context?.let { initializeSensors(it) }
-
-            val currRootIds = currRoots.keys
-            if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
-                val removed = lastRootIds.filter { !currRootIds.contains(it) }
-                val added = currRootIds.filter { !lastRootIds.contains(it) }
-                added.mapNotNull { currRoots[it] }
-                    .forEach { foldObserver?.startObservingFoldState(it) }
-                removed.mapNotNull { currRoots[it] }
-                    .forEach { foldObserver?.stopObservingFoldState(it) }
-                lastRootIds = currRootIds
-                checkpoint = ProgressCheckpoint.ROOTS_EVENT_SENT
-                connection.sendEvent {
-                    rootsEvent = WindowRootsEvent.newBuilder().apply {
-                        addAllIds(currRootIds)
-                    }.build()
-                }
-
-                synchronized(stateLock) {
-                    for (toRemove in removed) {
-                        state.contextMap.remove(toRemove)?.shutdown()
-                    }
-                    if (state.fetchContinuously) {
-                        if (added.isNotEmpty()) {
-                            // The first time we call this method, `lastRootIds` gets initialized
-                            // with views already being captured, so we don't need to start
-                            // capturing them again.
-                            val actuallyAdded = added.toMutableList().apply {
-                                removeAll { id -> state.contextMap.containsKey(id) }
-                            }
-                            if (actuallyAdded.isNotEmpty()) {
-                                ThreadUtils.runOnMainThread {
-                                    for (toAdd in added) {
-                                        try {
-                                            startCapturing(currRoots.getValue(toAdd))
-                                        }
-                                        catch (t: Throwable) {
-                                            connection.sendEvent {
-                                                errorEvent = ErrorEvent.newBuilder().apply {
-                                                    message = t.stackTraceToString()
-                                                }.build()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else if (removed.isNotEmpty()) {
-                            ThreadUtils.runOnMainThread {
-                                // When a window goes away, we expect remaining views to send a
-                                // signal causing the client to refresh, but this doesn't always
-                                // happen, so to be safe, we force it ourselves.
-                                currRoots.values.forEach { view -> view.invalidate() }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private fun getRootViewsOnMainThread(): Map<Long, View> {
-            while (!quit.get()) {
-                try {
-                    return ThreadUtils.runOnMainThread {
-                        getRootViews().associateBy { it.uniqueDrawingId }
-                    }.get(100, TimeUnit.MILLISECONDS)
-                } catch (e: TimeoutException) {
-                    // Ignore and try again.
-                }
-            }
-            // We'll only get here if we've already quit
-            return mapOf()
-        }
-    }
-
-    private fun initializeSensors(context: Context) {
-        if (!sensorsInitialized.compareAndSet(false, true)) {
-            return
-        }
-
-        val sensorManager = context.getSystemService(SensorManager::class.java)
-        sensorManager.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE)?.let { hingeAngleSensor ->
-            sensorManager.registerListener(object : SensorEventListener {
-                override fun onSensorChanged(event: SensorEvent) {
-                    currentHingeAngle = event.values[0].toInt()
-                    sendFoldStateEvent()
-                }
-
-                override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
-            }, hingeAngleSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        }
-    }
-
-    private fun sendFoldStateEvent() {
-        if ((!state.fetchContinuously && sentInitialFoldEvent) ||
-            (!isFoldActive && foldObserver?.foldState == null)) {
-            return
-        }
-        sentInitialFoldEvent = true
-        isFoldActive = foldObserver?.foldState != null
-        sendFoldStateEventNow()
-    }
-
-    private fun sendFoldStateEventNow() {
-        val observer = foldObserver ?: return
-        val foldState = observer.foldState
-        if (currentHingeAngle == null && foldState == null) {
-            return
-        }
-        connection.sendEvent {
-            foldEventBuilder.apply {
-                angle = currentHingeAngle ?: NO_FOLD_ANGLE_VALUE
-                foldState?.let { this.foldState = it }
-                this.orientation = observer.orientation ?: FoldOrientation.NONE
-            }
-        }
-    }
-
     private class SnapshotRequest {
         enum class State { NEW, PROCESSING }
         val result = CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>()
@@ -411,12 +176,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     @GuardedBy("stateLock")
     private val state = InspectorState()
 
-    private val rootsDetector = RootsDetector()
+    private val foldSupport = createFoldSupport(connection, { state.fetchContinuously })
+        get() = foldSupportOverrideForTests ?: field
+
+    @property:VisibleForTesting
+    var foldSupportOverrideForTests: FoldSupport? = null
+
+    private val rootsDetector =
+        RootsDetector(connection, ::onRootsChanged) { checkpoint = it }
 
     private var previousConfig = Configuration.getDefaultInstance()
-
-    private var sensorsInitialized = AtomicBoolean(false)
-    private var currentHingeAngle: Int? = null
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
@@ -444,9 +213,59 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     override fun onDispose() {
         forceStopAllCaptures()
-        foldObserver?.shutdown()
+        foldSupport?.shutdown()
         scope.cancel("ViewLayoutInspector has been disposed")
         SynchronousPixelCopy.stopHandler()
+    }
+
+    /**
+     * Stop any stale roots from capturing and, depending on [InspectorState.fetchContinuously],
+     * may start capturing new roots.
+     */
+    private fun onRootsChanged(added: List<Long>, removed: List<Long>, roots: Map<Long, View>) {
+        synchronized(stateLock) {
+            for (toRemove in removed) {
+                state.contextMap.remove(toRemove)?.shutdown()
+            }
+            added.mapNotNull { roots[it] }.forEach { foldSupport?.start(it) }
+            removed.mapNotNull { roots[it] }.forEach { foldSupport?.stop(it) }
+
+            if (state.fetchContinuously) {
+                if (added.isNotEmpty()) {
+                    // The first time we call this method, `lastRootIds` gets initialized
+                    // with views already being captured, so we don't need to start
+                    // capturing them again.
+                    val actuallyAdded = added.toMutableList().apply {
+                        removeAll { id -> state.contextMap.containsKey(id) }
+                    }
+                    if (actuallyAdded.isNotEmpty()) {
+                        ThreadUtils.runOnMainThread {
+                            for (toAdd in added) {
+                                try {
+                                    startCapturing(roots.getValue(toAdd))
+                                } catch (t: Throwable) {
+                                    connection.sendEvent {
+                                        errorEvent =
+                                            LayoutInspectorViewProtocol.ErrorEvent.newBuilder()
+                                                .apply {
+                                                    message = t.stackTraceToString()
+                                                }.build()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (removed.isNotEmpty()) {
+                    ThreadUtils.runOnMainThread {
+                        // When a window goes away, we expect remaining views to send a
+                        // signal causing the client to refresh, but this doesn't always
+                        // happen, so to be safe, we force it ourselves.
+                        roots.values.forEach { view -> view.invalidate() }
+                    }
+                }
+            }
+        }
     }
 
     private fun forceStopAllCaptures() {
@@ -583,7 +402,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             sendAllPropertiesEvent(root, snapshotResponse)
 
             // Send the updated fold state, in case we haven't been sending it continuously.
-            sendFoldStateEventNow()
+            foldSupport?.sendFoldStateEventNow()
         }
         snapshotResponse?.let { snapshotRequest?.result?.complete(it.build()) }
         return
@@ -599,7 +418,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         // properties, so that the user can continue to explore all values in the UI and
         // they will match exactly the layout at this moment in time.
 
-        val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
+        val allViews = ThreadUtils.runOnMainThread {
+            root.flatten().toList()
+        }.get(10, TimeUnit.SECONDS) ?: throw TimeoutException()
         val stringTable = StringTable()
         val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
         val properties = PropertiesEvent.newBuilder().apply {
@@ -735,9 +556,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
         try {
             ThreadUtils.runOnMainThread {
-                for (root in getRootViews()) {
+                val rootViews = getRootViews()
+                for (root in rootViews) {
                     startCapturing(root)
                 }
+                foldSupport?.initialize(rootViews.first().context)
             }.get()
         }
         catch (exception: ExecutionException) {
@@ -854,22 +677,13 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 }
 
-private fun getRootViews(): List<View> {
-    ThreadUtils.assertOnMainThread()
-
-    val views = WindowInspector.getGlobalWindowViews()
-    return views
-        .filter { view -> view.visibility == View.VISIBLE && view.isAttachedToWindow }
-        .sortedBy { view -> view.z }
-}
-
 private fun Inspector.CommandCallback.reply(initResponse: Response.Builder.() -> Unit) {
     val response = Response.newBuilder()
     response.initResponse()
     reply(response.build().toByteArray())
 }
 
-private fun Connection.sendEvent(init: Event.Builder.() -> Unit) {
+fun Connection.sendEvent(init: Event.Builder.() -> Unit) {
     sendEvent(
         Event.newBuilder()
             .apply { init() }

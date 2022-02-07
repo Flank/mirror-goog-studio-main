@@ -58,6 +58,12 @@ enum class PluginType(
         useNewDsl = false,
         last = true
     ),
+    KOTLIN_MPP(
+        id = "org.jetbrains.kotlin.multiplatform",
+        oldId = "kotlin-multiplatform",
+        isKotlin = true,
+        last = true
+    ),
     ANDROID_APP(
         id = "com.android.application",
         isAndroid = true,
@@ -81,7 +87,10 @@ enum class PluginType(
     JAVA_TEST_FIXTURES(
         id = "java-test-fixtures",
         useNewDsl = true
-    )
+    ),
+    MAVEN_PUBLISH(
+        id= "maven-publish",
+    ),
 }
 
 internal fun Iterable<PluginType>.containsAndroid() = any { it.isAndroid }

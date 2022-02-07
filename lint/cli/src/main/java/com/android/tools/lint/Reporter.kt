@@ -100,11 +100,11 @@ import com.android.tools.lint.checks.WatchFaceEditorDetector
 import com.android.tools.lint.checks.WearStandaloneAppDetector
 import com.android.tools.lint.checks.WrongCallDetector
 import com.android.tools.lint.checks.WrongCaseDetector
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.utils.SdkUtils
-import com.google.common.annotations.Beta
 import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
@@ -118,7 +118,6 @@ import java.net.URLEncoder
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class Reporter protected constructor(
     @JvmField
     protected val client: LintCliClient,
@@ -152,12 +151,14 @@ abstract class Reporter protected constructor(
      *
      * @param stats the vital statistics for the lint report
      * @param incidents the incidents to be reported @throws IOException
-     *     if an error occurs
+     *     if an error occurs @param registry the issue
+     *     registry for all issues used during analysis
      */
     @Throws(IOException::class)
     abstract fun write(
         stats: LintStats,
-        incidents: List<Incident>
+        incidents: List<Incident>,
+        registry: IssueRegistry
     )
 
     /**

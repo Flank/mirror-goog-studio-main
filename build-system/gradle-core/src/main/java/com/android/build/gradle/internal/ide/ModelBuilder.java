@@ -314,7 +314,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 project.getGradle().getSharedServices(), ProjectOptionService.class)
                         .get();
         ProjectOptions projectOptions = optionService.getProjectOptions();
-        Integer modelLevelInt = SyncOptions.buildModelOnlyVersion(projectOptions, project);
+        Integer modelLevelInt = SyncOptions.buildModelOnlyVersion(projectOptions);
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;
         }

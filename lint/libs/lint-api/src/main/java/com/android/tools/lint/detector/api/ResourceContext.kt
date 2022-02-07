@@ -19,7 +19,6 @@ package com.android.tools.lint.detector.api
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.client.api.LintDriver
-import com.google.common.annotations.Beta
 import java.io.File
 
 /**
@@ -41,7 +40,6 @@ import java.io.File
  *     not a public or final API; if you rely on this be prepared
  *     to adjust your code for the next tools release.**
  */
-@Beta
 open class ResourceContext(
     driver: LintDriver,
     project: Project,

@@ -17,7 +17,6 @@
 package com.android.tools.lint.detector.api
 
 import com.android.tools.lint.model.LintModelSeverity
-import com.google.common.annotations.Beta
 import java.util.Locale
 
 /**
@@ -26,7 +25,6 @@ import java.util.Locale
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 enum class Severity constructor(
     /**
      * A description of this severity suitable for display to the user.

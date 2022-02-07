@@ -19,4 +19,5 @@ package com.android.build.api.variant.impl
 enum class SourceType(name: String) {
 
     JAVA("java"),
+    RES("res"),
 }

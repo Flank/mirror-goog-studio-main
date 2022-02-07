@@ -63,6 +63,8 @@ class LintDriverCrashTest : AbstractCheckTest() {
             .allowSystemErrors(true)
             .allowExceptions(true)
             .issues(CrashingDetector.CRASHING_ISSUE)
+            // stack traces will differ between the test modes
+            .testModes(TestMode.DEFAULT)
             .run()
             // Checking for manual substrings instead of doing an actual equals check
             // since the stacktrace contains a number of specific line numbers from

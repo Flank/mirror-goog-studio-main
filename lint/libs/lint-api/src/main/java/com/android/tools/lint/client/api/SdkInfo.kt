@@ -16,15 +16,12 @@
 
 package com.android.tools.lint.client.api
 
-import com.google.common.annotations.Beta
-
 /**
  * Information about SDKs
  *
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class SdkInfo {
     /**
      * Returns true if the given child view is the same class or a sub

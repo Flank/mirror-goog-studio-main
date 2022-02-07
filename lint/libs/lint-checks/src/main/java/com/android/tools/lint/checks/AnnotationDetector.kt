@@ -24,8 +24,6 @@ import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.support.AndroidxName
 import com.android.tools.lint.checks.ApiDetector.Companion.REQUIRES_API_ANNOTATION
-import com.android.tools.lint.checks.ApiDetector.Companion.getApiLevel
-import com.android.tools.lint.checks.ApiDetector.Companion.getTargetApi
 import com.android.tools.lint.checks.EmptySuperDetector.Companion.EMPTY_SUPER_ANNOTATION
 import com.android.tools.lint.checks.OpenForTestingDetector.Companion.OPEN_FOR_TESTING_ANNOTATION
 import com.android.tools.lint.checks.ReturnThisDetector.Companion.RETURN_THIS_ANNOTATION
@@ -420,20 +418,6 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                 val fix = LintFix.create().name(name).replace().end().with("(TODO)").select("TODO").build()
                 val location = context.getLocation(annotation)
                 context.report(ANNOTATION_USAGE, annotation, location, "Must specify an API level", fix)
-            } else {
-                val apiLevel = getApiLevel(context, annotation, REQUIRES_API_ANNOTATION.newName())
-                val minSdk = context.project.minSdk
-                val targetApi = getTargetApi(annotation.uastParent?.uastParent)
-                val max = max(minSdk, targetApi)
-                if (apiLevel <= max) {
-                    val message = "The API level is already known to be at least $max ${
-                    if (targetApi > minSdk) "here from outer annotations" else "from the `minSdkVersion`"
-                    }"
-                    val fix = LintFix.create().name("Delete annotation").replace().all().with("").build()
-                    Incident(context, ANNOTATION_USAGE)
-                        .at(annotation).message(message).fix(fix).overrideSeverity(Severity.WARNING)
-                        .report()
-                }
             }
         }
 

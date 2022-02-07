@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.gradle.internal.services.BaseServices
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty

@@ -178,26 +178,26 @@ filegroup(
 
 filegroup(
     name = "platforms/latest_build_only",
-    srcs = [":platforms/android-31_build_only"],
+    srcs = [":platforms/android-32_build_only"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-31"],
+    srcs = [":platforms/android-32"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-31"],  # Currently there isn't a preview available
+    srcs = [":platforms/android-32"],  # Currently there isn't a preview available
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest/framework.aidl",
     srcs = sdk_glob(
-        include = ["platforms/android-31/framework.aidl"],
+        include = ["platforms/android-32/framework.aidl"],
     ),
     visibility = ["//visibility:public"],
 )
@@ -206,7 +206,7 @@ filegroup(
 # Note: these stubbed classes will not be available at runtime.
 java_import(
     name = "platforms/latest_jar",
-    jars = sdk_path(["platforms/android-31/android.jar"]),
+    jars = sdk_path(["platforms/android-32/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/adt/idea/emulator/screen-sharing-agent:__pkg__",
@@ -223,7 +223,7 @@ java_import(
 # Note: these are stubbed classes.
 java_import(
     name = "platforms/latest_runtime_jar",
-    jars = sdk_path(["platforms/android-31/android.jar"]),
+    jars = sdk_path(["platforms/android-32/android.jar"]),
     testonly = 1,
     visibility = [
         "//tools/base/dynamic-layout-inspector/agent:__subpackages__",

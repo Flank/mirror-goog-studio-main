@@ -35,19 +35,19 @@ data class NetworkResponse(
 interface InterceptionRuleService {
 
     fun interceptResponse(connection: NetworkConnection, response: NetworkResponse): NetworkResponse
-    fun addRule(rule: InterceptionRule)
-    fun removeRule(rule: InterceptionRule)
+    fun addRule(ruleId: Int, rule: InterceptionRule)
+    fun removeRule(ruleId: Int)
 }
 
 class InterceptionRuleServiceImpl : InterceptionRuleService {
 
-    private val rules = mutableListOf<InterceptionRule>()
+    private val rules = mutableMapOf<Int, InterceptionRule>()
 
     override fun interceptResponse(
         connection: NetworkConnection,
         response: NetworkResponse
     ): NetworkResponse {
-        return rules.fold(response) { intermediateResponse, rule ->
+        return rules.values.fold(response) { intermediateResponse, rule ->
             rule.transform(
                 connection,
                 intermediateResponse
@@ -55,11 +55,11 @@ class InterceptionRuleServiceImpl : InterceptionRuleService {
         }
     }
 
-    override fun addRule(rule: InterceptionRule) {
-        rules.add(rule)
+    override fun addRule(ruleId: Int, rule: InterceptionRule) {
+        rules[ruleId] = rule
     }
 
-    override fun removeRule(rule: InterceptionRule) {
-        rules.remove(rule)
+    override fun removeRule(ruleId: Int) {
+        rules.remove(ruleId)
     }
 }

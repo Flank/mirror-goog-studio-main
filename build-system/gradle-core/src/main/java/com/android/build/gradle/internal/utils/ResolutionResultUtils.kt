@@ -40,32 +40,48 @@ fun ResolutionResult.getModuleComponents(
 }
 
 /**
- * Returns a [ComponentPath] starting from the root of a [ResolutionResult] to this component.
+ * Returns a [ComponentPath] starting from the root of this [ResolutionResult] to the given
+ * component.
  *
- * Note that there can be multiple paths from root to the component, and this method returns only
- * the first path (as returned by Gradle). In practice, this path is usually the shortest path, but
- * there is no guarantee from the Gradle API.
+ * Note that there can be multiple paths, and this method returns only one of the paths. The result
+ * is stable across invocations.
  */
-fun ResolvedComponentResult.getPathFromRoot(): ComponentPath {
-    val components = mutableListOf(this)
-    var current = this
-    while (current.dependents.isNotEmpty()) {
-        // Select only the first parent of this component
-        val parent = current.dependents.first().from
-        components.add(parent)
-        if (parent == current) {
-            // It's possible that parent == current. For example, if configuration
-            // `debugAndroidTestRuntimeClasspath` of `project :foo` has a dependency on
-            // `project :foo`, then parent == current == `project: foo`.
-            // In that case, parent should be root, and we can stop here.
-            break
+fun ResolutionResult.getPathToComponent(component: ResolvedComponentResult): ComponentPath {
+    // Note that there may be cyclic dependencies (see bug 184406667), so we'll need to perform a
+    // graph search. Below we'll use standard Depth-First Search (Breadth-First Search would be
+    // slower in this case).
+    // Also, we'll find a path from component to root as it's faster, and we'll reconstruct the path
+    // from root to component after that.
+    var foundPathToRoot: List<ResolvedComponentResult>? = null
+    fun findPathToRoot(
+        nodeToVisit: ResolvedComponentResult,
+        path: MutableList<ResolvedComponentResult>,
+        visitedNodes: MutableSet<ResolvedComponentResult>
+    ) {
+        if (nodeToVisit in visitedNodes) return
+        path.add(nodeToVisit)
+        visitedNodes.add(nodeToVisit)
+
+        // We need to compare by ResolvedComponentResult.id because Gradle may create different
+        // objects with the same id (e.g., each invocation of ResolutionResult.allComponents returns
+        // a set of new objects, but their ids are the same across invocations).
+        if (nodeToVisit.id == root.id) {
+            foundPathToRoot = path.toList()
         } else {
-            current = parent
+            nodeToVisit.dependents.forEach {
+                findPathToRoot(it.from, path, visitedNodes)
+                if (foundPathToRoot != null) return@forEach
+            }
         }
+        path.removeLast()
     }
-    // Reverse the list as we want the root to be the first element
-    components.reverse()
-    return ComponentPath(components)
+
+    findPathToRoot(component, mutableListOf(), mutableSetOf())
+
+    checkNotNull(foundPathToRoot) {
+        "Unable to find a path from root (${root.id.displayName}) to ${component.id.displayName}"
+    }
+    return ComponentPath(foundPathToRoot!!.reversed())
 }
 
 /**

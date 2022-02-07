@@ -16,8 +16,10 @@
 
 package com.android.draw9patch.ui;
 
-import com.android.draw9patch.graphics.GraphicsUtilities;
+import static javax.swing.BorderFactory.createEmptyBorder;
+import static javax.swing.BorderFactory.createMatteBorder;
 
+import com.android.draw9patch.graphics.GraphicsUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -34,7 +36,7 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-
+import java.util.function.Supplier;
 import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -44,7 +46,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.event.ChangeEvent;
@@ -53,6 +56,10 @@ import javax.swing.event.ChangeListener;
 public class ImageEditorPanel extends JPanel {
     private static final String EXTENSION_9PATCH = ".9.png";
     private static final Color HELP_COLOR = new Color(0xffffe1);
+    private static final Color HELP_BORDER_COLOR = new Color(0xc0c0c0);
+
+    private final Supplier<Color> helpPanelBackground;
+    private final Supplier<Color> helpPanelBorderColor;
 
     private String name;
     private BufferedImage image;
@@ -66,7 +73,19 @@ public class ImageEditorPanel extends JPanel {
     private TexturePaint texture;
     private JSlider zoomSlider;
 
+
     public ImageEditorPanel(MainFrame mainFrame, BufferedImage image, String name) {
+        this(mainFrame, image, name, () -> HELP_COLOR, () -> HELP_BORDER_COLOR);
+    }
+
+    public ImageEditorPanel(
+            MainFrame mainFrame,
+            BufferedImage image,
+            String name,
+            Supplier<Color> helpPanelBackgroundColor,
+            Supplier<Color> helpPanelBorderColor) {
+        helpPanelBackground = helpPanelBackgroundColor;
+        this.helpPanelBorderColor = helpPanelBorderColor;
         this.image = image;
         this.name = name;
 
@@ -157,19 +176,26 @@ public class ImageEditorPanel extends JPanel {
         add(panel);
     }
 
-    private static Component createHelpPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(new EmptyBorder(0, 6, 0, 6));
-        panel.setBackground(HELP_COLOR);
-        JLabel label = new JLabel("Press Control/Shift while dragging on the border to modify layout bounds.");
-        label.putClientProperty("JComponent.sizeVariant", "small");
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        if (image != null) {
+            removeAll();
+            buildImageViewer();
+            buildStatusPanel();
+        }
+    }
 
-        // Labels are not opaque by default, as a result, if there is not enough space,
-        // the label will be painted over the button we add below. However, we still want the same
-        // background as the panel, so we explicitly set that background as well
-        // https://code.google.com/p/android/issues/detail?id=62576
-        label.setOpaque(true);
-        label.setBackground(HELP_COLOR);
+    private Component createHelpPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        Border border =
+                new CompoundBorder(
+                        createMatteBorder(0, 0, 1, 0, helpPanelBorderColor.get()),
+                        createEmptyBorder(3, 6, 3, 6));
+        panel.setBorder(border);
+        panel.setBackground(helpPanelBackground.get());
+
+        JLabel label = new JLabel("Press Control/Shift while dragging on the border to modify layout bounds.");
         panel.add(label, BorderLayout.WEST);
 
         return panel;

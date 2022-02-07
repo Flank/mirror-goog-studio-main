@@ -42,6 +42,7 @@ import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.JarFileIssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
@@ -75,7 +76,6 @@ import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.utils.CharSequences
 import com.android.utils.StdLogger
-import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Splitter
 import com.google.common.collect.Sets
@@ -120,7 +120,6 @@ import kotlin.math.max
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class LintCliClient : LintClient {
     constructor(clientName: String) : super(clientName) {
         flags = LintCliFlags()
@@ -353,7 +352,7 @@ open class LintCliClient : LintClient {
                     XmlFileType.BASELINE
                 )
                 reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
-                reporter.write(stats, definiteIncidents)
+                reporter.write(stats, definiteIncidents, driver.registry)
                 // With --write-reference-baseline we continue even if the baseline was written
                 if (outputBaselineFile == null) {
                     System.err.println(getBaselineCreationMessage(file))
@@ -384,7 +383,7 @@ open class LintCliClient : LintClient {
             println("Lint found $count. First failure:")
             val reporter = Reporter.createTextReporter(this, LintCliFlags(), null, writer, false)
             reporter.setWriteStats(false)
-            reporter.write(stats, listOf(definiteIncidents.first { it.severity.isError }))
+            reporter.write(stats, listOf(definiteIncidents.first { it.severity.isError }), driver.registry)
         }
 
         return if (flags.isSetExitCode) if (hasErrors) ERRNO_ERRORS else ERRNO_SUCCESS else ERRNO_SUCCESS
@@ -399,7 +398,7 @@ open class LintCliClient : LintClient {
      */
     protected open fun writeReports(stats: LintStats) {
         for (reporter in flags.reporters) {
-            reporter.write(stats, definiteIncidents)
+            reporter.write(stats, definiteIncidents, driver.registry)
         }
     }
 
@@ -1205,6 +1204,12 @@ open class LintCliClient : LintClient {
     ) {
         if (IssueRegistry.isDeletedIssueId(id)) {
             // Recently deleted, but avoid complaining about leftover configuration
+            return
+        }
+        if (JarFileIssueRegistry.isRejectedIssueId(id)) {
+            // Issue was not loaded (perhaps incompatible with this version of lint);
+            // we're already complaining about that, so don't also complain that
+            // it's an "unknown" issue
             return
         }
         val message = Configuration.getUnknownIssueIdErrorMessage(id, registry)

@@ -1,12 +1,11 @@
-# Options applied to all Bazel invocations in the workspace.
-# This file is imported by the os-specific rc files.
-# Those are included by the bazel wrapper scripts (bazel and bazel.cmd)
+import %workspace%/tools/base/bazel/platform_specific.bazelrc
+
+# Enables the use of native symlinks in worker sandboxes,
+# required for dynamic scheduling. This has no effect on non-windows platforms.
+startup --windows_enable_symlinks
 
 # Platform specific config automatically applies --config=(linux|macos|windows)
 common --enable_platform_specific_config
-common:linux --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/linux/ndk/20.1.5948944
-common:macos --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/darwin/ndk/20.1.5948944
-common:windows --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/windows/ndk/20.1.5948944
 
 # Remote Build Execution requires a strong hash function, such as SHA256.
 startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
@@ -154,6 +153,11 @@ build:remote --remote_timeout=3600
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
 build:remote --show_timestamps
+# Depending on how many machines are in the remote execution instance, setting
+# this higher can make builds faster by allowing more jobs to run in parallel.
+# Setting it too high can result in jobs that timeout, however, while waiting
+# for a remote machine to execute them.
+build:remote --jobs=250
 
 ## Enables dynamic scheduling. This will run some actions locally
 ## as well as remotely, choosing whichever finishes first.
@@ -175,8 +179,6 @@ build:dynamic --strategy=zipmerger=dynamic
 build:dynamic --strategy=chkplugin=dynamic
 build:dynamic --strategy=stamper=dynamic
 build:dynamic --strategy=PythonZipper=dynamic
-# We want to use persistent workers, if supported (Javac, kotlinc, formc)
-build:dynamic --dynamic_local_strategy=worker,sandboxed,local
 # Increase worker visibility in case there are issues.
 build:dynamic --worker_verbose
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,

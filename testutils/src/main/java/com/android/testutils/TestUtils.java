@@ -51,7 +51,7 @@ public class TestUtils {
      * <p>This version needs to be present in prebuilts for tests to pass (see
      * tools/base/bazel/README.md).
      */
-    public static final String KOTLIN_VERSION_FOR_TESTS = "1.5.30";
+    public static final String KOTLIN_VERSION_FOR_TESTS = "1.6.10";
 
     /** Default timeout for the {@link #eventually(Runnable)} check. */
     private static final Duration DEFAULT_EVENTUALLY_TIMEOUT = Duration.ofSeconds(10);
@@ -352,7 +352,7 @@ public class TestUtils {
     @NonNull
     public static Path getLocalMavenRepoFile(@NonNull String path) {
         if (runningFromBazel()) {
-          return resolveWorkspacePath("../maven/repo/" + path);
+          return resolveWorkspacePath("../maven/repository/" + path);
         } else {
           return resolveWorkspacePath("prebuilts/tools/common/m2/repository/" + path);
         }
@@ -425,7 +425,7 @@ public class TestUtils {
 
     @NonNull
     public static String getLatestAndroidPlatform() {
-        return "android-31";
+        return "android-32";
     }
 
     /**

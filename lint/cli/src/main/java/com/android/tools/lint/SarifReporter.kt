@@ -26,6 +26,7 @@ import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
 import com.android.repository.Revision
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Incident
@@ -40,7 +41,6 @@ import com.android.tools.lint.detector.api.getFileUri
 import com.android.tools.lint.detector.api.isParent
 import com.android.utils.SdkUtils
 import com.android.utils.SdkUtils.isBitmapFile
-import com.google.common.annotations.Beta
 import com.google.common.hash.Hashing
 import com.google.common.io.Files
 import java.io.BufferedWriter
@@ -68,7 +68,6 @@ import kotlin.text.Charsets.UTF_8
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class SarifReporter
 
 /**
@@ -113,7 +112,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     @Throws(IOException::class)
-    override fun write(stats: LintStats, incidents: List<Incident>) {
+    override fun write(stats: LintStats, incidents: List<Incident>, registry: IssueRegistry) {
         var indent = 0
         writer.indent(indent++).write("{\n")
         writer.indent(indent)

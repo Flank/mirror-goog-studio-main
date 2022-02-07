@@ -257,7 +257,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "VariantProperties.applicationId",
                         "BaseVariant.getApplicationIdTextResource",
                         "TBD",
-                        DeprecationReporter.DeprecationTarget.VERSION_7_0);
+                        DeprecationReporter.DeprecationTarget.VERSION_8_0);
         return getVariantData().applicationIdTextResource;
     }
 
@@ -751,7 +751,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public FileCollection getAllRawAndroidResources() {
-        return getVariantData().getAllRawAndroidResources();
+        return component.getAllRawAndroidResources$gradle_core();
     }
 
     @Override

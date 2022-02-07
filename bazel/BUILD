@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
 load("//tools/base/bazel:proto.bzl", "PROTOC_VERSION")
 load("@bazel_skylib//lib:selects.bzl", "selects")
+load("//tools/base/bazel:maven/artifacts.bzl", "ARTIFACTS", "DATA", "REMOTE_REPOS")
 
 exports_files(["jarjar_rules.txt"])
 
@@ -506,6 +507,18 @@ java_binary(
         "src/com/android/tools/repository_generator/BuildFileWriter.java",
         "src/com/android/tools/repository_generator/ResolutionResult.java",
     ],
+    args = ARTIFACTS +
+           ["+" + d for d in DATA] + [
+        "--repo-path",
+        "prebuilts/tools/common/m2/repository",
+    ] + [item for pair in [(
+        "--remote-repo",
+        "\"" + k + "\"=\"" + v + "\"",
+    ) for k, v in REMOTE_REPOS.items()] for item in pair] + [
+        "-o",
+        "tools/base/bazel/maven/BUILD.maven",
+        "--fetch",
+    ],
     main_class = "com.android.tools.binaries.LocalMavenRepositoryGenerator",
     visibility = ["//visibility:public"],
     deps = [
@@ -529,6 +542,37 @@ coverage_java_test(
         "no_test_windows",
     ],
     test_class = "com.android.tools.binaries.LocalMavenRepositoryGeneratorTest",
+    deps = [
+        ":json",
+        ":local_maven_repository_generator",
+        ":maven",
+        "//tools/base/testutils:tools.testutils",
+        "@maven//:junit.junit",
+        "@maven//:org.apache.maven.maven-aether-provider",
+        "@maven//:org.eclipse.aether.aether-transport-file",
+    ],
+)
+
+coverage_java_test(
+    name = "maven_consistency_test",
+    srcs = ["testSrc/com/android/tools/binaries/MavenConsistencyTest.java"],
+    data = [
+        "maven/BUILD.maven",
+        "//prebuilts/tools/common/m2:all",
+        "//tools/base/bazel/test:local_maven_repository_generator",
+    ],
+    env = {
+        "MAVEN_ARTIFACTS": ";".join(ARTIFACTS),
+        "MAVEN_DATA": ";".join(DATA),
+        "MAVEN_REPO_PATH": "prebuilts/tools/common/m2/repository",
+        "MAVEN_REMOTE_REPO_KEYS": ";".join(REMOTE_REPOS.keys()),
+        "MAVEN_REMOTE_REPO_VALUES": ";".join(REMOTE_REPOS.values()),
+        "MAVEN_OUTPUT_FILE": "tools/base/bazel/maven/BUILD.maven",
+    },
+    tags = [
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.MavenConsistencyTest",
     deps = [
         ":json",
         ":local_maven_repository_generator",

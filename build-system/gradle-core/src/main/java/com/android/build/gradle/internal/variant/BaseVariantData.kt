@@ -188,44 +188,6 @@ abstract class BaseVariantData(
         }
     }
 
-    val allRawAndroidResources: FileCollection by lazy {
-        val allRes: ConfigurableFileCollection = services.fileCollection().builtBy(
-            listOfNotNull(
-                taskContainer.generateResValuesTask,
-                taskContainer.generateApkDataTask,
-                extraGeneratedResFolders.builtBy
-            )
-        )
-
-        allRes.from(
-            variantDependencies
-                .getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.ANDROID_RES
-                )
-                .artifactFiles
-        )
-
-        allRes.from(
-            services.fileCollection(
-                artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES),
-                artifacts.get(InternalArtifactType.GENERATED_RES),
-                extraGeneratedResFolders
-            )
-        )
-
-        taskContainer.generateApkDataTask?.let {
-            allRes.from(artifacts.get(InternalArtifactType.MICRO_APK_RES))
-        }
-
-        for (sourceSet in androidResources.values) {
-            allRes.from(sourceSet)
-        }
-
-        allRes
-    }
-
     /**
      * Defines the discoverability attributes of filters.
      */

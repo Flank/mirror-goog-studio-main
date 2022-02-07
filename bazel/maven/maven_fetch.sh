@@ -1,15 +1,12 @@
 #!/bin/bash
 
 set -e
+trap 'echo "ERROR: maven_fetch.sh failed" >&2' ERR
 
 # The directory containing this script file.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)"
 
-BAZEL="${SCRIPT_DIR}/../bazel"
+${SCRIPT_DIR}/../bazel run //tools/base/bazel:local_maven_repository_generator
 
-# Use $RANDOM to make sure bazel never uses a cached result for the
-# repository_rule, and thus, always executes the generator.
-# Use "fetch" instead of "build" to avoid a race (root cause yet
-# unknown) between fetching and the glob() for artifacts.
-MAVEN_FETCH=$RANDOM "$BAZEL" fetch @maven//...
-
+echo "Done."
+echo "Note: Do not forget to commit downloaded artifacts and/or changes to the BUILD.maven file."

@@ -18,7 +18,6 @@ package com.android.tools.lint.client.api
 
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
-import com.google.common.annotations.Beta
 
 /**
  * Interface implemented by listeners to be notified of lint events.
@@ -26,7 +25,6 @@ import com.google.common.annotations.Beta
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 interface LintListener {
     /** The various types of events provided to lint listeners. */
     enum class EventType {

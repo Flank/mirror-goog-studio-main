@@ -316,10 +316,6 @@ public class BenchmarkTest {
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
-            // (b/195647205) temporarily disable vfs when running from windows
-            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                gradle.addArgument("-Dorg.gradle.vfs.watch=false");
-            }
             if (fromStudio) {
                 gradle.addArgument("-Pandroid.injected.invoked.from.ide=true");
                 gradle.addArgument("-Pandroid.injected.testOnly=true");

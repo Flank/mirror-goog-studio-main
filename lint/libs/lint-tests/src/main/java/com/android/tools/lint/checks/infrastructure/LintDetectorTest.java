@@ -62,7 +62,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.pom.java.LanguageLevel;
@@ -71,7 +70,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -82,6 +80,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
+import kotlin.io.FilesKt;
+import kotlin.text.Charsets;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
@@ -97,7 +97,6 @@ import org.w3c.dom.NodeList;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 @SuppressWarnings("javadoc")
 public abstract class LintDetectorTest extends BaseLintDetectorTest {
     @Override
@@ -690,15 +689,15 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 boolean ok = parentFile.mkdirs();
                 assertTrue("Couldn't create directory " + parentFile, ok);
             }
-            try (FileWriter fw = new FileWriter(manifest)) {
-                fw.write(
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    package=\"foo.bar2\"\n"
-                                + "    android:versionCode=\"1\"\n"
-                                + "    android:versionName=\"1.0\" >\n"
-                                + "</manifest>\n");
-            }
+            FilesKt.writeText(
+                    manifest,
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    package=\"foo.bar2\"\n"
+                            + "    android:versionCode=\"1\"\n"
+                            + "    android:versionName=\"1.0\" >\n"
+                            + "</manifest>\n",
+                    Charsets.UTF_8);
         }
     }
 
@@ -1103,7 +1102,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
             for (Reporter reporter : getFlags().getReporters()) {
-                reporter.write(stats, incidents);
+                reporter.write(stats, incidents, driver.getRegistry());
             }
 
             mOutput.append(writer.toString());

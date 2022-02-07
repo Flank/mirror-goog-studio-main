@@ -23,7 +23,6 @@ import com.android.tools.lint.client.api.UastParser
 import com.android.utils.CharSequences.indexOf
 import com.android.utils.CharSequences.lastIndexOf
 import com.android.utils.CharSequences.startsWith
-import com.google.common.annotations.Beta
 import org.jetbrains.uast.UIdentifier
 import org.jetbrains.uast.UMethod
 import java.io.File
@@ -36,7 +35,6 @@ import kotlin.math.min
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class Location
 /**
  * (Private constructor, use one of the factory methods

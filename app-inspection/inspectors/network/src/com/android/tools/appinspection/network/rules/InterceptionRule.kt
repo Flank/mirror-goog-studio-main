@@ -19,7 +19,7 @@ package com.android.tools.appinspection.network.rules
 /**
  * A rule class that intercepts connections and their responses that matches certain [criteria].
  */
-abstract class InterceptionRule(private val criteria: InterceptionCriteria) {
+abstract class InterceptionRule(private val criteria: InterceptionCriteria, val id: Int) {
 
     protected abstract fun doTransform(
         connection: NetworkConnection,
@@ -38,9 +38,10 @@ abstract class InterceptionRule(private val criteria: InterceptionCriteria) {
 }
 
 class BodyInterceptionRule(
+    id: Int,
     criteria: InterceptionCriteria,
     private val body: ByteArray
-) : InterceptionRule(criteria) {
+) : InterceptionRule(criteria, id) {
 
     override fun doTransform(
         connection: NetworkConnection,

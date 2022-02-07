@@ -67,6 +67,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.concurrent.thread
 
 class ViewLayoutInspectorTest {
@@ -148,7 +149,9 @@ class ViewLayoutInspectorTest {
             override fun stopObservingFoldState(rootView: View) {}
             override fun shutdown() {}
         }
-        viewInspector.foldObserver = myObserver
+        var fetchContinuously = true
+        viewInspector.foldSupportOverrideForTests =
+            FoldSupport(inspectorRule.connection, { fetchContinuously }, myObserver)
 
         val eventQueue = ArrayBlockingQueue<ByteArray>(15)
         inspectorRule.connection.eventListeners.add { bytes ->
@@ -227,6 +230,7 @@ class ViewLayoutInspectorTest {
         }
 
         // Turn off live updates. We should stop getting events.
+        fetchContinuously = false
         val stopFetchCommand = Command.newBuilder().apply {
             stopFetchCommand = StopFetchCommand.getDefaultInstance()
         }.build()
@@ -1590,7 +1594,8 @@ class ViewLayoutInspectorTest {
             val response = Response.parseFrom(bytes)
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
         }
-        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+        // Wait for startCommand to finish initializing
+        ThreadUtils.runOnMainThread { }.get(10, TimeUnit.SECONDS) ?: throw TimeoutException()
 
         val updateScreenshotTypeCommand = Command.newBuilder().apply {
             updateScreenshotTypeCommandBuilder.apply {
@@ -1603,25 +1608,25 @@ class ViewLayoutInspectorTest {
             updateScreenshotTypeCommand.toByteArray(),
             inspectorRule.commandCallback
         )
-        responseQueue.take()
+        responseQueue.poll(10, TimeUnit.SECONDS) ?: throw TimeoutException()
 
         // Validate that setting the screenshot type and scale caused an invalidation
         ThreadUtils.runOnMainThread {
             // Access root on the main thread. This also ensures this logic runs after the
             // invalidation call that occurs in ViewLayoutInspector#handleUpdateScreenshotType
             assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
-        }.get()
+        }.get(10, TimeUnit.SECONDS) ?: throw TimeoutException()
 
         // Send the same values again and verify that no invalidation happened
         viewInspector.onReceiveCommand(
             updateScreenshotTypeCommand.toByteArray(),
             inspectorRule.commandCallback
         )
-        responseQueue.take()
+        responseQueue.poll(10, TimeUnit.SECONDS) ?: throw TimeoutException()
 
         ThreadUtils.runOnMainThread {
             assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
-        }.get()
+        }.get(10, TimeUnit.SECONDS) ?: throw TimeoutException()
 
         // Make another change and verify that in invalidation did happen
         val updateScreenshotTypeCommand2 = Command.newBuilder().apply {
@@ -1633,11 +1638,11 @@ class ViewLayoutInspectorTest {
             updateScreenshotTypeCommand2.toByteArray(),
             inspectorRule.commandCallback
         )
-        responseQueue.take()
+        responseQueue.poll(10, TimeUnit.SECONDS) ?: throw TimeoutException()
 
         ThreadUtils.runOnMainThread {
             assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
-        }.get()
+        }.get(10, TimeUnit.SECONDS) ?: throw TimeoutException()
     }
 
     @Test
@@ -1940,7 +1945,7 @@ class ViewLayoutInspectorTest {
         val startTime = System.currentTimeMillis()
         var found = false
         while (startTime + TimeUnit.SECONDS.toMillis(10) > System.currentTimeMillis()) {
-            val bytes = eventQueue.take()
+            val bytes = eventQueue.poll(10, TimeUnit.SECONDS) ?: throw TimeoutException()
             val event = Event.parseFrom(bytes)
             if (event.specializedCase == Event.SpecializedCase.PROGRESS_EVENT) {
                 // skip progress events for this test

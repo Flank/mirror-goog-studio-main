@@ -85,7 +85,6 @@ import com.android.tools.lint.detector.api.isXmlFile
 import com.android.tools.lint.model.PathVariables
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.isBitmapFile
-import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Objects
 import com.google.common.base.Splitter
@@ -156,7 +155,6 @@ import kotlin.system.measureTimeMillis
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 class LintDriver(
     /** The [registry] containing issues to be checked. */
     var registry: IssueRegistry,
@@ -3779,7 +3777,7 @@ class LintDriver(
             throwable: Throwable,
             sb: StringBuilder,
             skipFrames: Int = 0,
-            maxFrames: Int = 8
+            maxFrames: Int = 100
         ) {
             val stackTrace = throwable.stackTrace
             var count = 0

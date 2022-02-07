@@ -21,6 +21,7 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.TAG_ACTION
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
+import com.android.SdkConstants.TAG_CATEGORY
 import com.android.SdkConstants.TAG_INTENT_FILTER
 import com.android.SdkConstants.TAG_NAV_GRAPH
 import com.android.SdkConstants.TAG_RECEIVER
@@ -59,7 +60,7 @@ class ExportedFlagDetector : Detector(), XmlScanner {
 
             // Check if the intent filter is for a launcher activity
             val incident = if (intentFilter?.subtag(TAG_ACTION)?.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                ?.equals(mainActivityAction) == true
+                ?.equals(MAIN_ACTION) == true
             ) {
                 Incident(
                     ISSUE,
@@ -99,14 +100,16 @@ class ExportedFlagDetector : Detector(), XmlScanner {
 
     private fun isNonExportedLaunchable(exported: Attr?, intentFilterTag: Element?) =
         exported?.value == VALUE_FALSE && intentFilterTag?.subtag(TAG_ACTION)
-            ?.getAttributeNS(ANDROID_URI, ATTR_NAME)?.equals(mainActivityAction) == true
+            ?.getAttributeNS(ANDROID_URI, ATTR_NAME)?.equals(MAIN_ACTION) == true &&
+            intentFilterTag.subtag(TAG_CATEGORY)?.getAttributeNS(ANDROID_URI, ATTR_NAME)?.equals(CATEGORY_LAUNCHER) == true
 
     private fun createSetToTrueFix() = fix().set().android().attribute(ATTR_EXPORTED).value(VALUE_TRUE).build()
 
     private fun createSetToFalseFix() = fix().set().android().attribute(ATTR_EXPORTED).value(VALUE_FALSE).build()
 
     companion object {
-        private const val mainActivityAction = "android.intent.action.MAIN"
+        private const val MAIN_ACTION = "android.intent.action.MAIN"
+        private const val CATEGORY_LAUNCHER = "android.intent.category.LAUNCHER"
 
         @JvmField
         val ISSUE = Issue.create(

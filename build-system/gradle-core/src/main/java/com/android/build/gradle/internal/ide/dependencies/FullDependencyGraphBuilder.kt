@@ -107,7 +107,19 @@ class FullDependencyGraphBuilder(
             return null
         }
 
-        val variant = dependency.resolvedVariant
+        // ResolvedVariantResult getResolvedVariant() should not return null, but there seems to be
+        // some corner cases when it is null. https://issuetracker.google.com/214259374
+        val variant: ResolvedVariantResult? = dependency.resolvedVariant
+        if (variant == null) {
+            val name = dependency.requested.toString()
+            if (!unresolvedDependencies.containsKey(name)) {
+                unresolvedDependencies[name] = UnresolvedDependencyImpl(
+                    name,
+                    "Internal error: ResolvedVariantResult getResolvedVariant() should not return null. https://issuetracker.google.com/214259374"
+                )
+            }
+            return null
+        }
 
         // check if we already visited this.
         val graphItem = visited[variant]

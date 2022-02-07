@@ -16,11 +16,13 @@
 
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
+import com.android.ddmlib.AvdData
 import com.android.ddmlib.IDevice
 import com.android.testutils.MockitoKt.eq
 import com.android.testutils.MockitoKt.mock
 import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
 import com.google.common.truth.Truth.assertThat
+import com.google.common.util.concurrent.Futures
 import com.google.protobuf.Any
 import com.google.testing.platform.api.provider.DeviceProviderConfigImpl
 import com.google.testing.platform.core.device.DeviceProviderException
@@ -88,7 +90,10 @@ class DdmlibAndroidDeviceProviderTest {
 
     @Test
     fun deviceFound() {
+        val mockAvdData = mock<AvdData>()
+        `when`(mockAvdData.name).thenReturn("mockAvdName")
         val mockDevice = mock<IDevice>()
+        `when`(mockDevice.avdData).thenReturn(Futures.immediateFuture(mockAvdData))
         `when`(mockDevice.serialNumber).thenReturn("serial-1234")
         `when`(mockDeviceFinder.findDevice(
                 eq("serial-1234"),

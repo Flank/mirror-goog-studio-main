@@ -3,8 +3,8 @@ load("@//tools/base/bazel:maven.bzl", "maven_artifact", "maven_import")
 # Bazel rules auto-generated from maven repo.
 maven_artifact(
     name = "com.google.example.a_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a/1/a-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/a/1/a-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/a/1",
     parent = "com.google.example.a-parent_1",
     deps = [
@@ -18,7 +18,7 @@ maven_import(
     classifiers = [],
     parent = "com.google.example.a-parent_1",
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a/1/a-1.jar"
+        "repository/com/google/example/a/1/a-1.jar"
     ],
     exports = [
         "com.google.example.c",
@@ -26,16 +26,16 @@ maven_import(
     original_deps = [
         "com.google.example.c_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a/1/a-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/a/1/a-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/a/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.b_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/b/1/b-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/b/1/b-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/b/1",
     deps = [
         "com.google.example.c_2",
@@ -47,7 +47,7 @@ maven_import(
     name = "com.google.example.b",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/b/1/b-1.jar"
+        "repository/com/google/example/b/1/b-1.jar"
     ],
     exports = [
         "com.google.example.c",
@@ -55,16 +55,16 @@ maven_import(
     original_deps = [
         "com.google.example.c_2",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/b/1/b-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/b/1/b-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/b/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.c_2",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/2/c-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/c/2/c-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/c/2",
     deps = [
         "com.google.example.d_2",
@@ -77,7 +77,7 @@ maven_import(
     name = "com.google.example.c",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/2/c-2.jar"
+        "repository/com/google/example/c/2/c-2.jar"
     ],
     exports = [
         "com.google.example.d",
@@ -89,16 +89,16 @@ maven_import(
         "com.google.example.d_2",
         "com.google.example.r_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/2/c-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/c/2/c-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/c/2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.d_2",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d/2/d-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d/2/d-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d/2",
     parent = "com.google.example.d-parent_2",
     deps = [
@@ -114,7 +114,7 @@ maven_import(
     classifiers = [],
     parent = "com.google.example.d-parent_2",
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d/2/d-2.jar"
+        "repository/com/google/example/d/2/d-2.jar"
     ],
     exports = [
         "com.google.example.e",
@@ -126,16 +126,16 @@ maven_import(
         "com.google.example.f_1",
         "com.google.example.g_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d/2/d-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d/2/d-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d/2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.e_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/e/1/e-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/e/1/e-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/e/1",
     visibility = ["//visibility:public"],
 )
@@ -144,19 +144,19 @@ maven_import(
     name = "com.google.example.e",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/e/1/e-1.jar"
+        "repository/com/google/example/e/1/e-1.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/e/1/e-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/e/1/e-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/e/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.f_2",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/f/2/f-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/f/2/f-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/f/2",
     visibility = ["//visibility:public"],
 )
@@ -165,19 +165,19 @@ maven_import(
     name = "com.google.example.f",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/f/2/f-2.jar"
+        "repository/com/google/example/f/2/f-2.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/f/2/f-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/f/2/f-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/f/2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.g_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/g/1/g-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/g/1/g-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/g/1",
     deps = [
         "com.google.example.f_2",
@@ -189,7 +189,7 @@ maven_import(
     name = "com.google.example.g",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/g/1/g-1.jar"
+        "repository/com/google/example/g/1/g-1.jar"
     ],
     exports = [
         "com.google.example.f",
@@ -197,16 +197,16 @@ maven_import(
     original_deps = [
         "com.google.example.f_2",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/g/1/g-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/g/1/g-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/g/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.h_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/h/1/h-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/h/1/h-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/h/1",
     deps = [
         "com.google.example.i_1",
@@ -225,16 +225,16 @@ maven_import(
     original_deps = [
         "com.google.example.i_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/h/1/h-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/h/1/h-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/h/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.i_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/i/1/i-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/i/1/i-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/i/1",
     visibility = ["//visibility:public"],
 )
@@ -243,19 +243,19 @@ maven_import(
     name = "com.google.example.i",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/i/1/i-1.jar"
+        "repository/com/google/example/i/1/i-1.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/i/1/i-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/i/1/i-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/i/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.j_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/j/1/j-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/j/1/j-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/j/1",
     visibility = ["//visibility:public"],
 )
@@ -264,19 +264,19 @@ maven_import(
     name = "com.google.example.j.linux",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/j/1/j-1-linux.jar"
+        "repository/com/google/example/j/1/j-1-linux.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/j/1/j-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/j/1/j-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/j/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.k_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/k/1/k-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/k/1/k-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/k/1",
     deps = [
         "com.google.example.m_1",
@@ -288,7 +288,7 @@ maven_import(
     name = "com.google.example.k",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/k/1/k-1.jar"
+        "repository/com/google/example/k/1/k-1.jar"
     ],
     exports = [
         "com.google.example.m",
@@ -296,16 +296,16 @@ maven_import(
     original_deps = [
         "com.google.example.m_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/k/1/k-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/k/1/k-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/k/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.l_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/l/1/l-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/l/1/l-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/l/1",
     deps = [
         "com.google.example.m_1",
@@ -317,7 +317,7 @@ maven_import(
     name = "com.google.example.l",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/l/1/l-1.jar"
+        "repository/com/google/example/l/1/l-1.jar"
     ],
     exports = [
         "com.google.example.m",
@@ -325,16 +325,16 @@ maven_import(
     original_deps = [
         "com.google.example.m_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/l/1/l-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/l/1/l-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/l/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.m_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/m/1/m-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/m/1/m-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/m/1",
     deps = [
         "com.google.example.n_1",
@@ -347,7 +347,7 @@ maven_import(
     name = "com.google.example.m",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/m/1/m-1.jar"
+        "repository/com/google/example/m/1/m-1.jar"
     ],
     exports = [
         "com.google.example.n",
@@ -357,16 +357,16 @@ maven_import(
         "com.google.example.n_1",
         "com.google.example.o_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/m/1/m-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/m/1/m-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/m/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.n_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/n/1/n-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/n/1/n-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/n/1",
     visibility = ["//visibility:public"],
 )
@@ -375,19 +375,19 @@ maven_import(
     name = "com.google.example.n",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/n/1/n-1.jar"
+        "repository/com/google/example/n/1/n-1.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/n/1/n-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/n/1/n-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/n/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.o_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/o/1/o-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/o/1/o-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/o/1",
     visibility = ["//visibility:public"],
 )
@@ -396,19 +396,19 @@ maven_import(
     name = "com.google.example.o",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/o/1/o-1.jar"
+        "repository/com/google/example/o/1/o-1.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/o/1/o-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/o/1/o-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/o/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.p_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/p/1/p-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/p/1/p-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/p/1",
     deps = [
         "com.google.example.q_1",
@@ -420,7 +420,7 @@ maven_import(
     name = "com.google.example.p",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/p/1/p-1.jar"
+        "repository/com/google/example/p/1/p-1.jar"
     ],
     exports = [
         "com.google.example.q",
@@ -428,16 +428,16 @@ maven_import(
     original_deps = [
         "com.google.example.q_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/p/1/p-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/p/1/p-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/p/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.q_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/q/1/q-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/q/1/q-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/q/1",
     visibility = ["//visibility:public"],
 )
@@ -446,19 +446,19 @@ maven_import(
     name = "com.google.example.q",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/q/1/q-1.jar"
+        "repository/com/google/example/q/1/q-1.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/q/1/q-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/q/1/q-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/q/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.r_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/r/1/r-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/r/1/r-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/r/1",
     deps = [
         "com.google.example.t_1",
@@ -470,19 +470,19 @@ maven_import(
     name = "com.google.example.r.nodeps",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/r/1/r-1-nodeps.jar"
+        "repository/com/google/example/r/1/r-1-nodeps.jar"
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/r/1/r-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/r/1/r-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/r/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.u_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/u/1/u-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/u/1/u-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/u/1",
     deps = [
         "com.google.example.v_1",
@@ -494,21 +494,21 @@ maven_import(
     name = "com.google.example.u",
     classifiers = [],
     jars = [
-        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/u/1/u-1.jar"
+        "repository/com/google/example/u/1/u-1.jar"
     ],
     original_deps = [
         "com.google.example.v_1",
     ],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/u/1/u-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/u/1/u-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/u/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.v_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/v/1/v-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/v/1/v-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/v/1",
     visibility = ["//visibility:public"],
 )
@@ -519,16 +519,16 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/v/1/v-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/v/1/v-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/v/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.a_2",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a/2/a-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/a/2/a-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/a/2",
     parent = "com.google.example.a-parent_1",
     deps = [
@@ -539,8 +539,8 @@ maven_artifact(
 
 maven_artifact(
     name = "com.google.example.c_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/1/c-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/c/1/c-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/c/1",
     deps = [
         "com.google.example.d_1",
@@ -551,8 +551,8 @@ maven_artifact(
 
 maven_artifact(
     name = "com.google.example.d_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d/1/d-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d/1/d-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d/1",
     parent = "com.google.example.d-parent_1",
     deps = [
@@ -563,61 +563,61 @@ maven_artifact(
 
 maven_artifact(
     name = "com.google.example.f_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/f/1/f-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/f/1/f-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/f/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.t_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/t/1/t-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/t/1/t-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/t/1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
     name = "com.google.example.a-parent-parent_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a-parent-parent/1/a-parent-parent-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/a-parent-parent/1/a-parent-parent-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/a-parent-parent/1",
 )
 
 maven_artifact(
     name = "com.google.example.a-parent_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a-parent/1/a-parent-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/a-parent/1/a-parent-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/a-parent/1",
     parent = "com.google.example.a-parent-parent_1",
 )
 
 maven_artifact(
     name = "com.google.example.d-parent-parent_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d-parent-parent/1/d-parent-parent-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d-parent-parent/1/d-parent-parent-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d-parent-parent/1",
 )
 
 maven_artifact(
     name = "com.google.example.d-parent-parent_2",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d-parent-parent/2/d-parent-parent-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d-parent-parent/2/d-parent-parent-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d-parent-parent/2",
 )
 
 maven_artifact(
     name = "com.google.example.d-parent_1",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d-parent/1/d-parent-1.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d-parent/1/d-parent-1.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d-parent/1",
     parent = "com.google.example.d-parent-parent_1",
 )
 
 maven_artifact(
     name = "com.google.example.d-parent_2",
-    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d-parent/2/d-parent-2.pom",
-    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    pom = "repository/com/google/example/d-parent/2/d-parent-2.pom",
+    repo_root_path = "repository",
     repo_path = "com/google/example/d-parent/2",
     parent = "com.google.example.d-parent-parent_2",
 )

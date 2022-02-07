@@ -24,7 +24,6 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.model.LintModelSeverity;
-import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
@@ -40,7 +39,6 @@ import java.util.Set;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 public class LintCliFlags {
     private final Set<String> suppress = new HashSet<>();
     private final Set<String> enabled = new HashSet<>();

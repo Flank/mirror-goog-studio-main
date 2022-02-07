@@ -21,7 +21,6 @@ package com.android.tools.lint.detector.api
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.XmlParser
-import com.google.common.annotations.Beta
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -34,7 +33,6 @@ import java.io.File
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class XmlContext(
     /** the driver running through the checks */
     driver: LintDriver,

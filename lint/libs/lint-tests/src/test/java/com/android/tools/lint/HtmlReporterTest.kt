@@ -60,13 +60,15 @@ class HtmlReporterTest {
                 ): LintDriver {
                     // Temporarily switch HardcodedValuesDetector.ISSUE to a custom
                     // registry with an example vendor to test output of vendor info
-                    // (which we normally omit for built-in checks)
+                    // (which we normally omit for built-in checks).
+                    // This also tests that it's listed in the "included additional" section.
                     HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
 
                     return super.createDriver(registry, request)
                 }
             }
             client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
+            client.flags.suppressedIds.add(ManifestDetector.MOCK_LOCATION.id)
             client.flags.isFullPath = false
             client.pathVariables.clear()
             client.pathVariables.add("TEST_ROOT", rootDirectory)
@@ -261,6 +263,10 @@ Check performed at ＄DATE</nav>
 <tr>
 <td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#UnknownNullness">UnknownNullness</a>: Unknown nullness</td></tr>
+<tr><td></td><td class="categoryColumn"><a href="#ExtraIssues">Included Additional Checks (1)</a>
+</td></tr>
+<tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (1)</a>
+</td></tr>
 </table>
 <br/>              </div>
               <div class="mdl-card__actions mdl-card--border">
@@ -475,7 +481,7 @@ Dismiss</button>            </div>
 <span class="location"><a href="app/src/other/pkg/AnnotationTest.java">src/other/pkg/AnnotationTest.java</a>:3</span>: <span class="message">Unknown nullability; explicitly declare as <code>@Nullable</code> or <code>@NonNull</code> to improve Kotlin interoperability; see <a href="https://developer.android.com/kotlin/interop#nullability_annotations">https://developer.android.com/kotlin/interop#nullability_annotations</a></span><br /><pre class="errorlines">
 <span class="lineno"> 1 </span><span class="keyword">package</span> other.pkg;
 <span class="lineno"> 2 </span><span class="keyword">public</span> <span class="keyword">class</span> AnnotationTest {
-<span class="caretline"><span class="lineno"> 3 </span>    <span class="keyword">public</span> <span class="warning">Float</span> error4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="keyword">public</span> <span class="warning">Float</span> error4:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <span class="lineno"> 4 </span>}</pre>
 
 </div>
@@ -526,6 +532,46 @@ Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id
 Dismiss</button>            </div>
             </div>
           </section>
+<a name="ExtraIssues"></a>
+<section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="ExtraIssuesCard" style="display: block;">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Included Additional Checks</h2>
+  </div>
+              <div class="mdl-card__supporting-text">
+This card lists all the extra checks run by lint, provided from libraries,
+build configuration and extra flags. This is included to help you verify
+whether a particular check is included in analysis when configuring builds.
+(Note that the list does not include the hundreds of built-in checks into lint,
+only additional ones.)
+<div id="IncludedIssues" style="display: none;"><br/><br/><div class="issue">
+<div class="id">HardcodedText<div class="issueSeparator"></div>
+</div>
+<div class="metadata"><div class="explanation">
+Hardcoding text attributes directly in layout files is bad for several reasons:<br/>
+<br/>
+* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)<br/>
+<br/>
+* The application cannot be translated to other languages by just adding new translations for existing string resources.<br/>
+<br/>
+There are quickfixes to automatically extract this hardcoded string into a resource lookup.<br/><div class="vendor">
+Vendor: AOSP Unit Tests<br/>
+Identifier: mylibrary-1.0<br/>
+Contact: lint@example.com<br/>
+Feedback: <a href="https://example.com/lint/file-new-bug.html">https://example.com/lint/file-new-bug.html</a><br/>
+</div>
+<br/>
+<br/></div>
+</div>
+</div>
+</div>
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="IncludedIssuesLink" onclick="reveal('IncludedIssues');">
+List Issues</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="ExtraIssuesCardLink" onclick="hideid('ExtraIssuesCard');">
+Dismiss</button>            </div>
+            </div>
+          </section>
 <a name="MissingIssues"></a>
 <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="MissingIssuesCard" style="display: block;">
             <div class="mdl-card mdl-cell mdl-cell--12-col">
@@ -537,7 +583,20 @@ One or more issues were not run by lint, either
 because the check is not enabled by default, or because
 it was disabled with a command line flag or via one or
 more <code>lint.xml</code> configuration files in the project directories.
-<div id="SuppressedIssues" style="display: none;"><br/><br/></div>              </div>
+<div id="SuppressedIssues" style="display: none;"><br/><br/><div class="issue">
+<div class="id">MockLocation<div class="issueSeparator"></div>
+</div>
+<div class="metadata">Disabled By: Command line flag<br/>
+<div class="explanation">
+Using a mock location provider (by requiring the permission <code>android.permission.ACCESS_MOCK_LOCATION</code>) should <b>only</b> be done in debug builds (or from tests). In Gradle projects, that means you should only request this permission in a test or debug source set specific manifest file.<br/>
+<br/>
+To fix this, create a new manifest file in the debug folder and move the <code>&lt;uses-permission></code> element there. A typical path to a debug manifest override file in a Gradle project is src/debug/AndroidManifest.xml.<br/>Note: This issue has an associated quickfix operation in Android Studio and IntelliJ IDEA.<br>
+<br/>
+<br/></div>
+</div>
+</div>
+</div>
+              </div>
               <div class="mdl-card__actions mdl-card--border">
 <button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="SuppressedIssuesLink" onclick="reveal('SuppressedIssues');">
 List Missing Issues</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="MissingIssuesCardLink" onclick="hideid('MissingIssuesCard');">
@@ -723,6 +782,10 @@ Check performed at ＄DATE</nav>
 <tr>
 <td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#UnknownNullness">UnknownNullness</a>: Unknown nullness</td></tr>
+<tr><td></td><td class="categoryColumn"><a href="#ExtraIssues">Included Additional Checks (1)</a>
+</td></tr>
+<tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (1)</a>
+</td></tr>
 </table>
 <br/>              </div>
               <div class="mdl-card__actions mdl-card--border">
@@ -929,7 +992,7 @@ Dismiss</button>            </div>
 <div class="warningslist">
 <span class="location"><a href="app/src/other/pkg/AnnotationTest.java">src/other/pkg/AnnotationTest.java</a>:3</span>: <span class="message">Unknown nullability; explicitly declare as <code>@Nullable</code> or <code>@NonNull</code> to improve Kotlin interoperability; see <a href="https://developer.android.com/kotlin/interop#nullability_annotations">https://developer.android.com/kotlin/interop#nullability_annotations</a></span><br /><pre class="errorlines">
 <span class="lineno"> 2 </span><span class="keyword">public</span> <span class="keyword">class</span> AnnotationTest {
-<span class="caretline"><span class="lineno"> 3 </span>    <span class="keyword">public</span> <span class="warning">Float</span> error4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="keyword">public</span> <span class="warning">Float</span> error4:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <span class="lineno"> 4 </span>}</pre>
 
 </div>
@@ -977,6 +1040,46 @@ Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id
 Dismiss</button>            </div>
             </div>
           </section>
+<a name="ExtraIssues"></a>
+<section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="ExtraIssuesCard" style="display: block;">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Included Additional Checks</h2>
+  </div>
+              <div class="mdl-card__supporting-text">
+This card lists all the extra checks run by lint, provided from libraries,
+build configuration and extra flags. This is included to help you verify
+whether a particular check is included in analysis when configuring builds.
+(Note that the list does not include the hundreds of built-in checks into lint,
+only additional ones.)
+<div id="IncludedIssues" style="display: none;"><br/><br/><div class="issue">
+<div class="id">HardcodedText<div class="issueSeparator"></div>
+</div>
+<div class="metadata"><div class="explanation">
+Hardcoding text attributes directly in layout files is bad for several reasons:<br/>
+<br/>
+* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)<br/>
+<br/>
+* The application cannot be translated to other languages by just adding new translations for existing string resources.<br/>
+<br/>
+There are quickfixes to automatically extract this hardcoded string into a resource lookup.<br/><div class="vendor">
+Vendor: AOSP Unit Tests<br/>
+Identifier: mylibrary-1.0<br/>
+Contact: lint@example.com<br/>
+Feedback: <a href="https://example.com/lint/file-new-bug.html">https://example.com/lint/file-new-bug.html</a><br/>
+</div>
+<br/>
+<br/></div>
+</div>
+</div>
+</div>
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="IncludedIssuesLink" onclick="reveal('IncludedIssues');">
+List Issues</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="ExtraIssuesCardLink" onclick="hideid('ExtraIssuesCard');">
+Dismiss</button>            </div>
+            </div>
+          </section>
 <a name="MissingIssues"></a>
 <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="MissingIssuesCard" style="display: block;">
             <div class="mdl-card mdl-cell mdl-cell--12-col">
@@ -988,7 +1091,20 @@ One or more issues were not run by lint, either
 because the check is not enabled by default, or because
 it was disabled with a command line flag or via one or
 more <code>lint.xml</code> configuration files in the project directories.
-<div id="SuppressedIssues" style="display: none;"><br/><br/></div>              </div>
+<div id="SuppressedIssues" style="display: none;"><br/><br/><div class="issue">
+<div class="id">MockLocation<div class="issueSeparator"></div>
+</div>
+<div class="metadata">Disabled By: Command line flag<br/>
+<div class="explanation">
+Using a mock location provider (by requiring the permission <code>android.permission.ACCESS_MOCK_LOCATION</code>) should <b>only</b> be done in debug builds (or from tests). In Gradle projects, that means you should only request this permission in a test or debug source set specific manifest file.<br/>
+<br/>
+To fix this, create a new manifest file in the debug folder and move the <code>&lt;uses-permission></code> element there. A typical path to a debug manifest override file in a Gradle project is src/debug/AndroidManifest.xml.<br/>Note: This issue has an associated quickfix operation in Android Studio and IntelliJ IDEA.<br>
+<br/>
+<br/></div>
+</div>
+</div>
+</div>
+              </div>
               <div class="mdl-card__actions mdl-card--border">
 <button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="SuppressedIssuesLink" onclick="reveal('SuppressedIssues');">
 List Missing Issues</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="MissingIssuesCardLink" onclick="hideid('MissingIssuesCard');">

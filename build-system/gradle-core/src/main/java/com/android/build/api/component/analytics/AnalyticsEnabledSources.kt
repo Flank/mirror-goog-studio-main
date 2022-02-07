@@ -16,11 +16,11 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
@@ -36,6 +36,17 @@ open class AnalyticsEnabledSources @Inject constructor(
                 VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE
             return objectFactory.newInstance(
                 AnalyticsEnabledSourceDirectories::class.java,
+                delegate.java,
+                stats,
+                objectFactory)
+        }
+
+    override val res: SourceAndOverlayDirectories
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_RES_ACCESS_VALUE
+            return objectFactory.newInstance(
+                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
                 delegate.java,
                 stats,
                 objectFactory)

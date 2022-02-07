@@ -440,7 +440,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             createGenerateResValuesTask(testFixturesComponent)
 
-            val flags: ImmutableSet<MergeResources.Flag?> =
+            val flags: Set<MergeResources.Flag> =
                 if (globalConfig.namespacedAndroidResources) {
                     Sets.immutableEnumSet(
                         MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
@@ -963,7 +963,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         "Renderscript is enabled but no configuration available, please file a bug.")
             val taskContainer = creationConfig.taskContainer
             val rsTask = taskFactory.register(
-                RenderscriptCompile.CreationAction(creationConfig, renderscript))
+                RenderscriptCompile.
+                CreationAction(creationConfig, renderscript))
             taskContainer.resourceGenTask.dependsOn(rsTask)
             // since rs may generate Java code, always set the dependency.
             taskContainer.sourceGenTask.dependsOn(rsTask)
@@ -973,7 +974,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createMergeResourcesTask(
             creationConfig: ComponentCreationConfig,
             processResources: Boolean,
-            flags: ImmutableSet<MergeResources.Flag?>) {
+            flags: Set<MergeResources.Flag>) {
         val alsoOutputNotCompiledResources = (creationConfig.variantType.isApk
                 && !creationConfig.variantType.isForTesting
                 && creationConfig.useResourceShrinker())
@@ -1026,7 +1027,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             includeDependencies: Boolean,
             processResources: Boolean,
             alsoOutputNotCompiledResources: Boolean,
-            flags: ImmutableSet<MergeResources.Flag?>,
+            flags: Set<MergeResources.Flag>,
             taskProviderCallback: TaskProviderCallback<MergeResources>?
     ): TaskProvider<MergeResources> {
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
@@ -1063,7 +1064,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     fun createBuildConfigTask(creationConfig: VariantCreationConfig) {
-        if (creationConfig.buildFeatures.buildConfig) {
+        if (creationConfig.buildConfigEnabled) {
             val generateBuildConfigTask =
                     taskFactory.register(GenerateBuildConfig.CreationAction(creationConfig))
             val isBuildConfigBytecodeEnabled = creationConfig
@@ -3309,7 +3310,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
-        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.5"
+        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.2.0-alpha02"
         const val CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar"
 
         /**

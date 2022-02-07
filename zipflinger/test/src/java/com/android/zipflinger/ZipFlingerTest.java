@@ -24,6 +24,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
@@ -1137,5 +1138,44 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
 
         Path b = getTestPath("testLargeInputStreamNoCompression.zip");
         runInputStreamSource(b, Deflater.NO_COMPRESSION, streamSize, 5000);
+    }
+
+    @Test
+    public void testDirectory() throws Exception {
+        Path cwd = temporaryFolder.newFolder().toPath();
+        final String newFolderName = "newFolder/";
+        Path newFolder = Paths.get(cwd.toString(), newFolderName);
+        Files.createDirectories(newFolder);
+
+        Path archPath = getTestPath("testDirectory.zip");
+        try (ZipArchive archive = new ZipArchive(archPath)) {
+            archive.add(Sources.dir(cwd.relativize(newFolder).toString()));
+        }
+
+        try (ZipRepo repo = new ZipRepo(archPath)) {
+            Map<String, Entry> entries = repo.getEntries();
+            Entry entry = entries.get(newFolderName);
+            Assert.assertNotNull("Directory Entry not found", entry);
+            Assert.assertTrue("Directory entry test1", entry.isDirectory());
+        }
+    }
+
+    @Test
+    public void testDirectoryName() throws Exception {
+        String name = "directory";
+        Assert.assertFalse("DirectoryName detection", Source.isNameDirectory(name));
+        name = Source.directoryName(name);
+        Assert.assertTrue("Directorize name", Source.isNameDirectory(name));
+    }
+
+    @Test
+    public void testDoubleDirectoryAdd() throws Exception {
+        Path cwd = temporaryFolder.newFolder().toPath();
+        Path archPath = getTestPath("testDirectory.zip");
+        String dirName = Source.directoryName("dir");
+        try (ZipArchive archive = new ZipArchive(archPath)) {
+            archive.add(Sources.dir(dirName));
+            archive.add(Sources.dir(dirName));
+        }
     }
 }

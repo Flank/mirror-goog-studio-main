@@ -25,7 +25,6 @@ import com.android.resources.ResourceType
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.utils.iterator
-import com.google.common.annotations.Beta
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -43,7 +42,6 @@ import javax.xml.parsers.ParserConfigurationException
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 abstract class XmlParser {
     /**
      * Parse the given XML content and returns as a Document

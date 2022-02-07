@@ -51,7 +51,6 @@ import com.android.tools.lint.detector.api.TargetSdkLessThan
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.assertionsEnabled
 import com.android.utils.XmlUtils
-import com.google.common.annotations.Beta
 import com.google.common.base.Joiner
 import com.google.common.io.Files
 import com.intellij.psi.PsiMethod
@@ -71,7 +70,6 @@ import kotlin.text.Charsets.UTF_8
  * **NOTE: This is not a public or final API; if you rely on this be
  * prepared to adjust your code for the next tools release.**
  */
-@Beta
 open class XmlWriter constructor(
     /** Client handling IO, path normalization and error reporting. */
     private val client: LintCliClient,

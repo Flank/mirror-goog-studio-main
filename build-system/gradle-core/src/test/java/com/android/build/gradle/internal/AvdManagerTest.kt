@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.repository.AndroidSdkHandler
-import com.android.testutils.file.createInMemoryFileSystemAndFolder
 import com.android.testutils.file.recordExistingFile
 import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
@@ -32,7 +31,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.ArgumentMatchers.anyString
@@ -45,7 +46,12 @@ import org.mockito.Mockito.`when`
 @RunWith(JUnit4::class)
 class AvdManagerTest {
 
-    private val rootDir = createInMemoryFileSystemAndFolder("")
+    @get:Rule
+    val tmpFolder = TemporaryFolder()
+
+    private val rootDir: Path by lazy {
+        tmpFolder.newFolder().toPath()
+    }
     private lateinit var manager: AvdManager
     private lateinit var sdkFolder: Path
     private lateinit var systemImageFolder: Path

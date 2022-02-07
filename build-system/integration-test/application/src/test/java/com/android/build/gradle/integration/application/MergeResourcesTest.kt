@@ -271,6 +271,49 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         }
     }
 
+    // Regression test for b/209574833
+    @Test
+    fun addResourceBetweenBuildsWithProductFlavor() {
+        val app = project.getSubproject("app")
+        //Setup flavors
+        TestFileUtils.appendToFile(
+            app.buildFile,
+            //language=groovy
+            """android.flavorDimensions "foo"
+                       android.productFlavors {
+                            flavor1 {
+                                dimension "foo"
+                            }
+                       }
+                    """
+        )
+        val flavor1 = app.file("src/flavor1/res")
+            .also(File::mkdirs)
+        FileUtils.createFile(FileUtils.join(flavor1, "values", "strings.xml"),
+            "<resources>\n" +
+                    "<string name=\"foo_string\">flavor1</string>\n" +
+                    "</resources>")
+        project.executor().run("clean", ":app:assembleDebug")
+        project.executor().run(":app:assembleDebug")
+        FileUtils.createFile(
+            app.file("src/main/res/layout/additional.xml"),
+            """<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:orientation="vertical" >
+                        </LinearLayout>"""
+        )
+        project.executor().run(":app:assembleDebug")
+
+        // Verify the resource can be moved to a different source set.
+        val flavor1Layout = File(flavor1, "layout").also { it.mkdirs() }
+        val movedFile = File(flavor1Layout, "additional.xml")
+        Files.move(app.file("src/main/res/layout/additional.xml").toPath(), movedFile.toPath())
+        project.executor().run(":app:assembleDebug")
+        val apk = app.getApk(GradleTestProject.ApkType.DEBUG, "flavor1")
+        assertThat(apk.getEntry("/res/layout/additional.xml")).isNotNull()
+    }
+
     @Test
     fun replaceResourceFileWithDifferentExtension() {
         /*

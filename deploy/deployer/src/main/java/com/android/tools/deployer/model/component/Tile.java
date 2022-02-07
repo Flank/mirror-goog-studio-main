@@ -22,7 +22,7 @@ import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
 
-public class Tile extends AppComponent {
+public class Tile extends WearComponent {
 
     public static class ShellCommand {
         public static String SET_TILE =
@@ -62,8 +62,7 @@ public class Tile extends AppComponent {
             runShellCommand(debugCommand, receiver);
         }
         String command = getStartTileCommand();
-        logger.info("$ adb shell " + command);
-        runShellCommand(command, receiver);
+        runStartCommand(command, receiver, logger);
     }
 
     private void validate(String extraFlags) throws DeployerException {

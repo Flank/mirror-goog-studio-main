@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.component.impl.DefaultSourcesProvider
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
@@ -37,7 +38,7 @@ import java.io.File
  * otherwise (if the application does not have product flavor, there won't be one).
  */
 class SourcesImpl(
-    private val defaultSourceProvider: (SourceType) -> List<DirectoryEntry>,
+    private val defaultSourceProvider: DefaultSourcesProvider,
     private val projectDirectory: Directory,
     private val variantServices: VariantServices,
     private val variantSourceSet: DefaultAndroidSourceSet?,
@@ -51,7 +52,7 @@ class SourcesImpl(
             variantSourceSet?.java?.filter
         ).also { sourceDirectoriesImpl ->
 
-            defaultSourceProvider(SourceType.JAVA).run {
+            defaultSourceProvider.java.run {
                 sourceDirectoriesImpl.addSources(this)
             }
             // reset the original variant specific source set in [VariantSources] as sourceDirectoriesImpl is now
@@ -68,7 +69,19 @@ class SourcesImpl(
                         )
                     )
                 }
-                variantSourceSet.java?.setSrcDirs(emptyList<File>())
+                variantSourceSet.java.setSrcDirs(emptyList<File>())
+            }
+        }
+
+    override val res: SourceAndOverlayDirectoriesImpl =
+        SourceAndOverlayDirectoriesImpl(
+            SourceType.RES.name,
+            projectDirectory,
+            variantServices,
+            variantSourceSet?.res?.filter
+        ).also { sourceDirectoriesImpl ->
+            defaultSourceProvider.res.run {
+                forEach(sourceDirectoriesImpl::addSources)
             }
         }
 

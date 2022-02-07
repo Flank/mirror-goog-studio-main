@@ -160,10 +160,12 @@ internal class ViolatingPluginDetector(
             }
         }
         return violatingPlugins.mapNotNull { component ->
-            component.getPathFromRoot().getPathString(projectDisplayName).takeIf {
-                // Ignore Safe-args plugin for now (bug 175379963).
-                !it.contains("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1")
-            }
+            buildscriptClasspath.getPathToComponent(component)
+                .getPathString(projectDisplayName)
+                .takeIf {
+                    // Ignore Safe-args plugin for now (bug 175379963).
+                    !it.contains("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1")
+                }
         }
     }
 }

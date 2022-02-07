@@ -136,11 +136,6 @@ class UtpTestRunner @JvmOverloads constructor(
             mergedTestResultPbFile.outputStream().use {
                 resultsMerger.result.writeTo(it)
             }
-            logger.quiet(
-                "\nTest results saved as ${mergedTestResultPbFile.toURI()}. " +
-                        "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                        "From File from the menu bar and importing test-result.pb."
-            )
         }
 
         return testSuiteResults.map { testRunResult ->

@@ -32,10 +32,13 @@ import org.gradle.api.tasks.util.PatternFilterable
 import javax.inject.Inject
 
 open class AnalyticsEnabledSourceDirectories @Inject constructor(
-    val delegate: SourceDirectories,
-    val stats: GradleBuildVariant.Builder,
-    val objectFactory: ObjectFactory,
-): SourceDirectories {
+    override val delegate: SourceDirectories,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory,
+):
+    AnalyticsEnabledAbstractSourceDirectories(delegate, stats, objectFactory),
+    SourceDirectories
+{
 
     override val all: Provider<List<Directory>>
         get() {
@@ -43,20 +46,4 @@ open class AnalyticsEnabledSourceDirectories @Inject constructor(
                 VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE
             return delegate.all
         }
-
-    override fun <T : Task> add(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.SOURCES_DIRECTORIES_ADD_VALUE
-        delegate.add(taskProvider, wiredWith)
-    }
-
-    override fun getName(): String {
-        return delegate.name
-    }
-
-    override fun addSrcDir(srcDir: String) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.SOURCES_DIRECTORIES_SRC_DIR_VALUE
-        delegate.addSrcDir(srcDir)
-    }
 }

@@ -293,6 +293,11 @@ public class ZipArchive implements Archive {
     }
 
     private void writeSource(@NonNull Source source) throws IOException {
+        // If this is a directory and it is already in the archive, just no-op.
+        if (Source.isNameDirectory(source.getName()) && cd.contains(source.getName())) {
+            return;
+        }
+
         modified = true;
         validateName(source);
         source.prepare();

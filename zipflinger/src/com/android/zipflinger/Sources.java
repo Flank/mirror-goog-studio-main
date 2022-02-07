@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.Deflater;
 
 public class Sources {
 
@@ -30,6 +31,13 @@ public class Sources {
     public static Source from(File file, @NonNull String name, int compressionLevel)
             throws IOException {
         return from(file.toPath(), name, compressionLevel);
+    }
+
+    public static Source dir(@NonNull String name) throws IOException {
+        if (!Source.isNameDirectory(name)) {
+            name = Source.directoryName(name);
+        }
+        return new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
     }
 
     public static Source from(Path path, @NonNull String name, int compressionLevel)

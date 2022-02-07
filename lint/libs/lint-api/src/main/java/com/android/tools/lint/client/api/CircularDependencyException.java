@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
-import com.google.common.annotations.Beta;
 
 /**
  * Exception thrown when there is a circular dependency, such as a circular dependency of library
@@ -29,7 +28,6 @@ import com.google.common.annotations.Beta;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 public class CircularDependencyException extends RuntimeException {
     @Nullable private Project project;
 

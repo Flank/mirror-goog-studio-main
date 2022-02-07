@@ -61,6 +61,8 @@ public abstract class Source {
 
     protected int externalAttributes;
 
+    static final String DIRECTORY_MARKER = "/";
+
     protected Source(@NonNull String name) {
         this.name = name;
         nameBytes = name.getBytes(StandardCharsets.UTF_8);
@@ -124,4 +126,12 @@ public abstract class Source {
 
     // Return the number of bytes written.
     public abstract long writeTo(@NonNull ZipWriter writer) throws IOException;
+
+    static boolean isNameDirectory(String name) {
+        return name.endsWith(DIRECTORY_MARKER);
+    }
+
+    static String directoryName(@NonNull String name) {
+        return name += DIRECTORY_MARKER;
+    }
 }

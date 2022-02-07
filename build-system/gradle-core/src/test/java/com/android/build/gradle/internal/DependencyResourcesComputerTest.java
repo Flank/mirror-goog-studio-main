@@ -23,10 +23,10 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.FakeFileCollection;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.ResourceSet;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -37,13 +37,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.junit.After;
 import org.junit.Before;
@@ -58,21 +58,15 @@ public class DependencyResourcesComputerTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     private DependencyResourcesComputer computer;
     private List<ResourceSet> folderSets;
-    private Map<String, FileCollection> artifactMap;
     Provider<Directory> defaultEmptyProvider = new FakeGradleProvider<>(null);
 
 
     @Before
     public void setUp() throws IOException {
-        computer = new DependencyResourcesComputer();
-
-        // set some default file collection on the required inputs
-        FileCollection empty = mock(FileCollection.class);
-        computer.setGeneratedResOutputDir(empty);
-
+        ObjectFactory factory = FakeObjectFactory.getFactory();
+        computer = factory.newInstance(DependencyResourcesComputer.class);
         folderSets = Lists.newArrayList();
-        artifactMap = new LinkedHashMap<>();
-        computer.setResources(artifactMap);
+        computer.getValidateEnabled().set(false);
     }
 
     @After
@@ -85,7 +79,7 @@ public class DependencyResourcesComputerTest {
     public void singleSetWithSingleFile() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         assertThat(computer.compute(null, defaultEmptyProvider)).containsExactly(mainSet);
     }
@@ -95,7 +89,7 @@ public class DependencyResourcesComputerTest {
         File file = temporaryFolder.newFolder("src", "main");
         File file2 = temporaryFolder.newFolder("src", "main2");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file, file2);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file, file2);
 
         assertThat(computer.compute(null, defaultEmptyProvider)).containsExactly(mainSet);
     }
@@ -104,10 +98,10 @@ public class DependencyResourcesComputerTest {
     public void twoSetsWithSingleFile() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         File file2 = temporaryFolder.newFolder("src", "debug");
-        ResourceSet debugSet = createResourceSet(folderSets, artifactMap, "debug", file2);
+        ResourceSet debugSet = createResourceSet(folderSets, "debug", file2);
 
         assertThat(computer.compute(null, defaultEmptyProvider)).containsExactly(mainSet, debugSet);
     }
@@ -116,12 +110,12 @@ public class DependencyResourcesComputerTest {
     public void singleSetWithDependency() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         File file2 = temporaryFolder.newFolder("foo", "bar", "1.0");
         List<ResourceSet> librarySets = setupLibraryDependencies(file2, ":path");
 
-        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(file2);
+        assertThat(computer.getLibraries().get().getArtifactFiles()).containsExactly(file2);
 
         List<ResourceSet> computedSets = computer.compute(null, defaultEmptyProvider);
         assertThat(computedSets).containsExactly(librarySets.get(0), mainSet).inOrder();
@@ -131,7 +125,7 @@ public class DependencyResourcesComputerTest {
     public void singleSetWithRenderscript() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         File rsFile = temporaryFolder.newFolder("rs");
         Directory rsFileDirectory = Mockito.mock(Directory.class);
@@ -149,10 +143,10 @@ public class DependencyResourcesComputerTest {
     public void singleSetWithGeneratedRes() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         File genFile = temporaryFolder.newFolder("generated");
-        setFileCollection(computer::setGeneratedResOutputDir, genFile);
+        computer.getGeneratedResOutputDir().from(genFile);
         mainSet.addSource(genFile);
 
         assertThat(computer.compute(null,defaultEmptyProvider)).containsExactly(mainSet);
@@ -164,10 +158,10 @@ public class DependencyResourcesComputerTest {
     public void singleSetWithMicroApkRes() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         File microFile = temporaryFolder.newFolder("micro");
-        setFileCollection(computer::setMicroApkResDirectory, microFile);
+        computer.getMicroApkResDirectory().from(microFile);
         mainSet.addSource(microFile);
 
         assertThat(computer.compute(null, defaultEmptyProvider)).containsExactly(mainSet);
@@ -179,10 +173,10 @@ public class DependencyResourcesComputerTest {
     public void singleSetWithExtraRes() throws Exception {
         File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
         File extraFile = temporaryFolder.newFolder("extra");
-        setFileCollectionSupplier(computer::setExtraGeneratedResFolders, extraFile);
+        computer.getExtraGeneratedResFolders().from(extraFile);
         mainSet.addSource(extraFile);
 
         assertThat(computer.compute(null, defaultEmptyProvider)).containsExactly(mainSet);
@@ -195,10 +189,10 @@ public class DependencyResourcesComputerTest {
         File file = temporaryFolder.newFolder("src", "main");
         File file2 = temporaryFolder.newFolder("src", "main2");
         ResourceSet mainSet =
-                createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file, file2);
+                createResourceSet(folderSets, BuilderConstants.MAIN, file, file2);
 
         File debugFile = temporaryFolder.newFolder("src", "debug");
-        ResourceSet debugSet = createResourceSet(folderSets, artifactMap, "debug", debugFile);
+        ResourceSet debugSet = createResourceSet(folderSets,  "debug", debugFile);
 
         File libFile = temporaryFolder.newFolder("foo", "bar", "1.0");
         File libFile2 = temporaryFolder.newFolder("foo", "bar", "2.0");
@@ -220,55 +214,40 @@ public class DependencyResourcesComputerTest {
         mainSet.addSource(rsFile);
 
         File genFile = temporaryFolder.newFolder("generated");
-        setFileCollection(computer::setGeneratedResOutputDir, genFile);
+        computer.getGeneratedResOutputDir().from(genFile);
         mainSet.addSource(genFile);
 
         File extraFile = temporaryFolder.newFolder("extra");
-        setFileCollectionSupplier(computer::setExtraGeneratedResFolders, extraFile);
+        computer.getExtraGeneratedResFolders().from(extraFile);
         mainSet.addSource(extraFile);
 
         File microFile = temporaryFolder.newFolder("micro");
-        setFileCollection(computer::setMicroApkResDirectory, microFile);
+        computer.getMicroApkResDirectory().from(microFile);
         mainSet.addSource(microFile);
 
-        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
+        assertThat(computer.getLibraries().get().getArtifactFiles()).containsExactly(libFile, libFile2);
         assertThat(computer.compute(null, renderscriptResProvider))
                 .containsExactly(librarySet2, librarySet, mainSet, debugSet)
                 .inOrder();
         // generated files should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles())
                 .containsExactly(file, file2, rsFile, genFile, extraFile, microFile);
-        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
+        assertThat(computer.getLibraries().get().getArtifactFiles()).containsExactly(libFile, libFile2);
     }
 
     @NonNull
     private ResourceSet createResourceSet(
             List<ResourceSet> folderSets,
-            Map<String, FileCollection> artifactMap,
             String name,
             File... files) {
         ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false, null);
         FileCollection artifact = new FakeFileCollection(Arrays.asList(files));
+        Map<String, FileCollection> artifactMap = new LinkedHashMap<>();
         artifactMap.put(name, artifact);
         mainSet.addSources(artifact.getFiles());
         folderSets.add(mainSet);
+        computer.addResourceSets(artifactMap, false, () -> FakeObjectFactory.getFactory().newInstance(DependencyResourcesComputer.ResourceSourceSetInput.class));
         return mainSet;
-    }
-
-    private static void setFileCollection(Consumer<FileCollection> setter, File... files) {
-        FileCollection fileCollection = mock(FileCollection.class);
-        Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
-        when(fileCollection.getFiles()).thenReturn(fileSet);
-        setter.accept(fileCollection);
-    }
-
-    private static void setFileCollectionSupplier(
-            Consumer<FileCollection> setter,
-            File... files) {
-        FileCollection fileCollection = mock(FileCollection.class);
-        Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
-        when(fileCollection.getFiles()).thenReturn(fileSet);
-        setter.accept(fileCollection);
     }
 
     @NonNull
@@ -309,7 +288,7 @@ public class DependencyResourcesComputerTest {
         when(libraries.getArtifacts()).thenReturn(artifacts);
         when(libraries.getArtifactFiles()).thenReturn(new FakeFileCollection(files));
 
-        computer.setLibraries(libraries);
+        computer.getLibraries().set(libraries);
 
         return resourceSets;
     }

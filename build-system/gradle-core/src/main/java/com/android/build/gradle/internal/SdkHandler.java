@@ -31,6 +31,8 @@ import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.SdkLoader;
 import com.android.builder.sdk.TargetInfo;
+import com.android.builder.utils.SynchronizedFile;
+import com.android.prefs.AndroidLocationsException;
 import com.android.prefs.AndroidLocationsProvider;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -46,6 +48,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -249,7 +252,7 @@ public class SdkHandler {
     }
 
     /**
-     * Ensures that that the system image corresponding to the given hash is installed.
+     * Ensures that the system image corresponding to the given hash is installed.
      *
      * <p>Reports an evaluation warning if the system image package is not present and could not be
      * automatically downloaded and installed.
@@ -270,7 +273,29 @@ public class SdkHandler {
 
         try {
             loader.getSdkInfo(logger);
-            File imageLocation = loader.installSdkTool(sdkLibData, imageHash);
+            // It fails to download a system image if you try to download the same system image
+            // simultaneously. https://issuetracker.google.com/issues/206798666
+            File imageLocation = SynchronizedFile.getInstanceWithMultiProcessLocking(
+                    androidLocationsProvider.getPrefsLocation().resolve(imageHash).toFile()
+            ).write((file) -> {
+                try {
+                    return loader.installSdkTool(sdkLibData, imageHash);
+                } catch (LicenceNotAcceptedException e) {
+                    issueReporter.reportWarning(
+                            IssueReporter.Type.MISSING_SDK_PACKAGE,
+                            imageHash
+                                    + " package is not installed. Please accept the installation"
+                                    + "licence to continue",
+                            imageHash);
+                } catch (InstallFailedException e) {
+                    issueReporter.reportWarning(
+                            IssueReporter.Type.MISSING_SDK_PACKAGE,
+                            imageHash
+                                    + " package is not installed, and automatic installation failed.",
+                            imageHash);
+                }
+                return null;
+            });
             if (imageLocation == null) {
                 issueReporter.reportWarning(
                         Type.MISSING_SDK_PACKAGE,
@@ -278,17 +303,10 @@ public class SdkHandler {
                         imageHash);
             }
             return imageLocation;
-        } catch (LicenceNotAcceptedException e) {
+        } catch (AndroidLocationsException | ExecutionException e) {
             issueReporter.reportWarning(
-                    IssueReporter.Type.MISSING_SDK_PACKAGE,
-                    imageHash
-                            + " package is not installed. Please accept the installation"
-                            + "licence to continue",
-                    imageHash);
-        } catch (InstallFailedException e) {
-            issueReporter.reportWarning(
-                    IssueReporter.Type.MISSING_SDK_PACKAGE,
-                    imageHash + " package is not installed, and automatic installation failed.",
+                    Type.MISSING_SDK_PACKAGE,
+                    imageHash + " package is not installed.",
                     imageHash);
         }
         return null;

@@ -18,7 +18,6 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
-import com.google.common.annotations.Beta;
 
 /**
  * Specialized detector intended for XML resources. Detectors that apply to XML resources should
@@ -27,7 +26,6 @@ import com.google.common.annotations.Beta;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
  * code for the next tools release.</b>
  */
-@Beta
 public abstract class ResourceXmlDetector extends Detector implements XmlScanner {
 
     /**

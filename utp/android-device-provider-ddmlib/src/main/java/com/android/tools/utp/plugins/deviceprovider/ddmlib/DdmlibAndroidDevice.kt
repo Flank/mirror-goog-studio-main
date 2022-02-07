@@ -50,7 +50,7 @@ class DdmlibAndroidDevice(val ddmlibDevice: IDevice) : Device, IDevice by ddmlib
         })
         AndroidDeviceProperties(
             devicePropertyMap,
-            avdName = avdName
+            avdName = ddmlibDevice.avdData.get()?.name,
         )
     }
 
