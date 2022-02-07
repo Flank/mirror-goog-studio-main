@@ -168,6 +168,7 @@ build:dynamic --strategy=kotlinc=dynamic
 build:dynamic --strategy=formc=dynamic
 build:dynamic --strategy=singlejar=dynamic
 build:dynamic --strategy=MergedZip=dynamic
+build:dynamic --strategy=CreateJvmCompileJar=dynamic
 # Configure auxiliary java mnemonics to run dynamically
 build:dynamic --strategy=JavaIjar=dynamic
 build:dynamic --strategy=JavaDeployJar=dynamic
