@@ -156,7 +156,6 @@ class CoreLibraryDesugarTest {
                 }
             """.trimIndent()
         )
-
         addSourceWithDesugarApiToLibraryModule()
     }
 
@@ -182,6 +181,8 @@ class CoreLibraryDesugarTest {
 
             android.lintOptions.abortOnError = true
         """.trimIndent())
+        executor().run("app:lintDebug")
+        // Run it twice as a regression test for http://b/218289804.
         executor().run("app:lintDebug")
     }
 
