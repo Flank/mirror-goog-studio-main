@@ -23,6 +23,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -329,6 +330,7 @@ interface VariantServices : BaseServices {
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun fileTree(dir: Any): ConfigurableFileTree
 
+    fun regularFileProperty(): RegularFileProperty
     fun directoryProperty(): DirectoryProperty
     fun fileTree(): ConfigurableFileTree
 

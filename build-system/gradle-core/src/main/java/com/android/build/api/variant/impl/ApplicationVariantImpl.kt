@@ -255,7 +255,8 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
         CodeTransparencyImpl(
-            global.bundleOptions.codeTransparency.signing
-        )
+            global.bundleOptions.codeTransparency.signing,
+        ),
+        internalServices,
     )
 }

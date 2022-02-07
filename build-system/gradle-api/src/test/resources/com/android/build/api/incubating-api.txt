@@ -763,6 +763,7 @@ com.android.build.api.variant.AnnotationProcessor.getArguments: org.gradle.api.p
 com.android.build.api.variant.AnnotationProcessor.getClassNames: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getBundleConfig: com.android.build.api.variant.BundleConfig ()
 com.android.build.api.variant.BundleConfig
+com.android.build.api.variant.BundleConfig.addMetadataFile: void (java.lang.String, org.gradle.api.provider.Provider<org.gradle.api.file.RegularFile>)
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)

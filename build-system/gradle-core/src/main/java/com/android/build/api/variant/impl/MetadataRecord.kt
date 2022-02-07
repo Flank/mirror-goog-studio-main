@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,21 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.BundleConfig
-import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
-class BundleConfigImpl(
-    override val codeTransparency: CodeTransparencyImpl,
-    val variantServices: VariantServices,
-): BundleConfig {
+/**
+ * Holds information of metadata file that will be eventually added to the resulting .aab file.
+ */
+class MetadataRecord(
+    @get:Input
+    val directory: String,
 
-    internal val metadataFiles = variantServices.listPropertyOf(MetadataRecord::class.java) {}
-
-    override fun addMetadataFile(metadataDirectory: String, file: Provider<RegularFile>) {
-        metadataFiles.add(
-            MetadataRecord(
-                metadataDirectory,
-                file
-            )
-        )
-    }
-}
+    @get: InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val metadataFile: Provider<RegularFile>
+)
