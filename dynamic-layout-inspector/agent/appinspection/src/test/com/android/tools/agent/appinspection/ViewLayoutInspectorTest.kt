@@ -109,6 +109,14 @@ class ViewLayoutInspectorTest {
             responseQueue.add(bytes)
         }
 
+        val packageName = "view.inspector.test"
+        val root = ViewGroup(Context(packageName, createResources(packageName))).apply {
+            width = 100
+            height = 200
+            setAttachInfo(View.AttachInfo())
+        }
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
         val startFetchCommand = Command.newBuilder().apply {
             startFetchCommandBuilder.apply {
                 continuous = true
@@ -121,6 +129,7 @@ class ViewLayoutInspectorTest {
         responseQueue.take().let { bytes ->
             val response = Response.parseFrom(bytes)
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error).isEmpty()
         }
 
         val stopFetchCommand = Command.newBuilder().apply {
@@ -133,6 +142,53 @@ class ViewLayoutInspectorTest {
         responseQueue.take().let { bytes ->
             val response = Response.parseFrom(bytes)
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.STOP_FETCH_RESPONSE)
+        }
+    }
+
+    @Test
+    fun canStartWithNoWindowInitially() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(5)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        var checkCount = 0
+        val packageName = "view.inspector.test"
+        val root = object: View(Context(packageName, createResources(packageName))) {
+            override fun isAttachedToWindow(): Boolean {
+                // For the first few tries say this window isn't attached and thus not a valid root
+                return checkCount++ > 5
+            }
+        }.apply {
+            setAttachInfo(View.AttachInfo())
+        }
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = false
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error).isEmpty()
+        }
+        ThreadUtils.runOnMainThread { }.get()
+
+        // If we didn't get any roots initially the view callback won't be registered and we won't
+        // get a response here.
+        root.forcePictureCapture(Picture(byteArrayOf(1)))
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
         }
     }
 
@@ -313,6 +369,7 @@ class ViewLayoutInspectorTest {
             responseQueue.take().let { bytes ->
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+                assertThat(response.startFetchResponse.error).isEmpty()
             }
 
             // In tests, invalidating a view does nothing. We need to trigger the capture manually.
@@ -359,6 +416,7 @@ class ViewLayoutInspectorTest {
             responseQueue.take().let { bytes ->
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+                assertThat(response.startFetchResponse.error).isEmpty()
             }
             ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
@@ -1290,6 +1348,7 @@ class ViewLayoutInspectorTest {
             responseQueue.take().let { bytes ->
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+                assertThat(response.startFetchResponse.error).isEmpty()
             }
             ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
@@ -1332,6 +1391,7 @@ class ViewLayoutInspectorTest {
             responseQueue.take().let { bytes ->
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+                assertThat(response.startFetchResponse.error).isEmpty()
             }
             ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
@@ -1387,6 +1447,7 @@ class ViewLayoutInspectorTest {
         responseQueue.take().let { bytes ->
             val response = Response.parseFrom(bytes)
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error).isEmpty()
         }
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
@@ -1592,6 +1653,7 @@ class ViewLayoutInspectorTest {
         responseQueue.take().let { bytes ->
             val response = Response.parseFrom(bytes)
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error).isEmpty()
         }
         // Wait for startCommand to finish initializing
         ThreadUtils.runOnMainThread { }.get(10, TimeUnit.SECONDS) ?: throw TimeoutException()
@@ -1750,6 +1812,7 @@ class ViewLayoutInspectorTest {
         responseQueue.take().let { bytes ->
             val response = Response.parseFrom(bytes)
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error).isEmpty()
         }
 
         root.forcePictureCapture(fakePicture)
