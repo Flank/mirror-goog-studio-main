@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.TestResult;
 import com.android.ddmlib.testrunner.XmlTestRunListener;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -56,8 +57,10 @@ public class CustomTestRunListener extends XmlTestRunListener {
 
     @Override
     protected File getResultFile(File reportDir) throws IOException {
-        return new File(reportDir,
-                "TEST-" + mDeviceName + "-" + mProjectPath + "-" + mFlavorName + ".xml");
+        return new File(
+                reportDir,
+                FileUtils.sanitizeFileName(
+                        "TEST-" + mDeviceName + "-" + mProjectPath + "-" + mFlavorName + ".xml"));
     }
 
     @Override
