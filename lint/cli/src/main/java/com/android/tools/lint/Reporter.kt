@@ -87,7 +87,6 @@ import com.android.tools.lint.checks.ToastDetector
 import com.android.tools.lint.checks.TranslationDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.TypographyDetector
-import com.android.tools.lint.checks.UnpackedNativeCodeDetector
 import com.android.tools.lint.checks.UnsafeBroadcastReceiverDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
 import com.android.tools.lint.checks.UselessViewDetector
@@ -527,7 +526,6 @@ abstract class Reporter protected constructor(
                     TypographyDetector.FRACTIONS,
                     TypographyDetector.OTHER,
                     TypographyDetector.QUOTES,
-                    UnpackedNativeCodeDetector.ISSUE,
                     UnsafeBroadcastReceiverDetector.BROADCAST_SMS,
                     UnusedResourceDetector.ISSUE,
                     UnusedResourceDetector.ISSUE_IDS,

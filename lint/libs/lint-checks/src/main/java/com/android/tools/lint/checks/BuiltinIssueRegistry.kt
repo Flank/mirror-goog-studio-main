@@ -421,7 +421,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 TypographyDetector.OTHER,
                 TypographyDetector.QUOTES,
                 UastImplementationDetector.ISSUE,
-                UnpackedNativeCodeDetector.ISSUE,
                 UnsafeBroadcastReceiverDetector.ACTION_STRING,
                 UnsafeBroadcastReceiverDetector.BROADCAST_SMS,
                 UnsafeNativeCodeDetector.LOAD,
@@ -521,6 +520,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
 
         // No longer the recommendation -- b/201700393
         "MediaCapabilities",
+
+        // No longer the recommentation -- b/216662628
+        "UnpackedNativeCode",
 
         // Deleted; no longer needed thanks to d8
         "Assert"
