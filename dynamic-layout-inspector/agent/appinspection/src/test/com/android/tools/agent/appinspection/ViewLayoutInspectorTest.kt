@@ -104,7 +104,6 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun canStartAndStopInspector() = createViewInspector { viewInspector ->
-
         val responseQueue = ArrayBlockingQueue<ByteArray>(1)
         inspectorRule.commandCallback.replyListeners.add { bytes ->
             responseQueue.add(bytes)
@@ -1969,12 +1968,15 @@ class ViewLayoutInspectorTest {
         // extras after.
         val initialThreads = Looper.getLoopers().keys.toSet()
 
-        block(viewInspector)
-        viewInspector.onDispose()
-
-        Looper.getLoopers().keys
-            .filter { !initialThreads.contains(it) }
-            .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }
+        try {
+            block(viewInspector)
+        }
+        finally {
+            viewInspector.onDispose()
+            Looper.getLoopers().keys
+                .filter { !initialThreads.contains(it) }
+                .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }
+        }
     }
 
     @Suppress("SameParameterValue")

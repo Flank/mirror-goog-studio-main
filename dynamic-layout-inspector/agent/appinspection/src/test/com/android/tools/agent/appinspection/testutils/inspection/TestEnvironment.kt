@@ -22,7 +22,6 @@ import androidx.inspection.InspectorEnvironment
 import androidx.inspection.InspectorExecutors
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 
 /**
  * A simple implementation of the [InspectorEnvironment] class, which as a side effect spins up its
@@ -32,7 +31,7 @@ import java.util.concurrent.Executors
  *
  * See also: [InspectorRule]
  */
-class TestInspectorEnvironment() : InspectorEnvironment {
+class TestInspectorEnvironment : InspectorEnvironment {
 
     private val looperFuture = CompletableFuture<Looper>()
     private val inspectorThread = Thread(
