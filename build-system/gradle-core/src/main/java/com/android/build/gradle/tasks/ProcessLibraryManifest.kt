@@ -106,7 +106,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
 
     private var isNamespaced = false
 
-    override fun doFullTaskAction() {
+    override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ProcessLibWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.variantName.set(variantName)
