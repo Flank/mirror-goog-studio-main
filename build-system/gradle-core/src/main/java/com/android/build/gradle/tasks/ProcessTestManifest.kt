@@ -101,7 +101,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     var navigationJsons: FileCollection? = null
         private set
 
-    override fun doFullTaskAction() {
+    override fun doTaskAction() {
         val dirName = apkData.get().variantOutputConfiguration.dirName()
         val manifestOutputFolder =
             if (Strings.isNullOrEmpty(dirName)) packagedManifestOutputDirectory.get().asFile

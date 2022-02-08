@@ -120,7 +120,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         private set
 
     @Throws(IOException::class)
-    override fun doFullTaskAction() {
+
+    override fun doTaskAction() {
         if (baseModuleDebuggable.isPresent) {
             val isDebuggable = optionalFeatures.get()
                 .contains(Invoker.Feature.DEBUGGABLE)

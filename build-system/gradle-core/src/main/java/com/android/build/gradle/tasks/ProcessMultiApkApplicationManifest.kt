@@ -79,7 +79,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
     @get:OutputDirectory
     abstract val multiApkManifestOutputDirectory: DirectoryProperty
 
-    override fun doFullTaskAction() {
+    override fun doTaskAction() {
         // read the output of the compatible screen manifest.
         val compatibleScreenManifests =
             BuiltArtifactsLoaderImpl().load(compatibleScreensManifest)
