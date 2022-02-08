@@ -196,6 +196,7 @@ public class Deployer {
             runner.runAsync(canceller);
 
             App app = new App(packageName, info.apks, adb.getDevice(), logger);
+            // we call get to make sure the coroutine debugger is installer before the app can start
             boolean coroutineDebuggerInstalled =
                     installCoroutineDebugger != null ? installCoroutineDebugger.get() : false;
             return new Result(info.skippedInstall, false, coroutineDebuggerInstalled, app);
