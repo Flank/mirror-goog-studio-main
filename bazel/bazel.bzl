@@ -6,6 +6,23 @@ load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "run_singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
+ImlModuleInfo = provider(
+    doc = 'Info produced by the iml_module rule.',
+    fields = [
+        'module_jars',
+        'forms',
+        'test_forms',
+        'java_deps',
+        'test_provider',
+        'main_provider',
+        'module_deps',
+        'plugin_deps',
+        'external_deps',
+        'names',
+        'plugin',
+    ],
+)
+
 # This is a custom implementation of label "tags".
 # A label of the form:
 #   "//package/directory:rule[tag1, tag2]"
@@ -218,15 +235,15 @@ def _iml_module_impl(ctx):
     java_deps = []
     form_deps = []
     for this_dep in ctx.attr.deps:
-        if hasattr(this_dep, "module"):
-            form_deps += this_dep.module.forms
+        if ImlModuleInfo in this_dep:
+            form_deps += this_dep[ImlModuleInfo].forms
         if JavaInfo in this_dep:
             java_deps += [this_dep[JavaInfo]]
     module_deps = []
     plugin_deps = []
     external_deps = []
     for dep in ctx.attr.deps:
-        if hasattr(dep, "module"):
+        if ImlModuleInfo in dep:
             module_deps += [dep]
         elif hasattr(dep, "plugin_info"):
             plugin_deps += [dep]
@@ -241,9 +258,9 @@ def _iml_module_impl(ctx):
     for this_dep in ctx.attr.test_deps:
         if JavaInfo in this_dep:
             test_java_deps += [this_dep[JavaInfo]]
-        if hasattr(this_dep, "module"):
-            test_form_deps += this_dep.module.test_forms
-            test_java_deps += [this_dep.module.test_provider]
+        if ImlModuleInfo in this_dep:
+            test_form_deps += this_dep[ImlModuleInfo].test_forms
+            test_java_deps += [this_dep[ImlModuleInfo].test_provider]
 
     # Exports.
     exports = []
@@ -251,8 +268,8 @@ def _iml_module_impl(ctx):
     for export in ctx.attr.exports:
         if JavaInfo in export:
             exports += [export[JavaInfo]]
-        if hasattr(export, "module"):
-            test_exports += [export.module.test_provider]
+        if ImlModuleInfo in export:
+            test_exports += [export[ImlModuleInfo].test_provider]
 
     # Runfiles.
     # Note: the runfiles for test-only deps should technically not be in
@@ -311,25 +328,25 @@ def _iml_module_impl(ctx):
         use_ijar = False,
     )
 
-    return struct(
-        module = struct(
-            module_jars = ctx.outputs.production_jar,
-            forms = main_forms,
-            test_forms = test_forms,
-            java_deps = java_deps,
-            test_provider = test_provider,
-            main_provider = main_provider,
-            module_deps = depset(direct = module_deps),
-            plugin_deps = depset(direct = plugin_deps),
-            external_deps = depset(direct = external_deps),
-            names = names,
-            plugin = plugin_xml,
-        ),
-        providers = [
-            main_provider,
-            DefaultInfo(runfiles = runfiles),
-        ],
+    iml_module_info = ImlModuleInfo(
+        module_jars = ctx.outputs.production_jar,
+        forms = main_forms,
+        test_forms = test_forms,
+        java_deps = java_deps,
+        test_provider = test_provider,
+        main_provider = main_provider,
+        module_deps = depset(direct = module_deps),
+        plugin_deps = depset(direct = plugin_deps),
+        external_deps = depset(direct = external_deps),
+        names = names,
+        plugin = plugin_xml,
     )
+
+    return [
+        iml_module_info,
+        main_provider,
+        DefaultInfo(runfiles = runfiles)
+    ]
 
 _iml_module_ = rule(
     attrs = {
@@ -352,13 +369,14 @@ _iml_module_ = rule(
         "test_resources": attr.label_list(allow_files = True),
         "package_prefixes": attr.string_dict(),
         "test_class": attr.string(),
-        "exports": attr.label_list(),
+        "exports": attr.label_list(providers = [[JavaInfo], [ImlModuleInfo]]),
         "roots": attr.string_list(),
         "test_roots": attr.string_list(),
-        "deps": attr.label_list(),
+        # TODO(b/218538628): Add proper support for native libs; right now they are effectively data deps.
+        "deps": attr.label_list(providers = [[JavaInfo], [ImlModuleInfo], [CcInfo]]),
         "runtime_deps": attr.label_list(providers = [JavaInfo]),
-        "test_deps": attr.label_list(),
-        "test_friends": attr.label_list(),
+        "test_deps": attr.label_list(providers = [[JavaInfo], [ImlModuleInfo], [CcInfo]]),
+        "test_friends": attr.label_list(providers = [JavaInfo]),
         "data": attr.label_list(allow_files = True),
         "test_data": attr.label_list(allow_files = True),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
@@ -409,13 +427,13 @@ _iml_module_ = rule(
 def _iml_test_module_impl(ctx):
     runfiles = ctx.attr.iml_module[DefaultInfo].default_runfiles
     return [
-        ctx.attr.iml_module.module.test_provider,  # JavaInfo.
+        ctx.attr.iml_module[ImlModuleInfo].test_provider,  # JavaInfo.
         DefaultInfo(runfiles = runfiles),
     ]
 
 _iml_test_module_ = rule(
     attrs = {
-        "iml_module": attr.label(),
+        "iml_module": attr.label(providers = [ImlModuleInfo]),
     },
     implementation = _iml_test_module_impl,
 )
