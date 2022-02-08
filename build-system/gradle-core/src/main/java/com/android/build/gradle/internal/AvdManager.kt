@@ -28,6 +28,7 @@ import com.android.sdklib.internal.avd.GpuMode
 import com.android.sdklib.internal.avd.HardwareProperties
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
+import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.android.utils.StdLogger
 import org.gradle.api.file.Directory
@@ -69,6 +70,10 @@ class AvdManager(
 
     private val deviceManager: DeviceManager by lazy {
         DeviceManager.createInstance(androidLocationsProvider, sdkDirectory.toPath(), logger)
+    }
+
+    init {
+        FileUtils.mkdirs(avdFolder)
     }
 
     fun createOrRetrieveAvd(
