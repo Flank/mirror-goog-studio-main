@@ -16,12 +16,6 @@
 
 package com.android.manifmerger;
 
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_SPLIT;
-import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -44,6 +38,14 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,13 +61,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
+import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
 
 /**
  * merges android manifest files, idempotent.
@@ -86,7 +87,8 @@ public class ManifestMerger2 {
     private final Map<String, Object> mPlaceHolderValues;
 
     @NonNull
-    private final KeyBasedValueResolver<ManifestSystemProperty> mSystemPropertyResolver;
+    private final KeyBasedValueResolver<ManifestSystemProperty>
+            mSystemPropertyResolver;
 
     @NonNull
     private final ILogger mLogger;
@@ -1326,13 +1328,13 @@ public class ManifestMerger2 {
 
     /**
      * Perform {@link ManifestSystemProperty} injection.
+     *
      * @param mergingReport to log actions and errors.
      * @param xmlDocument the xml document to inject into.
      */
     protected void performSystemPropertiesInjection(
-            @NonNull MergingReport.Builder mergingReport,
-            @NonNull XmlDocument xmlDocument) {
-        for (ManifestSystemProperty manifestSystemProperty : ManifestSystemProperty.values()) {
+            @NonNull MergingReport.Builder mergingReport, @NonNull XmlDocument xmlDocument) {
+        for (ManifestSystemProperty manifestSystemProperty : ManifestSystemProperty.getValues()) {
             String propertyOverride = mSystemPropertyResolver.getValue(manifestSystemProperty);
             if (propertyOverride != null) {
                 manifestSystemProperty.addTo(
@@ -1440,8 +1442,8 @@ public class ManifestMerger2 {
 
         protected final File mMainManifestFile;
 
-        protected final ImmutableMap.Builder<ManifestSystemProperty, Object> mSystemProperties =
-                new ImmutableMap.Builder<>();
+        protected final ImmutableMap.Builder<ManifestSystemProperty, Object>
+                mSystemProperties = new ImmutableMap.Builder<>();
 
         @NonNull
         protected final ILogger mLogger;
@@ -1492,12 +1494,14 @@ public class ManifestMerger2 {
 
         /**
          * Sets a value for a {@link ManifestSystemProperty}
+         *
          * @param override the property to set
          * @param value the value for the property
          * @return itself.
          */
         @NonNull
-        public Invoker setOverride(@NonNull ManifestSystemProperty override, @NonNull String value) {
+        public Invoker setOverride(
+                @NonNull ManifestSystemProperty override, @NonNull String value) {
             mSystemProperties.put(override, value);
             return this;
         }
@@ -1900,15 +1904,20 @@ public class ManifestMerger2 {
         public MergingReport merge() throws MergeFailureException {
 
             // provide some free placeholders values.
-            ImmutableMap<ManifestSystemProperty, Object> systemProperties = mSystemProperties.build();
-            if (systemProperties.containsKey(ManifestSystemProperty.PACKAGE)) {
+            ImmutableMap<ManifestSystemProperty, Object> systemProperties =
+                    mSystemProperties.build();
+            if (systemProperties.containsKey(ManifestSystemProperty.Document.PACKAGE)) {
                 // if the package is provided, make it available for placeholder replacement.
-                mPlaceholders.put(PACKAGE_NAME, systemProperties.get(ManifestSystemProperty.PACKAGE));
+                mPlaceholders.put(
+                        PACKAGE_NAME,
+                        systemProperties.get(ManifestSystemProperty.Document.PACKAGE));
                 // as well as applicationId since package system property overrides everything
                 // but not when output is a library since only the final (application)
                 // application Id should be used to replace libraries "applicationId" placeholders.
                 if (mMergeType != MergeType.LIBRARY) {
-                    mPlaceholders.put(APPLICATION_ID, systemProperties.get(ManifestSystemProperty.PACKAGE));
+                    mPlaceholders.put(
+                            APPLICATION_ID,
+                            systemProperties.get(ManifestSystemProperty.Document.PACKAGE));
                 }
             }
 

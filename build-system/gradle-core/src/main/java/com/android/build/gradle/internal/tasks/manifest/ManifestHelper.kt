@@ -191,31 +191,31 @@ private fun setInjectableValues(
 ) {
 
     if (packageOverride != null && packageOverride.isNotEmpty()) {
-        invoker.setOverride(ManifestSystemProperty.PACKAGE, packageOverride)
+        invoker.setOverride(ManifestSystemProperty.Document.PACKAGE, packageOverride)
     }
 
     versionCode?.let {
         if (it > 0) {
-            invoker.setOverride(ManifestSystemProperty.VERSION_CODE, it.toString())
+            invoker.setOverride(ManifestSystemProperty.Manifest.VERSION_CODE, it.toString())
         }
     }
 
     if (versionName != null && versionName.isNotEmpty()) {
-        invoker.setOverride(ManifestSystemProperty.VERSION_NAME, versionName)
+        invoker.setOverride(ManifestSystemProperty.Manifest.VERSION_NAME, versionName)
     }
     if (minSdkVersion != null && minSdkVersion.isNotEmpty()) {
-        invoker.setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
+        invoker.setOverride(ManifestSystemProperty.UsesSdk.MIN_SDK_VERSION, minSdkVersion)
     }
     if (targetSdkVersion != null && targetSdkVersion.isNotEmpty()) {
-        invoker.setOverride(ManifestSystemProperty.TARGET_SDK_VERSION, targetSdkVersion)
+        invoker.setOverride(ManifestSystemProperty.UsesSdk.TARGET_SDK_VERSION, targetSdkVersion)
     }
     if (maxSdkVersion != null) {
-        invoker.setOverride(ManifestSystemProperty.MAX_SDK_VERSION, maxSdkVersion.toString())
+        invoker.setOverride(ManifestSystemProperty.UsesSdk.MAX_SDK_VERSION, maxSdkVersion.toString())
     }
     if (profileable) {
-        invoker.setOverride(ManifestSystemProperty.SHELL, "true")
-        invoker.setOverride(ManifestSystemProperty.ENABLED, "true")
-        invoker.setOverride(ManifestSystemProperty.TEST_ONLY, "true")
+        invoker.setOverride(ManifestSystemProperty.Profileable.SHELL, "true")
+        invoker.setOverride(ManifestSystemProperty.Profileable.ENABLED, "true")
+        invoker.setOverride(ManifestSystemProperty.Application.TEST_ONLY, "true")
     }
 }
 

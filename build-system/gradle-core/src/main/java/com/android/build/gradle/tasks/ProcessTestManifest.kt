@@ -254,9 +254,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
                     .addLibraryManifest(generatedTestManifest)
                     .addAllowedNonUniqueNamespace(namespace)
-                    .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
-                    .setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
-                    .setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
+                    .setOverride(ManifestSystemProperty.Document.PACKAGE, testApplicationId)
+                    .setOverride(ManifestSystemProperty.UsesSdk.MIN_SDK_VERSION, minSdkVersion)
+                    .setOverride(ManifestSystemProperty.Instrumentation.TARGET_PACKAGE, testedApplicationId)
                     .setNamespace(namespace)
                     .withFeatures(
                         ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK,
@@ -267,24 +267,24 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     intermediateInvoker.setPlaceHolderValue(
                         PlaceholderHandler.INSTRUMENTATION_RUNNER,
                         it)
-                    intermediateInvoker.setOverride(ManifestSystemProperty.NAME, it)
+                    intermediateInvoker.setOverride(ManifestSystemProperty.Instrumentation.NAME, it)
                 }
                 functionalTest?.let {
                     intermediateInvoker.setOverride(
-                        ManifestSystemProperty.FUNCTIONAL_TEST, it.toString()
+                        ManifestSystemProperty.Instrumentation.FUNCTIONAL_TEST, it.toString()
                     )
                 }
                 handleProfiling?.let {
                     intermediateInvoker.setOverride(
-                        ManifestSystemProperty.HANDLE_PROFILING, it.toString()
+                        ManifestSystemProperty.Instrumentation.HANDLE_PROFILING, it.toString()
                     )
                 }
                 if (testLabel != null) {
-                    intermediateInvoker.setOverride(ManifestSystemProperty.LABEL, testLabel)
+                    intermediateInvoker.setOverride(ManifestSystemProperty.Instrumentation.LABEL, testLabel)
                 }
                 if (targetSdkVersion != "-1") {
                     intermediateInvoker.setOverride(
-                        ManifestSystemProperty.TARGET_SDK_VERSION, targetSdkVersion
+                        ManifestSystemProperty.UsesSdk.TARGET_SDK_VERSION, targetSdkVersion
                     )
                 }
                 tempFile2 = File.createTempFile("tempFile2ProcessTestManifest", ".xml", tmpDir)
@@ -299,7 +299,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 .withFeatures(
                     ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS
                 )
-                .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
+                .setOverride(ManifestSystemProperty.Document.PACKAGE, testApplicationId)
                 .addManifestProviders(manifestProviders)
                 .setPlaceHolderValues(manifestPlaceholders)
                 .addNavigationJsons(navigationJsons)

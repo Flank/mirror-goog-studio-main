@@ -30,206 +30,38 @@ import org.w3c.dom.Element
  * List of manifest files properties that can be directly overridden without using a
  * placeholder.
  */
-enum class ManifestSystemProperty : AutoAddingProperty {
-    /**
-     * Allow setting the merged manifest file package name.
-     */
-    PACKAGE {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElement(this, actionRecorder, value, document.rootNode)
+interface ManifestSystemProperty : AutoAddingProperty {
+
+    companion object {
+
+        @JvmStatic
+        val values: List<ManifestSystemProperty> = listOf(
+            Application.values(),
+            Document.values(),
+            Instrumentation.values(),
+            Manifest.values(),
+            Profileable.values(),
+            UsesSdk.values()
+        ).flatMap { it.asList() }
+
+        @JvmStatic
+        fun valueOf(value: String): ManifestSystemProperty {
+            return values.associateBy(ManifestSystemProperty::name)[value]
+                ?: throw IllegalArgumentException("'$value' not a valid ManifestSystemProperty.")
         }
-    },
+    }
+
+    val name: String
 
     /**
      * @see [
-     * http://developer.android.com/guide/topics/manifest/manifest-element.html.vcode](http://developer.android.com/guide/topics/manifest/manifest-element.html.vcode)
+     * https://developer.android.com/guide/topics/manifest/application-element](https://developer.android.com/guide/topics/manifest/application-element)
      */
-    VERSION_CODE {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(this, actionRecorder, value, document.rootNode)
-        }
-    },
+    enum class Application : ManifestSystemProperty {
 
-    /**
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/manifest-element.html.vname](http://developer.android.com/guide/topics/manifest/manifest-element.html.vname)
-     */
-    VERSION_NAME {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(this, actionRecorder, value, document.rootNode)
-        }
-    },
+        TEST_ONLY;
 
-    /**
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.min](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.min)
-     */
-    MIN_SDK_VERSION {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetUseSdk(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.target](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.target)
-     */
-    TARGET_SDK_VERSION {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetUseSdk(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.max](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.max)
-     */
-    MAX_SDK_VERSION {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetUseSdk(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * Name of the instrumentation runner.
-     *
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/instrumentation-element.html](http://developer.android.com/guide/topics/manifest/instrumentation-element.html)
-     */
-    NAME {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetInstrumentation(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * Target package for the instrumentation.
-     *
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/instrumentation-element.html](http://developer.android.com/guide/topics/manifest/instrumentation-element.html)
-     */
-    TARGET_PACKAGE {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetInstrumentation(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * Functional test attribute for the instrumentation.
-     *
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/instrumentation-element.html](http://developer.android.com/guide/topics/manifest/instrumentation-element.html)
-     */
-    FUNCTIONAL_TEST {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetInstrumentation(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * Handle profiling attribute for the instrumentation.
-     *
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/instrumentation-element.html](http://developer.android.com/guide/topics/manifest/instrumentation-element.html)
-     */
-    HANDLE_PROFILING {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetInstrumentation(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * Label attribute for the instrumentation.
-     *
-     * @see [
-     * http://developer.android.com/guide/topics/manifest/instrumentation-element.html](http://developer.android.com/guide/topics/manifest/instrumentation-element.html)
-     */
-    LABEL {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            addToElementInAndroidNS(
-                this, actionRecorder, value,
-                createOrGetInstrumentation(actionRecorder, document)
-            )
-        }
-    },
-
-    /**
-     * Test_only attribute for the application.
-     *
-     * @see [
-     * https://developer.android.com/guide/topics/manifest/application-element.testOnly](https://developer.android.com/guide/topics/manifest/application-element.testOnly)
-     */
-    TEST_ONLY {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
+        override fun addTo(actionRecorder: ActionRecorder, document: XmlDocument, value: String) {
             val msp = createOrGetElementInManifest(
                 actionRecorder,
                 document,
@@ -238,200 +70,198 @@ enum class ManifestSystemProperty : AutoAddingProperty {
             )
             addToElementInAndroidNS(this, actionRecorder, value, msp)
         }
-    },
-
-    /**
-     * Shell attribute set for Profileable
-     *
-     * @see [
-     * https://developer.android.com/guide/topics/manifest/profileable-element](https://developer.android.com/guide/topics/manifest/profileable-element)
-     */
-    SHELL {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            // Assume there is always an application element.
-            val applicationElement = document.getByTypeAndKey(NodeTypes.APPLICATION, null)
-            val profileable = createOrGetProfileable(
-                actionRecorder, document, applicationElement.get().xml
-            )
-            addToElementInAndroidNS(
-                this, actionRecorder, value, profileable
-            )
-        }
-    },
-
-    /**
-     * Enabled attribute set for Profileable
-     *
-     * @see [
-     * https://developer.android.com/guide/topics/manifest/profileable-element](https://developer.android.com/guide/topics/manifest/profileable-element)
-     */
-    ENABLED {
-        override fun addTo(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            value: String
-        ) {
-            // Assume there is always an application element.
-            val applicationElement = document.getByTypeAndKey(NodeTypes.APPLICATION, null)
-            val profileable = createOrGetProfileable(
-                actionRecorder, document, applicationElement.get().xml
-            )
-            addToElementInAndroidNS(
-                this,
-                actionRecorder,
-                value,
-                profileable
-            )
-        }
-    };
-
-    fun toCamelCase(): String {
-        return SdkUtils.constantNameToCamelCase(name)
     }
 
-    companion object {
-        // utility method to add an attribute which name is derived from the enum name().
-        private fun addToElement(
-            manifestSystemProperty: ManifestSystemProperty,
-            actionRecorder: ActionRecorder,
-            value: String,
-            to: XmlElement
-        ) {
-            to.xml.setAttribute(manifestSystemProperty.toCamelCase(), value)
-            val xmlAttribute = XmlAttribute(
-                to,
-                to.xml.getAttributeNode(manifestSystemProperty.toCamelCase()), null
-            )
-            recordElementInjectionAction(actionRecorder, to, xmlAttribute)
-        }
+    enum class Document : ManifestSystemProperty {
 
-        // utility method to add an attribute in android namespace which local name is derived from
-        // the enum name().
-        private fun addToElementInAndroidNS(
-            manifestSystemProperty: ManifestSystemProperty,
-            actionRecorder: ActionRecorder,
-            value: String,
-            to: XmlElement
-        ) {
-            val toolsPrefix = XmlUtils.lookupNamespacePrefix(
-                to.xml, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true
-            )
-            to.xml.setAttributeNS(
-                SdkConstants.ANDROID_URI,
-                toolsPrefix + XmlUtils.NS_SEPARATOR + manifestSystemProperty.toCamelCase(),
-                value
-            )
-            val attr = to.xml.getAttributeNodeNS(
-                SdkConstants.ANDROID_URI,
-                manifestSystemProperty.toCamelCase()
-            )
-            val xmlAttribute = XmlAttribute(to, attr, null)
-            recordElementInjectionAction(actionRecorder, to, xmlAttribute)
+        PACKAGE;
+        override fun addTo(actionRecorder: ActionRecorder, document: XmlDocument, value: String) {
+            addToElement(this, actionRecorder, value, document.rootNode)
         }
+    }
 
-        private fun recordElementInjectionAction(
-            actionRecorder: ActionRecorder,
-            to: XmlElement,
-            xmlAttribute: XmlAttribute
-        ) {
-            actionRecorder.recordNodeAction(to, Actions.ActionType.INJECTED)
-            actionRecorder.recordAttributeAction(
-                xmlAttribute, AttributeRecord(
-                    Actions.ActionType.INJECTED,
-                    SourceFilePosition(to.sourceFile, SourcePosition.UNKNOWN),
-                    xmlAttribute.id,
-                    null,  /* reason */
-                    null /* attributeOperationType */
+    /**
+     * @see [
+     * http://developer.android.com/guide/topics/manifest/instrumentation-element.html](http://developer.android.com/guide/topics/manifest/instrumentation-element.html)
+     */
+    enum class Instrumentation : ManifestSystemProperty {
+        FUNCTIONAL_TEST,
+        HANDLE_PROFILING,
+        NAME,
+        LABEL,
+
+        TARGET_PACKAGE;
+        override fun addTo(actionRecorder: ActionRecorder, document: XmlDocument, value: String) {
+            addToElementInAndroidNS(
+                this, actionRecorder, value,
+                createOrGetElementInManifest(
+                    actionRecorder,
+                    document,
+                    NodeTypes.INSTRUMENTATION,
+                    "instrumentation injection requested"
                 )
             )
         }
+    }
 
-        // utility method to create or get an existing use-sdk xml element under manifest.
-        // this could be made more generic by adding more metadata to the enum but since there is
-        // only one case so far, keep it simple.
-        private fun createOrGetUseSdk(
-            actionRecorder: ActionRecorder, document: XmlDocument
-        ): XmlElement {
-            return createOrGetElementInManifest(
-                actionRecorder,
-                document,
-                NodeTypes.USES_SDK,
-                "use-sdk injection requested"
-            )
+    /**
+     * @see [
+     * https://developer.android.com/guide/topics/manifest/profileable-element.vcode](https://developer.android.com/guide/topics/manifest/profileable-element.vcode)
+     */
+    enum class Manifest : ManifestSystemProperty {
+
+        VERSION_CODE,
+        VERSION_NAME;
+
+        override fun addTo(actionRecorder: ActionRecorder, document: XmlDocument, value: String) {
+            addToElementInAndroidNS(this, actionRecorder, value, document.rootNode)
         }
+    }
 
-        /** See above for details, similar like for uses-sdk tag */
-        private fun createOrGetInstrumentation(
-            actionRecorder: ActionRecorder, document: XmlDocument
-        ): XmlElement {
-            return createOrGetElementInManifest(
-                actionRecorder,
-                document,
-                NodeTypes.INSTRUMENTATION,
-                "instrumentation injection requested"
-            )
-        }
+    enum class Profileable : ManifestSystemProperty {
 
-        private fun createOrGetProfileable(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            applicationElement: Element
-        ): XmlElement {
-            return createOrGetElement(
-                actionRecorder,
-                document,
-                applicationElement,
-                NodeTypes.PROFILEABLE,
-                "profileable injection requested"
-            )
-        }
+        ENABLED,
+        SHELL;
 
-        private fun createOrGetElementInManifest(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            nodeType: NodeTypes,
-            message: String
-        ): XmlElement {
-            val manifest = document.xml.documentElement
-            return createOrGetElement(actionRecorder, document, manifest, nodeType, message)
-        }
-
-        private fun createOrGetElement(
-            actionRecorder: ActionRecorder,
-            document: XmlDocument,
-            parentElement: Element,
-            nodeType: NodeTypes,
-            message: String
-        ): XmlElement {
-            val elementName = document.model.toXmlName(nodeType)
-            var nodes = parentElement.getElementsByTagName(elementName)
-            if (nodes.length == 0) {
-                nodes = parentElement.getElementsByTagNameNS(SdkConstants.ANDROID_URI, elementName)
-            }
-            return if (nodes.length == 0) {
-                // create it first.
-                val node = parentElement.ownerDocument.createElement(elementName)
-                parentElement.appendChild(node)
-                val xmlElement = XmlElement(node, document)
-                val nodeRecord = NodeRecord(
-                    Actions.ActionType.INJECTED,
-                    SourceFilePosition(
-                        xmlElement.sourceFile,
-                        SourcePosition.UNKNOWN
-                    ),
-                    xmlElement.id,
-                    message,
-                    NodeOperationType.STRICT
+        override fun addTo(actionRecorder: ActionRecorder, document: XmlDocument, value: String) {
+            // Assume there is always an application element.
+            val applicationElement = document.getByTypeAndKey(NodeTypes.APPLICATION, null)
+            addToElementInAndroidNS(
+                this, actionRecorder, value,
+                createOrGetElement(
+                    actionRecorder,
+                    document,
+                    applicationElement.get().xml,
+                    NodeTypes.PROFILEABLE,
+                    "profileable injection requested"
                 )
-                actionRecorder.recordNodeAction(xmlElement, nodeRecord)
-                xmlElement
-            } else {
-                XmlElement((nodes.item(0) as Element), document)
-            }
+            )
         }
+    }
+    /**
+     * @see [
+     * http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.min](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html.min)
+     */
+    enum class UsesSdk : ManifestSystemProperty {
+
+        MAX_SDK_VERSION,
+        MIN_SDK_VERSION,
+        TARGET_SDK_VERSION;
+
+        override fun addTo(actionRecorder: ActionRecorder, document: XmlDocument, value: String) {
+            addToElementInAndroidNS(
+                this, actionRecorder, value,
+                createOrGetElementInManifest(
+                    actionRecorder,
+                    document,
+                    NodeTypes.USES_SDK,
+                    "use-sdk injection requested"
+                )
+            )
+        }
+    }
+}
+
+fun ManifestSystemProperty.toCamelCase(): String {
+    return SdkUtils.constantNameToCamelCase(name)
+}
+
+// utility method to add an attribute which name is derived from the enum name().
+private fun addToElement(
+    elementAttribute: ManifestSystemProperty,
+    actionRecorder: ActionRecorder,
+    value: String,
+    to: XmlElement
+) {
+    to.xml.setAttribute(elementAttribute.toCamelCase(), value)
+    val xmlAttribute = XmlAttribute(
+        to,
+        to.xml.getAttributeNode(elementAttribute.toCamelCase()), null
+    )
+    recordElementInjectionAction(actionRecorder, to, xmlAttribute)
+}
+
+// utility method to add an attribute in android namespace which local name is derived from
+// the enum name().
+private fun addToElementInAndroidNS(
+    elementAttribute: ManifestSystemProperty,
+    actionRecorder: ActionRecorder,
+    value: String,
+    to: XmlElement
+) {
+    val toolsPrefix = XmlUtils.lookupNamespacePrefix(
+        to.xml, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true
+    )
+    to.xml.setAttributeNS(
+        SdkConstants.ANDROID_URI,
+        toolsPrefix + XmlUtils.NS_SEPARATOR + elementAttribute.toCamelCase(),
+        value
+    )
+    val attr = to.xml.getAttributeNodeNS(
+        SdkConstants.ANDROID_URI,
+        elementAttribute.toCamelCase()
+    )
+    val xmlAttribute = XmlAttribute(to, attr, null)
+    recordElementInjectionAction(actionRecorder, to, xmlAttribute)
+}
+
+private fun recordElementInjectionAction(
+    actionRecorder: ActionRecorder,
+    to: XmlElement,
+    xmlAttribute: XmlAttribute
+) {
+    actionRecorder.recordNodeAction(to, Actions.ActionType.INJECTED)
+    actionRecorder.recordAttributeAction(
+        xmlAttribute, AttributeRecord(
+            Actions.ActionType.INJECTED,
+            SourceFilePosition(to.sourceFile, SourcePosition.UNKNOWN),
+            xmlAttribute.id,
+            null,  /* reason */
+            null /* attributeOperationType */
+        )
+    )
+}
+
+private fun createOrGetElementInManifest(
+    actionRecorder: ActionRecorder,
+    document: XmlDocument,
+    nodeType: NodeTypes,
+    message: String
+): XmlElement {
+    val manifest = document.xml.documentElement
+    return createOrGetElement(actionRecorder, document, manifest, nodeType, message)
+}
+
+private fun createOrGetElement(
+    actionRecorder: ActionRecorder,
+    document: XmlDocument,
+    parentElement: Element,
+    nodeType: NodeTypes,
+    message: String
+): XmlElement {
+    val elementName = document.model.toXmlName(nodeType)
+    var nodes = parentElement.getElementsByTagName(elementName)
+    if (nodes.length == 0) {
+        nodes = parentElement.getElementsByTagNameNS(SdkConstants.ANDROID_URI, elementName)
+    }
+    return if (nodes.length == 0) {
+        // create it first.
+        val node = parentElement.ownerDocument.createElement(elementName)
+        parentElement.appendChild(node)
+        val xmlElement = XmlElement(node, document)
+        val nodeRecord = NodeRecord(
+            Actions.ActionType.INJECTED,
+            SourceFilePosition(
+                xmlElement.sourceFile,
+                SourcePosition.UNKNOWN
+            ),
+            xmlElement.id,
+            message,
+            NodeOperationType.STRICT
+        )
+        actionRecorder.recordNodeAction(xmlElement, nodeRecord)
+        xmlElement
+    } else {
+        XmlElement((nodes.item(0) as Element), document)
     }
 }

@@ -298,7 +298,7 @@ public class ManifestMerger2SmallTest {
                 TestUtils.xmlDocumentFromString(
                         TestUtils.sourceFile(getClass(), "testPackageOverride#xml"), xml, mModel);
 
-        ManifestSystemProperty.PACKAGE.addTo(mActionRecorder, refDocument, "com.bar.new");
+        ManifestSystemProperty.Document.PACKAGE.addTo(mActionRecorder, refDocument, "com.bar.new");
         // verify the package value was overridden.
         assertEquals("com.bar.new", refDocument.getRootNode().getXml().getAttribute("package"));
     }
@@ -317,7 +317,7 @@ public class ManifestMerger2SmallTest {
                         xml,
                         mModel);
 
-        ManifestSystemProperty.PACKAGE.addTo(mActionRecorder, refDocument, "com.bar.new");
+        ManifestSystemProperty.Document.PACKAGE.addTo(mActionRecorder, refDocument, "com.bar.new");
         // verify the package value was added.
         assertEquals("com.bar.new", refDocument.getRootNode().getXml().getAttribute("package"));
     }
@@ -336,25 +336,25 @@ public class ManifestMerger2SmallTest {
                         xml,
                         mModel);
 
-        ManifestSystemProperty.VERSION_CODE.addTo(mActionRecorder, document, "101");
+        ManifestSystemProperty.Manifest.VERSION_CODE.addTo(mActionRecorder, document, "101");
         assertEquals("101",
                 document.getXml().getDocumentElement().getAttribute("android:versionCode"));
 
-        ManifestSystemProperty.VERSION_NAME.addTo(mActionRecorder, document, "1.0.1");
+        ManifestSystemProperty.Manifest.VERSION_NAME.addTo(mActionRecorder, document, "1.0.1");
         assertEquals("1.0.1",
                 document.getXml().getDocumentElement().getAttribute("android:versionName"));
 
-        ManifestSystemProperty.MIN_SDK_VERSION.addTo(mActionRecorder, document, "10");
+        ManifestSystemProperty.UsesSdk.MIN_SDK_VERSION.addTo(mActionRecorder, document, "10");
         Element usesSdk = (Element) document.getXml().getElementsByTagName("uses-sdk").item(0);
         assertNotNull(usesSdk);
         assertEquals("10", usesSdk.getAttribute("android:minSdkVersion"));
 
-        ManifestSystemProperty.TARGET_SDK_VERSION.addTo(mActionRecorder, document, "14");
+        ManifestSystemProperty.UsesSdk.TARGET_SDK_VERSION.addTo(mActionRecorder, document, "14");
         usesSdk = (Element) document.getXml().getElementsByTagName("uses-sdk").item(0);
         assertNotNull(usesSdk);
         assertEquals("14", usesSdk.getAttribute("android:targetSdkVersion"));
 
-        ManifestSystemProperty.MAX_SDK_VERSION.addTo(mActionRecorder, document, "16");
+        ManifestSystemProperty.UsesSdk.MAX_SDK_VERSION.addTo(mActionRecorder, document, "16");
         usesSdk = (Element) document.getXml().getElementsByTagName("uses-sdk").item(0);
         assertNotNull(usesSdk);
         assertEquals("16", usesSdk.getAttribute("android:maxSdkVersion"));
@@ -374,7 +374,7 @@ public class ManifestMerger2SmallTest {
                         xml,
                         mModel);
 
-        ManifestSystemProperty.VERSION_CODE.addTo(mActionRecorder, document, "101");
+        ManifestSystemProperty.Manifest.VERSION_CODE.addTo(mActionRecorder, document, "101");
         // using the non namespace aware API to make sure the prefix is the expected one.
         assertEquals("101",
                 document.getXml().getDocumentElement().getAttribute("t:versionCode"));
@@ -402,21 +402,20 @@ public class ManifestMerger2SmallTest {
         assertEquals("9", usesSdk.getAttribute("minSdkVersion"));
         assertEquals(".9", usesSdk.getAttribute("targetSdkVersion"));
 
-
-        ManifestSystemProperty.VERSION_CODE.addTo(mActionRecorder, document, "101");
+        ManifestSystemProperty.Manifest.VERSION_CODE.addTo(mActionRecorder, document, "101");
         assertEquals("101",
                 document.getXml().getDocumentElement().getAttribute("android:versionCode"));
 
-        ManifestSystemProperty.VERSION_NAME.addTo(mActionRecorder, document, "1.0.1");
+        ManifestSystemProperty.Manifest.VERSION_NAME.addTo(mActionRecorder, document, "1.0.1");
         assertEquals("1.0.1",
                 document.getXml().getDocumentElement().getAttribute("android:versionName"));
 
-        ManifestSystemProperty.MIN_SDK_VERSION.addTo(mActionRecorder, document, "10");
+        ManifestSystemProperty.UsesSdk.MIN_SDK_VERSION.addTo(mActionRecorder, document, "10");
         usesSdk = (Element) document.getXml().getElementsByTagName("uses-sdk").item(0);
         assertNotNull(usesSdk);
         assertEquals("10", usesSdk.getAttribute("android:minSdkVersion"));
 
-        ManifestSystemProperty.TARGET_SDK_VERSION.addTo(mActionRecorder, document, "14");
+        ManifestSystemProperty.UsesSdk.TARGET_SDK_VERSION.addTo(mActionRecorder, document, "14");
         usesSdk = (Element) document.getXml().getElementsByTagName("uses-sdk").item(0);
         assertNotNull(usesSdk);
         assertEquals("14", usesSdk.getAttribute("android:targetSdkVersion"));
@@ -469,7 +468,7 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .setOverride(ManifestSystemProperty.PACKAGE, "foo.bar")
+                            .setOverride(ManifestSystemProperty.Document.PACKAGE, "foo.bar")
                             .merge();
 
             assertTrue(mergingReport.getResult().isSuccess());

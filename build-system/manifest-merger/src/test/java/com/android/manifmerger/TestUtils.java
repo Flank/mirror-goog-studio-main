@@ -16,19 +16,20 @@
 
 package com.android.manifmerger;
 
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
+
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 
 /**
  * Utilities for testing ManifestMerge classes.
@@ -48,14 +49,8 @@ public class TestUtils {
         }
     };
 
-    private static final KeyBasedValueResolver<ManifestSystemProperty> NO_PROPERTY_RESOLVER =
-            new KeyBasedValueResolver<ManifestSystemProperty>() {
-                @Nullable
-                @Override
-                public String getValue(@NonNull ManifestSystemProperty key) {
-                    return null;
-                }
-            };
+    private static final KeyBasedValueResolver<ManifestSystemProperty>
+            NO_PROPERTY_RESOLVER = key -> null;
 
     static SourceFile sourceFile(Class sourceClass, String location) {
         return new SourceFile(sourceClass.getSimpleName() + "#" + location);
