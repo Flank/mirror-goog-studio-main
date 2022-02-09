@@ -16,6 +16,12 @@
 
 package com.android.tools.deployer;
 
+import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
@@ -23,13 +29,14 @@ import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
-import org.junit.Assert;
-import org.junit.Test;
-
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -37,11 +44,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ApkParserTest {
 
@@ -324,5 +328,29 @@ public class ApkParserTest {
                            .get(0)
                            .getCategories()
                            .contains("android.intent.category.APP_BROWSER"));
+    }
+
+    @Test
+    public void testApkInJarFile() throws IOException, DeployerException {
+        Path srcFile = TestUtils.resolveWorkspacePath(BASE + "parserTest/app.apk");
+        Path jarFile = Files.createTempFile("container", ".jar");
+        String destinationPath = "jar:" + jarFile.toUri() + "!/app.apk";
+        Files.delete(jarFile);
+        Map<String, String> env = ImmutableMap.of("create", "true");
+        try (FileSystem jarFileSystem =
+                FileSystems.newFileSystem(URI.create("jar:" + jarFile.toUri()), env)) {
+            Path destination = jarFileSystem.getPath("app.apk");
+            Files.copy(srcFile, destination);
+        }
+
+        new ApkParser().parsePaths(ImmutableList.of(destinationPath)).get(0);
+
+        try {
+            new ApkParser().parsePaths(ImmutableList.of("jar:" + jarFile.toUri())).get(0);
+            fail("Parsing of an invalid path should fail.");
+        } catch (DeployerException ignore) {
+        } catch (Throwable t) {
+            fail(t.getMessage());
+        }
     }
 }
