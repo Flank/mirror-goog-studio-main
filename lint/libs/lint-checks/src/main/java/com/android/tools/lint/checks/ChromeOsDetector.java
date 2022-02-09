@@ -443,7 +443,8 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             location,
                             "Expecting `android:resizeableActivity=\"true\"` for this activity "
                                     + "so the user can take advantage of the multi-window environment on "
-                                    + "Chrome OS devices",
+                                    + "all devices. NOTE: beginning with Android 12, "
+                                    + "all apps run in multi-window mode on large screen devices.",
                             fix);
             xmlContext.report(incident, new NotLibraryProject());
         }
