@@ -153,11 +153,14 @@ public class TestVariantFactory
     @NonNull
     @Override
     public BuildFeatureValues createTestFixturesBuildFeatureValues(
-            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions) {
+            @NonNull BuildFeatures buildFeatures,
+            @NonNull ProjectOptions projectOptions,
+            boolean androidResourcesEnabled) {
         if (buildFeatures instanceof TestBuildFeatures) {
             return new TestFixturesBuildFeaturesValuesImpl(
                     buildFeatures,
                     projectOptions,
+                    androidResourcesEnabled,
                     false /* dataBindingOverride */,
                     false /* mlModelBindingOverride */);
         } else {
