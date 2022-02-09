@@ -631,12 +631,11 @@ class ModelBuilder<
         // steps that create bytecode
         val classesFolders = mutableSetOf<File>()
         classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
         component.getCompiledRClassArtifact()?.get()?.asFile?.let {
             classesFolders.add(it)
         }
-        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
-        classesFolders.addAll(component.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH).files)
 
         val testInfo: TestInfo? = when(component) {
             is TestVariantImpl, is AndroidTestImpl -> {
