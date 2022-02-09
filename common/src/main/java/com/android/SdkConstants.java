@@ -2148,6 +2148,10 @@ public final class SdkConstants {
     public static final String VALUE_DISABLED = "disabled";
     public static final String VALUE_CLAMP = "clamp";
 
+    // Values: Wear
+    public static final String VALUE_COMPLICATION_SUPPORTED_TYPES =
+            "android.support.wearable.complications.SUPPORTED_TYPES";
+
     // Value delimiters: Manifest
     public static final String VALUE_DELIMITER_PIPE = "|";
 
