@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
@@ -30,6 +32,8 @@ import com.android.utils.Pair
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth
 import org.gradle.api.file.RegularFile
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +59,8 @@ class R8TaskWithDynamicFeaturesTest {
     private lateinit var featureDexDir: File
     private lateinit var featureJavaResOutputDir: File
     private lateinit var outputProguard: RegularFile
+    private lateinit var workers: WorkerExecutor
+    private lateinit var instantiatorTask: AndroidVariantTask
 
     @Before
     fun setUp() {
@@ -89,6 +95,13 @@ class R8TaskWithDynamicFeaturesTest {
         featureDexDir = tmp.newFolder()
         featureJavaResOutputDir = tmp.newFolder()
         outputProguard = Mockito.mock(RegularFile::class.java)
+        with(ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()) {
+            workers = FakeGradleWorkExecutor(
+                objects, tmp.newFolder(), listOf()
+            )
+            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
+            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
+        }
     }
 
     @Test
@@ -99,6 +112,8 @@ class R8TaskWithDynamicFeaturesTest {
         }
 
         runR8(
+            workers = workers,
+            instantiatorTask = instantiatorTask,
             classes = listOf(classesJar.toFile()),
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),
@@ -157,6 +172,8 @@ class R8TaskWithDynamicFeaturesTest {
         }
 
         runR8(
+            workers = workers,
+            instantiatorTask = instantiatorTask,
             classes = listOf(classesJar.toFile()),
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),

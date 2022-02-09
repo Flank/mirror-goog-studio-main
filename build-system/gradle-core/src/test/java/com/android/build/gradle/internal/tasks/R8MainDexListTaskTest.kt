@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
-import com.android.builder.dexing.ProguardOutputFiles
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -30,6 +31,8 @@ import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.file.RegularFile
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -47,11 +50,20 @@ class R8MainDexListTaskTest {
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var outputDir: Path
     private lateinit var outputProguard: RegularFile
+    private lateinit var workers: WorkerExecutor
+    private lateinit var instantiatorTask: AndroidVariantTask
 
     @Before
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
         outputProguard = Mockito.mock(RegularFile::class.java)
+        with(ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()) {
+            workers = FakeGradleWorkExecutor(
+                objects, tmp.newFolder(), listOf()
+            )
+            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
+            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
+        }
     }
 
     @Test
@@ -68,6 +80,8 @@ class R8MainDexListTaskTest {
         }
 
         runR8(
+            workers = workers,
+            instantiatorTask = instantiatorTask,
             classes = listOf(classes.toFile()),
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),
@@ -106,6 +120,8 @@ class R8MainDexListTaskTest {
         }
 
         runR8(
+            workers = workers,
+            instantiatorTask = instantiatorTask,
             classes = listOf(classes.toFile()),
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),
@@ -132,6 +148,8 @@ class R8MainDexListTaskTest {
 }
 
 fun runR8(
+    workers: WorkerExecutor,
+    instantiatorTask: AndroidVariantTask,
     classes: List<File>,
     resources: List<File>,
     referencedInputs: List<File> = listOf(),
@@ -147,8 +165,6 @@ fun runR8(
     featureDexDir: File? = null,
     featureJavaResourceOutputDir: File?
 ) {
-
-
     val proguardConfigurations: MutableList<String> = mutableListOf(
         "-ignorewarnings")
 
@@ -158,6 +174,7 @@ fun runR8(
     val output: File = outputDir.resolve("main").toFile()
 
     R8Task.shrink(
+        workerExecutor = workers,
         bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
         minSdkVersion = minSdkVersion,
         isDebuggable = true,
@@ -170,20 +187,17 @@ fun runR8(
         proguardConfigurationFiles = listOf(),
         proguardConfigurations = proguardConfigurations,
         variantType = VariantTypeImpl.BASE_APK,
-        messageReceiver = NoOpMessageReceiver(),
+        errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
         dexingType = dexingType,
         useFullR8 = false,
         referencedInputs = referencedInputs,
         classes = classes,
         resources = resources,
-        proguardOutputFiles =
-            ProguardOutputFiles(
-                mappingFile.toPath(),
-                proguardOutputDir.resolve("seeds.txt").toPath(),
-                proguardOutputDir.resolve("usage.txt").toPath(),
-                proguardOutputDir.resolve("configuration.txt").toPath(),
-                proguardOutputDir.resolve("missing_rules.txt").toPath(),
-            ),
+        mappingFile = mappingFile,
+        proguardSeedsOutput = proguardOutputDir.resolve("seeds.txt"),
+        proguardUsageOutput = proguardOutputDir.resolve("usage.txt"),
+        proguardConfigurationOutput = proguardOutputDir.resolve("configuration.txt"),
+        missingKeepRulesOutput = proguardOutputDir.resolve("missing_rules.txt"),
         output = output,
         outputResources = outputDir.resolve("java_res.jar").toFile(),
         mainDexListOutput = null,
@@ -192,6 +206,7 @@ fun runR8(
         featureDexDir = featureDexDir,
         featureJavaResourceOutputDir = featureJavaResourceOutputDir,
         libConfiguration = null,
-        outputKeepRulesDir = null
+        outputKeepRulesDir = null,
+        instantiator = instantiatorTask
     )
 }
