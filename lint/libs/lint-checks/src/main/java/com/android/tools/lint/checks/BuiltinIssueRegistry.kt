@@ -228,6 +228,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 JavaScriptInterfaceDetector.ISSUE,
                 JobSchedulerDetector.ISSUE,
                 KeyboardNavigationDetector.ISSUE,
+                KotlinNullnessAnnotationDetector.ISSUE,
                 LabelForDetector.ISSUE,
                 LayoutConsistencyDetector.INCONSISTENT_IDS,
                 LayoutInflationDetector.ISSUE,
@@ -520,9 +521,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
 
         // No longer the recommendation -- b/201700393
         "MediaCapabilities",
-
-        // No longer the recommentation -- b/216662628
-        "UnpackedNativeCode",
 
         // Deleted; no longer needed thanks to d8
         "Assert"
