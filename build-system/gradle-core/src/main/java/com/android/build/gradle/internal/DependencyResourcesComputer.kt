@@ -17,6 +17,8 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.build.gradle.tasks.SourceSetInputs
@@ -25,29 +27,84 @@ import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.IgnoreEmptyDirectories
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.Incremental
 import java.io.File
 
-class DependencyResourcesComputer {
-    @set:VisibleForTesting
-    lateinit var resources: Map<String, FileCollection>
+abstract class DependencyResourcesComputer {
 
-    @set:VisibleForTesting
-    var libraries: ArtifactCollection? = null
+    /**
+     * Each source set within this project is recorded separately as an input.
+     *
+     * This allows us to:
+     * 1. Preserve the order between sourcesets. It doesn't work to flatten these
+     * to a single [PathSensitive.RELATIVE] input, as that would ignore ordering.
+     * 2. Account for multiple source files with the same name. It doesn't work to use the
+     * order-preserving [org.gradle.api.tasks.Classpath], as it ignores duplicate files from
+     * fingerprinting.
+    */
+    abstract class ResourceSourceSetInput {
+        @get:Internal
+        abstract val relative: Property<Boolean>
 
-    @set:VisibleForTesting
-    lateinit var generatedResOutputDir: FileCollection
+        @get:Internal
+        val sourceDirectories: ConfigurableFileCollection
+            get() = if(relative.get()) sourceDirectoriesRelative else sourceDirectoriesAbsolute
 
-    @set:VisibleForTesting
-    var microApkResDirectory: FileCollection? = null
+        @get:InputFiles
+        @get:PathSensitive(PathSensitivity.RELATIVE)
+        @get:Incremental
+        @get:IgnoreEmptyDirectories
+        abstract val sourceDirectoriesRelative: ConfigurableFileCollection
 
-    @set:VisibleForTesting
-    var extraGeneratedResFolders: FileCollection? = null
+        @get:InputFiles
+        @get:PathSensitive(PathSensitivity.ABSOLUTE)
+        @get:Incremental
+        @get:IgnoreEmptyDirectories
+        abstract val sourceDirectoriesAbsolute: ConfigurableFileCollection
+    }
 
-    var validateEnabled: Boolean = false
-        private set
+    /** Local resources from within this project */
+    @get:Nested
+    abstract val resources: MapProperty<String, ResourceSourceSetInput>
+
+    @get:Internal
+    abstract val libraries: Property<ArtifactCollection>
+
+    /** Resources from dependencies (e.g. in apps and tests) */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Incremental
+    abstract val librarySourceSets: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val generatedResOutputDir: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val microApkResDirectory: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val extraGeneratedResFolders: ConfigurableFileCollection
+
+    @get:Input
+    abstract val validateEnabled: Property<Boolean>
 
     private fun addLibraryResources(
         libraries: ArtifactCollection?,
@@ -66,7 +123,7 @@ class DependencyResourcesComputer {
                 val resourceSet = ResourceSet(
                     ProcessApplicationManifest.getArtifactName(artifact),
                     ResourceNamespace.RES_AUTO, null,
-                    validateEnabled,
+                    validateEnabled.get(),
                     aaptEnv
                 )
                 resourceSet.isFromDependency = true
@@ -95,16 +152,16 @@ class DependencyResourcesComputer {
         aaptEnv: String?,
         renderscriptResOutputDir: Provider<Directory>
     ): List<ResourceSet> {
-        val sourceFolderSets = getResSet(resources, aaptEnv)
+        val sourceFolderSets = getResSet(resources.get().mapValues { it.value.sourceDirectories }, aaptEnv)
         var size = sourceFolderSets.size
-        libraries?.let {
+        libraries.orNull?.let {
             size += it.artifacts.size
         }
 
         val resourceSetList = ArrayList<ResourceSet>(size)
 
         addLibraryResources(
-            libraries,
+            libraries.orNull,
             resourceSetList,
             precompileDependenciesResources,
             aaptEnv
@@ -121,13 +178,8 @@ class DependencyResourcesComputer {
         }
 
         generatedResFolders.addAll(generatedResOutputDir.files)
-
-        extraGeneratedResFolders?.let {
-            generatedResFolders.addAll(it.files)
-        }
-        microApkResDirectory?.let {
-            generatedResFolders.addAll(it.files)
-        }
+        generatedResFolders.addAll(extraGeneratedResFolders.files)
+        generatedResFolders.addAll(microApkResDirectory.files)
 
         // add the generated files to the main set.
         if (sourceFolderSets.isNotEmpty()) {
@@ -144,11 +196,11 @@ class DependencyResourcesComputer {
     }
 
     private fun getResSet(
-        resourcesMap: Map<String, FileCollection> = resources, aaptEnv: String?)
+        resourcesMap: Map<String, FileCollection>, aaptEnv: String?)
     : List<ResourceSet> {
         return resourcesMap.map {
             val resourceSet = ResourceSet(
-                it.key, ResourceNamespace.RES_AUTO, null, validateEnabled, aaptEnv)
+                it.key, ResourceNamespace.RES_AUTO, null, validateEnabled.get(), aaptEnv)
             resourceSet.addSources(it.value.files)
             resourceSet
         }
@@ -158,26 +210,45 @@ class DependencyResourcesComputer {
         creationConfig: ComponentCreationConfig,
         sourceSetInputs: SourceSetInputs,
         microApkResDir: FileCollection,
-        libraryDependencies: ArtifactCollection?) {
+        libraryDependencies: ArtifactCollection?,
+        relativeLocalResources: Boolean,
+    ) {
         val projectOptions = creationConfig.services.projectOptions
         val services = creationConfig.services
 
-        validateEnabled = !projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
-        this.libraries = libraryDependencies
-
-        resources = sourceSetInputs.localResources.forUseAtConfigurationTime().get()
-
-        extraGeneratedResFolders = sourceSetInputs.extraGeneratedResDir
-
-        generatedResOutputDir = if (sourceSetInputs.generatedResDir.isPresent) {
-            services.fileCollection(sourceSetInputs.generatedResDir)
-        } else {
-            services.fileCollection()
+        validateEnabled.setDisallowChanges(!projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION))
+        libraryDependencies?.let {
+            this.libraries.set(it)
+            this.librarySourceSets.from(it.artifactFiles)
         }
+        this.libraries.disallowChanges()
+        this.librarySourceSets.disallowChanges()
+
+        addResourceSets(sourceSetInputs.localResources.get(), relativeLocalResources) {
+            services.newInstance(ResourceSourceSetInput::class.java)
+        }
+        resources.disallowChanges()
+
+        extraGeneratedResFolders.fromDisallowChanges(sourceSetInputs.extraGeneratedResDir)
+
+
+        if (sourceSetInputs.generatedResDir.isPresent) {
+            generatedResOutputDir.fromDisallowChanges(sourceSetInputs.generatedResDir)
+        }
+        generatedResOutputDir.disallowChanges()
 
         if (creationConfig.taskContainer.generateApkDataTask != null) {
-            microApkResDirectory = microApkResDir
+            microApkResDirectory.from(microApkResDir)
+        }
+    }
 
+    @VisibleForTesting
+    fun addResourceSets(resourcesMap: Map<String, FileCollection>, relative: Boolean, blockFactory: () -> ResourceSourceSetInput) {
+        resourcesMap.forEach{(name, fileCollection) ->
+            resources.put(name, blockFactory().also {
+                it.relative.set(relative)
+                it.sourceDirectories.fromDisallowChanges(fileCollection)
+            })
         }
     }
 }

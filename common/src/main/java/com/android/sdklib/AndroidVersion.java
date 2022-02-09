@@ -86,6 +86,8 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
         public static final int S = 31;
     }
 
+    private static final Pattern PREVIEW_PATTERN = Pattern.compile("^[A-Z][0-9A-Za-z_]*$");
+
     private static final long serialVersionUID = 1L;
 
     private final int mApiLevel;
@@ -177,8 +179,8 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
      * caller can guarantee that only {@link #getApiString()} will be used later. Wrong things will
      * happen if the caller then tries to resolve the numeric {@link #getApiLevel()}.
      *
-     * @param apiOrCodename A non-null API integer or a codename in its "ALL_CAPS" format. "REL" is
-     *     notable not a valid codename.
+     * @param apiOrCodename A non-null API integer or a codename. "REL" is notable not a valid
+     *     codename.
      * @throws AndroidVersionException if the input isn't a pure integer or doesn't look like a
      *     valid string codename.
      */
@@ -188,11 +190,11 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
         try {
             apiLevel = Integer.parseInt(apiOrCodename);
         } catch (NumberFormatException ignore) {
-            // We don't know the API level. Android platform codenames are all caps.
+            // We don't know the API level.
             // REL is a release-reserved keyword which we can use here.
 
             if (!SdkConstants.CODENAME_RELEASE.equals(apiOrCodename)) {
-                if (Pattern.matches("[A-Z_]+", apiOrCodename)) {
+                if (PREVIEW_PATTERN.matcher(apiOrCodename).matches()) {
                     codename = apiOrCodename;
                 }
             }

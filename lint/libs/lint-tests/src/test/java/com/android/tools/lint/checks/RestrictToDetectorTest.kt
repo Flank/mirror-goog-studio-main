@@ -2259,10 +2259,9 @@ class RestrictToDetectorTest : AbstractCheckTest() {
     }
 
     fun testVisibleForTestingOnConstructorProperty() {
-        // Having @VisibleForTesting on a parameter is kind of nonsensical but this tests
-        // the actual annotation type mapping. The AnnotationDetector will separately add
-        // a check for this. See
-        // https://kotlinlang.org/docs/annotations.html#annotation-use-site-targets
+        // This test used to check annotation handling, but we no longer flag
+        // parameters in this way so now we just make sure we don't complain
+        // here.
         lint().files(
             kotlin(
                 """
@@ -2280,25 +2279,15 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
                 fun test(foo: String) {
-                    TestClass1(foo) // WARN 1
-                    TestClass2(foo) // OK 1
-                    TestClass3(foo) // OK 2
-                    TestClass4(foo) // WARN 2
+                    TestClass1(foo) // OK 1
+                    TestClass2(foo) // OK 2
+                    TestClass3(foo) // OK 3
+                    TestClass4(foo) // OK 4
                 }
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(
-            """
-            src/test/pkg/test.kt:3: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
-                TestClass1(foo) // WARN 1
-                           ~~~
-            src/test/pkg/test.kt:6: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
-                TestClass4(foo) // WARN 2
-                           ~~~
-            0 errors, 2 warnings
-            """
-        )
+        ).run().expectClean()
     }
 
     fun testVisibleForTestingOnClassProperty() {
@@ -2428,5 +2417,33 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         assertTrue(sameLibraryGroupPrefix("foo.bar", "foo.baz"))
         assertTrue(sameLibraryGroupPrefix("com.foo.bar", "com.foo.baz"))
         assertFalse(sameLibraryGroupPrefix("com.foo.bar", "com.bar.qux"))
+    }
+
+    fun testParameterAnnotation() {
+        // https://www.reddit.com/r/androiddev/comments/sckryz/android_studio_bumblebee_202111_stable/hv0o4ii/
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.VisibleForTesting
+
+                class Thing1
+                class Thing2
+                class MyClass(
+                    @VisibleForTesting val arg1: Thing1,
+                    @VisibleForTesting var arg2: Thing2? = null)
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                fun test() {
+                    MyClass(Thing1(), Thing2()) // OK
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 }

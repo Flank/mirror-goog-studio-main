@@ -115,7 +115,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
             VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING -> {
-                if (member != null && type != AnnotationUsageType.METHOD_OVERRIDE) {
+                if (member != null && type != AnnotationUsageType.METHOD_OVERRIDE && type != AnnotationUsageType.METHOD_CALL_PARAMETER) {
                     checkVisibleForTesting(
                         context,
                         element,
