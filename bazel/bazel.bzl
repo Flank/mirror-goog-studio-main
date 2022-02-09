@@ -7,19 +7,18 @@ load(":merge_archives.bzl", "run_singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 ImlModuleInfo = provider(
-    doc = 'Info produced by the iml_module rule.',
+    doc = "Info produced by the iml_module rule.",
     fields = [
-        'module_jars',
-        'forms',
-        'test_forms',
-        'java_deps',
-        'test_provider',
-        'main_provider',
-        'module_deps',
-        'plugin_deps',
-        'external_deps',
-        'names',
-        'plugin',
+        "module_jars",
+        "forms",
+        "test_forms",
+        "java_deps",
+        "test_provider",
+        "main_provider",
+        "module_deps",
+        "plugin_deps",
+        "external_deps",
+        "names",
     ],
 )
 
@@ -58,11 +57,6 @@ def relative_paths(ctx, files, roots):
     return paths
 
 def resources_impl(ctx, name, roots, resources, resources_jar):
-    rel_paths = relative_paths(ctx, resources, roots)
-    plugin = None
-    for k, v in rel_paths:
-        if k == "META-INF/plugin.xml":
-            plugin = v
     zipper_args = ["c", resources_jar.path]
     zipper_files = "".join([k + "=" + v.path + "\n" for k, v in relative_paths(ctx, resources, roots)])
     zipper_list = create_option_file(ctx, name + ".res.lst", zipper_files)
@@ -75,7 +69,6 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
         progress_message = "Creating resources zip...",
         mnemonic = "zipper",
     )
-    return plugin
 
 def _iml_module_jar_impl(
         ctx,
@@ -123,10 +116,9 @@ def _iml_module_jar_impl(
             ijars += [kotlin_ijar]
 
     # Resources.
-    plugin = None
     if resources:
         resources_jar = ctx.actions.declare_file(name + ".res.jar")
-        plugin = resources_impl(ctx, name, roots, resources, resources_jar)
+        resources_impl(ctx, name, roots, resources, resources_jar)
         jars += [resources_jar]
     if res_zips:
         jars += res_zips
@@ -219,7 +211,7 @@ def _iml_module_jar_impl(
     )]
     providers += exports
 
-    return java_common.merge(providers), forms, plugin
+    return java_common.merge(providers), forms
 
 def merge_runfiles(deps):
     return depset(transitive = [
@@ -286,7 +278,7 @@ def _iml_module_impl(ctx):
 
     # If multiple modules we use the label, otherwise use the exact module name
     module_name = names[0] if len(names) == 1 else ctx.label.name
-    main_provider, main_forms, plugin_xml = _iml_module_jar_impl(
+    main_provider, main_forms = _iml_module_jar_impl(
         ctx = ctx,
         name = ctx.label.name,
         roots = ctx.attr.roots,
@@ -309,7 +301,7 @@ def _iml_module_impl(ctx):
     for test_friend in ctx.attr.test_friends:
         friend_jars += test_friend[JavaInfo].compile_jars.to_list()
 
-    test_provider, test_forms, _ = _iml_module_jar_impl(
+    test_provider, test_forms = _iml_module_jar_impl(
         ctx = ctx,
         name = ctx.label.name + "_test",
         roots = ctx.attr.test_roots,
@@ -339,13 +331,12 @@ def _iml_module_impl(ctx):
         plugin_deps = depset(direct = plugin_deps),
         external_deps = depset(direct = external_deps),
         names = names,
-        plugin = plugin_xml,
     )
 
     return [
         iml_module_info,
         main_provider,
-        DefaultInfo(runfiles = runfiles)
+        DefaultInfo(runfiles = runfiles),
     ]
 
 _iml_module_ = rule(
