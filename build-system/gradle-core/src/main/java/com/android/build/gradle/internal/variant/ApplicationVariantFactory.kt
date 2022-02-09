@@ -134,14 +134,16 @@ class ApplicationVariantFactory(
 
     override fun createTestFixturesBuildFeatureValues(
         buildFeatures: BuildFeatures,
-        projectOptions: ProjectOptions
+        projectOptions: ProjectOptions,
+        androidResourcesEnabled: Boolean
     ): BuildFeatureValues {
         buildFeatures as? ApplicationBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
 
         return TestFixturesBuildFeaturesValuesImpl(
             buildFeatures,
-            projectOptions
+            projectOptions,
+            androidResourcesEnabled
         )
     }
 
