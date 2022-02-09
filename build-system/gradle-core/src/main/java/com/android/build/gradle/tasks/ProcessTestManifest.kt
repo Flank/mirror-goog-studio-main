@@ -218,7 +218,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 File.createTempFile("tempFile1ProcessTestManifest", ".xml", tmpDir)
                     .also { tempFile1 = it }
             // we are generating the manifest and if there is an existing one,
-            // it will be overlaid with the generated one
+            // it will be merged with the generated one
             logger.verbose("Generating in %1\$s", generatedTestManifest!!.absolutePath)
             if (handleProfiling != null) {
                 Preconditions.checkNotNull(
@@ -258,7 +258,10 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     .setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
                     .setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
                     .setNamespace(namespace)
-                    .withFeatures(ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK)
+                    .withFeatures(
+                        ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK,
+                        ManifestMerger2.Invoker.Feature.WARN_IF_PACKAGE_IN_SOURCE_MANIFEST
+                    )
 
                 instrumentationRunner?.let {
                     intermediateInvoker.setPlaceHolderValue(

@@ -73,6 +73,7 @@ fun mergeManifests(
             .setFeatureName(featureName)
             .addDependencyFeatureNames(dependencyFeatureNames)
             .setNamespace(namespace)
+            .withFeatures(ManifestMerger2.Invoker.Feature.WARN_IF_PACKAGE_IN_SOURCE_MANIFEST)
         val isAppMerge = mergeType == ManifestMerger2.MergeType.APPLICATION
         val injectProfileable = isAppMerge && profileable
 

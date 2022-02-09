@@ -23,6 +23,7 @@ import com.android.SdkConstants;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -450,5 +451,17 @@ public class ManifestMergingTest {
                         + "        android:label=\"@string/app_name\" >");
         GradleBuildResult buildResult = flavors.executor().run("clean", "assembleDebug");
         Truth.assertThat(buildResult.getFailedTasks()).isEmpty();
+    }
+
+    @Test
+    public void checkWarningIfPackageSpecified() throws Exception {
+        TestFileUtils.searchAndReplace(
+                new File(flavors.getLocation().getProjectDir(), "src/main/AndroidManifest.xml"),
+                "<manifest",
+                "<manifest package=\"com.android.tests.flavors\"");
+        GradleBuildResult buildResult = flavors.executor().run("clean", "assembleF1FaDebug");
+        ScannerSubject.assertThat(buildResult.getStdout())
+                .contains(
+                        "package=\"com.android.tests.flavors\" found in source AndroidManifest.xml");
     }
 }
