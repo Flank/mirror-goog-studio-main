@@ -75,7 +75,7 @@ public class SdkAutoDownloadTest {
     private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION = "31";
     private static final String NDK_VERSION = "23.0.7344513";
-    private static final String CMAKE_VERSION = "3.18.1";
+    private static final String CMAKE_VERSION = "3.22.1";
 
     @Rule
     public GradleTestProject project =

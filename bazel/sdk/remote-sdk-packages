@@ -3,7 +3,7 @@
 platform-tools
 build-tools;30.0.3
 platforms;android-31
-cmake;3.18.1
+cmake;3.22.1
 add-ons;addon-google_apis-google-24
 patcher;v4
 ndk-bundle
