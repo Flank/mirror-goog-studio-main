@@ -87,7 +87,6 @@ public final class ProjectOptions {
             String argValue =
                     providerFactory
                             .gradleProperty(arg.getFullKey())
-                            .forUseAtConfigurationTime()
                             .getOrNull();
             if (argValue != null) {
                 testRunnerArgsBuilder.put(arg.getShortKey(), argValue);
@@ -237,7 +236,7 @@ public final class ProjectOptions {
     }
 
     private class OptionValue<OptionT extends Option<ValueT>, ValueT> {
-        @Nullable private Provider<ValueT> valueForUseAtConfiguration;
+        @Nullable private ValueT valueForUseAtConfiguration;
         @Nullable private Provider<ValueT> valueForUseAtExecution;
         @NonNull private OptionT option;
 
@@ -250,7 +249,7 @@ public final class ProjectOptions {
             if (valueForUseAtConfiguration == null) {
                 valueForUseAtConfiguration = setValueForUseAtConfiguration();
             }
-            return valueForUseAtConfiguration.getOrNull();
+            return valueForUseAtConfiguration;
         }
 
         @NonNull
@@ -261,17 +260,14 @@ public final class ProjectOptions {
             return valueForUseAtExecution;
         }
 
-        @NonNull
-        private Provider<ValueT> setValueForUseAtConfiguration() {
+        @Nullable
+        private ValueT setValueForUseAtConfiguration() {
             Provider<String> rawValue = providerFactory.gradleProperty(option.getPropertyName());
-            return providerFactory.provider(
-                    () -> {
-                        String str = rawValue.forUseAtConfigurationTime().getOrNull();
-                        if (str == null) {
-                            return null;
-                        }
-                        return option.parse(str);
-                    });
+            String str = rawValue.getOrNull();
+            if (str == null) {
+                return null;
+            }
+            return option.parse(str);
         }
 
         @NonNull
