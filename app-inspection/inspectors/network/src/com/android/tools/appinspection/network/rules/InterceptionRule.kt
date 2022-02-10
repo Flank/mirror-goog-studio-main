@@ -16,35 +16,36 @@
 
 package com.android.tools.appinspection.network.rules
 
+import studio.network.inspection.NetworkInspectorProtocol.InterceptRule
+
 /**
  * A rule class that intercepts connections and their responses that matches certain [criteria].
  */
-abstract class InterceptionRule(private val criteria: InterceptionCriteria, val id: Int) {
+class InterceptionRule(proto: InterceptRule) {
 
-    protected abstract fun doTransform(
-        connection: NetworkConnection,
-        response: NetworkResponse
-    ): NetworkResponse
+    private val criteria: InterceptionCriteria
+    private val transformations: List<InterceptionTransformation>
+
+    init {
+        criteria = InterceptionCriteria(proto.criteria)
+        transformations = proto.transformationList.mapNotNull { transformationProto ->
+            when {
+                transformationProto.hasBodyReplaced() ->
+                    BodyReplacedTransformation(transformationProto.bodyReplaced)
+                else -> null
+            }
+        }
+    }
 
     fun transform(
         connection: NetworkConnection,
         response: NetworkResponse
     ): NetworkResponse {
         if (criteria.appliesTo(connection)) {
-            return doTransform(connection, response)
+            return transformations.fold(response) { intermediateResponse, transformation ->
+                transformation.transform(intermediateResponse)
+            }
         }
         return response
     }
-}
-
-class BodyInterceptionRule(
-    id: Int,
-    criteria: InterceptionCriteria,
-    private val body: ByteArray
-) : InterceptionRule(criteria, id) {
-
-    override fun doTransform(
-        connection: NetworkConnection,
-        response: NetworkResponse
-    ) = response.copy(body = body.inputStream())
 }

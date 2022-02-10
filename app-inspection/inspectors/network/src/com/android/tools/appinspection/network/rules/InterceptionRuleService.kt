@@ -20,6 +20,7 @@ import java.io.InputStream
 
 class NetworkConnection(
     val url: String,
+    val method: String,
 )
 
 data class NetworkResponse(

@@ -25,9 +25,8 @@ import androidx.inspection.InspectorEnvironment
 import com.android.tools.appinspection.network.httpurl.wrapURLConnection
 import com.android.tools.appinspection.network.okhttp.OkHttp2Interceptor
 import com.android.tools.appinspection.network.okhttp.OkHttp3Interceptor
-import com.android.tools.appinspection.network.rules.BodyInterceptionRule
+import com.android.tools.appinspection.network.rules.InterceptionRule
 import com.android.tools.appinspection.network.rules.InterceptionRuleServiceImpl
-import com.android.tools.appinspection.network.rules.UrlInterceptionCriteria
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.OkHttpClient
 import kotlinx.coroutines.CoroutineScope
@@ -97,24 +96,16 @@ class NetworkInspector(
                         val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
                             interceptRuleAdded.ruleId,
-                            BodyInterceptionRule(
-                                interceptCommand.interceptRuleAdded.ruleId,
-                                UrlInterceptionCriteria(rule.url),
-                                rule.responseBody.toByteArray()
-                            )
+                            InterceptionRule(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
                     interceptCommand.hasInterceptRuleUpdated() -> {
-                        val interceptRuleUpdated = interceptCommand.interceptRuleAdded
-                        val rule = interceptRuleUpdated.rule
+                        val interceptRuleAdded = interceptCommand.interceptRuleUpdated
+                        val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
-                            interceptRuleUpdated.ruleId,
-                            BodyInterceptionRule(
-                                interceptCommand.interceptRuleAdded.ruleId,
-                                UrlInterceptionCriteria(rule.url),
-                                rule.responseBody.toByteArray()
-                            )
+                            interceptRuleAdded.ruleId,
+                            InterceptionRule(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }

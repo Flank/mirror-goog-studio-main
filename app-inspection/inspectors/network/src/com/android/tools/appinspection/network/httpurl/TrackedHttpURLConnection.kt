@@ -111,8 +111,15 @@ class TrackedHttpURLConnection(
             try {
                 tryConnect()
                 interceptedResponse = interceptionRuleService.interceptResponse(
-                    NetworkConnection(wrapped.url.toString()),
-                    NetworkResponse(wrapped.responseMessage, wrapped.headerFields, wrapped.inputStream)
+                    NetworkConnection(
+                        wrapped.url.toString(),
+                        wrapped.requestMethod
+                    ),
+                    NetworkResponse(
+                        wrapped.responseMessage,
+                        wrapped.headerFields,
+                        wrapped.inputStream
+                    )
                 )
                 // Don't call our getResponseMessage/getHeaderFields overrides, as it would call
                 // this method recursively.

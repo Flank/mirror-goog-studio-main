@@ -18,6 +18,7 @@ package com.android.tools.appinspection.network
 
 import androidx.inspection.Inspector
 import com.android.tools.appinspection.network.http.FakeHttpUrlConnection
+import com.android.tools.idea.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -71,8 +72,23 @@ class HttpUrlTest {
                 interceptCommandBuilder.apply {
                     interceptRuleAddedBuilder.apply {
                         ruleBuilder.apply {
-                            url = FAKE_URL.toExternalForm()
-                            responseBody = "InterceptedBody"
+                            criteriaBuilder.apply {
+                                urlBuilder.apply {
+                                    type = NetworkInspectorProtocol.MatchingText.Type.PLAIN
+                                    text = FAKE_URL.toExternalForm()
+                                }
+                                methodBuilder.apply {
+                                    type = NetworkInspectorProtocol.MatchingText.Type.PLAIN
+                                    text = ""
+                                }
+                            }
+                            addTransformation(
+                                NetworkInspectorProtocol.Transformation.newBuilder().apply {
+                                    bodyReplacedBuilder.apply {
+                                        body =
+                                            ByteString.copyFrom("InterceptedBody".toByteArray())
+                                    }
+                                })
                         }
                     }
                 }
