@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
@@ -260,13 +259,8 @@ public class SdkAutoDownloadTest {
 
         PathUtils.deleteRecursivelyIfExists(platformTools.toPath());
 
-        // http://b/158204704
-        getOfflineExecutor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("assembleDebug");
+        getOfflineExecutor().run("assembleDebug");
         assertThat(platformTools).doesNotExist();
-
-
     }
 
     @Test
@@ -295,10 +289,7 @@ public class SdkAutoDownloadTest {
         Files.write(project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
 
-        // b/158015183
-        getExecutor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("assemble");
+        getExecutor().run("assemble");
 
         File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
         assertThat(cmakeDirectory).isDirectory();
@@ -369,10 +360,7 @@ public class SdkAutoDownloadTest {
                 project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
 
-        // b/158015183
-        getExecutor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("assembleDebug");
+        getExecutor().run("assembleDebug");
 
         // Check the cmake build actually worked here, as the NDK can fail to be configured in a
         // way that doesn't actully fail the build https://issuetracker.google.com/169742131

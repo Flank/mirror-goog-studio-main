@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.desugar
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -116,18 +115,14 @@ class L8DexDesugarTest {
         """.trimIndent()
         )
         // check error message in debug build
-        // b/149978740
-        val debugResult =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .expectFailure().run("assembleDebug")
+        val debugResult = project.executor().expectFailure().run("assembleDebug")
         TruthHelper.assertThat(debugResult.failureMessage).contains(
             "In order to use core library desugaring, please enable java 8 language desugaring " +
                     "with D8 or R8."
         )
         // check error message in release build
         val releaseResult =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .expectFailure().run("clean", "assembleRelease")
+            project.executor().expectFailure().run("clean", "assembleRelease")
         TruthHelper.assertThat(releaseResult.failureMessage).contains(
             "In order to use core library desugaring, please enable java 8 language desugaring " +
                     "with D8 or R8."
@@ -139,8 +134,7 @@ class L8DexDesugarTest {
             android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
         """.trimIndent()
         )
-        project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run("assembleRelease")
+        project.executor().run("assembleRelease")
     }
 
     /**

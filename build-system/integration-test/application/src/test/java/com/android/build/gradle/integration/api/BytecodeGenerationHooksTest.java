@@ -22,7 +22,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
@@ -215,11 +214,7 @@ public class BytecodeGenerationHooksTest {
 
     @Test
     public void buildTestApp() throws IOException, InterruptedException {
-        GradleBuildResult result =
-                project.executor()
-                        // https://github.com/gradle/gradle/issues/13317
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                        .run("clean", "test:assembleDebug");
+        GradleBuildResult result = project.executor().run("clean", "test:assembleDebug");
 
         // verify the compile classpath
         checkDependencies(

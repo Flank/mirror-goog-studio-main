@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.GradleTaskSubjec
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -51,8 +50,6 @@ public class LintDependencyModelTest {
     @Rule
     public final GradleTestProject project =
             GradleTestProject.builder()
-                    // FIXME(b/195978143)
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("lintDeps")
                     .create();
 

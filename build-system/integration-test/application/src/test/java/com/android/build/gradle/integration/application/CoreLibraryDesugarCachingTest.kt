@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
@@ -34,8 +33,6 @@ class CoreLibraryDesugarCachingTest {
     @get:Rule
     val project = with(EmptyActivityProjectBuilder()) {
         this.projectName = "project"
-        // FIXME(b/195978143)
-        withConfigurationCaching = BaseGradleExecutor.ConfigurationCaching.OFF
         useGradleBuildCache = true
         gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE")
         build()
@@ -44,8 +41,6 @@ class CoreLibraryDesugarCachingTest {
     @get:Rule
     val projectCopy = with(EmptyActivityProjectBuilder()) {
         this.projectName = "projectCopy"
-        // FIXME(b/195978143)
-        withConfigurationCaching = BaseGradleExecutor.ConfigurationCaching.OFF
         useGradleBuildCache = true
         gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE")
         build()

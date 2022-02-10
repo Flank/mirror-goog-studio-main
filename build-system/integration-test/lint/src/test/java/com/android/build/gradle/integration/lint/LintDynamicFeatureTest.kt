@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -34,8 +33,6 @@ class LintDynamicFeatureTest {
     @get:Rule
     val project: GradleTestProject =
         GradleTestProject.builder()
-            // FIXME(b/195978143)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .fromTestProject("dynamicApp")
             .create()
 
