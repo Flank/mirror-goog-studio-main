@@ -24,8 +24,8 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.SdkConstants.NDK_DEFAULT_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.NinjaLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
@@ -198,7 +198,7 @@ open class BasicModuleModelMock {
     val allPlatformsProjectRootDir = join(projects, "MyProject")
     val projectRootDir = join(allPlatformsProjectRootDir,  "Source", "Android")
     val sdkDir = join(home, "Library", "Android", "sdk")
-    val cmakeDir = join(sdkDir, "cmake", DEFAULT_CMAKE_VERSION, "bin")
+    val cmakeDir = join(sdkDir, "cmake", CMakeVersion.DEFAULT.version, "bin")
     val ndkHandler = mock(
         SdkComponentsBuildService.VersionedNdkHandler::class.java,
         throwUnmocked

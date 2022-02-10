@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.getSoFolderFor;
-import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
@@ -28,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import java.io.File;
@@ -46,7 +46,7 @@ public class InjectedAbiSplitTest {
         sProject =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
-                        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                        .setCmakeVersion(CMakeVersion.DEFAULT.getSdkFolderName())
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                         .setWithCmakeDirInLocalProp(true)
                         .create();

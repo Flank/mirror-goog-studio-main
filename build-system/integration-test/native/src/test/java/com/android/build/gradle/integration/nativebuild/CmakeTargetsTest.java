@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
@@ -28,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.Native
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class CmakeTargetsTest {
                         .addFile(
                                 HelloWorldJniApp.libraryCpp(
                                         "src/main/cpp/library2", "library2.cpp"))
-                        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                        .setCmakeVersion(CMakeVersion.DEFAULT.getSdkFolderName())
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                         .setWithCmakeDirInLocalProp(true)
                         .create();

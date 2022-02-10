@@ -28,8 +28,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.settings.Macro.ENV_WORKSPACE_ROOT
@@ -63,11 +62,7 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
     companion object {
         @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
-        fun data() = arrayOf(
-          // CMakeSettings.json doesn't work with fork CMake version 3.6.0
-          arrayOf(DEFAULT_CMAKE_VERSION),
-          arrayOf(OFF_STAGE_CMAKE_VERSION)
-        )
+        fun data() = CMakeVersion.FOR_TESTING.map { it.version }.toTypedArray()
     }
 
     @Before

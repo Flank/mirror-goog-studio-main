@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.Native
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -44,7 +44,7 @@ class CmakeSysrootTest {
           .useCppSource(true)
           .build()
       )
-        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+        .setCmakeVersion(CMakeVersion.DEFAULT.sdkFolderName)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .create()

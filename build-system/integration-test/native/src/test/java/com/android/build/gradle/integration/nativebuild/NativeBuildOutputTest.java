@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
@@ -31,6 +30,7 @@ import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -78,7 +78,7 @@ public class NativeBuildOutputTest {
                                         .withNativeDir("cpp")
                                         .useCppSource(true)
                                         .build())
-                        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                        .setCmakeVersion(CMakeVersion.DEFAULT.getSdkFolderName())
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                         .setWithCmakeDirInLocalProp(true)
                         .create();

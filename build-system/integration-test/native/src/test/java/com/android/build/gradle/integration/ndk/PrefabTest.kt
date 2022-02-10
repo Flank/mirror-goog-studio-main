@@ -34,6 +34,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 
 @RunWith(Parameterized::class)
 class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: String) {
@@ -56,11 +57,11 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     companion object {
         @Parameterized.Parameters(name = "build system = {0}, cmake = {1}")
         @JvmStatic
-        fun data() = listOf(
-                arrayOf(NativeBuildSystem.CMAKE, "3.10.2"),
-                arrayOf(NativeBuildSystem.CMAKE, "3.18.1"),
-                arrayOf(NativeBuildSystem.NDK_BUILD, "N/A")
-        )
+        fun data() =
+            CMakeVersion.FOR_TESTING.map { arrayOf(NativeBuildSystem.CMAKE, it.version) } +
+                    listOf(
+                        arrayOf(NativeBuildSystem.NDK_BUILD, "N/A")
+                    )
     }
 
     fun setupProject(project: GradleTestProject) {

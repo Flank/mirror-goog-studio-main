@@ -19,11 +19,11 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.SdkConstants.FD_CMAKE
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.external.cmake.CmakeUtils.keepWhileNumbersAndDots
-import com.android.build.gradle.internal.cxx.os.exe
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.build.gradle.internal.cxx.os.exe
 import com.android.prefs.AndroidLocationsProvider
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
@@ -115,11 +115,62 @@ import java.util.function.Consumer
  *
  */
 
-/**
- * This is the version of fork CMake.
- */
-internal const val FORK_CMAKE_SDK_VERSION = "3.6.4111459"
-internal val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK_VERSION)
+enum class CMakeVersion(val version: String, val sdkFolderName: String) {
+    /**
+     * This is the version of fork CMake.
+     */
+    FORK("3.6.0", "3.6.4111459"),
+
+    /**
+     * The latest version of CMake that uses the CMake server API.
+     */
+    LATEST_WITH_SERVER_API("3.10.2", "3.10.2.4988404"),
+
+    /**
+     * The latest version of CMake that uses the CMake file API.
+     */
+    LATEST_WITH_FILE_API("3.18.1", "3.18.1");
+
+    companion object {
+        /**
+         * This is the default version of CMake to use for this Android Gradle Plugin if there was
+         * no version defined in build.gradle.
+         */
+        @JvmField
+        val DEFAULT = LATEST_WITH_FILE_API
+
+        /**
+         * The version of an unreleased CMake that is being used in testing, or the current default
+         * if there is no future version in testing.
+         *
+         * To add an unreleased CMake to prebuilts for testing, follow
+         * http://go/test-unreleased-cmake, then update this value.
+         */
+        @JvmField
+        val FUTURE_OR_DEFAULT_VERSION = DEFAULT
+
+        /**
+         * The CMake versions that should be tested with any tests that need to test against
+         * multiple versions of CMake.
+         *
+         * This will typically dedup to just two versions (one for CMake server, one for CMake
+         * file API).
+         *
+         * The fork version is excluded here because it is very old and not worth testing most of
+         * the time. The tests that care should test that version explicitly.
+         */
+        @JvmField
+        val FOR_TESTING =
+            setOf(
+                LATEST_WITH_SERVER_API,
+                LATEST_WITH_FILE_API,
+                DEFAULT,
+                FUTURE_OR_DEFAULT_VERSION
+            )
+    }
+}
+
+internal val forkCmakeSdkVersionRevision = Revision.parseRevision(CMakeVersion.FORK.sdkFolderName)
 
 /**
  *  This is the base version that forked CMake (which has SDK version 3.6.4111459) reports
@@ -130,23 +181,9 @@ internal val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK
  *  version to avoid giving the impression that fork CMake is not a shipping version in Android
  *  Studio.
  */
-internal const val FORK_CMAKE_REPORTED_VERSION = "3.6.0"
-internal val forkCmakeReportedVersion = Revision.parseRevision(FORK_CMAKE_REPORTED_VERSION)
+internal val forkCmakeReportedVersion = Revision.parseRevision(CMakeVersion.FORK.version)
 
-/**
- * This is the default version of CMake to use for this Android Gradle Plugin if there was no
- * version defined in build.gradle.
- */
-const val DEFAULT_CMAKE_VERSION = "3.18.1"
-val defaultCmakeVersion = Revision.parseRevision(DEFAULT_CMAKE_VERSION)
-const val DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION = DEFAULT_CMAKE_VERSION
-
-/**
- * This is the probable next CMake to be released or the last CMake released
- * depending on where we are in the process of releasing the next version of CMake.
- * A subset of tests are run against it.
- */
-const val OFF_STAGE_CMAKE_VERSION = "3.10.2"
+val defaultCmakeVersion = Revision.parseRevision(CMakeVersion.DEFAULT.version)
 
 /**
  * @return list of folders (as Files) retrieved from PATH environment variable and from Sdk
@@ -252,9 +289,9 @@ data class CmakeVersionRequirements(val cmakeVersionFromDsl : String?) {
      */
     val downloadVersion = when {
             effectiveRequestVersion.compareTo(forkCmakeReportedVersion, Revision.PreviewComparison.IGNORE) == 0 ->
-                FORK_CMAKE_SDK_VERSION
+                CMakeVersion.FORK.sdkFolderName
             isSatisfiedBy(defaultCmakeVersion) ->
-                DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
+                CMakeVersion.DEFAULT.sdkFolderName
             else -> null
         }
 

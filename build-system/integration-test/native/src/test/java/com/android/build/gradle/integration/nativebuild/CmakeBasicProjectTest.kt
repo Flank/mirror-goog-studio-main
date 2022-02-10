@@ -46,8 +46,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Outcome.CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
 import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -114,7 +113,9 @@ class CmakeBasicProjectTest(
         @Parameterized.Parameters(name = "version={0} mode={1}")
         @JvmStatic
         fun data() = cartesianOf(
-            arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
+            // This test covers a wider range of CMake versions than most other tests to verify that
+            // the basic functionality of each mode works.
+            CMakeVersion.values().map { it.version }.toTypedArray(),
             Mode.values())
         // Shuffle helps find problems earlier by not grouping similar cases with each other
         .toList().shuffled(Random(192))

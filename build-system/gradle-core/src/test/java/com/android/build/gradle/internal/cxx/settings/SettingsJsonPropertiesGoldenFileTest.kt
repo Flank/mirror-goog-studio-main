@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.BasicNdkBuildMock
 import com.android.testutils.GoldenFile
@@ -24,6 +23,7 @@ import org.junit.Test
 import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_VERSION_MAJOR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_VERSION_MINOR
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 
 /**
  * Print CMakeSettings.json macros along with description and examples.
@@ -73,7 +73,7 @@ class SettingsJsonPropertiesGoldenFileTest {
                         .sortedBy { macro -> macro.qualifiedName }
                         .forEach { macro ->
                             val example = macro.example
-                                .replace(DEFAULT_CMAKE_VERSION, "[Current CMake Version]")
+                                .replace(CMakeVersion.DEFAULT.version, "[Current CMake Version]")
                                 .replace(NDK_DEFAULT_VERSION, "[Current NDK Version]")
                                 .replace('\\', '/')
                                 .replace(".exe", "")
