@@ -27,10 +27,10 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 
 private const val EMULATOR_EXECUTABLE = "emulator"
-private const val SNAPSHOT_CHECK_TIMEOUT_SEC = 30L
-private const val WAIT_AFTER_BOOT_MS = 5000L
-private const val DEVICE_BOOT_TIMEOUT_SEC = 80L
-private const val ADB_TIMEOUT_SEC = 10L
+private const val SNAPSHOT_CHECK_TIMEOUT_SEC = 600L
+private const val WAIT_AFTER_BOOT_MS = 60000L
+private const val DEVICE_BOOT_TIMEOUT_SEC = 600L
+private const val ADB_TIMEOUT_SEC = 60L
 private const val MINIMUM_MAJOR_VERSION = 30
 private const val MINIMUM_MINOR_VERSION = 6
 private const val MINIMUM_MICRO_VERSION = 4
