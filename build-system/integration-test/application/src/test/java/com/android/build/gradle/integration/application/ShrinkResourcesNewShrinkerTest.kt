@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
@@ -46,9 +45,8 @@ class ShrinkResourcesNewShrinkerTest {
             .create()
 
     @get:Rule
-    var projectWithDynamicFeatureModules = builder().fromTestProject("shrinkDynamicFeatureModules")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            .create()
+    var projectWithDynamicFeatureModules =
+        builder().fromTestProject("shrinkDynamicFeatureModules").create()
 
     @Test
     fun `shrink resources for APKs with R8`() {

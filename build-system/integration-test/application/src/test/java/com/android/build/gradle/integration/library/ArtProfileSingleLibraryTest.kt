@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.library
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -127,7 +126,6 @@ class ArtProfileSingleLibraryTest {
 
         val result = project.executor()
                 .with(BooleanOption.ENABLE_ART_PROFILES, true)
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
                 .run(":lib:bundleReleaseAar", ":app:assembleRelease")
         Truth.assertThat(result.failedTasks).isEmpty()
 

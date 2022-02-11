@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.bundle
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -45,11 +44,7 @@ class DynamicFeatureDependsOnJavaLibTest {
                 .dependency(feature, app)
                 .dependency(feature, javaLib)
                 .build()
-        )
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // https://github.com/gradle/gradle/issues/13317
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
-        .create()
+        ).create()
 
     /** Regression test for b/79660649. */
     @Test()

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.PLATFORM_WINDOWS
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
@@ -108,8 +107,6 @@ class CmakeBasicProjectTest(
     @JvmField
     val project = GradleTestProject.builder()
         .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-        // TODO(b/159233213) Turn to ON when release configuration is cacheable
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 
