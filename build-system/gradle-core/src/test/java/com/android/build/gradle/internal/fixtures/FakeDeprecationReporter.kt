@@ -35,7 +35,7 @@ class FakeDeprecationReporter: DeprecationReporter {
     }
 
     override fun reportDeprecatedApi(
-        newApiElement: String,
+        newApiElement: String?,
         oldApiElement: String,
         url: String,
         deprecationTarget: DeprecationReporter.DeprecationTarget
