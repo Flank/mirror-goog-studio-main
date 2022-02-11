@@ -19,6 +19,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class ResourceCompilerTest {
+
     @Rule
     @JvmField
     var tempFolder = TemporaryFolder()
@@ -48,7 +49,7 @@ class ResourceCompilerTest {
         val valuesFolder = tempFolder.newFolder("values")
         val configSuffix = if (config.isEmpty()) "" else "-$config"
         val file = createFile(input, "test$configSuffix.xml", valuesFolder)
-        compileResource(file, outputDir, options)
+        compileResource(file, outputDir, options, getMockBlameLogger(BlameLoggerTest.MockLogger()))
         val filePath = extractPathData(file)
         // The extension is changed when the table is compiled.
         filePath.extension = "arsc"
@@ -56,15 +57,15 @@ class ResourceCompilerTest {
     }
 
     private fun testXmlFile(
-            type: AaptResourceType,
-            input: String,
-            config: String = "",
-            options: ResourceCompilerOptions = ResourceCompilerOptions()
+        type: AaptResourceType,
+        input: String,
+        config: String = "",
+        options: ResourceCompilerOptions = ResourceCompilerOptions()
     ): File {
         val resourceFolder = tempFolder.newFolder(type.tagName)
         val configSuffix = if (config.isEmpty()) "" else "-$config"
         val file = createFile(input, "test$configSuffix.xml", resourceFolder)
-        compileResource(file, outputDir, options)
+        compileResource(file, outputDir, options, getMockBlameLogger(BlameLoggerTest.MockLogger()))
         val filePath = extractPathData(file)
         return File(outputDir, filePath.getIntermediateContainerFilename())
     }
@@ -73,7 +74,12 @@ class ResourceCompilerTest {
         val resourceFolder = tempFolder.newFolder(AaptResourceType.RAW.tagName)
         val configSuffix = if (config.isEmpty()) "" else "-$config"
         val file = createFile(input, "test$configSuffix.$extension", resourceFolder)
-        compileResource(file, outputDir, ResourceCompilerOptions())
+        compileResource(
+            file,
+            outputDir,
+            ResourceCompilerOptions(),
+            getMockBlameLogger(BlameLoggerTest.MockLogger())
+        )
         val filePath = extractPathData(file)
         return File(outputDir, filePath.getIntermediateContainerFilename())
     }
@@ -89,7 +95,7 @@ class ResourceCompilerTest {
         val configSuffix = if (config.isEmpty()) "" else "-$config"
         val extension = if (isPatch9) "9.png" else "png"
         val file = createFile(input, "test$configSuffix.$extension", resourceFolder)
-        compileResource(file, outputDir, options)
+        compileResource(file, outputDir, options, getMockBlameLogger(BlameLoggerTest.MockLogger()))
         val filePath = extractPathData(file)
         return File(outputDir, filePath.getIntermediateContainerFilename())
     }
@@ -517,7 +523,8 @@ class ResourceCompilerTest {
             fail()
         } catch (e: ResourceCompilationException) {
             Truth.assertThat(e.cause!!.message).contains(
-                "Patch 9 PNG processing is not supported with the JVM Android resource compiler.")
+                "Patch 9 PNG processing is not supported with the JVM Android resource compiler."
+            )
             // expected
         }
     }
@@ -533,11 +540,13 @@ class ResourceCompilerTest {
             testPngFile(
                 AaptResourceType.LAYOUT,
                 input,
-                options = ResourceCompilerOptions(requirePngCrunching = true))
+                options = ResourceCompilerOptions(requirePngCrunching = true)
+            )
             fail()
         } catch (e: ResourceCompilationException) {
             Truth.assertThat(e.cause!!.message).contains(
-                "PNG crunching is not supported with the JVM Android resource compiler.")
+                "PNG crunching is not supported with the JVM Android resource compiler."
+            )
             // expected
         }
     }
@@ -583,7 +592,7 @@ class ResourceCompilerTest {
                 testXmlFile(type = AaptResourceType.LAYOUT, input = input, options = options))
         Truth.assertThat(result.numEntries).isEqualTo(1)
         val entries = result.entries as List<FileEntry>
-        val sourcePath : String = entries[0].header.sourcePath
+        val sourcePath: String = entries[0].header.sourcePath
         Truth.assertThat(sourcePath).isEqualTo(path)
     }
 
