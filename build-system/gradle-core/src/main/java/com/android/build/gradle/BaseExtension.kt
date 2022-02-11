@@ -256,6 +256,15 @@ abstract class BaseExtension protected constructor(
     override val testServers: List<TestServer>
         get() = testServerList
 
+    /**
+     * The [Transform] API is planned to be removed in Android Gradle plugin 8.0.
+     *
+     * There is no single replacement. For more information about how to migrate, see
+     * [https://developer.android.com/studio/releases/gradle-plugin-roadmap]
+     */
+    @Deprecated(
+        "The transform API is planned to be removed in Android Gradle plugin 8.0."
+    )
     fun registerTransform(transform: Transform, vararg dependencies: Any) {
         _transforms.add(transform)
         _transformDependencies.add(listOf(dependencies))
