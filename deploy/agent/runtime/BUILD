@@ -67,17 +67,28 @@ kotlin_library(
     visibility = ["//visibility:public"],
 )
 
+java_library(
+    name = "new_proxy_test_jar",
+    srcs = ["src/test/java/com/android/tools/deploy/liveedit/proxy/new/ProxyTestClasses.java"],
+    visibility = ["//visibility:public"],
+)
+
 coverage_java_test(
     name = "runtime_java_test",
     size = "small",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = glob(
+        ["src/test/java/**/*.java"],
+        ["src/test/java/com/android/tools/deploy/liveedit/proxy/new/ProxyTestClasses.java"],
+    ),
     data = [
+        ":new_proxy_test_jar",
         "//tools/base/deploy/agent/native/jni_dispatch:jni_dispatch_dso",
     ],
     jvm_flags = [
         "-Dtest.suite.jar=runtime_java_test.jar",
         "-Ddashboards.enabled=true",
         "-Djava.library.path=tools/base/deploy/agent/native/jni_dispatch",
+        "-Dproxy.new.classes=$(location :new_proxy_test_jar)",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
