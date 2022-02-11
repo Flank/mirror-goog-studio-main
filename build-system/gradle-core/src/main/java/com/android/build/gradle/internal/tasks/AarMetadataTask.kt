@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
@@ -24,12 +25,14 @@ import com.android.build.gradle.internal.component.AarCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.repository.GradleVersion.parseAndroidGradlePluginVersion
 import com.android.ide.common.repository.GradleVersion.tryParseStableAndroidGradlePluginVersion
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
@@ -56,8 +59,20 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     @get:Input
     abstract val aarMetadataVersion: Property<String>
 
+    /**
+     * The minimum SDK API-level any consuming module must be compiled against to use this library.
+     */
     @get:Input
     abstract val minCompileSdk: Property<Int>
+
+    /**
+     * The codename of the SDK being compiled against (if it's a preview version); e.g., "Tiramisu".
+     * If present, any consuming module must be compiled against an SDK with the exact same
+     * codename.
+     */
+    @get:Input
+    @get:Optional
+    abstract val forceCompileSdkPreview: Property<String>
 
     @get:Input
     abstract val minAgpVersion: Property<String>
@@ -70,6 +85,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.minCompileSdk.set(minCompileSdk)
             it.minAgpVersion.set(minAgpVersion)
+            it.forceCompileSdkPreview.set(forceCompileSdkPreview)
         }
     }
 
@@ -101,6 +117,9 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             task.aarMetadataVersion.setDisallowChanges(AAR_METADATA_VERSION)
             task.minCompileSdk.setDisallowChanges(creationConfig.aarMetadata.minCompileSdk)
             task.minAgpVersion.setDisallowChanges(creationConfig.aarMetadata.minAgpVersion)
+            task.forceCompileSdkPreview.setDisallowChanges(
+                parseTargetHash(creationConfig.global.compileSdkHashString).codeName
+            )
         }
     }
 
@@ -137,7 +156,8 @@ abstract class AarMetadataWorkAction: ProfileAwareWorkAction<AarMetadataWorkPara
             parameters.aarFormatVersion.get(),
             parameters.aarMetadataVersion.get(),
             parameters.minCompileSdk.get(),
-            parameters.minAgpVersion.get()
+            parameters.minAgpVersion.get(),
+            parameters.forceCompileSdkPreview.orNull
         )
     }
 }
@@ -149,6 +169,7 @@ abstract class AarMetadataWorkParameters: ProfileAwareWorkAction.Parameters() {
     abstract val aarMetadataVersion: Property<String>
     abstract val minCompileSdk: Property<Int>
     abstract val minAgpVersion: Property<String>
+    abstract val forceCompileSdkPreview: Property<String>
 }
 
 /** Writes an AAR metadata file with the given parameters */
@@ -157,7 +178,8 @@ fun writeAarMetadataFile(
     aarFormatVersion: String,
     aarMetadataVersion: String,
     minCompileSdk: Int,
-    minAgpVersion: String
+    minAgpVersion: String,
+    compileSdkPreview: String? = null
 ) {
     // We write the file manually instead of using the java.util.Properties API because (1) that API
     // doesn't guarantee the order of properties in the file and (2) that API writes an unnecessary
@@ -167,5 +189,6 @@ fun writeAarMetadataFile(
         writer.appendLine("$AAR_METADATA_VERSION_PROPERTY=$aarMetadataVersion")
         writer.appendLine("$MIN_COMPILE_SDK_PROPERTY=$minCompileSdk")
         writer.appendLine("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$minAgpVersion")
+        compileSdkPreview?.let { writer.appendLine("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
     }
 }
