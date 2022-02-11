@@ -545,6 +545,9 @@ open class XmlWriter constructor(
                 if (lintFix.reformat) {
                     writeAttribute(writer, indented, ATTR_REFORMAT, ATTR_VALUE)
                 }
+                if (lintFix.imports.isNotEmpty()) {
+                    writeAttribute(writer, indented, ATTR_IMPORTS, lintFix.imports.joinToString(","))
+                }
                 val range = lintFix.range
                 if (range != null) {
                     writer.write(">\n")
@@ -832,6 +835,7 @@ const val ATTR_REPLACEMENT = "replacement"
 const val ATTR_BINARY = "binary"
 const val ATTR_SHORTEN_NAMES = "shortenNames"
 const val ATTR_REFORMAT = "reformat"
+const val ATTR_IMPORTS = "imports"
 const val ATTR_OFFSET = "offset"
 const val ATTR_AFTER = "after"
 const val ATTR_BEFORE = "before"

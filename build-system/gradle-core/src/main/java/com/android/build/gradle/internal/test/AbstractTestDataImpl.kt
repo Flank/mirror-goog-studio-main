@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.test
 import com.android.SdkConstants
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.tasks.databinding.DATA_BINDING_TRIGGER_CLASS
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
@@ -34,8 +33,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import java.io.File
-import java.util.concurrent.Callable
 import java.util.zip.ZipFile
 
 /**
@@ -43,16 +40,15 @@ import java.util.zip.ZipFile
  * and separate module test projects.
  */
 abstract class AbstractTestDataImpl(
-        @get:Input
-        val namespace: Provider<String>,
-        creationConfig: TestCreationConfig,
-        instrumentedTestCreationConfig: InstrumentedTestCreationConfig,
-        variantSources: VariantSources,
-        override val testApkDir: Provider<Directory>,
-        @get:InputFiles
-        @get:PathSensitive(PathSensitivity.RELATIVE)
-        @get:Optional
-        val testedApksDir: FileCollection?
+    @get:Input
+    val namespace: Provider<String>,
+    creationConfig: TestCreationConfig,
+    instrumentedTestCreationConfig: InstrumentedTestCreationConfig,
+    override val testApkDir: Provider<Directory>,
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    val testedApksDir: FileCollection?
 ) : TestData {
 
     private var extraInstrumentationTestRunnerArgs: Map<String, String> = mutableMapOf()
@@ -95,12 +91,13 @@ abstract class AbstractTestDataImpl(
     override val flavorName = creationConfig.services.provider { creationConfig.flavorName ?: "" }
 
     override val testDirectories: ConfigurableFileCollection =
-        creationConfig.services.fileCollection().from(Callable<List<File>> {
+        creationConfig.services.fileCollection().from(
             // For now we check if there are any test sources. We could inspect the test classes and
             // apply JUnit logic to see if there's something to run, but that would not catch the case
             // where user makes a typo in a test name or forgets to inherit from a JUnit class
-            variantSources.sortedSourceProviders.flatMap { it.javaDirectories }
-        })
+            creationConfig.sources.java.all
+            // TODO : Add kotlin sources when available through the variant API ?
+        )
 
     override fun getAsStaticData(): StaticTestData {
         return StaticTestData(

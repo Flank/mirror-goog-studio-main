@@ -15,10 +15,11 @@
  */
 
 package com.android.build.gradle.integration.bundle
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
@@ -63,16 +64,18 @@ class DependenciesReportTest {
             .fileDependency(lib, "local_in_lib.jar")
             .build()
     @get:Rule
-    val project = GradleTestProject.builder()
-        // b/149978740
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .fromTestApp(testApp).create()
+    val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
     @Test
     fun testDependenciesFile() {
         project.addUseAndroidXProperty()
         // test that androidx.core.core is only using 1.0.1 which will be the resolved version.
-        project.executor().run(":app:bundleRelease")
+
+        // Run twice to verify configuration cache compatibility
+        project.executor().run("clean", ":app:bundleRelease")
+        val result = project.executor().run("clean", ":app:bundleRelease")
+        assertThat(result.stdout).contains("Configuration cache entry reused.")
+
         val bundle = getApkFolderOutput("release").bundleFile
         assertThat(bundle).exists()
         ZipFile(bundle).use {

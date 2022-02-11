@@ -212,8 +212,6 @@ public class SigningTest {
                         .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                         .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                         .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
-                        // http://b/149978740
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -437,8 +435,6 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -480,8 +476,6 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, false)
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
@@ -619,8 +613,6 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
 
@@ -654,8 +646,6 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
 
@@ -693,8 +683,6 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
 

@@ -292,14 +292,13 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             )
             task.lintTool.initialize(creationConfig.services)
             task.desugarMethodsFiles.from(
-                task.project.provider {
-                    getDesugaredMethods(
-                        task.project,
-                        creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
-                        creationConfig.minSdkVersion,
-                        creationConfig.global.compileSdkHashString,
-                        creationConfig.global.bootClasspath)
-                }
+                getDesugaredMethods(
+                    task.project,
+                    creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
+                    creationConfig.minSdkVersion,
+                    creationConfig.global.compileSdkHashString,
+                    creationConfig.global.bootClasspath
+                )
             )
         }
     }

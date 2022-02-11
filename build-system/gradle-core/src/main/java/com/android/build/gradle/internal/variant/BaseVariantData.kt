@@ -216,11 +216,6 @@ abstract class BaseVariantData(
         abstract fun getConfiguredFilters(splits: Splits): Collection<String>
     }
 
-    val androidResources: Map<String, FileCollection>
-        get() = variantSources
-            .sortedSourceProviders
-            .associate { it.name to (it as AndroidSourceSet).res.getBuildableArtifact() }
-
     override fun toString(): String {
         return MoreObjects.toStringHelper(this)
             .addValue(componentIdentity.name).toString()

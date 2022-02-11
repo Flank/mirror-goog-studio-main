@@ -22,14 +22,26 @@ import org.gradle.StartParameter
 import org.gradle.api.internal.StartParameterInternal
 import org.gradle.api.logging.Logging
 
-internal val StartParameter.isConfigurationCache : Boolean? get() {
-    return try {
-        // TODO(b/167384234) move away from using Gradle internal class when public API is available
-        // When project isolation is enabled, configuration cache is consider enabled. See b/190811940
-        (this as StartParameterInternal).configurationCache.get() || this.isolatedProjects.get()
-    } catch (e : Throwable) {
-        Logging.getLogger("StartParameterUtils")
-            .warn("Unable to decide if config caching is enabled", e)
-        return null
+internal val StartParameter.isConfigurationCache : Boolean?
+    get() {
+        return try {
+            // TODO(b/167384234) move away from using Gradle internal class when public API is available
+            // When project isolation is enabled, configuration cache is consider enabled. See b/190811940
+            (this as StartParameterInternal).configurationCache.get() || this.isolatedProjects.get()
+        } catch (e : Throwable) {
+            Logging.getLogger("StartParameterUtils")
+                .warn("Unable to decide if config caching is enabled", e)
+            return null
+        }
     }
-}
+
+internal val StartParameter.isProjectIsolation: Boolean?
+    get() {
+        return try {
+            (this as StartParameterInternal).isolatedProjects.get()
+        } catch (e: Throwable) {
+            Logging.getLogger("StartParameterUtils")
+                .warn("Unable to decide if project isolation is enabled", e)
+            return null
+        }
+    }

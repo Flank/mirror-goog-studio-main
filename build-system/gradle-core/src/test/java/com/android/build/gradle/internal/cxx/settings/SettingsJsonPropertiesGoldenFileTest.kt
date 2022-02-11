@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.BasicNdkBuildMock
 import com.android.testutils.GoldenFile
 import org.junit.Test
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 
 /**
  * Print CMakeSettings.json macros along with description and examples.
@@ -71,8 +72,10 @@ class SettingsJsonPropertiesGoldenFileTest {
                         .forEach { macro ->
                             val example = macro.example
                                 .replace(DEFAULT_CMAKE_VERSION, "[Current CMake Version]")
+                                .replace(NDK_DEFAULT_VERSION, "[Current NDK Version]")
                                 .replace('\\', '/')
                                 .replace(".exe", "")
+
                             val ndkBuildExample = ndkBuildExamples[macro]
                             result += "## " + macro.ref
                             result += macro.description

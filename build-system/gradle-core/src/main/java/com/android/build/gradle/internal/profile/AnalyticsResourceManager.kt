@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.profile
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.isConfigurationCache
+import com.android.build.gradle.internal.isProjectIsolation
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.options.BooleanOption
@@ -284,7 +285,10 @@ class AnalyticsResourceManager constructor(
             .get().projectOptions
         val providers = project.providers
 
-        recordPlugins(project)
+        val projectIsolation = project.gradle.startParameter.isProjectIsolation == true
+        if (!projectIsolation) {
+            recordPlugins(project)
+        }
 
         profileBuilder
             .setOsName(getSystemProperty(providers,"os.name"))

@@ -38,7 +38,7 @@
 #include "trace_metadata_request_handler.h"
 
 using ::perfetto::profiling::BinaryFinder;
-using ::perfetto::profiling::LocalBinaryFinder;
+using ::perfetto::profiling::LocalBinaryIndexer;
 using ::perfetto::profiling::LocalSymbolizer;
 using ::perfetto::profiling::Symbolizer;
 using ::perfetto::trace_processor::Config;
@@ -115,7 +115,7 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
     if (!request->symbolized_output_path().empty()) {
       output_file_fd = fopen(request->symbolized_output_path().c_str(), "wb+");
     }
-    std::unique_ptr<BinaryFinder> finder(new LocalBinaryFinder(symbol_paths));
+    std::unique_ptr<BinaryFinder> finder(new LocalBinaryIndexer(symbol_paths));
     std::unique_ptr<Symbolizer> symbolizer(
         new LocalSymbolizer(llvm_path_, std::move(finder)));
     ::perfetto::profiling::SymbolizeDatabase(

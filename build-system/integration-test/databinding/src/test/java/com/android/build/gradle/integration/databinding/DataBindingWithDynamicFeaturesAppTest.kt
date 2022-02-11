@@ -54,8 +54,6 @@ class DataBindingWithDynamicFeaturesAppTest(useAndroidX: Boolean) {
     @Test
     fun app() {
         project.executor()
-            // http://b/149978740
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .run(":app:assemble")
     }
 

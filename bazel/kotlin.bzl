@@ -272,7 +272,7 @@ def _kotlin_library_impl(ctx):
             java_info_deps.append(ctx.attr.stdlib[JavaInfo])
         friend_jars = []
         for friend in ctx.attr.friends:
-            friend_jars += [output.ijar for output in friend[JavaInfo].outputs.jars]
+            friend_jars += friend[JavaInfo].compile_jars.to_list()
 
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
@@ -317,7 +317,7 @@ def _kotlin_library_impl(ctx):
 
         jars += [java_jar]
         if use_ijar:
-            ijars += [java_output.ijar for java_output in java_provider.outputs.jars]
+            ijars += java_provider.compile_jars.to_list()
 
     run_singlejar(
         ctx = ctx,

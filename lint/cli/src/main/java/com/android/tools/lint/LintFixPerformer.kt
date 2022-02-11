@@ -26,6 +26,7 @@ import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.tools.lint.LintCliClient.Companion.printWriter
@@ -720,48 +721,81 @@ open class LintFixPerformer constructor(
             }
         }
 
-        if (includeMarkers && replaceFix.shortenNames) {
-            // This isn't fully shortening names, it's only removing fully qualified names
-            // for symbols already imported.
-            //
-            // Also, this will not correctly handle some conflicts. This is only used for
-            // unit testing lint fixes, not for actually operating on code; for that we're using
-            // IntelliJ's built in import cleanup when running in the IDE.
-            val imported: MutableSet<String> = HashSet()
-            for (fullLine in contents.split("\n")) {
-                val line = fullLine.trim()
-                if (line.startsWith("package ")) {
-                    var to = line.indexOf(';')
-                    if (to == -1) {
-                        to = line.length
+        // Are we in a unit-testing scenario? If so, perform some cleanup of imports etc
+        // (which is normally handled by the IDE)
+        if (includeMarkers) {
+            if (replaceFix.shortenNames) {
+                // This isn't fully shortening names, it's only removing fully qualified names
+                // for symbols already imported.
+                //
+                // Also, this will not correctly handle some conflicts. This is only used for
+                // unit testing lint fixes, not for actually operating on code; for that we're using
+                // IntelliJ's built in import cleanup when running in the IDE.
+
+                val imported: MutableSet<String> = HashSet()
+                for (fullLine in contents.split("\n")) {
+                    val line = fullLine.trim()
+                    if (line.startsWith("package ")) {
+                        var to = line.indexOf(';')
+                        if (to == -1) {
+                            to = line.length
+                        }
+                        imported.add(line.substring("package ".length, to).trim { it <= ' ' } + ".")
+                    } else if (line.startsWith("import ")) {
+                        var from = "import ".length
+                        if (line.startsWith("static ", from)) {
+                            from += "static ".length
+                        }
+                        var to = line.indexOf(';')
+                        if (to == -1) {
+                            to = line.length
+                        }
+                        if (line[to - 1] == '*') {
+                            to--
+                        }
+                        imported.add(line.substring(from, to).trim { it <= ' ' })
                     }
-                    imported.add(line.substring("package ".length, to).trim { it <= ' ' } + ".")
-                } else if (line.startsWith("import ")) {
-                    var from = "import ".length
-                    if (line.startsWith("static ", from)) {
-                        from += "static ".length
+                }
+                for (full in imported) {
+                    var clz = full
+                    if (replacement.contains(clz)) {
+                        if (!clz.endsWith(".")) {
+                            val index = clz.lastIndexOf('.')
+                            if (index == -1) {
+                                continue
+                            }
+                            clz = clz.substring(0, index + 1)
+                        }
+                        replacement = replacement.replace(clz, "")
                     }
-                    var to = line.indexOf(';')
-                    if (to == -1) {
-                        to = line.length
-                    }
-                    if (line[to - 1] == '*') {
-                        to--
-                    }
-                    imported.add(line.substring(from, to).trim { it <= ' ' })
                 }
             }
-            for (full in imported) {
-                var clz = full
-                if (replacement.contains(clz)) {
-                    if (!clz.endsWith(".")) {
-                        val index = clz.lastIndexOf('.')
-                        if (index == -1) {
-                            continue
+
+            for (import in replaceFix.imports) {
+                val isMethod = import[import.lastIndexOf('.') + 1].isLowerCase()
+                val importStatement = if (file.file.path.endsWith(DOT_JAVA)) {
+                    "import ${if (isMethod) "static " else ""}$import;\n"
+                } else {
+                    // Kotlin
+                    "import $import\n"
+                }
+                if (!contents.contains(importStatement)) {
+                    val offset = if (contents.startsWith("import "))
+                        0
+                    else {
+                        val firstImport = contents.indexOf("\nimport") + 1
+                        if (firstImport == 0) {
+                            val pkg = contents.indexOf("package ")
+                            if (pkg == -1) {
+                                0
+                            } else {
+                                contents.indexOf("\n", pkg) + 1
+                            }
+                        } else {
+                            firstImport
                         }
-                        clz = clz.substring(0, index + 1)
                     }
-                    replacement = replacement.replace(clz, "")
+                    file.edits.add(PendingEdit(replaceFix, contents, offset, offset, importStatement))
                 }
             }
         }

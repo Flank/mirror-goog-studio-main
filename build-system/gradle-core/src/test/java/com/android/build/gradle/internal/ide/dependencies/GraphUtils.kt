@@ -31,6 +31,7 @@ import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.capabilities.Capability
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.Optional
 
@@ -284,4 +285,10 @@ private data class FakeAttributeContainer(
 
     override fun isEmpty(): Boolean = map.isEmpty()
     override fun contains(key: Attribute<*>): Boolean = map.containsKey(key)
+    override fun <T : Any?> attributeProvider(
+        p0: Attribute<T>,
+        p1: Provider<out T>
+    ): AttributeContainer {
+        error("not yet implemented")
+    }
 }

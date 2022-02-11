@@ -88,12 +88,16 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 variantSources
                         .getJava()
                         .variantSourcesForModel$gradle_core(
-                                directoryEntry -> directoryEntry.isUserAdded());
+                                directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
         this.kotlinDirs = sourceProvider.getKotlinDirectories();
         this.resourcesDirs = sourceProvider.getResourcesDirectories();
         this.aidlDirs = sourceProvider.getAidlDirectories();
         this.rsDirs = sourceProvider.getRenderscriptDirectories();
-        this.resDirs = sourceProvider.getResDirectories();
+        this.resDirs =
+                variantSources
+                        .getRes()
+                        .variantSourcesForModel$gradle_core(
+                                directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
         this.assetsDirs = sourceProvider.getAssetsDirectories();
         this.libsDirs = sourceProvider.getJniLibsDirectories();
         this.shaderDirs = sourceProvider.getShadersDirectories();

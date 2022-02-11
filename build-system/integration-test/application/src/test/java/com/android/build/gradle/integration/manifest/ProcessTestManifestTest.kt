@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ApkSubject.getManifestContent
 import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assert.fail
@@ -330,6 +331,60 @@ class ProcessTestManifestTest {
         assertTrue { result.failedTasks.isEmpty()}
         val manifestFile = project.file("build/intermediates/packaged_manifests/releaseUnitTest/AndroidManifest.xml")
         assertThat(manifestFile).contains("android:label=\"unit test from tested variant\"")
+    }
+
+    @Test
+    fun testPackageNameInTestManifest() {
+        TestFileUtils.searchAndReplace(
+            project.buildFile,
+            "namespace \"com.example.helloworld\"",
+            ""
+        )
+
+        FileUtils.createFile(
+            project.file("src/androidTest/AndroidManifest.xml"),
+            """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.test">
+
+                    <application>
+                        <activity
+                            android:name=".TestActivity"
+                            android:exported="true" />
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+
+        project.file("src/main/AndroidManifest.xml").delete()
+        FileUtils.createFile(
+            project.file("src/main/AndroidManifest.xml"),
+            """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            package="com.example.helloworld"
+                            android:versionCode="1"
+                            android:versionName="1.0">
+
+                    <application android:label="@string/app_name">
+                        <activity android:name=".HelloWorld"
+                                  android:label="@string/app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+
+        project.executor().run("assembleDebugAndroidTest")
+
+        val manifestContent = getManifestContent(project.testApk.file)
+        assertManifestContentContainsString(manifestContent, "com.example.helloworld.HelloWorld")
+        assertManifestContentContainsString(manifestContent, "com.example.test.TestActivity")
     }
 
     private fun assertManifestContentContainsString(

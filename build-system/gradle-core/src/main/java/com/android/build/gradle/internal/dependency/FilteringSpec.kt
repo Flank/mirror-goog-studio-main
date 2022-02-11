@@ -21,6 +21,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 import java.io.File
 import java.io.ObjectInputStream
@@ -71,6 +72,9 @@ class FilteringSpec(
     // Returns a MutableSet as FilteredArtifactCollection#getIterator expects this to be mutable to
     // returns a mutable iterator.
     fun getArtifactFiles(): MutableSet<ResolvedArtifactResult> = filteredArtifacts.value
+
+    fun getResolvedArtifacts(): Provider<Set<ResolvedArtifactResult>> =
+        objectFactory.setProperty(ResolvedArtifactResult::class.java).map { getArtifactFiles() }
 
     fun getFilteredFileCollection(): FileCollection = filteredFileCollection.value
 

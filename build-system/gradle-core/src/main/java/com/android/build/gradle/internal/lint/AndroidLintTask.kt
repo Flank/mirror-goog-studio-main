@@ -639,15 +639,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.lintModelWriterTaskOutputPath.setDisallowChanges(
                 creationConfig.artifacts.getOutputPath(InternalArtifactType.LINT_MODEL).absolutePath
             )
-            task.desugarMethodsFiles.from(
-                task.project.provider {
-                    getDesugaredMethods(
-                        task.project,
-                        creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
-                        creationConfig.minSdkVersion,
-                        creationConfig.global.compileSdkHashString,
-                        creationConfig.global.bootClasspath)
-                }
+            task.desugarMethodsFiles.fromDisallowChanges(
+                getDesugaredMethods(
+                    task.project,
+                    creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
+                    creationConfig.minSdkVersion,
+                    creationConfig.global.compileSdkHashString,
+                    creationConfig.global.bootClasspath
+                )
             )
             if (autoFix) {
                 task.outputs.upToDateWhen {

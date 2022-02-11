@@ -54,7 +54,6 @@ internal class BundleTestDataImpl constructor(
     namespace,
     creationConfig,
     creationConfig,
-    creationConfig.variantSources,
     testApkDir,
     null
 ) {

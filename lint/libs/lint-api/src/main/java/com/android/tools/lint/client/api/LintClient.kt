@@ -1201,11 +1201,11 @@ abstract class LintClient {
     open fun createSuperClassMap(project: Project): Map<String, String> {
         val libraries = project.getJavaLibraries(true)
         val classFolders = project.javaClassFolders
-        val classEntries = ClassEntry.fromClassPath(this, classFolders, true)
+        val classEntries = ClassEntry.fromClassPath(this, classFolders)
         if (libraries.isEmpty()) {
             return ClassEntry.createSuperClassMap(this, classEntries)
         }
-        val libraryEntries = ClassEntry.fromClassPath(this, libraries, true)
+        val libraryEntries = ClassEntry.fromClassPath(this, libraries)
         return ClassEntry.createSuperClassMap(this, libraryEntries, classEntries)
     }
 

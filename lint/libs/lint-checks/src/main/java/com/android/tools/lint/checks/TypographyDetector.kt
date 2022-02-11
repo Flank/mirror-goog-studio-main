@@ -77,9 +77,15 @@ class TypographyDetector : ResourceXmlDetector() {
             return
         }
         for (child in element.childrenIterator()) {
-            if (child.nodeType == TEXT_NODE || child.nodeType == CDATA_SECTION_NODE) {
+            if (child.nodeType == TEXT_NODE) {
                 val text = child.nodeValue
                 checkText(context, element, child, text)
+            } else if (child.nodeType == CDATA_SECTION_NODE) {
+                val text = child.nodeValue
+                // Don't try to interpret CDATA which likely contains markup
+                if (!text.contains("<")) {
+                    checkText(context, element, child, text)
+                }
             } else if (child.nodeType == ELEMENT_NODE &&
                 (
                     child.parentNode.nodeName == TAG_STRING_ARRAY ||
@@ -88,9 +94,15 @@ class TypographyDetector : ResourceXmlDetector() {
             ) {
                 // String array or plural item children
                 for (item in child.childrenIterator()) {
-                    if (item.nodeType == TEXT_NODE || item.nodeType == CDATA_SECTION_NODE) {
+                    if (item.nodeType == TEXT_NODE) {
                         val text = item.nodeValue
                         checkText(context, child as Element, item, text)
+                    } else if (item.nodeType == CDATA_SECTION_NODE) {
+                        val text = item.nodeValue
+                        // Don't try to interpret CDATA which likely contains markup
+                        if (!text.contains("<")) {
+                            checkText(context, child as Element, item, text)
+                        }
                     }
                 }
             }

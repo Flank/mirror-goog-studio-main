@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instrumentation
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.appClassesDescriptorPrefix
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.checkClassesAreInstrumented
@@ -39,8 +38,7 @@ import org.junit.Test
 class AsmTransformApiInstrumentationTest {
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("asmTransformApi")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+    val project = GradleTestProject.builder().fromTestProject("asmTransformApi").create()
 
     private fun assertClassesAreInstrumentedInDebugVariant() {
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
@@ -276,7 +274,8 @@ class AsmTransformApiInstrumentationTest {
         configureExtensionForAnnotationAddingVisitor(project)
         configureExtensionForInterfaceAddingVisitor(project)
 
-        project.executor().run(":app:assembleRelease")
+        project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+            .run(":app:assembleRelease")
 
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.RELEASE)
 

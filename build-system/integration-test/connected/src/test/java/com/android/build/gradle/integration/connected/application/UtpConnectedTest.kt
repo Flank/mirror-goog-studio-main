@@ -44,6 +44,7 @@ class UtpConnectedTest {
         @JvmField
         val EMULATOR = getEmulator()
 
+        const val TEST_RESULT_XML = "build/outputs/androidTest-results/connected/TEST-emulator-5554 - 10-_app-.xml"
         const val LOGCAT = "build/outputs/androidTest-results/connected/emulator-5554 - 10/logcat-com.example.android.kotlin.ExampleInstrumentedTest-useAppContext.txt"
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
         const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
@@ -114,6 +115,7 @@ class UtpConnectedTest {
     @Throws(Exception::class)
     fun connectedAndroidTest() {
         val testTaskName = ":app:connectedAndroidTest"
+        val testResultXmlPath = "app/$TEST_RESULT_XML"
         val testReportPath = "app/$TEST_REPORT"
         val testResultPbPath = "app/$TEST_RESULT_PB"
         val aggTestResultPbPath = "app/$AGGREGATED_TEST_RESULT_PB"
@@ -123,6 +125,7 @@ class UtpConnectedTest {
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run(testTaskName)
 
+        assertThat(project.file(testResultXmlPath)).exists()
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
         assertThat(project.file(aggTestResultPbPath)).exists()
@@ -135,12 +138,14 @@ class UtpConnectedTest {
         // restored from the configuration cache. We expect no crashes.
         project.executor().run("clean")
 
+        assertThat(project.file(testResultXmlPath)).doesNotExist()
         assertThat(project.file(testReportPath)).doesNotExist()
         assertThat(project.file(testResultPbPath)).doesNotExist()
         assertThat(project.file(aggTestResultPbPath)).doesNotExist()
 
         project.executor().run(testTaskName)
 
+        assertThat(project.file(testResultXmlPath)).exists()
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
         assertThat(project.file(aggTestResultPbPath)).exists()

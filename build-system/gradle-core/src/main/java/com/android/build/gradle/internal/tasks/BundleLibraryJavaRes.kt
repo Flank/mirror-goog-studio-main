@@ -25,22 +25,16 @@ import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
-import java.io.File
 import java.nio.file.Files
 import java.util.zip.Deflater
 
@@ -57,13 +51,6 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val output: RegularFileProperty
-
-    // We cannot use @Classpath as it ignores empty directories which may be used as Java resources.
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:SkipWhenEmpty
-    @get:Optional
-    abstract val resources: ConfigurableFileCollection
 
     @get:Input
     lateinit var jarCreatorType: JarCreatorType
@@ -121,34 +108,23 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         ) {
             super.configure(task)
 
+            var resources: FileCollection?
             // we should have two tasks with each input and ensure that only one runs for any build.
             if (projectJavaResFromStreams != null) {
-                task.resources.fromDisallowChanges(projectJavaResFromStreams)
                 task.unfilteredResources = projectJavaResFromStreams
+                resources = projectJavaResFromStreams
             } else {
                 val projectJavaRes = getProjectJavaRes(creationConfig)
                 task.unfilteredResources = projectJavaRes
-                task.resources.fromDisallowChanges(computeResourcesForTaskInput(projectJavaRes))
+                resources = projectJavaRes.asFileTree.matching(MergeJavaResourceTask.patternSet)
             }
-
+            task.inputs.files(resources)
+                .skipWhenEmpty()
+                .ignoreEmptyDirectories(false)
+                .withPathSensitivity(PathSensitivity.RELATIVE)
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             task.debuggable
                 .setDisallowChanges(creationConfig.debuggable)
-        }
-
-        /**
-         * Visits a file collection by recursively visiting all directories, and ignoring
-         * all top level files. We cannot use FileTree as we do need empty dirs for Java resources.
-         */
-        private fun computeResourcesForTaskInput(projectJavaRes: FileCollection): Any {
-            return projectJavaRes.elements.map {
-                it.flatMap { fsLocation ->
-                    fsLocation.asFile.walk().filter { f ->
-                        if (f.isDirectory && f == fsLocation.asFile) return@filter false
-                        MergeJavaResourceTask.predicate.test(f.extension)
-                    }.sortedBy(File::invariantSeparatorsPath)
-                }
-            }
         }
     }
 }

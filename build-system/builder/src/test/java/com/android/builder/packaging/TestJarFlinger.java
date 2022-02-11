@@ -132,7 +132,25 @@ public class TestJarFlinger {
         }
 
         assertThat(ZipArchive.listEntries(path).keySet())
-                .containsExactly("linked/file.txt", "regular.txt", "regular.txt.link");
+                .containsExactly("linked/", "linked/file.txt", "regular.txt", "regular.txt.link");
+    }
+
+    @Test
+    public void testEmptyDirectory() throws Exception {
+        Path path = getOutPath("testEmptyDirectory.zip");
+
+        FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+        String emptyDirName = "emptyDir/";
+        Path directories = fs.getPath("/tmp_root/" + emptyDirName);
+        Files.createDirectories(directories);
+        Path root = directories.getParent();
+
+        try (JarFlinger flinger = new JarFlinger(path)) {
+            flinger.addDirectory(root);
+        }
+
+        assertThat(ZipArchive.listEntries(path).keySet()).containsExactly(emptyDirName);
+        assertThat(ZipArchive.listEntries(path).get(emptyDirName).isDirectory()).isTrue();
     }
 
     private static Path createDirectoryWithSymlinks() throws IOException {

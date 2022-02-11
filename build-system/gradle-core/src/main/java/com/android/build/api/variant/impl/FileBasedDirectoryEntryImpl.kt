@@ -38,6 +38,7 @@ class FileBasedDirectoryEntryImpl(
     private val directory: File,
     override val filter: PatternFilterable? = null,
     override val isUserAdded: Boolean = false,
+    override val shouldBeAddedToIdeModel: Boolean = false,
 ): DirectoryEntry {
 
     override fun asFiles(directoryPropertyCreator: () -> DirectoryProperty): Provider<Directory> {
@@ -47,7 +48,6 @@ class FileBasedDirectoryEntryImpl(
     }
 
     override val isGenerated: Boolean = false
-    override val shouldBeAddedToIdeModel: Boolean = true
 
     override fun asFileTree(fileTreeCreator: () -> ConfigurableFileTree): ConfigurableFileTree =
         fileTreeCreator().setDir(directory).also {

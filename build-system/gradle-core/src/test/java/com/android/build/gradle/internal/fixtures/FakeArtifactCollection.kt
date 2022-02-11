@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.fixtures
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 
 class FakeArtifactCollection(
     private val resolvedArtifacts: MutableSet<ResolvedArtifactResult>) : ArtifactCollection {
@@ -33,4 +34,8 @@ class FakeArtifactCollection(
         FakeFileCollection(resolvedArtifacts.map { it.file })
 
     override fun getArtifacts(): MutableSet<ResolvedArtifactResult> = resolvedArtifacts
+
+    @Suppress("UnstableApiUsage")
+    override fun getResolvedArtifacts(): Provider<Set<ResolvedArtifactResult>> =
+        FakeProviderFactory.factory.provider { resolvedArtifacts }
 }

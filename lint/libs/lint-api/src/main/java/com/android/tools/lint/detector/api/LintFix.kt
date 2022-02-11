@@ -608,6 +608,7 @@ open class LintFix protected constructor(
         private var reformat = false
         private var robot = false
         private var independent = false
+        private var imports: MutableList<String>? = null
 
         @RegExp
         private var oldPattern: String? = null
@@ -732,6 +733,22 @@ open class LintFix protected constructor(
         }
 
         /**
+         * Adds one or more imports to add if necessary when performing
+         * the fix. Normally you don't need to do this; it's better
+         * to use fully qualified names in your replacement code
+         * snippets; this ensures that if there is a naming conflict
+         * (where the same name is already imported for a different
+         * package) lint will leave the fully qualified name in place.
+         * However, in some scenarios, separately listing the import is
+         * necessary, such as for example with using extension methods.
+         */
+        fun imports(vararg imports: String): ReplaceStringBuilder {
+            val existing = this.imports ?: mutableListOf<String>().also { this.imports = it }
+            existing.addAll(imports)
+            return this
+        }
+
+        /**
          * The IDE should simplify fully qualified names in the element
          * after this fix has been run (off by default)
          */
@@ -851,6 +868,7 @@ open class LintFix protected constructor(
                 newText ?: "",
                 shortenNames,
                 reformat,
+                imports ?: emptyList(),
                 range,
                 robot,
                 independent
@@ -1458,6 +1476,7 @@ open class LintFix protected constructor(
         fun getStringList(key: String): List<String>? {
             val value = map[key]
             if (value is List<*>) {
+                @Suppress("UNCHECKED_CAST")
                 return value as List<String>?
             } else if (value is String) {
                 // from XML persistence
@@ -1683,6 +1702,15 @@ open class LintFix protected constructor(
         val shortenNames: Boolean,
         /** Whether the modified text range should be reformatted */
         val reformat: Boolean,
+        /**
+         * Additional imports to add. Normally, the replacement string
+         * should use fully qualified names and lint will automatically
+         * handle replacing these with imported symbols when possible
+         * (if [shortenNames] is true), but for example for extension
+         * methods where you cannot use fully qualified names in place,
+         * reference these here.
+         */
+        val imports: List<String>,
         /**
          * A location range to use for searching for the text or
          * pattern. Useful if you want to make a replacement that is

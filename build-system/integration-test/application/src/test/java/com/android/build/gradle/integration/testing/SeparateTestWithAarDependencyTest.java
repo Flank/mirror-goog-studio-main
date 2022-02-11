@@ -67,8 +67,6 @@ public class SeparateTestWithAarDependencyTest {
                         + "}\n");
 
         project.executor()
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assemble");
         models = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(models);

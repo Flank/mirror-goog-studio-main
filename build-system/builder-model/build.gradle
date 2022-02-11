@@ -20,21 +20,17 @@ project.ext.pomDesc = 'Model for the Builder library.'
 
 project.ext.apiVersion = rootProject.ext.apiVersion ?: 0
 
-// because the model is passed from the IDE to Gradle, no matter
-// what version of Gradle Plugin is running, we need to keep this
-// as Java6 bytecode in case Studio 2.2 loads a project running
-// an older plugin in a JDK6 VM.
 compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_6
-    targetCompatibility = JavaVersion.VERSION_1_6
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 compileKotlin {
-    sourceCompatibility = JavaVersion.VERSION_1_6
-    targetCompatibility = JavaVersion.VERSION_1_6
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 
     kotlinOptions {
-        jvmTarget = "1.6"
+        jvmTarget = "1.8"
     }
 }
 

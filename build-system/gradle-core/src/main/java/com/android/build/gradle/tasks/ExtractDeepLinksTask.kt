@@ -104,10 +104,10 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             ).forUseAtConfigurationTime().orNull
             task.navFilesFolders =
                 creationConfig.variantSources
-                    .getResourceSets(false, aaptEnv).stream()
+                    .getResourceSets(creationConfig.sources.res, false, aaptEnv, creationConfig.services::directoryProperty)
                     .flatMap {
-                        it.sourceFiles.stream().map { File(it, FD_RES_NAVIGATION) }
-                    }.collect(Collectors.toList()).reversed()
+                        it.sourceFiles.map { File(it, FD_RES_NAVIGATION) }
+                    }.reversed()
         }
     }
 }

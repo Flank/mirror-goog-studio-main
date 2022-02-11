@@ -59,7 +59,7 @@ public class PackageTreeCreator {
     private static Multimap<String, MethodReference> getAllMethodReferencesByClassName(
             @NonNull DexBackedDexFile dexFile) {
         Multimap<String, MethodReference> methodsByClass = ArrayListMultimap.create();
-        for (int i = 0, m = dexFile.getMethodCount(); i < m; i++) {
+        for (int i = 0, m = dexFile.getMethodSection().size(); i < m; i++) {
             MethodReference methodRef = new DexBackedMethodReference(dexFile, i);
             methodsByClass.put(methodRef.getDefiningClass(), methodRef);
         }
@@ -71,7 +71,7 @@ public class PackageTreeCreator {
     private static Multimap<String, FieldReference> getAllFieldReferencesByClassName(
             @NonNull DexBackedDexFile dexFile) {
         Multimap<String, FieldReference> fieldsByClass = ArrayListMultimap.create();
-        for (int i = 0, m = dexFile.getFieldCount(); i < m; i++) {
+        for (int i = 0, m = dexFile.getFieldSection().size(); i < m; i++) {
             FieldReference fieldRef = new DexBackedFieldReference(dexFile, i);
             fieldsByClass.put(fieldRef.getDefiningClass(), fieldRef);
         }
@@ -83,7 +83,7 @@ public class PackageTreeCreator {
     private static Map<String, TypeReference> getAllTypeReferencesByClassName(
             @NonNull DexBackedDexFile dexFile) {
         HashMap<String, TypeReference> typesByName = new HashMap<>();
-        for (int i = 0, m = dexFile.getTypeCount(); i < m; i++) {
+        for (int i = 0, m = dexFile.getTypeSection().size(); i < m; i++) {
             TypeReference typeRef = new DexBackedTypeReference(dexFile, i);
             typesByName.put(typeRef.getType(), typeRef);
         }

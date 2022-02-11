@@ -78,7 +78,6 @@ class CustomTestedApksTest {
                         signingConfig = debug.signingConfig
                     }
                 }
-                dependenciesInfo.includeInApk = false //https://issuetracker.google.com/162074215
             }
             """.trimIndent()
         )

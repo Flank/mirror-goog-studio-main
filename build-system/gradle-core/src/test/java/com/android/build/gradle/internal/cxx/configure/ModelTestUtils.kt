@@ -55,6 +55,7 @@ import org.gradle.api.provider.Provider
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 
 fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAbiModel {
     val projectOptions = Mockito.mock(ProjectOptions::class.java)
@@ -118,7 +119,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
     Mockito.doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
     Mockito.doReturn(ndkInfo).`when`(ndkPlatform).ndkInfo
-    Mockito.doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkPlatform).revision
+    Mockito.doReturn(Revision.parseRevision(NDK_DEFAULT_VERSION)).`when`(ndkPlatform).revision
     Mockito.doReturn(Stl.LIBCXX_SHARED).`when`(ndkInfo).getDefaultStl(NativeBuildSystem.CMAKE)
     Mockito.doReturn(buildDir).`when`(project).buildDir
     Mockito.doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory

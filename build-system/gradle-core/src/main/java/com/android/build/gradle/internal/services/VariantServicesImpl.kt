@@ -23,6 +23,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.HasConfigurableValue
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -299,6 +300,11 @@ class VariantServicesImpl(
             }
         }
     }
+
+    override fun regularFileProperty(): RegularFileProperty =
+        projectServices.objectFactory.fileProperty().also {
+            properties.add(it)
+        }
 
     override fun directoryProperty(): DirectoryProperty =
         projectServices.objectFactory.directoryProperty().also {

@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,8 +52,6 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     public void testReleasePackaging() throws Exception {
         project.executor()
-                // http://b/149978740
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run(":app:assembleRelease");
         Apk releaseApk =
                 project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED);

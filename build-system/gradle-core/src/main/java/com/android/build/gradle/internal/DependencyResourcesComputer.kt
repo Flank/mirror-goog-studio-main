@@ -17,11 +17,11 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
-import com.android.build.gradle.tasks.SourceSetInputs
 import com.android.builder.core.BuilderConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
@@ -208,7 +208,6 @@ abstract class DependencyResourcesComputer {
 
     fun initFromVariantScope(
         creationConfig: ComponentCreationConfig,
-        sourceSetInputs: SourceSetInputs,
         microApkResDir: FileCollection,
         libraryDependencies: ArtifactCollection?,
         relativeLocalResources: Boolean,
@@ -224,18 +223,24 @@ abstract class DependencyResourcesComputer {
         this.libraries.disallowChanges()
         this.librarySourceSets.disallowChanges()
 
-        addResourceSets(sourceSetInputs.localResources.get(), relativeLocalResources) {
+        addResourceSets(
+            creationConfig.sources.res.getLocalSourcesAsFileCollection().get(),
+            relativeLocalResources
+        ) {
             services.newInstance(ResourceSourceSetInput::class.java)
         }
         resources.disallowChanges()
 
-        extraGeneratedResFolders.fromDisallowChanges(sourceSetInputs.extraGeneratedResDir)
+        extraGeneratedResFolders.fromDisallowChanges(
+            creationConfig.variantData.extraGeneratedResFolders
+        )
 
 
-        if (sourceSetInputs.generatedResDir.isPresent) {
-            generatedResOutputDir.fromDisallowChanges(sourceSetInputs.generatedResDir)
+        if (creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES).isPresent) {
+            generatedResOutputDir.fromDisallowChanges(
+                creationConfig.artifacts.get(InternalArtifactType.GENERATED_RES)
+            )
         }
-        generatedResOutputDir.disallowChanges()
 
         if (creationConfig.taskContainer.generateApkDataTask != null) {
             microApkResDirectory.from(microApkResDir)

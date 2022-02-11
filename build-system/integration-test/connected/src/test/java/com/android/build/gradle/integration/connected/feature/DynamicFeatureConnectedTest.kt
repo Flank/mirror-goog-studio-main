@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import org.junit.Before
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
@@ -150,7 +149,6 @@ class DynamicFeatureConnectedTest {
         project.execute("uninstallAll")
     }
 
-    @Ignore("b/177370256")
     @Test
     fun runTestInDynamicFeature() {
         project.executor().run(":dynamicFeature:connectedAndroidTest")

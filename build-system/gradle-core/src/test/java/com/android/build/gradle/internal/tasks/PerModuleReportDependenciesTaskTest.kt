@@ -33,6 +33,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeResolutionResult
 import com.android.build.gradle.internal.fixtures.addDependencyEdge
 import com.android.build.gradle.internal.fixtures.createModuleComponent
@@ -46,12 +47,12 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.net.URI
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedComponentResult
-import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
 import org.gradle.api.internal.artifacts.repositories.DefaultIvyArtifactRepository
 import org.gradle.api.internal.artifacts.repositories.DefaultMavenArtifactRepository
 import org.gradle.api.internal.artifacts.result.ResolvedComponentResultInternal
@@ -72,15 +73,8 @@ class PerModuleReportDependenciesTaskTest {
     @JvmField
     var temporaryFolder = TemporaryFolder()
 
-    @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
-
     internal lateinit var project: Project
     lateinit var task: PerModuleReportDependenciesTask
-
-    @Mock private lateinit var mockConfiguration: ConfigurationInternal
-    @Mock private lateinit var mockResolvableDependencies: ResolvableDependencies
-    @Mock private lateinit var mockArtifactView: ArtifactView
 
     @Before
     @Throws(IOException::class)
@@ -88,13 +82,8 @@ class PerModuleReportDependenciesTaskTest {
         val testDir = temporaryFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
         task = project.tasks.create("taskUnderTest", PerModuleReportDependenciesTask::class.java)
-        task.runtimeClasspathName.set("dummyConfigurationName")
         task.moduleName.set("base")
         task.dependencyReport.set(project.file("dependencies.pb"))
-
-        Mockito.`when`(mockConfiguration.incoming).thenReturn(mockResolvableDependencies)
-        Mockito.`when`(mockConfiguration.name).thenReturn("dummyConfigurationName")
-        project.configurations.add(mockConfiguration)
     }
 
     @Test
@@ -124,9 +113,8 @@ class PerModuleReportDependenciesTaskTest {
         val stubbedGraph = FakeResolutionResult(rootComponent)
         val stubbedArtifactCollection = FakeArtifactCollection(mutableSetOf())
 
-        Mockito.`when`(mockResolvableDependencies.artifactView(any())).thenReturn(mockArtifactView)
-        Mockito.`when`(mockArtifactView.artifacts).thenReturn(stubbedArtifactCollection)
-        Mockito.`when`(mockResolvableDependencies.resolutionResult).thenReturn(stubbedGraph)
+        task.runtimeClasspathArtifacts.set(stubbedArtifactCollection)
+        task.getRootComponent().set(stubbedGraph.root)
 
         val expected = appDependencies {
             addLibrary("foo", "apple", "1.1")
@@ -185,9 +173,8 @@ class PerModuleReportDependenciesTaskTest {
         val stubbedGraph = FakeResolutionResult(rootComponent)
         val stubbedArtifactCollection = FakeArtifactCollection(mutableSetOf())
 
-        Mockito.`when`(mockResolvableDependencies.artifactView(any())).thenReturn(mockArtifactView)
-        Mockito.`when`(mockArtifactView.artifacts).thenReturn(stubbedArtifactCollection)
-        Mockito.`when`(mockResolvableDependencies.resolutionResult).thenReturn(stubbedGraph)
+        task.runtimeClasspathArtifacts.set(stubbedArtifactCollection)
+        task.getRootComponent().set(stubbedGraph.root)
 
         val expected = appDependencies {
             addLibrary("foo", "apple", "1.1")

@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.LoggingLevel;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -48,10 +47,6 @@ public class MinifyLibAndAppKeepRules {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("minifyLibWithJavaRes")
-                    // http://b/149978740
-                    .addGradleProperties(
-                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
-                                    + "=false")
                     .create();
 
     @Test

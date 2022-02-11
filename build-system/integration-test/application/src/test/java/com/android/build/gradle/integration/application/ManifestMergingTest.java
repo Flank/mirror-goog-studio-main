@@ -24,7 +24,6 @@ import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.utils.FileUtils;
@@ -72,10 +71,7 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergingForLibraries() throws Exception {
-        libsTest.executor()
-                // http://b/162074215
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                .run("clean", "build");
+        libsTest.executor().run("clean", "build");
         File fileOutput =
                 libsTest.file(
                         "libapp/build/"
@@ -99,10 +95,7 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergerReport() throws Exception {
-        flavors.executor()
-                // http://b/162074215
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                .run("clean", "assemble");
+        flavors.executor().run("clean", "assemble");
         File logs = new File(flavors.getOutputFile("apk").getParentFile(), "logs");
         File[] reports = logs.listFiles(file -> file.getName().startsWith("manifest-merger"));
         assertEquals(8, reports.length);
@@ -110,10 +103,7 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergeBlameReport() throws Exception {
-        flavors.executor()
-                // http://b/162074215
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                .run("clean", "assemble");
+        flavors.executor().run("clean", "assemble");
 
         File dirs =
                 FileUtils.join(
@@ -166,10 +156,7 @@ public class ManifestMergingTest {
                         + "        targetSdkVersion 'N'\n"
                         + "    }\n"
                         + "}");
-        libsTest.executor()
-                // http://b/162074215
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                .run("clean", ":app:build");
+        libsTest.executor().run("clean", ":app:build");
         assertThat(
                         appProject.file(
                                 "build/intermediates/packaged_manifests/debug/AndroidManifest.xml"))

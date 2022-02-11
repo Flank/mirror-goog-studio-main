@@ -23,9 +23,14 @@ import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.provider.Provider
 
 class FakeResolutionResult(private val root: ResolvedComponentResult): ResolutionResult {
     override fun getRoot(): ResolvedComponentResult = root
+
+    override fun getRootComponent(): Provider<ResolvedComponentResult> {
+        return FakeProviderFactory.factory.provider { getRoot() }
+    }
 
     override fun getAllComponents(): MutableSet<ResolvedComponentResult> {
         val allComponents = mutableSetOf<ResolvedComponentResult>()

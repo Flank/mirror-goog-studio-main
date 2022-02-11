@@ -23,7 +23,6 @@ import com.android.build.api.attributes.AgpVersionAttr;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -41,10 +40,6 @@ public class AppPublishingTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("densitySplit")
-                    // http://b/149978740
-                    .addGradleProperties(
-                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
-                                    + "=false")
                     .create();
 
     @Before
@@ -71,8 +66,6 @@ public class AppPublishingTest {
         // publish the app as a bundle
         setUpAabPublishing();
         project.executor()
-                // http://b/149978740 - building bundle always runs the incompatible task
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("publishAppPublicationToMavenRepository");
 
         // manually check that the app publishing worked.

@@ -42,6 +42,7 @@ enum class Version(
     VERSION_4_2("4.2"),
     VERSION_7_0("7.0"),
     VERSION_7_2("7.2"),
+    VERSION_7_3("7.3"),
     VERSION_8_0("8.0"),
 
     ; // end of enums

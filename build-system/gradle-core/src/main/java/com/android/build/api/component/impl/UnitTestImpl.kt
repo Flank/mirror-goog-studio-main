@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
@@ -44,7 +43,6 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -127,7 +125,8 @@ open class UnitTestImpl @Inject constructor(
         get() = variantDslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<DirectoryEntry>) {}
+        sourceSets: MutableList<DirectoryEntry>
+    ) {}
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,

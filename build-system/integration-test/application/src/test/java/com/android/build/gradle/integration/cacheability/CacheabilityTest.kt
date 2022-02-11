@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.cacheability
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.TaskStateList
@@ -168,8 +167,6 @@ class CacheabilityTest {
         return with(EmptyActivityProjectBuilder()) {
             this.projectName = projectName
             this.withUnitTest = true
-            // http://b/146208910 & http://b/149978740
-            this.withConfigurationCaching = BaseGradleExecutor.ConfigurationCaching.OFF
             build()
         }
     }

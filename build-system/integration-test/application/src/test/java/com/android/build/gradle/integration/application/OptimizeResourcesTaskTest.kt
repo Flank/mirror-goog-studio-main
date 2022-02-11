@@ -14,8 +14,6 @@ class OptimizeResourcesTaskTest {
     @JvmField
     val project = GradleTestProject.builder()
             .fromTestApp(MinSdkVersionTest.helloWorldApp)
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     @Test

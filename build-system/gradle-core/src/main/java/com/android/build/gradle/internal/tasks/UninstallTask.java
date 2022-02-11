@@ -30,7 +30,7 @@ import com.android.utils.ILogger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskProvider;
@@ -41,8 +41,9 @@ public abstract class UninstallTask extends NonIncrementalTask {
 
     private String variantName;
     private String projectName;
-    // these are not inputs so we don't need the task to have its own Property
-    private Provider<String> applicationId;
+
+    @Input
+    public abstract Property<String> getApplicationId();
 
     private int mTimeOutInMs = 0;
 
@@ -57,7 +58,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
     protected void doTaskAction() throws DeviceException, ExecutionException {
         final Logger logger = getLogger();
 
-        logger.info("Uninstalling app: {}", applicationId);
+        logger.info("Uninstalling app: {}", getApplicationId());
 
         final ILogger iLogger = new LoggerWrapper(getLogger());
         final DeviceProvider deviceProvider =
@@ -72,10 +73,11 @@ public abstract class UninstallTask extends NonIncrementalTask {
                     final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
 
                     for (DeviceConnector device : devices) {
-                        device.uninstallPackage(applicationId.get(), getTimeOutInMs(), iLogger);
+                        device.uninstallPackage(
+                                getApplicationId().get(), getTimeOutInMs(), iLogger);
                         logger.lifecycle(
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
-                                applicationId.get(),
+                                getApplicationId().get(),
                                 projectName,
                                 variantName,
                                 device.getName(),
@@ -85,7 +87,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                     int n = devices.size();
                     logger.quiet(
                             "Uninstalled {} from {} device{}.",
-                            applicationId.get(),
+                            getApplicationId().get(),
                             n,
                             n == 1 ? "" : "s");
 
@@ -130,7 +132,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
 
             task.variantName = creationConfig.getName();
             task.projectName = task.getProject().getName();
-            task.applicationId = creationConfig.getApplicationId();
+            task.getApplicationId().set(creationConfig.getApplicationId());
             task.setDescription("Uninstalls the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(

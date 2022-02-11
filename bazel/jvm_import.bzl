@@ -22,7 +22,7 @@ def _jvm_import(ctx):
             inputs = [jar],
             outputs = [compile_jar],
             mnemonic = "CreateJvmCompileJar",
-            progress_message = "Creating compile jar for %s" % ctx.label,
+            progress_message = "JvmCompileJar creating %s" % compile_jar.short_path,
         )
         source_jar = ctx.files.srcjar[0] if ctx.files.srcjar else None
         infos.append(JavaInfo(

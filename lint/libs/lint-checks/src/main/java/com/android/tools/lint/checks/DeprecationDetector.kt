@@ -26,8 +26,8 @@ import com.android.SdkConstants.ATTR_PASSWORD
 import com.android.SdkConstants.ATTR_PERMISSION
 import com.android.SdkConstants.ATTR_PHONE_NUMBER
 import com.android.SdkConstants.ATTR_SINGLE_LINE
-import com.android.SdkConstants.CLASS_PREFERENCE
 import com.android.SdkConstants.EDIT_TEXT
+import com.android.SdkConstants.PreferenceClasses.CLASS_PREFERENCE
 import com.android.SdkConstants.TAG_SERVICE
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M

@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.TaskStateAssertionHelper;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -68,11 +67,7 @@ public class DeploymentApiOverrideTest {
     @Test
     public void testOriginalLegacyMultiDexOnDebugBuild() throws Exception {
         // ics flavor has minSdk = 14
-        GradleBuildResult result =
-                project.executor()
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                        .run("clean", "assembleIcsDebug");
+        GradleBuildResult result = project.executor().run("clean", "assembleIcsDebug");
 
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isTrue();
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
@@ -83,11 +78,7 @@ public class DeploymentApiOverrideTest {
     @Test
     public void testOriginalNativeMultiDexOnDebugBuild() throws Exception {
         // lollipop flavor has minSdk = 21
-        GradleBuildResult result =
-                project.executor()
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                        .run("clean", "assembleLollipopDebug");
+        GradleBuildResult result = project.executor().run("clean", "assembleLollipopDebug");
 
         assertThat(getMainDexListFile(project, "lollipopDebug").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "lollipop"))
@@ -101,8 +92,6 @@ public class DeploymentApiOverrideTest {
         GradleBuildResult result =
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleIcsDebug");
 
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isFalse();
@@ -120,8 +109,6 @@ public class DeploymentApiOverrideTest {
         // ics flavor has minSdk = 14
         GradleBuildResult result =
                 project.executor()
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isTrue();
@@ -135,8 +122,6 @@ public class DeploymentApiOverrideTest {
         // lollipop flavor has minSdk = 21
         GradleBuildResult result =
                 project.executor()
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleLollipopRelease");
 
         assertThat(getMainDexListFile(project, "lollipopRelease").exists()).isFalse();
@@ -151,8 +136,6 @@ public class DeploymentApiOverrideTest {
         GradleBuildResult result =
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
@@ -227,8 +210,6 @@ public class DeploymentApiOverrideTest {
         GradleBuildResult result24 =
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
@@ -244,8 +225,6 @@ public class DeploymentApiOverrideTest {
         GradleBuildResult result25 =
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 25)
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();

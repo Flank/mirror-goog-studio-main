@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;
@@ -101,9 +100,6 @@ public class ExternalTestProjectTest {
                         + "    api project(path: ':app1', configuration: 'testLib')\n"
                         + "}\n");
 
-        project.executor()
-                // http://b/162074215
-                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                .run("clean", "app2:assembleDebug");
+        project.executor().run("clean", "app2:assembleDebug");
     }
 }

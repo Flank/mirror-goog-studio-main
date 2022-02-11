@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.instantexecution
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
@@ -47,7 +48,9 @@ class BasicInstantExecutionTest {
                         .appendToBuild("android.targetProjectPath ':app'")
                 )
                 .build()
-        ).create()
+        )
+        .enableProfileOutput()
+        .create()
 
     @Before
     fun setUp() {
@@ -71,7 +74,8 @@ class BasicInstantExecutionTest {
         executor().run("assemble")
         assertThat(project.projectDir.resolve(".gradle/configuration-cache")).isDirectory()
         val result = executor().run("assemble")
-        Truth.assertThat(result.didWorkTasks).isEmpty()
+        // AnalyticsRecordingTask always runs
+        Truth.assertThat(result.didWorkTasks).containsExactly(":app:analyticsRecordingRelease")
     }
 
     @Test
@@ -111,6 +115,15 @@ class BasicInstantExecutionTest {
         executor().run(":app:assembleDebugAndroidTest")
         executor().run("clean")
         executor().run(":app:assembleDebugAndroidTest")
+    }
+
+    @Test
+    fun testWithProjectIsolation() {
+        executor()
+            .withArgument("-Dorg.gradle.unsafe.isolated-projects=true")
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
+            .run("assemble")
     }
 
     private fun executor(): GradleTaskExecutor =

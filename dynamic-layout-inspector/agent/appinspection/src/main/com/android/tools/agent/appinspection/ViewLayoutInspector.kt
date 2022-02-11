@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.appinspection
 
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.GuardedBy
@@ -87,6 +88,8 @@ class ViewLayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_
         environment: InspectorEnvironment
     ) = ViewLayoutInspector(connection, environment)
 }
+
+private const val MAX_START_FETCH_RETRIES = 10
 
 class ViewLayoutInspector(connection: Connection, private val environment: InspectorEnvironment) :
     Inspector(connection) {
@@ -244,6 +247,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                                 try {
                                     startCapturing(roots.getValue(toAdd))
                                 } catch (t: Throwable) {
+                                    Log.w("layinsp", t)
                                     connection.sendEvent {
                                         errorEvent =
                                             LayoutInspectorViewProtocol.ErrorEvent.newBuilder()
@@ -555,15 +559,33 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             rootsDetector.reset()
         }
         try {
-            ThreadUtils.runOnMainThread {
-                val rootViews = getRootViews()
-                for (root in rootViews) {
-                    startCapturing(root)
+            // Since the start command is sent right after we set the debug system properties, which
+            // cause an activity restart, it's possible that the activity will still be restarting
+            // at this point and we won't find any root views. Retry a few times until we do.
+            var tries = 0
+            while (tries++ < MAX_START_FETCH_RETRIES) {
+                val result = ThreadUtils.runOnMainThread {
+                    val rootViews = getRootViews()
+                    if (rootViews.isEmpty()) {
+                        false
+                    } else {
+                        for (root in rootViews) {
+                            startCapturing(root)
+                        }
+                        foldSupport?.initialize(rootViews.first().context)
+                        true
+                    }
+                }.get()
+                when {
+                    result -> break
+                    tries == MAX_START_FETCH_RETRIES ->
+                        throw Exception(Exception("Unable to find any root Views"))
+                    else -> Thread.sleep(300)
                 }
-                foldSupport?.initialize(rootViews.first().context)
-            }.get()
+            }
         }
-        catch (exception: ExecutionException) {
+        catch (exception: Exception) {
+            Log.w("layinsp", exception)
             callback.reply {
                 startFetchResponse = StartFetchResponse.newBuilder().apply {
                     error = exception.cause?.message ?: "Unknown error"

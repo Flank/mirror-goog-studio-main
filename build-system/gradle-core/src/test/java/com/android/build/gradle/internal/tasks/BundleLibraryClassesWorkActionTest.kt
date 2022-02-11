@@ -467,7 +467,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         }.execute()
         assertContains(outputFile, "META-INF/dir/1.txt")
         assertContains(outputFile, "META-INF/dir/2.txt")
-        assertDoesNotContain(outputFile, "META-INF/emptyDir/")
+        assertContains(outputFile, "META-INF/emptyDir/")
     }
 
     /** Regression test for b/198667126. */
@@ -508,6 +508,6 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
             }
         }.execute()
         assertContains(outputFile, "META-INF/dir/1.txt")
-        assertDoesNotContain(outputFile, "META-INF/emptyDir/")
+        assertContains(outputFile, "META-INF/emptyDir/")
     }
 }

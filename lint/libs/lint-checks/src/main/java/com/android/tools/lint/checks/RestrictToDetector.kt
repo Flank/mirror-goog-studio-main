@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_VALUE
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationOrigin
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
@@ -41,7 +40,6 @@ import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.impl.compiled.ClsAnnotationImpl
 import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.uast.UAnnotated
@@ -63,7 +61,6 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
         RESTRICT_TO_ANNOTATION.oldName(),
         RESTRICT_TO_ANNOTATION.newName(),
-        GMS_HIDE_ANNOTATION,
         VISIBLE_FOR_TESTING_ANNOTATION.oldName(),
         VISIBLE_FOR_TESTING_ANNOTATION.newName(),
         GUAVA_VISIBLE_FOR_TESTING
@@ -105,14 +102,6 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     context, element, member, annotation, usageInfo, true
                 )
             }
-            GMS_HIDE_ANNOTATION -> {
-                val method = member as? PsiMethod
-                val isConstructor = method == null || method.isConstructor
-                val isStatic = if (method == null) false else context.evaluator.isStatic(method)
-                checkRestrictTo(
-                    context, element, method, annotation, usageInfo, isConstructor || isStatic
-                )
-            }
             VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING -> {
                 if (member != null && type != AnnotationUsageType.METHOD_OVERRIDE && type != AnnotationUsageType.METHOD_CALL_PARAMETER) {
@@ -126,66 +115,6 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             }
         }
-    }
-
-    /**
-     * Returns true if we should report usages of APIs annotated with
-     * com.google.android.gms.common.internal.Hide.
-     */
-    private fun flagHide(
-        context: JavaContext,
-        containingClass: PsiClass,
-        member: PsiMember?,
-        node: UElement
-    ): Boolean {
-        if (isGmsContext(context, node)) return false
-        return !isAllowedFirstParty(context, containingClass, member)
-    }
-
-    /**
-     * Is the annotated @Hide element *also* annotated with
-     * @ShowFirstParty, *and* we're in a context where @ShowFirstParty
-     * is enabled (e.g. g3).
-     */
-    private fun isAllowedFirstParty(
-        context: JavaContext,
-        containingClass: PsiClass,
-        member: PsiMember?
-    ): Boolean {
-        if (LintClient.isGradle) return false
-        val binDir = System.getProperty("com.android.tools.lint.bindir") ?: return false
-        if (!binDir.contains("third_party/java/android/")) return false
-
-        val evaluator = context.evaluator
-        fun PsiModifierListOwner.isFirstParty(): Boolean {
-            evaluator.findAnnotationInHierarchy(this, GMS_SHOW_FIRST_PARTY_ANNOTATION)
-                ?: return false
-            return true
-        }
-
-        if (member !== containingClass && member?.isFirstParty() == true) {
-            return true
-        }
-        return containingClass.isFirstParty()
-    }
-
-    /** Checks whether the client code is in the GMS codebase. */
-    private fun isGmsContext(
-        context: JavaContext,
-        element: UElement
-    ): Boolean {
-        val evaluator = context.evaluator
-        val pkg = evaluator.getPackage(element) ?: return false
-
-        val qualifiedName = pkg.qualifiedName
-        if (!qualifiedName.startsWith("com.google.")) {
-            return false
-        }
-
-        return qualifiedName.startsWith("com.google.firebase") ||
-            qualifiedName.startsWith("com.google.android.gms") ||
-            qualifiedName.startsWith("com.google.ads") ||
-            qualifiedName.startsWith("com.google.mlkit")
     }
 
     private fun isTestContext(
@@ -445,13 +374,6 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        if (scope and RESTRICT_TO_ALL != 0) {
-            val fqn = annotation.qualifiedName
-            if (fqn != GMS_HIDE_ANNOTATION || flagHide(context, containingClass, member, node)) {
-                reportRestriction(null, containingClass, member, context, node, usageInfo)
-            }
-        }
-
         if (scope and RESTRICT_TO_SUBCLASSES != 0) {
             val qualifiedName = containingClass.qualifiedName
             if (qualifiedName != null) {
@@ -631,14 +553,11 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         /** `RestrictTo(RestrictTo.Scope.SUBCLASSES` */
         private const val RESTRICT_TO_SUBCLASSES = 1 shl 4
-        private const val RESTRICT_TO_ALL = 1 shl 5
 
         private fun getRestrictionScope(annotation: UAnnotation): Int {
             val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
             if (value != null) {
                 return getRestrictionScope(value, annotation)
-            } else if (GMS_HIDE_ANNOTATION == annotation.qualifiedName) {
-                return RESTRICT_TO_ALL
             }
             return 0
         }

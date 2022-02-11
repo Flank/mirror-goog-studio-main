@@ -19,13 +19,13 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.SdkConstants.FD_NDK
 import com.android.SdkConstants.FD_NDK_SIDE_BY_SIDE
 import com.android.SdkConstants.NDK_DIR_PROPERTY
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.SdkLocator
 import com.android.build.gradle.internal.cxx.caching.cache
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
-import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
@@ -42,11 +42,6 @@ import com.android.utils.cxx.CxxDiagnosticCode.NDK_VERSION_UNSUPPORTED
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.InvalidUserDataException
 import java.io.File
-
-/**
- * The hard-coded NDK version for this Android Gradle Plugin.
- */
-const val ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION = "21.4.7075529"
 
 /**
  * Logic to find the NDK and optionally download it if not found.
@@ -246,7 +241,7 @@ private fun findNdkPathImpl(
         throw InvalidUserDataException(
             "NDK not configured. Download " +
                     "it with SDK manager. Preferred NDK version is " +
-                    "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'. ")
+                    "'$NDK_DEFAULT_VERSION'. ")
     }
 }
 
@@ -305,10 +300,10 @@ private fun getNdkVersionOrDefault(ndkVersionFromDsl : String?) =
     if (ndkVersionFromDsl.isNullOrBlank()) {
         infoln(
             "Because no explicit NDK was requested, the default version " +
-                    "[$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION] for this Android Gradle " +
+                    "[$NDK_DEFAULT_VERSION] for this Android Gradle " +
                     "Plugin will be used"
         )
-        ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+        NDK_DEFAULT_VERSION
     } else {
         ndkVersionFromDsl
     }

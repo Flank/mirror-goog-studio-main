@@ -54,11 +54,10 @@ internal class SourceAndOverlayDirectoriesImplTest {
             repeat(11) {
                 stub = stub.thenReturn(project.objects.directoryProperty())
             }
-
         }
 
-        Mockito.`when`(variantServices.newListPropertyForInternalUse(List::class.java))
-            .thenReturn(project.objects.listProperty(List::class.java))
+        Mockito.`when`(variantServices.newListPropertyForInternalUse(DirectoryEntries::class.java))
+            .thenReturn(project.objects.listProperty(DirectoryEntries::class.java))
         Mockito.`when`(variantServices.newListPropertyForInternalUse(Collection::class.java))
             .thenReturn(project.objects.listProperty(Collection::class.java))
         Mockito.`when`(variantServices.newListPropertyForInternalUse(Directory::class.java)).also {
@@ -96,23 +95,23 @@ internal class SourceAndOverlayDirectoriesImplTest {
         )
 
         // directories are added in reverse order, lower priority first, then higher prioriry
-        testTarget.addSources(listOf(
+        testTarget.addSources(DirectoryEntries("lowest", listOf(
             FileBasedDirectoryEntryImpl("lowest1", temporaryFolder.newFolder("lowest1")),
             FileBasedDirectoryEntryImpl("lowest2", temporaryFolder.newFolder("lowest2")),
             FileBasedDirectoryEntryImpl("lowest3", temporaryFolder.newFolder("lowest3")),
-        ))
+        )))
 
-        testTarget.addSources(listOf(
+        testTarget.addSources(DirectoryEntries("lower", listOf(
             FileBasedDirectoryEntryImpl("lower1", temporaryFolder.newFolder("lower1")),
             FileBasedDirectoryEntryImpl("lower2", temporaryFolder.newFolder("lower2")),
             FileBasedDirectoryEntryImpl("lower3", temporaryFolder.newFolder("lower3")),
-        ))
+        )))
 
-        testTarget.addSources(listOf(
+        testTarget.addSources(DirectoryEntries("higher", listOf(
             FileBasedDirectoryEntryImpl("higher1", temporaryFolder.newFolder("higher1")),
             FileBasedDirectoryEntryImpl("higher2", temporaryFolder.newFolder("higher2")),
             FileBasedDirectoryEntryImpl("higher3", temporaryFolder.newFolder("higher3")),
-        ))
+        )))
 
         testTarget.addSource(
             FileBasedDirectoryEntryImpl("highest1", temporaryFolder.newFolder("highest1"))

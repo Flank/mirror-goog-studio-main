@@ -49,8 +49,6 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=" + useAndroidX)
         .addGradleProperties(BooleanOption.ENABLE_JETIFIER.propertyName + "=" + useAndroidX)
-        // http://b/149978740
-        .addGradleProperties(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.propertyName + "=" + false)
         .create()
 
     @Test

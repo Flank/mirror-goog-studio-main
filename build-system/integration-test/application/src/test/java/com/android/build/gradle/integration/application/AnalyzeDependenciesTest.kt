@@ -197,8 +197,9 @@ class AnalyzeDependenciesTest {
     val project = GradleTestProject.builder()
             .withAdditionalMavenRepo(mavenRepo)
             .fromTestApp(testApp)
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            // b/215776121
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .withConfigurationCacheMaxProblems(11)
             .create()
 
     @Test

@@ -29,14 +29,11 @@ import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 import java.io.File
 import kotlin.test.fail
 
@@ -52,7 +49,6 @@ class ProcessMultiApkApplicationManifestTest {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         val taskProvider = project.tasks.register("testProcessApplicationManifest", ProcessMultiApkApplicationManifest::class.java)
         task = taskProvider.get()
@@ -88,7 +84,7 @@ class ProcessMultiApkApplicationManifestTest {
             elements = listOf()
         ).saveToDirectory(task.compatibleScreensManifest.get().asFile)
 
-        task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
+        task.taskAction()
 
         val listFiles = task.multiApkManifestOutputDirectory.asFile.get().listFiles()
         assertThat(listFiles).hasLength(2)
@@ -130,7 +126,7 @@ class ProcessMultiApkApplicationManifestTest {
             elements = listOf()
         ).saveToDirectory(task.compatibleScreensManifest.get().asFile)
 
-        task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
+        task.taskAction()
 
         val listFiles = task.multiApkManifestOutputDirectory.asFile.get().listFiles()
         assertThat(listFiles).hasLength(5)
@@ -193,7 +189,7 @@ class ProcessMultiApkApplicationManifestTest {
             )
         ).saveToDirectory(task.compatibleScreensManifest.get().asFile)
 
-        task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
+        task.taskAction()
 
         val listFiles = task.multiApkManifestOutputDirectory.asFile.get().listFiles()
         assertThat(listFiles).hasLength(4)
@@ -250,7 +246,7 @@ class ProcessMultiApkApplicationManifestTest {
             )
         ).saveToDirectory(task.compatibleScreensManifest.get().asFile)
 
-        task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
+        task.taskAction()
 
         val listFiles = task.multiApkManifestOutputDirectory.asFile.get().listFiles()
         assertThat(listFiles).hasLength(4)

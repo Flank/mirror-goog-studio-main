@@ -44,7 +44,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
@@ -384,15 +383,19 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
         FileUtils.mkdirs(outputDir)
         input.forEach { classRoot ->
             check(classRoot.isDirectory) { "Expected directory but found ${classRoot.path}." }
-            classRoot.walk().forEach {
+            for (it in classRoot.walk()) {
                 val relativePath = it.relativeTo(classRoot).path
-                if (it.isFile && relativePath.isNotEmpty() && filter.test(relativePath)) {
-                    val outputFile = outputDir.resolve(relativePath)
-                    FileUtils.mkdirs(outputFile.parentFile)
-                    if (outputFile.isFile) {
-                        throw IllegalStateException("File $outputFile already exists, it cannot be overwritten by $it.")
+                if (relativePath.isEmpty() || !filter.test(relativePath)) continue
+
+                val outputLocation = outputDir.resolve(relativePath)
+                if (it.isFile) {
+                    FileUtils.mkdirs(outputLocation.parentFile)
+                    if (outputLocation.isFile) {
+                        throw IllegalStateException("File $outputLocation already exists, it cannot be overwritten by $it.")
                     }
-                    FileUtils.copyFile(it, outputFile)
+                    FileUtils.copyFile(it, outputLocation)
+                } else if (it.isDirectory && !outputLocation.isDirectory) {
+                    FileUtils.mkdirs(outputLocation)
                 }
             }
         }
@@ -411,13 +414,17 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
             // If an added file is one of the roots of the FileCollection, normalizedPath will be
             // the file name, not an empty string, but we can probably ignore this edge case.
             val relativePath = it.normalizedPath
-            if (it.file.isFile && relativePath.isNotEmpty() && filter.test(relativePath)) {
-                val outputFile = outputDir.resolve(relativePath)
-                FileUtils.mkdirs(outputFile.parentFile)
-                if (outputFile.isFile) {
-                    throw IllegalStateException("File $outputFile already exists, it cannot be overwritten by $it.")
+            if (relativePath.isEmpty() || !filter.test(relativePath)) return@forEach
+
+            val outputLocation = outputDir.resolve(relativePath)
+            if (it.file.isFile) {
+                FileUtils.mkdirs(outputLocation.parentFile)
+                if (outputLocation.isFile) {
+                    throw IllegalStateException("File $outputLocation already exists, it cannot be overwritten by $it.")
                 }
-                FileUtils.copyFile(it.file, outputFile)
+                FileUtils.copyFile(it.file, outputLocation)
+            } else if (it.file.isDirectory && !outputLocation.isDirectory) {
+                FileUtils.mkdirs(outputLocation)
             }
         }
     }

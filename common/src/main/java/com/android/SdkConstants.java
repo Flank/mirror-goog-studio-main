@@ -780,16 +780,6 @@ public final class SdkConstants {
     public static final String CLASS_FRAMELAYOUT =
             "android.widget." + CLASS_NAME_FRAMELAYOUT;
     public static final String CLASS_ADAPTER = "android.widget.Adapter";
-    public static final String CLASS_PREFERENCE = "android.preference.Preference";
-    public static final AndroidxName CLASS_PREFERENCE_ANDROIDX =
-            AndroidxName.of("android.support.v7.preference.", "Preference");
-    public static final String CLASS_NAME_PREFERENCE_SCREEN = "PreferenceScreen";
-    public static final String CLASS_PREFERENCES =
-            "android.preference." + CLASS_NAME_PREFERENCE_SCREEN;
-    public static final String CLASS_PREFERENCE_GROUP =
-            "android.preference.PreferenceGroup";
-    public static final AndroidxName CLASS_PREFERENCE_GROUP_ANDROIDX =
-            AndroidxName.of("android.support.v7.preference.", "PreferenceGroup");
     public static final String CLASS_PARCELABLE = "android.os.Parcelable";
     public static final String CLASS_PARCEL = "android.os.Parcel";
     public static final String CLASS_FRAGMENT = "android.app.Fragment";
@@ -844,9 +834,6 @@ public final class SdkConstants {
             AndroidxName.of("android.support.v7.widget.", "CardView");
     public static final AndroidxName CLASS_ACTION_MENU_VIEW =
             AndroidxName.of("android.support.v7.widget.", "ActionMenuView");
-
-    public static final AndroidxName CLASS_SUPPORT_PREFERENCE_SCREEN =
-            AndroidxName.of("android.support.v7.preference.", "PreferenceScreen");
 
     public static final String CLASS_FRAGMENT_CONTAINER_VIEW =
             "androidx.fragment.app.FragmentContainerView";
@@ -1229,7 +1216,6 @@ public final class SdkConstants {
     // Tags: XML
     public static final String TAG_HEADER = "header";
     public static final String TAG_APPWIDGET_PROVIDER = "appwidget-provider";
-    public static final String TAG_PREFERENCE_SCREEN = "PreferenceScreen";
 
     // Tags: Layouts
     public static final String VIEW_TAG = "view";
@@ -2566,12 +2552,75 @@ public final class SdkConstants {
         public static final String CHECK_BOX_PREFERENCE = "CheckBoxPreference";
         public static final String EDIT_TEXT_PREFERENCE = "EditTextPreference";
         public static final String LIST_PREFERENCE = "ListPreference";
+        public static final String MULTI_CHECK_PREFERENCE = "MultiCheckPreference";
         public static final String MULTI_SELECT_LIST_PREFERENCE = "MultiSelectListPreference";
         public static final String PREFERENCE_CATEGORY = "PreferenceCategory";
         public static final String PREFERENCE_SCREEN = "PreferenceScreen";
         public static final String RINGTONE_PREFERENCE = "RingtonePreference";
+        public static final String SEEK_BAR_PREFERENCE = "SeekBarPreference";
         public static final String SWITCH_PREFERENCE = "SwitchPreference";
         public static final String INTENT = "intent";
+    }
+
+    public static final class PreferenceClasses {
+        public static final String CLASS_PREFERENCE = ANDROID_PREFERENCE_PKG + "Preference";
+        public static final String CLASS_PREFERENCE_GROUP =
+                ANDROID_PREFERENCE_PKG + "PreferenceGroup";
+        public static final String CLASS_CHECK_BOX_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.CHECK_BOX_PREFERENCE;
+        public static final String CLASS_DIALOG_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + "DialogPreference";
+        public static final String CLASS_EDIT_TEXT_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.EDIT_TEXT_PREFERENCE;
+        public static final String CLASS_LIST_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.LIST_PREFERENCE;
+        public static final String CLASS_MULTI_CHECK_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.MULTI_CHECK_PREFERENCE;
+        public static final String CLASS_MULTI_SELECT_LIST_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.MULTI_SELECT_LIST_PREFERENCE;
+        public static final String CLASS_PREFERENCE_CATEGORY =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.PREFERENCE_CATEGORY;
+        public static final String CLASS_PREFERENCE_SCREEN =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.PREFERENCE_SCREEN;
+        public static final String CLASS_RINGTONE_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.RINGTONE_PREFERENCE;
+        public static final String CLASS_SWITCH_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.SWITCH_PREFERENCE;
+        public static final String CLASS_SEEK_BAR_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + PreferenceTags.SEEK_BAR_PREFERENCE;
+        public static final String CLASS_TWO_STATE_PREFERENCE =
+                ANDROID_PREFERENCE_PKG + "TwoStatePreference";
+    }
+
+    public static final class PreferenceAndroidX {
+        public static final AndroidxName CLASS_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "Preference");
+        public static final AndroidxName CLASS_PREFERENCE_GROUP_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "PreferenceGroup");
+        public static final AndroidxName CLASS_CHECK_BOX_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "CheckBoxPreference");
+        public static final AndroidxName CLASS_DIALOG_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "DialogPreference");
+        public static final AndroidxName CLASS_EDIT_TEXT_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "EditTextPreference");
+        public static final AndroidxName CLASS_LIST_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "ListPreference");
+        public static final AndroidxName CLASS_MULTI_CHECK_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "MultiCheckPreference");
+        public static final AndroidxName CLASS_MULTI_SELECT_LIST_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "MultiSelectListPreference");
+        public static final AndroidxName CLASS_PREFERENCE_CATEGORY_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "PreferenceCategory");
+        public static final AndroidxName CLASS_PREFERENCE_SCREEN_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "PreferenceScreen");
+        public static final AndroidxName CLASS_RINGTONE_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "RingtonePreference");
+        public static final AndroidxName CLASS_SWITCH_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "SwitchPreference");
+        public static final AndroidxName CLASS_SEEK_BAR_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "SeekBarPreference");
+        public static final AndroidxName CLASS_TWO_STATE_PREFERENCE_ANDROIDX =
+                AndroidxName.of("android.support.v7.preference.", "TwoStatePreference");
     }
 
     public static final class PreferenceAttributes {
@@ -2669,6 +2718,9 @@ public final class SdkConstants {
 
     /** The android.webkit. package prefix */
     public static final String ANDROID_WEBKIT_PKG = ANDROID_PKG_PREFIX + "webkit.";
+
+    /** The android.preference. package prefix */
+    public static final String ANDROID_PREFERENCE_PKG = ANDROID_PKG_PREFIX + "preference.";
 
     /** The android.app. package prefix */
     public static final String ANDROID_APP_PKG = ANDROID_PKG_PREFIX + "app.";
@@ -2863,7 +2915,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.3.3";
+    public static final String GRADLE_LATEST_VERSION = "7.4";
 
     /**
      * The minimum released version of the Android Gradle Plugin that this version of Studio will
@@ -2877,6 +2929,12 @@ public final class SdkConstants {
      * required, consider using `LatestKnownPluginVersionProvider` instead.
      */
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "7.0.3";
+
+    /**
+     * The version of NDK to use as default. If no specific version of NDK is specified in
+     * build.gradle then this is the version that will be used.
+     */
+    public static final String NDK_DEFAULT_VERSION = "21.4.7075529";
 
     /** use api or implementation */
     @Deprecated public static final String GRADLE_COMPILE_CONFIGURATION = "compile";

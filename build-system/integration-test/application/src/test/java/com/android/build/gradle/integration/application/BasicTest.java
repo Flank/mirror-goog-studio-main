@@ -17,46 +17,16 @@
 package com.android.build.gradle.integration.application;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
-import com.android.AndroidProjectTypes;
-import com.android.build.api.variant.VariantOutputConfiguration;
-import com.android.build.api.variant.impl.BuiltArtifactImpl;
-import com.android.build.api.variant.impl.BuiltArtifactsImpl;
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
-import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
-import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildInformation;
-import com.android.ide.common.build.ListingFileRedirect;
-import com.android.utils.FileUtils;
-import com.google.common.truth.Truth;
-import java.io.File;
-import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -70,10 +40,6 @@ public class BasicTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("basic")
-                    // http://b/149978740
-                    .addGradleProperties(
-                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
-                                    + "=false")
                     .create();
 
    @AfterClass

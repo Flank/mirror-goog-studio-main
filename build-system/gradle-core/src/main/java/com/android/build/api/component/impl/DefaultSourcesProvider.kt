@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.impl
 
+import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 
 /**
@@ -31,5 +32,5 @@ interface DefaultSourcesProvider {
     /**
      * the list of sources [DirectoryEntry] for android resources.
      */
-    val res: List<Collection<DirectoryEntry>>
+    val res: List<DirectoryEntries>
 }

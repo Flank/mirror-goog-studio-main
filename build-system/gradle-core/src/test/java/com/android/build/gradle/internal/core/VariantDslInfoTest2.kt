@@ -244,6 +244,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
         }
@@ -258,6 +259,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -300,6 +302,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -316,7 +319,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `instrumentationRunner from manifest`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 instrumentationRunner = "foo"
             }
 
@@ -331,7 +335,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `instrumentationRunner defaultConfig overrides manifest`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 instrumentationRunner = "foo"
             }
 
@@ -350,7 +355,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `instrumentationRunner from flavor overrides all`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 instrumentationRunner = "foo"
             }
 
@@ -379,6 +385,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
         }
@@ -414,6 +421,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -430,7 +438,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `handleProfiling from manifest`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 handleProfiling = true
             }
 
@@ -445,7 +454,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `handleProfiling defaultConfig overrides manifest`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 handleProfiling = true
             }
 
@@ -464,7 +474,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `handleProfiling from flavor overrides all`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 handleProfiling = true
             }
 
@@ -493,6 +504,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
         }
@@ -528,6 +540,7 @@ class VariantDslInfoTest2 :
         given {
             // no specific manifest info
             manifestData { }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -544,7 +557,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `functionalTest from manifest`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 functionalTest = true
             }
 
@@ -559,7 +573,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `functionalTest defaultConfig overrides manifest`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 functionalTest = true
             }
 
@@ -578,7 +593,8 @@ class VariantDslInfoTest2 :
     @Test
     fun `functionalTest from flavor overrides all`() {
         given {
-            manifestData {
+            manifestData { }
+            testManifestData {
                 functionalTest = true
             }
 
@@ -623,6 +639,9 @@ class VariantDslInfoTest2 :
             manifestData {
                 packageName = "com.example.fromManifest"
             }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
+            }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -642,6 +661,9 @@ class VariantDslInfoTest2 :
             manifestData {
                 packageName = "com.example.fromManifest"
             }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
+            }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -660,6 +682,7 @@ class VariantDslInfoTest2 :
             manifestData {
                 packageName = "com.example.fromManifest"
             }
+            testManifestData { }
 
             variantType = VariantTypeImpl.ANDROID_TEST
         }
@@ -671,11 +694,32 @@ class VariantDslInfoTest2 :
     }
 
     @Test
-    fun `namespaceForR from single appId`() {
+    fun `testNamespace derived from test manifest`() {
         given {
-            // no specific manifest info
             manifestData {
                 packageName = "com.example.fromManifest"
+            }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
+            }
+
+            variantType = VariantTypeImpl.ANDROID_TEST
+        }
+
+        expect {
+            namespace = "com.example.fromTestManifest"
+            namespaceForR = "com.example.fromManifest.test"
+        }
+    }
+
+    @Test
+    fun `namespaceForR from single appId`() {
+        given {
+            manifestData {
+                packageName = "com.example.fromManifest"
+            }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
@@ -686,7 +730,7 @@ class VariantDslInfoTest2 :
         }
 
         expect {
-            namespace = "com.example.fromManifest.test"
+            namespace = "com.example.fromTestManifest"
             namespaceForR = "com.applicationId.test"
         }
     }
@@ -697,6 +741,9 @@ class VariantDslInfoTest2 :
             // no specific manifest info
             manifestData {
                 packageName = "com.example.fromManifest"
+            }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
@@ -721,6 +768,9 @@ class VariantDslInfoTest2 :
             manifestData {
                 packageName = "com.example.fromManifest"
             }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
+            }
 
             variantType = VariantTypeImpl.ANDROID_TEST
 
@@ -735,8 +785,8 @@ class VariantDslInfoTest2 :
         }
 
         expect {
-            namespace = "com.example.fromManifest.test"
-            namespaceForR = "com.example.fromManifest.test"
+            namespace = "com.example.fromTestManifest"
+            namespaceForR = "com.example.fromTestManifest"
         }
     }
 
@@ -746,6 +796,9 @@ class VariantDslInfoTest2 :
             // no specific manifest info
             manifestData {
                 packageName = "com.example.fromManifest"
+            }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
@@ -760,8 +813,8 @@ class VariantDslInfoTest2 :
         }
 
         expect {
-            namespace = "com.example.fromManifest.test"
-            namespaceForR = "com.example.fromManifest.test"
+            namespace = "com.example.fromTestManifest"
+            namespaceForR = "com.example.fromTestManifest"
         }
     }
 
@@ -771,6 +824,9 @@ class VariantDslInfoTest2 :
             // no specific manifest info
             manifestData {
                 packageName = "com.example.fromManifest"
+            }
+            testManifestData {
+                packageName = "com.example.fromTestManifest"
             }
 
             variantType = VariantTypeImpl.ANDROID_TEST
@@ -785,8 +841,8 @@ class VariantDslInfoTest2 :
         }
 
         expect {
-            namespace = "com.example.fromManifest.test"
-            namespaceForR = "com.example.fromManifest.test"
+            namespace = "com.example.fromTestManifest"
+            namespaceForR = "com.example.fromTestManifest"
         }
     }
 
@@ -865,7 +921,12 @@ class VariantDslInfoTest2 :
             productFlavorList = given.flavors,
             signingConfigOverride = null,
             productionVariant = parentVariant,
-            dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
+            dataProvider =
+                if (given.variantType.isTestComponent) {
+                    DirectManifestDataProvider(given.testManifestData, projectServices)
+                } else {
+                    DirectManifestDataProvider(given.manifestData, projectServices)
+                },
             dslServices = dslServices,
             services = services,
             buildDirectory = buildDirectory,
@@ -934,6 +995,14 @@ class VariantDslInfoTest2 :
         /** Configures the manifest data. */
         fun manifestData(action: ManifestData.() -> Unit) {
             action(manifestData)
+        }
+
+        /** the manifest data that represents values coming from the test manifest file */
+        val testManifestData = ManifestData()
+
+        /** Configures the manifest data. */
+        fun testManifestData(action: ManifestData.() -> Unit) {
+            action(testManifestData)
         }
 
         /** Variant type for the test */

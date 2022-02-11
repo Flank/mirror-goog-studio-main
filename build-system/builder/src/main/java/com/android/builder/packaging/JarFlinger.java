@@ -25,6 +25,7 @@ import com.android.zipflinger.Sources;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipSource;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -75,6 +76,8 @@ public class JarFlinger implements JarCreator {
             @Nullable Relocator relocator)
             throws IOException {
         ImmutableSortedMap.Builder<String, Path> candidateFiles = ImmutableSortedMap.naturalOrder();
+        ImmutableSortedSet.Builder<String> foldersEncountered = ImmutableSortedSet.naturalOrder();
+
         Files.walkFileTree(
                 directory,
                 EnumSet.of(FileVisitOption.FOLLOW_LINKS),
@@ -95,7 +98,24 @@ public class JarFlinger implements JarCreator {
                         candidateFiles.put(entryPath, file);
                         return FileVisitResult.CONTINUE;
                     }
+
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                        String entryPath =
+                                PathUtils.toSystemIndependentPath(directory.relativize(dir));
+                        // Check if the directory is the root of the tree being traversed in which
+                        // case its relative path is equal to"".
+                        if (!entryPath.isEmpty()) {
+                            foldersEncountered.add(entryPath);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
                 });
+
+        ImmutableSortedSet<String> sortedDirectories = foldersEncountered.build();
+        for (String dirName: sortedDirectories) {
+            zipArchive.add(Sources.dir(dirName));
+        }
 
         // Why do we even sort these?
         ImmutableSortedMap<String, Path> sortedFiles = candidateFiles.build();

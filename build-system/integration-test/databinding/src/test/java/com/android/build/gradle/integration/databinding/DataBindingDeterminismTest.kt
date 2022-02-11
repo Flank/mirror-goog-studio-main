@@ -51,6 +51,9 @@ class DataBindingDeterminismTest {
             // The following are specific to data binding.
             // Bug 129276057
             "build/intermediates/data_binding_layout_info_type_merge/debug/out/activity_main-layout.xml",
+        )
+
+        private val INCONSISTENT_NON_TASK_OUTPUTS = setOf(
             "build/reports/configuration-cache/"
         )
     }
@@ -146,10 +149,11 @@ class DataBindingDeterminismTest {
         )
 
         // Check that they have consistent outputs
-        expect.that(snapshot1.directorySet).containsExactlyElementsIn(snapshot2.directorySet)
+        val inconsistentOutputs = INCONSISTENT_TASK_OUTPUTS.plus(INCONSISTENT_NON_TASK_OUTPUTS)
+        expect.that(taskOutputDirs(snapshot1)).containsExactlyElementsIn(taskOutputDirs(snapshot2))
         for ((file, contents) in
         snapshot1.regularFileContentsMap.plus(snapshot2.regularFileContentsMap)) {
-            if (INCONSISTENT_TASK_OUTPUTS.any { file.startsWith(it) }) {
+            if (inconsistentOutputs.any { file.startsWith(it) }) {
                 continue
             }
 
@@ -164,6 +168,12 @@ class DataBindingDeterminismTest {
                     expect.fail("${file.path} is not consistent across two builds")
                 }
             }
+        }
+    }
+
+    private fun taskOutputDirs(snapshot: FileSnapshot): List<File> {
+        return snapshot.directorySet.filterNot { dir ->
+            INCONSISTENT_NON_TASK_OUTPUTS.any { dir.startsWith(it) }
         }
     }
 }

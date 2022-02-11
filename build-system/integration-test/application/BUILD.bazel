@@ -310,7 +310,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
-        "//tools/base/build-system/previous-versions:7.1.0-beta01",
+        "//tools/base/build-system/previous-versions:7.1.0",
     ],
     deps = TEST_DEPS,
 )

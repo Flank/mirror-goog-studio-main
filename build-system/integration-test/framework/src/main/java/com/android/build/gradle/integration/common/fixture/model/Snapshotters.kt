@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.v2.ModelSyncFile
@@ -236,10 +236,10 @@ internal fun ModelSnapshotter<NativeModule>.snapshotNativeModule() {
     }
     item("nativeBuildSystem", NativeModule::nativeBuildSystem)
     item("ndkVersion", NativeModule::ndkVersion) {
-        if (it == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else it
+        if (it == NDK_DEFAULT_VERSION) "{DEFAULT_NDK_VERSION}" else it
     }
     item("defaultNdkVersion", NativeModule::defaultNdkVersion) {
-        if (it == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else it
+        if (it == NDK_DEFAULT_VERSION) "{DEFAULT_NDK_VERSION}" else it
     }
     item("externalNativeBuildFile", NativeModule::externalNativeBuildFile)
 }

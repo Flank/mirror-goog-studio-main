@@ -60,14 +60,14 @@ public class DexReferences {
             //as this information is not readily available to query through
             //the dexlib2 API.
             Map<String, ImmutableTypeReference> typesByName = new HashMap<>();
-            for (int i = 0, m = file.getTypeCount(); i < m; i++) {
+            for (int i = 0, m = file.getTypeSection().size(); i < m; i++) {
                 ImmutableTypeReference immutableTypeRef =
                         ImmutableTypeReference.of(new DexBackedTypeReference(file, i));
                 typesByName.put(immutableTypeRef.getType(), immutableTypeRef);
             }
 
-            //loop through all methods referenced in the dex file, mapping the following:
-            for (int i = 0, m = file.getMethodCount(); i < m; i++) {
+            // loop through all methods referenced in the dex file, mapping the following:
+            for (int i = 0, m = file.getMethodSection().size(); i < m; i++) {
                 MethodReference methodReference = new DexBackedMethodReference(file, i);
                 //- return type => method
                 ImmutableReference typeRef = typesByName.get(methodReference.getReturnType());
@@ -130,9 +130,9 @@ public class DexReferences {
                 }
             }
 
-            //loop through all fields referenced in this dex file, creating
-            //a mapping from the field type => field
-            for (int i = 0, m = file.getFieldCount(); i < m; i++) {
+            // loop through all fields referenced in this dex file, creating
+            // a mapping from the field type => field
+            for (int i = 0, m = file.getFieldSection().size(); i < m; i++) {
                 FieldReference fieldRef = new DexBackedFieldReference(file, i);
                 ImmutableReference typeRef = typesByName.get(fieldRef.getType());
                 addReference(typeRef, fieldRef, immutableReferencesBin);

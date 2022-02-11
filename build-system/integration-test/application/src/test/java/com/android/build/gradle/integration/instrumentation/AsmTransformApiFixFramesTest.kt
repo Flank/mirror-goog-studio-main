@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instrumentation
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -35,8 +34,7 @@ class AsmTransformApiFixFramesTest {
 
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("asmTransformApi")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+    val project = GradleTestProject.builder().fromTestProject("asmTransformApi").create()
 
     @Before
     fun setUp() {

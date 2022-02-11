@@ -39,6 +39,7 @@ import java.io.File
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock as mock
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 
 class NdkLocatorKtTest {
     class TestLoggingEnvironment : ThreadLoggingEnvironment() {
@@ -121,7 +122,7 @@ class NdkLocatorKtTest {
                         "/my/ndk/folder".toSlash() -> null
                         "/my/ndk/environment-folder".toSlash() -> SdkSourceProperties(
                             mapOf(
-                                SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+                                SDK_PKG_REVISION.key to NDK_DEFAULT_VERSION
                             )
                         )
                         else -> throw RuntimeException(path.path)
@@ -229,7 +230,7 @@ class NdkLocatorKtTest {
                 when (path.path) {
                     "/my/ndk/folder".toSlash() -> SdkSourceProperties(
                         mapOf(
-                            SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+                            SDK_PKG_REVISION.key to NDK_DEFAULT_VERSION
                         )
                     )
                     else -> throw RuntimeException(path.path)
@@ -321,7 +322,7 @@ class NdkLocatorKtTest {
                 when (path.path) {
                     "/my/sdk/folder/ndk-bundle".toSlash() -> SdkSourceProperties(
                         mapOf(
-                            SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+                            SDK_PKG_REVISION.key to NDK_DEFAULT_VERSION
                         )
                     )
                     else -> null
@@ -373,7 +374,7 @@ class NdkLocatorKtTest {
         doThrow(RuntimeException(
             LicenceNotAcceptedException(sdkFolder.toSlashFile()!!.toPath(), listOf(pkg))))
             .`when`(sdkHandler)
-            .installNdk(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION))
+            .installNdk(Revision.parseRevision(NDK_DEFAULT_VERSION))
 
         try {
             findNdkPath(
@@ -409,7 +410,7 @@ class NdkLocatorKtTest {
         doThrow(RuntimeException(
             InstallFailedException(sdkFolder.toSlashFile()!!.toPath(), listOf(pkg))))
             .`when`(sdkHandler)
-            .installNdk(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION))
+            .installNdk(Revision.parseRevision(NDK_DEFAULT_VERSION))
 
         try {
             findNdkPath(
@@ -443,7 +444,7 @@ class NdkLocatorKtTest {
         val sdkHandler = mock(SdkHandler::class.java)
         doReturn(null)
             .`when`(sdkHandler)
-            .installNdk(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION))
+            .installNdk(Revision.parseRevision(NDK_DEFAULT_VERSION))
 
         try {
             findNdkPath(
@@ -472,9 +473,9 @@ class NdkLocatorKtTest {
         )
         val sdkHandler = mock(SdkHandler::class.java)
         doReturn(
-            "/my/sdk/folder/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION".toSlashFile())
+            "/my/sdk/folder/ndk/$NDK_DEFAULT_VERSION".toSlashFile())
             .`when`(sdkHandler)
-            .installNdk(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION))
+            .installNdk(Revision.parseRevision(NDK_DEFAULT_VERSION))
 
         val ndk =
             findNdkPath(
@@ -487,7 +488,7 @@ class NdkLocatorKtTest {
                 sdkHandler = sdkHandler
             )!!
         assertThat(ndk.ndk)
-            .isEqualTo("/my/sdk/folder/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION".toSlashFile())
+            .isEqualTo("/my/sdk/folder/ndk/$NDK_DEFAULT_VERSION".toSlashFile())
         assertThat(log.errors()).hasSize(0)
         assertThat(log.warnings()).hasSize(0)
     }
@@ -667,7 +668,7 @@ class NdkLocatorKtTest {
             ndkPathFromDsl = null,
             ndkDirProperty = null,
             sdkFolder = null,
-            ndkVersionedFolderNames = listOf(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
+            ndkVersionedFolderNames = listOf(NDK_DEFAULT_VERSION),
             getNdkSourceProperties = { null },
             sdkHandler = null
         )
@@ -696,12 +697,12 @@ class NdkLocatorKtTest {
             ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             ndkDirProperty = null,
             sdkFolder = null,
-            ndkVersionedFolderNames = listOf(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
+            ndkVersionedFolderNames = listOf(NDK_DEFAULT_VERSION),
             getNdkSourceProperties = { path ->
                 when (path.path) {
                     "/my/ndk/folder".toSlash() -> SdkSourceProperties(
                         mapOf(
-                            SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+                            SDK_PKG_REVISION.key to NDK_DEFAULT_VERSION
                         )
                     )
                     else -> throw RuntimeException(path.path)
@@ -719,17 +720,17 @@ class NdkLocatorKtTest {
             ndkPathFromDsl = null,
             ndkDirProperty = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
-            ndkVersionedFolderNames = listOf(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
+            ndkVersionedFolderNames = listOf(NDK_DEFAULT_VERSION),
             getNdkSourceProperties = { path ->
                 when (path.path) {
-                    "/my/sdk/folder/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION".toSlash()
-                    -> SdkSourceProperties(mapOf(SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION))
+                    "/my/sdk/folder/ndk/$NDK_DEFAULT_VERSION".toSlash()
+                    -> SdkSourceProperties(mapOf(SDK_PKG_REVISION.key to NDK_DEFAULT_VERSION))
                     else -> null
                 }
             },
             sdkHandler = null
         )!!.ndk
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION".toSlashFile())
+        assertThat(path).isEqualTo("/my/sdk/folder/ndk/$NDK_DEFAULT_VERSION".toSlashFile())
     }
 
     @Test

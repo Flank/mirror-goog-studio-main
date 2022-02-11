@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.api.variant.BuiltArtifact;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -66,10 +65,7 @@ public class OutputRenamingTest {
                         + "    }\n"
                         + "  }\n"
                         + "}");
-        project.executor()
-                // http://b/149978740 and http://b/146208910
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("clean", "assemble");
+        project.executor().run("clean", "assemble");
         model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)

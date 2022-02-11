@@ -3,7 +3,6 @@ package com.android.build.gradle.integration.testing;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
@@ -21,11 +20,6 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("separateTestModuleWithDependencies")
-                    // http://b/149978740
-                    .addGradleProperties(
-                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
-                                    + "="
-                                    + false)
                     .withDependencyChecker(false)
                     .create();
 

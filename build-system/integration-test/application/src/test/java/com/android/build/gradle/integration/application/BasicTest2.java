@@ -69,10 +69,6 @@ public class BasicTest2 {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("basic")
-                    // http://b/149978740
-                    .addGradleProperties(
-                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
-                                    + "=false")
                     .create();
 
     private static final Set<String> coordinates =

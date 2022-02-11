@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.builder.model.v2.models.ndk.NativeVariant
@@ -30,5 +30,5 @@ data class NativeModuleImpl(
     override val ndkVersion: String,
     override val externalNativeBuildFile: File
 ) : NativeModule, Serializable {
-    override val defaultNdkVersion: String get() = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+    override val defaultNdkVersion: String get() = NDK_DEFAULT_VERSION
 }

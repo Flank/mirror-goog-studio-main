@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -24,15 +25,12 @@ import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.SigningHelper
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.StringOption
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import sun.security.x509.X500Name
-import kotlin.jvm.Throws
 
 /**
  * Tests verifying that builds using the profileable option are configured correctly.
@@ -54,12 +52,9 @@ class ProfileableTest {
     fun `test dsl setting the release build type to be profileable`() {
         val app = project.getSubproject(":app")
         app.buildFile.appendText("android.buildTypes.release.profileable true")
-        project.executor()
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run("assembleRelease")
+        project.executor().run("assembleRelease")
         val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED)
-        val verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 14)
+        val verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 30)
         assertThat(
             (verificationResult.signerCertificates.first().subjectDN as X500Name).commonName
         ).isEqualTo("Android Debug")
@@ -70,10 +65,7 @@ class ProfileableTest {
         val app = project.getSubproject(":app")
         app.buildFile.appendText("android.buildTypes.debug.debuggable true\n")
         app.buildFile.appendText("android.buildTypes.debug.profileable true\n")
-        val result = project.executor()
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run("assembleDebug")
+        val result = project.executor().run("assembleDebug")
         // Ensure profileable is not applied (debuggable dsl option overrides profileable).
         val manifest = ApkSubject.getManifestContent(
             project.getApkAsFile(GradleTestProject.ApkType.DEBUG).toPath()
@@ -96,24 +88,42 @@ class ProfileableTest {
 
     @Test
     fun `test injecting the debug build type to be profileable`() {
+        val app = project.getSubproject(":app")
         project.executor()
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .with(StringOption.PROFILING_MODE, "profileable")
             .run("assembleDebug")
-        val app = project.getSubproject(":app")
         checkProjectContainsProfileableInManifest(app, GradleTestProject.ApkType.DEBUG)
     }
 
     @Test
     fun `test injecting the release build type to be profileable`() {
+        val app = project.getSubproject(":app")
         project.executor()
+            .with(StringOption.PROFILING_MODE, "profileable")
+            .run("assembleRelease")
+        checkProjectContainsProfileableInManifest(app, GradleTestProject.ApkType.RELEASE_SIGNED)
+    }
+
+    @Test
+    fun `build with minSdk less than 30 fails`() {
+        val app = project.getSubproject(":app")
+        TestFileUtils.searchAndReplace(
+            app.buildFile.absoluteFile,
+            "android.compileSdkVersion $DEFAULT_COMPILE_SDK_VERSION",
+            "android.compileSdkVersion 29",
+        )
+        val result = project.executor()
             // http://b/149978740
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .with(StringOption.PROFILING_MODE, "profileable")
-            .run("assembleRelease")
-        val app = project.getSubproject(":app")
-        checkProjectContainsProfileableInManifest(app, GradleTestProject.ApkType.RELEASE_SIGNED)
+            .expectFailure()
+            .run("assembleDebug")
+
+        result.stderr.use { out ->
+            ScannerSubject.assertThat(out).contains(
+                "'profileable' is enabled with compile SDK <30."
+            )
+        }
     }
 
     private fun checkProjectContainsProfileableInManifest(

@@ -27,6 +27,7 @@ import com.android.builder.packaging.JarFlinger
 import com.android.sdklib.AndroidTargetHash
 import com.android.tools.r8.Version
 import com.google.common.io.ByteStreams
+import java.io.File
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -50,7 +51,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.zip.ZipInputStream
@@ -113,8 +113,8 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
 }
 
 /**
- * Returns a list of files which contain desugared methods supported by D8 and core library
- * desugaring.
+ * Returns a [FileCollection] which contains files with desugared methods supported by D8 and core
+ * library desugaring.
  */
 fun getDesugaredMethods(
     project: Project,
@@ -122,8 +122,8 @@ fun getDesugaredMethods(
     minSdkVersion: AndroidVersion,
     compileSdkVersion: String?,
     bootclasspath: Provider<List<RegularFile>>
-): List<File> {
-    val desugaredMethodsFiles = mutableListOf<File>()
+): FileCollection {
+    val desugaredMethodsFiles = project.objects.fileCollection()
 
     val coreLibDesugarConfig =
         project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
@@ -131,21 +131,26 @@ fun getDesugaredMethods(
         val minSdk = minSdkVersion.getFeatureLevel()
         val compileSdk = AndroidTargetHash.getPlatformVersion(compileSdkVersion)!!.featureLevel
         registerDesugarLibLintTransform(project, minSdk, compileSdk)
-        desugaredMethodsFiles.addAll(
+        desugaredMethodsFiles.from(
             getDesugarLibLintFromTransform(coreLibDesugarConfig, minSdk, compileSdk))
     }
 
-    val fakeJar = project.gradle.gradleUserHomeDir.resolve("$ANDROID_SUBDIR/$FAKE_DEPENDENCY_JAR")
-    if (!fakeJar.exists()) {
-        fakeJar.parentFile.mkdirs()
-        JarFlinger(fakeJar.toPath()).use {}
+    var fakeJar: File?
+    synchronized(project.gradle) {
+        fakeJar = project.gradle.gradleUserHomeDir.resolve("$ANDROID_SUBDIR/$FAKE_DEPENDENCY_JAR")
+        if (fakeJar != null && !fakeJar!!.exists()) {
+            fakeJar!!.parentFile.mkdirs()
+            JarFlinger(fakeJar!!.toPath()).use {}
+        }
     }
     val fakeDependency = project.dependencies.create(project.files(fakeJar))
     val adhocConfiguration = project.configurations.detachedConfiguration(fakeDependency)
 
     registerD8BackportedMethodsTransform(
         project, coreLibDesugar, project.files(bootclasspath), Version.getVersionString())
-    desugaredMethodsFiles.addAll(getD8DesugarMethodFileFromTransform(adhocConfiguration))
+    desugaredMethodsFiles.fromDisallowChanges(
+        getD8DesugarMethodFileFromTransform(adhocConfiguration)
+    )
     return desugaredMethodsFiles
 }
 
@@ -233,7 +238,7 @@ private fun getDesugarLibLintFromTransform(
     configuration: Configuration,
     minSdkVersion: Int,
     compileSdkVersion: Int
-): Set<File> {
+): FileCollection {
     return configuration.incoming.artifactView { configuration ->
         configuration.attributes {
             it.attribute(
@@ -243,15 +248,15 @@ private fun getDesugarLibLintFromTransform(
             it.attribute(ATTR_LINT_MIN_SDK, minSdkVersion.toString())
             it.attribute(ATTR_LINT_COMPILE_SDK, compileSdkVersion.toString())
         }
-    }.artifacts.artifactFiles.files
+    }.artifacts.artifactFiles
 }
 
-private fun getD8DesugarMethodFileFromTransform(configuration: Configuration): Set<File> {
+private fun getD8DesugarMethodFileFromTransform(configuration: Configuration): FileCollection {
     return configuration.incoming.artifactView { configuration ->
         configuration.attributes {
             it.attribute(ArtifactAttributes.ARTIFACT_FORMAT, D8_DESUGAR_METHODS)
         }
-    }.artifacts.artifactFiles.files
+    }.artifacts.artifactFiles
 }
 
 /**

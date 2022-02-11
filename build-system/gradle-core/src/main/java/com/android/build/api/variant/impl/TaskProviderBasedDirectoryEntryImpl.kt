@@ -34,7 +34,7 @@ class TaskProviderBasedDirectoryEntryImpl(
     private val directoryProvider: Provider<Directory>,
     override val isGenerated: Boolean = true,
     override val isUserAdded: Boolean = false,
-    override val shouldBeAddedToIdeModel: Boolean = true,
+    override val shouldBeAddedToIdeModel: Boolean = false,
 ): DirectoryEntry {
 
     /**

@@ -20,7 +20,9 @@ import com.android.build.api.variant.BundleConfig
 import com.android.build.api.variant.CodeTransparency
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class AnalyticsEnabledBundleConfig @Inject constructor(
@@ -43,4 +45,10 @@ open class AnalyticsEnabledBundleConfig @Inject constructor(
                 VariantPropertiesMethodType.GET_CODE_TRANSPARENCY_VALUE
             return userVisibleCodeTransparency
         }
+
+    override fun addMetadataFile(metadataDirectory: String, file: Provider<RegularFile>) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.BUNDLE_CONFIG_ADD_METADATA_VALUE
+        delegate.addMetadataFile(metadataDirectory, file)
+    }
 }

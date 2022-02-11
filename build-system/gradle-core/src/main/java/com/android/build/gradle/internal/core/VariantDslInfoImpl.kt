@@ -316,10 +316,17 @@ open class VariantDslInfoImpl internal constructor(
         when {
             // -------------
             // Special case for test components
-            // The namespace is the tested component's testNamespace or else the tested component's
-            // namespace + ".test"
+            // We first look for a value specified via the DSL - either testNamespace or namespace +
+            // ".test". Otherwise, we use the package attribute from either the test manifest or the
+            // main manifest (appending ".test" if from the main manifest).
             testedVariant != null -> {
-                dslNamespaceProvider ?: testedVariant.namespace.map { "$it.test" }
+                dslNamespaceProvider
+                    ?: extension.namespace?.let { services.provider {"$it.test" } }
+                    ?: testedVariant.namespace.flatMap { testedVariantNamespace ->
+                        dataProvider.manifestData.map { manifestData ->
+                            manifestData.packageName ?: "$testedVariantNamespace.test"
+                        }
+                    }
             }
 
             // -------------
@@ -1194,6 +1201,19 @@ open class VariantDslInfoImpl internal constructor(
                 services.projectOptions[StringOption.PROFILING_MODE]
             ).isProfileable
             val fromBuildType = (buildTypeObj as? ApplicationBuildType)?.isProfileable
+            // When profileable is enabled from the profilingMode option, it ensures all profileable
+            // features are supported, therefore the compileSdk => 30.
+            val minProfileableSdk = 30
+            val compileSdk = extension.compileSdk ?: minProfileableSdk
+            if ((fromProfilingModeOption == true || fromBuildType == true)
+                && compileSdk < minProfileableSdk
+            ) {
+                services.issueReporter.reportError(IssueReporter.Type.COMPILE_SDK_VERSION_TOO_LOW,
+                    """'profileable' is enabled with compile SDK <30.
+                        Recommended action: If possible, upgrade compileSdk from ${minSdkVersion.apiLevel} to 30."""
+                        .trimIndent()
+                )
+            }
             return when {
                 fromProfilingModeOption != null -> {
                     fromProfilingModeOption
