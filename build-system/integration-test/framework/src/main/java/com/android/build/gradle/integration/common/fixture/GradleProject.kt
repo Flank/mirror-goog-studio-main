@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture
 
+import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import java.io.File
 
@@ -113,6 +114,14 @@ abstract class GradleProject(
      */
     fun replaceFile(file: TestSourceFile) {
         sourceFiles[file.path] = file
+    }
+
+    /**
+     * Appends the given snippet to an already existing build file
+     */
+    open fun appendToBuild(snippet: String): GradleProject {
+        replaceFile(getFile("build.gradle").appendContent("\n" + snippet + "\n"))
+        return this
     }
 
     override fun write(projectDir: File, buildScriptContent: String?) {

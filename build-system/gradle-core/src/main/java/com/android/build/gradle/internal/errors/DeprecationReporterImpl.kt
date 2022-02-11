@@ -47,15 +47,20 @@ class DeprecationReporterImpl(
     }
 
     override fun reportDeprecatedApi(
-        newApiElement: String,
+        newApiElement: String?,
         oldApiElement: String,
         url: String,
         deprecationTarget: DeprecationTarget
     ) {
         if (!checkAndSet(oldApiElement)) {
             val debugApi = projectOptions.get(BooleanOption.DEBUG_OBSOLETE_API)
+            val firstLine = if(newApiElement != null) {
+                "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'."
+            } else {
+                "API '$oldApiElement' is obsolete."
+            }
 
-            val messageStart = "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'.\n" +
+            val messageStart = firstLine + "\n" +
                     deprecationTarget.getDeprecationTargetMessage() +
                     "\nFor more information, see $url."
             var messageEnd = ""
