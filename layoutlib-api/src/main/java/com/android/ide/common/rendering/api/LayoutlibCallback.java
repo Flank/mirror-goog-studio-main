@@ -186,6 +186,12 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
         return null;
     }
 
+    /** Returns the package name for project resources. */
+    @Nullable
+    public String getResourcePackage() {
+        return null;
+    }
+
     /**
      * Finds a custom class in the project.
      *
