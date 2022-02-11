@@ -1,4 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "custom_maven_library")
+load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 load("//prebuilts/tools/common/aapt:aapt2_version.bzl", "AAPT2_VERSION")
 
@@ -8,9 +9,9 @@ custom_maven_library(
     name = "aapt2",
     coordinates = "com.android.tools.build:aapt2:" + POM_VERSION,
     files = {
-        ":libdarwin_zip.jar": "aapt2-" + POM_VERSION + "-osx.jar",
-        ":liblinux_zip.jar": "aapt2-" + POM_VERSION + "-linux.jar",
-        ":libwindows_zip.jar": "aapt2-" + POM_VERSION + "-windows.jar",
+        ":darwin.jar": "aapt2-" + POM_VERSION + "-osx.jar",
+        ":linux.jar": "aapt2-" + POM_VERSION + "-linux.jar",
+        ":windows.jar": "aapt2-" + POM_VERSION + "-windows.jar",
     },
     visibility = ["//visibility:public"],
 )
@@ -26,11 +27,18 @@ DARWIN_FILES = [
 ]
 
 java_library(
-    name = "darwin_zip",
-    resource_jars = [":notice"],
+    name = "darwin_resources",
     resource_strip_prefix = "prebuilts/tools/common/aapt/darwin",
-    #  resources = [":darwin_files"],
     resources = DARWIN_FILES,
+)
+
+merge_jars(
+    name = "darwin",
+    out = "darwin.jar",
+    jars = [
+        ":darwin_resources",
+        ":notice",
+    ],
 )
 
 LINUX_FILES = [
@@ -38,10 +46,18 @@ LINUX_FILES = [
 ]
 
 java_library(
-    name = "linux_zip",
-    resource_jars = [":notice"],
+    name = "linux_resources",
     resource_strip_prefix = "prebuilts/tools/common/aapt/linux",
     resources = LINUX_FILES,
+)
+
+merge_jars(
+    name = "linux",
+    out = "linux.jar",
+    jars = [
+        ":linux_resources",
+        ":notice",
+    ],
 )
 
 WINDOWS_FILES = [
@@ -49,10 +65,18 @@ WINDOWS_FILES = [
 ]
 
 java_library(
-    name = "windows_zip",
-    resource_jars = [":notice"],
+    name = "windows_resources",
     resource_strip_prefix = "prebuilts/tools/common/aapt/windows",
     resources = WINDOWS_FILES,
+)
+
+merge_jars(
+    name = "windows",
+    out = "windows.jar",
+    jars = [
+        ":windows_resources",
+        ":notice",
+    ],
 )
 
 filegroup(
