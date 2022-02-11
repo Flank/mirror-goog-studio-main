@@ -49,6 +49,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.zip.ZipInputStream
 import com.android.SdkConstants.GRADLE_LATEST_VERSION
+import com.android.builder.model.v2.ide.SyncIssue
 import com.android.utils.SdkUtils.escapePropertyValue
 import com.google.common.truth.Truth.assertThat
 
@@ -115,7 +116,9 @@ fun GradleTestProject.goldenBuildProducts() : String {
  */
 fun GradleTestProject.goldenConfigurationFlags(abi: Abi) : String {
     val fetchResult =
-            modelV2().fetchNativeModules(NativeModuleParams(listOf("debug"), listOf(abi.tag)))
+            modelV2()
+                .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+                .fetchNativeModules(NativeModuleParams(listOf("debug"), listOf(abi.tag)))
     val recoveredAbiModel = recoverExistingCxxAbiModels().single { it.abi == abi }
     val hashToKey = fetchResult.cxxFileVariantSegmentTranslator()
     return hashToKey(recoveredAbiModel.goldenConfigurationFlags())

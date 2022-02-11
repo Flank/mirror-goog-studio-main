@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.model.readCompileComm
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -99,7 +100,9 @@ target_link_libraries(native-lib ${'$'}{log-lib})
 
     @Test
     fun testThatHeaderFileIsExcluded() {
-        val nativeModules = project.modelV2().fetchNativeModules(NativeModuleParams())
+        val nativeModules = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+            .fetchNativeModules(NativeModuleParams())
         val nativeModule = nativeModules.container.singleNativeModule
         assertThat(nativeModule.variants.map { it.name }).containsExactly("debug", "release")
         for (variant in nativeModule.variants) {

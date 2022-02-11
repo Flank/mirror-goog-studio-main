@@ -74,6 +74,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.builder.model.v2.ide.SyncIssue
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
@@ -709,7 +710,9 @@ class CmakeBasicProjectTest(
     fun checkModelSingleVariant() {
         // Request build details for debug-x86_64
         val fetchResult =
-          project.modelV2().fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86_64")))
+          project.modelV2()
+              .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+              .fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86_64")))
 
         // note that only build files for the requested variant and ABI exists.
         Truth.assertThat(fetchResult.dump()).isEqualTo(
@@ -1032,7 +1035,9 @@ apply plugin: 'com.android.application'
 
     @Test
     fun `ensure compile_commands json bin is created for each native ABI in model`() {
-        val nativeModules = project.modelV2().fetchNativeModules(NativeModuleParams())
+        val nativeModules = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+            .fetchNativeModules(NativeModuleParams())
         val nativeModule = nativeModules.container.singleNativeModule
         for (variant in nativeModule.variants) {
             for (abi in variant.abis) {
