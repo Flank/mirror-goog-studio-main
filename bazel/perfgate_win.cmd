@@ -47,7 +47,7 @@ SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
 
-echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
+echo "<head><meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" /></head>" > %DISTDIR%\upsalite_test_results.html
 
 set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 @rem Extract test logs and perfgate data
