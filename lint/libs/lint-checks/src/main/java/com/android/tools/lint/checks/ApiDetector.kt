@@ -691,34 +691,44 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         if (api == -1) return
         val minSdk = getMinSdk(context)
         if (usageInfo.type == AnnotationUsageType.DEFINITION) {
-            val message = "Unnecessary; SDK_INT is always >= $api"
             val fix = fix()
                 .replace().all().with("")
                 .range(context.getLocation(annotation))
                 .name("Delete @RequiresApi")
                 .build()
-            context.report(
-                Incident(
-                    OBSOLETE_SDK,
-                    message,
-                    context.getLocation(annotation),
-                    annotation,
-                    fix
-                ),
-                minSdkAtLeast(api)
-            )
+
+            val (targetAnnotation, target) = getTargetApiAnnotation(element.uastParent?.uastParent)
+            if (target > api) {
+                val outerAnnotation = "@${targetAnnotation?.qualifiedName?.substringAfterLast('.')}($target)"
+                val message = "Unnecessary; SDK_INT is always >= $target from outer annotation (`$outerAnnotation`)"
+                context.report(Incident(OBSOLETE_SDK, message, context.getLocation(annotation), annotation, fix))
+            } else {
+                val message = "Unnecessary; SDK_INT is always >= $api"
+                context.report(
+                    Incident(OBSOLETE_SDK, message, context.getLocation(annotation), annotation, fix),
+                    minSdkAtLeast(api)
+                )
+            }
             return
         }
+        val (targetAnnotation, target) = getTargetApiAnnotation(element)
         if (annotation.qualifiedName == SDK_SUPPRESS_ANNOTATION || annotation.qualifiedName == TARGET_API) {
             // These two annotations do not propagate the requirement outwards to callers
             return
         }
-        val target = getTargetApi(element)
         if (target == -1 || api > target) {
             if (isWithinVersionCheckConditional(context, element, api)) {
                 return
             }
             if (isPrecededByVersionCheckExit(context, element, api)) {
+                return
+            }
+            if (isSurroundedByHigherTargetAnnotation(targetAnnotation, api)) {
+                // Make sure we aren't interpreting a redundant local @RequireApi(x) annotation
+                // as implying the API level can be x here if there is an *outer* annotation
+                // with a higher API level (we flag those above using [OBSOLETE_SDK_LEVEL] but
+                // since that's a warning and this type is an error, make sure we don't have
+                // false positives.
                 return
             }
 
@@ -763,6 +773,25 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             ApiVisitor(context).report(issue, element, location, type, fqcn, api, minSdk, apiLevelFix(api))
+        }
+    }
+
+    /**
+     * Is there an outer annotation (outside [annotation] that specifies
+     * an api level requirement of [atLeast]?
+     */
+    private fun isSurroundedByHigherTargetAnnotation(
+        annotation: UAnnotation?,
+        atLeast: Int,
+        isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+    ): Boolean {
+        var curr = annotation ?: return false
+        while (true) {
+            val (outer, target) = getTargetApiAnnotation(curr.uastParent?.uastParent, isApiLevelAnnotation)
+            if (target >= atLeast) {
+                return true
+            }
+            curr = outer ?: return false
         }
     }
 
@@ -2928,6 +2957,38 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             return -1
         }
 
+        @JvmOverloads
+        @JvmStatic
+        fun getTargetApiAnnotation(
+            scope: UElement?,
+            isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+        ): Pair<UAnnotation?, Int> {
+            var current = scope
+            while (current != null) {
+                if (current is UAnnotated) {
+                    //noinspection AndroidLintExternalAnnotations
+                    for (annotation in current.uAnnotations) {
+                        val target = getTargetApiForAnnotation(annotation, isApiLevelAnnotation)
+                        if (target != -1) {
+                            return annotation to target
+                        }
+                    }
+                }
+                if (current is UFile) {
+                    break
+                }
+                current = current.uastParent
+            }
+
+            return NO_ANNOTATION_FOUND
+        }
+
+        /**
+         * Return value for no annotation found from
+         * [getTargetApiAnnotation]
+         */
+        private val NO_ANNOTATION_FOUND: Pair<UAnnotation?, Int> = null to -1
+
         @JvmStatic
         fun getApiLevel(context: JavaContext, annotation: UAnnotation, qualifiedName: String): Int {
             var api =
@@ -2988,78 +3049,87 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             //noinspection AndroidLintExternalAnnotations
             for (annotation in annotated.uAnnotations) {
-                val fqcn = annotation.qualifiedName
-                if (fqcn != null && isApiLevelAnnotation(fqcn)) {
-                    val attributeList = annotation.attributeValues
-                    for (attribute in attributeList) {
-                        if (fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
-                            fqcn == SDK_SUPPRESS_ANNOTATION ||
-                            fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION
-                        ) {
-                            val name = attribute.name
-                            if (name == null || !(name.startsWith("minSdk") || name == "codeName")) {
-                                continue
-                            }
+                val target = getTargetApiForAnnotation(annotation, isApiLevelAnnotation)
+                if (target != -1) {
+                    return target
+                }
+            }
+
+            return -1
+        }
+
+        private fun getTargetApiForAnnotation(annotation: UAnnotation, isApiLevelAnnotation: (String) -> Boolean): Int {
+            val fqcn = annotation.qualifiedName
+            if (fqcn != null && isApiLevelAnnotation(fqcn)) {
+                val attributeList = annotation.attributeValues
+                for (attribute in attributeList) {
+                    if (fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
+                        fqcn == SDK_SUPPRESS_ANNOTATION ||
+                        fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION
+                    ) {
+                        val name = attribute.name
+                        if (name == null || !(name.startsWith("minSdk") || name == "codeName")) {
+                            continue
                         }
-                        val expression = attribute.expression
-                        if (expression is ULiteralExpression) {
-                            val value = expression.value
-                            if (value is Int) {
-                                return value
-                            } else if (value is String) {
-                                return codeNameToApi(value)
+                    }
+                    val expression = attribute.expression
+                    if (expression is ULiteralExpression) {
+                        val value = expression.value
+                        if (value is Int) {
+                            return value
+                        } else if (value is String) {
+                            return codeNameToApi(value)
+                        }
+                    } else {
+                        val apiLevel = ConstantEvaluator.evaluate(null, expression) as? Int
+                        if (apiLevel != null) {
+                            return apiLevel
+                        } else if (expression is UReferenceExpression) {
+                            val name = expression.resolvedName
+                            if (name != null) {
+                                return codeNameToApi(name)
                             }
                         } else {
-                            val apiLevel = ConstantEvaluator.evaluate(null, expression) as? Int
-                            if (apiLevel != null) {
-                                return apiLevel
-                            } else if (expression is UReferenceExpression) {
-                                val name = expression.resolvedName
-                                if (name != null) {
-                                    return codeNameToApi(name)
-                                }
-                            } else {
-                                return codeNameToApi(expression.asSourceString())
-                            }
+                            return codeNameToApi(expression.asSourceString())
                         }
                     }
-                } else if (fqcn == null) {
-                    // Work around bugs in UAST type resolution for file annotations:
-                    // parse the source string instead.
-                    val psi = annotation.sourcePsi ?: continue
-                    if (psi is PsiCompiledElement) {
-                        continue
-                    }
-                    val text = psi.text
-                    val start = text.indexOf('(')
-                    if (start == -1) {
-                        continue
-                    }
-                    val colon = text.indexOf(':') // skip over @file: etc
-                    val annotationString = text.substring(if (colon < start) colon + 1 else 0, start)
-                    if (isApiLevelAnnotation(annotationString)) {
-                        val end = text.indexOf(')', start + 1)
-                        if (end != -1) {
-                            var name = text.substring(start + 1, end)
-                            // Strip off attribute name and qualifiers, e.g.
-                            //   @RequiresApi(api = Build.VERSION.O) -> O
-                            var index = name.indexOf('=')
-                            if (index != -1) {
-                                name = name.substring(index + 1).trim()
-                            }
-                            index = name.indexOf('.')
-                            if (index != -1) {
-                                name = name.substring(index + 1)
-                            }
-                            if (name.isNotEmpty()) {
-                                if (name[0].isDigit()) {
-                                    val api = Integer.parseInt(name)
-                                    if (api > 0) {
-                                        return api
-                                    }
-                                } else {
-                                    return codeNameToApi(name)
+                }
+            } else if (fqcn == null) {
+                // Work around bugs in UAST type resolution for file annotations:
+                // parse the source string instead.
+                val psi = annotation.sourcePsi ?: return -1
+                if (psi is PsiCompiledElement) {
+                    return -1
+                }
+                val text = psi.text
+                val start = text.indexOf('(')
+                if (start == -1) {
+                    return -1
+                }
+                val colon = text.indexOf(':') // skip over @file: etc
+                val annotationString = text.substring(if (colon < start) colon + 1 else 0, start)
+                if (isApiLevelAnnotation(annotationString)) {
+                    val end = text.indexOf(')', start + 1)
+                    if (end != -1) {
+                        var name = text.substring(start + 1, end)
+                        // Strip off attribute name and qualifiers, e.g.
+                        //   @RequiresApi(api = Build.VERSION.O) -> O
+                        var index = name.indexOf('=')
+                        if (index != -1) {
+                            name = name.substring(index + 1).trim()
+                        }
+                        index = name.indexOf('.')
+                        if (index != -1) {
+                            name = name.substring(index + 1)
+                        }
+                        if (name.isNotEmpty()) {
+                            if (name[0].isDigit()) {
+                                val api = Integer.parseInt(name)
+                                if (api > 0) {
+                                    return api
                                 }
+                            } else {
+                                return codeNameToApi(name)
                             }
                         }
                     }

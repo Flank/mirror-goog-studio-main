@@ -891,7 +891,7 @@ class AnnotationDetectorTest : AbstractCheckTest() {
             src/test/pkg/WrongUsages.java:15: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]
                 @RequiresApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH) // ERROR 3: Already known to be at least 15 from minSdkVersion
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/WrongUsages.java:20: Warning: Unnecessary; SDK_INT is always >= 15 [ObsoleteSdkInt]
+            src/test/pkg/WrongUsages.java:20: Warning: Unnecessary; SDK_INT is always >= 20 from outer annotation (@RequiresApi(20)) [ObsoleteSdkInt]
                     @RequiresApi(15) // ERROR 4: Already known to be at least 20 from outer annotation
                     ~~~~~~~~~~~~~~~~
             1 errors, 4 warnings

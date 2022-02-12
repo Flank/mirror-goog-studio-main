@@ -1760,7 +1760,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/foo/bar/ApiTargetTest.java:39: Error: Class requires API level 8 (current min is 7): org.w3c.dom.DOMErrorHandler [NewApi]\n"
                         + "   Class<?> clz = DOMErrorHandler.class; // API 8\n"
                         + "                  ~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
+                        + "src/foo/bar/ApiTargetTest.java:37: Warning: Unnecessary; SDK_INT is always >= 11 from outer annotation (@TargetApi(11)) [ObsoleteSdkInt]\n"
+                        + "  @TargetApi(7)\n"
+                        + "  ~~~~~~~~~~~~~\n"
+                        + "3 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
@@ -1819,7 +1822,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/ApiTargetTest2.java:32: Error: Call requires API level 14 (current min is 3): new android.widget.GridLayout [NewApi]\n"
                         + "                        new GridLayout(null, null, 0);\n"
                         + "                        ~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+                        + "src/test/pkg/ApiTargetTest2.java:26: Warning: Unnecessary; SDK_INT is always >= 14 from outer annotation (@TargetApi(14)) [ObsoleteSdkInt]\n"
+                        + "            @TargetApi(value=3)\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
@@ -1864,7 +1870,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        };\n"
                                         + "    }\n"
                                         + "}\n"))
-                .checkMessage(this::checkReportedError)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -7702,6 +7707,41 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}"))
                 .run()
                 .expectClean();
+    }
+
+    public void test219091668() {
+        // Make sure we flag @RequiresApi annotations that specify a lower minSdkVersion
+        // than implied by an outer requires api annotation
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "import androidx.annotation.RequiresApi\n"
+                                        + "import androidx.test.filters.SdkSuppress\n"
+                                        + "\n"
+                                        + "@SdkSuppress(minSdkVersion = 23)\n"
+                                        + "@RequiresApi(23)\n"
+                                        + "class Test {\n"
+                                        + "  @RequiresApi(22)\n"
+                                        + "  class Inner {\n"
+                                        + "    private var scenario: Any? = null\n"
+                                        + "    @SdkSuppress(minSdkVersion = 21, maxSdkVersion = 29)\n"
+                                        + "    fun test() {\n"
+                                        + "        scenario?.toString()\n"
+                                        + "    }\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        sdkSuppressStub,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/Test.kt:7: Warning: Unnecessary; SDK_INT is always >= 23 from outer annotation (@SdkSuppress(23)) [ObsoleteSdkInt]\n"
+                                + "  @RequiresApi(22)\n"
+                                + "  ~~~~~~~~~~~~~~~~\n"
+                                + "src/Test.kt:10: Warning: Unnecessary; SDK_INT is always >= 22 from outer annotation (@RequiresApi(22)) [ObsoleteSdkInt]\n"
+                                + "    @SdkSuppress(minSdkVersion = 21, maxSdkVersion = 29)\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 2 warnings");
     }
 
     @Override
