@@ -82,6 +82,17 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "modularize",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/refactoring/modularize",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.agp-integration-tests_tests__modularize",
+        "//tools/adt/idea/android:intellij.android.core.tests_tests__modularize",
+    ],
+)
+
 # Coverage report for CMake vNext feature
 coverage_report(
     name = "cmake-vnext",
@@ -806,6 +817,7 @@ combine_report_definitions(
         "layouteditor",
         "memory-recording-ui",
         "ml-model-binding",
+        "modularize",
         "motioneditor",
         "navigationeditor",
         "navigationpropertyinspector",
@@ -839,6 +851,7 @@ coverage_report(
         "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
         "//tools/adt/idea/adt-ui-model:intellij.android.adt.ui.model_tests",
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android:intellij.android.core.agp-integration-tests_tests",
         "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
         "//tools/adt/idea/android-common:intellij.android.common_tests",
         #TODO(b/155257347) too flaky for coverage runs
