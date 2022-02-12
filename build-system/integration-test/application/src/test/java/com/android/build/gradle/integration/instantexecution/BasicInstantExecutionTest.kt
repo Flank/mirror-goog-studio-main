@@ -55,18 +55,6 @@ class BasicInstantExecutionTest {
     @Before
     fun setUp() {
         project.projectDir.resolve(".gradle/configuration-cache").deleteRecursively()
-
-        // Disable lint because of http://b/146208910
-        listOf("app", "lib").forEach {
-            project.getSubproject(it).buildFile.appendText("""
-
-            android {
-                lintOptions {
-                    checkReleaseBuilds false
-                }
-            }
-        """.trimIndent())
-        }
     }
 
     @Test
@@ -74,8 +62,12 @@ class BasicInstantExecutionTest {
         executor().run("assemble")
         assertThat(project.projectDir.resolve(".gradle/configuration-cache")).isDirectory()
         val result = executor().run("assemble")
-        // AnalyticsRecordingTask always runs
-        Truth.assertThat(result.didWorkTasks).containsExactly(":app:analyticsRecordingRelease")
+        // AnalyticsRecordingTask and AndroidLintTextOutputTask always run
+        Truth.assertThat(result.didWorkTasks).containsExactly(
+            ":app:analyticsRecordingRelease",
+            ":app:lintVitalRelease",
+            ":app:assembleRelease",
+            ":app:assemble")
     }
 
     @Test

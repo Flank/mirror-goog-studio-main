@@ -33,16 +33,6 @@ class DataBindingInstantExecutionTest {
     @Before
     fun setUp() {
         project.projectDir.resolve(".gradle/configuration-cache").deleteRecursively()
-
-        // Disable lint because of http://b/146208910
-        project.buildFile.appendText("""
-
-            android {
-                lintOptions {
-                    checkReleaseBuilds false
-                }
-            }
-        """.trimIndent())
     }
 
     @Test

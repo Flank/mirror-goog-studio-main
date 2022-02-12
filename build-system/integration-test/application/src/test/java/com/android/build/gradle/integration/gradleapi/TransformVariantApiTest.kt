@@ -42,10 +42,7 @@ class TransformVariantApiTest {
 
     @Test
     fun checkRunForRelease() {
-        // b/149978740
-        val result =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("assemblePlayFreeRelease")
+        val result = project.executor().run("assemblePlayFreeRelease")
 
         project.getApk(GradleTestProject.ApkType.RELEASE, "play", "free")
             .use { outputFile -> assertThat(outputFile).containsJavaResource(TRANSFORM_MARKER_FILE) }

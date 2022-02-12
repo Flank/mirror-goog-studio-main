@@ -22,18 +22,21 @@ dependencies {
     implementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
-task('checkDependencies').doLast {
-    assert project.connectedCheck instanceof Task
-    def deps =  project.connectedCheck.taskDependencies.getDependencies(project.connectedCheck)
+tasks.register('checkDependencies') {
+    doLast {
+        assert project.connectedCheck instanceof Task
+        def deps =  project.connectedCheck.taskDependencies.getDependencies(project.connectedCheck)
 
-    def connectedAndroidTest = deps.find { it.name == "connectedAndroidTest" }
-    assert connectedAndroidTest instanceof Task
+        def connectedAndroidTest = deps.find { it.name == "connectedAndroidTest" }
+        assert connectedAndroidTest instanceof Task
 
-    deps = connectedAndroidTest.taskDependencies.getDependencies(connectedAndroidTest)
-    def actualTestTask = deps.find { it.name == "connectedDebugAndroidTest" }
-    // The actual class name has the _Decorated suffix.
-    assert actualTestTask.class.name.contains(".DeviceProviderInstrumentTestTask")
+        deps = connectedAndroidTest.taskDependencies.getDependencies(connectedAndroidTest)
+        def actualTestTask = deps.find { it.name == "connectedDebugAndroidTest" }
+        // The actual class name has the _Decorated suffix.
+        assert actualTestTask.class.name.contains(".DeviceProviderInstrumentTestTask")
 
-    // :test:assembleDebug will fail if the app module is not built, so other tests verify
-    // that this ends up compiling the app module.
+        // :test:assembleDebug will fail if the app module is not built, so other tests verify
+        // that this ends up compiling the app module.
+    }
+    notCompatibleWithConfigurationCache("doLast block uses project instance")
 }

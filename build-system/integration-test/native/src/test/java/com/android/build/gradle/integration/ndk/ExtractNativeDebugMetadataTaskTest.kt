@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.ndk
 import com.android.SdkConstants.ABI_ARMEABI_V7A
 import com.android.SdkConstants.ABI_INTEL_ATOM
 import com.android.SdkConstants.ABI_INTEL_ATOM64
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -103,7 +102,6 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
     val project: GradleTestProject =
         GradleTestProject.builder()
             .fromTestApp(multiModuleTestProject)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .create()
 

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.ndk
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
@@ -44,14 +43,12 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     @JvmField
     val project = GradleTestProject.builder().fromTestProject("prefabApp")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Rule
     @JvmField
     val prefabNoDepsProject = GradleTestProject.builder().fromTestProject("prefabNoDeps")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     companion object {

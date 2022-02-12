@@ -77,11 +77,7 @@ class MappingFileAccessTest {
 
     @Test
     fun assembleTest() {
-
-        // b/149978740
-        val buildResult =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("clean", "assemble")
+        val buildResult = project.executor().run("clean", "assemble")
         assertThat(buildResult.tasks).contains(":helloRelease")
         assertThat(buildResult.tasks).doesNotContain(":helloDebug")
 
@@ -93,10 +89,7 @@ class MappingFileAccessTest {
 
     @Test
     fun bundleTest() {
-        // b/149978740
-        val buildResult =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("clean", "bundle")
+        val buildResult = project.executor().run("clean", "bundle")
         assertThat(buildResult.tasks).contains(":helloRelease")
         assertThat(buildResult.tasks).doesNotContain(":helloDebug")
 

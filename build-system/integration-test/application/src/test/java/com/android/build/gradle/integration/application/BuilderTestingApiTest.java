@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
@@ -49,8 +48,6 @@ public class BuilderTestingApiTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("builderTestingApiUse")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .enableProfileOutput()
                     .create();
 

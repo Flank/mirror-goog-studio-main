@@ -98,6 +98,7 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
 
             // This task should always run
             task.outputs.upToDateWhen { false }
+            task.notCompatibleWithConfigurationCache("See https://buganizer.corp.google.com/issues/219099391")
         }
     }
 

@@ -26,7 +26,6 @@ import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -56,8 +55,6 @@ public class VariantDependencyTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.noBuildFile())
-                    .withConfigurationCaching(
-                            BaseGradleExecutor.ConfigurationCaching.OFF) // b/146208910
                     .create();
 
     private static ModelContainer<AndroidProject> model;

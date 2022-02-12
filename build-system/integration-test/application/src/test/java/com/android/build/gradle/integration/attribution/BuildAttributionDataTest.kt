@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.attribution
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -27,29 +26,14 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class BuildAttributionDataTest(private val configCachingMode: BaseGradleExecutor.ConfigurationCaching) {
-
-    companion object {
-
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun configCachingModes(): List<BaseGradleExecutor.ConfigurationCaching> {
-            return listOf(BaseGradleExecutor.ConfigurationCaching.ON,
-                    BaseGradleExecutor.ConfigurationCaching.OFF)
-        }
-    }
-
+class BuildAttributionDataTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
     @get:Rule
     var project = GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .withConfigurationCaching(configCachingMode)
             .create()
 
     private fun setUpProject() {
