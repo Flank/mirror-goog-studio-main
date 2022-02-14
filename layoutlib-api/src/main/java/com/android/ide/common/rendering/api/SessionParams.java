@@ -16,10 +16,7 @@
 
 package com.android.ide.common.rendering.api;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import org.jetbrains.annotations.NotNull;
+import com.android.annotations.NonNull;
 
 /**
  * Rendering parameters for a {@link RenderSession}.
@@ -43,7 +40,7 @@ public class SessionParams extends RenderParams {
         private final SizeAction mHorizAction;
         private final SizeAction mVertAction;
 
-        RenderingMode(@NotNull SizeAction horizAction, @NotNull SizeAction vertAction) {
+        RenderingMode(@NonNull SizeAction horizAction, @NonNull SizeAction vertAction) {
             mHorizAction = horizAction;
             mVertAction = vertAction;
         }
@@ -59,8 +56,6 @@ public class SessionParams extends RenderParams {
 
     private final ILayoutPullParser mLayoutDescription;
     private final RenderingMode mRenderingMode;
-    private boolean mLayoutOnly = false;
-    private Map<ResourceReference, AdapterBinding> mAdapterBindingMap;
     private boolean mExtendedViewInfoMode = false;
     private final int mSimulatedPlatformVersion;
 
@@ -129,10 +124,6 @@ public class SessionParams extends RenderParams {
         mLayoutDescription = params.mLayoutDescription;
         mRenderingMode = params.mRenderingMode;
         mSimulatedPlatformVersion = params.mSimulatedPlatformVersion;
-        if (params.mAdapterBindingMap != null) {
-            mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>(
-                    params.mAdapterBindingMap);
-        }
         mExtendedViewInfoMode = params.mExtendedViewInfoMode;
     }
 
@@ -142,33 +133,6 @@ public class SessionParams extends RenderParams {
 
     public RenderingMode getRenderingMode() {
         return mRenderingMode;
-    }
-
-    /**
-     * @deprecated Use {@link RenderSession#measure()} instead
-     */
-    public void setLayoutOnly() {
-        mLayoutOnly = true;
-    }
-
-    public boolean isLayoutOnly() {
-        return mLayoutOnly;
-    }
-
-    public void addAdapterBinding(ResourceReference reference, AdapterBinding data) {
-        if (mAdapterBindingMap == null) {
-            mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>();
-        }
-
-        mAdapterBindingMap.put(reference, data);
-    }
-
-    public Map<ResourceReference, AdapterBinding> getAdapterBindings() {
-        if (mAdapterBindingMap == null) {
-            return Collections.emptyMap();
-        }
-
-        return Collections.unmodifiableMap(mAdapterBindingMap);
     }
 
     public void setExtendedViewInfoMode(boolean mode) {
