@@ -40,6 +40,7 @@ public abstract class WearComponent extends AppComponent {
 
     public static final class CommandResultReceiver extends MultiLineReceiver {
         public static final int SUCCESS_CODE = 1;
+        public static final int INVALID_ARGUMENT_CODE = 3;
 
         private int resultCode = -1;
         private final @NotNull Pattern resultCodePattern = Pattern.compile("result=(\\d+)");
