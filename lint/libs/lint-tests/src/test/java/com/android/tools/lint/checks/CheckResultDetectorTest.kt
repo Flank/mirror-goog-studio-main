@@ -1731,4 +1731,34 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun test216101161() {
+        // Regression test for an overloaded operator expression referencing an annotated
+        // call
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                fun isSingleDigit(num: Int?): Boolean {
+                    num?.let { if (it in Range.closedOpen(1, 10)) return true }
+                    return false
+                }
+
+                class Range<C : Comparable<*>?> {
+                    @CheckResult
+                    operator fun contains(value: C): Boolean = TODO()
+
+                    companion object {
+                        @CheckResult
+                        fun <C : Comparable<*>?> closedOpen(lower: C, upper: C): Range<C> = TODO()
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
