@@ -87,7 +87,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
 
             if (dexParams.getDebuggable()) {
                 builder.addAssertionsConfiguration(
-                        AssertionsConfiguration.Builder::enableAllAssertions);
+                        AssertionsConfiguration.Builder::compileTimeEnableAllAssertions);
             }
 
             if (dexParams.getWithDesugaring()) {
