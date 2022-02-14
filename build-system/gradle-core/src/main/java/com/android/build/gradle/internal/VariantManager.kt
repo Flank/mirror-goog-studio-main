@@ -611,7 +611,8 @@ class VariantManager<
         )
         val testFixturesBuildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
             dslExtension.buildFeatures,
-            dslServices.projectOptions
+            dslServices.projectOptions,
+            variantDslInfo.testFixtures.androidResources
         )
 
         val testFixturesComponent = variantFactory.createTestFixtures(

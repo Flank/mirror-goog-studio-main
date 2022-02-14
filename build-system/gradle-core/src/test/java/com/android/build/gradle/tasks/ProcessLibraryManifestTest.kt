@@ -22,14 +22,12 @@ import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
 import java.io.IOException
 import javax.inject.Inject
 
@@ -93,7 +91,7 @@ class ProcessLibraryManifestTest {
         task.reportFile.set(temporaryFolder.newFile())
         task.mergeBlameFile.set(temporaryFolder.newFile())
         task.disableMinSdkVersionCheck.set(false)
-        task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
+        task.taskAction()
         assertThat(task.manifestOutputFile.get().asFile.readText(Charsets.UTF_8))
                 .contains("package=\"random.word\"")
         assertThat(task.tmpDir.get().asFileTree.files).isEmpty()

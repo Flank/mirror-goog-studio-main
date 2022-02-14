@@ -128,9 +128,9 @@ void EnqueueAllocationInfoEvents(const proto::Command& command,
   assert(Agent::Instance().agent_config().common().profiler_unified_pipeline());
 
   bool is_start_command = command.has_start_alloc_tracking();
-  bool request_timestamp = is_start_command
-                               ? command.start_alloc_tracking().request_time()
-                               : command.stop_alloc_tracking().request_time();
+  int64_t request_timestamp =
+      is_start_command ? command.start_alloc_tracking().request_time()
+                       : command.stop_alloc_tracking().request_time();
 
   // Task for sending the MEMORY_ALLOC_TRACKING_STATUS event.
   Agent::Instance().SubmitAgentTasks(
