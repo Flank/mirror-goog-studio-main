@@ -179,7 +179,7 @@ fun writeAarMetadataFile(
     aarMetadataVersion: String,
     minCompileSdk: Int,
     minAgpVersion: String,
-    compileSdkPreview: String? = null
+    forceCompileSdkPreview: String? = null
 ) {
     // We write the file manually instead of using the java.util.Properties API because (1) that API
     // doesn't guarantee the order of properties in the file and (2) that API writes an unnecessary
@@ -189,6 +189,6 @@ fun writeAarMetadataFile(
         writer.appendLine("$AAR_METADATA_VERSION_PROPERTY=$aarMetadataVersion")
         writer.appendLine("$MIN_COMPILE_SDK_PROPERTY=$minCompileSdk")
         writer.appendLine("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$minAgpVersion")
-        compileSdkPreview?.let { writer.appendLine("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
+        forceCompileSdkPreview?.let { writer.appendLine("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
     }
 }

@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.Version
@@ -300,6 +301,28 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
             }
         }
 
+        // check forceCompileSdkPreview
+        val forceCompileSdkPreview = aarMetadataReader.forceCompileSdkPreview
+        if (forceCompileSdkPreview != null) {
+            val compileSdkVersion = parameters.compileSdkVersion.get()
+            val compileSdkPreview = parseTargetHash(parameters.compileSdkVersion.get()).codeName
+            if (compileSdkPreview != forceCompileSdkPreview) {
+                errorMessages.add(
+                    """
+                        Dependency '$displayName' requires libraries and applications that
+                        depend on it to compile against codename "$forceCompileSdkPreview" of the
+                        Android APIs.
+
+                        ${parameters.projectPath.get()} is currently compiled against $compileSdkVersion.
+
+                        Recommended action: Use a different version of dependency '$displayName',
+                        or set compileSdkPreview to "$forceCompileSdkPreview" in your build.gradle
+                        file if you intend to experiment with that preview SDK.
+                    """.trimIndent()
+                )
+            }
+        }
+
         // check compileSdkVersion
         val minCompileSdk = aarMetadataReader.minCompileSdk
         if (minCompileSdk != null) {
@@ -422,6 +445,7 @@ private data class AarMetadataReader(val file: File) {
     val aarMetadataVersion: String?
     val minCompileSdk: String?
     val minAgpVersion: String?
+    val forceCompileSdkPreview: String?
 
     init {
         val properties = Properties()
@@ -430,6 +454,7 @@ private data class AarMetadataReader(val file: File) {
         aarMetadataVersion = properties.getProperty(AAR_METADATA_VERSION_PROPERTY)
         minCompileSdk = properties.getProperty(MIN_COMPILE_SDK_PROPERTY)
         minAgpVersion = properties.getProperty(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
+        forceCompileSdkPreview = properties.getProperty(FORCE_COMPILE_SDK_PREVIEW_PROPERTY)
     }
 }
 

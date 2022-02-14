@@ -17,10 +17,12 @@ package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
@@ -409,11 +411,67 @@ class CheckAarMetadataTaskTest {
         }
     }
 
+    @Test
+    fun testPassingWithForceCompileSdkPreview() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            forceCompileSdkPreview = "Tiramisu"
+        )
+        TestFileUtils.appendToFile(
+            project.getSubproject("app").buildFile,
+            "\n\nandroid.compileSdkPreview 'Tiramisu'\n\n"
+        )
+        val result = project.executor().run(":app:checkDebugAarMetadata")
+        ScannerSubject.assertThat(result.stdout).contains("BUILD SUCCESSFUL")
+    }
+
+    @Test
+    fun testFailsWithForceCompileSdkPreview() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            forceCompileSdkPreview = "Tiramisu"
+        )
+
+        // Set app's compileSdkVersion to 30 for consistent error message.
+        project.getSubproject("app").buildFile
+        TestFileUtils.searchRegexAndReplace(
+            project.getSubproject("app").buildFile,
+            "compileSdkVersion \\d+",
+            "compileSdkVersion 30"
+        )
+
+        // Test that build fails with desired error message.
+        try {
+            project.executor().run(":app:checkDebugAarMetadata")
+            Assert.fail("Expected build failure")
+        } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message)
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  Dependency 'library.aar' requires libraries and applications that
+                              depend on it to compile against codename "Tiramisu" of the
+                              Android APIs.
+
+                              :app is currently compiled against android-30.
+
+                              Recommended action: Use a different version of dependency 'library.aar',
+                              or set compileSdkPreview to "Tiramisu" in your build.gradle
+                              file if you intend to experiment with that preview SDK.
+                    """.trimIndent()
+                )
+        }
+    }
+
     private fun addAarWithPossiblyInvalidAarMetadataToAppProject(
         aarFormatVersion: String?,
         aarMetadataVersion: String?,
         minCompileSdk: String? = null,
-        minAgpVersion: String? = null
+        minAgpVersion: String? = null,
+        forceCompileSdkPreview: String? = null
     ) {
         project.executor().run(":lib:assembleDebug")
         // Copy lib's .aar build output to the app's libs directory
@@ -432,6 +490,7 @@ class CheckAarMetadataTaskTest {
             aarMetadataVersion?.let { sb.appendln("$AAR_METADATA_VERSION_PROPERTY=$it") }
             minCompileSdk?.let { sb.appendln("$MIN_COMPILE_SDK_PROPERTY=$it") }
             minAgpVersion?.let { sb.appendln("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$it") }
+            forceCompileSdkPreview?.let { sb.appendln("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
             aar.add(
                 BytesSource(
                     sb.toString().toByteArray(),
