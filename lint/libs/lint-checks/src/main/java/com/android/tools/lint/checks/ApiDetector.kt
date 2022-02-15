@@ -711,11 +711,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
             return
         }
-        val (targetAnnotation, target) = getTargetApiAnnotation(element)
-        if (annotation.qualifiedName == SDK_SUPPRESS_ANNOTATION || annotation.qualifiedName == TARGET_API) {
+        if (!REQUIRES_API_ANNOTATION.isEquals(annotation.qualifiedName)) {
             // These two annotations do not propagate the requirement outwards to callers
             return
         }
+        val (targetAnnotation, target) = getTargetApiAnnotation(element)
         if (target == -1 || api > target) {
             if (isWithinVersionCheckConditional(context, element, api)) {
                 return
