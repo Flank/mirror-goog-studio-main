@@ -204,7 +204,7 @@ public class HprofParserTest extends TestCase {
      */
     public void testDuplicateEntries() {
         mSnapshot = new SnapshotBuilder(2).addReferences(1, 2).addRoot(1).build();
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(2, mSnapshot.getReachableInstances().size());
         ClassInstance parent = (ClassInstance)mSnapshot.findInstance(1);

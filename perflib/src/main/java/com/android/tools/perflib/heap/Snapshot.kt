@@ -46,7 +46,7 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
 
     //  List of individual stack frames
     private var frames = TLongObjectHashMap<StackFrame>()
-    private var dominators: LinkEvalDominators? = null
+    private var areRetainedSizesComputed = false
 
     //  The set of all classes that are (sub)class(es) of java.lang.ref.Reference.
     private val referenceClasses = THashSet<ClassObj>()
@@ -197,18 +197,44 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
     fun findAllDescendantClasses(className: String): List<ClassObj> =
         findClasses(className).flatMap { it.descendantClasses }
 
-    fun computeDominators() {
-        prepareDominatorComputation()
-        doComputeDominators(LinkEvalDominators(this))
+    fun computeRetainedSizes() {
+        if (!areRetainedSizesComputed) {
+            prepareComputeRetainedSizes()
+            doComputeRetainedSizes()
+            areRetainedSizesComputed = true
+        }
     }
 
-    @VisibleForTesting
-    fun prepareDominatorComputation() {
-        if (dominators == null) {
-            resolveReferences()
-            compactMemory()
-            ShortestDistanceVisitor().doVisit(gcRoots)
-            forEachReachableInstance(Instance::dedupeReferences)
+    private fun prepareComputeRetainedSizes() {
+        resolveReferences()
+        compactMemory()
+        ShortestDistanceVisitor().doVisit(gcRoots)
+        forEachReachableInstance(Instance::dedupeReferences)
+
+        // Initialize retained sizes for all classes and objects, including unreachable ones.
+        for (heap in heaps) {
+            heap.classes.forEach(Instance::resetRetainedSize)
+            heap.forEachInstance {
+                it.resetRetainedSize()
+                true
+            }
+        }
+    }
+
+    private fun doComputeRetainedSizes() {
+        val (instances, immDom) = LinkEvalDominators.computeDominators(
+            gcRoots.mapNotNullTo(mutableSetOf(), RootObj::getReferredInstance),
+            { it.hardForwardReferences.stream() },
+            { it.hardReverseReferences.stream() }
+        )
+
+        // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
+        // It's important to traverse in reverse topological order
+        for (i in instances.indices.reversed()) {
+            val node = instances[i]
+            val dom = immDom[i]
+            node?.setImmediateDominator(dom ?: SENTINEL_ROOT)
+            dom?.addRetainedSizes(node)
         }
     }
 
@@ -220,15 +246,6 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
                 }
             }
         }.doVisit(gcRoots)
-
-    @VisibleForTesting
-    fun doComputeDominators(computable: LinkEvalDominators) {
-        if (dominators == null) {
-            dominators = computable
-            dominators!!.computeDominators()
-            dominators!!.computeRetainedSizes()
-        }
-    }
 
     fun getReachableInstances(): List<Instance> {
         val result = ArrayList<Instance>()

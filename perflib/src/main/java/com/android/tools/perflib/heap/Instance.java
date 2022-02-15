@@ -196,10 +196,6 @@ public abstract class Instance {
         mRetainedSizes[allHeaps.indexOf(mHeap)] = getSize() + getNativeSize();
     }
 
-    public void addRetainedSize(int heapIndex, long size) {
-        mRetainedSizes[heapIndex] += size;
-    }
-
     public void addRetainedSizes(Instance other) {
         for (int i = 0; i < mRetainedSizes.length; ++i) {
             mRetainedSizes[i] += other.mRetainedSizes[i];

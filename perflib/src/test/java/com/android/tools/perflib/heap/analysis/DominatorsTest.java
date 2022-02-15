@@ -23,8 +23,6 @@ import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 public class DominatorsTest extends TestCase {
 
@@ -39,7 +37,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(6, mSnapshot.getReachableInstances().size());
         assertDominates(1, 2);
@@ -64,7 +62,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(4, mSnapshot.getReachableInstances().size());
         assertDominates(1, 2);
@@ -87,7 +85,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(2)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(6, mSnapshot.getReachableInstances().size());
         assertDominates(1, 3);
@@ -117,7 +115,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(45, mSnapshot.findInstance(1).getRetainedSize(1));
         assertEquals(44, mSnapshot.findInstance(2).getRetainedSize(1));
@@ -145,7 +143,7 @@ public class DominatorsTest extends TestCase {
         assertNotNull(mSnapshot.getHeap(13).getClass(102));
         assertNotNull(mSnapshot.getHeap(13).getClass(103));
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(0, mSnapshot.getHeap(13).getClass(102).getRetainedSize(1));
         assertEquals(0, mSnapshot.getHeap(13).getClass(103).getRetainedSize(1));
@@ -158,7 +156,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(6, mSnapshot.findInstance(1).getRetainedSize(1));
         assertEquals(2, mSnapshot.findInstance(2).getRetainedSize(1));
@@ -177,7 +175,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         assertEquals(mSnapshot.findInstance(1), mSnapshot.findInstance(4).getImmediateDominator());
         assertEquals(mSnapshot.findInstance(4), mSnapshot.findInstance(6).getImmediateDominator());
@@ -200,7 +198,7 @@ public class DominatorsTest extends TestCase {
                 .addRoot(1)
                 .build();
 
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
         for (Heap heap : mSnapshot.getHeaps()) {
             ClassObj softClass = heap.getClass(SnapshotBuilder.SOFT_REFERENCE_ID);
             if (softClass != null) {
@@ -240,7 +238,7 @@ public class DominatorsTest extends TestCase {
     public void testSampleHprof() throws Exception {
         File file = TestResources.getFile(getClass(), "/dialer.android-hprof");
         mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
 
         long totalInstanceCount = 0;
         for (Heap heap : mSnapshot.getHeaps()) {

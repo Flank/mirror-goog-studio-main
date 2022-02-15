@@ -15,15 +15,13 @@
  */
 package com.android.tools.perflib.heap.analysis
 
-import com.android.tools.perflib.heap.Instance
-import com.android.tools.perflib.heap.RootObj
-import com.android.tools.perflib.heap.Snapshot
 import gnu.trove.TIntArrayList
 import gnu.trove.TObjectIdentityHashingStrategy
 import gnu.trove.TObjectIntHashMap
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.Stack
+import java.util.stream.Stream
 
 /**
  * Computes dominators based on the union-find data structure with path compression and linking by
@@ -31,45 +29,28 @@ import java.util.Stack
  * on a copy of the paper available at:
  * http://www.cc.gatech.edu/~harrold/6340/cs6340_fall2009/Readings/lengauer91jul.pdf
  */
-class LinkEvalDominators(private val snapshot: Snapshot) {
-
-    init {
-        // Initialize retained sizes for all classes and objects, including unreachable ones.
-        for (heap in snapshot.heaps) {
-            heap.classes.forEach(Instance::resetRetainedSize)
-            heap.forEachInstance {
-                it.resetRetainedSize()
-                true
-            }
-        }
-    }
+object LinkEvalDominators {
 
     /**
-     * Computes retained sizes of instances. Only call this AFTER dominator computation.
+     * @return 2 parallel arrays of each node and its immediate dominator,
+     *         with `null` being the auxiliary root.
      */
-    fun computeRetainedSizes() {
-        // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
-        // This loop relies on the fact that getReachableInstances returns the
-        // nodes in topological order.
-        for (node in snapshot.getReachableInstances().asReversed()) {
-            val dom = node.immediateDominator
-            if (dom !== Snapshot.SENTINEL_ROOT) {
-                dom?.addRetainedSizes(node)
-            }
-        }
-    }
-
-    fun computeDominators() {
+    inline fun <reified T : Any> computeDominators(
+        roots: Set<T>,
+        next: (T) -> Stream<T>,
+        prev: (T) -> Stream<T>
+    ): Result<T> {
         // Step 1 of paper.
         // Number the instances by their DFS-traversal order and record each one's parent in the DFS
         // tree.
         // Also gather predecessors and initialize semi-dominators in the same pass.
-        val (instances, parents, preds) = computeIndicesAndParents()
+        val (instances, parents, preds) = computeIndicesAndParents(roots, next, prev)
         val semis = IntArray(instances.size) { it }
         val buckets = Array(instances.size) { TIntArrayList() }
         val doms = IntArray(instances.size)
         val ancestors = IntArray(instances.size) { INVALID_ANCESTOR }
         val labels = IntArray(instances.size) { it }
+        val immDom = arrayOfNulls<T>(instances.size)
         for (currentNode in instances.size - 1 downTo 1) {
             // Step 2 of paper.
             // Compute each instance's semi-dominator
@@ -89,7 +70,7 @@ class LinkEvalDominators(private val snapshot: Snapshot) {
                 val nodeEvaled = eval(ancestors, labels, semis, node)
                 doms[node] =
                     if (semis[nodeEvaled] < semis[node]) nodeEvaled else parents[currentNode]
-                instances[node].setImmediateDominator(instances[doms[node]])
+                immDom[node] = instances[doms[node]]
             }
             buckets[parents[currentNode]].clear() // Bulk remove (slightly different from paper).
         }
@@ -99,113 +80,101 @@ class LinkEvalDominators(private val snapshot: Snapshot) {
         for (currentNode in 1 until instances.size) {
             if (doms[currentNode] != semis[currentNode]) {
                 doms[currentNode] = doms[doms[currentNode]]
-                instances[currentNode].setImmediateDominator(instances[doms[currentNode]])
+                immDom[currentNode] = instances[doms[currentNode]]
             }
         }
+
+        return Result(instances, immDom)
     }
 
     /** Traverse the instances depth-first, marking their order and parents in the DFS-tree  */
-    private fun computeIndicesAndParents(): DFSResult {
-        val parents = TObjectIntHashMap<Instance>(TObjectIdentityHashingStrategy())
-        val instances = ArrayList<Instance>()
-        val nodeStack = Stack<Instance>()
-        instances.add(Snapshot.SENTINEL_ROOT)
-        val gcRoots = snapshot.gcRoots.mapNotNullTo(mutableSetOf(), RootObj::getReferredInstance)
-        gcRoots.forEach { gcRoot ->
-            parents.put(gcRoot, 0)
-            nodeStack.push(gcRoot)
+    inline fun <reified T : Any> computeIndicesAndParents(
+        roots: Set<T>,
+        next: (T) -> Stream<T>,
+        prev: (T) -> Stream<T>
+    ): DFSResult<T> {
+        val parents = TObjectIntHashMap<T>(TObjectIdentityHashingStrategy())
+        val instances = ArrayList<T?>()
+        val nodeStack = Stack<T>()
+        instances.add(null) // auxiliary root at 0
+        roots.forEach {
+            parents.put(it, 0)
+            nodeStack.push(it)
         }
-        dfs(nodeStack, instances, parents)
-        return DFSResult.of(instances, parents, gcRoots)
+        val topoOrder = TObjectIntHashMap<T>(TObjectIdentityHashingStrategy())
+        val touched = Collections.newSetFromMap<T>(IdentityHashMap())
+        while (!nodeStack.empty()) {
+            val node = nodeStack.pop()
+            if (node !in touched) {
+                topoOrder.put(node, instances.size)
+                touched.add(node)
+                instances.add(node)
+            }
+            for (succ in next(node)) {
+                if (!touched.contains(succ)) {
+                    parents.put(succ, topoOrder.get(node))
+                    nodeStack.push(succ)
+                }
+            }
+        }
+        val parentIndices = IntArray(instances.size)
+        val predIndices = arrayOfNulls<IntArray>(instances.size)
+        for (i in 1 until instances.size) { // omit auxiliary root at [0]
+            val instance = instances[i]!!
+            val order = topoOrder.get(instance)
+            parentIndices[order] = parents[instance]
+            val backRefs = prev(instance)
+                .filter(topoOrder::contains)
+                .mapToInt(topoOrder::get)
+                .toArray()
+            predIndices[order] = if (instance in roots) (0 + backRefs) else backRefs
+        }
+        return DFSResult(instances.toTypedArray(), parentIndices, predIndices)
     }
 
-    private data class DFSResult(
-        val instances: Array<Instance>,
-        val parents: IntArray, // Predecessors not involved in DFS, but lumped in here for 1 pass. Paper did same.
-        val predecessors: Array<IntArray?>
-    ) {
-        companion object {
-            fun of(
-                instances: ArrayList<Instance>,
-                parents: TObjectIntHashMap<Instance>,
-                gcRoots: Set<Instance?>
-            ): DFSResult {
-                val parentIndices = IntArray(instances.size)
-                val predIndices = arrayOfNulls<IntArray>(instances.size)
-                for (i in 1 until instances.size) { // omit auxiliary root at [0]
-                    val instance = instances[i]
-                    val order = instance.topologicalOrder
-                    parentIndices[order] = parents[instance]
-                    val backRefs = instance.hardReverseReferences.stream()
-                        .filter(Instance::isReachable)
-                        .mapToInt(Instance::getTopologicalOrder)
-                        .toArray()
-                    predIndices[order] = if (gcRoots.contains(instance)) (0 + backRefs) else backRefs
-                }
-                return DFSResult(instances.toTypedArray(), parentIndices, predIndices)
-            }
-        }
-    }
-
-    companion object {
-        private fun dfs(
-            nodeStack: Stack<Instance>,
-            instances: ArrayList<Instance>,
-            parents: TObjectIntHashMap<Instance>
-        ) {
-            val touched = Collections.newSetFromMap(IdentityHashMap<Instance, Boolean>())
-            while (!nodeStack.empty()) {
-                val node = nodeStack.pop()
-                if (node !in touched) {
-                    node.topologicalOrder = instances.size
-                    touched.add(node)
-                    instances.add(node)
-                }
-                for (succ in node.hardForwardReferences) {
-                    if (!touched.contains(succ)) {
-                        parents.put(succ, node.topologicalOrder)
-                        nodeStack.push(succ)
-                    }
-                }
-            }
-        }
-
-        private fun eval(ancestors: IntArray, labels: IntArray, semis: IntArray, node: Int) =
-            when (ancestors[node]) {
-                INVALID_ANCESTOR -> node
-                else -> compress(ancestors, labels, semis, node)
-            }
-
-        /** @return a node's evaluation after compression
-         */
-        private fun compress(ancestors: IntArray, labels: IntArray, semis: IntArray, node: Int): Int {
-            val compressArray = TIntArrayList()
-            assert(ancestors[node] != INVALID_ANCESTOR)
-            var n = node
-            while (ancestors[ancestors[n]] != INVALID_ANCESTOR) {
-                compressArray.add(n)
-                n = ancestors[n]
-            }
-            for (i in compressArray.size() - 1 downTo 0) {
-                val toCompress = compressArray[i]
-                val ancestor = ancestors[toCompress]
-                assert(ancestor != INVALID_ANCESTOR)
-                if (semis[labels[ancestor]] < semis[labels[toCompress]]) {
-                    labels[toCompress] = labels[ancestor]
-                }
-                ancestors[toCompress] = ancestors[ancestor]
-            }
-            return labels[node]
-        }
-
-        // 0 would coincide with valid parent. Paper uses 0 because they count from 1.
-        private const val INVALID_ANCESTOR = -1
-
-        private val EMPTY_INT_ARRAY = IntArray(0)
-    }
+    data class Result<T>(val topoOrder: Array<T?>, val immediateDominator: Array<T?>)
 }
 
-private operator fun Int.plus(ns: IntArray) = IntArray(ns.size + 1).also { out ->
+data class DFSResult<T>(
+    val instances: Array<T?>,
+    val parents: IntArray, // Predecessors not involved in DFS, but lumped in here for 1 pass. Paper did same.
+    val predecessors: Array<IntArray?>
+)
+
+fun eval(ancestors: IntArray, labels: IntArray, semis: IntArray, node: Int) =
+    when (ancestors[node]) {
+        INVALID_ANCESTOR -> node
+        else -> compress(ancestors, labels, semis, node)
+    }
+
+/**
+ *  @return a node's evaluation after compression
+ */
+private fun compress(ancestors: IntArray, labels: IntArray, semis: IntArray, node: Int): Int {
+    val compressArray = TIntArrayList()
+    assert(ancestors[node] != INVALID_ANCESTOR)
+    var n = node
+    while (ancestors[ancestors[n]] != INVALID_ANCESTOR) {
+        compressArray.add(n)
+        n = ancestors[n]
+    }
+    for (i in compressArray.size() - 1 downTo 0) {
+        val toCompress = compressArray[i]
+        val ancestor = ancestors[toCompress]
+        assert(ancestor != INVALID_ANCESTOR)
+        if (semis[labels[ancestor]] < semis[labels[toCompress]]) {
+            labels[toCompress] = labels[ancestor]
+        }
+        ancestors[toCompress] = ancestors[ancestor]
+    }
+    return labels[node]
+}
+
+// 0 would coincide with valid parent. Paper uses 0 because they count from 1.
+const val INVALID_ANCESTOR = -1
+val EMPTY_INT_ARRAY = IntArray(0)
+
+operator fun Int.plus(ns: IntArray) = IntArray(ns.size + 1).also { out ->
     System.arraycopy(ns, 0, out, 1, ns.size)
     out[0] = this
 }

@@ -25,7 +25,7 @@ public final class DuplicatedBitmapAnalyzerTaskTest {
     public void getSnapshot() throws IOException {
         File file = TestResources.getFile(getClass(), "/duplicated_bitmaps.android-hprof");
         mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
-        mSnapshot.computeDominators();
+        mSnapshot.computeRetainedSizes();
         mSnapshot.resolveClasses();
     }
 
