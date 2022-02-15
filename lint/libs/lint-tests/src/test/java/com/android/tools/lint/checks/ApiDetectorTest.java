@@ -4545,6 +4545,44 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testTargetApiVersusRequiresApi() {
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.annotation.TargetApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "public class ApiDetectorTest {\n"
+                                        + "    @RequiresApi(api=19)\n"
+                                        + "    public void requiresApi19() { };\n"
+                                        + "\n"
+                                        + "    @SdkSuppress(minSdkVersion = 19)\n"
+                                        + "    public void suppressSdk19() { };\n"
+                                        + "\n"
+                                        + "    @TargetApi(19)\n"
+                                        + "    public void targetApi19() { };\n"
+                                        + "\n"
+                                        + "    public void test() {\n"
+                                        + "        requiresApi19();\n"
+                                        + "        targetApi19();\n"
+                                        + "        suppressSdk19();\n"
+                                        + "    }\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_JAR,
+                        sdkSuppressStub)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/ApiDetectorTest.java:17: Error: Call requires API level 19 (current min is 15): requiresApi19 [NewApi]\n"
+                                + "        requiresApi19();\n"
+                                + "        ~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void testUnnecessaryRequiresApi() {
         lint().files(
                         manifest().minSdk(28),
