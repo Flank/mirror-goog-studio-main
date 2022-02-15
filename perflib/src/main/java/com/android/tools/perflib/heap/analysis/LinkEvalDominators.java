@@ -16,9 +16,11 @@
 package com.android.tools.perflib.heap.analysis;
 
 import com.android.annotations.NonNull;
+import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.RootObj;
 import com.android.tools.perflib.heap.Snapshot;
+import com.google.common.collect.Lists;
 import gnu.trove.TIntArrayList;
 import gnu.trove.TObjectHashingStrategy;
 import gnu.trove.TObjectIntHashMap;
@@ -37,40 +39,41 @@ import java.util.stream.Collectors;
  * on a copy of the paper available at:
  * http://www.cc.gatech.edu/~harrold/6340/cs6340_fall2009/Readings/lengauer91jul.pdf
  */
-public final class LinkEvalDominators extends DominatorsBase {
-
-    private volatile int mNodeCount;
-    private volatile int mSemiDominatorProgress = 0;
-    private volatile int mDominatorProgress = 0;
+public final class LinkEvalDominators {
+    private Snapshot mSnapshot;
 
     public LinkEvalDominators(@NonNull Snapshot snapshot) {
-        super(snapshot);
-    }
-
-    @NonNull
-    @Override
-    public ComputationProgress getComputationProgress() {
-        String progressMessage;
-        double progress;
-        if (mSemiDominatorProgress < mNodeCount) {
-            progressMessage =
-                    String.format(
-                            "Calculating semi-dominators %d/%d",
-                            mSemiDominatorProgress, mNodeCount);
-            progress = 0.5 * (double) mSemiDominatorProgress / (double) mNodeCount;
-        } else {
-            progressMessage =
-                    String.format(
-                            "Calculating immediate dominators %d/%d",
-                            mDominatorProgress, mNodeCount);
-            progress = 0.5 + 0.5 * (double) mDominatorProgress / (double) mNodeCount;
+        mSnapshot = snapshot;
+        // Initialize retained sizes for all classes and objects, including unreachable ones.
+        for (Heap heap : mSnapshot.getHeaps()) {
+            for (Instance instance : heap.getClasses()) {
+                instance.resetRetainedSize();
+            }
+            heap.forEachInstance(
+                    instance -> {
+                        instance.resetRetainedSize();
+                        return true;
+                    });
         }
-        mCurrentProgress.setMessage(progressMessage);
-        mCurrentProgress.setProgress(progress);
-        return mCurrentProgress;
     }
 
-    @Override
+    public void dispose() {
+        mSnapshot = null;
+    }
+
+    /** Computes retained sizes of instances. Only call this AFTER dominator computation. */
+    public void computeRetainedSizes() {
+        // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
+        // This loop relies on the fact that getReachableInstances returns the
+        // nodes in topological order.
+        for (Instance node : Lists.reverse(mSnapshot.getReachableInstances())) {
+            Instance dom = node.getImmediateDominator();
+            if (dom != Snapshot.SENTINEL_ROOT) {
+                dom.addRetainedSizes(node);
+            }
+        }
+    }
+
     public void computeDominators() {
         // Step 1 of paper.
         // Number the instances by their DFS-traversal order and record each one's parent in the DFS
@@ -89,11 +92,8 @@ public final class LinkEvalDominators extends DominatorsBase {
         int[] ancestors = new int[instances.length];
         Arrays.fill(ancestors, INVALID_ANCESTOR);
         int[] labels = makeIdentityIntArray(instances.length);
-        mNodeCount = instances.length;
 
         for (int currentNode = instances.length - 1; currentNode > 0; --currentNode) {
-            mSemiDominatorProgress = instances.length - currentNode;
-
             // Step 2 of paper.
             // Compute each instance's semi-dominator
             for (int predecessor : preds[currentNode]) {
@@ -123,7 +123,6 @@ public final class LinkEvalDominators extends DominatorsBase {
                 doms[currentNode] = doms[doms[currentNode]];
                 instances[currentNode].setImmediateDominator(instances[doms[currentNode]]);
             }
-            mDominatorProgress = currentNode;
         }
     }
 

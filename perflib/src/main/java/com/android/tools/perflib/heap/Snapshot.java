@@ -45,38 +45,6 @@ import java.util.function.Consumer;
 public class Snapshot extends Capture {
 
 
-    public enum DominatorComputationStage {
-        INITIALIZING(new ComputationProgress("Preparing for dominator calculation...", 0), 0.1, 0.0),
-        RESOLVING_REFERENCES(new ComputationProgress("Resolving references...", 0), 0.1, 0.2),
-        COMPUTING_SHORTEST_DISTANCE(new ComputationProgress("Computing depth to nodes...", 0), 0.3,
-                0.03),
-        COMPUTING_DOMINATORS(new ComputationProgress("Calculating dominators...", 0), 0.63, 0.35),
-        COMPUTING_RETAINED_SIZES(new ComputationProgress("Calculating retained sizes...", 0), 0.98,
-                0.02);
-
-        private final ComputationProgress mInitialProgress;
-
-        private final double mOffset;
-
-        private final double mScale;
-
-        DominatorComputationStage(@NonNull ComputationProgress initialProgress, double offset,
-                double scale) {
-            mInitialProgress = initialProgress;
-            mOffset = offset;
-            mScale = scale;
-        }
-
-        public ComputationProgress getInitialProgress() {
-            return mInitialProgress;
-        }
-
-        public static double toAbsoluteProgressPercentage(@NonNull DominatorComputationStage baseStage,
-                                                          @NonNull ComputationProgress computationProgress) {
-            return computationProgress.getProgress() * baseStage.mScale + baseStage.mOffset;
-        }
-    }
-
     public static final String TYPE_NAME = "hprof";
 
     private static final String JAVA_LANG_CLASS = "java.lang.Class";
@@ -107,10 +75,7 @@ public class Snapshot extends Capture {
     @NonNull
     TLongObjectHashMap<StackFrame> mFrames = new TLongObjectHashMap<StackFrame>();
 
-    private DominatorsBase mDominators;
-
-    private volatile DominatorComputationStage mDominatorComputationStage
-            = DominatorComputationStage.INITIALIZING;
+    private LinkEvalDominators mDominators;
 
     //  The set of all classes that are (sub)class(es) of java.lang.ref.Reference.
     private THashSet<ClassObj> mReferenceClasses = new THashSet<ClassObj>();
@@ -451,11 +416,9 @@ public class Snapshot extends Capture {
             return;
         }
 
-        mDominatorComputationStage = DominatorComputationStage.RESOLVING_REFERENCES;
         resolveReferences();
         compactMemory();
 
-        mDominatorComputationStage = DominatorComputationStage.COMPUTING_SHORTEST_DISTANCE;
         ShortestDistanceVisitor shortestDistanceVisitor = new ShortestDistanceVisitor();
         shortestDistanceVisitor.doVisit(getGCRoots());
 
@@ -472,30 +435,15 @@ public class Snapshot extends Capture {
     }
 
     @VisibleForTesting
-    public void doComputeDominators(@NonNull DominatorsBase computable) {
+    public void doComputeDominators(@NonNull LinkEvalDominators computable) {
         if (mDominators != null) {
             return;
         }
 
         mDominators = computable;
-        mDominatorComputationStage = DominatorComputationStage.COMPUTING_DOMINATORS;
         mDominators.computeDominators();
 
-        mDominatorComputationStage = DominatorComputationStage.COMPUTING_RETAINED_SIZES;
         mDominators.computeRetainedSizes();
-    }
-
-    @NonNull
-    public ComputationProgress getComputationProgress() {
-        if (mDominatorComputationStage == DominatorComputationStage.COMPUTING_DOMINATORS) {
-            return mDominators.getComputationProgress();
-        } else {
-            return mDominatorComputationStage.getInitialProgress();
-        }
-    }
-
-    public DominatorComputationStage getDominatorComputationStage() {
-        return mDominatorComputationStage;
     }
 
     @NonNull
@@ -508,27 +456,6 @@ public class Snapshot extends Capture {
                     }
                 });
         return result;
-    }
-
-    public final void dumpInstanceCounts() {
-        for (Heap heap : mHeaps) {
-            System.out.println("+------------------ instance counts for heap: " + heap.getName());
-            heap.dumpInstanceCounts();
-        }
-    }
-
-    public final void dumpSizes() {
-        for (Heap heap : mHeaps) {
-            System.out.println("+------------------ sizes for heap: " + heap.getName());
-            heap.dumpSizes();
-        }
-    }
-
-    public final void dumpSubclasses() {
-        for (Heap heap : mHeaps) {
-            System.out.println("+------------------ subclasses for heap: " + heap.getName());
-            heap.dumpSubclasses();
-        }
     }
 
     @Nullable
