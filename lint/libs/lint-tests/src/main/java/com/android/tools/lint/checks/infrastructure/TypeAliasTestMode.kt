@@ -20,10 +20,18 @@ import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.acceptSourceFile
 import com.android.tools.lint.detector.api.isKotlin
+import com.intellij.psi.PsiArrayType
+import com.intellij.psi.PsiCapturedWildcardType
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiDisjunctionType
 import com.intellij.psi.PsiEllipsisType
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiIntersectionType
+import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiTypeParameter
+import com.intellij.psi.PsiWildcardType
 import org.jetbrains.kotlin.psi.KtTypeArgumentList
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClassLiteralExpression
@@ -138,11 +146,24 @@ class TypeAliasTestMode : UastSourceTransformationTestMode(
                     }
                     name
                 } ?: return
-                if (typeText.isBlank() || type is PsiEllipsisType) {
+                if (typeText.isBlank() || type is PsiEllipsisType || type.hasTypeParameter()) {
                     return
                 }
                 val aliasName = getTypeAlias(typeText)
                 editMap[offset] = replace(start, end, aliasName)
+            }
+
+            private fun PsiType.hasTypeParameter(): Boolean {
+                return when (this) {
+                    is PsiPrimitiveType -> false
+                    is PsiClassType -> parameters.any { it.hasTypeParameter() } || resolve() is PsiTypeParameter
+                    is PsiWildcardType -> isBounded && bound?.hasTypeParameter() == true || isExtends && extendsBound.hasTypeParameter()
+                    is PsiCapturedWildcardType -> upperBound.hasTypeParameter()
+                    is PsiArrayType -> componentType.hasTypeParameter() // includes PsiEllipsisType
+                    is PsiIntersectionType -> conjuncts.any { it.hasTypeParameter() }
+                    is PsiDisjunctionType -> disjunctions.any { it.hasTypeParameter() }
+                    else -> false
+                }
             }
 
             override fun allowClassReference(
