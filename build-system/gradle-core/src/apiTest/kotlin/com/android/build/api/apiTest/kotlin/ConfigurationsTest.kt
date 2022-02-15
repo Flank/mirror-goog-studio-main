@@ -72,12 +72,14 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
 
                         androidComponents {
                             onVariants(selector().withBuildType("release")) { variant ->
-                                variant.compileConfiguration.resolutionStrategy.dependencySubstitution {
-                                    substitute(project(":lib1")).using(project(":lib2"))
+                                // configure compile and runtime configurations with a single call.
+                                variant.configurations { configuration ->
+                                    configuration.resolutionStrategy.dependencySubstitution {
+                                        substitute(project(":lib1")).using(project(":lib2"))
+                                    }
                                 }
-                                variant.runtimeConfiguration.resolutionStrategy.dependencySubstitution {
-                                    substitute(project(":lib1")).using(project(":lib2"))
-                                }
+                                // must configure annotation processor configuration separately, if
+                                // necessary.
                                 variant.annotationProcessorConfiguration.resolutionStrategy.dependencySubstitution {
                                     substitute(project(":lib1")).using(project(":lib2"))
                                 }

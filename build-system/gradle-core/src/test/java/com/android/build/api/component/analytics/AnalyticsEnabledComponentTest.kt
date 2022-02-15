@@ -310,4 +310,15 @@ class AnalyticsEnabledComponentTest {
         Mockito.verify(delegate, times(1)).annotationProcessorConfiguration
     }
 
+    @Test
+    fun configurations() {
+        val block = { _ : Configuration  -> }
+        proxy.configurations(block)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.CONFIGURATIONS_VALUE)
+        Mockito.verify(delegate, times(1)).configurations(block)
+    }
 }

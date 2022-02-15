@@ -767,6 +767,7 @@ com.android.build.api.variant.BundleConfig.addMetadataFile: void (java.lang.Stri
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.configurations: void (kotlin.jvm.functions.Function1<? super org.gradle.api.artifacts.Configuration, kotlin.Unit>)
 com.android.build.api.variant.Component.getAnnotationProcessorConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getCompileClasspath: org.gradle.api.file.FileCollection ()
 com.android.build.api.variant.Component.getCompileConfiguration: org.gradle.api.artifacts.Configuration ()

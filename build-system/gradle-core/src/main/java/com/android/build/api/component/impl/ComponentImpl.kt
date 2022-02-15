@@ -85,6 +85,7 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -187,6 +188,11 @@ abstract class ComponentImpl(
 
     override val annotationProcessorConfiguration =
         variantDependencies.annotationProcessorConfiguration
+
+    override fun configurations(action: (Configuration) -> Unit) {
+        action.invoke(compileConfiguration)
+        action.invoke(runtimeConfiguration)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
