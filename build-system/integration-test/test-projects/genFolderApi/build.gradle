@@ -88,7 +88,7 @@ android.applicationVariants.all { variant ->
     }
     resFolder2.builtBy(resGenerationTask2)
 
-    if (Boolean.parseBoolean(project.providers.gradleProperty('inject_enable_generate_values_res').forUseAtConfigurationTime().orNull)) {
+    if (Boolean.parseBoolean(project.property('inject_enable_generate_values_res'))) {
         variant.registerGeneratedResFolders(resFolder2)
     }
 }

@@ -96,7 +96,7 @@ abstract class AnalyticsService :
         AnalyticsSettings.initialize(
                 LoggerWrapper.getLogger(AnalyticsService::class.java),
                 null,
-                GradleAnalyticsEnvironment(provider))
+                GradleAnalyticsEnvironment())
         // Initialize UsageTracker because some tasks(e.g. lint) need to record analytics with
         // UsageTracker.
         AnalyticsProfileWriter().initializeUsageTracker()

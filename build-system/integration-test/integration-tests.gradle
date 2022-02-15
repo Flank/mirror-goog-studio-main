@@ -45,7 +45,7 @@ ext.testEnvironment =
                     key.startsWith("MALLOC_CONF") ||
                     key.startsWith("LD_PRELOAD")
             if (captureValue) {
-                providerFactory.environmentVariable(key).forUseAtConfigurationTime().get()
+                System.getenv(key)
             }
             captureValue
         }
@@ -53,8 +53,7 @@ ext.testEnvironment =
 ext.testEnvironment << [
         TEST_TMPDIR:
                 providerFactory.
-                        environmentVariable("TEST_TMPDIR").
-                        forUseAtConfigurationTime()
+                        environmentVariable("TEST_TMPDIR")
                         .map { new File(it) }
                         .orElse(project.buildDir) // Use the same environment variable as Bazel for now.
                         .get(),
@@ -83,7 +82,7 @@ test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 4
 
     useJUnit {
-        String includedCategories = providerFactory.systemProperty('test.includeCategories').forUseAtConfigurationTime().orNull
+        String includedCategories = System.getProperty('test.includeCategories')
         if (includedCategories != null) {
             def categories = includedCategories.split(',')
             String defaultPackage = "com.android.build.gradle.integration.common.category."

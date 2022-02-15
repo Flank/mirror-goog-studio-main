@@ -61,8 +61,8 @@ public final class ProjectOptions {
         AnalyticsSettings.initialize(
                 LoggerWrapper.getLogger(ProjectOptions.class),
                 null,
-                new GradleAnalyticsEnvironment(providerFactory));
-        Environment.initialize(new GradleSystemEnvironment(providerFactory));
+                new GradleAnalyticsEnvironment());
+        Environment.initialize(new GradleSystemEnvironment());
     }
 
     @NonNull

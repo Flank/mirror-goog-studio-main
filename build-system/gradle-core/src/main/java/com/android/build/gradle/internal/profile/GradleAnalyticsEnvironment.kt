@@ -20,13 +20,13 @@ import com.android.tools.analytics.Environment
 import org.gradle.api.provider.ProviderFactory
 
 /** Gradle-specific implementation of the [Environment] for the analytics library. */
-class GradleAnalyticsEnvironment(providerFactory: ProviderFactory) : Environment() {
+class GradleAnalyticsEnvironment : Environment() {
 
     private val systemProperties = SystemProperty.values().associate {
-        it to providerFactory.systemProperty(it.key).forUseAtConfigurationTime().orNull
+        it to System.getProperty(it.key)
     }
     private val envVariables = EnvironmentVariable.values().associate {
-        it to providerFactory.environmentVariable(it.key).forUseAtConfigurationTime().orNull
+        it to System.getenv(it.key)
     }
 
     override fun getVariable(name: EnvironmentVariable): String? {
@@ -43,13 +43,13 @@ class GradleAnalyticsEnvironment(providerFactory: ProviderFactory) : Environment
  * Gradle-specific implementation of the [com.android.utils.Environment] for computer
  * architecture utils.
  */
-class GradleSystemEnvironment(providerFactory: ProviderFactory) : com.android.utils.Environment() {
+class GradleSystemEnvironment : com.android.utils.Environment() {
 
     private val systemProperties = SystemProperty.values().associate {
-        it to providerFactory.systemProperty(it.key).forUseAtConfigurationTime().orNull
+        it to System.getProperty(it.key)
     }
     private val envVariables = EnvironmentVariable.values().associate {
-        it to providerFactory.environmentVariable(it.key).forUseAtConfigurationTime().orNull
+        it to System.getenv(it.key)
     }
 
     override fun getVariable(name: EnvironmentVariable): String? {
