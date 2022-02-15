@@ -18,6 +18,7 @@ package com.android.tools.utp.plugins.deviceprovider.gradle
 
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.argThat
+import com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceLauncher.Companion.MANAGED_DEVICE_NAME_KEY
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
@@ -47,7 +48,7 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 
 /**
- * Tests for [GradleManagedDeviceLauncher]
+ * Tests for [GradleManagedAndroidDeviceLauncher]
  */
 @RunWith(JUnit4::class)
 class GradleManagedAndroidDeviceLauncherTest {
@@ -126,7 +127,7 @@ class GradleManagedAndroidDeviceLauncherTest {
                 adbManager,
                 emulatorHandle,
                 deviceControllerFactory,
-                skipRetryDelay = true,
+                maxDelayMillis = 0,
                 mockLogger
         )
     }
@@ -356,7 +357,7 @@ class GradleManagedAndroidDeviceLauncherTest {
 
         verify(mockLogger).info(argThat<Supplier<String>> {
             it.get().contains("""
-                Finding a test device myapp_myDeviceAndroidDebugTest (attempt 1/6).
+                Finding a test device myapp_myDeviceAndroidDebugTest (attempt 1 of 10).
                 Found 2 devices:
                 myapp_myDeviceAndroidVariantTest(emulator-5554)
                 myapp_myDeviceAndroidDebugTest(emulator-5556)
