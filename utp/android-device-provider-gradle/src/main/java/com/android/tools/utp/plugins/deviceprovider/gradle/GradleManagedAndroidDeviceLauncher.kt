@@ -20,7 +20,6 @@ import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAn
 import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.config.AndroidSdk
 import com.google.testing.platform.api.config.Config
-import com.google.testing.platform.lib.process.logger.DefaultSubprocessLogger
 import com.google.testing.platform.api.config.ConfigBase
 import com.google.testing.platform.api.config.Environment
 import com.google.testing.platform.api.config.Setup
@@ -29,13 +28,16 @@ import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.core.device.DeviceProviderErrorSummary
 import com.google.testing.platform.core.device.DeviceProviderException
+import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.lib.process.inject.DaggerSubprocessComponent
+import com.google.testing.platform.lib.process.logger.DefaultSubprocessLogger
 import com.google.testing.platform.lib.process.logger.SubprocessLogger
 import com.google.testing.platform.proto.api.config.AdbConfigProto
 import com.google.testing.platform.proto.api.core.PathProto
 import com.google.testing.platform.runtime.android.AndroidDeviceProvider
 import com.google.testing.platform.runtime.android.device.AndroidDevice
 import com.google.testing.platform.runtime.android.device.AndroidDeviceProperties
+import java.util.logging.Logger
 import kotlin.math.pow
 
 private const val MAX_ADB_ATTEMPTS = 6
@@ -54,11 +56,12 @@ const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
  *
  * @param subprocessComponent Dagger component factory for [Subprocess]
  */
-class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
-        private val adbManager: GradleAdbManager,
-        private val emulatorHandle: EmulatorHandle,
-        private val deviceControllerFactory: DeviceControllerFactory,
-        private val skipRetryDelay: Boolean
+class GradleManagedAndroidDeviceLauncher(
+    private val adbManager: GradleAdbManager,
+    private val emulatorHandle: EmulatorHandle,
+    private val deviceControllerFactory: DeviceControllerFactory,
+    private val skipRetryDelay: Boolean,
+    private val logger: Logger = getLogger(),
 ) : AndroidDeviceProvider {
     private lateinit var environment: Environment
     private lateinit var testSetup: Setup
@@ -187,6 +190,13 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         var retries = 0
         while (retries < numberOfRetries) {
             val serials = adbManager.getAllSerials()
+            logger.info {
+                "Finding a test device $avdId (attempt ${retries + 1}/$numberOfRetries).\n" +
+                "Found ${serials.size} devices:\n" +
+                serials.joinToString("\n") {
+                    "${adbManager.getId(it).orEmpty()}($it)"
+                }
+            }
             for (serial in serials) {
                 // ignore non-emulator devices.
                 if (!serial.startsWith("emulator-")) {

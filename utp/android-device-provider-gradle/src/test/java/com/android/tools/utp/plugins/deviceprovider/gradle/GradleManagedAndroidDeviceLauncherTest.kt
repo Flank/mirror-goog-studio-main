@@ -17,6 +17,7 @@
 package com.android.tools.utp.plugins.deviceprovider.gradle
 
 import com.android.testutils.MockitoKt.any
+import com.android.testutils.MockitoKt.argThat
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
@@ -29,6 +30,8 @@ import com.google.testing.platform.proto.api.config.EnvironmentProto
 import com.google.testing.platform.proto.api.config.SetupProto
 import com.google.testing.platform.proto.api.core.PathProto
 import com.google.testing.platform.runtime.android.device.AndroidDevice
+import java.util.function.Supplier
+import java.util.logging.Logger
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
@@ -40,7 +43,8 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
 
 /**
  * Tests for [GradleManagedDeviceLauncher]
@@ -56,6 +60,9 @@ class GradleManagedAndroidDeviceLauncherTest {
     @get:Rule
     val tempFolder = TemporaryFolder()
 
+    @get:Rule
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+
     lateinit var logDir: String
 
     @Mock
@@ -69,6 +76,9 @@ class GradleManagedAndroidDeviceLauncherTest {
 
     @Mock
     lateinit var deviceController: DeviceController
+
+    @Mock
+    lateinit var mockLogger: Logger
 
     private lateinit var managedDeviceLauncher: GradleManagedAndroidDeviceLauncher
 
@@ -93,7 +103,6 @@ class GradleManagedAndroidDeviceLauncherTest {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
         logDir = tempFolder.newFolder().absolutePath
         androidDevice = null
         `when`(
@@ -117,7 +126,8 @@ class GradleManagedAndroidDeviceLauncherTest {
                 adbManager,
                 emulatorHandle,
                 deviceControllerFactory,
-                skipRetryDelay = true
+                skipRetryDelay = true,
+                mockLogger
         )
     }
 
@@ -324,6 +334,34 @@ class GradleManagedAndroidDeviceLauncherTest {
 
         verify(emulatorHandle).closeInstance()
         verify(adbManager).closeDevice("emulator-5558")
+    }
+
+    @Test
+    fun logAllAvailableDevices() {
+        `when`(adbManager.getAllSerials()).thenReturn(
+            listOf("emulator-5554", "emulator-5556")
+        )
+        `when`(adbManager.getId("emulator-5554")).thenReturn("myapp_myDeviceAndroidVariantTest")
+        `when`(adbManager.getId("emulator-5556")).thenReturn(deviceId)
+        `when`(adbManager.isBootLoaded("emulator-5556")).thenReturn(true)
+
+        managedDeviceLauncher.configure(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
+        )
+
+        managedDeviceLauncher.provideDevice()
+
+        verify(mockLogger).info(argThat<Supplier<String>> {
+            it.get().contains("""
+                Finding a test device myapp_myDeviceAndroidDebugTest (attempt 1/6).
+                Found 2 devices:
+                myapp_myDeviceAndroidVariantTest(emulator-5554)
+                myapp_myDeviceAndroidDebugTest(emulator-5556)
+                """.trimIndent())
+        })
     }
 
     private fun makeConfigFromDeviceProviderConfig(
