@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /*
  * A snapshot of all of the heaps, and related meta-data, for the runtime at a given instant.
@@ -49,8 +50,6 @@ public class Snapshot extends Capture {
         RESOLVING_REFERENCES(new ComputationProgress("Resolving references...", 0), 0.1, 0.2),
         COMPUTING_SHORTEST_DISTANCE(new ComputationProgress("Computing depth to nodes...", 0), 0.3,
                 0.03),
-        COMPUTING_TOPOLOGICAL_SORT(new ComputationProgress("Performing topological sorting...", 0),
-                0.33, 0.30),
         COMPUTING_DOMINATORS(new ComputationProgress("Calculating dominators...", 0), 0.63, 0.35),
         COMPUTING_RETAINED_SIZES(new ComputationProgress("Calculating retained sizes...", 0), 0.98,
                 0.02);
@@ -107,8 +106,6 @@ public class Snapshot extends Capture {
     //  List of individual stack frames
     @NonNull
     TLongObjectHashMap<StackFrame> mFrames = new TLongObjectHashMap<StackFrame>();
-
-    private List<Instance> mTopSort;
 
     private DominatorsBase mDominators;
 
@@ -462,11 +459,16 @@ public class Snapshot extends Capture {
         ShortestDistanceVisitor shortestDistanceVisitor = new ShortestDistanceVisitor();
         shortestDistanceVisitor.doVisit(getGCRoots());
 
-        mDominatorComputationStage = DominatorComputationStage.COMPUTING_TOPOLOGICAL_SORT;
-        mTopSort = TopologicalSort.compute(getGCRoots());
-        for (Instance instance : mTopSort) {
-            instance.dedupeReferences();
-        }
+        forEachReachableInstance(Instance::dedupeReferences);
+    }
+
+    private void forEachReachableInstance(Consumer<Instance> action) {
+        new NonRecursiveVisitor() {
+            @Override
+            protected void defaultAction(Instance instance) {
+                action.accept(instance);
+            }
+        }.doVisit(getGCRoots());
     }
 
     @VisibleForTesting
@@ -498,17 +500,14 @@ public class Snapshot extends Capture {
 
     @NonNull
     public List<Instance> getReachableInstances() {
-        List<Instance> result = new ArrayList<Instance>(mTopSort.size());
-        for (Instance node : mTopSort) {
-            if (node.getImmediateDominator() != null) {
-                result.add(node);
-            }
-        }
+        List<Instance> result = new ArrayList<>();
+        forEachReachableInstance(
+                inst -> {
+                    if (inst.getImmediateDominator() != null) {
+                        result.add(inst);
+                    }
+                });
         return result;
-    }
-
-    public List<Instance> getTopologicalOrdering() {
-        return mTopSort;
     }
 
     public final void dumpInstanceCounts() {

@@ -32,14 +32,8 @@ public abstract class DominatorsBase {
 
     protected Snapshot mSnapshot;
 
-    @NonNull
-    protected List<Instance> mTopSort;
-
     protected DominatorsBase(@NonNull Snapshot snapshot) {
         mSnapshot = snapshot;
-        assert mSnapshot.getTopologicalOrdering() != null;
-        mTopSort = mSnapshot.getTopologicalOrdering();
-
         // Initialize retained sizes for all classes and objects, including unreachable ones.
         for (Heap heap : mSnapshot.getHeaps()) {
             for (Instance instance : heap.getClasses()) {
