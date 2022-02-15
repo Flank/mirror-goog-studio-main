@@ -59,6 +59,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class DeviceMonitor implements ClientTracker {
     private final AndroidDebugBridge mServer;
+    private final MonitorErrorHandler mMonitorErrorHandler;
     private DeviceListMonitorTask mDeviceListMonitorTask;
     @Nullable private Thread mDeviceListMonitorThread;
     @Nullable private DeviceClientMonitorTask myDeviceClientMonitorTask;
@@ -76,8 +77,10 @@ public final class DeviceMonitor implements ClientTracker {
      *
      * @param server the running {@link AndroidDebugBridge}.
      */
-    public DeviceMonitor(@NonNull AndroidDebugBridge server) {
+    public DeviceMonitor(
+            @NonNull AndroidDebugBridge server, @NonNull MonitorErrorHandler monitorErrorHandler) {
         mServer = server;
+        mMonitorErrorHandler = monitorErrorHandler;
     }
 
     /** Starts the monitoring. */
@@ -366,7 +369,12 @@ public final class DeviceMonitor implements ClientTracker {
 
     private class DeviceListUpdateListener implements DeviceListMonitorTask.UpdateListener {
         @Override
-        public void connectionError(@NonNull Exception e) {
+        public void initializationError(@NonNull Exception e) {
+            mMonitorErrorHandler.initializationError(e);
+        }
+
+        @Override
+        public void listFetchError(@NonNull Exception e) {
             // TODO(b/37104675): Clearing the device list in response to an exception is probably the wrong thing to do.
             ImmutableList<DeviceImpl> devices;
             synchronized (mDevicesGuard) {
@@ -444,5 +452,9 @@ public final class DeviceMonitor implements ClientTracker {
 
             return null;
         }
+    }
+
+    public interface MonitorErrorHandler {
+        void initializationError(@NonNull Exception e);
     }
 }
