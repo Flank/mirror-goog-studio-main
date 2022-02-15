@@ -123,9 +123,10 @@ fun compileResource(
     compileFunction(pathData, outputDirectory, options, logger)
   } catch (e: Exception) {
     logger?.info("Failed to compile file", blameSource(pathData.source))
-    throw ResourceCompilationException("Resource compilation failed. Check logs for details.",
-      e
-    )
+      val message =
+          "Resource compilation failed (${e.message}. Cause: ${e.cause}). " +
+                  "Check logs for more details."
+      throw ResourceCompilationException(message, e)
   }
 }
 
@@ -318,10 +319,15 @@ private fun compileXml(
 
   pathData.file.inputStream().use {
     val xmlProcessor = XmlProcessor(source = pathData.source, logger = logger)
-    if (!xmlProcessor.process(fileToProcess, it)) {
-      logger?.warning("Failure to compile the resource file.", blameSource(pathData.source))
-      error("Failed to compile resource file.")
-    }
+      try {
+          xmlProcessor.process(fileToProcess, it)
+      } catch (e: Exception) {
+          throw ResourceCompilationException(
+              "Failed to compile resource file: " +
+                      logger?.getOutputSource(blameSource(pathData.source)),
+              e
+          )
+      }
 
     val container =
       Container(outputFile.outputStream(), xmlProcessor.xmlResources.size)

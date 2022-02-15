@@ -69,6 +69,24 @@ class MessageRewriteWithJvmResCompilerTest(private val useRelativeResPaths: Bool
         }
     }
 
+    @Test
+    fun testInvalidXmlFileReportsSourceFile() {
+        val executor = gradleTaskExecutor()
+        TemporaryProjectModification.doTest(project) { it: TemporaryProjectModification ->
+            it.replaceInFile(
+                "app/src/main/res/layout/main.xml",
+                "</LinearLayout>", ""
+            )
+            val result = executor.expectFailure().run("assembleDebug")
+            result.stderr.use { stderr ->
+                assertThat(stderr)
+                    .contains(
+                        FileUtils.join("app", "src", "main", "res", "layout", "main.xml")
+                    )
+            }
+        }
+    }
+
     private fun gradleTaskExecutor(): GradleTaskExecutor {
         return project.executor()
                 .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, useRelativeResPaths)
