@@ -61,7 +61,7 @@ class KotlinNullnessAnnotationDetector : Detector(), SourceCodeScanner {
             severity = Severity.ERROR,
             androidSpecific = true,
             implementation = IMPLEMENTATION,
-            enabledByDefault = false
+            enabledByDefault = true
         )
 
         const val ANDROIDX_NULLABLE = "androidx.annotation.Nullable"
