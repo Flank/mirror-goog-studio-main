@@ -1860,13 +1860,13 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.squareup.okhttp3.okhttp_3.3.0",
-    pom = "repository/com/squareup/okhttp3/okhttp/3.3.0/okhttp-3.3.0.pom",
+    name = "com.squareup.okhttp3.okhttp_3.12.0",
+    pom = "repository/com/squareup/okhttp3/okhttp/3.12.0/okhttp-3.12.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okhttp3/okhttp/3.3.0",
-    parent = "com.squareup.okhttp3.parent_3.3.0",
+    repo_path = "com/squareup/okhttp3/okhttp/3.12.0",
+    parent = "com.squareup.okhttp3.parent_3.12.0",
     deps = [
-        "com.squareup.okio.okio_1.8.0",
+        "com.squareup.okio.okio_1.15.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -1874,19 +1874,19 @@ maven_artifact(
 maven_import(
     name = "com.squareup.okhttp3.okhttp",
     classifiers = [],
-    parent = "com.squareup.okhttp3.parent_3.3.0",
+    parent = "com.squareup.okhttp3.parent_3.12.0",
     jars = [
-        "repository/com/squareup/okhttp3/okhttp/3.3.0/okhttp-3.3.0.jar"
+        "repository/com/squareup/okhttp3/okhttp/3.12.0/okhttp-3.12.0.jar"
     ],
     exports = [
         "com.squareup.okio.okio",
     ],
     original_deps = [
-        "com.squareup.okio.okio_1.8.0",
+        "com.squareup.okio.okio_1.15.0",
     ],
-    pom = "repository/com/squareup/okhttp3/okhttp/3.3.0/okhttp-3.3.0.pom",
+    pom = "repository/com/squareup/okhttp3/okhttp/3.12.0/okhttp-3.12.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okhttp3/okhttp/3.3.0",
+    repo_path = "com/squareup/okhttp3/okhttp/3.12.0",
     visibility = ["//visibility:public"],
 )
 
@@ -1923,25 +1923,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.squareup.okio.okio_1.13.0",
-    pom = "repository/com/squareup/okio/okio/1.13.0/okio-1.13.0.pom",
+    name = "com.squareup.okio.okio_1.15.0",
+    pom = "repository/com/squareup/okio/okio/1.15.0/okio-1.15.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okio/okio/1.13.0",
-    parent = "com.squareup.okio.okio-parent_1.13.0",
+    repo_path = "com/squareup/okio/okio/1.15.0",
+    parent = "com.squareup.okio.okio-parent_1.15.0",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.squareup.okio.okio",
     classifiers = [],
-    parent = "com.squareup.okio.okio-parent_1.13.0",
+    parent = "com.squareup.okio.okio-parent_1.15.0",
     jars = [
-        "repository/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+        "repository/com/squareup/okio/okio/1.15.0/okio-1.15.0.jar"
     ],
     original_deps = [],
-    pom = "repository/com/squareup/okio/okio/1.13.0/okio-1.13.0.pom",
+    pom = "repository/com/squareup/okio/okio/1.15.0/okio-1.15.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okio/okio/1.13.0",
+    repo_path = "com/squareup/okio/okio/1.15.0",
     visibility = ["//visibility:public"],
 )
 
@@ -24123,20 +24123,20 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.squareup.okio.okio_1.13.0",
+    pom = "repository/com/squareup/okio/okio/1.13.0/okio-1.13.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/squareup/okio/okio/1.13.0",
+    parent = "com.squareup.okio.okio-parent_1.13.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.squareup.okio.okio_1.6.0",
     pom = "repository/com/squareup/okio/okio/1.6.0/okio-1.6.0.pom",
     repo_root_path = "repository",
     repo_path = "com/squareup/okio/okio/1.6.0",
     parent = "com.squareup.okio.okio-parent_1.6.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.squareup.okio.okio_1.8.0",
-    pom = "repository/com/squareup/okio/okio/1.8.0/okio-1.8.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/squareup/okio/okio/1.8.0",
-    parent = "com.squareup.okio.okio-parent_1.8.0",
     visibility = ["//visibility:public"],
 )
 
@@ -30140,10 +30140,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.squareup.okhttp3.parent_3.3.0",
-    pom = "repository/com/squareup/okhttp3/parent/3.3.0/parent-3.3.0.pom",
+    name = "com.squareup.okhttp3.parent_3.12.0",
+    pom = "repository/com/squareup/okhttp3/parent/3.12.0/parent-3.12.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okhttp3/parent/3.3.0",
+    repo_path = "com/squareup/okhttp3/parent/3.12.0",
     parent = "org.sonatype.oss.oss-parent_7",
 )
 
@@ -30164,18 +30164,18 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.squareup.okio.okio-parent_1.6.0",
-    pom = "repository/com/squareup/okio/okio-parent/1.6.0/okio-parent-1.6.0.pom",
+    name = "com.squareup.okio.okio-parent_1.15.0",
+    pom = "repository/com/squareup/okio/okio-parent/1.15.0/okio-parent-1.15.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okio/okio-parent/1.6.0",
+    repo_path = "com/squareup/okio/okio-parent/1.15.0",
     parent = "org.sonatype.oss.oss-parent_7",
 )
 
 maven_artifact(
-    name = "com.squareup.okio.okio-parent_1.8.0",
-    pom = "repository/com/squareup/okio/okio-parent/1.8.0/okio-parent-1.8.0.pom",
+    name = "com.squareup.okio.okio-parent_1.6.0",
+    pom = "repository/com/squareup/okio/okio-parent/1.6.0/okio-parent-1.6.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/squareup/okio/okio-parent/1.8.0",
+    repo_path = "com/squareup/okio/okio-parent/1.6.0",
     parent = "org.sonatype.oss.oss-parent_7",
 )
 

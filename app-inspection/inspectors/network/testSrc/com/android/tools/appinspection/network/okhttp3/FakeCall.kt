@@ -20,12 +20,17 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
 import okhttp3.Response
+import okio.Timeout
 
 class FakeCall(
     private val client: FakeOkHttp3Client,
     private val request: Request,
     private val response: Response
 ) : Call {
+
+    override fun clone(): Call {
+        TODO("Not yet implemented")
+    }
 
     override fun request(): Request {
         return request
@@ -49,6 +54,10 @@ class FakeCall(
     override fun isCanceled(): Boolean {
         // does not matter
         return false
+    }
+
+    override fun timeout(): Timeout {
+        TODO("Not yet implemented")
     }
 
     fun executeThenBlowUp(): Response {
