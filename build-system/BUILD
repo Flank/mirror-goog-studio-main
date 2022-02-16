@@ -256,10 +256,6 @@ maven_repository(
     # Don't add new targets here, see above for how to migrate
     visibility = [
         "//tools/adt/idea/android:__pkg__",
-        "//tools/adt/idea/android-lang-databinding:__pkg__",
-        "//tools/adt/idea/android-lint:__pkg__",
-        "//tools/adt/idea/android-npw:__pkg__",
-        "//tools/adt/idea/android-templates:__pkg__",
         "//tools/adt/idea/android-uitests:__pkg__",
         "//tools/adt/idea/app-inspection/ide:__pkg__",
         "//tools/adt/idea/build-attribution:__pkg__",
