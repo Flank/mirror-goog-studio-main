@@ -524,7 +524,7 @@ pattes->patates
 pattis->patates
 peçeta->peçete
 penbe->pembe
-pelisilin->penisilin
+pelisilin->penilisin
 poaça->poğaça
 pohaça->poğaça
 poğçe->poğaça
