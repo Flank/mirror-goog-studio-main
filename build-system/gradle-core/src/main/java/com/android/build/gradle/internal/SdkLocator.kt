@@ -233,9 +233,9 @@ It is recommended to use ANDROID_HOME as other methods are deprecated
             val filePath =
                 File(sourceSet.projectRoot, SdkConstants.FN_LOCAL_PROPERTIES).absolutePath
             val message =
-                "SDK location not found. Define location with an ANDROID_SDK_ROOT environment" +
-                        " variable or by setting the sdk.dir path in your project's local" +
-                        " properties file at '$filePath'."
+                "SDK location not found. Define a valid SDK location with an ANDROID_HOME" +
+                        " environment variable or by setting the sdk.dir path in your project's" +
+                        " local properties file at '$filePath'."
             issueReporter.reportError(IssueReporter.Type.SDK_NOT_SET, message, filePath)
 
             return it
