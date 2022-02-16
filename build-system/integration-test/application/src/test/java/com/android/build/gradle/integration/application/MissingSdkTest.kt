@@ -40,7 +40,7 @@ class MissingSdkTest {
         val exception = testProject.executeExpectingFailure("assembleDebug")
         val rootCause = getRootCause(exception)
         assertThat(rootCause.message).isEqualTo(
-            "SDK location not found. Define location with an ANDROID_SDK_ROOT " +
+            "SDK location not found. Define a valid SDK location with an ANDROID_HOME " +
                     "environment variable or by setting the sdk.dir path in " +
                     "your project's local properties file at '$localPropertiesPath'."
         )
