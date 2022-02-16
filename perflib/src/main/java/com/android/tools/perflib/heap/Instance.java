@@ -46,16 +46,9 @@ public abstract class Instance {
     //  O+ format only. The registered native size associated with this object.
     long mNativeSize;
 
-    //  Another identifier for this Instance, that we computed during the analysis phase.
-    int mTopologicalOrder;
-
     int mDistanceToGcRoot = Integer.MAX_VALUE;
 
     Instance mNextInstanceToGcRoot = null;
-
-    //  The immediate dominator of this instance, or null if not reachable from any GC roots.
-    @Nullable
-    private Instance mImmediateDominator;
 
     //  The retained size of this object, indexed by heap (default, image, app, zygote).
     //  Intuitively, this represents the amount of memory that could be reclaimed in each heap if
@@ -142,23 +135,6 @@ public abstract class Instance {
 
     public Heap getHeap() {
         return mHeap;
-    }
-
-    public int getTopologicalOrder() {
-        return mTopologicalOrder;
-    }
-
-    public void setTopologicalOrder(int topologicalOrder) {
-        mTopologicalOrder = topologicalOrder;
-    }
-
-    @Nullable
-    public Instance getImmediateDominator() {
-        return mImmediateDominator;
-    }
-
-    public void setImmediateDominator(@NonNull Instance dominator) {
-        mImmediateDominator = dominator;
     }
 
     public int getDistanceToGcRoot() {

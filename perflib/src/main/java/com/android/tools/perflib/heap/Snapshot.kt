@@ -231,17 +231,14 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
         // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
         // It's important to traverse in reverse topological order
         for (i in instances.indices.reversed()) {
-            val node = instances[i]
-            val dom = immDom[i]
-            node?.setImmediateDominator(dom ?: SENTINEL_ROOT)
-            dom?.addRetainedSizes(node)
+            immDom[i]?.addRetainedSizes(instances[i])
         }
     }
 
     private inline fun forEachReachableInstance(crossinline visit: (Instance) -> Unit) =
         object : NonRecursiveVisitor() {
             override fun defaultAction(instance: Instance) {
-                if (instance.immediateDominator != null) {
+                if (instance.isReachable) {
                     visit(instance)
                 }
             }
