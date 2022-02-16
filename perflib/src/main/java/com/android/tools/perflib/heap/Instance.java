@@ -48,8 +48,6 @@ public abstract class Instance {
 
     int mDistanceToGcRoot = Integer.MAX_VALUE;
 
-    Instance mNextInstanceToGcRoot = null;
-
     //  The retained size of this object, indexed by heap (default, image, app, zygote).
     //  Intuitively, this represents the amount of memory that could be reclaimed in each heap if
     //  the instance were removed.
@@ -139,17 +137,9 @@ public abstract class Instance {
         return mDistanceToGcRoot;
     }
 
-    public Instance getNextInstanceToGcRoot() {
-        return mNextInstanceToGcRoot;
-    }
-
     public void setDistanceToGcRoot(int newDistance) {
         assert (newDistance < mDistanceToGcRoot);
         mDistanceToGcRoot = newDistance;
-    }
-
-    public void setNextInstanceToGcRoot(Instance instance) {
-        mNextInstanceToGcRoot = instance;
     }
 
     /**

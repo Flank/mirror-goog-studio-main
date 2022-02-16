@@ -17,12 +17,16 @@
 package com.android.tools.perflib.heap.analysis;
 
 import com.android.testutils.TestResources;
-import com.android.tools.perflib.heap.*;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
-
+import com.android.tools.perflib.heap.ClassObj;
+import com.android.tools.perflib.heap.Heap;
+import com.android.tools.perflib.heap.Instance;
+import com.android.tools.perflib.heap.Snapshot;
+import com.android.tools.perflib.heap.SnapshotBuilder;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.util.stream.Stream;
 
 // These are now tests on computing retained sizes and path-to-gc, rather than the lower-level
 // dominator algorithm
@@ -261,8 +265,10 @@ public class DominatorsTest extends TestCase {
      */
     private void assertParentPathToGc(int node, int... parents) {
         for (int parent : parents) {
-            Instance parentInstance = mSnapshot.findInstance(node).getNextInstanceToGcRoot();
-            if (parentInstance != null && parentInstance.getId() == parent) {
+            Instance instance = mSnapshot.findInstance(node);
+            Stream<Instance> parentInstances = instance.getHardReverseReferences().stream()
+                    .filter(next -> next.getDistanceToGcRoot() < instance.getDistanceToGcRoot());
+            if (parentInstances.anyMatch(p -> p.getId() == parent)) {
                 return;
             }
         }
