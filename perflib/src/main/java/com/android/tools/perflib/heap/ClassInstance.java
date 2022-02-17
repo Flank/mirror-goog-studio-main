@@ -65,9 +65,7 @@ public class ClassInstance extends Instance {
             if (fieldValue.getValue() instanceof Instance) {
                 Instance referencedInstance = (Instance)fieldValue.getValue();
                 referencedInstance.addReverseReference(fieldValue.getField(), this);
-                if (getIsSoftReference() && fieldValue.getField().getName().equals("referent")) {
-                    mSoftForwardReference = referencedInstance;
-                } else {
+                if (!getIsSoftReference() || !fieldValue.getField().getName().equals("referent")) {
                     mHardForwardReferences.add(referencedInstance);
                 }
             }

@@ -58,8 +58,6 @@ public abstract class Instance {
 
     protected final ArrayList<Instance> mHardForwardReferences = new ArrayList<>();
 
-    protected Instance mSoftForwardReference = null;
-
     //  List of all objects that hold a live reference to this object
     protected final ArrayList<Instance> mHardReverseReferences = new ArrayList<>();
 
@@ -217,11 +215,6 @@ public abstract class Instance {
     @NonNull
     public ArrayList<Instance> getHardForwardReferences() {
         return mHardForwardReferences;
-    }
-
-    @NonNull
-    public Instance getSoftForwardReference() {
-        return mSoftForwardReference;
     }
 
     @NonNull
