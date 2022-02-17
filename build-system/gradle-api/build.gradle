@@ -13,6 +13,11 @@ dependencies {
     compileOnly gradleApi()
     compileOnly project(':base:builder-model') // Only present for legacy reasons.
 
+    metalavaTestImplementation libs.com.android.tools.testutils
+    metalavaTestImplementation libs.guava
+    metalavaTestImplementation libs.junit
+    metalavaTestImplementation libs.kotlin_test
+
     testImplementation libs.junit
     testImplementation libs.kotlin_test
     testImplementation libs.com.android.tools.testutils

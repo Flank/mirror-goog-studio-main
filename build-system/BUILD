@@ -524,3 +524,34 @@ gradle_build(
     tasks = [":base:gradle-api:distMetalavaApiZip"],
     visibility = ["//visibility:public"],
 )
+
+gradle_test(
+    name = "android_gradle_plugin_gradle_api_metalava_test",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    # keep sorted
+    data = [
+        ":agp_gradle_build_files",
+        "//prebuilts/studio/jdk",
+        "//tools:agp_gradle_build_files",
+        "//tools/base/build-system/builder-model:agp_gradle_build_files",
+        "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
+        "//tools/base/build-system/gradle-api:agp_gradle_build_files",
+        "//tools/base/build-system/gradle-api:agp_gradle_metalava_test_files",
+        "//tools/buildSrc:agp_gradle_build_files",
+        "//tools/buildSrc/base:agp_gradle_build_files",
+    ],
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    # keep sorted
+    repos = [
+        ":android_gradle_plugin_gradle_api_test_repository",
+        ":metalava_tool",
+        "//tools/base:agp_artifacts",
+        "//tools/base:agp_dependencies",
+    ],
+    tasks = [":base:gradle-api:metalavaTest"],
+    test_output_dir = "build/base/gradle-api/build/test-results/metalavaTest",
+    visibility = ["//visibility:public"],
+)
