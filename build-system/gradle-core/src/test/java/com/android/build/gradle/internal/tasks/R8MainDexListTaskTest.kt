@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
-import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
@@ -31,8 +29,6 @@ import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.file.RegularFile
-import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -50,20 +46,11 @@ class R8MainDexListTaskTest {
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var outputDir: Path
     private lateinit var outputProguard: RegularFile
-    private lateinit var workers: WorkerExecutor
-    private lateinit var instantiatorTask: AndroidVariantTask
 
     @Before
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
         outputProguard = Mockito.mock(RegularFile::class.java)
-        with(ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()) {
-            workers = FakeGradleWorkExecutor(
-                objects, tmp.newFolder(), listOf()
-            )
-            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
-            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
-        }
     }
 
     @Test
@@ -80,8 +67,6 @@ class R8MainDexListTaskTest {
         }
 
         runR8(
-            workers = workers,
-            instantiatorTask = instantiatorTask,
             classes = listOf(classes.toFile()),
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),
@@ -120,8 +105,6 @@ class R8MainDexListTaskTest {
         }
 
         runR8(
-            workers = workers,
-            instantiatorTask = instantiatorTask,
             classes = listOf(classes.toFile()),
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),
@@ -148,8 +131,6 @@ class R8MainDexListTaskTest {
 }
 
 fun runR8(
-    workers: WorkerExecutor,
-    instantiatorTask: AndroidVariantTask,
     classes: List<File>,
     resources: List<File>,
     referencedInputs: List<File> = listOf(),
@@ -174,7 +155,6 @@ fun runR8(
     val output: File = outputDir.resolve("main").toFile()
 
     R8Task.shrink(
-        workerExecutor = workers,
         bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
         minSdkVersion = minSdkVersion,
         isDebuggable = true,
@@ -186,7 +166,7 @@ fun runR8(
         inputProguardMapping = null,
         proguardConfigurationFiles = listOf(),
         proguardConfigurations = proguardConfigurations,
-        variantType = VariantTypeImpl.BASE_APK,
+        isAar = VariantTypeImpl.BASE_APK.isAar,
         errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
         dexingType = dexingType,
         useFullR8 = false,
@@ -206,7 +186,6 @@ fun runR8(
         featureDexDir = featureDexDir,
         featureJavaResourceOutputDir = featureJavaResourceOutputDir,
         libConfiguration = null,
-        outputKeepRulesDir = null,
-        instantiator = instantiatorTask
+        outputKeepRulesDir = null
     )
 }

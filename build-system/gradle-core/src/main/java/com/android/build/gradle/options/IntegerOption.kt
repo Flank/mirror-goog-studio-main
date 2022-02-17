@@ -70,6 +70,11 @@ enum class IntegerOption(
     AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize", ApiStage.Experimental),
 
     /**
+     * Max number of R8 workers to run at once
+     */
+    R8_MAX_WORKERS("android.r8.maxWorkers", ApiStage.Experimental),
+
+    /**
      * Flags for Android Test Retention
      * >=1: enable Android Test Retention and set it as maximum number of snapshots.
      * 0: disable Android Test Retention.

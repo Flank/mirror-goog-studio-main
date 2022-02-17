@@ -77,8 +77,6 @@ class R8Test(val r8OutputType: R8OutputType) {
     private lateinit var featureDexDir: File
     private lateinit var featureJavaResourceOutputDir: File
     private lateinit var outputProguard: RegularFile
-    private lateinit var workers: WorkerExecutor
-    private lateinit var instantiatorTask: AndroidVariantTask
 
     companion object {
         @Parameterized.Parameters
@@ -92,13 +90,6 @@ class R8Test(val r8OutputType: R8OutputType) {
         featureDexDir = tmp.newFolder()
         featureJavaResourceOutputDir = tmp.newFolder()
         outputProguard = Mockito.mock(RegularFile::class.java)
-        with(ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()) {
-            workers = FakeGradleWorkExecutor(
-                objects, tmp.newFolder(), listOf()
-            )
-            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
-            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
-        }
     }
 
     @Test
@@ -726,7 +717,6 @@ class R8Test(val r8OutputType: R8OutputType) {
             }
 
         R8Task.shrink(
-            workerExecutor = workers,
             bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
@@ -740,7 +730,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             inputProguardMapping = null,
             proguardConfigurationFiles = proguardRulesFiles,
             proguardConfigurations = proguardConfigurations,
-            variantType = variantType,
+            isAar = variantType.isAar,
             errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
             dexingType = DexingType.NATIVE_MULTIDEX,
             useFullR8 = useFullR8,
@@ -761,7 +751,6 @@ class R8Test(val r8OutputType: R8OutputType) {
             featureJavaResourceOutputDir = featureJavaResourceOutputDir,
             libConfiguration = libConfiguration,
             outputKeepRulesDir = outputKeepRulesDir,
-            instantiator = instantiatorTask
         )
     }
 

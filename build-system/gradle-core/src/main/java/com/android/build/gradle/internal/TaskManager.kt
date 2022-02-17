@@ -92,6 +92,7 @@ import com.android.build.gradle.internal.scope.getDirectories
 import com.android.build.gradle.internal.scope.getRegularFiles
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
+import com.android.build.gradle.internal.services.R8ParallelBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
@@ -183,6 +184,7 @@ import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask
 import com.android.build.gradle.tasks.BundleAar
@@ -2777,6 +2779,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     AndroidArtifacts.ArtifactType.FEATURE_SHRUNK_JAVA_RES,
                     DOT_JAR)
         }
+
+        R8ParallelBuildService.RegistrationAction(
+            project,
+            creationConfig.services.projectOptions.get(IntegerOption.R8_MAX_WORKERS)
+        ).execute()
         return taskFactory.register(
                 R8Task.CreationAction(creationConfig, isTestApplication, addCompileRClass))
     }
