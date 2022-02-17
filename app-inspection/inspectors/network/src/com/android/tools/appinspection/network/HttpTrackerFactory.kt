@@ -22,7 +22,7 @@ import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
 /**
  * This is the factory for the [HttpConnectionTracker] instances.
  */
-class HttpTrackerFactory(private val inspectorConnection: androidx.inspection.Connection) {
+interface HttpTrackerFactory {
 
     /**
      * Starts tracking an HTTP request based on the provided url.
@@ -31,7 +31,14 @@ class HttpTrackerFactory(private val inspectorConnection: androidx.inspection.Co
      *
      * Returns an [HttpConnectionTracker] which can be used to track request and response details.
      */
-    fun trackConnection(url: String, callstack: String): HttpConnectionTracker {
+    fun trackConnection(url: String, callstack: String): HttpConnectionTracker
+}
+
+class HttpTrackerFactoryImpl(
+    private val inspectorConnection: androidx.inspection.Connection
+) : HttpTrackerFactory {
+
+    override fun trackConnection(url: String, callstack: String): HttpConnectionTracker {
         return ConnectionTracker(
             url, callstack,
             ConnectionReporter.createConnectionTracker(inspectorConnection)

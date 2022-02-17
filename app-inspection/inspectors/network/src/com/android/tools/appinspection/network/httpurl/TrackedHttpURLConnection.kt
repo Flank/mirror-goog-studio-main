@@ -179,7 +179,7 @@ class TrackedHttpURLConnection(
         }
     }
 
-    val errorStream: InputStream
+    val errorStream: InputStream?
         get() = wrapped.errorStream
 
     val permission: Permission
@@ -201,7 +201,7 @@ class TrackedHttpURLConnection(
         return wrapped.usingProxy()
     }
 
-    val contentEncoding: String
+    val contentEncoding: String?
         get() = wrapped.contentEncoding
 
     var instanceFollowRedirects: Boolean
@@ -329,7 +329,7 @@ class TrackedHttpURLConnection(
             return interceptedResponse.responseMessage
         }
 
-    fun getHeaderField(pos: Int): String {
+    fun getHeaderField(pos: Int): String? {
         tryTrackResponse()
         return wrapped.getHeaderField(pos)
     }
@@ -340,7 +340,7 @@ class TrackedHttpURLConnection(
             return interceptedResponse.responseHeaders
         }
 
-    fun getHeaderField(key: String): String {
+    fun getHeaderField(key: String): String? {
         tryTrackResponse()
         return wrapped.getHeaderField(key)
     }
@@ -350,7 +350,7 @@ class TrackedHttpURLConnection(
         return wrapped.getHeaderFieldInt(field, defaultValue)
     }
 
-    fun getHeaderFieldKey(posn: Int): String {
+    fun getHeaderFieldKey(posn: Int): String? {
         tryTrackResponse()
         return wrapped.getHeaderFieldKey(posn)
     }
@@ -386,7 +386,7 @@ class TrackedHttpURLConnection(
             return wrapped.content
         }
 
-    fun getContent(types: Array<Class<*>>): Any {
+    fun getContent(types: Array<Class<*>>): Any? {
         tryTrackResponse()
         return wrapped.getContent(types)
     }
@@ -403,7 +403,7 @@ class TrackedHttpURLConnection(
             return wrapped.contentLengthLong
         }
 
-    val contentType: String
+    val contentType: String?
         get() {
             tryTrackResponse()
             return wrapped.contentType

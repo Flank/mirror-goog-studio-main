@@ -37,7 +37,7 @@ class HttpURLConnectionWrapper(
     private val trackedConnection: TrackedHttpURLConnection =
         TrackedHttpURLConnection(wrapped, callstack, trackerFactory, interceptionRuleService)
 
-    override fun getHeaderFieldKey(n: Int): String {
+    override fun getHeaderFieldKey(n: Int): String? {
         return trackedConnection.getHeaderFieldKey(n)
     }
 
@@ -53,7 +53,7 @@ class HttpURLConnectionWrapper(
         trackedConnection.setChunkedStreamingMode(chunklen)
     }
 
-    override fun getHeaderField(n: Int): String {
+    override fun getHeaderField(n: Int): String? {
         return trackedConnection.getHeaderField(n)
     }
 
@@ -89,7 +89,7 @@ class HttpURLConnectionWrapper(
         return trackedConnection.permission
     }
 
-    override fun getErrorStream(): InputStream {
+    override fun getErrorStream(): InputStream? {
         return trackedConnection.errorStream
     }
 
@@ -121,11 +121,11 @@ class HttpURLConnectionWrapper(
         return trackedConnection.contentLengthLong
     }
 
-    override fun getContentType(): String {
+    override fun getContentType(): String? {
         return trackedConnection.contentType
     }
 
-    override fun getContentEncoding(): String {
+    override fun getContentEncoding(): String? {
         return trackedConnection.contentEncoding
     }
 
@@ -141,7 +141,7 @@ class HttpURLConnectionWrapper(
         return trackedConnection.lastModified
     }
 
-    override fun getHeaderField(name: String): String {
+    override fun getHeaderField(name: String): String? {
         return trackedConnection.getHeaderField(name)
     }
 
@@ -161,7 +161,7 @@ class HttpURLConnectionWrapper(
         return trackedConnection.content
     }
 
-    override fun getContent(classes: Array<Class<*>>): Any {
+    override fun getContent(classes: Array<Class<*>>): Any? {
         return trackedConnection.getContent(classes)
     }
 

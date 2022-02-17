@@ -1,0 +1,115 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.appinspection.network
+
+import com.android.tools.appinspection.network.httpurl.HttpURLConnectionWrapper
+import com.android.tools.appinspection.network.httpurl.HttpsURLConnectionWrapper
+import com.android.tools.appinspection.network.rules.InterceptionRule
+import com.android.tools.appinspection.network.rules.InterceptionRuleService
+import com.android.tools.appinspection.network.rules.NetworkConnection
+import com.android.tools.appinspection.network.rules.NetworkResponse
+import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.cert.Certificate
+import javax.net.ssl.HttpsURLConnection
+
+class WrappedUrlConnectionTest {
+
+    // Checks the handcrafted Kotlin wrapper around HttpUrlConnection and HttpsUrlConnection
+    // returns null without throwing an exception (only for certain APIs).
+    @Test
+    fun verifyNullableHttpUrlConnectionApi() {
+        // Setup
+        val factory = object : HttpTrackerFactory {
+            override fun trackConnection(url: String, callstack: String): HttpConnectionTracker {
+                return object : HttpConnectionTracker {
+                    override fun disconnect() = Unit
+                    override fun error(message: String) = Unit
+                    override fun trackRequestBody(stream: OutputStream) = stream
+                    override fun trackRequest(method: String, fields: Map<String, List<String>>
+                    ) = Unit
+                    override fun trackResponse(
+                        response: String,
+                        fields: Map<String, List<String>>
+                    ) = Unit
+                    override fun trackResponseBody(stream: InputStream) = stream
+                }
+            }
+        }
+        val interceptionService = object : InterceptionRuleService {
+            override fun interceptResponse(
+                connection: NetworkConnection,
+                response: NetworkResponse
+            ) = response
+            override fun addRule(ruleId: Int, rule: InterceptionRule) = Unit
+            override fun removeRule(ruleId: Int) = Unit
+        }
+
+        // Test WrappedHttpsUrlConnection
+        val httpsConnection = object : HttpsURLConnection(URL("https://www.google.com")) {
+            override fun connect() = Unit
+            override fun disconnect() = Unit
+            override fun usingProxy() = false
+            override fun getCipherSuite() = ""
+            override fun getLocalCertificates(): Array<Certificate>? = null
+            override fun getServerCertificates(): Array<Certificate> = emptyArray()
+            override fun getHeaderFieldKey(n: Int) = null
+            override fun getHeaderField(name: String?) = null
+            override fun getErrorStream() = null
+            override fun getHeaderField(n: Int) = null
+            override fun getContentType() = null
+            override fun getContentEncoding() = null
+            override fun getContent(classes: Array<out Class<Any>>?) = null
+        }
+        val httpsWrapper = HttpsURLConnectionWrapper(
+            httpsConnection, "", factory, interceptionService
+        )
+        assertThat(httpsWrapper.localCertificates).isNull()
+        assertNullableApi(httpsConnection)
+
+        // Test WrappedHttpUrlConnection
+        val httpConnection = object : HttpURLConnection(URL("https://www.google.com")) {
+            override fun getHeaderFieldKey(n: Int) = null
+            override fun disconnect() = Unit
+            override fun usingProxy() = false
+            override fun getHeaderField(name: String?) = null
+            override fun getErrorStream() = null
+            override fun getHeaderField(n: Int) = null
+            override fun connect() = Unit
+            override fun getContentType() = null
+            override fun getContentEncoding() = null
+            override fun getContent(classes: Array<out Class<Any>>?) = null
+        }
+        val httpWrapper = HttpURLConnectionWrapper(httpConnection, "", factory, interceptionService)
+        assertNullableApi(httpWrapper)
+    }
+
+    private fun assertNullableApi(urlConnection: HttpURLConnection) {
+        assertThat(urlConnection.getHeaderFieldKey(1)).isNull()
+        assertThat(urlConnection.getHeaderField("")).isNull()
+        assertThat(urlConnection.getHeaderField(1)).isNull()
+        assertThat(urlConnection.errorStream).isNull()
+        assertThat(urlConnection.contentType).isNull()
+        assertThat(urlConnection.contentEncoding).isNull()
+        assertThat(urlConnection.getContent(arrayOf(WrappedUrlConnectionTest::class.java))).isNull()
+    }
+}

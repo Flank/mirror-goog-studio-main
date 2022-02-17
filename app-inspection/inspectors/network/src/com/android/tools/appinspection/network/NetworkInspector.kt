@@ -58,7 +58,7 @@ class NetworkInspector(
     private val scope =
         CoroutineScope(SupervisorJob() + environment.executors().primary().asCoroutineDispatcher())
 
-    private val trackerService = HttpTrackerFactory(connection)
+    private val trackerService = HttpTrackerFactoryImpl(connection)
     private var isStarted = false
 
     private var okHttp2Interceptors: List<Interceptor>? = null
