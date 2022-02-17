@@ -51,6 +51,7 @@ fun mergeManifests(
     minSdkVersion: String?,
     targetSdkVersion: String?,
     maxSdkVersion: Int?,
+    testOnly: Boolean,
     outMergedManifestLocation: String?,
     outAaptSafeManifestLocation: String?,
     mergeType: ManifestMerger2.MergeType,
@@ -89,7 +90,7 @@ fun mergeManifests(
             manifestMergerInvoker,
             packageOverride, versionCode, versionName,
             minSdkVersion, targetSdkVersion, maxSdkVersion,
-            injectProfileable
+            injectProfileable, testOnly
         )
 
         val mergingReport = manifestMergerInvoker.merge()
@@ -187,7 +188,8 @@ private fun setInjectableValues(
     minSdkVersion: String?,
     targetSdkVersion: String?,
     maxSdkVersion: Int?,
-    profileable: Boolean
+    profileable: Boolean,
+    testOnly: Boolean
 ) {
 
     if (packageOverride != null && packageOverride.isNotEmpty()) {
@@ -215,6 +217,8 @@ private fun setInjectableValues(
     if (profileable) {
         invoker.setOverride(ManifestSystemProperty.Profileable.SHELL, "true")
         invoker.setOverride(ManifestSystemProperty.Profileable.ENABLED, "true")
+    }
+    if (testOnly) {
         invoker.setOverride(ManifestSystemProperty.Application.TEST_ONLY, "true")
     }
 }

@@ -53,11 +53,21 @@ class ProfileableTest {
         val app = project.getSubproject(":app")
         app.buildFile.appendText("android.buildTypes.release.profileable true")
         project.executor().run("assembleRelease")
-        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED)
+        val apkType = GradleTestProject.ApkType.RELEASE_SIGNED
+        val apk = project.getSubproject("app").getApk(apkType)
         val verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 30)
         assertThat(
             (verificationResult.signerCertificates.first().subjectDN as X500Name).commonName
         ).isEqualTo("Android Debug")
+        val manifest = ApkSubject.getManifestContent(apk.file.toAbsolutePath())
+        assertThat(manifest).containsAtLeastElementsIn(
+            arrayListOf(
+                "        E: application (line=11)",
+                "            E: profileable (line=12)",
+                "              A: http://schemas.android.com/apk/res/android:enabled(0x0101000e)=true",
+                "              A: http://schemas.android.com/apk/res/android:shell(0x01010594)=true"
+            )
+        )
     }
 
     @Test
