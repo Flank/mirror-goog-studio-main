@@ -25,6 +25,7 @@ def gradle_integration_test(
         resources = [],
         runtime_deps = [],
         tags = [],
+        jvm_flags = [],
         timeout = "long",
         lint_baseline = None,
         **kwargs):
@@ -55,7 +56,7 @@ def gradle_integration_test(
         name = name,
         timeout = timeout,
         data = data + maven_repo_dependencies,
-        jvm_flags = [
+        jvm_flags = jvm_flags + [
             "-Dtest.suite.jar=" + lib_name + ".jar",
             "-Dfile.encoding=UTF-8",
             "-Dsun.jnu.encoding=UTF-8",

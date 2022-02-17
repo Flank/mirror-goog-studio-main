@@ -19,14 +19,21 @@ import com.android.SdkConstants;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.manifest.parser.ManifestInfo;
 import com.android.tools.tracer.Trace;
+import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
@@ -83,8 +90,30 @@ public class ApkParser {
         return manifestInfo;
     }
 
+    /**
+     * Obtains the {@link File} for the apk passed in apkPath. If apkPath represents a path within a
+     * jar file, the apk will be extracted and the returned {@link File} will point to a temporary
+     * location.
+     */
+    private File getApkFileFromPath(String apkPath) throws IOException {
+        if (apkPath.startsWith("jar:")) {
+            int separatorIndex = apkPath.lastIndexOf('!');
+            if (separatorIndex != -1) {
+                String subPath = apkPath.substring(separatorIndex + 1);
+                try (FileSystem fileSystem =
+                        FileSystems.newFileSystem(URI.create(apkPath), Collections.emptyMap())) {
+                    Path outputApk = Files.createTempFile("extracted", ".apk");
+                    FileUtils.copyFile(fileSystem.getPath(subPath), outputApk);
+                    return outputApk.toFile();
+                }
+            }
+        }
+
+        return new File(apkPath);
+    }
+
     Apk parse(String apkPath) throws IOException, DeployerException {
-        File file = new File(apkPath);
+        File file = getApkFileFromPath(apkPath);
         String absolutePath = file.getAbsolutePath();
         String digest;
         List<ZipUtils.ZipEntry> zipEntries;

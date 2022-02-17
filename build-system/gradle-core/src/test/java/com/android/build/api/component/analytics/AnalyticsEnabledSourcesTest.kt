@@ -16,6 +16,8 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.AbstractSourceDirectories
+import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -44,18 +46,102 @@ class AnalyticsEnabledSourcesTest {
 
     @Test
     fun getJava() {
-        val java = Mockito.mock(SourceDirectories::class.java)
-        Mockito.`when`(delegate.java).thenReturn(java)
+        testAnalytics(
+            SourceDirectories::class.java,
+            Sources::java,
+            VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE
+        )
+    }
 
-        val sourcesProxy = proxy.java
-        Truth.assertThat(sourcesProxy is AnalyticsEnabledSourceDirectories).isTrue()
-        Truth.assertThat((sourcesProxy as AnalyticsEnabledSourceDirectories).delegate)
-            .isEqualTo(java)
+    @Test
+    fun getKotlin() {
+        testAnalytics(
+            SourceDirectories::class.java,
+            Sources::kotlin,
+            VariantPropertiesMethodType.SOURCES_KOTLIN_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getRenderscript() {
+        testAnalytics(
+            SourceDirectories::class.java,
+            Sources::renderscript,
+            VariantPropertiesMethodType.SOURCES_RENDERSCRIPT_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getMlModels() {
+        testAnalytics(
+            SourceAndOverlayDirectories::class.java,
+            Sources::mlModels,
+            VariantPropertiesMethodType.SOURCES_ML_MODELS_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getAidl() {
+        testAnalytics(
+            SourceDirectories::class.java,
+            Sources::aidl,
+            VariantPropertiesMethodType.SOURCES_AIDL_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getRes() {
+        testAnalytics(
+            SourceAndOverlayDirectories::class.java,
+            Sources::res,
+            VariantPropertiesMethodType.SOURCES_RES_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getJniLibs() {
+        testAnalytics(
+            SourceAndOverlayDirectories::class.java,
+            Sources::jniLibs,
+            VariantPropertiesMethodType.SOURCES_JNI_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getShaders() {
+        testAnalytics(
+            SourceAndOverlayDirectories::class.java,
+            Sources::shaders,
+            VariantPropertiesMethodType.SOURCES_SHADERS_ACCESS_VALUE
+        )
+    }
+
+    @Test
+    fun getAssets() {
+        testAnalytics(
+            SourceAndOverlayDirectories::class.java,
+            Sources::assets,
+            VariantPropertiesMethodType.SOURCES_ASSETS_ACCESS_VALUE
+        )
+    }
+
+    private fun <T: AbstractSourceDirectories> testAnalytics(
+        type: Class<T>,
+        accessor: (sources: Sources) -> T?,
+        analyticsEnumValue: Int,
+    ) {
+        val mockedType = Mockito.mock(type)
+        Mockito.`when`(accessor(delegate)).thenReturn(mockedType)
+
+        val sourcesProxy = accessor(proxy)
+        Truth.assertThat(sourcesProxy is AnalyticsEnabledAbstractSourceDirectories).isTrue()
+        Truth.assertThat((sourcesProxy as AnalyticsEnabledAbstractSourceDirectories).delegate)
+            .isEqualTo(mockedType)
 
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .java
+        ).isEqualTo(analyticsEnumValue)
+        accessor(Mockito.verify(delegate, Mockito.times(1)))
     }
+
 }

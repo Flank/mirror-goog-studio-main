@@ -16,20 +16,21 @@
 
 package com.android.manifmerger;
 
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
 import com.android.resources.NamespaceReferenceRewriter;
 import com.android.utils.PositionXmlParser;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 
 /**
  * Responsible for loading XML files.

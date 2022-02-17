@@ -119,14 +119,16 @@ internal class DynamicFeatureVariantFactory(
 
     override fun createTestFixturesBuildFeatureValues(
         buildFeatures: BuildFeatures,
-        projectOptions: ProjectOptions
+        projectOptions: ProjectOptions,
+        androidResourcesEnabled: Boolean
     ): BuildFeatureValues {
         buildFeatures as? DynamicFeatureBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
 
         return TestFixturesBuildFeaturesValuesImpl(
             buildFeatures,
-            projectOptions
+            projectOptions,
+            androidResourcesEnabled
         )
     }
 

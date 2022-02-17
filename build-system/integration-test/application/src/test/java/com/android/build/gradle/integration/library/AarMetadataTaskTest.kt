@@ -15,14 +15,19 @@
  */
 package com.android.build.gradle.integration.library
 
+import com.android.SdkConstants
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.apksig.internal.util.ByteBufferUtils.toByteArray
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AarMetadataTask
+import com.android.testutils.truth.PathSubject
+import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -231,5 +236,28 @@ class AarMetadataTaskTest {
                 assertThat(aarMetadataBytes).isEqualTo(expectedAarMetadataBytes)
             }
         }
+    }
+
+    @Test
+    fun testCompileSdkPreview() {
+        project.getSubproject("lib").buildFile.appendText(
+            """
+                android {
+                    compileSdkPreview 'Tiramisu'
+                }
+            """.trimIndent()
+        )
+        project.executor().run(":lib:writeDebugAarMetadata")
+        val aarMetadataFile =
+            FileUtils.join(
+                project.getSubproject("lib").buildDir,
+                SdkConstants.FD_INTERMEDIATES,
+                InternalArtifactType.AAR_METADATA.getFolderName(),
+                "debug",
+                AarMetadataTask.AAR_METADATA_FILE_NAME
+            )
+        PathSubject.assertThat(aarMetadataFile).contains(
+            "${FORCE_COMPILE_SDK_PREVIEW_PROPERTY}=Tiramisu"
+        )
     }
 }

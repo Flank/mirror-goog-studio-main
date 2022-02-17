@@ -132,7 +132,7 @@ fun runR8(
         }
         if (toolConfig.isDebuggable) {
             r8CommandBuilder.addAssertionsConfiguration(
-                AssertionsConfiguration.Builder::enableAllAssertions
+                AssertionsConfiguration.Builder::compileTimeEnableAllAssertions
             )
         }
     }

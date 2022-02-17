@@ -22,11 +22,15 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
+import com.android.ide.common.resources.ResourceSet
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
 import com.android.utils.FileUtils
 import com.google.gson.GsonBuilder
+import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -44,8 +48,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var navFilesFolders: List<File>
-        private set
+    abstract val navFilesFolders: ListProperty<Directory>
 
     @get:OutputFile
     abstract val navigationJson: RegularFileProperty
@@ -54,7 +57,8 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
     fun create() {
         val navigationIds = mutableSetOf<String>()
         val navDatas = mutableListOf<NavigationXmlDocumentData>()
-        navFilesFolders.forEach { folder ->
+        navFilesFolders.get().forEach { directory ->
+            val folder = directory.asFile
             if (folder.exists()) {
                 folder.listFiles().map { navigationFile ->
                     val navigationId = navigationFile.name.replace(DOT_XML_EXT, "")
@@ -99,15 +103,15 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             task: ExtractDeepLinksTask
         ) {
             super.configure(task)
-            val aaptEnv = creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
-                ANDROID_AAPT_IGNORE
-            ).forUseAtConfigurationTime().orNull
-            task.navFilesFolders =
-                creationConfig.variantSources
-                    .getResourceSets(creationConfig.sources.res, false, aaptEnv, creationConfig.services::directoryProperty)
-                    .flatMap {
-                        it.sourceFiles.map { File(it, FD_RES_NAVIGATION) }
-                    }.reversed()
+            task.navFilesFolders.set(
+                creationConfig.sources.res.all.map {
+                    it.flatten()
+                }.map { directories ->
+                    directories.map { directory ->
+                        directory.dir(FD_RES_NAVIGATION)
+                    }
+                }
+            )
         }
     }
 }

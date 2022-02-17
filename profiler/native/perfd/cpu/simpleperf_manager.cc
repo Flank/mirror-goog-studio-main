@@ -58,7 +58,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
                                        std::string *error,
                                        bool is_startup_profiling) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
-  Trace trace("CPU: StartProfiling simplerperf");
+  Trace trace("CPU: StartProfiling simpleperf");
   Log::D(Log::Tag::PROFILER, "Profiler:Received query to profile %s",
          app_name.c_str());
 

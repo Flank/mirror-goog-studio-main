@@ -130,11 +130,15 @@ class LibraryVariantFactory(
     }
 
     override fun createTestFixturesBuildFeatureValues(
-        buildFeatures: BuildFeatures, projectOptions: ProjectOptions): BuildFeatureValues {
+        buildFeatures: BuildFeatures,
+        projectOptions: ProjectOptions,
+        androidResourcesEnabled: Boolean
+    ): BuildFeatureValues {
         return if (buildFeatures is LibraryBuildFeatures) {
             TestFixturesBuildFeaturesValuesImpl(
                 buildFeatures,
                 projectOptions,
+                androidResourcesEnabled,
                 dataBindingOverride = null,
                 mlModelBindingOverride = null
             )

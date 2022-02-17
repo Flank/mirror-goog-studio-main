@@ -16,24 +16,25 @@
 
 package com.android.manifmerger;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
 import com.android.annotations.NonNull;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
+import junit.framework.TestCase;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.CharBuffer;
-import junit.framework.TestCase;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link Merger} class
@@ -171,7 +172,7 @@ public class MergerTest extends TestCase {
         final String[] args = { "--main", "src/main/AndroidManifest.xml",
                 "--property", "min_sdk_version=19" };
         new MergerWithMock().process(args);
-        verify(mInvoker).setOverride(ManifestSystemProperty.MIN_SDK_VERSION, "19");
+        verify(mInvoker).setOverride(ManifestSystemProperty.UsesSdk.MIN_SDK_VERSION, "19");
         verify(mInvoker).merge();
         verifyNoMoreInteractions(mInvoker);
     }
@@ -297,7 +298,7 @@ public class MergerTest extends TestCase {
         verify(mInvoker).addFlavorAndBuildTypeManifest(new File("src/flavor1/AndroidManifest.xml"));
         verify(mInvoker).addFlavorAndBuildTypeManifest(new File("src/flavor2/AndroidManifest.xml"));
         verify(mInvoker).addFlavorAndBuildTypeManifest(new File("src/flavor3/AndroidManifest.xml"));
-        verify(mInvoker).setOverride(ManifestSystemProperty.MAX_SDK_VERSION, "21");
+        verify(mInvoker).setOverride(ManifestSystemProperty.UsesSdk.MAX_SDK_VERSION, "21");
         verify(mInvoker).setPlaceHolderValue("Foo", "bar");
         verify(mInvoker).merge();
         verifyNoMoreInteractions(mInvoker);

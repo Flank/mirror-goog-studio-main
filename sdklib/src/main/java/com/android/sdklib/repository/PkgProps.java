@@ -16,82 +16,79 @@
 
 package com.android.sdklib.repository;
 
-
-
 /**
- * Public constants used by the repository when saving {@code source.properties}
- * files in local packages.
- * <p>
- * These constants are public and part of the SDK Manager public API.
- * Once published we can't change them arbitrarily since various parts
- * of our build process depend on them.
+ * Public constants used by the repository when saving {@code source.properties} files in local
+ * packages.
+ *
+ * <p>These constants are public and part of the SDK Manager public API. Once published we can't
+ * change them arbitrarily since various parts of our build process depend on them.
  */
 public class PkgProps {
 
     // Base Package
-    public static final String PKG_REVISION             = "Pkg.Revision";           //$NON-NLS-1$
-    public static final String PKG_LICENSE              = "Pkg.License";            //$NON-NLS-1$
-    public static final String PKG_LICENSE_REF          = "Pkg.LicenseRef";         //$NON-NLS-1$
-    public static final String PKG_DESC                 = "Pkg.Desc";               //$NON-NLS-1$
-    public static final String PKG_DESC_URL             = "Pkg.DescUrl";            //$NON-NLS-1$
-    public static final String PKG_SOURCE_URL           = "Pkg.SourceUrl";          //$NON-NLS-1$
-    public static final String PKG_OBSOLETE             = "Pkg.Obsolete";           //$NON-NLS-1$
-    public static final String PKG_LIST_DISPLAY         = "Pkg.ListDisplay";        //$NON-NLS-1$
+    public static final String PKG_REVISION = "Pkg.Revision";
+    public static final String PKG_LICENSE = "Pkg.License";
+    public static final String PKG_LICENSE_REF = "Pkg.LicenseRef";
+    public static final String PKG_DESC = "Pkg.Desc";
+    public static final String PKG_DESC_URL = "Pkg.DescUrl";
+    public static final String PKG_SOURCE_URL = "Pkg.SourceUrl";
+    public static final String PKG_OBSOLETE = "Pkg.Obsolete";
+    public static final String PKG_LIST_DISPLAY = "Pkg.ListDisplay";
 
     // AndroidVersion
 
-    public static final String VERSION_API_LEVEL        = "AndroidVersion.ApiLevel";//$NON-NLS-1$
+    public static final String VERSION_API_LEVEL = "AndroidVersion.ApiLevel";
     /** Code name of the platform if the platform is not final */
-    public static final String VERSION_CODENAME         = "AndroidVersion.CodeName";//$NON-NLS-1$
+    public static final String VERSION_CODENAME = "AndroidVersion.CodeName";
 
+    public static final String VERSION_IS_BASE_EXTENSION = "AndroidVersion.IsBaseSdk";
+    public static final String VERSION_EXTENSION_LEVEL = "AndroidVersion.ExtensionLevel";
 
     // AddonPackage
 
-    public static final String ADDON_NAME               = "Addon.Name";             //$NON-NLS-1$
-    public static final String ADDON_NAME_ID            = "Addon.NameId";           //$NON-NLS-1$
-    public static final String ADDON_NAME_DISPLAY       = "Addon.NameDisplay";      //$NON-NLS-1$
-
-    public static final String ADDON_VENDOR             = "Addon.Vendor";           //$NON-NLS-1$
-    public static final String ADDON_VENDOR_ID          = "Addon.VendorId";         //$NON-NLS-1$
-    public static final String ADDON_VENDOR_DISPLAY     = "Addon.VendorDisplay";    //$NON-NLS-1$
+    public static final String ADDON_NAME = "Addon.Name";
+    public static final String ADDON_NAME_ID = "Addon.NameId";
+    public static final String ADDON_NAME_DISPLAY = "Addon.NameDisplay";
+    public static final String ADDON_VENDOR = "Addon.Vendor";
+    public static final String ADDON_VENDOR_ID = "Addon.VendorId";
+    public static final String ADDON_VENDOR_DISPLAY = "Addon.VendorDisplay";
 
     // DocPackage
 
     // ExtraPackage
 
-    public static final String EXTRA_PATH               = "Extra.Path";             //$NON-NLS-1$
-    public static final String EXTRA_OLD_PATHS          = "Extra.OldPaths";         //$NON-NLS-1$
-    public static final String EXTRA_MIN_API_LEVEL      = "Extra.MinApiLevel";      //$NON-NLS-1$
-    public static final String EXTRA_PROJECT_FILES      = "Extra.ProjectFiles";     //$NON-NLS-1$
-    public static final String EXTRA_VENDOR_ID          = "Extra.VendorId";         //$NON-NLS-1$
-    public static final String EXTRA_VENDOR_DISPLAY     = "Extra.VendorDisplay";    //$NON-NLS-1$
-    public static final String EXTRA_NAME_DISPLAY       = "Extra.NameDisplay";      //$NON-NLS-1$
+    public static final String EXTRA_PATH = "Extra.Path";
+    public static final String EXTRA_OLD_PATHS = "Extra.OldPaths";
+    public static final String EXTRA_MIN_API_LEVEL = "Extra.MinApiLevel";
+    public static final String EXTRA_PROJECT_FILES = "Extra.ProjectFiles";
+    public static final String EXTRA_VENDOR_ID = "Extra.VendorId";
+    public static final String EXTRA_VENDOR_DISPLAY = "Extra.VendorDisplay";
+    public static final String EXTRA_NAME_DISPLAY = "Extra.NameDisplay";
 
     // ILayoutlibVersion
 
-    public static final String LAYOUTLIB_API            = "Layoutlib.Api";          //$NON-NLS-1$
-    public static final String LAYOUTLIB_REV            = "Layoutlib.Revision";     //$NON-NLS-1$
+    public static final String LAYOUTLIB_API = "Layoutlib.Api";
+    public static final String LAYOUTLIB_REV = "Layoutlib.Revision";
 
     // MinToolsPackage
 
-    public static final String MIN_TOOLS_REV            = "Platform.MinToolsRev";   //$NON-NLS-1$
+    public static final String MIN_TOOLS_REV = "Platform.MinToolsRev";
 
     // PlatformPackage
 
-    public static final String PLATFORM_VERSION         = "Platform.Version";       //$NON-NLS-1$
+    public static final String PLATFORM_VERSION = "Platform.Version";
 
     // ToolPackage
 
-    public static final String MIN_PLATFORM_TOOLS_REV = "Platform.MinPlatformToolsRev";//$NON-NLS-1$
-
+    public static final String MIN_PLATFORM_TOOLS_REV = "Platform.MinPlatformToolsRev";
 
     // SamplePackage
 
-    public static final String SAMPLE_MIN_API_LEVEL     = "Sample.MinApiLevel";     //$NON-NLS-1$
+    public static final String SAMPLE_MIN_API_LEVEL = "Sample.MinApiLevel";
 
     // SystemImagePackage
 
-    public static final String SYS_IMG_ABI              = "SystemImage.Abi";        //$NON-NLS-1$
-    public static final String SYS_IMG_TAG_ID           = "SystemImage.TagId";      //$NON-NLS-1$
-    public static final String SYS_IMG_TAG_DISPLAY      = "SystemImage.TagDisplay"; //$NON-NLS-1$
+    public static final String SYS_IMG_ABI = "SystemImage.Abi";
+    public static final String SYS_IMG_TAG_ID = "SystemImage.TagId";
+    public static final String SYS_IMG_TAG_DISPLAY = "SystemImage.TagDisplay";
 }

@@ -140,14 +140,17 @@ public class Merger {
                     return 1;
                 }
                 try {
-                    ManifestSystemProperty manifestSystemProperty = ManifestSystemProperty
-                            .valueOf(value.substring(0, value.indexOf('='))
-                                    .toUpperCase(Locale.ENGLISH));
-                    invoker.setOverride(manifestSystemProperty, value.substring(value.indexOf('=') + 1));
+                    ManifestSystemProperty manifestElement =
+                            ManifestSystemProperty.valueOf(value.substring(0, value.indexOf('='))
+                                            .toUpperCase(Locale.ENGLISH));
+                    invoker.setOverride(manifestElement, value.substring(value.indexOf('=') + 1));
                 } catch (IllegalArgumentException e) {
-                    logger.error(e, "Invalid property name "+ value.substring(0, value.indexOf('='))
-                        + ", allowed properties are : " + Joiner
-                            .on(',').join(ManifestSystemProperty.values()));
+                    logger.error(
+                            e,
+                            "Invalid property name "
+                                    + value.substring(0, value.indexOf('='))
+                                    + ", allowed properties are : "
+                                    + Joiner.on(',').join(ManifestSystemProperty.getValues()));
                     return 1;
                 }
             }
@@ -205,9 +208,10 @@ public class Merger {
         System.out.println("\t--log [VERBOSE, INFO, WARNING, ERROR]");
         System.out.println("\t--libs [path separated list of lib's manifests]");
         System.out.println("\t--overlays [path separated list of overlay's manifests]");
-        System.out.println("\t--property ["
-                + Joiner.on(" | ").join(ManifestSystemProperty.values())
-                + "=value]");
+        System.out.println(
+                "\t--property ["
+                        + Joiner.on(" | ").join(ManifestSystemProperty.getValues())
+                        + "=value]");
         System.out.println("\t--placeholder [name=value]");
         System.out.println("\t--out [path of the output file]");
         System.out.println("\t--remove-tools-declarations");

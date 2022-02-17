@@ -29,6 +29,7 @@ import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodTy
 import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
 import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 
@@ -90,6 +91,33 @@ abstract class AnalyticsEnabledComponent(
                 VariantPropertiesMethodType.COMPILE_CLASSPATH_VALUE
             return delegate.compileClasspath
         }
+
+    override val compileConfiguration: Configuration
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.COMPILE_CONFIGURATION_VALUE
+            return delegate.compileConfiguration
+        }
+
+    override val runtimeConfiguration: Configuration
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.RUNTIME_CONFIGURATION_VALUE
+            return delegate.runtimeConfiguration
+        }
+
+    override val annotationProcessorConfiguration: Configuration
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.ANNOTATION_PROCESSOR_CONFIGURATION_VALUE
+            return delegate.annotationProcessorConfiguration
+        }
+
+    override fun configurations(action: (Configuration) -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.CONFIGURATIONS_VALUE
+        delegate.configurations(action)
+    }
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,

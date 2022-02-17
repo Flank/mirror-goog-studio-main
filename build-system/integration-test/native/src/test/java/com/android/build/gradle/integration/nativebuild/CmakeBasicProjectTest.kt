@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.PLATFORM_WINDOWS
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
@@ -74,6 +73,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.builder.model.v2.ide.SyncIssue
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
@@ -107,8 +107,6 @@ class CmakeBasicProjectTest(
     @JvmField
     val project = GradleTestProject.builder()
         .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-        // TODO(b/159233213) Turn to ON when release configuration is cacheable
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 
@@ -709,7 +707,9 @@ class CmakeBasicProjectTest(
     fun checkModelSingleVariant() {
         // Request build details for debug-x86_64
         val fetchResult =
-          project.modelV2().fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86_64")))
+          project.modelV2()
+              .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+              .fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86_64")))
 
         // note that only build files for the requested variant and ABI exists.
         Truth.assertThat(fetchResult.dump()).isEqualTo(
@@ -1032,7 +1032,9 @@ apply plugin: 'com.android.application'
 
     @Test
     fun `ensure compile_commands json bin is created for each native ABI in model`() {
-        val nativeModules = project.modelV2().fetchNativeModules(NativeModuleParams())
+        val nativeModules = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+            .fetchNativeModules(NativeModuleParams())
         val nativeModule = nativeModules.container.singleNativeModule
         for (variant in nativeModule.variants) {
             for (abi in variant.abis) {

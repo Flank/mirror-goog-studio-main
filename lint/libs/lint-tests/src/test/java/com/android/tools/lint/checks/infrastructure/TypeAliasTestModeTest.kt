@@ -428,6 +428,24 @@ class TypeAliasTestModeTest {
     }
 
     @Test
+    fun testGenerics() {
+        @Language("kotlin")
+        val kotlin = """
+            interface TypeWithGenerics<T>
+            fun <T> functionReturningTypeWithGenerics(): TypeWithGenerics<T> = error("stub")
+            // Nest various PSI types (PsiArrayType, PsiWildardType, etc) to make sure we recurse properly
+            fun <T> functionReturningTypeWithGenerics2(): Array<Map<in String, TypeWithGenerics<T>>> = error("stub")
+        """.trimIndent()
+
+        @Suppress("UnnecessaryVariable")
+        @Language("kotlin")
+        val expected = kotlin
+
+        val aliased = alias(kotlin)
+        assertEquals(expected, aliased.trim())
+    }
+
+    @Test
     fun testTransformMessage() {
         val mode = ImportAliasTestMode()
         assertTrue(

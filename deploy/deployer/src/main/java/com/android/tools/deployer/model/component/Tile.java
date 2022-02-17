@@ -35,7 +35,6 @@ public class Tile extends WearComponent {
                 "am broadcast -a com.google.android.wearable.app.DEBUG_SYSUI --es operation show-tile --ei index "; // + index
     }
 
-    static final String DEBUG_COMMAND = "am set-debug-app -w";
 
     public Tile(
             @NonNull ManifestServiceInfo info,
@@ -49,20 +48,19 @@ public class Tile extends WearComponent {
     public void activate(
             @NonNull String extraFlags,
             @NonNull Mode activationMode,
-            @NonNull IShellOutputReceiver receiver
-    ) throws DeployerException {
+            @NonNull IShellOutputReceiver addTileReceiver)
+     throws DeployerException {
         validate(extraFlags);
         logger.info("Activating Tile '%s' %s",
                     info.getQualifiedName(),
                     activationMode.equals(Mode.DEBUG) ? "for debug" : "");
 
         if (activationMode.equals(Mode.DEBUG)) {
-            String debugCommand = String.format("%s '%s'", DEBUG_COMMAND, appId);
-            logger.info("$ adb shell " + debugCommand);
-            runShellCommand(debugCommand, receiver);
+            setUpAmDebugApp();
+            setUpDebugSurfaceDebugApp();
         }
         String command = getStartTileCommand();
-        runStartCommand(command, receiver, logger);
+        runStartCommand(command, addTileReceiver, logger);
     }
 
     private void validate(String extraFlags) throws DeployerException {

@@ -16,6 +16,8 @@
 
 package com.android.build.api.dsl
 
+import org.gradle.api.Incubating
+
 /**
  * DSL object to configure external native builds using
  * [CMake](https://cmake.org/)
@@ -42,36 +44,36 @@ package com.android.build.api.dsl
 interface ExternalNativeBuild {
 
     /**
-     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
-     * to your `Android.mk` build script and build output directory.
+     * Per module settings, such as the path to `Android.mk`, for an external ndk-build project.
      *
-     * For more information about the properties you can configure in this block, see
-     * [NdkBuild]
+     * For more information about the properties you can configure in this block, see [NdkBuild].
      */
     val ndkBuild: NdkBuild
 
     /**
-     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
-     * to your `Android.mk` build script and build output directory.
+     * Per module settings, such as the path to `Android.mk`, for an external ndk-build project.
      *
-     * For more information about the properties you can configure in this block, see [NdkBuild]
+     * For more information about the properties you can configure in this block, see [NdkBuild].
      */
     fun ndkBuild(action: NdkBuild.() -> Unit)
 
     /**
-     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
-     * to your `CMakeLists.txt` build script and build output directory.
+     * Per module settings, such as the path to `CMakeLists.txt`, for an external CMake project.
      *
-     * For more information about the properties you can configure in this block, see [Cmake]
+     * For more information about the properties you can configure in this block, see [Cmake].
      */
     val cmake: Cmake
 
     /**
-     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
-     * to your `CMakeLists.txt` build script and build output directory.
+     * Per module settings, such as the path to `CMakeLists.txt`, for an external CMake project.
      *
-     * For more information about the properties you can configure in this block, see [Cmake]
+     * For more information about the properties you can configure in this block, see [Cmake].
      */
     fun cmake(action: Cmake.() -> Unit)
 
+    /**
+     * Additional per module experimental properties for C and C++.
+     */
+    @get:Incubating
+    val experimentalProperties: MutableMap<String, Any>
 }

@@ -88,6 +88,16 @@ void CopyFileToPackageFolder(const string& package_name,
   // 'file not found' error.
   DeleteFileFromPackageFolder(package_name, file_name);
 
+  // Make sure the code cache directory is present before copying file.
+  // The -p flag ensures the command returns successfully even if the directory
+  // already exists.
+  BashCommandRunner mkdir{"mkdir"};
+  std::ostringstream mkdir_args;
+  mkdir_args << "-p " << kCodeCacheRelativeDir;
+  if (!mkdir.RunAs(mkdir_args.str(), package_name, nullptr)) {
+    perror("mkdir");
+  }
+
   BashCommandRunner cp{"cp"};
   std::ostringstream args;
   args << CurrentProcess::dir() << file_name << " " << kCodeCacheRelativeDir;

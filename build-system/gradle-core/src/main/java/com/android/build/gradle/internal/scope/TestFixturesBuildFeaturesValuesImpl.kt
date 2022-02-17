@@ -22,6 +22,7 @@ import com.android.build.gradle.options.ProjectOptions
 class TestFixturesBuildFeaturesValuesImpl(
     buildFeatures: BuildFeatures,
     projectOptions: ProjectOptions,
+    androidResourcesEnabled: Boolean,
     dataBindingOverride: Boolean? = null,
     mlModelBindingOverride: Boolean? = null
 ) : BuildFeatureValuesImpl(
@@ -37,4 +38,5 @@ class TestFixturesBuildFeaturesValuesImpl(
     override val renderScript: Boolean = false
     override val shaders: Boolean = false
     override val prefabPublishing: Boolean = false
+    override val androidResources: Boolean = androidResourcesEnabled
 }

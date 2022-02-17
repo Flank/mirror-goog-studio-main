@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.Version
@@ -24,6 +25,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.ide.dependencies.getIdString
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ToolsRevisionUtils
@@ -104,7 +106,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
                         when (val id = artifact.id.componentIdentifier) {
                             is LibraryBinaryIdentifier -> id.projectPath
                             is ModuleComponentIdentifier -> "${id.group}:${id.module}:${id.version}"
-                            is ProjectComponentIdentifier -> id.projectPath
+                            is ProjectComponentIdentifier -> id.getIdString()
                             else -> id.displayName
                         }
                     )
@@ -228,10 +230,8 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
         if (aarFormatVersion == null) {
             errorMessages.add(
                 """
-                    A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH}) does
-                    not specify an $AAR_FORMAT_VERSION_PROPERTY value, which is a required value.
-                    Dependency: $displayName.
-                    AAR metadata file: ${aarMetadataFile.absolutePath}.
+                    The AAR metadata for dependency '$displayName' does not specify an
+                    $AAR_FORMAT_VERSION_PROPERTY value, which is a required value.
                     """.trimIndent()
             )
         } else {
@@ -243,23 +243,21 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 if (majorAarVersion > maxMajorAarVersion) {
                     errorMessages.add(
                         """
-                            The $AAR_FORMAT_VERSION_PROPERTY ($aarFormatVersion) specified in a dependency's AAR metadata
-                            (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                            is not compatible with this version of the Android Gradle plugin.
+                            Dependency '$displayName' has an $AAR_FORMAT_VERSION_PROPERTY value of
+                            '$aarFormatVersion', which is not compatible with this version of the
+                            Android Gradle plugin.
+
                             Please upgrade to a newer version of the Android Gradle plugin.
-                            Dependency: $displayName.
-                            AAR metadata file: ${aarMetadataFile.absolutePath}.
                             """.trimIndent()
                     )
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(
                     """
-                        A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                        has an invalid $AAR_FORMAT_VERSION_PROPERTY value.
+                        The AAR metadata for dependency '$displayName' has an invalid
+                        $AAR_FORMAT_VERSION_PROPERTY value ($aarFormatVersion).
+
                         ${e.message}
-                        Dependency: $displayName.
-                        AAR metadata file: ${aarMetadataFile.absolutePath}.
                         """.trimIndent()
                 )
             }
@@ -270,10 +268,8 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
         if (aarMetadataVersion == null) {
             errorMessages.add(
                 """
-                    A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH}) does
-                    not specify an $AAR_METADATA_VERSION_PROPERTY value, which is a required value.
-                    Dependency: $displayName.
-                    AAR metadata file: ${aarMetadataFile.absolutePath}.
+                    The AAR metadata for dependency '$displayName' does not specify an
+                    $AAR_METADATA_VERSION_PROPERTY value, which is a required value.
                     """.trimIndent()
             )
         } else {
@@ -285,24 +281,44 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 if (majorAarMetadataVersion > maxMajorAarMetadataVersion) {
                     errorMessages.add(
                         """
-                            The $AAR_METADATA_VERSION_PROPERTY ($aarMetadataVersion) specified in a dependency's AAR metadata
-                            (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                            is not compatible with this version of the Android Gradle plugin.
+                            Dependency '$displayName' has an $AAR_METADATA_VERSION_PROPERTY value of
+                            '$aarMetadataVersion', which is not compatible with this version of the
+                            Android Gradle plugin.
+
                             Please upgrade to a newer version of the Android Gradle plugin.
-                            Dependency: $displayName.
-                            AAR metadata file: ${aarMetadataFile.absolutePath}.
                             """.trimIndent()
                     )
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(
                     """
-                        A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                        has an invalid $AAR_METADATA_VERSION_PROPERTY value.
+                        The AAR metadata for dependency '$displayName' has an invalid
+                        $AAR_METADATA_VERSION_PROPERTY value ($aarMetadataVersion).
+
                         ${e.message}
-                        Dependency: $displayName.
-                        AAR metadata file: ${aarMetadataFile.absolutePath}.
                         """.trimIndent()
+                )
+            }
+        }
+
+        // check forceCompileSdkPreview
+        val forceCompileSdkPreview = aarMetadataReader.forceCompileSdkPreview
+        if (forceCompileSdkPreview != null) {
+            val compileSdkVersion = parameters.compileSdkVersion.get()
+            val compileSdkPreview = parseTargetHash(parameters.compileSdkVersion.get()).codeName
+            if (compileSdkPreview != forceCompileSdkPreview) {
+                errorMessages.add(
+                    """
+                        Dependency '$displayName' requires libraries and applications that
+                        depend on it to compile against codename "$forceCompileSdkPreview" of the
+                        Android APIs.
+
+                        ${parameters.projectPath.get()} is currently compiled against $compileSdkVersion.
+
+                        Recommended action: Use a different version of dependency '$displayName',
+                        or set compileSdkPreview to "$forceCompileSdkPreview" in your build.gradle
+                        file if you intend to experiment with that preview SDK.
+                    """.trimIndent()
                 )
             }
         }
@@ -314,11 +330,10 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
             if (minCompileSdkInt == null) {
                 errorMessages.add(
                     """
-                        A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                        has an invalid $MIN_COMPILE_SDK_PROPERTY value. $MIN_COMPILE_SDK_PROPERTY
-                        must be an integer.
-                        Dependency: $displayName.
-                        AAR metadata file: ${aarMetadataFile.absolutePath}.
+                        The AAR metadata for dependency '$displayName' has an invalid
+                        $MIN_COMPILE_SDK_PROPERTY value ($minCompileSdk).
+
+                        $MIN_COMPILE_SDK_PROPERTY must be an integer.
                         """.trimIndent()
                 )
             } else {
@@ -369,13 +384,11 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
             if (parsedMinAgpVersion == null) {
                 errorMessages.add(
                     """
-                        A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                        has an invalid $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY value
-                        ($minAgpVersion). $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY must be a a
-                        stable AGP version, formatted with major, minor, and micro values (for
-                        example "4.0.0").
-                        Dependency: $displayName.
-                        AAR metadata file: ${aarMetadataFile.absolutePath}.
+                        The AAR metadata for dependency '$displayName' has an invalid
+                        $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY value ($minAgpVersion).
+
+                        $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY must be a stable AGP version,
+                        formatted with major, minor, and micro values (for example "4.0.0").
                         """.trimIndent()
                 )
             } else {
@@ -432,6 +445,7 @@ private data class AarMetadataReader(val file: File) {
     val aarMetadataVersion: String?
     val minCompileSdk: String?
     val minAgpVersion: String?
+    val forceCompileSdkPreview: String?
 
     init {
         val properties = Properties()
@@ -440,6 +454,7 @@ private data class AarMetadataReader(val file: File) {
         aarMetadataVersion = properties.getProperty(AAR_METADATA_VERSION_PROPERTY)
         minCompileSdk = properties.getProperty(MIN_COMPILE_SDK_PROPERTY)
         minAgpVersion = properties.getProperty(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
+        forceCompileSdkPreview = properties.getProperty(FORCE_COMPILE_SDK_PREVIEW_PROPERTY)
     }
 }
 

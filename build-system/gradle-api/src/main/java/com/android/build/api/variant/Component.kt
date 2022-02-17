@@ -22,6 +22,7 @@ import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 
 interface Component: ComponentIdentity {
@@ -66,4 +67,44 @@ interface Component: ComponentIdentity {
      */
     @get:Incubating
     val compileClasspath: FileCollection
+
+    /**
+     * Access to the variant's compile [Configuration]; for example, the debugCompileClasspath
+     * [Configuration] for the debug variant.
+     *
+     * The returned [Configuration] should not be resolved until execution time.
+     */
+    @get:Incubating
+    val compileConfiguration: Configuration
+
+    /**
+     * Access to the variant's runtime [Configuration]; for example, the debugRuntimeClasspath
+     * [Configuration] for the debug variant.
+     *
+     * The returned [Configuration] should not be resolved until execution time.
+     */
+    @get:Incubating
+    val runtimeConfiguration: Configuration
+
+    /**
+     * Access to the variant's annotation processor [Configuration]; for example, the
+     * debugAnnotationProcessor [Configuration] for the debug variant.
+     *
+     * The returned [Configuration] should not be resolved until execution time.
+     */
+    @get:Incubating
+    val annotationProcessorConfiguration: Configuration
+
+    /**
+     * Configures the variant's runtime and compile [Configuration]s according to the given
+     * [action].
+     *
+     * The [action] should not resolve the [Configuration]s.
+     *
+     * The annotation processor [Configuration] is not affected by this function.
+     *
+     * @param action the action to perform on the runtime and compile configurations.
+     */
+    @Incubating
+    fun configurations(action: (Configuration) -> Unit)
 }

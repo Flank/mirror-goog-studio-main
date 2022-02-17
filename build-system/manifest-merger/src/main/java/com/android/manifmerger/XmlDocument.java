@@ -16,11 +16,6 @@
 
 package com.android.manifmerger;
 
-import static com.android.manifmerger.ManifestModel.NodeTypes.USES_PERMISSION;
-import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,15 +32,21 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import static com.android.manifmerger.ManifestModel.NodeTypes.USES_PERMISSION;
+import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
+import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
 
 /**
  * Represents a loaded xml document.
@@ -84,8 +85,11 @@ public class XmlDocument {
     private final SourceFile mSourceFile;
     @NonNull
     private final KeyResolver<String> mSelectors;
+
     @NonNull
-    private final KeyBasedValueResolver<ManifestSystemProperty> mSystemPropertyResolver;
+    private final KeyBasedValueResolver<ManifestSystemProperty>
+            mSystemPropertyResolver;
+
     @NonNull
     private final Type mType;
     @Nullable private final String mNamespace;
@@ -218,11 +222,12 @@ public class XmlDocument {
     }
 
     /**
-     * Returns the {@link KeyBasedValueResolver} capable of resolving all injected {@link
-     * ManifestSystemProperty}
+     * Returns the {@link KeyBasedValueResolver} capable of resolving all injected
+     * {@link ManifestSystemProperty}
      */
     @NonNull
-    public KeyBasedValueResolver<ManifestSystemProperty> getSystemPropertyResolver() {
+    public KeyBasedValueResolver<ManifestSystemProperty>
+            getSystemPropertyResolver() {
         return mSystemPropertyResolver;
     }
 
@@ -329,7 +334,8 @@ public class XmlDocument {
     @NonNull
     public String getMinSdkVersion() {
         // check for system properties.
-        String injectedMinSdk = mSystemPropertyResolver.getValue(ManifestSystemProperty.MIN_SDK_VERSION);
+        String injectedMinSdk =
+                mSystemPropertyResolver.getValue(ManifestSystemProperty.UsesSdk.MIN_SDK_VERSION);
         if (injectedMinSdk != null) {
             return injectedMinSdk;
         }
@@ -411,8 +417,8 @@ public class XmlDocument {
     public String getTargetSdkVersion() {
 
         // check for system properties.
-        String injectedTargetVersion = mSystemPropertyResolver
-                .getValue(ManifestSystemProperty.TARGET_SDK_VERSION);
+        String injectedTargetVersion =
+                mSystemPropertyResolver.getValue(ManifestSystemProperty.UsesSdk.TARGET_SDK_VERSION);
         if (injectedTargetVersion != null) {
             return injectedTargetVersion;
         }
@@ -428,7 +434,7 @@ public class XmlDocument {
 
         // check for system properties.
         String injectedMaxVersion =
-                mSystemPropertyResolver.getValue(ManifestSystemProperty.MAX_SDK_VERSION);
+                mSystemPropertyResolver.getValue(ManifestSystemProperty.UsesSdk.MAX_SDK_VERSION);
         if (injectedMaxVersion != null) {
             return injectedMaxVersion;
         }

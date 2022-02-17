@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -33,8 +32,6 @@ public class RsEnabledAnnotationTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("extractRsEnabledAnnotations")
-                    // TODO(159233213) Turn to ON when release configuration is cacheable
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
                     .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

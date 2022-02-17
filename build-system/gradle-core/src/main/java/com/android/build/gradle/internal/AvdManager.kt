@@ -42,8 +42,6 @@ private const val MAX_SYSTEM_IMAGE_RETRIES = 4
 private const val BASE_RETRY_DELAY_SECONDS = 2L
 private const val MAX_RETRY_DELAY_SECONDS = 10L
 
-private val avdLocks: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
-
 /**
  * Manages AVDs for the Avd build service inside the Android Gradle Plugin.
  */
@@ -85,21 +83,16 @@ class AvdManager(
         // It fails to generate a snapshot image if you try to create two AVDs with a same name
         // simultaneously. https://issuetracker.google.com/issues/206798666
         return SynchronizedFile.getInstanceWithMultiProcessLocking(avdFolder.resolve(deviceName)).write {
-            val lock = avdLocks.computeIfAbsent(deviceName) {
-                Any()
+            avdManager.reloadAvds(logger)
+            val info = avdManager.getAvd(deviceName, false)
+            info?.let {
+                logger.info("Device: $deviceName already exists. AVD creation skipped.")
+                // already generated the avd
+                return@write info.configFile.toFile()
             }
-            synchronized(lock) {
-                avdManager.reloadAvds(logger)
-                val info = avdManager.getAvd(deviceName, false)
-                info?.let {
-                    logger.info("Device: $deviceName already exists. AVD creation skipped.")
-                    // already generated the avd
-                    return@write info.configFile.toFile()
-                }
 
-                val newInfo = createAvd(imageProvider, imageHash, deviceName, hardwareProfile)
-                return@write newInfo?.configFile?.toFile() ?: error("AVD could not be created.")
-            }
+            val newInfo = createAvd(imageProvider, imageHash, deviceName, hardwareProfile)
+            return@write newInfo?.configFile?.toFile() ?: error("AVD could not be created.")
         }
     }
 
@@ -149,53 +142,48 @@ class AvdManager(
         // It fails to generate a snapshot image if you try to create a snapshot for two
         // AVD with a same name simultaneously. https://issuetracker.google.com/issues/206798666
         SynchronizedFile.getInstanceWithMultiProcessLocking(avdFolder.resolve(deviceName)).write {
-            val lock = avdLocks.computeIfAbsent(deviceName) {
-                Any()
-            }
-            synchronized(lock) {
-                val emulatorProvider = versionedSdkLoader.get().emulatorDirectoryProvider
-                val emulatorExecutable = snapshotHandler.getEmulatorExecutable(emulatorProvider)
+            val emulatorProvider = versionedSdkLoader.get().emulatorDirectoryProvider
+            val emulatorExecutable = snapshotHandler.getEmulatorExecutable(emulatorProvider)
 
-                if (snapshotHandler.checkSnapshotLoadable(
-                        deviceName,
-                        emulatorExecutable,
-                        avdFolder,
-                        emulatorGpuFlag,
-                        logger
-                    )
-                ) {
-                    logger.verbose("Snapshot already exists for device $deviceName")
-                    return@write
-                }
-
-                val adbExecutable = versionedSdkLoader.get().adbExecutableProvider.get().asFile
-
-                logger.verbose("Creating snapshot for $deviceName")
-                snapshotHandler.generateSnapshot(
+            if (snapshotHandler.checkSnapshotLoadable(
                     deviceName,
                     emulatorExecutable,
-                    adbExecutable,
                     avdFolder,
                     emulatorGpuFlag,
                     logger
                 )
+            ) {
+                logger.verbose("Snapshot already exists for device $deviceName")
+                return@write
+            }
 
-                if (snapshotHandler.checkSnapshotLoadable(
-                        deviceName,
-                        emulatorExecutable,
-                        avdFolder,
-                        emulatorGpuFlag,
-                        logger
-                    )
-                ) {
-                    logger.verbose("Verified snapshot created for: $deviceName.")
-                } else {
-                    error("""
+            val adbExecutable = versionedSdkLoader.get().adbExecutableProvider.get().asFile
+
+            logger.verbose("Creating snapshot for $deviceName")
+            snapshotHandler.generateSnapshot(
+                deviceName,
+                emulatorExecutable,
+                adbExecutable,
+                avdFolder,
+                emulatorGpuFlag,
+                logger
+            )
+
+            if (snapshotHandler.checkSnapshotLoadable(
+                    deviceName,
+                    emulatorExecutable,
+                    avdFolder,
+                    emulatorGpuFlag,
+                    logger
+                )
+            ) {
+                logger.verbose("Verified snapshot created for: $deviceName.")
+            } else {
+                error("""
                     Snapshot setup ran successfully, but the snapshot failed to be created. This is
                     likely to a lack of disk space for the snapshot. Try the cleanManagedDevices
                     task with the --unused-only flag to remove any unused devices for this project.
                 """.trimIndent())
-                }
             }
         }
     }

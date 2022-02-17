@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.library
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -127,7 +126,6 @@ class ArtProfileMultipleLibrariesTest {
 
         val result = project.executor()
                 .with(BooleanOption.ENABLE_ART_PROFILES, true)
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
                 .run(
                     ":lib1:bundleReleaseAar",
                     ":lib2:bundleReleaseAar",

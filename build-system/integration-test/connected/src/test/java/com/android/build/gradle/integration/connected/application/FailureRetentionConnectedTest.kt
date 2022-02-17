@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
@@ -34,7 +33,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.gradle.tooling.BuildException
 import org.junit.Before
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -53,8 +51,6 @@ class FailureRetentionConnectedTest {
     @get:Rule
     var project = builder()
         .fromTestProject("failureRetention")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN) // b/158092419
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
         .create()
 
     @Before

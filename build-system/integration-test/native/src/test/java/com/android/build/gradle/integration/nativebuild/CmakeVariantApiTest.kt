@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.getSoFolderFor
@@ -34,8 +33,6 @@ class CmakeVariantApiTest {
     @JvmField
     val project = GradleTestProject.builder()
             .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-            // TODO(b/159233213) Turn to ON when release configuration is cacheable
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
             .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .create()
 

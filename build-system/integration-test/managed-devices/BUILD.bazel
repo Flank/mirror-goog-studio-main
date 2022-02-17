@@ -1,0 +1,116 @@
+load("//tools/base/bazel:maven.bzl", "maven_repository")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/build-system/integration-test/connected:connected-test.bzl", "gradle_connected_test")
+
+kotlin_library(
+    name = "managed-devices",
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
+    deps = [
+        "//tools/base/build-system/gradle-core",
+        "//tools/base/build-system/integration-test/framework",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/testutils:tools.testutils",
+    ],
+)
+
+downloaded_sdk = [
+    "@build_tools_zip//file",
+    "@emulator_zip//file",
+    "@platform_32_zip//file",
+    "@platform_tools_zip//file",
+    "@sdk_patcher_zip//file",
+    "@sdk_tools_zip//file",
+    "@system_image_android-29_default_x86_zip//file",
+]
+
+sdk_jvm_flags = [
+    "-Dsdk.repo.buildtools.zip=$(location @build_tools_zip//file)",
+    "-Dsdk.repo.emulator.zip=$(location @emulator_zip//file)",
+    "-Dsdk.repo.platform.zip=$(location @platform_32_zip//file)",
+    "-Dsdk.repo.platformtools.zip=$(location @platform_tools_zip//file)",
+    "-Dsdk.repo.sdkpatcher.zip=$(location @sdk_patcher_zip//file)",
+    "-Dsdk.repo.sdktools.zip=$(location @sdk_tools_zip//file)",
+    "-Dsdk.repo.sysimage.android29.zip=$(location @system_image_android-29_default_x86_zip//file)",
+]
+
+#keep sorted
+TEST_DEPS = [
+    ":managed-devices",
+]
+
+#keep sorted
+TEST_DATA = downloaded_sdk + [
+    "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system/integration-test:android_platform_for_tests",
+]
+
+#keep sorted
+TEST_MAVEN_REPOS = [
+    "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+    "//tools/base/build-system/integration-test:androidx_latest",
+    "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
+    "//tools/base/build-system/integration-test:support_library_latest",
+    "//tools/base/build-system/integration-test:utp_plugins",
+    "//tools/base/build-system/integration-test/managed-devices:prebuilts",
+]
+
+gradle_connected_test(
+    name = "SimpleManagedDeviceTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/manageddevice/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/utp"],
+    jvm_flags = sdk_jvm_flags,
+    maven_repos = TEST_MAVEN_REPOS,
+    # b/219103375
+    tags = ["very_flaky"],
+    deps = TEST_DEPS,
+)
+
+# Maven repo with all the dependencies required by test projects.
+#
+# Quick way of updating this list:
+# - Run the new test with bazel
+# - Copy the output log to $PWD/test.log
+# - Run this command:
+# grep -F '> Could not find' test.log \
+#   | sed -e "s# *> Could not find \(.*\)\.#\1#"
+#   | sed -e 's#\(.*\):\(.*\):\(.*\)#"@maven_tests//:\1.\2_\3",#'
+#   | sort | uniq
+maven_repository(
+    name = "prebuilts",
+    # keep sorted
+    artifacts = [
+        "@maven//:androidx.activity.activity-compose_1.3.1",
+        "@maven//:androidx.appcompat.appcompat_1.1.0",
+        "@maven//:androidx.appcompat.appcompat_1.2.0",
+        "@maven//:androidx.appcompat.appcompat_1.3.0-beta01",
+        "@maven//:androidx.compose.compiler.compiler_1.1.0-rc02",
+        "@maven//:androidx.compose.material.material_1.1.0-rc01",
+        "@maven//:androidx.compose.ui.ui-tooling_1.0.3",
+        "@maven//:androidx.core.core-ktx_1.1.0",
+        "@maven//:androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
+        "@maven//:androidx.lifecycle.lifecycle-viewmodel-ktx_2.2.0",
+        "@maven//:androidx.test.core_1.4.0-alpha06",
+        "@maven//:androidx.test.espresso.espresso-core_3.2.0",
+        "@maven//:androidx.test.ext.junit_1.1.1",
+        "@maven//:androidx.test.ext.junit_1.1.3-alpha02",
+        "@maven//:androidx.test.orchestrator_1.4.0-alpha06",
+        "@maven//:androidx.test.rules_1.1.0",
+        "@maven//:androidx.test.rules_1.4.0-alpha06",
+        "@maven//:androidx.test.runner_1.4.0-alpha06",
+        "@maven//:com.android.support.multidex-instrumentation_1.0.2",
+        "@maven//:com.android.support.multidex_1.0.2",
+        "@maven//:com.android.tools.desugar_jdk_libs_1.1.5",
+        "@maven//:com.google.android.gms.play-services-base_15.0.1",
+        "@maven//:com.google.code.findbugs.jsr305_1.3.9",
+        "@maven//:com.google.guava.guava_19.0",
+        "@maven//:org.hamcrest.hamcrest-library_1.3",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.4.1",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
+        "@maven//:org.tensorflow.tensorflow-lite-metadata_0.1.0",
+        "@maven//:org.tensorflow.tensorflow-lite-support_0.1.0",
+    ],
+    visibility = ["__subpackages__"],
+)

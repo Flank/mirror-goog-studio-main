@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
@@ -58,8 +57,5 @@ class LintUpToDateTest {
         assertThat(secondRun.getTask(":app:lintAnalyzeDebug")).wasUpToDate()
     }
 
-    private fun getExecutor(): GradleTaskExecutor =
-        project.executor()
-            // see https://github.com/gradle/gradle/issues/15626
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+    private fun getExecutor(): GradleTaskExecutor = project.executor()
 }

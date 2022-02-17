@@ -93,6 +93,21 @@ interface DeprecationReporter {
                 }
             """.trimIndent()
         ),
+        TRANSFORM_API(
+            Version.VERSION_8_0,
+            """
+                The Transform API is removed to improve build performance. Projects that use the
+                Transform API force the Android Gradle plugin to use a less optimized flow for the
+                build that can result in large regressions in build times. It’s also difficult to
+                use the Transform API and combine it with other Gradle features; the replacement
+                APIs aim to make it easier to extend the build without introducing performance or
+                correctness issues.
+
+                There is no single replacement for the Transform API—there are new, targeted
+                APIs for each use case. All the replacement APIs are in the
+                `androidComponents {}` block.
+            """.trimIndent()
+        )
         ;
 
         fun getDeprecationTargetMessage(): String {
@@ -126,7 +141,7 @@ interface DeprecationReporter {
      * timing is added to the message.
      */
     fun reportDeprecatedApi(
-        newApiElement: String,
+        newApiElement: String?,
         oldApiElement: String,
         url: String,
         deprecationTarget: DeprecationTarget)

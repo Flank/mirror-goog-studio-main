@@ -318,6 +318,8 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
 
     @Test
     fun testNoNativeDebugMetadataInBundleIfAlreadyStripped() {
+        // TODO(169266007) Re-enable after 169266007 is fixed
+        Assume.assumeTrue(debugSymbolLevel != FULL)
         // add native libs to all modules
         listOf("app", "feature", "appLib", "featureLib").forEach {
             val subProject = project.getSubproject(":$it")

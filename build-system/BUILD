@@ -238,11 +238,47 @@ maven_repository(
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
 
-# m2 repository packaged inside studio.
+# Legacy maven repository representing what used to be packaged inside Studio
+#
+# This doesn't correspond to anything we publish and is obsolete.
+#
+# Tests that depend on this should migrate to using the Android Gradle plugin
+# as built with Gradle (wrapped in Bazel), i.e.
+#
+#    "//tools/base/build-system:android_gradle_plugin.zip",
+#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
+#
+# For an example of a migration, see
+# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
 maven_repository(
     name = "studio_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
-    visibility = ["//visibility:public"],
+    # Don't add new targets here, see above for how to migrate
+    visibility = [
+        "//tools/adt/idea/android:__pkg__",
+        "//tools/adt/idea/android-lang-databinding:__pkg__",
+        "//tools/adt/idea/android-lint:__pkg__",
+        "//tools/adt/idea/android-npw:__pkg__",
+        "//tools/adt/idea/android-templates:__pkg__",
+        "//tools/adt/idea/android-uitests:__pkg__",
+        "//tools/adt/idea/app-inspection/ide:__pkg__",
+        "//tools/adt/idea/build-attribution:__pkg__",
+        "//tools/adt/idea/compose-designer:__pkg__",
+        "//tools/adt/idea/compose-ide-plugin:__pkg__",
+        "//tools/adt/idea/databinding:__pkg__",
+        "//tools/adt/idea/designer:__pkg__",
+        "//tools/adt/idea/designer-perf-tests:__pkg__",
+        "//tools/adt/idea/ide-perf-tests:__pkg__",
+        "//tools/adt/idea/kotlin-integration:__pkg__",
+        "//tools/adt/idea/mlkit:__pkg__",
+        "//tools/adt/idea/nav/safeargs:__pkg__",
+        "//tools/adt/idea/project-system-gradle-sync:__pkg__",
+        "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
+        "//tools/adt/idea/sync-perf-tests:__pkg__",
+        "//tools/data-binding/compilationTests:__pkg__",
+        "//tools/vendor/google/android-ndk:__pkg__",
+        "//tools/vendor/google/lldb-integration-tests:__pkg__",
+    ],
 )
 
 filegroup(

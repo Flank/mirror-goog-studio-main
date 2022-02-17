@@ -21,22 +21,26 @@ readonly BUILD_TARGETS="//tools/... -//tools/adt/idea/studio/..."
 
 "${SCRIPT_DIR}/bazel" \
   --max_idle_secs=60 \
-  build \
+  test \
   --config=dynamic \
+  --config=sponge --config=ants \
   --invocation_id=${INVOCATION_ID} \
   --build_tag_filters=${BUILD_TAG_FILTERS} \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
+  --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+  --build_metadata=ab_target=studio-linux_canary \
   --define=meta_android_build_number="${BUILD_NUMBER}" \
   --tool_tag=studio-linux-canary \
+  --test_tag_filters="-no_test_linux,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate,-very_flaky" \
   -- \
-  ${BUILD_TARGETS}
+  //tools/adt/idea/...
 
 readonly BAZEL_STATUS=$?
 
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 if [[ -d "${DIST_DIR}" ]]; then
   # Generate a simple html page that redirects to the test results page.
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; url='https://source.cloud.google.com/results/invocations/${INVOCATION_ID}'\" /></head>" > "${DIST_DIR}"/upsalite_build_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; url='http://sponge2/${INVOCATION_ID}'\" /></head>" > "${DIST_DIR}"/sponge_build_results.html
 fi
 
 exit $BAZEL_STATUS

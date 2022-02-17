@@ -17,10 +17,8 @@
 package com.android.tools.utp.plugins.deviceprovider.gradle
 
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
-import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.config.AndroidSdk
 import com.google.testing.platform.api.config.Config
-import com.google.testing.platform.lib.process.logger.DefaultSubprocessLogger
 import com.google.testing.platform.api.config.ConfigBase
 import com.google.testing.platform.api.config.Environment
 import com.google.testing.platform.api.config.Setup
@@ -29,19 +27,17 @@ import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.core.device.DeviceProviderErrorSummary
 import com.google.testing.platform.core.device.DeviceProviderException
+import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.lib.process.inject.DaggerSubprocessComponent
+import com.google.testing.platform.lib.process.logger.DefaultSubprocessLogger
 import com.google.testing.platform.lib.process.logger.SubprocessLogger
 import com.google.testing.platform.proto.api.config.AdbConfigProto
 import com.google.testing.platform.proto.api.core.PathProto
 import com.google.testing.platform.runtime.android.AndroidDeviceProvider
 import com.google.testing.platform.runtime.android.device.AndroidDevice
 import com.google.testing.platform.runtime.android.device.AndroidDeviceProperties
-import kotlin.math.pow
-
-private const val MAX_ADB_ATTEMPTS = 6
-private const val MS_PER_SECOND = 1000
-private const val ADB_RETRY_DELAY_SECONDS = 2.0
-const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
+import java.util.logging.Logger
+import kotlin.math.min
 
 /**
  * Creates an emulator using the [GradleManagedAndroidDeviceProvider] configuration proto and the
@@ -51,14 +47,13 @@ const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
  *
  * Ports for the emulator is decided by the emulator directly, where the device is detected by a
  * unique id created by the device launcher.
- *
- * @param subprocessComponent Dagger component factory for [Subprocess]
  */
-class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
-        private val adbManager: GradleAdbManager,
-        private val emulatorHandle: EmulatorHandle,
-        private val deviceControllerFactory: DeviceControllerFactory,
-        private val skipRetryDelay: Boolean
+class GradleManagedAndroidDeviceLauncher(
+    private val adbManager: GradleAdbManager,
+    private val emulatorHandle: EmulatorHandle,
+    private val deviceControllerFactory: DeviceControllerFactory,
+    private val maxDelayMillis: Long = 30000,
+    private val logger: Logger = getLogger(),
 ) : AndroidDeviceProvider {
     private lateinit var environment: Environment
     private lateinit var testSetup: Setup
@@ -73,6 +68,8 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
     private lateinit var device: AndroidDevice
 
     companion object {
+        const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
+
         fun create(config: Config): GradleManagedAndroidDeviceLauncher {
             val subprocessLoggerFactory = object: SubprocessLogger.Factory {
                 override fun create() = DefaultSubprocessLogger(
@@ -86,7 +83,6 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
                     GradleAdbManagerImpl(subprocessComponent),
                     EmulatorHandleImpl(subprocessComponent),
                     DeviceControllerFactoryImpl(),
-                    skipRetryDelay = false
             )
         }
     }
@@ -181,27 +177,46 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
      * retrieve each id, checking against the emulators unique id to find the
      * correct serial.
      */
-    private fun findSerial(numberOfRetries: Int = MAX_ADB_ATTEMPTS): String? {
+    private fun findSerial(maxAttempts: Int = 10): String? {
         // We may need to retry as the emulator may not have attached to the
         // adb server even though the emulator has booted.
-        var retries = 0
-        while (retries < numberOfRetries) {
+        return retryWithExponentialBackOff(maxAttempts) { attempt ->
             val serials = adbManager.getAllSerials()
+            logger.info {
+                "Finding a test device $avdId (attempt $attempt of $maxAttempts).\n" +
+                "Found ${serials.size} devices:\n" +
+                serials.joinToString("\n") {
+                    "${adbManager.getId(it).orEmpty()}($it)"
+                }
+            }
             for (serial in serials) {
                 // ignore non-emulator devices.
                 if (!serial.startsWith("emulator-")) {
                     continue
                 }
                 if (avdId == adbManager.getId(serial)) {
-                    return serial
+                    return@retryWithExponentialBackOff serial
                 }
             }
-            if (!skipRetryDelay) {
-                Thread.sleep(ADB_RETRY_DELAY_SECONDS.pow(retries).toLong() * MS_PER_SECOND)
-            }
-            ++retries
+            null
         }
+    }
 
+    private fun <T> retryWithExponentialBackOff(
+        maxAttempts: Int = 10,
+        initialRetryDelayMillis: Long = 2000,
+        retryBackOffBase: Double = 2.0,
+        runnableFunc: (attempt: Int) -> T
+    ): T? {
+        var backOffMillis = min(initialRetryDelayMillis, maxDelayMillis)
+        for (attempt in 1..maxAttempts) {
+            val result = runnableFunc(attempt)
+            if (result != null) {
+                return result
+            }
+            Thread.sleep(backOffMillis)
+            backOffMillis = min((retryBackOffBase * backOffMillis).toLong(), maxDelayMillis)
+        }
         return null
     }
 
@@ -213,22 +228,15 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
      * we attempt to install the test apk, therefore we need it to be
      * established before we supply the Device to the rest of AGP
      */
-    private fun establishBootCheck(
-        deviceSerial: String,
-        numberOfRetries: Int = MAX_ADB_ATTEMPTS
-    ): Boolean {
+    private fun establishBootCheck(deviceSerial: String): Boolean {
         // We may need to retry if we default to cold boot.
-        var retries = 0
-        while (retries < numberOfRetries) {
+        return retryWithExponentialBackOff {
             if (adbManager.isBootLoaded(deviceSerial)) {
-                return true
+                true
+            } else {
+                null
             }
-            if (!skipRetryDelay) {
-                Thread.sleep(ADB_RETRY_DELAY_SECONDS.pow(retries).toLong() * MS_PER_SECOND)
-            }
-            ++retries
-        }
-        return false
+        } ?: false
     }
 
     override fun provideDevice(): DeviceController {

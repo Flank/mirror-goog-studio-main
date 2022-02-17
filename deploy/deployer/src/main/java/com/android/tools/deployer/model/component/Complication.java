@@ -37,8 +37,6 @@ public class Complication extends WearComponent {
                 "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-complication --ecn component '%s' --ecn watchface '%s' --ei slot %d --ei type %d";
     }
 
-    private static final String DEBUG_COMMAND = "am set-debug-app -w";
-
     public Complication(
             @NonNull ManifestAppComponentInfo info,
             @NonNull String appId,
@@ -59,9 +57,8 @@ public class Complication extends WearComponent {
                 info.getQualifiedName(), activationMode.equals(Mode.DEBUG) ? "for debug" : "");
 
         if (activationMode.equals(Mode.DEBUG)) {
-            String debug_command = DEBUG_COMMAND + " '" + appId + "'";
-            logger.info("$ adb shell " + debug_command);
-            runShellCommand(debug_command, receiver);
+            setUpAmDebugApp();
+            setUpDebugSurfaceDebugApp();
         }
         String command = getAddComplicationCommand(params);
         runStartCommand(command, receiver, logger);

@@ -1,0 +1,79 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+apply plugin: 'com.android.tools.java'
+apply plugin: 'com.android.tools.kotlin'
+
+repositories {
+    maven { url = uri(rootProject.cloneArtifacts.repository) }
+}
+
+dependencies {
+    implementation project(':base:build-system:integration-test:framework')
+    implementation project(':base:gradle-api')
+    implementation libs.junit
+    implementation libs.com.android.tools.common
+    implementation libs.com.android.tools.sdkCommon
+    implementation libs.com.android.tools.testutils
+    implementation libs.com.android.tools.sdklib
+    implementation libs.kotlin_stdlib
+    implementation gradleApi()
+    implementation(project(':base:build-system:gradle-core'))
+
+    testImplementation project(':base:build-system:integration-test:framework')
+    testImplementation libs.com.android.tools.analyticsLibrary.protos
+    testImplementation libs.com.android.tools.build.apksig
+    testImplementation project(':base:builder')
+    testImplementation project(':base:builder-model')
+    testImplementation libs.com.android.tools.sdkCommon
+    testImplementation libs.com.android.tools.testutils
+    testImplementation project(':base:gradle-api')
+    testCompileOnly(project(':base:profile'))
+
+    testImplementation libs.kotlin_stdlib
+    testImplementation libs.kotlin_test
+
+    testImplementation gradleApi()
+    testImplementation libs.apache_commons_io
+    testImplementation libs.apache_commons_lang
+    testImplementation libs.apache_compress
+    testImplementation libs.google_api_client
+    testImplementation libs.google_storage_client
+    testImplementation libs.junit
+    testImplementation libs.protobuf
+    testImplementation libs.protobuf_util
+    testImplementation libs.truth
+    testImplementation libs.unified_test_platform
+
+    testImplementation libs.mockito_core
+
+    // Add dependency on plugin code.  Exclude transitive dependencies to avoid conflict due to
+    // Groovy versions.
+    testImplementation(project(':base:build-system:gradle-core')) {
+        transitive = false
+    }
+}
+
+configurations {
+    // google-api-client depends on guava-jdk5.
+    testImplementation.exclude group: 'com.google.guava', module: 'guava-jdk5'
+}
+
+apply from: '../integration-tests.gradle'
+
+test {
+    dependsOn ':publishLocal'
+}

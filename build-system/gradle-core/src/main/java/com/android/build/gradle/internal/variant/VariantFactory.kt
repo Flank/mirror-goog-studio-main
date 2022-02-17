@@ -150,7 +150,9 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
 
     fun createTestFixturesBuildFeatureValues(
         buildFeatures: BuildFeatures,
-        projectOptions: ProjectOptions): BuildFeatureValues
+        projectOptions: ProjectOptions,
+        androidResourcesEnabled: Boolean
+    ): BuildFeatureValues
 
     fun createTestBuildFeatureValues(
             buildFeatures: BuildFeatures,

@@ -16,8 +16,18 @@
 
 package com.android.sdklib.repository.legacy.local;
 
-import static com.android.sdklib.repository.PkgProps.*;
-import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.*;
+import static com.android.sdklib.repository.PkgProps.ADDON_NAME;
+import static com.android.sdklib.repository.PkgProps.ADDON_NAME_DISPLAY;
+import static com.android.sdklib.repository.PkgProps.ADDON_NAME_ID;
+import static com.android.sdklib.repository.PkgProps.ADDON_VENDOR;
+import static com.android.sdklib.repository.PkgProps.ADDON_VENDOR_DISPLAY;
+import static com.android.sdklib.repository.PkgProps.ADDON_VENDOR_ID;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.NODE_NAME;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.NODE_NAME_DISPLAY;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.NODE_NAME_ID;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.NODE_VENDOR;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.NODE_VENDOR_DISPLAY;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.NODE_VENDOR_ID;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -28,13 +38,13 @@ import com.android.repository.api.RepoManager;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
-import com.android.sdklib.AndroidVersionHelper;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.legacy.AndroidVersionHelper;
 import com.android.sdklib.repository.legacy.FileOp;
 import com.android.sdklib.repository.legacy.descriptors.IPkgDesc;
 import com.android.sdklib.repository.legacy.descriptors.PkgDescExtra;

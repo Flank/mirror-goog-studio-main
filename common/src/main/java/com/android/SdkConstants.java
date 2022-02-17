@@ -89,6 +89,7 @@ public final class SdkConstants {
     public static final String MIN_COMPILE_SDK_PROPERTY = "minCompileSdk";
     public static final String MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY =
             "minAndroidGradlePluginVersion";
+    public static final String FORCE_COMPILE_SDK_PREVIEW_PROPERTY = "forceCompileSdkPreview";
 
     /** Properties in app-metadata.properties file */
     public static final String APP_METADATA_VERSION_PROPERTY = "appMetadataVersion";
@@ -2147,6 +2148,10 @@ public final class SdkConstants {
     // Values: Drawables
     public static final String VALUE_DISABLED = "disabled";
     public static final String VALUE_CLAMP = "clamp";
+
+    // Values: Wear
+    public static final String VALUE_COMPLICATION_SUPPORTED_TYPES =
+            "android.support.wearable.complications.SUPPORTED_TYPES";
 
     // Value delimiters: Manifest
     public static final String VALUE_DELIMITER_PIPE = "|";

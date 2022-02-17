@@ -31,11 +31,13 @@ import com.android.repository.impl.manager.LocalRepoLoaderImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.local.LocalSdk;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.Library;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
@@ -49,26 +51,29 @@ import junit.framework.TestCase;
  */
 public class LegacyLocalRepoTest extends TestCase {
 
-    public void testParseLegacy() {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFolder("/sdk/tools");
-        mockFop.recordExistingFile("/sdk/tools/source.properties",
-                "Pkg.License=Terms and Conditions\n" +
-                        "Archive.Os=WINDOWS\n" +
-                        "Pkg.Revision=22.3.4\n" +
-                        "Platform.MinPlatformToolsRev=18\n" +
-                        "Pkg.LicenseRef=android-sdk-license\n" +
-                        "Archive.Arch=ANY\n" +
-                        "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
-        mockFop.recordExistingFile("/sdk/tools/" + LocalSdk.androidCmdName(), "placeholder");
-        mockFop.recordExistingFile("/sdk/tools/" + SdkConstants.FN_EMULATOR, "placeholder");
+    private final Path mSdkLocation = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
 
-        Path root = mockFop.toPath("/sdk");
+    public void testParseLegacy() {
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("tools/source.properties"),
+                "Pkg.License=Terms and Conditions\n"
+                        + "Archive.Os=WINDOWS\n"
+                        + "Pkg.Revision=22.3.4\n"
+                        + "Platform.MinPlatformToolsRev=18\n"
+                        + "Pkg.LicenseRef=android-sdk-license\n"
+                        + "Archive.Arch=ANY\n"
+                        + "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("tools/" + LocalSdk.androidCmdName()), "placeholder");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("tools/" + SdkConstants.FN_EMULATOR), "placeholder");
+
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        RepoManager mgr = new AndroidSdkHandler(root, null).getSdkManager(progress);
+        RepoManager mgr = new AndroidSdkHandler(mSdkLocation, null).getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();
 
-        LocalRepoLoader sdk = new LocalRepoLoaderImpl(root, mgr, new LegacyLocalRepoLoader(root));
+        LocalRepoLoader sdk =
+                new LocalRepoLoaderImpl(mSdkLocation, mgr, new LegacyLocalRepoLoader(mSdkLocation));
         Map<String, LocalPackage> packages = sdk.getPackages(progress);
         progress.assertNoErrorsOrWarnings();
         assertEquals(1, packages.size());
@@ -78,16 +83,76 @@ public class LegacyLocalRepoTest extends TestCase {
         assertEquals(new Revision(22, 3, 4), local.getVersion());
     }
 
+    public void testParseNonBaseExtensions() {
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("platforms/android-30-ext3/source.properties"),
+                "Pkg.Desc=Android SDK Platform API 30\n"
+                        + "Pkg.UserSrc=false\n"
+                        + "Platform.Version=11\n"
+                        + "Platform.CodeName=\n"
+                        + "Pkg.Revision=3\n"
+                        + "AndroidVersion.ApiLevel=30\n"
+                        + "AndroidVersion.ExtensionLevel=3\n"
+                        + "AndroidVersion.IsBaseSdk=false\n"
+                        + "Layoutlib.Api=15\n"
+                        + "Layoutlib.Revision=1\n"
+                        + "Platform.MinToolsRev=22\n");
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        RepoManager mgr = new AndroidSdkHandler(mSdkLocation, null).getSdkManager(progress);
+        progress.assertNoErrorsOrWarnings();
+
+        LocalRepoLoader sdk =
+                new LocalRepoLoaderImpl(mSdkLocation, mgr, new LegacyLocalRepoLoader(mSdkLocation));
+        Map<String, LocalPackage> packages = sdk.getPackages(progress);
+        progress.assertNoErrorsOrWarnings();
+        assertEquals(1, packages.size());
+        LocalPackage local = packages.get("platforms;android-30-ext3");
+        DetailsTypes.PlatformDetailsType typeDetails =
+                (DetailsTypes.PlatformDetailsType) local.getTypeDetails();
+        assertThat(typeDetails.getAndroidVersion())
+                .isEqualTo(new AndroidVersion(30, null, 3, false));
+    }
+
+    public void testParseBaseExtensions() {
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("platforms/android-30/source.properties"),
+                "Pkg.Desc=Android SDK Platform API 30\n"
+                        + "Pkg.UserSrc=false\n"
+                        + "Platform.Version=11\n"
+                        + "Platform.CodeName=\n"
+                        + "Pkg.Revision=3\n"
+                        + "AndroidVersion.ApiLevel=30\n"
+                        + "AndroidVersion.ExtensionLevel=3\n"
+                        + "AndroidVersion.IsBaseSdk=true\n"
+                        + "Layoutlib.Api=15\n"
+                        + "Layoutlib.Revision=1\n"
+                        + "Platform.MinToolsRev=22\n");
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        RepoManager mgr = new AndroidSdkHandler(mSdkLocation, null).getSdkManager(progress);
+        progress.assertNoErrorsOrWarnings();
+
+        LocalRepoLoader sdk =
+                new LocalRepoLoaderImpl(mSdkLocation, mgr, new LegacyLocalRepoLoader(mSdkLocation));
+        Map<String, LocalPackage> packages = sdk.getPackages(progress);
+        progress.assertNoErrorsOrWarnings();
+        assertEquals(1, packages.size());
+        LocalPackage local = packages.get("platforms;android-30");
+        DetailsTypes.PlatformDetailsType typeDetails =
+                (DetailsTypes.PlatformDetailsType) local.getTypeDetails();
+        assertThat(typeDetails.getAndroidVersion())
+                .isEqualTo(new AndroidVersion(30, null, 3, true));
+    }
+
     public void testReadNewInLegacyLocation() throws Exception {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFolder("/sdk/tools");
-        mockFop.recordExistingFile(
-                "/sdk/tools/source.properties",
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("tools/source.properties"),
                 "Pkg.Revision=1.2\n"
                         + "Pkg.Path=cmdline-tools;latest\n"
                         + "Pkg.Desc=Android SDK Command-line Tools");
 
-        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "tools/package.xml", true);
+        LocalPackage local = loadLocalPackage(mSdkLocation, "tools/package.xml", true);
 
         assertEquals("cmdline-tools;latest", local.getPath());
         int[] revision = local.getVersion().toIntArray(false);
@@ -98,10 +163,8 @@ public class LegacyLocalRepoTest extends TestCase {
     }
 
     public void testRewriteLegacyTools() throws Exception {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFolder("/sdk/tools");
-        mockFop.recordExistingFile(
-                "/sdk/tools/source.properties",
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("tools/source.properties"),
                 "Pkg.License=Terms and Conditions\n"
                         + "Archive.Os=WINDOWS\n"
                         + "Pkg.Revision=22.3\n"
@@ -110,7 +173,7 @@ public class LegacyLocalRepoTest extends TestCase {
                         + "Archive.Arch=ANY\n"
                         + "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
 
-        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "tools/package.xml");
+        LocalPackage local = loadLocalPackage(mSdkLocation, "tools/package.xml");
 
         assertTrue(local.getPath().startsWith(SdkConstants.FD_TOOLS));
         assertEquals("Terms and Conditions", local.getLicense().getValue());
@@ -122,10 +185,10 @@ public class LegacyLocalRepoTest extends TestCase {
     }
 
     public void testRewriteLegacyAddon() throws Exception {
-        MockFileOp mockFop = new MockFileOp();
-        recordLegacyGoogleApis23(mockFop);
+        recordLegacyGoogleApis23(mSdkLocation);
 
-        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+        LocalPackage local =
+                loadLocalPackage(mSdkLocation, "add-ons/addon-google_apis-google-23/package.xml");
 
         assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
         assertEquals(new Revision(1, 0, 0), local.getVersion());
@@ -138,17 +201,17 @@ public class LegacyLocalRepoTest extends TestCase {
                                 "com.google.android.maps",
                                 "maps.jar",
                                 "API for Google Maps",
-                                mockFop.toPath("/sdk/add-ons/addon-google_apis-google-23/")),
+                                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/")),
                         createLibraryType(
                                 "com.android.future.usb.accessory",
                                 "usb.jar",
                                 "API for USB Accessories",
-                                mockFop.toPath("/sdk/add-ons/addon-google_apis-google-23/")),
+                                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/")),
                         createLibraryType(
                                 "com.google.android.media.effects",
                                 "effects.jar",
                                 "Collection of video effects",
-                                mockFop.toPath("/sdk/add-ons/addon-google_apis-google-23/")));
+                                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/")));
 
         Set<OptionalLibrary> libraries = Sets.newHashSet(details.getLibraries().getLibrary());
         assertEquals(desired, libraries);
@@ -170,62 +233,69 @@ public class LegacyLocalRepoTest extends TestCase {
     }
 
     public void testRewriteLegacyAddonWithMinimalSourceProperties() throws Exception {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
-                                   "AndroidVersion.ApiLevel=23\n"
-                                   + "Pkg.Desc=Android + Google APIs\n"
-                                   + "Pkg.Revision=1\n");
-        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
-                                   "name=Google APIs Test\n"
-                                   + "name-id=google_apis\n"
-                                   + "vendor=Google Inc.\n"
-                                   + "vendor-id=google\n"
-                                   + "description=Android + Google APIs\n");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/source.properties"),
+                "AndroidVersion.ApiLevel=23\n"
+                        + "Pkg.Desc=Android + Google APIs\n"
+                        + "Pkg.Revision=1\n");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/manifest.ini"),
+                "name=Google APIs Test\n"
+                        + "name-id=google_apis\n"
+                        + "vendor=Google Inc.\n"
+                        + "vendor-id=google\n"
+                        + "description=Android + Google APIs\n");
 
-        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+        LocalPackage local =
+                loadLocalPackage(mSdkLocation, "add-ons/addon-google_apis-google-23/package.xml");
 
         assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
         assertThat(local.getDisplayName()).startsWith("Google APIs Test,");
     }
 
     public void testRewriteLegacyAddonGetNameFromManifest() throws Exception {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
-                                   "AndroidVersion.ApiLevel=23\n"
-                                   + "Pkg.Desc=Android + Google APIs\n"
-                                   + "Pkg.Revision=1\n");
-        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
-                                   "name=Google Apis\n"
-                                   + "vendor=Google Inc.\n"
-                                   + "vendor-id=google\n"
-                                   + "description=Android + Google APIs\n");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/source.properties"),
+                "AndroidVersion.ApiLevel=23\n"
+                        + "Pkg.Desc=Android + Google APIs\n"
+                        + "Pkg.Revision=1\n");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/manifest.ini"),
+                "name=Google Apis\n"
+                        + "vendor=Google Inc.\n"
+                        + "vendor-id=google\n"
+                        + "description=Android + Google APIs\n");
 
-        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+        LocalPackage local =
+                loadLocalPackage(mSdkLocation, "add-ons/addon-google_apis-google-23/package.xml");
 
         assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
         assertThat(local.getDisplayName()).startsWith("Google Apis,");
     }
 
     public void testRewriteLegacyAddonGetNameIdFromManifest() throws Exception {
-        MockFileOp mockFop = new MockFileOp();
-        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
-                                   "AndroidVersion.ApiLevel=23\n"
-                                   + "Pkg.Desc=Android + Google APIs\n"
-                                   + "Pkg.Revision=1\n");
-        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
-                                   "name-id=google_apis\n"
-                                   + "vendor=Google Inc.\n"
-                                   + "vendor-id=google\n"
-                                   + "description=Android + Google APIs\n");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/source.properties"),
+                "AndroidVersion.ApiLevel=23\n"
+                        + "Pkg.Desc=Android + Google APIs\n"
+                        + "Pkg.Revision=1\n");
+        InMemoryFileSystems.recordExistingFile(
+                mSdkLocation.resolve("add-ons/addon-google_apis-google-23/manifest.ini"),
+                "name-id=google_apis\n"
+                        + "vendor=Google Inc.\n"
+                        + "vendor-id=google\n"
+                        + "description=Android + Google APIs\n");
 
-        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+        LocalPackage local =
+                loadLocalPackage(mSdkLocation, "add-ons/addon-google_apis-google-23/package.xml");
 
         assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
         assertThat(local.getDisplayName()).startsWith("Google Apis,");
     }
 
-    private static void recordLegacyGoogleApis23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
+    private static void recordLegacyGoogleApis23(Path path) {
+        InMemoryFileSystems.recordExistingFile(
+                path.resolve("add-ons/addon-google_apis-google-23/source.properties"),
                 "Addon.NameDisplay=Google APIs\n"
                         + "Addon.NameId=google_apis\n"
                         + "Addon.VendorDisplay=Google Inc.\n"
@@ -234,7 +304,8 @@ public class LegacyLocalRepoTest extends TestCase {
                         + "Pkg.Desc=Android + Google APIs\n"
                         + "Pkg.Revision=1\n"
                         + "Pkg.SourceUrl=https\\://dl.google.com/android/repository/addon.xml\n");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
+        InMemoryFileSystems.recordExistingFile(
+                path.resolve("add-ons/addon-google_apis-google-23/manifest.ini"),
                 "name=Google APIs\n"
                         + "name-id=google_apis\n"
                         + "vendor=Google Inc.\n"
@@ -256,20 +327,21 @@ public class LegacyLocalRepoTest extends TestCase {
                         + "com.google.android.media.effects=effects.jar;Collection of video effects\n"
                         + "\n"
                         + "SystemImage.GpuSupport=true\n");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar");
+        InMemoryFileSystems.recordExistingFile(
+                path.resolve("add-ons/addon-google_apis-google-23/libs/effects.jar"));
+        InMemoryFileSystems.recordExistingFile(
+                path.resolve("add-ons/addon-google_apis-google-23/libs/maps.jar"));
+        InMemoryFileSystems.recordExistingFile(
+                path.resolve("add-ons/addon-google_apis-google-23/libs/usb.jar"));
     }
 
-    private static LocalPackage loadLocalPackage(MockFileOp mockFop, String rootPath, String packagePath) throws Exception {
-        return loadLocalPackage(mockFop, rootPath, packagePath, false);
+    private static LocalPackage loadLocalPackage(Path root, String packagePath) throws Exception {
+        return loadLocalPackage(root, packagePath, false);
     }
 
     private static LocalPackage loadLocalPackage(
-            MockFileOp mockFop, String rootPath, String packagePath, boolean allowWarnings)
-            throws Exception {
+            Path root, String packagePath, boolean allowWarnings) throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        Path root = mockFop.toPath(rootPath);
         RepoManager mgr = new AndroidSdkHandler(root, null).getSdkManager(progress);
 
         if (!allowWarnings) {

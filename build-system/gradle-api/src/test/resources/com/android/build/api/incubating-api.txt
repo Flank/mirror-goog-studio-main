@@ -327,6 +327,7 @@ com.android.build.api.dsl.EmulatorSnapshots.retainAll: void ()
 com.android.build.api.dsl.EmulatorSnapshots.setCompressSnapshots: void (boolean)
 com.android.build.api.dsl.EmulatorSnapshots.setEnableForTestFailures: void (boolean)
 com.android.build.api.dsl.EmulatorSnapshots.setMaxSnapshotsForTestFailures: void (int)
+com.android.build.api.dsl.ExternalNativeBuild.getExperimentalProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.api.dsl.ExternalNativeBuildOptions
 com.android.build.api.dsl.ExternalNativeBuildOptions.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.api.dsl.ExternalNativeCmakeOptions ()
@@ -767,9 +768,13 @@ com.android.build.api.variant.BundleConfig.addMetadataFile: void (java.lang.Stri
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.configurations: void (kotlin.jvm.functions.Function1<? super org.gradle.api.artifacts.Configuration, kotlin.Unit>)
+com.android.build.api.variant.Component.getAnnotationProcessorConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getCompileClasspath: org.gradle.api.file.FileCollection ()
+com.android.build.api.variant.Component.getCompileConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getInstrumentation: com.android.build.api.variant.Instrumentation ()
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
+com.android.build.api.variant.Component.getRuntimeConfiguration: org.gradle.api.artifacts.Configuration ()
 com.android.build.api.variant.Component.getSources: com.android.build.api.variant.Sources ()
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder
@@ -804,9 +809,16 @@ com.android.build.api.variant.SourceAndOverlayDirectories.getAll: org.gradle.api
 com.android.build.api.variant.SourceDirectories implements com.android.build.api.variant.AbstractSourceDirectories
 com.android.build.api.variant.SourceDirectories.getAll: org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.Directory>> ()
 com.android.build.api.variant.Sources
+com.android.build.api.variant.Sources.getAidl: com.android.build.api.variant.SourceDirectories ()
+com.android.build.api.variant.Sources.getAssets: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.Sources.getByName: com.android.build.api.variant.SourceDirectories (java.lang.String)
 com.android.build.api.variant.Sources.getJava: com.android.build.api.variant.SourceDirectories ()
+com.android.build.api.variant.Sources.getJniLibs: com.android.build.api.variant.SourceAndOverlayDirectories ()
+com.android.build.api.variant.Sources.getKotlin: com.android.build.api.variant.SourceDirectories ()
+com.android.build.api.variant.Sources.getMlModels: com.android.build.api.variant.SourceAndOverlayDirectories ()
+com.android.build.api.variant.Sources.getRenderscript: com.android.build.api.variant.SourceDirectories ()
 com.android.build.api.variant.Sources.getRes: com.android.build.api.variant.SourceAndOverlayDirectories ()
+com.android.build.api.variant.Sources.getShaders: com.android.build.api.variant.SourceAndOverlayDirectories ()
 com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
 com.android.build.api.variant.TestFixtures.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()

@@ -20,20 +20,93 @@ import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
+import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.compiling.BuildConfigType
+import com.android.builder.model.SourceProvider
 import java.util.Collections
+import java.io.File
 
 /**
  * Computes the default sources for all [com.android.build.api.variant.impl.SourceType]s.
  */
-class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesProvider {
+class DefaultSourcesProviderImpl(
+    val component: ComponentImpl,
+    val variantSources: VariantSources,
+): DefaultSourcesProvider {
 
     override val java: List<DirectoryEntry>
         get() = component.defaultJavaSources()
+
+    override val kotlin: List<DirectoryEntry>
+        get() {
+            val sourceSets = mutableListOf<DirectoryEntry>()
+            for (sourceProvider in variantSources.sortedSourceProviders) {
+                val sourceSet = sourceProvider as AndroidSourceSet
+                for (srcDir in (sourceSet.kotlin as DefaultAndroidSourceDirectorySet).srcDirs) {
+                    sourceSets.add(
+                        FileBasedDirectoryEntryImpl(
+                            name = sourceSet.name,
+                            directory = srcDir,
+                            filter = null,
+                        )
+                    )
+                }
+            }
+            return sourceSets
+        }
+
     override val res: List<DirectoryEntries>
         get() = component.defaultResSources()
+    override val assets: List<DirectoryEntries>
+        get() = defaultAssetsSources()
+
+    override val jniLibs: List<DirectoryEntries>
+        get() = getSourceList {
+                sourceProvider -> sourceProvider.jniLibsDirectories
+        }
+
+    override val shaders: List<DirectoryEntries>?
+        get() = if (component.buildFeatures.shaders) getSourceList {
+                sourceProvider -> sourceProvider.shadersDirectories
+        } else null
+
+    override val aidl: List<DirectoryEntry>?
+        get() = if (component.buildFeatures.aidl) {
+            flattenSourceProviders { sourceSet -> sourceSet.aidl }
+        } else null
+
+    override val mlModels: List<DirectoryEntries>
+        get() = getSourceList { sourceProvider ->
+            sourceProvider.mlModelsDirectories
+        }
+
+    override val renderscript: List<DirectoryEntry>?
+        get() = if (component.buildFeatures.renderScript) {
+            flattenSourceProviders { sourceSet -> sourceSet.renderscript }
+        } else null
+
+    private fun flattenSourceProviders(
+        sourceDirectory: (sourceSet: AndroidSourceSet) -> AndroidSourceDirectorySet
+    ): List<DirectoryEntry> {
+        val sourceSets = mutableListOf<DirectoryEntry>()
+        for (sourceProvider in variantSources.sortedSourceProviders) {
+            val sourceSet = sourceProvider as AndroidSourceSet
+            for (srcDir in sourceDirectory(sourceSet).srcDirs) {
+                sourceSets.add(
+                    FileBasedDirectoryEntryImpl(
+                        name = sourceSet.name,
+                        directory = srcDir,
+                        filter = sourceDirectory(sourceSet).filter,
+                    )
+                )
+            }
+        }
+        return sourceSets
+    }
 
     /**
      * Computes the default java sources: source sets and generated sources.
@@ -46,19 +119,9 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         val sourceSets = mutableListOf<DirectoryEntry>()
 
         // First the actual source folders.
-        val providers = variantSources.sortedSourceProviders
-        for (provider in providers) {
-            val sourceSet = provider as AndroidSourceSet
-            for (srcDir in sourceSet.java.srcDirs) {
-                sourceSets.add(
-                    FileBasedDirectoryEntryImpl(
-                        name = sourceSet.name,
-                        directory = srcDir,
-                        filter = (provider as AndroidSourceSet).java.filter,
-                    )
-                )
-            }
-        }
+        sourceSets.addAll(
+            flattenSourceProviders { sourceSet -> sourceSet.java }
+        )
 
         // for the other, there's no duplicate so no issue.
         if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_SOURCE) {
@@ -113,7 +176,9 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
     private fun ComponentImpl.defaultResSources(): List<DirectoryEntries> {
         val sourceDirectories = mutableListOf<DirectoryEntries>()
 
-        sourceDirectories.addAll(variantSources.resSourceList)
+        sourceDirectories.addAll(
+            getSourceList { sourceProvider -> sourceProvider.resDirectories }
+        )
 
         val generatedFolders = mutableListOf<DirectoryEntry>()
         if (buildFeatures.renderScript) {
@@ -137,5 +202,22 @@ class DefaultSourcesProviderImpl(val component: ComponentImpl): DefaultSourcesPr
         sourceDirectories.add(DirectoryEntries("generated", generatedFolders))
 
         return Collections.unmodifiableList(sourceDirectories)
+    }
+
+    private fun defaultAssetsSources(): List<DirectoryEntries> =
+        getSourceList { sourceProvider -> sourceProvider.assetsDirectories }
+
+    private fun getSourceList(action: (sourceProvider: SourceProvider) -> Collection<File>): List<DirectoryEntries> {
+        return variantSources.sortedSourceProviders.map { sourceProvider ->
+            DirectoryEntries(
+                sourceProvider.name,
+                action(sourceProvider).map { directory ->
+                    FileBasedDirectoryEntryImpl(
+                        sourceProvider.name,
+                        directory,
+                    )
+                }
+            )
+        }
     }
 }

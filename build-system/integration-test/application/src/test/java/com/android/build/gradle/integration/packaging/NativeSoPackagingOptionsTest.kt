@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.packaging
 
 import com.android.build.api.variant.JniLibsPackaging
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.ANDROIDTEST_DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
@@ -125,9 +124,6 @@ class NativeSoPackagingOptionsTest {
         GradleTestProject
             .builder()
             .fromTestApp(multiModuleTestProject)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            // b/149978740, b/146208910
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
             .create()
 
     @Test

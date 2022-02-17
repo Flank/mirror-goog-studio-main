@@ -53,7 +53,7 @@ class GetCompileClasspathTest {
                 androidComponents {
                     onVariants(selector().all(), { variant ->
                         project.tasks.register(
-                            variant.name + "PrintClasspath",
+                            variant.name + "PrintCompileClasspath",
                             PrintClasspathTask.class
                         ) {
                             // The expected error is caused by trying to resolve the FileCollection
@@ -63,7 +63,7 @@ class GetCompileClasspathTest {
                     })
                 }
             """.trimIndent())
-        val result = project.executor().expectFailure().run("debugPrintClasspath")
+        val result = project.executor().expectFailure().run("debugPrintCompileClasspath")
         ScannerSubject.assertThat(result.stderr).contains(
             "Configuration 'debugCompileClasspath' was resolved during configuration time."
         )

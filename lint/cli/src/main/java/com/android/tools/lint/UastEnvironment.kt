@@ -105,6 +105,9 @@ class UastEnvironment private constructor(
     private val kotlinCompilerEnv: KotlinCoreEnvironment,
     private val projectDisposable: Disposable
 ) {
+    val coreAppEnv: CoreApplicationEnvironment
+        get() = kotlinCompilerEnv.projectEnvironment.environment
+
     val ideaProject: MockProject
         get() = kotlinCompilerEnv.projectEnvironment.project
 

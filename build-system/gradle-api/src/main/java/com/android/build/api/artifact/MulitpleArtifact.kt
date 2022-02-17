@@ -49,7 +49,11 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
             Replaceable
 
     /**
-     * All classes that will eventually be dex'ed for this module provided as directories.
+     * Classes that will eventually be dex'ed for this module, that were generated, or processed
+     * as directories.
+     *
+     * This is not the whole list of classes as some are generated, or processed as jars. In order
+     * to process all classes, one should also consume [ALL_CLASSES_JARS]
      */
     @Incubating
     object ALL_CLASSES_DIRS:
@@ -59,7 +63,11 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
             Replaceable
 
     /**
-     * All classes that will eventually be dex'ed for this module provided as jar files.
+     * Classes that will eventually be dex'ed for this module, that were generated, or processed
+     * as jar files.
+     *
+     * This is not the whole list of classes as some are generated, or processed as directories.
+     * In order to process all classes, one should also consume [ALL_CLASSES_DIRS]
      */
     @Incubating
     object ALL_CLASSES_JARS:

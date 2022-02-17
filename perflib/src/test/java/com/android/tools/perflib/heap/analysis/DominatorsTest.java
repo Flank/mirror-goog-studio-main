@@ -242,9 +242,6 @@ public class DominatorsTest extends TestCase {
         mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
         mSnapshot.computeDominators();
 
-        Set<Instance> topologicalSet = new HashSet<Instance>(mSnapshot.getTopologicalOrdering());
-        assertEquals(topologicalSet.size(), mSnapshot.getTopologicalOrdering().size());
-
         long totalInstanceCount = 0;
         for (Heap heap : mSnapshot.getHeaps()) {
             totalInstanceCount += heap.getInstancesCount();

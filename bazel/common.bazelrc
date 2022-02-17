@@ -119,6 +119,20 @@ build:resultstore --config=_resultstore
 build:resultstore --noremote_upload_local_results
 build:resultstore --noremote_accept_cached
 
+# Publish to the private BES backend.
+# TODO(b/158230441) Sponge support is still in progress and will not work for
+# non-CI (user) builds.
+build:sponge --bes_backend=buildeventservice-pa.googleapis.com
+build:sponge --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,https://www.googleapis.com/auth/cloud-platform
+
+# Enable go/antswatcher to process test results.
+# This config must be used with the sponge config as it relies on the same bes_backend.
+# NOTE: Bazel invocations must still supply --build_metadata values for ab_target and ab_build_id
+# to be create a successful AnTS result.
+build:ants --bes_keywords=android-test-storage
+build:ants --build_metadata="test_definition_name=android_studio/bazel"
+build:ants --build_metadata=generate_test_uri=fusion
+
 ## Base config for using the remote cache.
 ## This avoids building things which were already built by CI.
 build:_rcache --config=_remote_base

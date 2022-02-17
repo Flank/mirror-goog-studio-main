@@ -24,6 +24,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.api.tasks.util.PatternSet
+import java.io.File
 
 abstract class AbstractSourceDirectoriesImpl(
     private val _name: String,
@@ -74,4 +75,6 @@ abstract class AbstractSourceDirectoriesImpl(
     }
 
     internal abstract fun addSource(directoryEntry: DirectoryEntry)
+
+    internal abstract fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File>
 }

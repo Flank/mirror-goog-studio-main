@@ -17,10 +17,12 @@ package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
@@ -215,7 +217,14 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("not specify an $AAR_FORMAT_VERSION_PROPERTY value")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' does not specify an
+                              aarFormatVersion value, which is a required value.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -233,12 +242,11 @@ class CheckAarMetadataTaskTest {
             assertThat(Throwables.getRootCause(e).message).startsWith("""
                 An issue was found when checking AAR metadata:
 
-                  1.  The aarFormatVersion (99999) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
+                  1.  Dependency 'library.aar' has an aarFormatVersion value of
+                      '99999', which is not compatible with this version of the
+                      Android Gradle plugin.
+
                       Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: library.aar.
-                      AAR metadata file:
             """.trimIndent())
         }
     }
@@ -255,7 +263,16 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_FORMAT_VERSION_PROPERTY value.")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' has an invalid
+                              aarFormatVersion value (invalid).
+
+                              Invalid revision: invalid
+                    """.trimIndent()
+                )
         }
     }
 
@@ -271,7 +288,14 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("not specify an $AAR_METADATA_VERSION_PROPERTY value")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' does not specify an
+                              aarMetadataVersion value, which is a required value.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -289,12 +313,11 @@ class CheckAarMetadataTaskTest {
             assertThat(Throwables.getRootCause(e).message).startsWith("""
                 An issue was found when checking AAR metadata:
 
-                  1.  The aarMetadataVersion (99999) specified in a dependency's AAR metadata
-                      (META-INF/com/android/build/gradle/aar-metadata.properties)
-                      is not compatible with this version of the Android Gradle plugin.
+                  1.  Dependency 'library.aar' has an aarMetadataVersion value of
+                      '99999', which is not compatible with this version of the
+                      Android Gradle plugin.
+
                       Please upgrade to a newer version of the Android Gradle plugin.
-                      Dependency: library.aar.
-                      AAR metadata file:
                 """.trimIndent())
         }
     }
@@ -328,7 +351,16 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_METADATA_VERSION_PROPERTY value.")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' has an invalid
+                              aarMetadataVersion value (invalid).
+
+                              Invalid revision: invalid
+                    """.trimIndent()
+                )
         }
     }
 
@@ -345,7 +377,16 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $MIN_COMPILE_SDK_PROPERTY value.")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  The AAR metadata for dependency 'library.aar' has an invalid
+                              minCompileSdk value (invalid).
+
+                              minCompileSdk must be an integer.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -362,14 +403,66 @@ class CheckAarMetadataTaskTest {
             project.executor().run(":app:assembleDebug")
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message).contains(AAR_FORMAT_VERSION_PROPERTY)
+            assertThat(Throwables.getRootCause(e).message).contains(AAR_METADATA_VERSION_PROPERTY)
+            assertThat(Throwables.getRootCause(e).message).contains(MIN_COMPILE_SDK_PROPERTY)
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_FORMAT_VERSION_PROPERTY value.")
+                .contains(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
+        }
+    }
+
+    @Test
+    fun testPassingWithForceCompileSdkPreview() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            forceCompileSdkPreview = "Tiramisu"
+        )
+        TestFileUtils.appendToFile(
+            project.getSubproject("app").buildFile,
+            "\n\nandroid.compileSdkPreview 'Tiramisu'\n\n"
+        )
+        val result = project.executor().run(":app:checkDebugAarMetadata")
+        ScannerSubject.assertThat(result.stdout).contains("BUILD SUCCESSFUL")
+    }
+
+    @Test
+    fun testFailsWithForceCompileSdkPreview() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            forceCompileSdkPreview = "Tiramisu"
+        )
+
+        // Set app's compileSdkVersion to 30 for consistent error message.
+        project.getSubproject("app").buildFile
+        TestFileUtils.searchRegexAndReplace(
+            project.getSubproject("app").buildFile,
+            "compileSdkVersion \\d+",
+            "compileSdkVersion 30"
+        )
+
+        // Test that build fails with desired error message.
+        try {
+            project.executor().run(":app:checkDebugAarMetadata")
+            Assert.fail("Expected build failure")
+        } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $AAR_METADATA_VERSION_PROPERTY value.")
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $MIN_COMPILE_SDK_PROPERTY value.")
-            assertThat(Throwables.getRootCause(e).message)
-                .contains("has an invalid $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY value")
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  Dependency 'library.aar' requires libraries and applications that
+                              depend on it to compile against codename "Tiramisu" of the
+                              Android APIs.
+
+                              :app is currently compiled against android-30.
+
+                              Recommended action: Use a different version of dependency 'library.aar',
+                              or set compileSdkPreview to "Tiramisu" in your build.gradle
+                              file if you intend to experiment with that preview SDK.
+                    """.trimIndent()
+                )
         }
     }
 
@@ -377,7 +470,8 @@ class CheckAarMetadataTaskTest {
         aarFormatVersion: String?,
         aarMetadataVersion: String?,
         minCompileSdk: String? = null,
-        minAgpVersion: String? = null
+        minAgpVersion: String? = null,
+        forceCompileSdkPreview: String? = null
     ) {
         project.executor().run(":lib:assembleDebug")
         // Copy lib's .aar build output to the app's libs directory
@@ -396,6 +490,7 @@ class CheckAarMetadataTaskTest {
             aarMetadataVersion?.let { sb.appendln("$AAR_METADATA_VERSION_PROPERTY=$it") }
             minCompileSdk?.let { sb.appendln("$MIN_COMPILE_SDK_PROPERTY=$it") }
             minAgpVersion?.let { sb.appendln("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$it") }
+            forceCompileSdkPreview?.let { sb.appendln("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
             aar.add(
                 BytesSource(
                     sb.toString().toByteArray(),

@@ -150,6 +150,8 @@ interface AndroidProjectBuilder {
     var minSdkCodename: String?
     var targetProjectPath: String?
 
+    val dynamicFeatures: MutableSet<String>
+
     fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit)
 
     fun testFixtures(action: TestFixturesBuilder.() -> Unit)

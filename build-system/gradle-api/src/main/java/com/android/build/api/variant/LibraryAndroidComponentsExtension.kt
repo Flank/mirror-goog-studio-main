@@ -17,14 +17,13 @@
 package com.android.build.api.variant
 
 import com.android.build.api.dsl.LibraryExtension
-import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantBuilder
 
 /**
- * Extension for Library module variant.
+ * Extension for the Android Library Gradle Plugin components.
  *
- * A library module is created when a build script is applying the 'com.android.library' plugin.
+ * This is the `androidComponents` block when the `com.android.library` plugin is applied.
+ *
+ * Only the Android Gradle Plugin should create instances of interfaces in com.android.build.api.variant.
  */
 interface LibraryAndroidComponentsExtension:
     AndroidComponentsExtension<LibraryExtension, LibraryVariantBuilder, LibraryVariant>

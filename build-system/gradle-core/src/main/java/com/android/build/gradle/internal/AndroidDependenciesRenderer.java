@@ -141,18 +141,18 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                         String text;
 
                         if (id instanceof ProjectComponentIdentifier) {
+                            String projectId =
+                                    BuildMappingUtils.getIdString((ProjectComponentIdentifier) id);
                             if (artifact.isWrappedModule()) {
-                                String project = ((ProjectComponentIdentifier) id).getProjectPath();
                                 String file = artifact.getArtifactFile().getAbsolutePath();
-
-                                text = String.format("%s (file: %s)", project, file);
-                            } else if (artifact.getDependencyType() == DependencyType.ANDROID) {
-                                String project = ((ProjectComponentIdentifier) id).getProjectPath();
-                                String variant = artifact.getVariantName();
-
-                                text = String.format("%s (variant: %s)", project, variant);
+                                text = String.format("%s (file: %s)", projectId, file);
                             } else {
-                                text = ((ProjectComponentIdentifier) id).getProjectPath();
+                                if (artifact.getDependencyType() == DependencyType.ANDROID) {
+                                    String variant = artifact.getVariantName();
+                                    text = String.format("%s (variant: %s)", projectId, variant);
+                                } else {
+                                    text = projectId;
+                                }
                             }
 
                         } else if (id instanceof ModuleComponentIdentifier) {

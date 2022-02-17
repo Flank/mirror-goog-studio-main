@@ -32,9 +32,48 @@ interface Sources {
     val java: SourceDirectories
 
     /**
+     * Access ot the Kotlin source folders.
+     */
+    val kotlin: SourceDirectories
+
+    /**
      * Access to the Android resources sources folders.
      */
     val res: SourceAndOverlayDirectories
+
+    /**
+     * Access to the Android assets sources folders.
+     */
+    val assets: SourceAndOverlayDirectories
+
+    /**
+     * Access to the JNI libraries folders
+     */
+    val jniLibs: SourceAndOverlayDirectories
+
+    /**
+     * Access to the shaders sources folders if [com.android.build.api.dsl.BuildFeatures.shaders]
+     * is true otherwise null
+     */
+    val shaders: SourceAndOverlayDirectories?
+
+    /**
+     * Access to the machine learning models folders.
+     */
+    val mlModels: SourceAndOverlayDirectories
+
+    /**
+     * Access to the aidl sources folders if [com.android.build.api.dsl.BuildFeatures.aidl]
+     * is true otherwise null
+     */
+    val aidl: SourceDirectories?
+
+    /**
+     * Access to the renderscript sources folders if
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is true otherwise null.
+     */
+    @get:Deprecated("renderscript is deprecated and will be removed in a future release.")
+    val renderscript: SourceDirectories?
 
     /**
      * Access (and potentially creates) a new [SourceDirectories] for a custom source type that can

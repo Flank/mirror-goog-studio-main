@@ -23,6 +23,7 @@ import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.utils.ILogger;
 
+
 public class Activity extends AppComponent {
 
     public Activity(@NonNull ManifestActivityInfo info,

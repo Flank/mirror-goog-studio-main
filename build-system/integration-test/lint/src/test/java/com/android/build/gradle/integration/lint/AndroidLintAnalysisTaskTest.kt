@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.testutils.truth.PathSubject.assertThat
@@ -31,8 +30,6 @@ class AndroidLintAnalysisTaskTest {
     @get:Rule
     val lintKotlinProject: GradleTestProject =
         GradleTestProject.builder()
-            // FIXME(b/195978143)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .fromTestProject("lintKotlin")
             .create()
 

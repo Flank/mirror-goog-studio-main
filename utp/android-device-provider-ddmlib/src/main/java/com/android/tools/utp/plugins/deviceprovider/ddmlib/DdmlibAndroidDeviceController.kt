@@ -48,7 +48,7 @@ class DdmlibAndroidDeviceController(
 ) : DeviceController {
 
     companion object {
-        private const val DEFAULT_ADB_TIMEOUT_SECONDS = 120L
+        private const val DEFAULT_ADB_TIMEOUT_SECONDS = 360L
         private const val SHELL_EXIT_CODE_TAG = "utp_shell_exit_code="
 
         // This list is copied from the com.android.tools.deployer.ApkInstaller. These errors are

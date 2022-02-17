@@ -323,6 +323,8 @@ class LintBaseline(
             "IconDensities" -> true
             // Error message changed but details aren't important; b/169615369
             "UselessLeaf" -> true
+            // Error message changed but details aren't important; b/218579133
+            "NonResizeableActivity" -> true
             // See 181170484
             "ScopedStorage" -> sameSuffixFrom("MANAGE_EXTERNAL_STORAGE", new, old)
             // See 168897210

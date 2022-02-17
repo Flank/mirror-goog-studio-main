@@ -85,6 +85,7 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -101,7 +102,7 @@ abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
     final override val variantDslInfo: VariantDslInfo,
-    override val variantDependencies: VariantDependencies,
+    final override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
     override val artifacts: ArtifactsImpl,
@@ -146,7 +147,7 @@ abstract class ComponentImpl(
 
     override val sources: SourcesImpl by lazy {
         SourcesImpl(
-            DefaultSourcesProviderImpl(this),
+            DefaultSourcesProviderImpl(this, variantSources),
             internalServices.projectInfo.projectDirectory,
             internalServices,
             variantSources.variantSourceProvider,
@@ -179,6 +180,18 @@ abstract class ComponentImpl(
             AndroidArtifacts.ArtifactType.CLASSES_JAR,
             generatedBytecodeKey = null
         )
+    }
+
+    override val compileConfiguration = variantDependencies.compileClasspath
+
+    override val runtimeConfiguration = variantDependencies.runtimeClasspath
+
+    override val annotationProcessorConfiguration =
+        variantDependencies.annotationProcessorConfiguration
+
+    override fun configurations(action: (Configuration) -> Unit) {
+        action.invoke(compileConfiguration)
+        action.invoke(runtimeConfiguration)
     }
 
     // ---------------------------------------------------------------------------------------------

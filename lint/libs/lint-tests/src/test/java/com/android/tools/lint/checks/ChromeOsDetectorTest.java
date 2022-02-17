@@ -260,7 +260,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: Expecting android:resizeableActivity=\"true\" for this activity so the user can take advantage of the multi-window environment on Chrome OS devices [NonResizeableActivity]\n"
+                        + "AndroidManifest.xml:5: Warning: Expecting android:resizeableActivity=\"true\" for this activity so the user can take advantage of the multi-window environment on all devices. NOTE: beginning with Android 12, all apps run in multi-window mode on large screen devices. [NonResizeableActivity]\n"
                         + "        <activity android:name=\".MainActivity\" android:resizeableActivity=\"false\"/>\n"
                         + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";

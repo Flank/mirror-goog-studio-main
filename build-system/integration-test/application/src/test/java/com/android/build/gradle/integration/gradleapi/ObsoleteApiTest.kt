@@ -37,12 +37,50 @@ import java.io.File
 class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
     companion object {
-        @JvmStatic @Parameterized.Parameters()
+        @JvmStatic @Parameterized.Parameters(name="{0}")
         fun setUps() = listOf(
             TestProjectProvider("Kotlin") {
                 KotlinHelloWorldApp.forPlugin("com.android.application")
             }, TestProjectProvider("Java") {
                 HelloWorldApp.forPlugin("com.android.application")
+                    .appendToBuild("""
+                        android.applicationVariants.all { variant ->
+                            println variant.getJavaCompile().getName()
+                        }
+                        """.trimIndent()
+                )
+            }, TestProjectProvider("TransformApi") {
+                HelloWorldApp.forPlugin("com.android.application")
+                    .appendToBuild(
+                        /* language=groovy */
+                        """
+
+                        import com.android.build.api.transform.Transform
+                        import com.android.build.api.transform.QualifiedContent.ContentType
+                        import com.android.build.api.transform.QualifiedContent.DefaultContentType
+                        import com.android.build.api.transform.QualifiedContent.Scope
+                        import com.android.build.api.transform.Transform
+
+                        // This is not an example of how to use the obsolete transform API
+                        // but just exists to satisfy the tests.
+                        class MyTransform extends Transform {
+                            String getName() {
+                                return "myTransform"
+                            }
+                            Set<ContentType> getInputTypes() {
+                                return Collections.singleton(DefaultContentType.CLASSES);
+                            }
+                            Set<Scope> getScopes() {
+                                return Collections.singleton(Scope.PROJECT);
+                            }
+                            boolean isIncremental() {
+                                return false;
+                            }
+                        }
+
+                        android.registerTransform(new MyTransform())
+                        """.trimIndent()
+                    )
             }
         )
     }
@@ -52,17 +90,6 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
         GradleTestProject.builder()
             .fromTestApp(provider.provider.invoke())
             .create()
-
-    @Before
-    fun setup() {
-        if (provider.name == "Java") {
-            project.buildFile.appendText("\n" +
-                "android.applicationVariants.all { variant ->\n" +
-                        "  println variant.getJavaCompile().getName()\n" +
-                        "}\n"
-            )
-        }
-    }
 
     @Test
     fun `test via model`() {
@@ -87,6 +114,16 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
                             "REASON: Called from: ${project.projectDir}${File.separatorChar}build.gradle:27\n" +
                             "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
             }
+            "TransformApi" -> {
+                Truth.assertThat(syncIssues).hasSize(1)
+                val warningMsg = syncIssues.first().message
+                Truth.assertThat(warningMsg).isEqualTo(
+                    "API 'android.registerTransform' is obsolete.\n" +
+                            "${DeprecationReporter.DeprecationTarget.TRANSFORM_API.getDeprecationTargetMessage()}\n" +
+                            "For more information, see https://developer.android.com/studio/releases/gradle-plugin-api-updates#transform-api.\n" +
+                            "REASON: Called from: ${project.projectDir}${File.separatorChar}build.gradle:50\n" +
+                            "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
+            }
             else -> throw RuntimeException("Unsupported type")
         }
     }
@@ -108,6 +145,15 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
                                 "REASON: Called from: ${project.projectDir}${File.separatorChar}build.gradle:27\n" +
                                 "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
                 }
+                "TransformApi" -> {
+                ScannerSubject.assertThat(it).contains(
+                    "WARNING:API 'android.registerTransform' is obsolete.\n" +
+                            "It will be removed in version 8.0 of the Android Gradle plugin.\n" +
+                            "${DeprecationReporter.DeprecationTarget.TRANSFORM_API.getDeprecationTargetMessage()}\n" +
+                            "For more information, see https://developer.android.com/studio/releases/gradle-plugin-api-updates#transform-api.\n" +
+                            "REASON: Called from: ${project.projectDir}${File.separatorChar}build.gradle:50\n" +
+                            "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
+                         }
                 else -> throw RuntimeException("Unsupported type")
             }
         }

@@ -24,8 +24,9 @@ import org.gradle.api.file.Directory
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import javax.inject.Inject
 
-open class AnalyticsEnabledSourceAndOverlayDirectories(
+open class AnalyticsEnabledSourceAndOverlayDirectories @Inject constructor(
     override val delegate: SourceAndOverlayDirectories,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory,

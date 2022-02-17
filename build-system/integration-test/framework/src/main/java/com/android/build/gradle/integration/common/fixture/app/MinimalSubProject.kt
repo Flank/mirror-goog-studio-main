@@ -73,9 +73,8 @@ class MinimalSubProject private constructor(
         return this
     }
 
-    fun appendToBuild(snippet: String): MinimalSubProject {
-        replaceFile(getFile("build.gradle").appendContent("\n" + snippet + "\n"))
-        return this
+    override fun appendToBuild(snippet: String): MinimalSubProject {
+        return super.appendToBuild(snippet) as MinimalSubProject
     }
 
     companion object {

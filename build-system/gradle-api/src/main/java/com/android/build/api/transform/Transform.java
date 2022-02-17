@@ -37,6 +37,12 @@ import org.gradle.api.provider.Property;
 /**
  * A Transform that processes intermediary build artifacts.
  *
+ * <p>This API is deprecated and is planned to be removed in Android Gradle plugin 8.0.
+ *
+ * <p>There is no single replacement. For more information about how to migrate, see <a
+ * href="https://developer.android.com/studio/releases/gradle-plugin-roadmap">
+ * https://developer.android.com/studio/releases/gradle-plugin-roadmap </a>.
+ *
  * <p>For each added transform, a new task is created. The action of adding a transform takes
  * care of handling dependencies between the tasks. This is done based on what the transform
  * processes. The output of the transform becomes consumable by other transforms and these
@@ -77,7 +83,8 @@ import org.gradle.api.provider.Property;
  * <p>These secondary inputs/outputs allow a transform to read but not process any content. This
  * can be achieved by having {@link #getScopes()} return an empty list and use
  * {@link #getReferencedScopes()} to indicate what to read instead.
- * @deprecated
+ *
+ * @deprecated This API is planned to be removed in Android Gradle Plugin 8.0.
  */
 @SuppressWarnings("MethodMayBeStatic")
 @Deprecated

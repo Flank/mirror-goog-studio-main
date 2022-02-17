@@ -121,8 +121,6 @@ class UtpConnectedTest {
         val aggTestResultPbPath = "app/$AGGREGATED_TEST_RESULT_PB"
 
         project.executor()
-            // see https://github.com/gradle/gradle/issues/15626
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run(testTaskName)
 
         assertThat(project.file(testResultXmlPath)).exists()
@@ -275,8 +273,6 @@ class UtpConnectedTest {
                 .withArgument("--init-script")
                 .withArgument(initScriptPath.toString())
                 .withArgument("-P${ENABLE_UTP_TEST_REPORT_PROPERTY}=true")
-                // see https://github.com/gradle/gradle/issues/15626
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run(testTaskName)
 
         resultWithConfigCache.stdout.use {

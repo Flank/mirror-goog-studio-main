@@ -291,7 +291,6 @@ public final class DeviceMonitor implements ClientTracker {
         }
 
         for (IDevice device : result.added) {
-            AndroidDebugBridge.deviceConnected(device);
             if (device.isOnline()) {
                 newlyOnline.add((DeviceImpl) device);
             }
@@ -308,11 +307,20 @@ public final class DeviceMonitor implements ClientTracker {
         }
 
         for (DeviceImpl device : newlyOnline) {
-            setProperties(device);
+            setEmulatorProperties(device);
 
             // Initiate a property fetch so that future requests can be served out of this cache.
             // This is necessary for backwards compatibility
             device.getSystemProperty(IDevice.PROP_BUILD_API_LEVEL);
+        }
+        for (IDevice device : result.added) {
+            if (device.getAvdName() == null) {
+                // Try to set properties even if the device is still technically offline and wasn't
+                // added to newlyOnline. Surprisingly, setEmulatorProperties() does work for a newly
+                // added device even before device.isOnline() == true
+                setEmulatorProperties((DeviceImpl) device);
+            }
+            AndroidDebugBridge.deviceConnected(device);
         }
     }
 
@@ -330,7 +338,7 @@ public final class DeviceMonitor implements ClientTracker {
         }
     }
 
-    private static void setProperties(@NonNull DeviceImpl device) {
+    private static void setEmulatorProperties(@NonNull DeviceImpl device) {
         AvdData avdData = null;
 
         try {

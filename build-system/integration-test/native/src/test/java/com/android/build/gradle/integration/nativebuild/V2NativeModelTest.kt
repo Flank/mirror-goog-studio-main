@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
+import com.android.build.gradle.integration.common.fixture.model.assertEqualsMultiline
 import com.android.build.gradle.integration.common.fixture.model.cxxFileVariantSegmentTranslator
 import com.android.build.gradle.integration.common.fixture.model.dumpCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
@@ -152,22 +153,23 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
             PLATFORM_LINUX -> translated.replace("linux-x86_64", "{HOST_PLATFORM}")
             else -> error(CURRENT_PLATFORM)
         }
-        Truth.assertThat(deplatformed).isEqualTo(
+        .replace("-O0, ", "") // -O0 was removed some time after r21
+        assertEqualsMultiline(deplatformed,
             """
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
+                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -fno-limit-debug-info, -fPIC]
 
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE]
+                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -fno-limit-debug-info, -fPIE]
 
                 sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
+                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -fno-limit-debug-info, -fPIC]
                 """.trimIndent()
         )
     }
