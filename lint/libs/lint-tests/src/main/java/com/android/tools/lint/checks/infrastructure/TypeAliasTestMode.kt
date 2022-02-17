@@ -33,6 +33,7 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiWildcardType
 import org.jetbrains.kotlin.psi.KtTypeArgumentList
+import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UElement
@@ -108,6 +109,11 @@ class TypeAliasTestMode : UastSourceTransformationTestMode(
                         packageMap[typeText] = it
                         newAliases[typeText] = it
                     }
+            }
+
+            override fun visitAnnotation(node: UAnnotation): Boolean {
+                // don't type alias annotation names
+                return false
             }
 
             override fun checkTypeReference(

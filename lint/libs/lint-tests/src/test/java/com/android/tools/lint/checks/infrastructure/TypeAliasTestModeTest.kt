@@ -446,6 +446,27 @@ class TypeAliasTestModeTest {
     }
 
     @Test
+    fun testJvmStatic() {
+        @Language("kotlin")
+        val kotlin = """
+            annotation class MyAnnotation
+            class Test {
+                companion object {
+                    @MyAnnotation @JvmStatic fun test() {
+                    }
+                }
+            }
+        """.trimIndent()
+
+        @Suppress("UnnecessaryVariable")
+        @Language("kotlin")
+        val expected = kotlin
+
+        val aliased = alias(kotlin)
+        assertEquals(expected, aliased.trim())
+    }
+
+    @Test
     fun testTransformMessage() {
         val mode = ImportAliasTestMode()
         assertTrue(
