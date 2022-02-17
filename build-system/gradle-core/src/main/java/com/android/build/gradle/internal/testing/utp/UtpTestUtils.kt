@@ -35,7 +35,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
-import kotlin.math.min
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
@@ -299,7 +298,7 @@ private fun hasEmulatorTimeoutException(error: ErrorDetailProto.ErrorDetail): Bo
  */
 fun getPlatformErrorMessage(resultsProto: TestSuiteResultProto.TestSuiteResult?): String {
     resultsProto ?: return UNKNOWN_PLATFORM_ERROR_MESSAGE
-    return getPlatformErrorMessage(resultsProto.platformError.errorDetail)
+    return getPlatformErrorMessage(resultsProto.platformError.errorDetail).toString()
 }
 
 /**
@@ -307,14 +306,24 @@ fun getPlatformErrorMessage(resultsProto: TestSuiteResultProto.TestSuiteResult?)
  *
  * @param error the top level error detail to be analyzed.
  */
-private fun getPlatformErrorMessage(error : ErrorDetailProto.ErrorDetail) : String =
-    when {
-        getExceptionFromStackTrace(error.summary.stackTrace)
-            .contains("EmulatorTimeoutException") -> "PLATFORM ERROR: ${error.summary.errorMessage}"
-        error.hasCause() -> getPlatformErrorMessage(error.cause)
-        error.summary.errorMessage.isNotBlank() -> "PLATFORM ERROR: ${error.summary.errorMessage}"
-        else -> UNKNOWN_PLATFORM_ERROR_MESSAGE
+private fun getPlatformErrorMessage(
+    error : ErrorDetailProto.ErrorDetail,
+    errorMessageBuilder: StringBuilder = StringBuilder()) : StringBuilder {
+    if (error.hasCause()) {
+        if (error.summary.errorMessage.isNotBlank()) {
+            errorMessageBuilder.append("${error.summary.errorMessage}\n")
+        }
+        getPlatformErrorMessage(error.cause, errorMessageBuilder)
+    } else {
+        if (error.summary.errorMessage.isNotBlank()) {
+            errorMessageBuilder.append("${error.summary.errorMessage}\n")
+        } else {
+            errorMessageBuilder.append("$UNKNOWN_PLATFORM_ERROR_MESSAGE\n")
+        }
+        errorMessageBuilder.append(error.summary.stackTrace)
     }
+    return errorMessageBuilder
+}
 
 /**
  * Attempts to get a simple string by which the exception can be easily parsed.

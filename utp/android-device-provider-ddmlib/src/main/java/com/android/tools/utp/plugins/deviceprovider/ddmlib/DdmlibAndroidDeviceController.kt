@@ -196,7 +196,7 @@ class DdmlibAndroidDeviceController(
                             if (!retryInstall) {
                                 throw UtpException(
                                     errorSummary,
-                                    "Failed to install APKs: " + e.errorCode,
+                                    "Failed to install APK(s): $apkPath",
                                     e
                                 )
                             }

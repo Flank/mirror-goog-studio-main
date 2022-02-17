@@ -349,17 +349,56 @@ class UtpTestUtilsTest {
                   error_name: "DEVICE_PROVISION_FAILED"
                   error_classification: "UNDERLYING_TOOL"
                   error_message: "Failed trying to provide device controller."
+                  stack_trace: "This stacktrace should not be included in the error message."
                 }
                 cause {
                   summary {
                     error_message: "Gradle was unable to attach one or more devices to the adb server."
+                    stack_trace: "stacktrace line1\nstacktrace line2"
                   }
                 }
               }
             }
         """)
 
-        assertThat(getPlatformErrorMessage(resultProto))
-            .isEqualTo("PLATFORM ERROR: Gradle was unable to attach one or more devices to the adb server.")
+        assertThat(getPlatformErrorMessage(resultProto)).contains("""
+            Failed trying to provide device controller.
+            Gradle was unable to attach one or more devices to the adb server.
+            stacktrace line1
+            stacktrace line2
+            """.trimIndent())
+    }
+
+    @Test
+    fun getPlatformErrorMessageShouldReturnErrorMessageEvenIfErrorMessageIsMissingInProto() {
+        val resultProto = createResultProto("""
+            test_status: ERROR
+            platform_error {
+              error_detail {
+                summary {
+                  namespace {
+                    namespace: "com.google.testing.platform"
+                  }
+                  error_code: 3002
+                  error_name: "DEVICE_PROVISION_FAILED"
+                  error_classification: "UNDERLYING_TOOL"
+                  error_message: "Failed trying to provide device controller."
+                  stack_trace: "This stacktrace should not be included in the error message."
+                }
+                cause {
+                  summary {
+                    stack_trace: "stacktrace line1\nstacktrace line2"
+                  }
+                }
+              }
+            }
+        """)
+
+        assertThat(getPlatformErrorMessage(resultProto)).contains("""
+            Failed trying to provide device controller.
+            Unknown platform error occurred when running the UTP test suite. Please check logs for details.
+            stacktrace line1
+            stacktrace line2
+            """.trimIndent())
     }
 }

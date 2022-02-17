@@ -201,7 +201,7 @@ class DdmlibAndroidDeviceControllerTest {
             controller.execute(listOf("install", "apk.apk"))
         }
 
-        assertThat(exception.message).contains("Failed to install APKs")
+        assertThat(exception.message).contains("Failed to install APK(s): apk.apk")
         assertThat(exception.errorSummary.errorName)
             .isEqualTo("INSTALL_FAILED_UPDATE_INCOMPATIBLE")
         assertThat(exception.errorSummary.errorCode)
@@ -244,7 +244,7 @@ class DdmlibAndroidDeviceControllerTest {
             controller.execute(listOf("install", "apk.apk"))
         }
 
-        assertThat(exception.message).contains("Failed to install APKs")
+        assertThat(exception.message).contains("Failed to install APK(s): apk.apk")
         assertThat(exception.errorSummary.errorName)
             .isEqualTo("INSTALL_FAILED_UPDATE_INCOMPATIBLE")
         assertThat(exception.errorSummary.errorCode)
@@ -274,7 +274,7 @@ class DdmlibAndroidDeviceControllerTest {
             controller.execute(listOf("install", "apk.apk"))
         }
 
-        assertThat(exception.message).contains("Failed to install APKs")
+        assertThat(exception.message).contains("Failed to install APK(s): apk.apk")
         assertThat(exception.errorSummary.errorName)
             .isEqualTo("UNKNOWN")
         assertThat(exception.errorSummary.errorCode)

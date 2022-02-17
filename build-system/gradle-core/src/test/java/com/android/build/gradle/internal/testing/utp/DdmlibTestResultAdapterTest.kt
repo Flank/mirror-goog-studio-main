@@ -156,7 +156,8 @@ class DdmlibTestResultAdapterTest {
 
         inOrder(mockDdmlibListener).apply {
             verify(mockDdmlibListener).addSystemError(eq(
-                "PLATFORM ERROR: Gradle was unable to attach one or more devices to the adb server.\n"))
+                "Failed trying to provide device controller.\n" +
+                "Gradle was unable to attach one or more devices to the adb server.\n\n"))
             verify(mockDdmlibListener).testRunEnded(anyLong(), eq(mapOf()))
             verifyNoMoreInteractions()
         }
