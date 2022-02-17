@@ -31,9 +31,9 @@ import com.google.testing.platform.proto.api.core.TestArtifactProto.Artifact
 import com.google.testing.platform.proto.api.core.TestArtifactProto.ArtifactType.ANDROID_APK
 import com.google.testing.platform.runtime.android.device.AndroidDevice
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 import java.util.logging.Logger
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -108,7 +108,14 @@ class DdmlibAndroidDeviceController(
     override fun execute(args: List<String>, timeout: Long?): CommandResult {
         val output = mutableListOf<String>()
         val handler = executeAsync(args) { output.add(it) }
-        handler.waitFor(timeout ?: DEFAULT_ADB_TIMEOUT_SECONDS)
+        try {
+            handler.waitFor(timeout ?: DEFAULT_ADB_TIMEOUT_SECONDS)
+        } catch (e: TimeoutCancellationException) {
+            logger.warning {
+                "adb command [${args.joinToString(" ")}] failed due to timeout.\n${e.message}"
+            }
+            handler.stop()
+        }
         return CommandResult(handler.exitCode(), output)
     }
 
@@ -218,7 +225,13 @@ class DdmlibAndroidDeviceController(
             )
         }
         return object : CommandHandle {
-            override fun exitCode(): Int = deferred.getCompleted().statusCode
+            override fun exitCode(): Int {
+                return if (isCancelled) {
+                    -1
+                } else {
+                    deferred.getCompleted().statusCode
+                }
+            }
 
             override fun stop() {
                 isCancelled = true
@@ -226,7 +239,7 @@ class DdmlibAndroidDeviceController(
 
             override fun isRunning(): Boolean = deferred.isActive
 
-            @Throws(TimeoutException::class)
+            @Throws(TimeoutCancellationException::class)
             override fun waitFor(timeout: Long?): Unit = runBlocking {
                 if (timeout != null) {
                     withTimeout(timeout * 1000) {

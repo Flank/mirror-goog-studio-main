@@ -184,6 +184,12 @@ class DdmlibAndroidDeviceControllerTest {
     }
 
     @Test
+    fun executeShellCommandFailedByTimeout() {
+        val ret = controller.execute(listOf("shell", "am", "instrument"), timeout = 0)
+        assertThat(ret.statusCode).isEqualTo(-1)
+    }
+
+    @Test
     fun executeInstallCommand() {
         val ret = controller.execute(listOf("install", "apk.apk"))
         assertThat(ret.statusCode).isEqualTo(0)
