@@ -39,6 +39,8 @@ import studio.network.inspection.NetworkInspectorProtocol
 import java.net.URL
 import java.net.URLConnection
 import java.util.List
+import java.util.logging.Level
+import android.util.Log
 
 private const val POLL_INTERVAL_MS = 500L
 private const val MULTIPLIER_FACTOR = 1000 / POLL_INTERVAL_MS
@@ -118,31 +120,43 @@ class NetworkInspector(
         }
     }
 
-    private fun startSpeedCollection() {
-        val application = environment.artTooling().findInstances(Application::class.java).single()
-        val uid = application.applicationInfo.uid
-
-        scope.launch {
-            var prevRxBytes = TrafficStats.getUidRxBytes(uid)
-            var prevTxBytes = TrafficStats.getUidTxBytes(uid)
-            while (true) {
-                delay(POLL_INTERVAL_MS)
-                val rxBytes = TrafficStats.getUidRxBytes(uid)
-                val txBytes = TrafficStats.getUidTxBytes(uid)
-                connection.sendEvent(
-                    NetworkInspectorProtocol.Event.newBuilder()
-                        .setSpeedEvent(
-                            NetworkInspectorProtocol.SpeedEvent.newBuilder()
-                                .setRxSpeed((rxBytes - prevRxBytes) * MULTIPLIER_FACTOR)
-                                .setTxSpeed((txBytes - prevTxBytes) * MULTIPLIER_FACTOR)
-                        )
-                        .setTimestamp(System.nanoTime())
-                        .build()
-                        .toByteArray()
-                )
-                prevRxBytes = rxBytes
-                prevTxBytes = txBytes
+    private fun startSpeedCollection() = scope.launch {
+        // The app can have multiple Application instances. In that case, we use the first non-null
+        // uid, which is most likely from the Application created by Android.
+        val uid = environment.artTooling().findInstances(Application::class.java)
+            .mapNotNull {
+                try {
+                    it.applicationInfo?.uid
+                } catch (e: Exception) {
+                    null
+                }
             }
+            .firstOrNull() ?: run {
+            Log.e(
+                this::class.java.name,
+                "Failed to find application instance. Collection of network speed is not available."
+            )
+            return@launch
+        }
+        var prevRxBytes = TrafficStats.getUidRxBytes(uid)
+        var prevTxBytes = TrafficStats.getUidTxBytes(uid)
+        while (true) {
+            delay(POLL_INTERVAL_MS)
+            val rxBytes = TrafficStats.getUidRxBytes(uid)
+            val txBytes = TrafficStats.getUidTxBytes(uid)
+            connection.sendEvent(
+                NetworkInspectorProtocol.Event.newBuilder()
+                    .setSpeedEvent(
+                        NetworkInspectorProtocol.SpeedEvent.newBuilder()
+                            .setRxSpeed((rxBytes - prevRxBytes) * MULTIPLIER_FACTOR)
+                            .setTxSpeed((txBytes - prevTxBytes) * MULTIPLIER_FACTOR)
+                    )
+                    .setTimestamp(System.nanoTime())
+                    .build()
+                    .toByteArray()
+            )
+            prevRxBytes = rxBytes
+            prevTxBytes = txBytes
         }
     }
 
