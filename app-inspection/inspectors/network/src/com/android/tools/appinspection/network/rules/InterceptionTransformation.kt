@@ -17,6 +17,7 @@
 package com.android.tools.appinspection.network.rules
 
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderAdded
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.StatusCodeReplaced
 import java.io.InputStream
 
@@ -36,7 +37,8 @@ class StatusCodeReplacedTransformation(
     private val replacingCode = statusCodeReplaced.newCode
 
     override fun transform(response: NetworkResponse): NetworkResponse {
-        val statusLine = response.responseHeaders["null"]?.getOrNull(0) ?: return response
+        val statusHeader = response.responseHeaders["null"] ?: return response
+        val statusLine = statusHeader.getOrNull(0) ?: return response
         if (statusLine.startsWith("HTTP/1.")) {
             val codePos = statusLine.indexOf(' ')
             if (codePos > 0) {
@@ -56,6 +58,22 @@ class StatusCodeReplacedTransformation(
             }
         }
         return response
+    }
+}
+
+/**
+ * A transformation class that adds a pair of header and value to the response.
+ */
+class HeaderAddedTransformation(
+    private val headerAdded: HeaderAdded
+) : InterceptionTransformation {
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        val headers = response.responseHeaders.toMutableMap()
+        val values = headers.getOrPut(headerAdded.name) { listOf() }.toMutableList()
+        values.add(headerAdded.value)
+        headers[headerAdded.name] = values
+        return response.copy(responseHeaders = headers)
     }
 }
 

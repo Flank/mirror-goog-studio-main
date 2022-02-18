@@ -32,6 +32,8 @@ class InterceptionRule(proto: InterceptRule) {
             when {
                 transformationProto.hasStatusCodeReplaced() ->
                     StatusCodeReplacedTransformation(transformationProto.statusCodeReplaced)
+                transformationProto.hasHeaderAdded() ->
+                    HeaderAddedTransformation(transformationProto.headerAdded)
                 transformationProto.hasBodyReplaced() ->
                     BodyReplacedTransformation(transformationProto.bodyReplaced)
                 else -> null

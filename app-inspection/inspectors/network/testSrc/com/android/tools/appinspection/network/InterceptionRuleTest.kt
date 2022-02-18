@@ -16,6 +16,7 @@
 
 package com.android.tools.appinspection.network
 
+import com.android.tools.appinspection.network.rules.HeaderAddedTransformation
 import com.android.tools.appinspection.network.rules.NetworkResponse
 import com.android.tools.appinspection.network.rules.StatusCodeReplacedTransformation
 import com.android.tools.appinspection.network.rules.matches
@@ -23,6 +24,7 @@ import com.android.tools.appinspection.network.rules.wildCardMatches
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderAdded
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.StatusCodeReplaced
 
 class InterceptionRuleTest {
@@ -74,5 +76,30 @@ class InterceptionRuleTest {
             StatusCodeReplacedTransformation(proto).transform(responseWithoutMessage)
         assertThat(transformedResponse.responseHeaders["null"]!![0]).isEqualTo("HTTP/1.0 404")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
+    }
+
+    @Test
+    fun addResponseHeader() {
+        val response = NetworkResponse(
+            mapOf("null" to listOf("HTTP/1.0 200 OK")),
+            "Body".byteInputStream()
+        )
+        val addingNewHeaderAndValue = HeaderAdded.newBuilder().apply {
+            name = "Name"
+            value = "Value"
+        }.build()
+        var transformedResponse =
+            HeaderAddedTransformation(addingNewHeaderAndValue).transform(response)
+        assertThat(transformedResponse.responseHeaders["Name"]!![0]).isEqualTo("Value")
+
+        val addingValueToExitingHeader = HeaderAdded.newBuilder().apply {
+            name = "Name"
+            value = "Value2"
+        }.build()
+
+        transformedResponse =
+            HeaderAddedTransformation(addingValueToExitingHeader).transform(transformedResponse)
+        assertThat(transformedResponse.responseHeaders["Name"])
+            .containsExactly("Value", "Value2")
     }
 }
