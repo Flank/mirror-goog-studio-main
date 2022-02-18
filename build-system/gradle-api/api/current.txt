@@ -624,10 +624,10 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public com.android.build.api.dsl.BundleDeviceTier getDeviceTier();
     method @org.gradle.api.Incubating public org.gradle.api.file.DirectoryProperty getIntegrityConfigDir();
     method public com.android.build.api.dsl.BundleLanguage getLanguage();
-    method @org.gradle.api.Incubating public com.android.build.api.dsl.StoreArchive getStoreArchive();
+    method public com.android.build.api.dsl.BundleStoreArchive getStoreArchive();
     method public com.android.build.api.dsl.BundleTexture getTexture();
     method public void language(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage,kotlin.Unit> action);
-    method @org.gradle.api.Incubating public void storeArchive(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.StoreArchive,kotlin.Unit> action);
+    method public void storeArchive(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleStoreArchive,kotlin.Unit> action);
     method public void texture(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture,kotlin.Unit> action);
     property public abstract com.android.build.api.dsl.BundleAbi abi;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.BundleCodeTransparency codeTransparency;
@@ -635,7 +635,7 @@ package com.android.build.api.dsl {
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.BundleDeviceTier deviceTier;
     property @org.gradle.api.Incubating public abstract org.gradle.api.file.DirectoryProperty integrityConfigDir;
     property public abstract com.android.build.api.dsl.BundleLanguage language;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.StoreArchive storeArchive;
+    property public abstract com.android.build.api.dsl.BundleStoreArchive storeArchive;
     property public abstract com.android.build.api.dsl.BundleTexture texture;
   }
 
@@ -670,6 +670,12 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public Boolean? getEnableSplit();
     method @org.gradle.api.Incubating public void setEnableSplit(Boolean? enableSplit);
     property @org.gradle.api.Incubating public abstract Boolean? enableSplit;
+  }
+
+  public interface BundleStoreArchive {
+    method public Boolean? getEnable();
+    method public void setEnable(Boolean? enable);
+    property public abstract Boolean? enable;
   }
 
   public interface BundleTexture {
@@ -1554,12 +1560,6 @@ package com.android.build.api.dsl {
     property public abstract java.util.Collection<java.lang.String> abiFilters;
     property public abstract com.android.build.api.dsl.DensitySplit density;
     property public abstract java.util.Collection<java.lang.String> densityFilters;
-  }
-
-  @org.gradle.api.Incubating public interface StoreArchive {
-    method @org.gradle.api.Incubating public Boolean? getEnable();
-    method @org.gradle.api.Incubating public void setEnable(Boolean? enable);
-    property @org.gradle.api.Incubating public abstract Boolean? enable;
   }
 
   public interface TestBaseFlavor extends com.android.build.api.dsl.BaseFlavor com.android.build.api.dsl.TestVariantDimension {

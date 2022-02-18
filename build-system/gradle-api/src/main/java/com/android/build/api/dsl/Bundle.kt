@@ -36,8 +36,7 @@ interface Bundle {
     @get:Incubating
     val codeTransparency: BundleCodeTransparency
 
-    @get:Incubating
-    val storeArchive: StoreArchive
+    val storeArchive: BundleStoreArchive
 
     @get:Incubating
     val integrityConfigDir: DirectoryProperty
@@ -56,6 +55,5 @@ interface Bundle {
     @Incubating
     fun codeTransparency(action: BundleCodeTransparency.() -> Unit)
 
-    @Incubating
-    fun storeArchive(action: StoreArchive.() -> Unit)
+    fun storeArchive(action: BundleStoreArchive.() -> Unit)
 }

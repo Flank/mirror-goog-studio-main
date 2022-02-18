@@ -1151,7 +1151,7 @@ com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier implements com.and
 com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier.<init>: com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier ()
 com.android.build.gradle.internal.dsl.BundleOptionsLanguage implements com.android.build.api.dsl.BundleLanguage
 com.android.build.gradle.internal.dsl.BundleOptionsLanguage.<init>: com.android.build.gradle.internal.dsl.BundleOptionsLanguage ()
-com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive implements com.android.build.api.dsl.StoreArchive
+com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive implements com.android.build.api.dsl.BundleStoreArchive
 com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive.<init>: com.android.build.gradle.internal.dsl.BundleOptionsStoreArchive ()
 com.android.build.gradle.internal.dsl.BundleOptionsTexture implements com.android.build.api.dsl.BundleTexture
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.<init>: com.android.build.gradle.internal.dsl.BundleOptionsTexture ()

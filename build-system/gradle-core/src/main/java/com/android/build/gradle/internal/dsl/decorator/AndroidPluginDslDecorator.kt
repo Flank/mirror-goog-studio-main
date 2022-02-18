@@ -48,7 +48,7 @@ import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.Split
 import com.android.build.api.dsl.Splits
-import com.android.build.api.dsl.StoreArchive
+import com.android.build.api.dsl.BundleStoreArchive
 import com.android.build.api.dsl.ViewBinding
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AarMetadataImpl
@@ -107,7 +107,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(BundleLanguage::class.java, BundleOptionsLanguage::class.java),
     SupportedPropertyType.Block(BundleTexture::class.java, BundleOptionsTexture::class.java),
     SupportedPropertyType.Block(BundleCodeTransparency::class.java, BundleOptionsCodeTransparency::class.java),
-    SupportedPropertyType.Block(StoreArchive::class.java, BundleOptionsStoreArchive::class.java),
+    SupportedPropertyType.Block(BundleStoreArchive::class.java, BundleOptionsStoreArchive::class.java),
     SupportedPropertyType.Block(Cmake::class.java, CmakeOptions::class.java),
     SupportedPropertyType.Block(CompileOptions::class.java, com.android.build.gradle.internal.CompileOptions::class.java),
     SupportedPropertyType.Block(DataBinding::class.java, DataBindingOptions::class.java),

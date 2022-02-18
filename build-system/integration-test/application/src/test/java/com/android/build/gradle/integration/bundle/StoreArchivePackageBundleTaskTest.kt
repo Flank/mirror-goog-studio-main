@@ -76,7 +76,7 @@ class StoreArchivePackageBundleTaskTest(
             val appBundle = AppBundle.buildFromZip(zip)
             if (storeArchiveEnabled == null) {
                 Truth.assertThat(appBundle.bundleConfig.optimizations.hasStoreArchive())
-                    .isFalse()
+                    .isTrue()
             } else {
                 Truth.assertThat(appBundle.bundleConfig.optimizations.storeArchive.enabled)
                     .isEqualTo(storeArchiveEnabled)
