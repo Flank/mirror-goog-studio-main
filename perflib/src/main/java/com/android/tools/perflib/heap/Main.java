@@ -59,7 +59,7 @@ public class Main {
             Set<ClassObj> classes = someClasses.get(thePackage);
 
             for (ClassObj theClass : classes) {
-                System.out.println("     " + theClass.mClassName);
+                System.out.println("     " + theClass.getClassName());
             }
         }
     }
@@ -73,7 +73,7 @@ public class Main {
             Set<ClassObj> classes = allClasses.get(thePackage);
 
             for (ClassObj theClass : classes) {
-                System.out.println("     " + theClass.mClassName);
+                System.out.println("     " + theClass.getClassName());
             }
         }
     }

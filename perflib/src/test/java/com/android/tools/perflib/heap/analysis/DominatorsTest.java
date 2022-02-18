@@ -193,12 +193,12 @@ public class DominatorsTest extends TestCase {
         for (Heap heap : mSnapshot.getHeaps()) {
             ClassObj softClass = heap.getClass(SnapshotBuilder.SOFT_REFERENCE_ID);
             if (softClass != null) {
-                assertTrue(softClass.getIsSoftReference());
+                assertTrue(softClass.isSoftReference());
             }
 
             ClassObj softAndHardClass = heap.getClass(SnapshotBuilder.SOFT_AND_HARD_REFERENCE_ID);
             if (softAndHardClass != null) {
-                assertTrue(softAndHardClass.getIsSoftReference());
+                assertTrue(softAndHardClass.isSoftReference());
             }
         }
 

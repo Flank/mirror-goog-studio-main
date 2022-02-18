@@ -39,7 +39,7 @@ public class ShortestDistanceVisitor extends NonRecursiveVisitor {
                 (parent == null ||
                         child.getSoftReverseReferences() == null ||
                         !child.getSoftReverseReferences().contains(parent) ||
-                        child.getIsSoftReference())) {
+                        child.isSoftReference())) {
             child.setDistanceToGcRoot(mVisitDistance);
             mPriorityQueue.add(child);
         }
