@@ -21,6 +21,7 @@ import com.android.SdkConstants.ATTR_AUTO_TEXT
 import com.android.SdkConstants.ATTR_CAPITALIZE
 import com.android.SdkConstants.ATTR_EDITABLE
 import com.android.SdkConstants.ATTR_INPUT_METHOD
+import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_NUMERIC
 import com.android.SdkConstants.ATTR_PASSWORD
 import com.android.SdkConstants.ATTR_PERMISSION
@@ -28,6 +29,7 @@ import com.android.SdkConstants.ATTR_PHONE_NUMBER
 import com.android.SdkConstants.ATTR_SINGLE_LINE
 import com.android.SdkConstants.EDIT_TEXT
 import com.android.SdkConstants.PreferenceClasses.CLASS_PREFERENCE
+import com.android.SdkConstants.TAG_META_DATA
 import com.android.SdkConstants.TAG_SERVICE
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
@@ -50,6 +52,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.minSdkAtLeast
+import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -116,6 +119,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
             ATTR_INPUT_METHOD,
             ATTR_AUTO_TEXT,
             ATTR_CAPITALIZE,
+            ATTR_NAME,
             ATTR_NUMERIC,
             ATTR_PHONE_NUMBER,
             ATTR_PASSWORD,
@@ -164,6 +168,24 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
                         context.getLocation(attribute),
                         "ChooserTargetService` is deprecated: Please see $SHARE_API_URL",
                         fix().url(SHARE_API_URL).build()
+                    )
+                }
+                return
+            }
+            ATTR_NAME -> {
+                if (TAG_META_DATA == attribute.ownerElement.tagName &&
+                    APP_ACTIONS == attribute.value) {
+                    val incident = Incident(
+                        ISSUE,
+                        attribute,
+                        context.getLocation(attribute),
+                        "App actions via actions.xml is deprecated; Please migrate to " +
+                                "shortcuts.xml. See $APP_ACTIONS_MIGRATION_URL.",
+                        fix().url(APP_ACTIONS_MIGRATION_URL).build()
+                    )
+                    context.report(
+                        incident,
+                        targetSdkAtLeast(21)
                     )
                 }
                 return
@@ -272,6 +294,12 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         private const val SHARE_API_URL =
             "https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets"
+
+        private const val APP_ACTIONS =
+            "com.google.android.actions"
+
+        private const val APP_ACTIONS_MIGRATION_URL =
+            "https://developers.google.com/assistant/app/legacy/migration-guide"
 
         /** Usage of deprecated views or attributes. */
         @JvmField

@@ -327,6 +327,36 @@ class DeprecationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testManifestAppActionsDeprecation() {
+        val expected =
+            """
+            AndroidManifest.xml:9: Warning: App actions via actions.xml is deprecated; Please migrate to shortcuts.xml. See https://developers.google.com/assistant/app/legacy/migration-guide. [Deprecated]
+                        android:name="com.google.android.actions"
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                    <uses-sdk android:minSdkVersion="21" />
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <meta-data
+                            android:name="com.google.android.actions"
+                            android:resource="@xml/actions"/>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected).expectFixDiffs(
+            "Show URL for AndroidManifest.xml line 9: https://developers.google.com/assistant/app/legacy/migration-guide"
+         )
+    }
+
     fun testChooserTargetServiceDeprecation() {
         lint().files(
             java(
