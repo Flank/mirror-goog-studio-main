@@ -163,6 +163,33 @@ class DdmlibTestResultAdapterTest {
         }
     }
 
+    @Test
+    fun testFailedByProcessCrash() {
+        val resultProto = createResultProto("""
+            test_status: FAILED
+            issue {
+              namespace {
+                namespace: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+              }
+              severity: SEVERE
+              code: 1
+              name: "INSTRUMENTATION_FAILED"
+              message: "Test run failed to complete. Instrumentation run failed due to Process crashed."
+            }
+        """)
+
+        val adapter = DdmlibTestResultAdapter("runName", mockDdmlibListener)
+
+        replayTestEvent(resultProto, adapter)
+
+        inOrder(mockDdmlibListener).apply {
+            verify(mockDdmlibListener).addSystemError(eq(
+                "Test run failed to complete. Instrumentation run failed due to Process crashed.\n"))
+            verify(mockDdmlibListener).testRunEnded(anyLong(), eq(mapOf()))
+            verifyNoMoreInteractions()
+        }
+    }
+
     private fun replayTestEvent(
             testSuiteResult: TestSuiteResultProto.TestSuiteResult,
             utpListener: UtpTestResultListener) {

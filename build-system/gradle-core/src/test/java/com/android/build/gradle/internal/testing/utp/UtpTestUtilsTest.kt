@@ -150,6 +150,16 @@ class UtpTestUtilsTest {
         }.build())
     }
 
+    private fun UtpTestResultListener.stubTestSuiteFailing() {
+        val testSuiteResult = createFailedStubResultProto()
+        onTestResultEvent(TestResultEvent.newBuilder().apply {
+            testSuiteFinishedBuilder.apply {
+                deviceId = "deviceId"
+                this.testSuiteResult = Any.pack(testSuiteResult)
+            }
+        }.build())
+    }
+
     private fun verifyTestListenerIsInvoked() {
         val testSuiteResult = createStubResultProto()
         inOrder(mockUtpTestResultListener).apply {
@@ -188,6 +198,7 @@ class UtpTestUtilsTest {
             test_suite_meta_data {
               scheduled_test_case_count: 1
             }
+            test_status: PASSED
             test_result {
               test_case {
                 test_class: "ExampleInstrumentedTest"
@@ -195,6 +206,21 @@ class UtpTestUtilsTest {
                 test_method: "useAppContext"
               }
               test_status: PASSED
+            }
+        """)
+    }
+
+    private fun createFailedStubResultProto(): TestSuiteResultProto.TestSuiteResult {
+        return createResultProto("""
+            test_status: FAILED
+            issue {
+              namespace {
+                namespace: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+              }
+              severity: SEVERE
+              code: 1
+              name: "INSTRUMENTATION_FAILED"
+              message: "Test run failed to complete. Instrumentation run failed due to Process crashed."
             }
         """)
     }
@@ -277,6 +303,23 @@ class UtpTestUtilsTest {
             """<property name="flavor" value="variantName" />""",
             """<property name="project" value="projectName" />""",
             """<testcase name="useAppContext" classname="com.example.application.ExampleInstrumentedTest""""
+        )
+    }
+
+    @Test
+    fun runSuccessfullyButTestFailed() {
+        val results = runUtp { stubTestSuiteFailing() }
+
+        assertThat(results).containsExactly(UtpTestRunResult(false, createFailedStubResultProto()))
+
+        val resultsXml = utpResultDir.resolve("TEST-deviceName-projectName-variantName.xml")
+        assertThat(resultsXml).exists()
+        assertThat(resultsXml).containsAllOf(
+            """<testsuite tests="0" failures="0" errors="0" skipped="0"""",
+            """<property name="device" value="deviceName" />""",
+            """<property name="flavor" value="variantName" />""",
+            """<property name="project" value="projectName" />""",
+            """<system-err>Test run failed to complete. Instrumentation run failed due to Process crashed."""
         )
     }
 

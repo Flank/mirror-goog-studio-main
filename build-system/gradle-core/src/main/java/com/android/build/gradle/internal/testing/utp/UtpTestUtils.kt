@@ -28,7 +28,7 @@ import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.ErrorDetailProto
-import com.google.testing.platform.proto.api.core.TestStatusProto
+import com.google.testing.platform.proto.api.core.TestStatusProto.TestStatus
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
@@ -155,12 +155,11 @@ fun runUtpTestSuiteAndWait(
                     File(config.utpOutputDir, TEST_RESULT_PB_FILE_NAME).outputStream().use {
                         resultsProto.writeTo(it)
                     }
-                    val testFailed = resultsProto.hasPlatformError() ||
-                            resultsProto.testResultList.any { testCaseResult ->
-                                testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
-                                        || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
-                            }
-                    !testFailed
+                    val testSuitePassed = resultsProto.testStatus.isPassedOrSkipped()
+                    val hasAnyFailedTestCase = resultsProto.testResultList.any { testCaseResult ->
+                        !testCaseResult.testStatus.isPassedOrSkipped()
+                    }
+                    testSuitePassed && !hasAnyFailedTestCase && !resultsProto.hasPlatformError()
                 } else {
                     logger.error(null, "Failed to receive the UTP test results")
                     false
@@ -176,6 +175,15 @@ fun runUtpTestSuiteAndWait(
         return postProcessCallback.map {
             it()
         }.toList()
+    }
+}
+
+private fun TestStatus.isPassedOrSkipped(): Boolean {
+    return when (this) {
+        TestStatus.PASSED,
+        TestStatus.IGNORED,
+        TestStatus.SKIPPED -> true
+        else -> false
     }
 }
 
