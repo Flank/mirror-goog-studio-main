@@ -123,16 +123,19 @@ message MatchingText {
     enum Type {
         UNDEFINED = 0;
         PLAIN = 1;
-        WILD_CARD = 2;
-        REGEX = 3;
+        REGEX = 2;
     }
     Type type = 1;
     string text = 2;
 }
 
 message InterceptCriteria {
-    MatchingText url = 1;
-    MatchingText method = 2;
+    string protocol = 1;
+    string host = 2;
+    string port = 3;
+    string path = 4;
+    string query = 5;
+    string method = 6;
 }
 
 message Transformation {

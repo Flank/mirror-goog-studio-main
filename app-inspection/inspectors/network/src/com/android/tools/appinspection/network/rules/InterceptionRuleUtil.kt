@@ -18,13 +18,18 @@ package com.android.tools.appinspection.network.rules
 
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
 
+const val FIELD_RESPONSE_STATUS_CODE = "response-status-code"
+
 fun MatchingText.matches(text: String): Boolean {
-    return this.text.isBlank() || when(type) {
+    return this.text.isBlank() || when (type) {
         MatchingText.Type.PLAIN -> this.text == text
-        MatchingText.Type.WILD_CARD -> wildCardToRegex(this.text).matches(text)
         MatchingText.Type.REGEX -> Regex(this.text).matches(text)
         else -> false
     }
+}
+
+fun wildCardMatches(pattern: String, text: String): Boolean {
+    return (pattern.isBlank()) || wildCardToRegex(pattern).matches(text)
 }
 
 private fun wildCardToRegex(wildCardText: String): Regex {
@@ -32,7 +37,7 @@ private fun wildCardToRegex(wildCardText: String): Regex {
     val segment = StringBuilder()
     // Add previous escaped text and then the wild card.
     val consumeWildCard = { str: String ->
-        if (!segment.isEmpty()) {
+        if (segment.isNotEmpty()) {
             patternBuilder.append(Regex.escape(segment.toString()))
             segment.clear()
         }

@@ -116,17 +116,13 @@ class TrackedHttpURLConnection(
                         wrapped.requestMethod
                     ),
                     NetworkResponse(
-                        wrapped.responseMessage,
                         wrapped.headerFields,
                         wrapped.inputStream
                     )
                 )
-                // Don't call our getResponseMessage/getHeaderFields overrides, as it would call
+                // Don't call our getHeaderFields overrides, as it would call
                 // this method recursively.
-                connectionTracker.trackResponse(
-                    interceptedResponse.responseMessage,
-                    interceptedResponse.responseHeaders
-                )
+                connectionTracker.trackResponseHeaders(interceptedResponse.responseHeaders)
             } finally {
                 responseTracked = true
             }
@@ -326,7 +322,7 @@ class TrackedHttpURLConnection(
     val responseMessage: String?
         get() {
             tryTrackResponse()
-            return interceptedResponse.responseMessage
+            return wrapped.responseMessage
         }
 
     fun getHeaderField(pos: Int): String? {

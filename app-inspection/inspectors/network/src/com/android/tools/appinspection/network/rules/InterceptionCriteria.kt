@@ -17,20 +17,25 @@
 package com.android.tools.appinspection.network.rules
 
 import studio.network.inspection.NetworkInspectorProtocol.InterceptCriteria
-import studio.network.inspection.NetworkInspectorProtocol.MatchingText
+import java.net.URL
 
 /**
  * A criteria class that checks if a connection should be intercepted.
  */
-class InterceptionCriteria(
-    private val url: MatchingText,
-    private val method: MatchingText
-) {
-
-    constructor(proto: InterceptCriteria) : this(proto.url, proto.method)
+class InterceptionCriteria(private val interceptCriteria: InterceptCriteria) {
 
     fun appliesTo(connection: NetworkConnection): Boolean {
-        return url.matches(connection.url) &&
-                method.matches(connection.method)
+        if (interceptCriteria.method.isNotBlank() && connection.method != interceptCriteria.method) {
+            return false
+        }
+        val url = URL(connection.url)
+        return interceptCriteria.protocol == url.protocol &&
+                wildCardMatches(
+                    interceptCriteria.port,
+                    if (url.port == -1) "" else url.port.toString()
+                ) &&
+                wildCardMatches(interceptCriteria.host, url.host) &&
+                wildCardMatches(interceptCriteria.path, url.path) &&
+                wildCardMatches(interceptCriteria.query, url.query)
     }
 }

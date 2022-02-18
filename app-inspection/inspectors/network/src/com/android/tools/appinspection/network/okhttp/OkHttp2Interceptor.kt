@@ -81,7 +81,7 @@ class OkHttp2Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
         val fields = mutableMapOf<String, List<String>>()
         fields.putAll(response.headers().toMultimap())
         fields["response-status-code"] = listOf(response.code().toString())
-        tracker.trackResponse("", fields)
+        tracker.trackResponseHeaders(fields)
         val source = Okio.buffer(
             Okio.source(tracker.trackResponseBody(response.body().source().inputStream()))
         )

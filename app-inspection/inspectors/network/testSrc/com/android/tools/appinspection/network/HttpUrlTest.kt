@@ -73,14 +73,12 @@ class HttpUrlTest {
                     interceptRuleAddedBuilder.apply {
                         ruleBuilder.apply {
                             criteriaBuilder.apply {
-                                urlBuilder.apply {
-                                    type = NetworkInspectorProtocol.MatchingText.Type.PLAIN
-                                    text = FAKE_URL.toExternalForm()
-                                }
-                                methodBuilder.apply {
-                                    type = NetworkInspectorProtocol.MatchingText.Type.PLAIN
-                                    text = ""
-                                }
+                                protocol = FAKE_URL.protocol
+                                host = FAKE_URL.host
+                                port = ""
+                                path = FAKE_URL.path
+                                query = FAKE_URL.query
+                                method = ""
                             }
                             addTransformation(
                                 NetworkInspectorProtocol.Transformation.newBuilder().apply {
