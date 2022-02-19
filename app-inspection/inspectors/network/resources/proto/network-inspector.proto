@@ -159,7 +159,7 @@ message Transformation {
         string value = 2;
     }
 
-    // Replace headers that match the text or regex.
+    // Replace all headers that match the text or regex.
     message HeaderReplaced {
         MatchingText target_name = 1;
         MatchingText target_value = 2;

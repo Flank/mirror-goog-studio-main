@@ -18,6 +18,7 @@ package com.android.tools.appinspection.network.rules
 
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderAdded
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderReplaced
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.StatusCodeReplaced
 import java.io.InputStream
 
@@ -73,6 +74,41 @@ class HeaderAddedTransformation(
         val values = headers.getOrPut(headerAdded.name) { listOf() }.toMutableList()
         values.add(headerAdded.value)
         headers[headerAdded.name] = values
+        return response.copy(responseHeaders = headers)
+    }
+}
+
+/**
+ * A transformation class that finds the all target name-value pairs and replaces them with a
+ * new pair.
+ */
+class HeaderReplacedTransformation(
+    private val headerReplaced: HeaderReplaced
+) : InterceptionTransformation {
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        var anyMatched = false
+
+        // Remove all matched header values.
+        val headers = response.responseHeaders.mapValues { (headerKey, headerValues) ->
+            if (headerReplaced.targetName.matches(headerKey)) {
+                headerValues.filter {
+                    val matched = headerReplaced.targetValue.matches(it)
+                    if (matched) {
+                        anyMatched = true
+                    }
+                    !matched
+                }
+            } else headerValues
+        }.filter {
+            it.value.isNotEmpty()
+        }.toMutableMap()
+
+        // Add the replaced header and value.
+        if (anyMatched) {
+            headers[headerReplaced.newName] =
+                (headers[headerReplaced.newName] ?: listOf()) + listOf(headerReplaced.newValue)
+        }
         return response.copy(responseHeaders = headers)
     }
 }
