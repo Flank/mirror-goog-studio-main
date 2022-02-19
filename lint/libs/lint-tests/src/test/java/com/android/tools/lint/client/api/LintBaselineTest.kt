@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.testutils.TestUtils
+import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.MainTest
@@ -29,10 +30,13 @@ import com.android.tools.lint.checks.RangeDetector
 import com.android.tools.lint.checks.RestrictToDetector
 import com.android.tools.lint.checks.ScopedStorageDetector
 import com.android.tools.lint.checks.TypoDetector
+import com.android.tools.lint.checks.infrastructure.TestFiles.bytecode
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
 import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
@@ -1060,6 +1064,238 @@ class LintBaselineTest {
             </issues>
             """.trimIndent()
             assertEquals(expected, newBaseline.dos2unix()) // b/209433064
+        }
+    }
+
+    @Test
+    fun testPathsOutsideProject() {
+        val client = ToolsBaseTestLintClient()
+        val dir = client.pathVariables["GRADLE_USER_HOME"]
+        assertNotNull(dir)
+        dir!!
+        if (!dir.exists()) {
+            // TODO: What about sandbox? Create it?
+            return
+        }
+        val gradleUserFile = File(dir, "mypath.txt")
+        val sdkFile = File(TestUtils.getSdk().toFile(), "platform-tools/package.xml")
+        try {
+            gradleUserFile.writeText("Some file in gradle user home")
+            val root = temporaryFolder.root
+            val projects = lint().files(
+                // lint check just looks for a file named *.txt and takes its *contents* a path where it reports the file
+                source("src/foo/foo.txt", gradleUserFile.path),
+                source("src/foo/bar.txt", sdkFile.path),
+                *JarFileIssueRegistryTest.lintApiStubs,
+                bytecode(
+                    "lint.jar",
+                    source(
+                        "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
+                        "test.pkg.MyIssueRegistry"
+                    ),
+                    0x70522285
+                ),
+                bytecode(
+                    "lint.jar",
+                    kotlin(
+                        """
+                    package test.pkg
+                    import java.io.File
+                    import com.android.tools.lint.client.api.*
+                    import com.android.tools.lint.detector.api.*
+                    import java.util.EnumSet
+
+                    class MyDetector : Detector(), OtherFileScanner {
+                        override fun getApplicableFiles(): EnumSet<Scope> {
+                            return EnumSet.of(Scope.OTHER)
+                        }
+
+                        override fun run(context: Context) {
+                            if (context.file.name.endsWith(".txt")) {
+                              val path = context.file.readText()
+                              val file = File(path)
+                              context.report(ISSUE, Location.create(file), "My message")
+                            }
+                        }
+
+                        companion object {
+                            @JvmField
+                            val ISSUE = Issue.create(
+                                id = "MyIssueId",
+                                briefDescription = "My Summary",
+                                explanation = "My full explanation.",
+                                category = Category.LINT,
+                                priority = 10,
+                                severity = Severity.WARNING,
+                                implementation = Implementation(MyDetector::class.java, EnumSet.of(Scope.OTHER))
+                            )
+                        }
+                    }
+                    class MyIssueRegistry : IssueRegistry() {
+                        override val issues: List<Issue> = listOf(MyDetector.ISSUE)
+                        override val api: Int = 9
+                        override val minApi: Int = 7
+                        override val vendor: Vendor = Vendor(
+                            vendorName = "Android Open Source Project: Lint Unit Tests",
+                            contact = "/dev/null"
+                        )
+                    }
+                    """
+                    ).indented(),
+                    0x9fd640fb,
+                    """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGI2BijgMuZSTM7P1UvMSynKz0zRK8nPzynW
+                y8nMK9FLzslMBVKJBZlCfM5gdnxxSWlSsXeJEoMWAwCSLNcCTQAAAA==
+                """,
+                    """
+                test/pkg/MyDetector＄Companion.class:
+                H4sIAAAAAAAAAJVSy04UQRQ9VT0v2kGahwoo4gMVNFJAXBgxJDpo0smgCejE
+                hIUpZkospruadNUQ3c1K/8M/YGXiwkxY+lHGW80oG2Pi5j7Ovefe6nP7x89v
+                3wE8wB2GOaesE4fdfbH1cVM51XZZvtDI0kNpdGaqYAzRgTySIpFmX7zcO6CO
+                KgKGymNttNtgCBaXWnWUUQlRQpWh5N5ryzDf/OfkdYbVxWY3c4k24uAoFdo4
+                lRuZiE31TvYS18iMdXnPs7Zk3lX5+lIrBPcbJhfaZ8W3aVFlWP6/aQzjvwlb
+                ysmOdJIwnh4FJA3zpuINGFiX8A/aZysUdVYZNgb9KOTTPOTRoB/yGvdJ7eRT
+                MD3or/EV9rRa4ydfKjzi21EUzPKV0sPKm5PPJY+Fg76fssb87HK8s/P6GcO9
+                ZjtLhTSdPNMd4bIssYKe5kRnqJyQh1rE1vYUvXLyL9JWMccw8kdfhtGz2nLX
+                0V0aWUcxjDW1US966Z7KX8m9hJCJZtaWSUvm2udDsB4bo/JGIq1VdM1wJ+vl
+                bfVc+9rMds84naqWtpqanxiTOeloqcUqXajkZSPP/U9B33idMuF1JF+++xW1
+                46J8w0tcgFO4SbZ+2oARhEBE0uDckHyfPB+S68fFTTzh4il4SiiiUZynWoAF
+                ysKCdBXzmMGtYuE13Cb/iPAx6o12EcQYjzERYxJTFOJCTDMv7YJZTGNmF2WL
+                0GLWomJx2eLKL/vlZnc4AwAA
+                """,
+                    """
+                test/pkg/MyDetector.class:
+                H4sIAAAAAAAAAJ1XaXcT1xl+rmR7pEGAEIRgCInbECIhozGOoWnk0oIxsYgk
+                U+SYGrqNpbE8tjSjzoxcuyttk7bpvrfp3nTfThunBzjlnB5OP/Yv9G/0Y09P
+                nzsa27KtD2O8zF3f933e9d77r//9/R8AxvBngcOe4Xpaa7muldauGJ5R9WxH
+                gRAYrtpNTbdqjm3WNM+2G67WMC1PqwWbNL1lalsUUYGxMBTT3qLhXDUbRqWq
+                W5ZByn6BgXHTMr2LAtF0ZjYBBTEVfYgL9HmLpivwWLEHyrxAqm54l1qthlnV
+                5xuG5Co3pzPFJX1F19qe2dAmrXazYnjcfLnX/HgxDOhK1W4Z+Ytk8nTRdura
+                kuHNO7ppuaS0bE/3TJv9su2V240Gd2VCM1VwSKB/emZq8oZAdg9gEjiMI3Gk
+                8JjAAV+thm7VfbUUPC5waJeqCgYFIvaCwDPp4naKfC+LJXACT6g4jpMCB+2F
+                tC8350PNxPCUwJPLtkd42tJKUyNKw7H0hlawPIeGMauugrcJnKguGtXlwDKT
+                qy3HcF0aa1ZvtA2BZ7uBTM8vUcl810xFsqrnZUg8jVMq3o5nGCJO2xIYSYey
+                1YRNXKseWQgo1c4ghgyDpBvXdd3RmyRzEsh25AzTGXvgryDHWF1g/NEZHQVM
+                W5PxSCuO4FwcGkYFEt0rCsaIiQFcpmyBIxvR2a15AhfwDhXn8TwdGsDPSTE5
+                i0QxvECpOU+qNE6VAnfITQED9yVCY1olDavm3jS9xVM1Y0FvNzyBfHq3uN0z
+                twq7HZS5lcB7cEnFu3GZsAKpgVa+xCuU6Bh6bYZItiROp7dbpjOyOKwu6o5r
+                eNpEp833EtrLOFfxoopJTMmc7x02Cq5J873EHCtUKi9Phs2xguu2pe9KKMcR
+                wXTIcli0q34tUPBegfiE3Wzp1I/h+nwoqRvkpzYpCaGCmThu4GWBC4/GQ8FN
+                VtgqHeIxzi7u8EJmT8iIZw63VLwPtwXU0tpQk/ms1xmKH2DkO0bLdro8/u+9
+                JekePLM30D0iPRQ9Z66aqz3DkbH1IXxYZV7rzMGW7i3yNNotR+DsnkzAxNnJ
+                QwErdmy82giOyJM9jsJuZ5sC59LFXqX5SscvlOV6TlvSlXRn2XCCTFlWsYSG
+                wFO9DtsdIWnJrLBDHnS+yxR8ROB8eBfvEOjG4YAhFS+t+cuFWgwrnRCstJtN
+                3VmLYZVVlOMFVvQhY7VFG/ruz8XwsZD5O8EUqdvOmoJP0KvFQnlGIBfOgQEl
+                wX4Kn47jk7gTUmbFWDEc06PMz/I8uHnpRrlQfjGs2A1iin0Fr8bxOXxeYDSU
+                kZuthtE0LC8oWF/ccRpPNHTXzfe4FnSC5UsqXsOXBZ57BIcq+KrAf0KdP4+Y
+                uZveKOzNiuHCc5vlQhbQjQNlDl9X8TV8Q95pu3L02krzqmk0aiwAhzbmS4an
+                13RP51ykuRLlhV3Iz4D8QEAsc37VlKMR9mrnBBYe3jmtRo5Ftv5jW/2Hd9RI
+                stP4o2MP7wztG42MCP5HXhD7Lvf/842BSDJ67UCy73gs1ZeKjAyM9E8dvZZM
+                KscjI7HRgWScrTp1VEobDRuhXbf1C6EIdj4QSHi4532eNti/VaByy6wOJ260
+                Lc9sGgVrxXRNPgkubV3PmdATdo0n4EHWdaPcbs4bzox8NsjCzZOiMas7phwH
+                k/GKWWcBaTvs7694enW5pLeCtVM75WzeILcJTBSkAn4myYeJWrHbTtV/pggM
+                BixmdwHFOdbWPmo3wHZQFlv2fyk9zzbJdlBeS4I5lXu+xVbOSxo+nfj9FUea
+                jBG2/WfuQX2TnQh+HTABt/2G30RnA/ax55sTBxD1ice5O8I2tY6jD3HsPp4s
+                ZlND93E6+9cdnOJdnFIBp9/6ew5uA83ygjRnJfe/UH4f20I2deY+zmb/hufu
+                4p2l4VSeEoZT74r2i/uYeB1ZuSL6OCiUHuD83PA9FMvZdVxfx+zZu3h/6oMi
+                GePqvFQvit/xS+3/iykFdR/iUSo3QLWGqFiWgMYIZYowJeQzhJDFSVRRI6wx
+                HJEXdch0KgRqyF4GBqH/XppMBJrEsLhp5Ca3yp/zD7A0J+6h+RZa62inPppa
+                S318HZ9Jquv4wgO8NpeKbFryHr5yF998C9ff9M0icZ6mGfcR7QE8ThHHiHCQ
+                eI5zdIK9J/h7EjmuR/EH3+eCJ3WEkTGIP/qmfgN/YjvN+W9T4+/cRrSA7xbw
+                vQK+jx+wi9cL+CF+dBvCxY/xk9tIuPLvpy5+5iLmYr+Ln7s44uJZF79wkXFh
+                uKj8H5i9QWsnEAAA
+                """,
+                    """
+                test/pkg/MyIssueRegistry.class:
+                H4sIAAAAAAAAAKVVW28bRRT+Zn13nWTjppC4DXGTuHXckHXSG9Rpipu0sNRO
+                UNxaoDxt7K2ZeL0b7YwtioSUX8EPQDzyAIioiEoo6iM/CvWs161dOxEFHnbO
+                nDPn+p0zs3/9/cefAG5gm2FamkJqh82GVn6mC9E2d80GF9J9FgFj0GpOSzPs
+                uuvwuiYdxxKaxW2p1SxuEjEOuTZkFGAIr3Obyw2GQHapmkAI4TiCiDCcH4i1
+                ZUqzJh03ghhDSK9UnjxguFY6I169p92PWEjgHBIxxDHGkG46kvQoW8siPe7Y
+                Qtvs7x/JCCYoL4ty3HnKsJgtHRgdQ7MMu6Ht7B+QWmHJF7Ult7QS6ZH/SSTj
+                UHGeLLkXUjCoo1oX8F4MCt6ncik5BqYnMIOUJ7tIli1uFw95ArO+6AOG7D9j
+                WjXtugdNmmG56Gumdw5NO11x2m7NTH/hOl7Sd9IlMkw/IbTTjwlaEcU8Q4zQ
+                6mh227KiWGT4drDYinS53Sj8N4le6sF80GlpFNh0bcPStsynRtuSm4SzdNte
+                k8qG2zTdgt/7K3FcxlUCotOtiSF3Vo9H6idwl5DzULvGEJRfc2pAqnTWvBao
+                8oYp9V6nktmRjjLcGxGu/4uJ2yAPCyXHbWgHptx3DU5TZti2Iw1/4rYduU2o
+                k1aYEil6w0A3QPfzKnfnwN9Xe1AsUzrvDAbD3f+Z++Tr/pVNadQNaZBMaXUC
+                9BQwbwl7C2iCmyT/hntcnnb1VYYfT46ycWVa8b8ofWqUaIBouicLvT6bPjla
+                U/LsfujlD2FFVXan1EBKyQe/fPn9Fkmi8ZOjVDAaUsO7KTWSiiaDSSUfy0fp
+                ONg/jqvnyC4xajdGdlPqOB1MvG2hqpNermsMq++A6fDkUNVj/TdppSmpURXe
+                sA3Zdk2Gi7ttW/KWqdsdLvi+ZRb7bafR3HTqpDRBl9Hcbrf2TfexQTo0gyWn
+                ZlhVw+Ue3xPG/Tv8kHvMTM9xdcQtVmnug9SCIJLeG0Pcp8Qp+Aifeb2ijNeI
+                Jr23pktne5SuDJ0N6oSIhrqcTtx3iNEO0HLPEc39ivHfMXWM6ZwaO8alnBo5
+                xlzuBS5/lVxgLJlRw+w5ssdY/qUb/HNac/Tmgi51EPMYxwKmsEihM5jDFZJm
+                SHKV1gxWiHtEmgk/HD4kiQe0hjwC3VQ0b9i8BHO/YfrnNwHCXeH8gHGoZ+wj
+                sPpWdQzX6U/GRhxe+mnI4cIpDhlunmo8N2y8eKrxLdwmrWHj5eFSMqcYD5ag
+                oNRdH6JM1CDpx6R3Zw8BHQUd6zruYoO2uKfjExT3wATuY3MPSYEVgS2BsMCM
+                wAOB6wI3BC509wkBTSAvMCtwU2BJICdwS+D2KzTjhGAACAAA
+                """
+                )
+            ).testModes(TestMode.DEFAULT).createProjects(root)
+
+            val lintJar = File(root, "app/lint.jar")
+            assertTrue(lintJar.exists())
+
+            val baseline = File(root, "baseline.xml")
+            MainTest.checkDriver(
+                // Expected output
+                null, // not checked since it has an absolute path which depends on specific test machine
+                // Expected error
+                null,
+                // Expected exit code
+                ERRNO_CREATED_BASELINE,
+                arrayOf(
+                    "--exit-code",
+                    "--ignore",
+                    "LintBaseline",
+                    "--baseline",
+                    baseline.path,
+                    "--update-baseline",
+                    "--disable",
+                    "LintError",
+                    "--lint-rule-jars",
+                    lintJar.path,
+                    "--sdk-home",
+                    TestUtils.getSdk().toFile().path,
+                    projects[0].path
+                ),
+                { it.replace(root.path, "ROOT") },
+                null
+            )
+
+            @Language("XML")
+            val expected = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <issues>
+
+                    <issue
+                        id="MyIssueId"
+                        message="My message">
+                        <location
+                            file="${'$'}GRADLE_USER_HOME/mypath.txt"/>
+                    </issue>
+
+                    <issue
+                        id="MyIssueId"
+                        message="My message">
+                        <location
+                            file="${'$'}ANDROID_HOME/platform-tools/package.xml"/>
+                    </issue>
+
+                    <issue
+                        id="UsesMinSdkAttributes"
+                        message="Manifest should specify a minimum API level with `&lt;uses-sdk android:minSdkVersion=&quot;?&quot; />`; if it really supports all versions of Android set it to 1">
+                        <location
+                            file="AndroidManifest.xml"/>
+                    </issue>
+
+                </issues>
+            """.trimIndent()
+            assertEquals(expected, readBaseline(baseline).dos2unix())
+        } finally {
+            gradleUserFile.delete()
         }
     }
 

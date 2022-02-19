@@ -79,7 +79,7 @@ enum class XmlFileType(private val typeName: String) {
     fun relativePaths(): Boolean = this != REPORT && this != REPORT_WITH_FIXES
 
     /** Whether we should use path variables for this file type */
-    fun variables(): Boolean = isPersistenceFile()
+    fun variables(): Boolean = isPersistenceFile() || this == BASELINE
 
     /**
      * Should all paths be converted to Unix paths (file separator /

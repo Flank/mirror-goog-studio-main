@@ -44,6 +44,17 @@ class PathVariables {
     }
 
     /**
+     * Returns true if this path variable list contains a path variable
+     * named [name].
+     */
+    fun contains(name: String): Boolean = get(name) != null
+
+    /**
+     * Returns the path associated with a given path variable, if found.
+     */
+    operator fun get(name: String): File? = pathVariables.firstOrNull { it.name == name }?.dir
+
+    /**
      * Sorts the variables such that the most specific match is found
      * first
      */
@@ -70,10 +81,27 @@ class PathVariables {
         toPathString(file.path, relativeTo?.path, unix)
 
     /**
+     * Like [toPathString], but if the file is not inside any path
+     * variable's directory, returns null instead of the absolute path.
+     */
+    fun toPathStringIfMatched(file: File, relativeTo: File? = null, unix: Boolean = false): String? =
+        toPathStringIfMatched(file.path, relativeTo?.path, unix)
+
+    /**
      * For a given file's full path, produces a path with variables
      * which applies to path variable mapping.
      */
     fun toPathString(fullPath: String, relativeTo: String? = null, unix: Boolean = false): String {
+        return toPathStringIfMatched(fullPath, relativeTo, unix)
+            ?: fullPath.let { if (unix) it.replace('\\', '/') else it }
+    }
+
+    /**
+     * For a given file's full path, produces a path with variables
+     * which applies to path variable mapping, unless none of the path
+     * variables match; in that case, it will return null.
+     */
+    fun toPathStringIfMatched(fullPath: String, relativeTo: String? = null, unix: Boolean = false): String? {
         for ((prefix, root) in pathVariables) {
             if (fullPath.startsWith(root.path)) {
                 if (fullPath == root.path) {
@@ -97,7 +125,7 @@ class PathVariables {
                 .let { if (unix) it.replace('\\', '/') else it }
         }
 
-        return fullPath.let { if (unix) it.replace('\\', '/') else it }
+        return null
     }
 
     /** Reverses the path string computed by [toPathString] */
@@ -177,11 +205,31 @@ class PathVariables {
         return pathVariables.isNotEmpty()
     }
 
+    /**
+     * Creates a new [PathVariables] list by filtering the current set.
+     */
+    fun filter(predicate: (String) -> Boolean): PathVariables {
+        val filtered = PathVariables()
+        for (variable in pathVariables) {
+            if (predicate(variable.name)) {
+                filtered.pathVariables.add(variable)
+            }
+        }
+        return filtered
+    }
+
     override fun toString(): String = pathVariables.joinToString(separator = "\n")
 
     companion object {
         /** Internal suffix for canonicalized versions of the paths */
         private const val CANONICALIZED = "_canonical"
+
+        /**
+         * Returns true if the given [path] is a *private* path variable
+         * (which should not show up in user visible files, such as
+         * baselines or report files)
+         */
+        fun isPrivatePathVariable(path: String): Boolean = !path.startsWith("{")
 
         /**
          * Sort variables such that sub directories are listed before
@@ -256,6 +304,20 @@ class PathVariables {
                             "${name.asSequence().first { !it.isJavaIdentifierPart() }}\"."
                     )
             }
+        }
+
+        fun startsWithVariable(path: String, variable: String): Boolean {
+            if (path.startsWith("$")) {
+                val hasBraces = path.length > 1 && path[1] == '{'
+                for (i in 1 until path.length) {
+                    val c = path[i]
+                    if ((hasBraces && path[i - 1] == '}') || (!hasBraces && !c.isJavaIdentifierPart())) {
+                        return i - 1 == variable.length && path.regionMatches(1, variable, 0, variable.length)
+                    }
+                }
+            }
+
+            return false
         }
     }
 }

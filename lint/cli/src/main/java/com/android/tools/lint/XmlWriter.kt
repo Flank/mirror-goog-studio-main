@@ -50,11 +50,10 @@ import com.android.tools.lint.detector.api.TargetSdkAtLeast
 import com.android.tools.lint.detector.api.TargetSdkLessThan
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.assertionsEnabled
+import com.android.tools.lint.model.PathVariables
 import com.android.utils.XmlUtils
 import com.google.common.base.Joiner
-import com.google.common.io.Files
 import com.intellij.psi.PsiMethod
-import java.io.BufferedWriter
 import java.io.File
 import java.io.IOException
 import java.io.Writer
@@ -62,7 +61,6 @@ import java.util.Base64
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.text.Charsets.UTF_8
 
 /**
  * A reporter which emits lint results into an XML report.
@@ -76,7 +74,9 @@ open class XmlWriter constructor(
     /** The type of report to create. */
     private var type: XmlFileType,
     /** Writer to send output to. */
-    private val writer: Writer
+    private val writer: Writer,
+    /** Path variables to use when writing */
+    private val pathVariables: PathVariables
 ) {
     constructor(
         /**
@@ -87,7 +87,7 @@ open class XmlWriter constructor(
         output: File,
         /** The type of report to create. */
         type: XmlFileType
-    ) : this(client, type, BufferedWriter(Files.newWriter(output, UTF_8)))
+    ) : this(client, type, output.bufferedWriter(), client.pathVariables)
 
     /** Flush any buffered changes to the file. */
     fun close() {
@@ -443,12 +443,39 @@ open class XmlWriter constructor(
     }
 
     private fun getPath(file: File, project: Project?): String {
-        val path: String = if (type.relativePaths() && type.variables() && client.pathVariables.any()) {
-            if (assertionsEnabled()) assert(file.isAbsolute)
-            client.pathVariables.toPathString(file, unix = type.unixPaths())
-        } else {
+        var path: String? = null
+
+        // If we have path variables, use those (but if there's no match, don't use
+        // an absolute path; try to make it project relative
+        if (path == null && type.relativePaths() && type.variables() && pathVariables.any()) {
+            // For baselines, if we have a project, try to make it project relative first
+            if (type == XmlFileType.BASELINE && !client.flags.isFullPath) {
+                path = client.getDisplayPath(project, file, false)
+                if (path.isParentDirectoryPath()) {
+                    path = null
+                }
+            }
+
+            if (path == null) {
+                if (assertionsEnabled()) assert(file.isAbsolute)
+                path = pathVariables.toPathStringIfMatched(file, unix = type.unixPaths())
+
+                if (path != null && PathVariables.startsWithVariable(path, "HOME")) {
+                    // Don't match $HOME if the location is inside the current project -- that just means
+                    // the project is under $HOME, which is pretty likely
+                    // (We do want to include HOME such that we pick up a relative location to files
+                    // outside of the project, such as (say ~/.android)
+                    val relativePath = client.getDisplayPath(project, file, false)
+                    if (!relativePath.isParentDirectoryPath()) {
+                        path = relativePath
+                    }
+                }
+            }
+        }
+
+        if (path == null) {
             val absolute = !type.relativePaths() && client.flags.isFullPath
-            client.getDisplayPath(project, file, absolute)
+            path = client.getDisplayPath(project, file, absolute)
         }
 
         return if (type.unixPaths())
@@ -456,6 +483,8 @@ open class XmlWriter constructor(
         else
             path
     }
+
+    private fun String.isParentDirectoryPath() = startsWith("..")
 
     private fun emitEdit(incident: Incident, lintFix: LintFix) {
         indent(2)

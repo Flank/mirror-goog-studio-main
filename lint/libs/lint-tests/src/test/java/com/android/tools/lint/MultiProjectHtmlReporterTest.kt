@@ -110,7 +110,7 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
             var begin = report.indexOf(timestampPrefix)
             assertTrue(begin != -1)
             begin += timestampPrefix.length
-            val end = report.indexOf("</nav>", begin)
+            val end = report.indexOf(" by ", begin)
             assertTrue(end != -1)
             report = report.substring(0, begin) + "\$DATE" + report.substring(end)
 
@@ -152,8 +152,7 @@ document.getElementById(id).style.display = 'none';
     <div class="mdl-layout__header-row">
       <span class="mdl-layout-title">Lint Report: 2 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">
-Check performed at ${"$"}DATE</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at ${"$"}DATE by Lint Unit Test</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">

@@ -947,7 +947,14 @@ abstract class LintClient {
         get() = dirToProject.values
 
     /** Path variables to use when reading and writing paths */
-    open val pathVariables = PathVariables()
+    open val pathVariables: PathVariables
+        // Lazy initialization since we'll want to overridden state (like this.sdkHome()) which
+        // is not yet initialized when the class is instantiated
+        get() = _pathVariables ?: PathVariables().apply {
+            addDefaultPathVariables(this)
+            _pathVariables = this
+        }
+    private var _pathVariables: PathVariables? = null // backing field for [pathVariables]
 
     /**
      * Registers the given project for the given directory. This can be
@@ -1940,6 +1947,25 @@ abstract class LintClient {
         }
 
         return root
+    }
+
+    private fun addDefaultPathVariables(variables: PathVariables) {
+        // A few additional path variables for lint checks that issues warnings files in home directories,
+        // gradle downloaded directories etc. This is defined here such that Studio can interpret these
+        // in baselines as well.
+        with(variables) {
+            val userHome = System.getProperty("user.home")
+            add("ANDROID_PREFS", AndroidLocationsSingleton.prefsLocation.toFile(), false)
+            getSdkHome()?.let { add("ANDROID_HOME", it, false) }
+            // See org.gradle.wrapper.GradleUserHomeLookup
+            val gradleUserHome =
+                System.getProperty("gradle.user.home")
+                    ?: System.getenv("GRADLE_USER_HOME")
+                    ?: "$userHome/.gradle"
+            add("GRADLE_USER_HOME", File(gradleUserHome), false)
+            add("HOME", File(userHome), false)
+            sort()
+        }
     }
 
     companion object {

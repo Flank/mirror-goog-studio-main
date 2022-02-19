@@ -74,6 +74,7 @@ import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.gradle.GroovyGradleVisitor
 import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.tools.lint.model.LintModelModuleType
+import com.android.tools.lint.model.PathVariables
 import com.android.utils.CharSequences
 import com.android.utils.StdLogger
 import com.google.common.annotations.VisibleForTesting
@@ -351,6 +352,7 @@ open class LintCliClient : LintClient {
                     file,
                     XmlFileType.BASELINE
                 )
+                reporter.pathVariables = pathVariables.filter(PathVariables::isPrivatePathVariable)
                 reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
                 reporter.write(stats, definiteIncidents, driver.registry)
                 // With --write-reference-baseline we continue even if the baseline was written

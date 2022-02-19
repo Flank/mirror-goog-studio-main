@@ -403,12 +403,15 @@ class LintBaseline(
                 var path: String? = null
                 var currentEntry: Entry? = null
 
+                val pathVariables = client?.pathVariables
+
                 while (parser.next() != XmlPullParser.END_DOCUMENT) {
                     val eventType = parser.eventType
                     if (eventType == XmlPullParser.END_TAG) {
                         val tag = parser.name
                         if (tag == TAG_LOCATION) {
                             if (issue != null && message != null && path != null) {
+                                path = pathVariables?.fromPathString(path)?.path ?: path
                                 val entry = Entry(issue, message, path)
                                 if (currentEntry != null) {
                                     currentEntry.next = entry

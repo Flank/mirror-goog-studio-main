@@ -396,11 +396,11 @@ class HtmlReporter(
                 ) +
                 "</span>\n" +
                 "      <div class=\"mdl-layout-spacer\"></div>\n" +
-                "      <nav class=\"mdl-navigation mdl-layout--large-screen-only\">\n"
+                "      <nav class=\"mdl-navigation mdl-layout--large-screen-only\">"
         )
-        append("Check performed at ${Date()}")
+        append("Check performed at ${Date()} by ${client.getClientDisplayName()}")
         append(
-            """      </nav>
+            """</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
