@@ -8,19 +8,19 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
+import com.android.tools.r8.internal.it
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.internal.file.DefaultFilePropertyFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -56,21 +56,14 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    abstract val incrementalMergedDirPath: Property<String>
-
-    @get:Internal
-    abstract val incrementalMergedDir: DirectoryProperty
+    abstract val incrementalMergedDir: Property<String>
 
     @get:Input
     abstract val localResources: MapProperty<String, FileCollection>
 
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val librarySourceSets: ConfigurableFileCollection
-
-    @get:OutputFile
-    abstract val filepathMappingFile: RegularFileProperty
 
     @get:Input
     abstract val allGeneratedRes: ListProperty<Collection<String>>
@@ -79,6 +72,9 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
     @get:Optional
     abstract val extraGeneratedResDir: ListProperty<String>
 
+    @get:OutputFile
+    abstract val filepathMappingFile: RegularFileProperty
+
     override fun doTaskAction() {
         val uncreatedSourceSets = listOfNotNull(
             generatedPngsOutputDir.orNull,
@@ -86,12 +82,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             renderscriptResOutputDir.orNull,
             mergeResourcesOutputDir.orNull,
         )
-
-        val generatedSourceSets = mutableListOf<String>()
-        allGeneratedRes.get().forEach { directories ->
-            generatedSourceSets.addAll(directories)
-        }
-
+        val generatedSourceSets = allGeneratedRes.get().flatten()
 
         writeIdentifiedSourceSetsFile(
             resourceSourceSets = listConfigurationSourceSets(uncreatedSourceSets, generatedSourceSets),
@@ -101,13 +92,15 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
         )
     }
 
-    private fun listConfigurationSourceSets(additionalSourceSets: List<String>, generatedSourceSets: List<String>): List<File> {
+    private fun listConfigurationSourceSets(
+        additionalSourceSets: List<String>,
+        generatedSourceSets: List<String>
+    ): List<File> {
         val uncreatedSourceSets = listOfNotNull(
             getPathIfPresentOrNull(incrementalMergedDir, listOf(SdkConstants.FD_MERGED_DOT_DIR)),
             getPathIfPresentOrNull(incrementalMergedDir, listOf(SdkConstants.FD_STRIPPED_DOT_DIR))
         )
-
-        return localResources.get().values.map { it.files }.flatten().asSequence()
+        return localResources.get().values.flatMap { it.files }.asSequence()
             .plus(librarySourceSets.files)
             .plus(extraGeneratedResDir.get().map(::File))
             .plus(uncreatedSourceSets.map(::File))
@@ -115,17 +108,16 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             .plus(generatedSourceSets.map(::File)).toList()
     }
 
-    private fun getPathIfPresentOrNull(property: Provider<Directory>, paths: List<String>) : String? {
-        return if (property.isPresent && property.orNull != null) {
-            FileUtils.join(listOf(property.get().asFile.absolutePath) + paths)
-        } else {
-            null
-        }
+    private fun getPathIfPresentOrNull(property: Provider<String>, paths: List<String>): String? {
+        return FileUtils.join(
+            listOf(
+                File(property.orNull ?: return null).absolutePath
+            ) + paths
+        )
     }
 
     internal class CreateAction(
         creationConfig: ComponentCreationConfig,
-        val mergeResourcesTask: TaskProvider<MergeResources>,
         val includeDependencies: Boolean
     ) :
         VariantTaskCreationAction<MapSourceSetPathsTask, ComponentCreationConfig>(creationConfig) {
@@ -151,7 +143,8 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                 }
             )
             task.mergeResourcesOutputDir.setDisallowChanges(
-                creationConfig.artifacts.get(InternalArtifactType.MERGED_RES).map {
+                (creationConfig.artifacts.get(InternalArtifactType.MERGED_RES)
+                        as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {
                     it.asFile.absolutePath
                 }
             )
@@ -168,11 +161,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                 }
             )
             task.incrementalMergedDir.setDisallowChanges(
-                creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER)
-            )
-            task.incrementalMergedDirPath.setDisallowChanges(
-                creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER)
-                    .map { it.asFile.absolutePath }
+                (creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_INCREMENTAL_FOLDER)
+                        as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {
+                    it.asFile.absolutePath
+                }
             )
             task.namespace.setDisallowChanges(creationConfig.namespace)
             if (includeDependencies) {
@@ -195,9 +187,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             task.localResources.setDisallowChanges(
                 creationConfig.sources.res.getLocalSourcesAsFileCollection()
             )
-            if (!mergeResourcesTask.get().isVectorSupportLibraryUsed) {
+            if (creationConfig.variantDslInfo.vectorDrawables.useSupportLibrary == false) {
                 task.generatedPngsOutputDir.setDisallowChanges(
-                    creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES).map {
+                    (creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES)
+                            as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {
                         it.asFile.absolutePath
                     }
                 )
