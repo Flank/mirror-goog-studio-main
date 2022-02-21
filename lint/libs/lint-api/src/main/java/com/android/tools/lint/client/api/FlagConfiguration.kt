@@ -377,6 +377,10 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         severityOnly: Boolean,
         source: Configuration
     ): Location? {
+        if (specificOnly && !configuresIssue(issue) && source !== this) {
+            return null
+        }
+
         if (associatedLocation != null) {
             val file = associatedLocation?.file
             if (file != null) {
@@ -386,5 +390,32 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
 
         return parent?.getLocalIssueConfigLocation(issue, specificOnly, severityOnly, source)
             ?: associatedLocation
+    }
+
+    /**
+     * Returns true if this flag configuration contains issue specific
+     * configuration for the given [issueId].
+     */
+    private fun configuresIssue(issueId: String): Boolean {
+        val enabled = enabledIds()
+        val disabled = disabledIds()
+        val exact = exactCheckedIds()
+        val disabledCategories: Set<Category>? = disabledCategories()
+        val enabledCategories = enabledCategories()
+        val exactCategories = exactCategories()
+
+        return enabled.contains(issueId) ||
+            disabled.contains(issueId) ||
+            exact != null && exact.contains(issueId) ||
+            disabledCategories.contains(issueId) ||
+            enabledCategories.contains(issueId) ||
+            exactCategories.contains(issueId)
+    }
+
+    /**
+     * Returns true if this set of categories contains one named [id].
+     */
+    private fun Set<Category>?.contains(id: String): Boolean {
+        return this != null && any { it.name == id }
     }
 }
