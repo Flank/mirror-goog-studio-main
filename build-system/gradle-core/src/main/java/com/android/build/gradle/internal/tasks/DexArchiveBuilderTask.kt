@@ -311,8 +311,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
             val jacocoTransformEnabled =
                 creationConfig.isAndroidTestCoverageEnabled &&
-                        !creationConfig.componentType.isForTesting &&
-                        creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
+                        !creationConfig.componentType.isForTesting
 
             val jacocoTransformWithLegacyTransformsRegistered =
                 jacocoTransformEnabled && variantHasLegacyTransforms

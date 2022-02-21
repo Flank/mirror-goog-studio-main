@@ -233,13 +233,6 @@ enum class BooleanOption(
             DeprecationReporter.DeprecationTarget.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE
         )
     ),
-
-    ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION(
-        "android.enableJacocoTransformInstrumentation",
-        true,
-        FeatureStage.SoftlyEnforced(VERSION_8_0)
-    ),
-
     ENABLE_SOURCE_SET_PATHS_MAP(
         "android.enableSourceSetPathsMap",
         true,
@@ -486,7 +479,11 @@ enum class BooleanOption(
             "AAPT2 worker actions have been used unconditionally since Android Gradle Plugin 3.3"
         )
     ),
-
+    ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION(
+        "android.enableJacocoTransformInstrumentation",
+        true,
+        FeatureStage.Enforced(VERSION_7_3)
+    ),
 
     /* ----------------
      * REMOVED FEATURES

@@ -16,10 +16,6 @@
 
 package com.android.build.gradle.tasks.factory;
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -41,10 +37,6 @@ import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.ComponentType;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.concurrent.Callable;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -63,6 +55,14 @@ import org.gradle.api.tasks.testing.TestTaskReports;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.Serializable;
+import java.util.concurrent.Callable;
+
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 @CacheableTask
@@ -153,9 +153,6 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
-            boolean jacocoArtifactTransform = unitTestCreationConfig.getServices()
-                    .getProjectOptions().get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION);
-
             unitTestCreationConfig.onTestedConfig(
                     testedConfig -> {
                         if (unitTestCreationConfig.isTestCoverageEnabled()) {
@@ -168,21 +165,6 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                         task.getExtensions()
                                                                 .findByType(
                                                                         JacocoTaskExtension.class);
-                                                // The previous method of Jacoco offline
-                                                // instrumenting library classes i.e. by a task
-                                                // replacing source classes with instrumented
-                                                // classes. This meant that library classes needed
-                                                // to be excluded from the input classes to the
-                                                // JacocoPlugin, as the code was already
-                                                // instrumented. This case will be supported until
-                                                // legacy transforms are removed as they are not
-                                                // supported in the current artifact transform
-                                                // based instrumentation.
-                                                if (testedConfig.getComponentType().isAar()
-                                                        && !jacocoArtifactTransform) {
-                                                    jacocoTaskExtension.setExcludes(
-                                                            Collections.singletonList("*"));
-                                                }
                                                 jacocoTaskExtension.setDestinationFile(
                                                         task.getJacocoCoverageOutputFile()
                                                                 .getAsFile());

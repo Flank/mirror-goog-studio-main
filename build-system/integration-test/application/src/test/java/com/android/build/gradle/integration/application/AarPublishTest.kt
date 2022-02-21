@@ -50,9 +50,7 @@ class AarPublishTest {
     @Test
     fun canPublishLibraryAarWithCoverageEnabled() {
         val librarySubproject = project.getSubproject(":library")
-        project.executor()
-            .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, true)
-            .run("library:assembleDebug")
+        project.execute("library:assembleDebug")
 
         val libraryPublishedAar =
             FileUtils.join(librarySubproject.outputDir, "aar", "library-debug.aar")

@@ -900,12 +900,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .getArtifactFileCollection(
                         ConsumedConfigType.RUNTIME_CLASSPATH,
                         ArtifactScope.ALL,
-                        if (creationConfig.services.projectOptions[
-                                    BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
-                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
-                        } else {
-                            AndroidArtifacts.ArtifactType.CLASSES_JAR
-                        }
+                        AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
                     )
             }
             transformManager.addStream(
@@ -2057,21 +2052,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Merge Java Resources.
         createMergeJavaResTask(creationConfig)
 
-        val jacocoTransformEnabled = creationConfig.services
-                .projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
         val isAndroidTestCoverageEnabled =
             creationConfig.isAndroidTestCoverageEnabled && !creationConfig.componentType.isForTesting
-
-        // Previous (non-gradle-transform) jacoco instrumentation (pre-legacy-transform).
-        if (isAndroidTestCoverageEnabled && !jacocoTransformEnabled) {
-            createJacocoTask(creationConfig)
-        }
 
         // ----- External Transforms -----
         val registeredLegacyTransform = addExternalLegacyTransforms(transformManager, creationConfig)
 
         // New gradle-transform jacoco instrumentation support.
-        if (isAndroidTestCoverageEnabled && jacocoTransformEnabled) {
+        if (isAndroidTestCoverageEnabled) {
             if (registeredLegacyTransform) {
                 createJacocoTaskWithLegacyTransformSupport(creationConfig)
             } else {
@@ -2355,9 +2343,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT),
                 setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
             )
-        val jacocoTransformEnabled =
-            creationConfig.services.projectOptions.get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION)
-
         // Instrumented refers to ASM and not Jacoco in this case.
         if (creationConfig.projectClassesAreInstrumented) {
             taskFactory.register(JacocoTask.CreationActionWithTransformAsmClasses(creationConfig))
@@ -2366,8 +2351,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
 
         val instrumentedClasses: FileCollection =
-            if (jacocoTransformEnabled &&
-                creationConfig.isAndroidTestCoverageEnabled &&
+            if (creationConfig.isAndroidTestCoverageEnabled &&
                     creationConfig !is ApplicationCreationConfig) {
                 // For libraries that can be published,avoid publishing classes
                 // with runtime dependencies on Jacoco.

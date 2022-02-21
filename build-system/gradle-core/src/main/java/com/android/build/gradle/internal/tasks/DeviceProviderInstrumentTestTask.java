@@ -16,17 +16,6 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.build.gradle.internal.testing.utp.RetentionConfigKt.createRetentionConfig;
-import static com.android.build.gradle.internal.testing.utp.UtpTestUtilsKt.shouldEnableUtp;
-import static com.android.builder.core.BuilderConstants.CONNECTED;
-import static com.android.builder.core.BuilderConstants.DEVICE;
-import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
-import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
-import static com.android.builder.core.BuilderConstants.FD_FLAVORS;
-import static com.android.builder.core.BuilderConstants.FD_REPORTS;
-import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR;
-import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -78,17 +67,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -117,6 +95,29 @@ import org.gradle.internal.logging.ConsoleRenderer;
 import org.gradle.process.ExecOperations;
 import org.gradle.work.DisableCachingByDefault;
 import org.gradle.workers.WorkerExecutor;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+import static com.android.build.gradle.internal.testing.utp.RetentionConfigKt.createRetentionConfig;
+import static com.android.build.gradle.internal.testing.utp.UtpTestUtilsKt.shouldEnableUtp;
+import static com.android.builder.core.BuilderConstants.CONNECTED;
+import static com.android.builder.core.BuilderConstants.DEVICE;
+import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
+import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
+import static com.android.builder.core.BuilderConstants.FD_FLAVORS;
+import static com.android.builder.core.BuilderConstants.FD_REPORTS;
+import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR;
+import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR;
 
 /** Run instrumentation tests for a given variant */
 @DisableCachingByDefault
@@ -816,11 +817,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             task.getCodeCoverageEnabled().set(creationConfig.isAndroidTestCoverageEnabled());
             boolean useJacocoTransformOutputs =
-                    creationConfig
-                                    .getServices()
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION)
-                            && creationConfig.isAndroidTestCoverageEnabled();
+                    creationConfig.isAndroidTestCoverageEnabled();
             task.dependencies =
                     creationConfig
                             .getVariantDependencies()

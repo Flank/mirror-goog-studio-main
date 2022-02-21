@@ -331,36 +331,33 @@ class DependencyConfigurator(
             }
         }
 
-
-        if (projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
-            val jacocoTransformParametersConfig: (JacocoTransform.Params) -> Unit = {
-                val jacocoVersion = JacocoOptions.DEFAULT_VERSION
-                val jacocoConfiguration = JacocoConfigurations
-                    .getJacocoAntTaskConfiguration(project, jacocoVersion)
-                it.jacocoInstrumentationService
-                    .set(getBuildService(projectServices.buildServiceRegistry))
-                it.jacocoConfiguration.from(jacocoConfiguration)
-                it.jacocoVersion.setDisallowChanges(jacocoVersion)
-            }
-            registerTransform(
-                JacocoTransform::class.java,
-                AndroidArtifacts.ArtifactType.CLASSES,
-                AndroidArtifacts.ArtifactType.JACOCO_CLASSES,
-                jacocoTransformParametersConfig
-            )
-            registerTransform(
-                JacocoTransform::class.java,
-                AndroidArtifacts.ArtifactType.CLASSES_JAR,
-                AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR,
-                jacocoTransformParametersConfig
-            )
-            registerTransform(
-                JacocoTransform::class.java,
-                AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
-                AndroidArtifacts.ArtifactType.JACOCO_ASM_INSTRUMENTED_JARS,
-                jacocoTransformParametersConfig
-            )
+        val jacocoTransformParametersConfig: (JacocoTransform.Params) -> Unit = {
+            val jacocoVersion = JacocoOptions.DEFAULT_VERSION
+            val jacocoConfiguration = JacocoConfigurations
+                .getJacocoAntTaskConfiguration(project, jacocoVersion)
+            it.jacocoInstrumentationService
+                .set(getBuildService(projectServices.buildServiceRegistry))
+            it.jacocoConfiguration.from(jacocoConfiguration)
+            it.jacocoVersion.setDisallowChanges(jacocoVersion)
         }
+        registerTransform(
+            JacocoTransform::class.java,
+            AndroidArtifacts.ArtifactType.CLASSES,
+            AndroidArtifacts.ArtifactType.JACOCO_CLASSES,
+            jacocoTransformParametersConfig
+        )
+        registerTransform(
+            JacocoTransform::class.java,
+            AndroidArtifacts.ArtifactType.CLASSES_JAR,
+            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR,
+            jacocoTransformParametersConfig
+        )
+        registerTransform(
+            JacocoTransform::class.java,
+            AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
+            AndroidArtifacts.ArtifactType.JACOCO_ASM_INSTRUMENTED_JARS,
+            jacocoTransformParametersConfig
+        )
         if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
             registerTransform(
                 ExtractProGuardRulesTransform::class.java,
