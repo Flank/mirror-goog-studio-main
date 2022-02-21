@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_CORE_LIBRARY_DESUGARING
 import com.android.builder.dexing.D8DesugaredMethodsGenerator
 import com.android.builder.packaging.JarFlinger
+import com.android.builder.utils.SynchronizedFile
 import com.android.sdklib.AndroidTargetHash
 import com.android.tools.r8.Version
 import com.google.common.io.ByteStreams
@@ -135,23 +136,24 @@ fun getDesugaredMethods(
             getDesugarLibLintFromTransform(coreLibDesugarConfig, minSdk, compileSdk))
     }
 
-    var fakeJar: File?
-    synchronized(project.gradle) {
-        fakeJar = project.gradle.gradleUserHomeDir.resolve("$ANDROID_SUBDIR/$FAKE_DEPENDENCY_JAR")
-        if (fakeJar != null && !fakeJar!!.exists()) {
-            fakeJar!!.parentFile.mkdirs()
-            JarFlinger(fakeJar!!.toPath()).use {}
+    return SynchronizedFile.getInstanceWithMultiProcessLocking(project.gradle.gradleUserHomeDir.resolve(ANDROID_SUBDIR)).write {
+        val fakeJar = it.resolve(FAKE_DEPENDENCY_JAR)
+        if (!fakeJar.exists()) {
+            fakeJar.parentFile.mkdirs()
+            JarFlinger(fakeJar.toPath()).use {}
         }
-    }
-    val fakeDependency = project.dependencies.create(project.files(fakeJar))
-    val adhocConfiguration = project.configurations.detachedConfiguration(fakeDependency)
 
-    registerD8BackportedMethodsTransform(
-        project, coreLibDesugar, project.files(bootclasspath), Version.getVersionString())
-    desugaredMethodsFiles.fromDisallowChanges(
-        getD8DesugarMethodFileFromTransform(adhocConfiguration)
-    )
-    return desugaredMethodsFiles
+        val fakeDependency = project.dependencies.create(project.files(fakeJar))
+        val adhocConfiguration = project.configurations.detachedConfiguration(fakeDependency)
+
+        registerD8BackportedMethodsTransform(
+            project, coreLibDesugar, project.files(bootclasspath), Version.getVersionString())
+        desugaredMethodsFiles.fromDisallowChanges(
+            getD8DesugarMethodFileFromTransform(adhocConfiguration)
+        )
+        return@write desugaredMethodsFiles
+    }
+
 }
 
 /**
