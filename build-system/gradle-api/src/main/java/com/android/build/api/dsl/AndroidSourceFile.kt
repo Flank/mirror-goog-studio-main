@@ -23,12 +23,12 @@ import java.io.File
 /**
  * An AndroidSourceFile represents a single file input for an Android project.
  */
-@Incubating
 interface AndroidSourceFile: Named {
 
     /**
      * A concise name for the source directory (typically used to identify it in a collection).
      */
+    @Incubating
     override fun getName(): String
 
     /**
@@ -38,5 +38,6 @@ interface AndroidSourceFile: Named {
      *
      * This method has a return value for legacy reasons.
      */
+    @Incubating
     fun srcFile(srcPath: Any): Any
 }
