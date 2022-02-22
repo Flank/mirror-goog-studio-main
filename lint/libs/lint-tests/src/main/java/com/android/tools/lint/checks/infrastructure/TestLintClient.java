@@ -31,7 +31,6 @@ import static java.io.File.separatorChar;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -540,13 +539,20 @@ public class TestLintClient extends LintCliClient {
                 // directories or home directories in the XML
                 if ((type.isPersistenceFile() || !getFlags().isFullPath())
                         && !task.allowAbsolutePathsInMessages) {
-                    assertFalse(xml, xml.contains(absProjectPath));
-                    assertFalse(xml, xml.contains(absProjectCanonicalPath));
-                    assertFalse(xml, xml.contains(absTestRootPath));
-                    assertFalse(xml, xml.contains(absTestRootCanonicalPath));
-                    assertFalse(xml, xml.contains(absHomePrefix));
+                    ensureNoAbsolutePath(serializationFile, xml, absProjectPath);
+                    ensureNoAbsolutePath(serializationFile, xml, absProjectCanonicalPath);
+                    ensureNoAbsolutePath(serializationFile, xml, absTestRootPath);
+                    ensureNoAbsolutePath(serializationFile, xml, absTestRootCanonicalPath);
+                    ensureNoAbsolutePath(serializationFile, xml, absHomePrefix);
                 }
             }
+        }
+    }
+
+    private void ensureNoAbsolutePath(File file, String xml, String path) {
+        int index = xml.indexOf(path);
+        if (index != -1) {
+            fail("Found absolute path " + path + " in persistence file " + file + ": " + xml);
         }
     }
 
@@ -1177,7 +1183,11 @@ public class TestLintClient extends LintCliClient {
                                     + "in a reported error message; this is discouraged because absolute\n"
                                     + "paths do not play well with baselines, shared HTML reports, remote\n"
                                     + "caching, etc. If you really want this, you can set the property\n"
-                                    + "`lint().allowAbsolutePathsInMessages(true)`.");
+                                    + "`lint().allowAbsolutePathsInMessages(true)`.\n"
+                                    + "\n"
+                                    + "Error message was: `"
+                                    + message
+                                    + "`");
                 }
                 offset = matcher.end();
             }

@@ -46,7 +46,12 @@ class LintJavaUtils {
             @NonNull KtElement ktElement,
             boolean boxed) {
         // TODO(kotlin-uast-cleanup): avoid using "internal" utils
-        return KotlinInternalUastUtilsKt.toPsiType(type, source, ktElement, BaseKotlinInternalUastUtilsKt.getTypeOwnerKind(ktElement), boxed);
+        return KotlinInternalUastUtilsKt.toPsiType(
+                type,
+                source,
+                ktElement,
+                BaseKotlinInternalUastUtilsKt.getTypeOwnerKind(ktElement),
+                boxed);
     }
 
     @Nullable

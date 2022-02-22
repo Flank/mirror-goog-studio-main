@@ -25,6 +25,7 @@ import com.android.tools.lint.MainTest
 import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
+import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
@@ -32,6 +33,7 @@ import com.android.tools.lint.checks.RestrictToDetector
 import com.android.tools.lint.checks.ScopedStorageDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.infrastructure.TestFiles.bytecode
+import com.android.tools.lint.checks.infrastructure.TestFiles.image
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
@@ -40,7 +42,10 @@ import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
+import com.android.tools.lint.client.api.LintBaseline.Companion.prefixMatchLength
+import com.android.tools.lint.client.api.LintBaseline.Companion.sameWithAbsolutePath
 import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
+import com.android.tools.lint.client.api.LintBaseline.Companion.suffixMatchLength
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
@@ -308,6 +313,30 @@ class LintBaselineTest {
                 RangeDetector.RANGE,
                 "Value must be ≥ 0 but can be -1",
                 "Value must be ≥ 0"
+            )
+        )
+    }
+
+    @Test
+    fun tolerateIconMissingDensityFolderMessageChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                IconDetector.ICON_MISSING_FOLDER,
+                "Missing density variation folders in `res`: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi",
+                "Missing density variation folders in `/some/full/path/to/app/res`: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi"
+            )
+        )
+    }
+
+    @Test
+    fun tolerateIconXmlAndPngMessageChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                IconDetector.ICON_XML_AND_PNG,
+                "The following images appear both as density independent `.xml` files and as bitmap files: res/drawable/background.xml",
+                "The following images appear both as density independent `.xml` files and as bitmap files: /some/full/path/to/app/res/drawable/background.xml"
             )
         )
     }
@@ -1328,7 +1357,7 @@ class LintBaselineTest {
         MainTest.checkDriver(
             // Expected output
             "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
-                    "0 errors, 1 warnings",
+                "0 errors, 1 warnings",
             // Expected error
             "",
             // Expected exit code
@@ -1355,7 +1384,7 @@ class LintBaselineTest {
         MainTest.checkDriver(
             // Expected output
             "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
-                    "0 errors, 1 warnings",
+                "0 errors, 1 warnings",
             // Expected error
             "",
             // Expected exit code
@@ -1403,17 +1432,17 @@ class LintBaselineTest {
         MainTest.checkDriver(
             // Expected output
             "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
-                    "0 errors, 1 warnings",
+                "0 errors, 1 warnings",
             // Expected error
             "Created baseline file ROOT" + File.separator + "lint-baseline.xml\n" +
-                    "\n" +
-                    "Also breaking the build in case this was not intentional. If you\n" +
-                    "deliberately created the baseline file, re-run the build and this\n" +
-                    "time it should succeed without warnings.\n" +
-                    "\n" +
-                    "If not, investigate the baseline path in the lintOptions config\n" +
-                    "or verify that the baseline file has been checked into version\n" +
-                    "control.\n",
+                "\n" +
+                "Also breaking the build in case this was not intentional. If you\n" +
+                "deliberately created the baseline file, re-run the build and this\n" +
+                "time it should succeed without warnings.\n" +
+                "\n" +
+                "If not, investigate the baseline path in the lintOptions config\n" +
+                "or verify that the baseline file has been checked into version\n" +
+                "control.\n",
             // Expected exit code
             ERRNO_CREATED_BASELINE,
             arrayOf(
@@ -1489,14 +1518,14 @@ class LintBaselineTest {
             "No issues found.",
             // Expected error
             "Created baseline file ROOT" + File.separator + "lint-baseline.xml\n" +
-                    "\n" +
-                    "Also breaking the build in case this was not intentional. If you\n" +
-                    "deliberately created the baseline file, re-run the build and this\n" +
-                    "time it should succeed without warnings.\n" +
-                    "\n" +
-                    "If not, investigate the baseline path in the lintOptions config\n" +
-                    "or verify that the baseline file has been checked into version\n" +
-                    "control.\n",
+                "\n" +
+                "Also breaking the build in case this was not intentional. If you\n" +
+                "deliberately created the baseline file, re-run the build and this\n" +
+                "time it should succeed without warnings.\n" +
+                "\n" +
+                "If not, investigate the baseline path in the lintOptions config\n" +
+                "or verify that the baseline file has been checked into version\n" +
+                "control.\n",
             // Expected exit code
             ERRNO_CREATED_BASELINE,
             arrayOf(
@@ -1550,6 +1579,109 @@ class LintBaselineTest {
         )
 
         PathSubject.assertThat(baseline).doesNotExist()
+    }
+
+    @Test
+    fun testRelativePathsInIconMessages() {
+        // Make sure that the IconMissingDensityFolder check does not write absolute paths in baseline messages
+        // Regression test for https://issuetracker.google.com/220161119
+        val root = temporaryFolder.newFolder().canonicalFile.absoluteFile
+
+        val testFiles = arrayOf(
+            image("res/drawable-mdpi/frame.png", 472, 290)
+                .fill(-0x1)
+                .fill(10, 10, 362, 280, 0x00000000),
+            image("res/drawable-nodpi/frame.png", 472, 290)
+                .fill(-0x1)
+                .fill(10, 10, 362, 280, 0x00000000),
+            image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290)
+                .fill(-0x1)
+                .fill(10, 10, 362, 280, 0x00000000),
+        )
+        val baselineFolder = File(root, "baselines")
+        baselineFolder.mkdirs()
+        val outputBaseline = File(baselineFolder, "baseline-out.xml")
+
+        val project = lint().files(*testFiles).createProjects(root).single()
+
+        MainTest.checkDriver(
+            // Expected output
+            "ROOT/app/res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n" +
+                "0 errors, 1 warnings",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            arrayOf(
+                "--exit-code",
+                "--check",
+                "IconMissingDensityFolder",
+                "--ignore",
+                "LintBaseline",
+                "--fullpath",
+                "--write-reference-baseline",
+                outputBaseline.path,
+                "--disable",
+                "LintError",
+                "--sdk-home",
+                TestUtils.getSdk().toFile().path,
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        @Language("XML")
+        val expected = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <issues>
+
+                <issue
+                    id="IconMissingDensityFolder"
+                    message="Missing density variation folders in `res`: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi">
+                    <location
+                        file="res"/>
+                </issue>
+
+            </issues>
+        """.trimIndent()
+        assertEquals(expected, readBaseline(outputBaseline).dos2unix()) // b/209433064
+    }
+
+    @Test
+    fun testPrefixMatchLength() {
+        assertEquals(0, prefixMatchLength("", ""))
+        assertEquals(0, prefixMatchLength("a", "b"))
+        assertEquals(0, prefixMatchLength("a", ""))
+        assertEquals(0, prefixMatchLength("", "b"))
+        assertEquals(4, prefixMatchLength("abcd", "abcd"))
+        assertEquals(4, prefixMatchLength("abcde", "abcdf"))
+        assertEquals(3, prefixMatchLength("abcXabcd", "abcYYabcd"))
+    }
+
+    @Test
+    fun testSuffixMatchLength() {
+        assertEquals(0, suffixMatchLength("", ""))
+        assertEquals(0, suffixMatchLength("a", "b"))
+        assertEquals(0, suffixMatchLength("a", ""))
+        assertEquals(0, suffixMatchLength("", "b"))
+        assertEquals(4, suffixMatchLength("abcd", "abcd"))
+        assertEquals(0, suffixMatchLength("abcde", "abcdf"))
+        assertEquals(3, suffixMatchLength("abcdXabc", "abcdYYabc"))
+    }
+
+    @Test
+    fun testSameWithAbsolutePath() {
+        assertTrue(sameWithAbsolutePath("", ""))
+        assertTrue(sameWithAbsolutePath("foo", "/path/to/foo"))
+        assertTrue(sameWithAbsolutePath("the path is `foo`!", "the path is `/path/to/foo`!"))
+        assertTrue(sameWithAbsolutePath("the path is `foo`!", "the path is `/path/to/foo`!", "the", "!"))
+
+        assertFalse(sameWithAbsolutePath("/path/to/foo", "foo"))
+        assertFalse(sameWithAbsolutePath("foo", "bar"))
+        assertFalse(sameWithAbsolutePath("the path is `bar`!", "the path is `/path/to/foo`!"))
+        assertFalse(sameWithAbsolutePath("foo", "/path/to/foo", "the"))
+        assertFalse(sameWithAbsolutePath("foo", "/path/to/foo", "", "the"))
     }
 
     companion object {

@@ -345,7 +345,7 @@ open class LintCliClient : LintClient {
                     stats,
                     file = fileToWrite,
                     writeEmptyBaseline =
-                        !flags.missingBaselineIsEmptyBaseline || outputBaselineFile != null
+                    !flags.missingBaselineIsEmptyBaseline || outputBaselineFile != null
                 )
             if (exitCode != ERRNO_INTERNAL_CONTINUE) {
                 return exitCode
@@ -395,13 +395,16 @@ open class LintCliClient : LintClient {
     /**
      * Writes a new baseline file.
      *
-     * In the case when [writeEmptyBaseline] is false and there are no incidents, does not write a
-     * new baseline file and deletes any existing baseline file.
+     * In the case when [writeEmptyBaseline] is false and there are no
+     * incidents, does not write a new baseline file and deletes any
+     * existing baseline file.
      *
      * @param stats the [LintStats]
      * @param file the file to write to.
-     * @param writeEmptyBaseline whether to write a file when there are no lint issues.
-     * @return [ERRNO_INTERNAL_CONTINUE] or another exit code in case of a problem
+     * @param writeEmptyBaseline whether to write a file when there are
+     *     no lint issues.
+     * @return [ERRNO_INTERNAL_CONTINUE] or another exit code in case of
+     *     a problem
      */
     private fun writeNewBaselineFile(
         stats: LintStats,
@@ -1271,7 +1274,7 @@ open class LintCliClient : LintClient {
 
     override fun getDisplayPath(file: File, project: Project?, format: TextFormat): String {
         return if (project != null) {
-            val path = getDisplayPath(project, file)
+            val path = getDisplayPath(project, file, false)
             TextFormat.TEXT.convertTo(path, format)
         } else {
             super.getDisplayPath(file, null, format)

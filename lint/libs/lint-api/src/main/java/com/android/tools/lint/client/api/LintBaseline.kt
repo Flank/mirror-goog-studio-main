@@ -359,6 +359,9 @@ class LintBaseline(
                     stringsEquivalent(old, new)
                 }
             }
+            // Changed error messages to no longer include absolute paths: b/220161119
+            "IconMissingDensityFolder", "IconXmlAndPng" -> sameWithAbsolutePath(new, old)
+
             // Sometimes we just append (or remove trailing period in error messages, now
             // flagged by lint)
             else -> stringsEquivalent(old, new)
@@ -707,9 +710,8 @@ class LintBaseline(
         /**
          * Given an error message produced by this lint detector for the
          * given issue type, determines whether this corresponds to the
-         * warning (produced by {@link #reportBaselineIssues(LintDriver,
-         * Project)} above) that one or more issues have been filtered
-         * out.
+         * warning (produced by [reportBaselineIssues] above) that one
+         * or more issues have been filtered out.
          *
          * Intended for IDE quickfix implementations.
          */
@@ -721,9 +723,9 @@ class LintBaseline(
         /**
          * Given an error message produced by this lint detector for the
          * given issue type, determines whether this corresponds to the
-         * warning (produced by {@link #reportBaselineIssues(LintDriver,
-         * Project)} above) that one or more issues have been
-         * fixed (present in baseline but not in project.)
+         * warning (produced by [reportBaselineIssues] above) that one
+         * or more issues have been fixed (present in baseline but not
+         * in project.)
          *
          * Intended for IDE quickfix implementations.
          */
@@ -826,6 +828,73 @@ class LintBaseline(
                 i1 + target.length,
                 i2 + target.length
             )
+        }
+
+        /**
+         * Returns true if these two strings appear to be the same
+         * except the [full] string has a single absolute path somewhere
+         * in the middle which is only a relative path in the [relative]
+         * string. For example, `relative="The file res does not
+         * exist"` and `full="The file C:\path\to\res does not exist"`.
+         *
+         * If [prefix] and or [suffix] are non-empty, they must also be
+         * matched in the strings.
+         */
+        fun sameWithAbsolutePath(
+            relative: String,
+            full: String,
+            prefix: String = "",
+            suffix: String = ""
+        ): Boolean {
+            if (!relative.startsWith(prefix) || !full.startsWith(prefix) ||
+                !relative.endsWith(suffix) || !full.endsWith(suffix)
+            ) {
+                return false
+            }
+            if (relative.length > full.length) {
+                return false
+            }
+            val first = prefixMatchLength(relative, full)
+            val last = suffixMatchLength(relative, full)
+            val relativeLength = relative.length - first - last
+            return relative.regionMatches(first, full, full.length - last - relativeLength, relativeLength)
+        }
+
+        /**
+         * Return the index of the first character where the strings [a]
+         * and [b] differ
+         */
+        fun prefixMatchLength(a: String, b: String): Int {
+            for (i in a.indices) {
+                if (i == b.length) {
+                    return i
+                }
+                val ac = a[i]
+                val bc = b[i]
+                if (ac != bc) {
+                    return i
+                }
+            }
+            return a.length
+        }
+
+        /**
+         * Return the index **from the end of both strings** where the
+         * first characters in the strings [a] and [b] differ.
+         */
+        fun suffixMatchLength(a: String, b: String): Int {
+            var ai = a.length - 1
+            var bi = b.length - 1
+            var index = 0
+            while (ai >= 0 && bi >= 0) {
+                val ac = a[ai--]
+                val bc = b[bi--]
+                if (ac != bc) {
+                    break
+                }
+                index++
+            }
+            return index
         }
 
         /**

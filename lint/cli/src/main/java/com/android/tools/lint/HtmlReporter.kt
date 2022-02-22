@@ -209,7 +209,9 @@ class HtmlReporter(
                     append("\" style=\"display: none\">\n")
                 }
                 count++
-                val url = writeLocation(incident.file, incident.getDisplayPath(), incident.line)
+
+                val displayPath = incident.getPath(client)
+                val url = writeLocation(incident.file, displayPath, incident.line)
                 append(':')
                 append(' ')
 
@@ -267,7 +269,7 @@ class HtmlReporter(
                         if (message != null && message.isNotEmpty()) {
                             val start = l.start
                             val line = start?.line ?: -1
-                            val path = client.getDisplayPath(incident.project, l.file)
+                            val path = incident.getPath(client, l.file)
                             writeLocation(l.file, path, line)
                             append(':')
                             append(' ')
@@ -316,7 +318,7 @@ class HtmlReporter(
                         while (l != null) {
                             val start = l.start
                             val line = start?.line ?: -1
-                            val path = client.getDisplayPath(incident.project, l.file)
+                            val path = incident.getPath(client, l.file)
                             append("<li> ")
                             writeLocation(l.file, path, line)
                             append("\n")

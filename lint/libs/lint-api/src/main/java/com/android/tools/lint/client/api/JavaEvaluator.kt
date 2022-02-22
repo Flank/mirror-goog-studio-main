@@ -523,10 +523,10 @@ class JavaEvaluator {
     /**
      * Constructs a simplified version of the internal JVM
      * description of the given method. This is in the same format as
-     * {@link #getMethodDescription} above, the difference being we
-     * don't have the actual PSI for the method type, we just construct
-     * the signature from the [method] name, the list of [argumentTypes]
-     * and optionally include the [returnType].
+     * [getMethodDescription] above, the difference being we don't
+     * have the actual PSI for the method type, we just construct the
+     * signature from the [method] name, the list of [argumentTypes] and
+     * optionally include the [returnType].
      */
     open fun constructMethodDescription(
         method: String,

@@ -36,7 +36,6 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.util.PathString
 import com.android.manifmerger.Actions
-import com.android.prefs.AndroidLocationsException
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo

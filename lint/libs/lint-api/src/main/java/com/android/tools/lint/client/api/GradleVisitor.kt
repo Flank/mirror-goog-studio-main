@@ -22,7 +22,7 @@ import com.android.tools.lint.detector.api.Location
 
 /**
  * Visitor which can traverse a Gradle file and invoke the various
- * methods on a {@link GradleScanner}.
+ * methods on a [GradleScanner].
  *
  * This is only intended to be implemented by lint.
  */

@@ -39,36 +39,28 @@ import org.jetbrains.uast.UReferenceExpression
  * There are several different common patterns for detecting issues:
  * <ul>
  * <li> Checking calls to a given method. For this see
- *     {@link #getApplicableMethodNames()} and
- *     {@link #visitMethodCall(JavaContext,
- *     UCallExpression, PsiMethod)}</li>
+ *     [getApplicableMethodNames] and [visitMethodCall]</li>
  * <li> Instantiating a given class. For this, see
- *     {@link #getApplicableConstructorTypes()}
- *     and {@link #visitConstructor(JavaContext,
- *     UCallExpression, PsiMethod)}</li>
+ *     [getApplicableConstructorTypes] and [visitConstructor]</li>
  * <li> Referencing a given constant. For this, see
- *     {@link #getApplicableReferenceNames()}
- *     and {@link #visitReference(JavaContext,
- *     UReferenceExpression, PsiElement)}</li>
+ *     [getApplicableReferenceNames] and [visitReference]</li>
  * <li> Extending a given class or implementing a given interface. For
- *     this, see {@link #applicableSuperClasses()} and
- *     {@link #visitClass(JavaContext, UClass)}</li>
+ *     this, see [applicableSuperClasses] and [visitClass]</li>
  * <li> More complicated scenarios: perform a general AST traversal with
  *     a visitor. In this case, first tell lint which AST node types
- *     you're interested in with the {@link #getApplicableUastTypes()}
- *     method, and then provide a {@link UElementHandler} from
- *     the {@link #createUastHandler(JavaContext)} where you
- *     override the various applicable handler methods. This is
- *     done rather than a general visitor from the root node to
- *     avoid having to have every single lint detector (there
+ *     you're interested in with the [getApplicableUastTypes] method,
+ *     and then provide a [UElementHandler] from the [createUastHandler]
+ *     where you override the various applicable handler methods.
+ *     This is done rather than a general visitor from the root node
+ *     to avoid having to have every single lint detector (there
  *     are hundreds) do a full tree traversal on its own.</li>
  * </ul>
  *
- * {@linkplain SourceCodeScanner} exposes the UAST API to lint checks.
- * UAST is short for "Universal AST" and is an abstract syntax tree
- * library which abstracts away details about Java versus Kotlin versus
- * other similar languages and lets the client of the library access the
- * AST in a unified way.
+ * [SourceCodeScanner] exposes the UAST API to lint checks. UAST is
+ * short for "Universal AST" and is an abstract syntax tree library
+ * which abstracts away details about Java versus Kotlin versus other
+ * similar languages and lets the client of the library access the AST
+ * in a unified way.
  *
  * UAST isn't actually a full replacement for PSI; it **augments** PSI.
  * Essentially, UAST is used for the **inside** of methods (e.g. method
@@ -77,35 +69,33 @@ import org.jetbrains.uast.UReferenceExpression
  * and signatures). There are also wrappers around some of these for
  * convenience.
  *
- * The {@linkplain SourceCodeScanner} interface reflects this fact. For
- * example, when you indicate that you want to check calls to a method
- * named {@code foo}, the call site node is a UAST node (in this case,
- * {@link UCallExpression}, but the called method itself is a {@link
- * PsiMethod}, since that method might be anywhere (including in a
- * library that we don't have source for, so UAST doesn't make sense.)
+ * The [SourceCodeScanner] interface reflects this fact. For example,
+ * when you indicate that you want to check calls to a method named
+ * {@code foo}, the call site node is a UAST node (in this case,
+ * [UCallExpression], but the called method itself is a [PsiMethod],
+ * since that method might be anywhere (including in a library that we
+ * don't have source for, so UAST doesn't make sense.)
  *
  * ## Migrating JavaPsiScanner to SourceCodeScanner
  * As described above, PSI is still used, so a lot of code will remain
  * the same. For example, all resolve methods, including those in UAST,
  * will continue to return PsiElement, not necessarily a UElement. For
  * example, if you resolve a method call or field reference, you'll get
- * a {@link PsiMethod} or {@link PsiField} back.
+ * a [PsiMethod] or [PsiField] back.
  *
  * However, the visitor methods have all changed, generally
- * to change to UAST types. For example, the signature {@link
- * JavaPsiScanner#visitMethodCall(JavaContext, JavaElementVisitor,
- * PsiMethodCallExpression, PsiMethod)} should be changed to {@link
- * SourceCodeScanner#visitMethodCall(JavaContext, UCallExpression,
- * PsiMethod)}.
+ * to change to UAST types. For example, the signature
+ * [JavaPsiScanner.visitMethodCall] should be changed to
+ * [SourceCodeScanner.visitMethodCall].
  *
- * Similarly, replace {@link JavaPsiScanner#createPsiVisitor}
- * with {@link SourceCodeScanner#createUastHandler}, {@link
- * JavaPsiScanner#getApplicablePsiTypes()} with {@link
- * SourceCodeScanner#getApplicableUastTypes()}, etc.
+ * Similarly, replace [JavaPsiScanner.createPsiVisitor]
+ * with [SourceCodeScanner.createUastHandler],
+ * [JavaPsiScanner.getApplicablePsiTypes] with
+ * [SourceCodeScanner.getApplicableUastTypes], etc.
  *
- * There are a bunch of new methods on classes like {@link JavaContext}
- * which lets you pass in a {@link UElement} to match the existing
- * {@link PsiElement} methods.
+ * There are a bunch of new methods on classes like [JavaContext] which
+ * lets you pass in a [UElement] to match the existing [PsiElement]
+ * methods.
  *
  * If you have code which does something specific with PSI classes, the
  * following mapping table in alphabetical order might be helpful, since
@@ -165,26 +155,25 @@ import org.jetbrains.uast.UReferenceExpression
  * calls.
  *
  * ### Parents
- * In UAST, you get your parent {@linkplain UElement} by calling {@code
- * getUastParent} instead of {@code getParent}. This is to avoid
- * method name clashes on some elements which are both UAST elements
- * and PSI elements at the same time - such as {@link UMethod}.
+ * In UAST, you get your parent [UElement] by calling {@code
+ * getUastParent} instead of {@code getParent}. This is to avoid method
+ * name clashes on some elements which are both UAST elements and PSI
+ * elements at the same time - such as [UMethod].
  *
  * ### Children
  * When you're going in the opposite direction (e.g. you have a
- * {@linkplain PsiMethod} and you want to look at its content, you
- * should **not** use {@link PsiMethod#getBody()}. This will only
- * give you the PSI child content, which won't work for example when
- * dealing with Kotlin methods. Normally lint passes you the {@linkplain
- * UMethod} which you should be procesing instead. But if for some
- * reason you need to look up the UAST method body from a {@linkplain
- * PsiMethod}, use this:
+ * [PsiMethod] and you want to look at its content, you should **not**
+ * use [PsiMethod.getBody]. This will only give you the PSI child
+ * content, which won't work for example when dealing with Kotlin
+ * methods. Normally lint passes you the [UMethod] which you should be
+ * processing instead. But if for some reason you need to look up the
+ * UAST method body from a [PsiMethod], use this:
  * <pre>
  *     UastContext context = UastUtils.getUastContext(element);
  *     UExpression body = context.getMethodBody(method);
  * </pre>
- * Similarly if you have a {@link PsiField} and you want to look up its
- * field initializer, use this:
+ * Similarly if you have a [PsiField] and you want to look up its field
+ * initializer, use this:
  * <pre>
  *     UastContext context = UastUtils.getUastContext(element);
  *     UExpression initializer = context.getInitializerBody(field);
@@ -195,8 +184,8 @@ import org.jetbrains.uast.UReferenceExpression
  * to things like the method called or to the operand/qualifier, you'd
  * first need to get the "method expression". In UAST there is no
  * method expression and this information is available directly on the
- * {@linkplain UCallExpression} element. Therefore, here's how you'd
- * change the code:
+ * [UCallExpression] element. Therefore, here's how you'd change the
+ * code:
  * <pre>
  * &lt;    call.getMethodExpression().getReferenceName();
  * ---
@@ -228,19 +217,18 @@ import org.jetbrains.uast.UReferenceExpression
  * ### Instanceof
  * You may have code which does something like "parent instanceof
  * PsiAssignmentExpression" to see if something is an assignment.
- * Instead, use one of the many utilities in {@link UastExpressionUtils}
- * such as {@link UastExpressionUtils#isAssignment(UElement)}.
- * Take a look at all the methods there now - there are
- * methods for checking whether a call is a constructor,
- * whether an expression is an array initializer, etc etc.
+ * Instead, use one of the many utilities in [UastExpressionUtils] such
+ * as [UastExpressionUtils.isAssignment]. Take a look at all the methods
+ * there now - there are methods for checking whether a call is a
+ * constructor, whether an expression is an array initializer, etc etc.
  *
  * ### Android Resources
  * Don't do your own AST lookup to figure out if something is a
  * reference to an Android resource (e.g. see if the class refers to an
  * inner class of a class named "R" etc.) There is now a new utility
- * class which handles this: {@link ResourceReference}. Here's an
- * example of code which has a {@link UExpression} and wants to know
- * it's referencing a R.styleable resource:
+ * class which handles this: [ResourceReference]. Here's an example of
+ * code which has a [UExpression] and wants to know it's referencing a
+ * R.styleable resource:
  * <pre>
  *        ResourceReference reference = ResourceReference.get(expression);
  *        if (reference == null || reference.getType() != ResourceType.STYLEABLE) {
@@ -250,17 +238,17 @@ import org.jetbrains.uast.UReferenceExpression
  * </pre>
  *
  * ### Binary Expressions
- * If you had been using {@link PsiBinaryExpression} for things like
- * checking comparator operators or arithmetic combination of operands,
- * you can replace this with {@link UBinaryExpression}. **But you
- * normally shouldn't; you should use {@link UPolyadicExpression}
- * instead**. A polyadic expression is just like a binary expression,
- * but possibly with more than two terms. With the old parser backend,
- * an expression like "A + B + C" would be represented by nested
- * binary expressions (first A + B, then a parent element which
- * combined that binary expression with C). However, this will now be
- * provided as a {@link UPolyadicExpression} instead. And the binary
- * case is handled trivially without the need to special case it.
+ * If you had been using [PsiBinaryExpression] for things like checking
+ * comparator operators or arithmetic combination of operands, you can
+ * replace this with [UBinaryExpression]. **But you normally shouldn't;
+ * you should use [UPolyadicExpression] instead**. A polyadic expression
+ * is just like a binary expression, but possibly with more than two
+ * terms. With the old parser backend, an expression like "A + B + C"
+ * would be represented by nested binary expressions (first A + B,
+ * then a parent element which combined that binary expression with
+ * C). However, this will now be provided as a [UPolyadicExpression]
+ * instead. And the binary case is handled trivially without the need to
+ * special case it.
  *
  * ### Method name changes
  * The following table maps some common method names and what their
@@ -292,22 +280,21 @@ import org.jetbrains.uast.UReferenceExpression
  * class, you should switch from JavaRecursiveElementVisitor to
  * AbstractUastVisitor. However, most lint checks don't do their own
  * full AST traversal; they instead participate in a shared traversal
- * of the tree, registering element types they're interested with using
- * {@link #getApplicableUastTypes()} and then providing a visitor
+ * of the tree, registering element types they're interested with
+ * using [getApplicableUastTypes] and then providing a visitor
  * where they implement the corresponding visit methods. However,
  * from these visitors you should **not** be calling super.visitX.
  * To remove this whole confusion, lint now provides a separate
- * class, {@link UElementHandler}. For the shared traversal, just
- * provide this handler instead and implement the appropriate visit
+ * class, [UElementHandler]. For the shared traversal, just provide
+ * this handler instead and implement the appropriate visit
  * methods. It will throw an error if you register element types in
- * {@linkplain #getApplicableUastTypes()} that you don't override.
+ * [getApplicableUastTypes] that you don't override.
  *
  * ### Migrating JavaScanner to SourceCodeScanner
- * First read the javadoc on how to convert from the older {@linkplain
- * JavaScanner} interface over to {@linkplain JavaPsiScanner}. While
- * {@linkplain JavaPsiScanner} is itself deprecated, it's a lot closer
- * to {@link SourceCodeScanner} so a lot of the same concepts apply;
- * then follow the above section.
+ * First read the javadoc on how to convert from the older [JavaScanner]
+ * interface over to [JavaPsiScanner]. While [JavaPsiScanner] is
+ * itself deprecated, it's a lot closer to [SourceCodeScanner] so a
+ * lot of the same concepts apply; then follow the above section.
  */
 interface SourceCodeScanner : FileScanner {
 
@@ -342,7 +329,7 @@ interface SourceCodeScanner : FileScanner {
      *     method
      * @param method the [PsiMethod] being called
      * @deprecated This is really visiting calls, not methods, so has
-     *     been renamed to {@link #visitMethodCall} instead
+     *     been renamed to [visitMethodCall] instead
      */
     @Deprecated("Rename to visitMethodCall instead when targeting 3.3+")
     fun visitMethod(

@@ -103,7 +103,7 @@ class TextReporter(
                     lastIssue = issue
                 }
                 val startLength = output.length
-                val displayPath = incident.getDisplayPath()
+                val displayPath = incident.getPath(client)
                 appendPath(output, displayPath)
                 output.append(':')
                 if (incident.line >= 0) {
@@ -156,7 +156,7 @@ class TextReporter(
                         val locationMessage = location.message
                         if (locationMessage != null && locationMessage.isNotEmpty()) {
                             output.append("    ")
-                            val path = client.getDisplayPath(incident.project, location.file)
+                            val path = incident.getPath(client, location.file)
                             appendPath(output, path)
                             val start = location.start
                             if (start != null) {
@@ -196,7 +196,7 @@ class TextReporter(
                                 if (sb.length > begin) {
                                     sb.append(", ")
                                 }
-                                val path = client.getDisplayPath(incident.project, location.file)
+                                val path = incident.getPath(client, location.file)
                                 appendPath(sb, path)
                                 val start = location.start
                                 if (start != null) {

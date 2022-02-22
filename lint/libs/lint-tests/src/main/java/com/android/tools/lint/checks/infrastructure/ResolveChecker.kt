@@ -227,7 +227,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
             visitMethod: String
         ): Nothing {
             val isImport = name.isEmpty()
-            val message = StringBuilder(createErrorMessage(node, "Couldn't resolve this $symbolType"))
+            val message = StringBuilder(createErrorMessage(context, node, "Couldn't resolve this $symbolType"))
 
             if (!isImport) {
                 message.append(
@@ -298,7 +298,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
          * reporter to create an error-string with source content and
          * range underlines to pinpoint the problem
          */
-        private fun createErrorMessage(locationNode: UElement, message: String): String {
+        private fun createErrorMessage(context: JavaContext, locationNode: UElement, message: String): String {
             val writer = StringWriter()
             writer.write("\n")
             val flags = LintCliFlags()
@@ -307,7 +307,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
             reporter.setWriteStats(false)
             val location = getLocation(locationNode)
             val incidents = listOf(
-                Incident(IssueRegistry.LINT_ERROR, "\n" + message, location)
+                Incident(IssueRegistry.LINT_ERROR, "\n" + message, location).apply { project = context.project }
             )
             reporter.write(LintStats(1, 0), incidents, driver.registry)
             var output: String = writer.toString()
