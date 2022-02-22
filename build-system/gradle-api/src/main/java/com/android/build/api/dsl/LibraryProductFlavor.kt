@@ -52,7 +52,5 @@ interface LibraryProductFlavor :
     LibraryBaseFlavor,
     ProductFlavor {
     /** Whether this product flavor should be selected in Studio by default  */
-    @get:Incubating
-    @set:Incubating
     var isDefault: Boolean
 }

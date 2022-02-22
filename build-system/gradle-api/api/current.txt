@@ -390,17 +390,17 @@ package com.android.build.api.dsl {
   public interface ApplicationBuildType extends com.android.build.api.dsl.BuildType com.android.build.api.dsl.ApplicationVariantDimension {
     method @org.gradle.api.Incubating public Boolean? isCrunchPngs();
     method @org.gradle.api.Incubating public boolean isDebuggable();
-    method @org.gradle.api.Incubating public boolean isDefault();
+    method public boolean isDefault();
     method @org.gradle.api.Incubating public boolean isEmbedMicroApp();
     method @org.gradle.api.Incubating public boolean isProfileable();
     method @org.gradle.api.Incubating public void setCrunchPngs(Boolean? isCrunchPngs);
     method @org.gradle.api.Incubating public void setDebuggable(boolean isDebuggable);
-    method @org.gradle.api.Incubating public void setDefault(boolean isDefault);
+    method public void setDefault(boolean isDefault);
     method @org.gradle.api.Incubating public void setEmbedMicroApp(boolean isEmbedMicroApp);
     method @org.gradle.api.Incubating public void setProfileable(boolean isProfileable);
     property @org.gradle.api.Incubating public abstract Boolean? isCrunchPngs;
     property @org.gradle.api.Incubating public abstract boolean isDebuggable;
-    property @org.gradle.api.Incubating public abstract boolean isDefault;
+    property public abstract boolean isDefault;
     property @org.gradle.api.Incubating public abstract boolean isEmbedMicroApp;
     property @org.gradle.api.Incubating public abstract boolean isProfileable;
   }
@@ -425,9 +425,9 @@ package com.android.build.api.dsl {
   }
 
   public interface ApplicationProductFlavor extends com.android.build.api.dsl.ApplicationBaseFlavor com.android.build.api.dsl.ProductFlavor {
-    method @org.gradle.api.Incubating public boolean isDefault();
-    method @org.gradle.api.Incubating public void setDefault(boolean isDefault);
-    property @org.gradle.api.Incubating public abstract boolean isDefault;
+    method public boolean isDefault();
+    method public void setDefault(boolean isDefault);
+    property public abstract boolean isDefault;
   }
 
   public interface ApplicationPublishing extends com.android.build.api.dsl.Publishing<com.android.build.api.dsl.ApplicationSingleVariant> {
@@ -1073,9 +1073,9 @@ package com.android.build.api.dsl {
   }
 
   public interface LibraryBuildType extends com.android.build.api.dsl.BuildType com.android.build.api.dsl.LibraryVariantDimension {
-    method @org.gradle.api.Incubating public boolean isDefault();
-    method @org.gradle.api.Incubating public void setDefault(boolean isDefault);
-    property @org.gradle.api.Incubating public abstract boolean isDefault;
+    method public boolean isDefault();
+    method public void setDefault(boolean isDefault);
+    property public abstract boolean isDefault;
   }
 
   public interface LibraryDefaultConfig extends com.android.build.api.dsl.LibraryBaseFlavor com.android.build.api.dsl.DefaultConfig {
@@ -1092,9 +1092,9 @@ package com.android.build.api.dsl {
   }
 
   public interface LibraryProductFlavor extends com.android.build.api.dsl.LibraryBaseFlavor com.android.build.api.dsl.ProductFlavor {
-    method @org.gradle.api.Incubating public boolean isDefault();
-    method @org.gradle.api.Incubating public void setDefault(boolean isDefault);
-    property @org.gradle.api.Incubating public abstract boolean isDefault;
+    method public boolean isDefault();
+    method public void setDefault(boolean isDefault);
+    property public abstract boolean isDefault;
   }
 
   public interface LibraryPublishing extends com.android.build.api.dsl.Publishing<com.android.build.api.dsl.LibrarySingleVariant> {
