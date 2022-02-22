@@ -114,8 +114,6 @@ interface ProductFlavor : Named, BaseFlavor, ExtensionAware, HasInitWith<BaseFla
      * To learn more about configuring flavor dimensions, read
      * [Combine multiple flavors](https://developer.android.com/studio/build/build-variants.html#flavor-dimensions).
      */
-    @get:Incubating
-    @set:Incubating
     var dimension: String?
 
     @Incubating

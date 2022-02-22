@@ -1455,13 +1455,13 @@ package com.android.build.api.dsl {
   }
 
   public interface ProductFlavor extends org.gradle.api.Named com.android.build.api.dsl.BaseFlavor org.gradle.api.plugins.ExtensionAware com.android.build.api.dsl.HasInitWith<com.android.build.api.dsl.BaseFlavor> {
-    method @org.gradle.api.Incubating public String? getDimension();
+    method public String? getDimension();
     method @org.gradle.api.Incubating public java.util.List<java.lang.String> getMatchingFallbacks();
-    method @org.gradle.api.Incubating public void setDimension(String? dimension);
+    method public void setDimension(String? dimension);
     method @Deprecated @org.gradle.api.Incubating public Void? setDimension(String? dimension);
     method @Deprecated @org.gradle.api.Incubating public void setMatchingFallbacks(java.lang.String... fallbacks);
     method @Deprecated @org.gradle.api.Incubating public void setMatchingFallbacks(java.util.List<java.lang.String> fallbacks);
-    property @org.gradle.api.Incubating public abstract String? dimension;
+    property public abstract String? dimension;
     property @org.gradle.api.Incubating public abstract java.util.List<java.lang.String> matchingFallbacks;
   }
 
