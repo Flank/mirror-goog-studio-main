@@ -33,8 +33,6 @@ interface ApplicationVariantDimension : VariantDimension {
      * flavor of the first dimension, second dimension and so on. All of these will have a dot in
      * between e.g. &quot;defaultSuffix.dimension1Suffix.dimensions2Suffix&quot;.
      */
-    @get:Incubating
-    @set:Incubating
     var applicationIdSuffix: String?
 
     /**
