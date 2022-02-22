@@ -16,18 +16,26 @@
 
 package com.android.tools.appinspection.network
 
+import com.android.tools.appinspection.network.rules.BodyModifiedTransformation
+import com.android.tools.appinspection.network.rules.BodyReplacedTransformation
 import com.android.tools.appinspection.network.rules.HeaderAddedTransformation
 import com.android.tools.appinspection.network.rules.HeaderReplacedTransformation
 import com.android.tools.appinspection.network.rules.NetworkResponse
 import com.android.tools.appinspection.network.rules.StatusCodeReplacedTransformation
 import com.android.tools.appinspection.network.rules.matches
 import com.android.tools.appinspection.network.rules.wildCardMatches
+import com.android.tools.idea.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyModified
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderAdded
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderReplaced
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.StatusCodeReplaced
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 class InterceptionRuleTest {
 
@@ -149,5 +157,138 @@ class InterceptionRuleTest {
         transformedResponse = HeaderReplacedTransformation(multipleMatchedProto).transform(response)
         assertThat(transformedResponse.responseHeaders["newName"]!![0]).isEqualTo("newValue")
         assertThat(transformedResponse.responseHeaders["header1"]).isNull()
+    }
+
+    @Test
+    fun modifyResponseBody() {
+        val response = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("text/html")
+            ),
+            "BodyXBodyXBodyXBoody".byteInputStream()
+        )
+        val bodyModifiedProto = BodyModified.newBuilder().apply {
+            targetTextBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "Body"
+            }
+            newText = "Test"
+        }.build()
+        var transformedResponse = BodyModifiedTransformation(bodyModifiedProto).transform(response)
+        assertThat(transformedResponse.body.reader().use { it.readText() })
+            .isEqualTo("TestXTestXTestXBoody")
+
+        val responseWithJsonContent = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("application/json")
+            ),
+            "Body".byteInputStream()
+        )
+        transformedResponse = BodyModifiedTransformation(bodyModifiedProto)
+            .transform(responseWithJsonContent)
+        assertThat(transformedResponse.body.reader().use { it.readText() })
+            .isEqualTo("Test")
+    }
+
+    @Test
+    fun modifyResponseBodyWithRegex() {
+        val response = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("text/html")
+            ),
+            "BodyXBodyXBodyXBoody".byteInputStream()
+        )
+        val bodyModifiedRegexProto = BodyModified.newBuilder().apply {
+            targetTextBuilder.apply {
+                type = MatchingText.Type.REGEX
+                text = "Bo*dy"
+            }
+            newText = "Test"
+        }.build()
+        val transformedResponse =
+            BodyModifiedTransformation(bodyModifiedRegexProto).transform(response)
+        assertThat(transformedResponse.body.reader().use { it.readText() })
+            .isEqualTo("TestXTestXTestXTest")
+    }
+
+    @Test
+    fun modifyCompressedResponseBody() {
+        val byteOutput = ByteArrayOutputStream()
+        GZIPOutputStream(byteOutput).use { stream ->
+            stream.write("Body".toByteArray())
+        }
+        val response = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("text/html"),
+                "content-encoding" to listOf("gzip")
+            ),
+            byteOutput.toByteArray().inputStream()
+        )
+        val bodyModifiedProto = BodyModified.newBuilder().apply {
+            targetTextBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "Body"
+            }
+            newText = "Test"
+        }.build()
+        val transformedResponse = BodyModifiedTransformation(bodyModifiedProto).transform(response)
+
+        assertThat(GZIPInputStream(transformedResponse.body).reader().use { it.readText() })
+            .isEqualTo("Test")
+    }
+
+    @Test
+    fun replaceCompressedResponseBody() {
+        val byteOutput = ByteArrayOutputStream()
+        GZIPOutputStream(byteOutput).use { stream ->
+            stream.write("Body".toByteArray())
+        }
+        val response = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("text/html"),
+                "content-encoding" to listOf("gzip")
+            ),
+            byteOutput.toByteArray().inputStream()
+        )
+        val bodyReplaced = BodyReplaced.newBuilder().apply {
+            body = ByteString.copyFrom("Test".toByteArray())
+        }.build()
+        val transformedResponse = BodyReplacedTransformation(bodyReplaced).transform(response)
+
+        assertThat(GZIPInputStream(transformedResponse.body).reader().use { it.readText() })
+            .isEqualTo("Test")
+    }
+
+    @Test
+    fun replaceTwoResponseBody() {
+        val response1 = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("text/html")
+            ),
+            "Body1".toByteArray().inputStream()
+        )
+        val response2 = NetworkResponse(
+            mapOf(
+                "null" to listOf("HTTP/1.0 200 OK"),
+                "content-type" to listOf("text/html")
+            ),
+            "Body2".toByteArray().inputStream()
+        )
+        val bodyReplaced = BodyReplaced.newBuilder().apply {
+            body = ByteString.copyFrom("Test".toByteArray())
+        }.build()
+        val transformation = BodyReplacedTransformation(bodyReplaced)
+        val transformedResponse1 = transformation.transform(response1)
+        val transformedResponse2 = transformation.transform(response2)
+        assertThat(transformedResponse1.body.reader().use { it.readText() })
+            .isEqualTo("Test")
+        assertThat(transformedResponse2.body.reader().use { it.readText() })
+            .isEqualTo("Test")
     }
 }

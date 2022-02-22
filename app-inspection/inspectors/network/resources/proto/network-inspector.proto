@@ -172,13 +172,8 @@ message Transformation {
         bytes body = 1;
     }
 
-    // Modify the response body.
+    // Replace segments of response body that match the target.
     message BodyModified {
-        repeated BodyTextReplaced text_replacements = 1;
-    }
-
-    // Replace the text of response body.
-    message BodyTextReplaced {
         MatchingText target_text = 1;
         string new_text = 2;
     }

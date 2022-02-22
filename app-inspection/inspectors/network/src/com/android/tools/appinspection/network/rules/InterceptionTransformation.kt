@@ -16,11 +16,16 @@
 
 package com.android.tools.appinspection.network.rules
 
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyModified
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderAdded
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderReplaced
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.StatusCodeReplaced
+import java.io.IOException
 import java.io.InputStream
+import java.util.regex.Pattern
+import java.util.zip.GZIPInputStream
+import java.util.zip.ZipException
 
 interface InterceptionTransformation {
 
@@ -116,11 +121,73 @@ class HeaderReplacedTransformation(
 /**
  * A transformation class that replaces the response body.
  */
-class BodyReplacedTransformation(bodyReplaced: BodyReplaced) : InterceptionTransformation {
+class BodyReplacedTransformation(
+    private val bodyReplaced: BodyReplaced
+) : InterceptionTransformation {
 
-    private val body: InputStream = bodyReplaced.body.toByteArray().inputStream()
+    private val body: InputStream get() = bodyReplaced.body.toByteArray().inputStream()
+    private val gzipBody: InputStream get() = bodyReplaced.body.toByteArray().gzip().inputStream()
 
     override fun transform(response: NetworkResponse): NetworkResponse {
-        return response.copy(body = body)
+        return response.copy(body = if (isContentCompressed(response)) gzipBody else body)
+    }
+}
+
+/**
+ * A transformation class that replaces the target text segments from response body.
+ */
+class BodyModifiedTransformation(
+    private val bodyModified: BodyModified
+) : InterceptionTransformation {
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        if (!isSupportedTextType(response)) {
+            return response
+        }
+
+        val isCompressed = isContentCompressed(response)
+        try {
+            val inputStream = if (isCompressed) GZIPInputStream(response.body) else response.body
+            val body = inputStream.bufferedReader().use { it.readText() }
+            var newBody = bodyModified.targetText.toRegex()
+                .replace(body, bodyModified.newText)
+                .toByteArray()
+            if (isCompressed) {
+                newBody = newBody.gzip()
+            }
+            return response.copy(body = newBody.inputStream())
+        } catch (ignored: IOException) {
+            // If we got here, it means we failed to unzip data that was supposedly zipped.
+            return response
+        } catch (ignored: ZipException) {
+            return response
+        }
+    }
+
+    /**
+     * @return true if its type is "text" or its subtype is a known text subtype.
+     */
+    private fun isSupportedTextType(response: NetworkResponse): Boolean {
+        val contentHeaderValues = response.responseHeaders[FIELD_CONTENT_TYPE] ?: return false
+        val mimeType = contentHeaderValues.getOrNull(0) ?: return false
+        val typeAndSubType = mimeType.split(Pattern.compile("/"), 2)
+        if (typeAndSubType.isEmpty()) {
+            return false
+        }
+        val type = typeAndSubType[0]
+        if (type.equals("text", ignoreCase = true)) {
+            return true
+        }
+        if (typeAndSubType.size == 2) {
+            // Without suffix: json, xml, html, etc.
+            // With suffix: vnd.api+json, svg+xml, etc.
+            // See also: https://en.wikipedia.org/wiki/Media_type#Suffix
+            val subtypeAndSuffix = typeAndSubType[1].split(Pattern.compile("\\+"), 2)
+            val suffix = subtypeAndSuffix.last()
+            return listOf("csv", "html", "json", "xml").any {
+                it.equals(suffix, ignoreCase = true)
+            }
+        }
+        return false
     }
 }

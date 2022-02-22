@@ -38,6 +38,8 @@ class InterceptionRule(proto: InterceptRule) {
                     HeaderReplacedTransformation(transformationProto.headerReplaced)
                 transformationProto.hasBodyReplaced() ->
                     BodyReplacedTransformation(transformationProto.bodyReplaced)
+                transformationProto.hasBodyModified() ->
+                    BodyModifiedTransformation(transformationProto.bodyModified)
                 else -> null
             }
         }

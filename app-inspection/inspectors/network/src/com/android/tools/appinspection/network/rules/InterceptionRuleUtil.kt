@@ -17,19 +17,43 @@
 package com.android.tools.appinspection.network.rules
 
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPOutputStream
 
+const val MATCHING_TEXT_TYPE_NOT_SPECIFIED = "MatchingText type not specified"
+const val FIELD_CONTENT_TYPE = "content-type"
+const val FIELD_CONTENT_ENCODING = "content-encoding"
 const val FIELD_RESPONSE_STATUS_CODE = "response-status-code"
 
 fun MatchingText.matches(text: String): Boolean {
     return this.text.isBlank() || when (type) {
         MatchingText.Type.PLAIN -> this.text == text
         MatchingText.Type.REGEX -> Regex(this.text).matches(text)
-        else -> false
+        else -> throw RuntimeException(MATCHING_TEXT_TYPE_NOT_SPECIFIED)
     }
 }
 
 fun wildCardMatches(pattern: String, text: String): Boolean {
     return (pattern.isBlank()) || wildCardToRegex(pattern).matches(text)
+}
+
+fun MatchingText.toRegex(): Regex =
+    if (text.isBlank()) Regex(".*")
+    else when (type) {
+        MatchingText.Type.PLAIN -> Regex.fromLiteral(text)
+        MatchingText.Type.REGEX -> Regex(text)
+        else -> throw RuntimeException(MATCHING_TEXT_TYPE_NOT_SPECIFIED)
+    }
+
+fun isContentCompressed(response: NetworkResponse): Boolean {
+    val contentHeaderValues = response.responseHeaders[FIELD_CONTENT_ENCODING] ?: return false
+    return contentHeaderValues.any { it.toLowerCase().contains("gzip") }
+}
+
+fun ByteArray.gzip(): ByteArray {
+    val outputStream = ByteArrayOutputStream()
+    GZIPOutputStream(outputStream).use { it.write(this) }
+    return outputStream.toByteArray()
 }
 
 private fun wildCardToRegex(wildCardText: String): Regex {
