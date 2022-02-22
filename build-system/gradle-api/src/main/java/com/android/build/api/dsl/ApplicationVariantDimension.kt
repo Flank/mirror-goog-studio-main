@@ -43,8 +43,6 @@ interface ApplicationVariantDimension : VariantDimension {
      * contain the suffix from the default product flavor, followed by the suffix from product
      * flavor of the first dimension, second dimension and so on.
      */
-    @get:Incubating
-    @set:Incubating
     var versionNameSuffix: String?
 
     /**
