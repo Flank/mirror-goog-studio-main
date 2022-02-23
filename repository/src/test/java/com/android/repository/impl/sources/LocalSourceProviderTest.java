@@ -94,7 +94,7 @@ public class LocalSourceProviderTest {
                         ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         FakeProgressIndicator logger = new FakeProgressIndicator();
-        provider.getSources(null, logger, false).iterator();
+        provider.getSources(null, logger, false);
         logger.assertNoErrorsOrWarnings();
     }
 
