@@ -486,21 +486,21 @@ package com.android.build.api.dsl {
   }
 
   public interface BaseFlavor extends com.android.build.api.dsl.VariantDimension com.android.build.api.dsl.HasInitWith<com.android.build.api.dsl.BaseFlavor> {
-    method @org.gradle.api.Incubating public Integer? getMinSdk();
-    method @org.gradle.api.Incubating public String? getMinSdkPreview();
+    method public Integer? getMinSdk();
+    method public String? getMinSdkPreview();
     method @org.gradle.api.Incubating public String getName();
     method @org.gradle.api.Incubating public Boolean? getRenderscriptNdkModeEnabled();
     method @org.gradle.api.Incubating public Boolean? getRenderscriptSupportModeBlasEnabled();
     method @org.gradle.api.Incubating public Boolean? getRenderscriptSupportModeEnabled();
     method @org.gradle.api.Incubating public Integer? getRenderscriptTargetApi();
-    method @org.gradle.api.Incubating public java.util.Set<java.lang.String> getResourceConfigurations();
-    method @org.gradle.api.Incubating public String? getTestApplicationId();
-    method @org.gradle.api.Incubating public Boolean? getTestFunctionalTest();
-    method @org.gradle.api.Incubating public Boolean? getTestHandleProfiling();
-    method @org.gradle.api.Incubating public String? getTestInstrumentationRunner();
-    method @org.gradle.api.Incubating public java.util.Map<java.lang.String,java.lang.String> getTestInstrumentationRunnerArguments();
+    method public java.util.Set<java.lang.String> getResourceConfigurations();
+    method public String? getTestApplicationId();
+    method public Boolean? getTestFunctionalTest();
+    method public Boolean? getTestHandleProfiling();
+    method public String? getTestInstrumentationRunner();
+    method public java.util.Map<java.lang.String,java.lang.String> getTestInstrumentationRunnerArguments();
     method @org.gradle.api.Incubating public com.android.build.api.dsl.VectorDrawables getVectorDrawables();
-    method @org.gradle.api.Incubating public Boolean? getWearAppUnbundled();
+    method public Boolean? getWearAppUnbundled();
     method @org.gradle.api.Incubating public void initWith(com.android.build.api.dsl.BaseFlavor that);
     method @Deprecated @org.gradle.api.Incubating public void minSdkVersion(int minSdkVersion);
     method @Deprecated @org.gradle.api.Incubating public void minSdkVersion(String? minSdkVersion);
@@ -510,39 +510,39 @@ package com.android.build.api.dsl {
     method @Deprecated @org.gradle.api.Incubating public void resConfig(String config);
     method @Deprecated @org.gradle.api.Incubating public void resConfigs(java.util.Collection<java.lang.String> config);
     method @Deprecated @org.gradle.api.Incubating public void resConfigs(java.lang.String... config);
-    method @org.gradle.api.Incubating public void setMinSdk(Integer? minSdk);
-    method @org.gradle.api.Incubating public void setMinSdkPreview(String? minSdkPreview);
+    method public void setMinSdk(Integer? minSdk);
+    method public void setMinSdkPreview(String? minSdkPreview);
     method @Deprecated @org.gradle.api.Incubating public void setMinSdkVersion(int minSdkVersion);
     method @Deprecated @org.gradle.api.Incubating public void setMinSdkVersion(String? minSdkVersion);
     method @org.gradle.api.Incubating public void setRenderscriptNdkModeEnabled(Boolean? renderscriptNdkModeEnabled);
     method @org.gradle.api.Incubating public void setRenderscriptSupportModeBlasEnabled(Boolean? renderscriptSupportModeBlasEnabled);
     method @org.gradle.api.Incubating public void setRenderscriptSupportModeEnabled(Boolean? renderscriptSupportModeEnabled);
     method @org.gradle.api.Incubating public void setRenderscriptTargetApi(Integer? renderscriptTargetApi);
-    method @org.gradle.api.Incubating public void setTestApplicationId(String? testApplicationId);
-    method @org.gradle.api.Incubating public void setTestFunctionalTest(Boolean? testFunctionalTest);
+    method public void setTestApplicationId(String? testApplicationId);
+    method public void setTestFunctionalTest(Boolean? testFunctionalTest);
     method @Deprecated @org.gradle.api.Incubating public Object? setTestFunctionalTest(boolean testFunctionalTest);
-    method @org.gradle.api.Incubating public void setTestHandleProfiling(Boolean? testHandleProfiling);
+    method public void setTestHandleProfiling(Boolean? testHandleProfiling);
     method @Deprecated @org.gradle.api.Incubating public Object? setTestHandleProfiling(boolean testHandleProfiling);
-    method @org.gradle.api.Incubating public void setTestInstrumentationRunner(String? testInstrumentationRunner);
+    method public void setTestInstrumentationRunner(String? testInstrumentationRunner);
     method @Deprecated @org.gradle.api.Incubating public Object? setTestInstrumentationRunnerArguments(java.util.Map<java.lang.String,java.lang.String> testInstrumentationRunnerArguments);
-    method @org.gradle.api.Incubating public void setWearAppUnbundled(Boolean? wearAppUnbundled);
+    method public void setWearAppUnbundled(Boolean? wearAppUnbundled);
     method @Deprecated @org.gradle.api.Incubating public void testInstrumentationRunnerArgument(String key, String value);
     method @Deprecated @org.gradle.api.Incubating public void testInstrumentationRunnerArguments(java.util.Map<java.lang.String,java.lang.String> args);
     method @org.gradle.api.Incubating public void vectorDrawables(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables,kotlin.Unit> action);
-    property @org.gradle.api.Incubating public abstract Integer? minSdk;
-    property @org.gradle.api.Incubating public abstract String? minSdkPreview;
+    property public abstract Integer? minSdk;
+    property public abstract String? minSdkPreview;
     property @org.gradle.api.Incubating public abstract Boolean? renderscriptNdkModeEnabled;
     property @org.gradle.api.Incubating public abstract Boolean? renderscriptSupportModeBlasEnabled;
     property @org.gradle.api.Incubating public abstract Boolean? renderscriptSupportModeEnabled;
     property @org.gradle.api.Incubating public abstract Integer? renderscriptTargetApi;
-    property @org.gradle.api.Incubating public abstract java.util.Set<java.lang.String> resourceConfigurations;
-    property @org.gradle.api.Incubating public abstract String? testApplicationId;
-    property @org.gradle.api.Incubating public abstract Boolean? testFunctionalTest;
-    property @org.gradle.api.Incubating public abstract Boolean? testHandleProfiling;
-    property @org.gradle.api.Incubating public abstract String? testInstrumentationRunner;
-    property @org.gradle.api.Incubating public abstract java.util.Map<java.lang.String,java.lang.String> testInstrumentationRunnerArguments;
+    property public abstract java.util.Set<java.lang.String> resourceConfigurations;
+    property public abstract String? testApplicationId;
+    property public abstract Boolean? testFunctionalTest;
+    property public abstract Boolean? testHandleProfiling;
+    property public abstract String? testInstrumentationRunner;
+    property public abstract java.util.Map<java.lang.String,java.lang.String> testInstrumentationRunnerArguments;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.VectorDrawables vectorDrawables;
-    property @org.gradle.api.Incubating public abstract Boolean? wearAppUnbundled;
+    property public abstract Boolean? wearAppUnbundled;
   }
 
   public interface BuildFeatures extends org.gradle.api.plugins.ExtensionAware {

@@ -32,8 +32,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *
      * See [Set the Application ID](https://developer.android.com/studio/build/application-id.html)
      */
-    @get:Incubating
-    @set:Incubating
     var testApplicationId: String?
 
     /**
@@ -43,8 +41,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    @get:Incubating
-    @set:Incubating
     var minSdk: Int?
 
     @Deprecated("Replaced by minSdk property")
@@ -61,9 +57,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-
-    @get:Incubating
-    @set:Incubating
     var minSdkPreview: String?
 
     @Deprecated("Replaced by minSdkPreview property")
@@ -117,8 +110,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
-    @get:Incubating
-    @set:Incubating
     var testInstrumentationRunner: String?
 
     /**
@@ -135,7 +126,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
-    @get:Incubating
     val testInstrumentationRunnerArguments: MutableMap<String, String>
 
     @Incubating
@@ -155,8 +145,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
-    @get:Incubating
-    @set:Incubating
     var testHandleProfiling: Boolean?
 
     @Incubating
@@ -167,8 +155,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
-    @get:Incubating
-    @set:Incubating
     var testFunctionalTest: Boolean?
 
     @Incubating
@@ -210,7 +196,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    @get:Incubating
     val resourceConfigurations: MutableSet<String>
 
     @Incubating
@@ -237,9 +222,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * If true, this enables the app to transition from an embedded wear app to one
      * distributed by the play store directly.
      */
-
-    @get:Incubating
-    @set:Incubating
     var wearAppUnbundled: Boolean?
 
 
