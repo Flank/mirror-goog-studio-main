@@ -26,6 +26,7 @@ import java.io.Serializable
  */
 data class BuildTypeImpl(
     override val isDebuggable: Boolean,
+    override val isProfileable: Boolean,
     override val isTestCoverageEnabled: Boolean,
     override val isPseudoLocalesEnabled: Boolean,
     override val isJniDebuggable: Boolean,

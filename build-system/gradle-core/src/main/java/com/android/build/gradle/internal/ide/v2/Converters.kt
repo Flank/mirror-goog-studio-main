@@ -117,6 +117,7 @@ internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFla
 internal fun DslBuildType.convert(features: BuildFeatureValues) = BuildTypeImpl(
     name = name,
     isDebuggable = isDebuggable,
+    isProfileable = isProfileable,
     isTestCoverageEnabled = isTestCoverageEnabled,
     isPseudoLocalesEnabled = isPseudoLocalesEnabled,
     isJniDebuggable = isJniDebuggable,

@@ -34,6 +34,9 @@ interface BuildType : BaseConfig, AndroidModel {
     /** Whether the build type is configured to generate a debuggable apk. */
     val isDebuggable: Boolean
 
+    /** Whether the build type is configured to work with profilers. */
+    val isProfileable: Boolean
+
     /** Whether the build type is configured to be build with support for code coverage. */
     val isTestCoverageEnabled: Boolean
 
