@@ -70,7 +70,7 @@ class TrackedHttpURLConnection(
     private fun trackPreConnect() {
         if (!connectTracked) {
             try {
-                connectionTracker.trackRequest(requestMethod, requestProperties)
+                connectionTracker.trackRequest(getRequestMethod(), requestProperties)
             } finally {
                 connectTracked = true
             }
@@ -187,15 +187,15 @@ class TrackedHttpURLConnection(
 
     // Unfortunately, HttpURLConnection only updates its method to "POST" after connect is
     // called. But for our tracking purposes, that's too late.
-    var requestMethod: String
-        get() = if (wrapped.doOutput && wrapped.requestMethod == "GET") {
-            // Unfortunately, HttpURLConnection only updates its method to "POST" after connect is
-            // called. But for our tracking purposes, that's too late.
-            "POST"
-        } else wrapped.requestMethod
-        set(method) {
-            wrapped.requestMethod = method
-        }
+    fun getRequestMethod(): String = if (wrapped.doOutput && wrapped.requestMethod == "GET") {
+        // Unfortunately, HttpURLConnection only updates its method to "POST" after connect is
+        // called. But for our tracking purposes, that's too late.
+        "POST"
+    } else wrapped.requestMethod
+
+    fun setRequestMethod(method: String?) {
+        wrapped.requestMethod = method
+    }
 
     fun usingProxy(): Boolean {
         return wrapped.usingProxy()
@@ -246,7 +246,7 @@ class TrackedHttpURLConnection(
     val requestProperties: Map<String, List<String>>
         get() = wrapped.requestProperties
 
-    fun addRequestProperty(field: String, newValue: String) {
+    fun addRequestProperty(field: String?, newValue: String?) {
         wrapped.addRequestProperty(field, newValue)
     }
 
@@ -259,7 +259,7 @@ class TrackedHttpURLConnection(
     val lastModified: Long
         get() = wrapped.lastModified
 
-    fun getRequestProperty(field: String): String {
+    fun getRequestProperty(field: String?): String? {
         return wrapped.getRequestProperty(field)
     }
 
@@ -272,7 +272,7 @@ class TrackedHttpURLConnection(
             wrapped.useCaches = newValue
         }
 
-    fun setRequestProperty(field: String, newValue: String) {
+    fun setRequestProperty(field: String?, newValue: String?) {
         wrapped.setRequestProperty(field, newValue)
     }
 
@@ -323,7 +323,7 @@ class TrackedHttpURLConnection(
             return wrapped.responseCode
         }
 
-    val responseMessage: String
+    val responseMessage: String?
         get() {
             tryTrackResponse()
             return interceptedResponse.responseMessage
@@ -340,12 +340,12 @@ class TrackedHttpURLConnection(
             return interceptedResponse.responseHeaders
         }
 
-    fun getHeaderField(key: String): String? {
+    fun getHeaderField(key: String?): String? {
         tryTrackResponse()
         return wrapped.getHeaderField(key)
     }
 
-    fun getHeaderFieldInt(field: String, defaultValue: Int): Int {
+    fun getHeaderFieldInt(field: String?, defaultValue: Int): Int {
         tryTrackResponse()
         return wrapped.getHeaderFieldInt(field, defaultValue)
     }
@@ -355,12 +355,12 @@ class TrackedHttpURLConnection(
         return wrapped.getHeaderFieldKey(posn)
     }
 
-    fun getHeaderFieldDate(field: String, defaultValue: Long): Long {
+    fun getHeaderFieldDate(field: String?, defaultValue: Long): Long {
         tryTrackResponse()
         return wrapped.getHeaderFieldDate(field, defaultValue)
     }
 
-    fun getHeaderFieldLong(name: String, Default: Long): Long {
+    fun getHeaderFieldLong(name: String?, Default: Long): Long {
         tryTrackResponse()
         return wrapped.getHeaderFieldLong(name, Default)
     }

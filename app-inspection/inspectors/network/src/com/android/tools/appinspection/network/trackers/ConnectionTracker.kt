@@ -56,7 +56,7 @@ class ConnectionTracker(
         reporter.reportCurrentThread()
     }
 
-    override fun trackResponse(response: String, fields: Map<String, List<String>>) {
+    override fun trackResponse(response: String?, fields: Map<String, List<String>>) {
         val s = StringBuilder()
         for ((key, value) in fields) {
             s.append(key).append(" = ")
