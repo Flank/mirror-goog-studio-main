@@ -24,6 +24,8 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl

@@ -19,7 +19,11 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
+import com.android.build.api.dsl.LibraryBuildFeatures;
+import com.android.build.api.dsl.LibraryBuildType;
+import com.android.build.api.dsl.LibraryDefaultConfig;
 import com.android.build.api.dsl.LibraryExtension;
+import com.android.build.api.dsl.LibraryProductFlavor;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
@@ -33,6 +37,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
+import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
@@ -51,6 +56,8 @@ import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
+
+import java.util.Collection;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -64,6 +71,10 @@ import org.jetbrains.annotations.NotNull;
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin
         extends BasePlugin<
+                LibraryBuildFeatures,
+                com.android.build.api.dsl.LibraryBuildType,
+                com.android.build.api.dsl.LibraryDefaultConfig,
+                com.android.build.api.dsl.LibraryProductFlavor,
                 LibraryExtension,
                 LibraryAndroidComponentsExtension,
                 LibraryVariantBuilderImpl,
@@ -79,7 +90,12 @@ public class LibraryPlugin
 
     @NonNull
     @Override
-    protected ExtensionData<LibraryExtension> createExtension(
+    protected ExtensionData<
+            LibraryBuildFeatures,
+            com.android.build.api.dsl.LibraryBuildType,
+            com.android.build.api.dsl.LibraryDefaultConfig,
+            com.android.build.api.dsl.LibraryProductFlavor,
+            LibraryExtension> createExtension(
             @NonNull DslServices dslServices,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
@@ -230,16 +246,16 @@ public class LibraryPlugin
         return ProjectType.LIBRARY;
     }
 
-    @NonNull
+    @NotNull
     @Override
-    protected LibraryTaskManager createTaskManager(
-            @NonNull Project project,
-            @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
-            @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesImpl> testFixturesComponents,
-            @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
-            @NonNull TaskManagerConfig localConfig,
-            @NonNull BaseExtension extension) {
+    protected TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> createTaskManager(
+            @NotNull Project project,
+            @NotNull Collection<? extends ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
+            @NotNull Collection<? extends TestComponentImpl> testComponents,
+            @NotNull Collection<? extends TestFixturesImpl> testFixturesComponents,
+            @NotNull GlobalTaskCreationConfig globalTaskCreationConfig,
+            @NotNull TaskManagerConfig localConfig,
+            @NotNull BaseExtension extension) {
         return new LibraryTaskManager(
                 project,
                 variants,

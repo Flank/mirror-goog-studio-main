@@ -96,7 +96,7 @@ public class PluginDslTest {
 
     @Test
     public void testBasic() {
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         VariantCheckers.checkDefaultVariants(getComponents(plugin.getVariantManager()));
 
         // we can now call this since the variants/tasks have been created
@@ -119,7 +119,7 @@ public class PluginDslTest {
                         + String.valueOf(TestConstants.COMPILE_SDK_VERSION)
                         + "'\n        }\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         VariantCheckers.checkDefaultVariants(getComponents(plugin.getVariantManager()));
 
         // we can now call this since the variants/tasks have been created
@@ -163,7 +163,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTest", 3);
@@ -204,7 +204,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTest", 4);
@@ -264,7 +264,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         ImmutableMap<String, Integer> map =
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
         assertThat(VariantCheckers.countVariants(map))
@@ -338,7 +338,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         VariantCheckers.checkDefaultVariants(getComponents(plugin.getVariantManager()));
 
         // we can now call this since the variants/tasks have been created
@@ -394,7 +394,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         Map<String, List<String>> expected = new TreeMap<>();
         expected.put(
@@ -450,7 +450,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         String defaultFile =
                 new File(
@@ -491,7 +491,7 @@ public class PluginDslTest {
                         + "        targetCompatibility '1.6'\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         JavaCompile compileReleaseJavaWithJavac =
                 (JavaCompile) project.getTasks().getByName(checker.getReleaseJavacTaskName());
@@ -517,7 +517,7 @@ public class PluginDslTest {
                         + "        targetCompatibility = JavaVersion.VERSION_1_8\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         JavaCompile compileReleaseJavaWithJavac =
                 (JavaCompile) project.getTasks().getByName(checker.getReleaseJavacTaskName());
@@ -534,7 +534,7 @@ public class PluginDslTest {
     public void testMockableJarName() {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         Map<String, VariantImpl> componentMap = getComponentMap();
         Map.Entry<String, VariantImpl> vsentry = componentMap.entrySet().iterator().next();
         File mockableJarFile =
@@ -563,7 +563,7 @@ public class PluginDslTest {
                         + "       encoding 'foo'\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         JavaCompile compileReleaseJavaWithJavac =
                 (JavaCompile) project.getTasks().getByName(checker.getReleaseJavacTaskName());
@@ -604,7 +604,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         Map<String, VariantImpl> componentMap = getComponentMap();
 
@@ -671,10 +671,10 @@ public class PluginDslTest {
     @Test
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(
-                        plugin.versionedSdkLoaderService
+                        plugin.getVersionedSdkLoaderService()
                                 .getVersionedSdkLoader()
                                 .get()
                                 .getBuildToolsRevisionProvider()
@@ -727,7 +727,7 @@ public class PluginDslTest {
 
     @Test
     public void testNestedComponents() {
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         List<VariantImpl> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
@@ -759,7 +759,7 @@ public class PluginDslTest {
                         + "}\n"
                         + "\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         List<VariantImpl> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
@@ -791,7 +791,7 @@ public class PluginDslTest {
                         + "}\n"
                         + "\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         List<VariantImpl> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
@@ -823,7 +823,7 @@ public class PluginDslTest {
                         + "}\n"
                         + "\n");
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         List<VariantImpl> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)

@@ -33,6 +33,7 @@ open class ComponentInfo<
 )
 
 class VariantComponentInfo<
+        CommonExtensionT: CommonExtension<*, *, *, *>,
         VariantBuilderT : VariantBuilderImpl,
         VariantT : VariantImpl>
 (
@@ -40,7 +41,7 @@ class VariantComponentInfo<
         variant: VariantT,
         stats: GradleBuildVariant.Builder?,
         val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
-                in CommonExtension<*, *, *, *>,
+                in CommonExtensionT,
                 in VariantBuilderT,
                 in VariantT,
                 >

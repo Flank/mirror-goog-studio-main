@@ -39,7 +39,7 @@ class LintTaskManager constructor(
             variantType: VariantType,
             variantModel: VariantModel,
             variantPropertiesList: List<VariantImpl>,
-            testComponentPropertiesList: List<TestComponentImpl>
+            testComponentPropertiesList: Collection<TestComponentImpl>
             ) {
         if (variantType.isForTesting) {
             return // Don't  create lint tasks in test-only projects
@@ -165,7 +165,7 @@ class LintTaskManager constructor(
 
     private fun attachTestsToVariants(
         variantPropertiesList: List<VariantImpl>,
-        testComponentPropertiesList: List<TestComponentImpl>,
+        testComponentPropertiesList: Collection<TestComponentImpl>,
         ignoreTestFixturesSources: Boolean
     ): LinkedHashMap<String, VariantWithTests> {
         val variantsWithTests = LinkedHashMap<String, VariantWithTests>()

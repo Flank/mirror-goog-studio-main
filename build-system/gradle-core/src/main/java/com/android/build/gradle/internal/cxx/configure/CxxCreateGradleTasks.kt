@@ -107,7 +107,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
         issueReporter: IssueReporter,
         taskFactory: TaskFactory,
         projectOptions: ProjectOptions,
-        variants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
+        variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>) {
     if (variants.isEmpty()) return
     IssueReporterLoggingEnvironment(
         issueReporter,

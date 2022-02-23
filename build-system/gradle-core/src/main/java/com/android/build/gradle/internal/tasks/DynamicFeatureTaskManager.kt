@@ -34,9 +34,9 @@ import org.gradle.api.Project
 
 internal class DynamicFeatureTaskManager(
     project: Project,
-    variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
-    testComponents: List<TestComponentImpl>,
-    testFixturesComponents: List<TestFixturesImpl>,
+    variants: Collection<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
+    testComponents: Collection<TestComponentImpl>,
+    testFixturesComponents: Collection<TestFixturesImpl>,
     globalConfig: GlobalTaskCreationConfig,
     localConfig: TaskManagerConfig,
     extension: BaseExtension,

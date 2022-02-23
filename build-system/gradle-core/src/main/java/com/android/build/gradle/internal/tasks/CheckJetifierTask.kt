@@ -71,9 +71,9 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
     class CreationAction(
         creationConfig: GlobalTaskCreationConfig,
         private val checkJetifierBuildService: Provider<CheckJetifierBuildService>,
-        variants: List<ComponentInfo<*, *>>,
-        testComponents: List<TestComponentImpl>,
-        testFixturesComponents: List<TestFixturesImpl>
+        variants: Collection<ComponentInfo<*, *>>,
+        testComponents: Collection<TestComponentImpl>,
+        testFixturesComponents: Collection<TestFixturesImpl>
     ) : GlobalTaskCreationAction<CheckJetifierTask>(creationConfig) {
 
         override val name = "checkJetifier"

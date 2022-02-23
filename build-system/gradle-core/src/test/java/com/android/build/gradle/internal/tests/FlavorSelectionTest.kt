@@ -79,7 +79,7 @@ class FlavorSelectionTest {
             it.missingDimensionStrategy("variant-only", "variant-only")
         }
 
-        plugin.runAfterEvaluate()
+        plugin.runAfterEvaluate(project)
 
         // get the configuration for a given variant
         variantConfiguration = android.applicationVariants.stream()

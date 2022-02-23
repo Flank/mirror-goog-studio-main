@@ -16,10 +16,15 @@
 
 package com.android.build.gradle.internal.plugins
 
+import org.gradle.api.Project
+
 /**
  * extension to call afterEvaluate on a plugin directly. This also works around the
  * package visibility of createAndroidTasks for testing.
  */
-fun BasePlugin<*, *, *, *>.runAfterEvaluate(force: Boolean = false) {
-    this.createAndroidTasks()
+fun BasePlugin<*, *, *, *, *, *, *, *>.runAfterEvaluate(
+    project: Project,
+    force: Boolean = false
+) {
+    this.createAndroidTasks(project)
 }

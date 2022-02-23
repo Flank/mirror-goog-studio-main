@@ -449,7 +449,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         String defaultVariant = variantModel.getDefaultVariant();
         String namespace = null;
         String androidTestNamespace = null;
-        for (com.android.build.api.variant.impl.VariantImpl variant : variantModel.getVariants()) {
+        for (ComponentImpl variant : variantModel.getVariants()) {
             variantNames.add(variant.getName());
             if (shouldBuildVariant) {
                 variants.add(createVariant(variant));
@@ -671,10 +671,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (com.android.build.api.variant.impl.VariantImpl variantImpl :
-                variantModel.getVariants()) {
-            if (variantImpl.getName().equals(variantName)) {
-                VariantImpl variant = createVariant(variantImpl);
+        for (ComponentImpl component : variantModel.getVariants()) {
+            if (component.getName().equals(variantName)) {
+                VariantImpl variant = createVariant(component);
                 if (shouldScheduleSourceGeneration) {
                     scheduleSourceGeneration(project, variant);
                 }

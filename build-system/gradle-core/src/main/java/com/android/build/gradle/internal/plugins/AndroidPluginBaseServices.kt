@@ -143,21 +143,22 @@ abstract class AndroidPluginBaseServices(
         configuratorService.recordBlock(
             ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
             project.path,
-            null,
-            this::configureProject
-        )
+            null
+        ) { configureProject(project) }
         configuratorService.recordBlock(
             ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
             project.path,
             null,
-            this::configureExtension
-        )
+        ) {
+            configureExtension(project)
+        }
         configuratorService.recordBlock(
             ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION,
             project.path,
             null,
-            this::createTasks
-        )
+        ) {
+            createTasks(project)
+        }
     }
 
     private fun checkPathForErrors() {
@@ -201,11 +202,11 @@ abstract class AndroidPluginBaseServices(
         }
     }
 
-    protected abstract fun configureProject()
+    protected abstract fun configureProject(project: Project)
 
-    protected abstract fun configureExtension()
+    protected abstract fun configureExtension(project: Project)
 
-    protected abstract fun createTasks()
+    protected abstract fun createTasks(project: Project)
 
     protected abstract fun getAnalyticsPluginType(): GradleBuildProject.PluginType?
 
@@ -215,7 +216,7 @@ abstract class AndroidPluginBaseServices(
      *
      * This is useful to have not nullable val field that depends on [project] being initialized.
      */
-    private fun <T> withProject(context: String, action: (project: Project) -> T): T =
+    protected fun <T> withProject(context: String, action: (project: Project) -> T): T =
         project?.let {
             action(it)
         } ?: throw IllegalStateException("Cannot obtain $context until Project is known")

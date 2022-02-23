@@ -43,6 +43,8 @@ import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.sync.TestModuleVariantModelTask;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
+
+import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
@@ -60,9 +62,9 @@ public class TestApplicationTaskManager
 
     public TestApplicationTaskManager(
             @NonNull Project project,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
-            @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesImpl> testFixturesComponents,
+            @NonNull Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
+            @NonNull Collection<? extends TestComponentImpl> testComponents,
+            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {

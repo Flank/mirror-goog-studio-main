@@ -271,9 +271,9 @@ import org.gradle.testing.jacoco.plugins.JacocoPlugin
  */
 abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
     @JvmField protected val project: Project,
-    private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-    private val testComponents: List<TestComponentImpl>,
-    private val testFixturesComponents: List<TestFixturesImpl>,
+    private val variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>,
+    private val testComponents: Collection<TestComponentImpl>,
+    private val testFixturesComponents: Collection<TestFixturesImpl>,
     @JvmField protected val globalConfig: GlobalTaskCreationConfig,
     @JvmField protected val localConfig: TaskManagerConfig,
     @JvmField protected val extension: BaseExtension,

@@ -60,6 +60,8 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -75,9 +77,9 @@ public abstract class AbstractAppTaskManager<
 
     protected AbstractAppTaskManager(
             @NonNull Project project,
-            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
-            @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesImpl> testFixturesComponents,
+            @NonNull Collection<? extends ComponentInfo<VariantBuilderT, VariantT>> variants,
+            @NonNull Collection<? extends TestComponentImpl> testComponents,
+            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {
