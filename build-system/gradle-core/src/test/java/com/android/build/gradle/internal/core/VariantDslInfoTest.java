@@ -40,8 +40,8 @@ import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.variant.DimensionCombinationImpl;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.ApiVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -289,7 +289,7 @@ public class VariantDslInfoTest {
         VariantDslInfoBuilder<?> builder =
                 VariantDslInfoBuilder.getBuilder(
                         new DimensionCombinationImpl("debug", flavors),
-                        VariantTypeImpl.BASE_APK,
+                        ComponentTypeImpl.BASE_APK,
                         defaultConfig,
                         new MockSourceProvider("main"),
                         buildType,

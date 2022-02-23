@@ -61,7 +61,7 @@ import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.common.collect.ImmutableList;
@@ -161,7 +161,7 @@ public class ModelBuilderTest {
             @NonNull Class<ComponentT> componentClass,
             @Nullable VariantImpl testedVariant) {
         // prepare the objects required for the constructor
-        final VariantType type = variantDslInfo.getVariantType();
+        final ComponentType type = variantDslInfo.getComponentType();
         VariantServices variantServices = FakeServices.createVariantPropertiesApiServices();
         TaskCreationServices taskCreationServices = FakeServices.createTaskCreationServices();
 
@@ -205,7 +205,7 @@ public class ModelBuilderTest {
 
             testedVariant
                     .getTestComponents()
-                    .put(variantDslInfo.getVariantType(), unitTestComponent);
+                    .put(variantDslInfo.getComponentType(), unitTestComponent);
 
             return unitTestComponent;
         }

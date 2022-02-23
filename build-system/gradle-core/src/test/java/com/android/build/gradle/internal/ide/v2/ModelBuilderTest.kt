@@ -45,7 +45,7 @@ import com.android.build.gradle.internal.variant.VariantInputModelBuilder
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.internal.variant.VariantModelImpl
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SyncIssue
@@ -208,7 +208,7 @@ class ModelBuilderTest {
 
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
-            VariantTypeImpl.BASE_APK,
+            ComponentTypeImpl.BASE_APK,
             SourceSetManager(
                 ProjectFactory.project,
                 false,

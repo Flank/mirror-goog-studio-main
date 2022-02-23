@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.google.common.base.Preconditions
 
 /** Common parts of build type and product flavor data objects.  */
@@ -26,7 +26,7 @@ abstract class VariantDimensionData(
     private val androidTestSourceSet: DefaultAndroidSourceSet?,
     private val unitTestSourceSet: DefaultAndroidSourceSet?
 ) {
-    fun getTestSourceSet(type: VariantType): DefaultAndroidSourceSet? {
+    fun getTestSourceSet(type: ComponentType): DefaultAndroidSourceSet? {
         Preconditions.checkState(
             type.isTestComponent,
             "Unknown test variant type $type"

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.TestExtension
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.BaseExtension
@@ -36,7 +35,7 @@ import com.android.build.gradle.internal.services.createVariantPropertiesApiServ
 import com.android.build.gradle.internal.variant.Container
 import com.android.build.gradle.internal.variant.ContainerImpl
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.testutils.AbstractBuildGivenBuildExpectTest
 import org.gradle.api.file.DirectoryProperty
@@ -246,7 +245,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -261,7 +260,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 minSdk = 20
@@ -304,7 +303,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testInstrumentationRunner = "foo"
@@ -324,7 +323,7 @@ class VariantDslInfoTest2 :
                 instrumentationRunner = "foo"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -340,7 +339,7 @@ class VariantDslInfoTest2 :
                 instrumentationRunner = "foo"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testInstrumentationRunner = "bar"
@@ -360,7 +359,7 @@ class VariantDslInfoTest2 :
                 instrumentationRunner = "foo"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testInstrumentationRunner = "bar3"
@@ -387,7 +386,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -403,7 +402,7 @@ class VariantDslInfoTest2 :
         }
 
         // provide a custom convert action to call VariantDslInfo.handleProfiling
-        // even though this is not a test VariantType
+        // even though this is not a test componentType
         convertToResult {
             handleProfiling = it.handleProfiling.orNull
         }
@@ -423,7 +422,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testHandleProfiling = true
@@ -443,7 +442,7 @@ class VariantDslInfoTest2 :
                 handleProfiling = true
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -459,7 +458,7 @@ class VariantDslInfoTest2 :
                 handleProfiling = true
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testHandleProfiling = false
@@ -479,7 +478,7 @@ class VariantDslInfoTest2 :
                 handleProfiling = true
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testHandleProfiling = true
@@ -506,7 +505,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -522,7 +521,7 @@ class VariantDslInfoTest2 :
         }
 
         // provide a custom convert action to call VariantDslInfo.functionalTest
-        // even though this is not a test VariantType
+        // even though this is not a test componentType
         convertToResult {
             functionalTest = it.functionalTest.orNull
         }
@@ -542,7 +541,7 @@ class VariantDslInfoTest2 :
             manifestData { }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testFunctionalTest = true
@@ -562,7 +561,7 @@ class VariantDslInfoTest2 :
                 functionalTest = true
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -578,7 +577,7 @@ class VariantDslInfoTest2 :
                 functionalTest = true
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testFunctionalTest = false
@@ -598,7 +597,7 @@ class VariantDslInfoTest2 :
                 functionalTest = true
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 testFunctionalTest = true
@@ -643,7 +642,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             namespace = "com.example.namespace"
             testNamespace = "com.example.testNamespace"
@@ -665,7 +664,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             namespace = "com.example.namespace"
         }
@@ -684,7 +683,7 @@ class VariantDslInfoTest2 :
             }
             testManifestData { }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -703,7 +702,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
         }
 
         expect {
@@ -722,7 +721,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             defaultConfig {
                 applicationId = "com.applicationId"
@@ -746,7 +745,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             namespace = "com.example.namespace"
 
@@ -772,7 +771,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             productFlavors {
                 create("flavor1") {
@@ -801,7 +800,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             productFlavors {
                 create("flavor1") {
@@ -829,7 +828,7 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromTestManifest"
             }
 
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
 
             productFlavors {
                 create("flavor1") {
@@ -871,7 +870,7 @@ class VariantDslInfoTest2 :
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
 
-        val extension =  if (given.variantType.isTestComponent) {
+        val extension =  if (given.componentType.isTestComponent) {
             Mockito.mock(TestedFullExtension::class.java).also {
                 Mockito.`when`(it.namespace).thenReturn(given.namespace)
                 Mockito.`when`(it.testNamespace).thenReturn(given.testNamespace)
@@ -891,10 +890,10 @@ class VariantDslInfoTest2 :
         )
 
         val parentVariant =
-            if (given.variantType.isNestedComponent) {
+            if (given.componentType.isNestedComponent) {
                 VariantDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    variantType = given.testedVariantType,
+                    componentType = given.testedcomponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
@@ -915,14 +914,14 @@ class VariantDslInfoTest2 :
 
         val variantDslInfo = VariantDslInfoImpl(
             componentIdentity = componentIdentity,
-            variantType = given.variantType,
+            componentType = given.componentType,
             defaultConfig = given.defaultConfig,
             buildTypeObj = given.buildType,
             productFlavorList = given.flavors,
             signingConfigOverride = null,
             productionVariant = parentVariant,
             dataProvider =
-                if (given.variantType.isTestComponent) {
+                if (given.componentType.isTestComponent) {
                     DirectManifestDataProvider(given.testManifestData, projectServices)
                 } else {
                     DirectManifestDataProvider(given.manifestData, projectServices)
@@ -945,7 +944,7 @@ class VariantDslInfoTest2 :
                 it.versionCode = variantDslInfo.versionCode.orNull
                 it.versionName = variantDslInfo.versionName.orNull
                 // only query these if this is not a test.
-                if (given.variantType.isForTesting) {
+                if (given.componentType.isForTesting) {
                     it.instrumentationRunner = variantDslInfo.getInstrumentationRunner(given.dexingType).orNull
                     it.handleProfiling = variantDslInfo.handleProfiling.get()
                     it.functionalTest = variantDslInfo.functionalTest.get()
@@ -969,7 +968,7 @@ class VariantDslInfoTest2 :
     override fun initResultDefaults(given: GivenData, result: ResultData) {
         // if the variant type is a test, then make sure that the result is initialized
         // with the right defaults.
-        if (given.variantType.isForTesting) {
+        if (given.componentType.isForTesting) {
             result.instrumentationRunner = "android.test.InstrumentationTestRunner" // DEFAULT_TEST_RUNNER
             result.handleProfiling = false // DEFAULT_HANDLE_PROFILING
             result.functionalTest = false //DEFAULT_FUNCTIONAL_TEST
@@ -1006,9 +1005,9 @@ class VariantDslInfoTest2 :
         }
 
         /** Variant type for the test */
-        var variantType = VariantTypeImpl.BASE_APK
+        var componentType = ComponentTypeImpl.BASE_APK
         /** Variant type for the tested component */
-        var testedVariantType = VariantTypeImpl.BASE_APK
+        var testedcomponentType = ComponentTypeImpl.BASE_APK
 
         var dexingType = DexingType.NATIVE_MULTIDEX
 

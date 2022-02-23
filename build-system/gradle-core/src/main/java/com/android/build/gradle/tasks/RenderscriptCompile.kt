@@ -357,7 +357,7 @@ abstract class RenderscriptCompile : NdkTask() {
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            if (creationConfig.variantType.isTestComponent) {
+            if (creationConfig.componentType.isTestComponent) {
                 task.dependsOn(creationConfig.taskContainer.processManifestTask!!)
             }
         }

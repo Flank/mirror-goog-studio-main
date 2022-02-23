@@ -436,7 +436,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val checkDependencies: Boolean
             get() =
                 creationConfig.global.lintOptions.checkDependencies
-                        && !variant.main.variantType.isDynamicFeature
+                        && !variant.main.componentType.isDynamicFeature
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
             registerLintIntermediateArtifacts(
@@ -493,7 +493,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val checkDependencies: Boolean
             get() =
                 creationConfig.global.lintOptions.checkDependencies
-                        && !variant.main.variantType.isDynamicFeature
+                        && !variant.main.componentType.isDynamicFeature
 
         override fun configureOutputSettings(task: AndroidLintTask) {
             task.textReportToStdOut.setDisallowChanges(true)
@@ -541,7 +541,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val checkDependencies: Boolean
             get() =
                 creationConfig.global.lintOptions.checkDependencies
-                        && !variant.main.variantType.isDynamicFeature
+                        && !variant.main.componentType.isDynamicFeature
 
         override fun configureOutputSettings(task: AndroidLintTask) {
             // do nothing

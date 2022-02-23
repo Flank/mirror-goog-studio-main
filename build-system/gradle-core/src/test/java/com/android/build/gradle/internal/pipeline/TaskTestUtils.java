@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.NameAnonymizer;
 import com.android.builder.profile.NameAnonymizerSerializer;
@@ -326,7 +326,7 @@ public class TaskTestUtils {
         when(creationConfig.getName()).thenReturn("theVariantName");
         when(creationConfig.getFlavorName()).thenReturn("theFlavorName");
         when(creationConfig.getBuildType()).thenReturn("debug");
-        when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(creationConfig.getComponentType()).thenReturn(ComponentTypeImpl.BASE_APK);
 
         VariantScope scope = mock(VariantScope.class);
         when(creationConfig.getVariantScope()).thenReturn(scope);
@@ -336,7 +336,7 @@ public class TaskTestUtils {
         VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
         when(creationConfig.getVariantDslInfo()).thenReturn(variantDslInfo);
         when(creationConfig.getDirName()).thenReturn("config dir name");
-        when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(creationConfig.getComponentType()).thenReturn(ComponentTypeImpl.BASE_APK);
         when(creationConfig.getDebuggable()).thenReturn(true);
         return creationConfig;
     }

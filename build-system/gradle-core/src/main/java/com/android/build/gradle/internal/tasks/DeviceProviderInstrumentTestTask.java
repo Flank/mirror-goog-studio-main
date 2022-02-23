@@ -64,7 +64,7 @@ import com.android.build.gradle.internal.testing.utp.UtpTestRunner;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
@@ -697,7 +697,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .on(InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE);
             }
 
-            if (creationConfig.getVariantType().isForTesting()) {
+            if (creationConfig.getComponentType().isForTesting()) {
                 if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                     creationConfig.getTaskContainer().setConnectedTestTask(taskProvider);
                 } else {
@@ -719,10 +719,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             // this can be null for test plugin
             VariantCreationConfig testedConfig = creationConfig.getTestedConfig();
 
-            VariantType variantType =
+            ComponentType componentType =
                     testedConfig != null
-                            ? testedConfig.getVariantType()
-                            : creationConfig.getVariantType();
+                            ? testedConfig.getComponentType()
+                            : creationConfig.getComponentType();
             String variantName =
                     testedConfig != null ? testedConfig.getName() : creationConfig.getName();
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
@@ -779,7 +779,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .getConnectedCheckDeviceSerials()
                         .set(connectedCheckTargetSerials);
             }
-            boolean useUtp = shouldEnableUtp(projectOptions, testOptions, variantType);
+            boolean useUtp = shouldEnableUtp(projectOptions, testOptions, componentType);
             task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
             if (useUtp) {
                 if (!projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {

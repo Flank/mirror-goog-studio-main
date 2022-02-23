@@ -54,7 +54,7 @@ import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.testFixtures.TestFixturesUtil;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.android.builder.errors.IssueReporter;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
@@ -216,7 +216,7 @@ public class VariantDependenciesBuilder {
                 factory.named(AgpVersionAttr.class, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
         String variantName = variantDslInfo.getComponentIdentity().getName();
-        VariantType variantType = variantDslInfo.getVariantType();
+        ComponentType componentType = variantDslInfo.getComponentType();
         String buildType = variantDslInfo.getComponentIdentity().getBuildType();
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
                 getConsumptionFlavorAttributes(flavorSelection);
@@ -245,7 +245,7 @@ public class VariantDependenciesBuilder {
             compileClasspath.getDependencies().add(dependencies.create(project));
         }
 
-        if (variantType.isTestFixturesComponent()) {
+        if (componentType.isTestFixturesComponent()) {
             // equivalent to dependencies { testFixturesApi project("$currentProject") }
             apiClasspaths.forEach(
                     apiConfiguration ->
@@ -285,8 +285,8 @@ public class VariantDependenciesBuilder {
             if (testFixturesEnabled) {
                 dependencies.add(runtimeClasspath.getName(), dependencies.testFixtures(project));
             }
-            if (testedVariant.getVariantDslInfo().getVariantType().isAar()
-                    || !variantDslInfo.getVariantType().isApk()) {
+            if (testedVariant.getVariantDslInfo().getComponentType().isAar()
+                    || !variantDslInfo.getComponentType().isApk()) {
                 runtimeClasspath.getDependencies().add(dependencies.create(project));
             }
         }
@@ -308,7 +308,7 @@ public class VariantDependenciesBuilder {
                     compileClasspath, runtimeClasspath, dependencies, false, stringCachingService);
 
             // if this is a test App, then also synchronize the 2 runtime classpaths
-            if (variantType.isApk() && testedVariant != null) {
+            if (componentType.isApk() && testedVariant != null) {
                 Configuration testedRuntimeClasspath =
                         testedVariant.getVariantDependencies().getRuntimeClasspath();
                 ConstraintHandler.alignWith(
@@ -323,7 +323,7 @@ public class VariantDependenciesBuilder {
         Configuration globalTestedApks =
                 configurations.findByName(VariantDependencies.CONFIG_NAME_TESTED_APKS);
         Configuration providedClasspath;
-        if (variantType.isApk() && globalTestedApks != null) {
+        if (componentType.isApk() && globalTestedApks != null) {
             // this configuration is created only for test-only project
             Configuration testedApks =
                     configurations.maybeCreate(
@@ -348,7 +348,7 @@ public class VariantDependenciesBuilder {
         Configuration wearApp = null;
         Map<PublishedConfigSpec, Configuration> elements = Maps.newHashMap();
 
-        if (variantType.isBaseModule()) {
+        if (componentType.isBaseModule()) {
             wearApp = configurations.maybeCreate(variantName + "WearBundling");
             wearApp.setDescription(
                     "Resolved Configuration for wear app bundling for variant: " + variantName);
@@ -371,7 +371,7 @@ public class VariantDependenciesBuilder {
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
                 getElementsPublicationFlavorAttributes();
 
-        if (variantType.getPublishToOtherModules()) {
+        if (componentType.getPublishToOtherModules()) {
             // this is the configuration that contains the artifacts for inter-module
             // dependencies.
             Configuration runtimeElements =
@@ -408,12 +408,12 @@ public class VariantDependenciesBuilder {
             elements.put(new PublishedConfigSpec(API_ELEMENTS), apiElements);
         }
 
-        if (variantType.getPublishToRepository()) {
+        if (componentType.getPublishToRepository()) {
             VariantPublishingInfo variantPublish = variantDslInfo.getPublishInfo();
             if (variantPublish != null) {
                 // if the variant is a library, we need to make both a runtime and an API
                 // configurations, and they both must contain transitive dependencies
-                if (variantType.isAar()) {
+                if (componentType.isAar()) {
                     LibraryElements aar =
                             factory.named(
                                     LibraryElements.class,
@@ -591,7 +591,7 @@ public class VariantDependenciesBuilder {
 
         }
 
-        if (variantType.getPublishToMetadata()) {
+        if (componentType.getPublishToMetadata()) {
             // Variant-specific reverse metadata publishing configuration. Only published to
             // by base app, optional apks, and non base feature modules.
             Configuration reverseMetadataElements =
@@ -609,7 +609,7 @@ public class VariantDependenciesBuilder {
                     new PublishedConfigSpec(REVERSE_METADATA_ELEMENTS), reverseMetadataElements);
         }
 
-        if (variantType.isBaseModule()) {
+        if (componentType.isBaseModule()) {
             // The variant-specific configuration that will contain the feature
             // reverse metadata. It's per-variant to contain the right attribute.
             final String reverseMetadataValuesName = variantName + "ReverseMetadataValues";
@@ -652,7 +652,7 @@ public class VariantDependenciesBuilder {
         checkOldConfigurations(configurations, "_" + variantName + "Apk", runtimeClasspathName);
         checkOldConfigurations(configurations, "_" + variantName + "Publish", runtimeClasspathName);
 
-        if (variantType.isTestFixturesComponent()) {
+        if (componentType.isTestFixturesComponent()) {
             Capability capability = TestFixturesUtil.getTestFixturesCapabilityForProject(project);
             elements.forEach(
                     (publishedConfigType, configuration) ->
@@ -664,7 +664,7 @@ public class VariantDependenciesBuilder {
                         variantDslInfo.getExperimentalProperties());
         return new VariantDependencies(
                 variantName,
-                variantDslInfo.getVariantType(),
+                variantDslInfo.getComponentType(),
                 compileClasspath,
                 runtimeClasspath,
                 runtimeClasspaths,

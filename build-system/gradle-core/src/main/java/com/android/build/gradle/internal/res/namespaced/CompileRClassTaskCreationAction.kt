@@ -56,7 +56,7 @@ class CompileRClassTaskCreationAction(private val creationConfig: ComponentCreat
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, creationConfig.name)
 
         task.classpath = task.project.files()
-        if (creationConfig.variantType.isTestComponent || creationConfig.variantType.isApk) {
+        if (creationConfig.componentType.isTestComponent || creationConfig.componentType.isApk) {
             task.source(creationConfig.artifacts.get(RUNTIME_R_CLASS_SOURCES))
         }
     }

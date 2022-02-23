@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 
 internal class DynamicFeatureVariantFactory(
     projectServices: ProjectServices,
@@ -152,6 +152,6 @@ internal class DynamicFeatureVariantFactory(
         )
     }
 
-    override val variantType
-        get() = VariantTypeImpl.OPTIONAL_APK
+    override val componentType
+        get() = ComponentTypeImpl.OPTIONAL_APK
 }

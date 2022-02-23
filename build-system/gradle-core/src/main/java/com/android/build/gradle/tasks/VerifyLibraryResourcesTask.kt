@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.files.SerializableInputChanges
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
@@ -177,7 +177,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 .addResourceDir(resourceDir = compiledResources)
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
                 .setOptions(AaptOptions())
-                .setVariantType(VariantTypeImpl.LIBRARY)
+                .setComponentType(ComponentTypeImpl.LIBRARY)
                 .setAndroidTarget(androidJar = parameters.androidJar.get().asFile)
                 .setMergeBlameDirectory(parameters.mergeBlameFolder.get().asFile)
                 .setManifestMergeBlameFile(parameters.manifestMergeBlameFile.get().asFile)

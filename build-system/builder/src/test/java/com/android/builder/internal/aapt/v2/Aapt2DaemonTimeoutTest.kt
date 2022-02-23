@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -101,7 +101,7 @@ class Aapt2DaemonTimeoutTest {
                 manifestFile = manifest,
                 resourceOutputApk = outputFile,
                 options = AaptOptions(),
-                variantType = VariantTypeImpl.BASE_APK
+                componentType = ComponentTypeImpl.BASE_APK
         )
 
         val daemon = CompileLinkTimeoutAapt2Daemon(name = testName.methodName)

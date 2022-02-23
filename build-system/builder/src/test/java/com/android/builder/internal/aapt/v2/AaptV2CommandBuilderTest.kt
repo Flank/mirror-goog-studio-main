@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.google.common.collect.ImmutableList
@@ -48,7 +48,7 @@ class AaptV2CommandBuilderTest {
             resourceDirs = ImmutableList.of(resourceDir),
             staticLibrary = true,
             resourceOutputApk = staticLibApk,
-            variantType = VariantTypeImpl.LIBRARY,
+            componentType = ComponentTypeImpl.LIBRARY,
             mergeOnly = true,
             intermediateDir = intermediateDir
         )
@@ -90,7 +90,7 @@ class AaptV2CommandBuilderTest {
             options = AaptOptions(noCompress, additionalParameters = null),
             staticLibrary = true,
             resourceOutputApk = staticLibApk,
-            variantType = VariantTypeImpl.LIBRARY,
+            componentType = ComponentTypeImpl.LIBRARY,
             intermediateDir = intermediateDir
         )
 
@@ -137,7 +137,7 @@ class AaptV2CommandBuilderTest {
             options = AaptOptions(noCompress, additionalParameters = null),
             staticLibrary = true,
             resourceOutputApk = staticLibApk,
-            variantType = VariantTypeImpl.LIBRARY,
+            componentType = ComponentTypeImpl.LIBRARY,
             intermediateDir = intermediateDir
         )
 

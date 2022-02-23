@@ -203,7 +203,7 @@ abstract class MergeJavaResourceTask
             taskProvider: TaskProvider<MergeJavaResourceTask>
         ) {
             super.handleProvider(taskProvider)
-            val fileName = if (creationConfig.variantType.isBaseModule) {
+            val fileName = if (creationConfig.componentType.isBaseModule) {
                 "base.jar"
             } else {
                 TaskManager.getFeatureFileName(

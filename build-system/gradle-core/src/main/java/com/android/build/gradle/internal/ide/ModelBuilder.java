@@ -84,10 +84,10 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.compiling.BuildConfigType;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.ComponentType;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
-import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.AaptOptions;
@@ -346,11 +346,12 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<ArtifactMetaData> artifactMetaDataList = Lists.newArrayList(
                 extraModelInfo.getExtraArtifacts());
 
-        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-            artifactMetaDataList.add(new ArtifactMetaDataImpl(
-                    variantType.getArtifactName(),
-                    true /*isTest*/,
-                    variantType.getArtifactType()));
+        for (ComponentType componentType : ComponentType.Companion.getTestComponents()) {
+            artifactMetaDataList.add(
+                    new ArtifactMetaDataImpl(
+                            componentType.getArtifactName(),
+                            true /*isTest*/,
+                            componentType.getArtifactType()));
         }
 
         LintOptions lintOptions = ConvertersKt.convertLintOptions(extension.getLintOptions());
@@ -729,7 +730,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                     new DefaultManifestParser(
                             manifest,
                             () -> true,
-                            component.getVariantType().getRequiresManifest(),
+                            component.getComponentType().getRequiresManifest(),
                             variantModel.getSyncIssueReporter());
             try {
                 validateMinSdkVersion(attributeSupplier);
@@ -771,22 +772,23 @@ public class ModelBuilder<Extension extends BaseExtension>
             com.android.build.api.variant.impl.VariantImpl variant =
                     (com.android.build.api.variant.impl.VariantImpl) component;
 
-            for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                ComponentImpl testVariant = variant.getTestComponents().get(variantType);
+            for (ComponentType componentType : ComponentType.Companion.getTestComponents()) {
+                ComponentImpl testVariant = variant.getTestComponents().get(componentType);
                 if (testVariant != null) {
-                    switch ((VariantTypeImpl) variantType) {
+                    switch ((ComponentTypeImpl) componentType) {
                         case ANDROID_TEST:
                             extraAndroidArtifacts.add(
                                     createAndroidArtifact(
-                                            variantType.getArtifactName(), testVariant));
+                                            componentType.getArtifactName(), testVariant));
                             break;
                         case UNIT_TEST:
                             clonedExtraJavaArtifacts.add(
-                                    createUnitTestsJavaArtifact(variantType, testVariant));
+                                    createUnitTestsJavaArtifact(componentType, testVariant));
                             break;
                         default:
                             throw new IllegalArgumentException(
-                                    "Unsupported test variant type ${variantType}.");
+                                    String.format(
+                                            "Unsupported test variant type %s.", componentType));
                     }
                 }
             }
@@ -814,8 +816,8 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private void checkProguardFiles(@NonNull ComponentImpl component) {
         // We check for default files unless it's a base module, which can include default files.
-        boolean isBaseModule = component.getVariantType().isBaseModule();
-        boolean isDynamicFeature = component.getVariantType().isDynamicFeature();
+        boolean isBaseModule = component.getComponentType().isBaseModule();
+        boolean isDynamicFeature = component.getComponentType().isDynamicFeature();
 
         if (!isBaseModule) {
             List<File> consumerProguardFiles =
@@ -868,7 +870,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private JavaArtifactImpl createUnitTestsJavaArtifact(
-            @NonNull VariantType variantType, @NonNull ComponentImpl component) {
+            @NonNull ComponentType componentType, @NonNull ComponentImpl component) {
         ArtifactsImpl artifacts = component.getArtifacts();
 
         SourceProviders sourceProviders = determineSourceProviders(component);
@@ -902,7 +904,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantModel.getMockableJarArtifact().getFiles().stream().findFirst().orElse(null);
 
         return new JavaArtifactImpl(
-                variantType.getArtifactName(),
+                componentType.getArtifactName(),
                 component.getTaskContainer().getAssembleTask().getName(),
                 component.getTaskContainer().getCompileTask().getName(),
                 Sets.newHashSet(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
@@ -1011,7 +1013,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
 
-        if (component.getVariantType().isTestComponent() || component instanceof TestVariantImpl) {
+        if (component.getComponentType().isTestComponent()
+                || component instanceof TestVariantImpl) {
             Configuration testHelpers =
                     project.getConfigurations()
                             .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);

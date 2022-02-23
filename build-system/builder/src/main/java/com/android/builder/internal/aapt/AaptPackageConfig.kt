@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt
 
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -30,7 +30,7 @@ data class AaptPackageConfig(
     val manifestFile: File,
     val options: AaptOptions,
     val androidJarPath: String?,
-    val variantType: VariantType,
+    val componentType: ComponentType,
     val sourceOutputDir: File? = null,
     val resourceOutputApk: File,
     val librarySymbolTableFiles: ImmutableCollection<File> = ImmutableList.of(),
@@ -97,7 +97,7 @@ data class AaptPackageConfig(
         private var androidJarPath: String? = null
         private var resourceConfigs: ImmutableSet<String> = ImmutableSet.of()
         private var isGenerateProtos: Boolean = false
-        private var variantType: VariantType? = null
+        private var componentType: ComponentType? = null
         private var imports: ImmutableList<File> = ImmutableList.of()
         private var packageId: Int? = null
         private var allowReservedPackageId: Boolean = false
@@ -139,7 +139,7 @@ data class AaptPackageConfig(
                 preferredDensity = preferredDensity,
                 resourceConfigs = resourceConfigs,
                 generateProtos = isGenerateProtos,
-                variantType = variantType!!,
+                componentType = componentType!!,
                 imports = imports,
                 packageId = packageId,
                 allowReservedPackageId = allowReservedPackageId,
@@ -261,8 +261,8 @@ data class AaptPackageConfig(
             return this
         }
 
-        fun setVariantType(variantType: VariantType): Builder {
-            this.variantType = variantType
+        fun setComponentType(componentType: ComponentType): Builder {
+            this.componentType = componentType
             return this
         }
 

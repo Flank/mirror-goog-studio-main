@@ -55,8 +55,8 @@ import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.core.ComponentType;
+import com.android.builder.core.ComponentTypeImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -268,7 +268,7 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public VariantType getVariantType() {
-        return VariantTypeImpl.TEST_APK;
+    public ComponentType getComponentType() {
+        return ComponentTypeImpl.TEST_APK;
     }
 }

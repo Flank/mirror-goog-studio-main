@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.MainDexListConfig
@@ -232,7 +231,7 @@ abstract class R8Task @Inject constructor(
             super.handleProvider(taskProvider)
 
             when {
-                variantType.isAar -> creationConfig.artifacts.setInitialProvider(
+                componentType.isAar -> creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     R8Task::outputClasses)
                     .withName("shrunkClasses.jar")
@@ -310,7 +309,7 @@ abstract class R8Task @Inject constructor(
 
             task.enableDesugaring.set(
                 creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.R8
-                        && !variantType.isAar)
+                        && !componentType.isAar)
 
             setBootClasspathForCodeShrinker(task)
             task.minSdkVersion.set(creationConfig.minSdkVersionForDexing.apiLevel)
@@ -329,7 +328,7 @@ abstract class R8Task @Inject constructor(
 
             task.proguardConfigurations = proguardConfigurations
 
-            if (variantType.isApk) {
+            if (componentType.isApk) {
                 // options applicable only when building APKs, do not apply with AARs
                 task.duplicateClassesCheck.from(artifacts.get(DUPLICATE_CLASSES_CHECK))
 
@@ -418,7 +417,7 @@ abstract class R8Task @Inject constructor(
 
         val output: Property<out FileSystemLocation> =
             when {
-                variantType.orNull?.isAar == true -> outputClasses
+                componentType.orNull?.isAar == true -> outputClasses
                 includeFeaturesInScopes.get() -> baseDexDir
                 else -> outputDex
             }
@@ -493,7 +492,7 @@ abstract class R8Task @Inject constructor(
                     testedMappingFile.singleFile
                 })
             it.proguardConfigurations.set(proguardConfigurations)
-            it.aar.set(variantType.orNull?.isAar == true)
+            it.aar.set(componentType.orNull?.isAar == true)
             it.dexingType.set(dexingType)
             it.useFullR8.set(useFullR8.get())
             it.referencedInputs.from((referencedClasses + referencedResources).toList())

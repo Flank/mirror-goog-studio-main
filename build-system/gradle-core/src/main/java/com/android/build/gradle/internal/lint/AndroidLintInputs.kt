@@ -47,8 +47,8 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentType
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.ApiVersion
@@ -323,7 +323,7 @@ abstract class ProjectInputs {
         val globalConfig = creationConfig.global
 
         initializeFromProject(creationConfig.services.projectInfo.getProject(), lintMode)
-        projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
+        projectType.setDisallowChanges(creationConfig.componentType.toLintModelModuleType())
 
         lintOptions.initialize(globalConfig.lintOptions, lintMode)
         resourcePrefix.setDisallowChanges(globalConfig.resourcePrefix)
@@ -398,14 +398,14 @@ abstract class ProjectInputs {
     }
 }
 
-internal fun VariantType.toLintModelModuleType(): LintModelModuleType {
+internal fun ComponentType.toLintModelModuleType(): LintModelModuleType {
     return when (this) {
         // FIXME add other types
-        VariantTypeImpl.BASE_APK -> LintModelModuleType.APP
-        VariantTypeImpl.LIBRARY -> LintModelModuleType.LIBRARY
-        VariantTypeImpl.OPTIONAL_APK -> LintModelModuleType.DYNAMIC_FEATURE
-        VariantTypeImpl.TEST_APK -> LintModelModuleType.TEST
-        else -> throw RuntimeException("Unsupported VariantTypeImpl value")
+        ComponentTypeImpl.BASE_APK -> LintModelModuleType.APP
+        ComponentTypeImpl.LIBRARY -> LintModelModuleType.LIBRARY
+        ComponentTypeImpl.OPTIONAL_APK -> LintModelModuleType.DYNAMIC_FEATURE
+        ComponentTypeImpl.TEST_APK -> LintModelModuleType.TEST
+        else -> throw RuntimeException("Unsupported ComponentTypeImpl value")
     }
 }
 
@@ -1399,7 +1399,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         useSupportLibraryVectorDrawables.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
-            variantType = VariantTypeImpl.JAVA_LIBRARY,
+            componentType = ComponentTypeImpl.JAVA_LIBRARY,
             compileClasspath = project.configurations.getByName(sourceSet.compileClasspathConfigurationName),
             runtimeClasspath = project.configurations.getByName(sourceSet.runtimeClasspathConfigurationName),
             sourceSetRuntimeConfigurations = listOf(),
@@ -1514,7 +1514,7 @@ abstract class JavaArtifactInput : ArtifactInput() {
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
-            variantType = VariantTypeImpl.JAVA_LIBRARY,
+            componentType = ComponentTypeImpl.JAVA_LIBRARY,
             compileClasspath = project.configurations.getByName(sourceSet.compileClasspathConfigurationName),
             runtimeClasspath = project.configurations.getByName(sourceSet.runtimeClasspathConfigurationName),
             sourceSetRuntimeConfigurations = listOf(),

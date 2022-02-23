@@ -83,9 +83,9 @@ class SigningConfigDataProvider(
         @JvmStatic
         fun create(creationConfig: ApkCreationConfig): SigningConfigDataProvider {
             val isInDynamicFeature =
-                creationConfig.variantType.isDynamicFeature
+                creationConfig.componentType.isDynamicFeature
                         || (creationConfig is TestComponentImpl
-                                && creationConfig.testedConfig.variantType.isDynamicFeature)
+                                && creationConfig.testedConfig.componentType.isDynamicFeature)
 
             // We want to avoid writing the signing config information to disk to protect sensitive
             // data (see bug 137210434), so we'll attempt to get this information directly from

@@ -75,7 +75,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
 import com.android.build.gradle.tasks.sync.AppIdListTask
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ModelSyncFile
@@ -258,10 +258,10 @@ class ModelBuilder<
         val defaultConfig = if (variantDimensionInfo.isNotEmpty()) {
             SourceSetContainerImpl(
                 sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
-                androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)
+                androidTestSourceProvider = defaultConfigData.getTestSourceSet(ComponentTypeImpl.ANDROID_TEST)
                     ?.takeIf { androidTests.isNotEmpty() }
                     ?.convert(buildFeatures),
-                unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)
+                unitTestSourceProvider = defaultConfigData.getTestSourceSet(ComponentTypeImpl.UNIT_TEST)
                     ?.takeIf { unitTests.isNotEmpty() }
                     ?.convert(buildFeatures),
                 testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet
@@ -279,10 +279,10 @@ class ModelBuilder<
                 buildTypes.add(
                     SourceSetContainerImpl(
                         sourceProvider = buildType.sourceSet.convert(buildFeatures),
-                        androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)
+                        androidTestSourceProvider = buildType.getTestSourceSet(ComponentTypeImpl.ANDROID_TEST)
                             ?.takeIf { androidTests.buildTypes.contains(buildTypeName) }
                             ?.convert(buildFeatures),
-                        unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)
+                        unitTestSourceProvider = buildType.getTestSourceSet(ComponentTypeImpl.UNIT_TEST)
                             ?.takeIf { unitTests.buildTypes.contains(buildTypeName) }
                             ?.convert(buildFeatures),
                         testFixturesSourceProvider = buildType.testFixturesSourceSet
@@ -302,10 +302,10 @@ class ModelBuilder<
                 productFlavors.add(
                     SourceSetContainerImpl(
                         sourceProvider = flavor.sourceSet.convert(buildFeatures),
-                        androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)
+                        androidTestSourceProvider = flavor.getTestSourceSet(ComponentTypeImpl.ANDROID_TEST)
                             ?.takeIf { androidTests.flavors.contains(flavorDimensionName) }
                             ?.convert(buildFeatures),
-                        unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)
+                        unitTestSourceProvider = flavor.getTestSourceSet(ComponentTypeImpl.UNIT_TEST)
                             ?.takeIf { unitTests.flavors.contains(flavorDimensionName) }
                             ?.convert(buildFeatures),
                         testFixturesSourceProvider = flavor.testFixturesSourceSet
@@ -548,10 +548,10 @@ class ModelBuilder<
         return VariantDependenciesImpl(
             name = variantName,
             mainArtifact = createDependencies(variant, buildMapping, libraryService),
-            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+            androidTestArtifact = variant.testComponents[ComponentTypeImpl.ANDROID_TEST]?.let {
                 createDependencies(it, buildMapping, libraryService)
             },
-            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+            unitTestArtifact = variant.testComponents[ComponentTypeImpl.UNIT_TEST]?.let {
                 createDependencies(it, buildMapping, libraryService)
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
@@ -568,10 +568,10 @@ class ModelBuilder<
         return BasicVariantImpl(
             name = variant.name,
             mainArtifact = createBasicArtifact(variant, features),
-            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+            androidTestArtifact = variant.testComponents[ComponentTypeImpl.ANDROID_TEST]?.let {
                 createBasicArtifact(it, features)
             },
-            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+            unitTestArtifact = variant.testComponents[ComponentTypeImpl.UNIT_TEST]?.let {
                 createBasicArtifact(it, features)
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
@@ -604,10 +604,10 @@ class ModelBuilder<
             name = variant.name,
             displayName = variant.baseName,
             mainArtifact = createAndroidArtifact(variant),
-            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+            androidTestArtifact = variant.testComponents[ComponentTypeImpl.ANDROID_TEST]?.let {
                 createAndroidArtifact(it)
             },
-            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+            unitTestArtifact = variant.testComponents[ComponentTypeImpl.UNIT_TEST]?.let {
                 createJavaArtifact(it)
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
@@ -719,7 +719,7 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
             generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
             classesFolders = classesFolders,
-            assembleTaskOutputListingFile = if (component.variantType.isApk)
+            assembleTaskOutputListingFile = if (component.componentType.isApk)
                 component.artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE).get().asFile
             else
                 null,
@@ -817,7 +817,7 @@ class ModelBuilder<
     private fun getBundleInfo(
         component: ComponentImpl
     ): BundleInfo? {
-        if (!component.variantType.isBaseModule) {
+        if (!component.componentType.isBaseModule) {
             return null
         }
 
@@ -843,7 +843,7 @@ class ModelBuilder<
         component: ComponentImpl,
         instantAppResultMap: MutableMap<File, Boolean>
     ): Boolean {
-        if (!component.variantType.isBaseModule && !component.variantType.isDynamicFeature) {
+        if (!component.componentType.isBaseModule && !component.componentType.isDynamicFeature) {
             return false
         }
 

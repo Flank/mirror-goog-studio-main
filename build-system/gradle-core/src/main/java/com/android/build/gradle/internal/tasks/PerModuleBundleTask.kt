@@ -302,7 +302,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
             task.featureJavaResFiles.disallowChanges()
 
-            if (creationConfig.variantType.isDynamicFeature) {
+            if (creationConfig.componentType.isDynamicFeature) {
                 // If this is a dynamic feature, we use the abiFilters published by the base module.
                 task.appMetadata.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(
@@ -374,7 +374,7 @@ private class ResRelocator : JarCreator.Relocator {
  */
 fun getNativeLibsFiles(creationConfig: ComponentCreationConfig): FileCollection {
     val nativeLibs = creationConfig.services.fileCollection()
-    if (creationConfig.variantType.isForTesting) {
+    if (creationConfig.componentType.isForTesting) {
         return nativeLibs.from(creationConfig.artifacts.get(MERGED_NATIVE_LIBS))
     }
     nativeLibs.from(creationConfig.artifacts.get(STRIPPED_NATIVE_LIBS))

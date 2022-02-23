@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -60,7 +60,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     val dirName: String
     val baseName: String
-    val variantType: VariantType
+    val componentType: ComponentType
     val description: String
 
     // ---------------------------------------------------------------------------------------------

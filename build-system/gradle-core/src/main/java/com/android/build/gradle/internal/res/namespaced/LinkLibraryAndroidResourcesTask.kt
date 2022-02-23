@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
@@ -109,7 +109,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 staticLibrary = true,
                 imports = imports.build(),
                 resourceOutputApk = staticLibApk.get().asFile,
-                variantType = VariantTypeImpl.LIBRARY,
+                componentType = ComponentTypeImpl.LIBRARY,
                 customPackageForR = namespace.get(),
                 intermediateDir = aaptIntermediateDir,
                 mergeOnly = mergeOnly.get())

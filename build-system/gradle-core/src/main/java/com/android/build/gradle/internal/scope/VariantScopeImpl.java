@@ -26,7 +26,7 @@ import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.pub
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_APK_CREATOR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
-import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
+import static com.android.builder.core.ComponentTypeImpl.UNIT_TEST;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -58,7 +58,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.sdklib.AndroidTargetHash;
@@ -130,7 +130,7 @@ public class VariantScopeImpl implements VariantScope {
         this.artifacts = artifacts;
         this.baseServices = baseServices;
         this.variantPublishingSpec =
-                PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
+                PublishingSpecs.getVariantSpec(variantDslInfo.getComponentType());
         this.compileSdkVersion = compileSdkVersion;
         this.hasDynamicFeatures = hasDynamicFeatures;
         this.testedVariantProperties = testedVariantProperties;
@@ -235,7 +235,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     public boolean consumesFeatureJars() {
-        return variantDslInfo.getVariantType().isBaseModule()
+        return variantDslInfo.getComponentType().isBaseModule()
                 && variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
                 && hasDynamicFeatures;
     }
@@ -244,7 +244,8 @@ public class VariantScopeImpl implements VariantScope {
     public boolean getNeedsJavaResStreams() {
         // We need to create original java resource stream only if we're in a library module with
         // custom transforms.
-        return variantDslInfo.getVariantType().isAar() && !variantDslInfo.getTransforms().isEmpty();
+        return variantDslInfo.getComponentType().isAar()
+                && !variantDslInfo.getTransforms().isEmpty();
     }
 
     @NonNull
@@ -257,7 +258,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public List<File> getConsumerProguardFilesForFeatures() {
         // We include proguardFiles if we're in a dynamic-feature module.
-        final boolean includeProguardFiles = variantDslInfo.getVariantType().isDynamicFeature();
+        final boolean includeProguardFiles = variantDslInfo.getComponentType().isDynamicFeature();
         final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
         if (includeProguardFiles) {
             consumerProguardFiles.addAll(gatherProguardFiles(ProguardFileType.EXPLICIT));
@@ -433,18 +434,19 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public Provider<RegularFile> getRJarForUnitTests() {
-        VariantType variantType = variantDslInfo.getVariantType();
+        ComponentType componentType = variantDslInfo.getComponentType();
         checkNotNull(
                 testedVariantProperties,
-                "Variant type does not have a tested variant: " + variantType);
-        checkState(variantType == UNIT_TEST, "Expected unit test type but found: " + variantType);
+                "Variant type does not have a tested variant: " + componentType);
+        checkState(
+                componentType == UNIT_TEST, "Expected unit test type but found: " + componentType);
 
-        if (testedVariantProperties.getVariantType().isAar()) {
+        if (testedVariantProperties.getComponentType().isAar()) {
             return artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         } else {
             checkState(
-                    testedVariantProperties.getVariantType().isApk(),
-                    "Expected APK type but found: " + testedVariantProperties.getVariantType());
+                    testedVariantProperties.getComponentType().isApk(),
+                    "Expected APK type but found: " + testedVariantProperties.getComponentType());
             return testedVariantProperties
                     .getArtifacts()
                     .get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);

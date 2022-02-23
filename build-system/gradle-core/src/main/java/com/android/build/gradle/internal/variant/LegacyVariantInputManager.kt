@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import org.gradle.api.NamedDomainObjectContainer
 
 /**
@@ -42,11 +42,11 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 class LegacyVariantInputManager(
     dslServices: DslServices,
-    variantType: VariantType,
+    componentType: ComponentType,
     sourceSetManager: SourceSetManager
 ) : AbstractVariantInputManager<DefaultConfig, BuildType, ProductFlavor, SigningConfig>(
     dslServices,
-    variantType,
+    componentType,
     sourceSetManager
 ) {
 
@@ -82,13 +82,13 @@ class LegacyVariantInputManager(
         var testFixturesSourceSet: DefaultAndroidSourceSet? = null
         var androidTestSourceSet: DefaultAndroidSourceSet? = null
         var unitTestSourceSet: DefaultAndroidSourceSet? = null
-        if (variantType.hasTestComponents) {
+        if (componentType.hasTestComponents) {
             androidTestSourceSet =
-                sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX) as DefaultAndroidSourceSet
+                sourceSetManager.setUpTestSourceSet(ComponentType.ANDROID_TEST_PREFIX) as DefaultAndroidSourceSet
             unitTestSourceSet =
-                sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX) as DefaultAndroidSourceSet
+                sourceSetManager.setUpTestSourceSet(ComponentType.UNIT_TEST_PREFIX) as DefaultAndroidSourceSet
             testFixturesSourceSet =
-                sourceSetManager.setUpSourceSet(VariantType.TEST_FIXTURES_PREFIX)
+                sourceSetManager.setUpSourceSet(ComponentType.TEST_FIXTURES_PREFIX)
                         as DefaultAndroidSourceSet
         }
 

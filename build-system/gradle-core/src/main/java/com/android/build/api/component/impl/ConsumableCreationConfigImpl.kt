@@ -64,7 +64,7 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
     open fun getNeedsMergedJavaResStream(): Boolean {
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
-        return (variantDslInfo.variantType.isAar
+        return (variantDslInfo.componentType.isAar
                 || variantDslInfo.transforms.isNotEmpty()
                 || config.minifiedEnabled)
     }

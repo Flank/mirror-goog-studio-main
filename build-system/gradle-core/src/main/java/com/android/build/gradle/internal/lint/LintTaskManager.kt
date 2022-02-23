@@ -10,7 +10,7 @@ import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -40,12 +40,12 @@ class LintTaskManager constructor(
     }
 
     fun createLintTasks(
-            variantType: VariantType,
-            variantModel: VariantModel,
-            variantPropertiesList: List<VariantImpl>,
-            testComponentPropertiesList: Collection<TestComponentImpl>
-            ) {
-        if (variantType.isForTesting) {
+        componentType: ComponentType,
+        variantModel: VariantModel,
+        variantPropertiesList: List<VariantImpl>,
+        testComponentPropertiesList: Collection<TestComponentImpl>
+    ) {
+        if (componentType.isForTesting) {
             return // Don't  create lint tasks in test-only projects
         }
 
@@ -67,7 +67,7 @@ class LintTaskManager constructor(
         val needsCopyReportTask = needsCopyReportTask(globalTaskCreationConfig.lintOptions)
 
         for (variantWithTests in variantsWithTests.values) {
-            if (variantType.isAar) {
+            if (componentType.isAar) {
                 // We need the library lint models if checkDependencies is true
                 taskFactory.register(LintModelWriterTask.LintCreationAction(variantWithTests))
                 // We need the library lint model metadata if checkDependencies is false
@@ -88,7 +88,7 @@ class LintTaskManager constructor(
                 AndroidLintAnalysisTask.SingleVariantCreationAction(variantWithTests)
             )
 
-            if (variantType.isDynamicFeature) {
+            if (componentType.isDynamicFeature) {
                 taskFactory.register(
                     AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests.main)
                 )
@@ -119,7 +119,7 @@ class LintTaskManager constructor(
             }
 
             val mainVariant = variantWithTests.main
-            if (mainVariant.variantType.isBaseModule &&
+            if (mainVariant.componentType.isBaseModule &&
                 !mainVariant.variantDslInfo.isDebuggable &&
                 globalTaskCreationConfig.lintOptions.checkReleaseBuilds
             ) {
@@ -145,7 +145,7 @@ class LintTaskManager constructor(
 
         // Nothing left to do for dynamic features because they don't have global lint or lintFix
         // tasks, and they don't have any lint reporting tasks.
-        if (variantType.isDynamicFeature) {
+        if (componentType.isDynamicFeature) {
             return
         }
 

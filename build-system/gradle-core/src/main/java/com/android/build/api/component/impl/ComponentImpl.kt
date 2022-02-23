@@ -74,8 +74,8 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.compiling.BuildConfigType
-import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentType
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
@@ -207,8 +207,8 @@ abstract class ComponentImpl(
     // Move as direct delegates
     override val taskContainer = variantData.taskContainer
 
-    override val variantType: VariantType
-        get() = variantDslInfo.variantType
+    override val componentType: ComponentType
+        get() = variantDslInfo.componentType
 
     override val dirName: String
         get() = variantDslInfo.dirName
@@ -290,8 +290,8 @@ abstract class ComponentImpl(
      * if there is no tested variant this does nothing and returns null.
      */
     override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T?): T? {
-        if (variantType.isTestComponent) {
-            val tested = testedConfig ?: throw RuntimeException("testedVariant null with type $variantType")
+        if (componentType.isTestComponent) {
+            val tested = testedConfig ?: throw RuntimeException("testedVariant null with type $componentType")
             return action(tested)
         }
 
@@ -299,11 +299,11 @@ abstract class ComponentImpl(
     }
 
     override fun useResourceShrinker(): Boolean {
-        if (variantType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
+        if (componentType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
             return false
         }
         val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
-        if (variantType.isDynamicFeature) {
+        if (componentType.isDynamicFeature) {
             internalServices
                 .issueReporter
                 .reportError(
@@ -321,7 +321,7 @@ abstract class ComponentImpl(
                     .reportError(IssueReporter.Type.GENERIC, message)
             return false
         }
-        if (variantType.isAar) {
+        if (componentType.isAar) {
             internalServices
                 .issueReporter
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
@@ -529,7 +529,7 @@ abstract class ComponentImpl(
                                 outputSpec.libraryElements?.let {
                                     internalServices.named(LibraryElements::class.java, it)
                                 },
-                                variantType.isTestFixturesComponent
+                                componentType.isTestFixturesComponent
                             )
                     }
                 } else {
@@ -541,7 +541,7 @@ abstract class ComponentImpl(
                             outputSpec.libraryElements?.let {
                                 internalServices.named(LibraryElements::class.java, it)
                             },
-                            variantType.isTestFixturesComponent
+                            componentType.isTestFixturesComponent
                         )
                 }
             }
@@ -624,15 +624,15 @@ abstract class ComponentImpl(
                 }
             }
         } else {
-            val variantType = variantDslInfo.variantType
+            val componentType = variantDslInfo.componentType
 
             if (testedConfig == null) {
                 // TODO(b/138780301): Also use it in android tests.
                 val useCompileRClassInApp = (internalServices
                     .projectOptions[BooleanOption
                     .ENABLE_APP_COMPILE_TIME_R_CLASS]
-                        && !variantType.isForTesting)
-                if (variantType.isAar || useCompileRClassInApp) {
+                        && !componentType.isForTesting)
+                if (componentType.isAar || useCompileRClassInApp) {
                     if (androidResourcesEnabled) {
                         internalServices.fileCollection(artifacts.get(COMPILE_R_CLASS_JAR)
                         )
@@ -641,8 +641,8 @@ abstract class ComponentImpl(
                     }
                 } else {
                     Preconditions.checkState(
-                        variantType.isApk,
-                        "Expected APK type but found: $variantType"
+                        componentType.isApk,
+                        "Expected APK type but found: $componentType"
                     )
 
                     internalServices.fileCollection(
@@ -650,7 +650,7 @@ abstract class ComponentImpl(
                     )
                 }
             } else { // Android test or unit test
-                if (variantType === VariantTypeImpl.ANDROID_TEST) {
+                if (componentType === ComponentTypeImpl.ANDROID_TEST) {
                     internalServices.fileCollection(
                         artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
@@ -674,15 +674,15 @@ abstract class ComponentImpl(
         return if (global.namespacedAndroidResources) {
             artifacts.get(COMPILE_R_CLASS_JAR)
         } else {
-            val variantType = variantDslInfo.variantType
+            val componentType = variantDslInfo.componentType
 
             if (testedConfig == null) {
                 // TODO(b/138780301): Also use it in android tests.
                 val useCompileRClassInApp = (internalServices
                     .projectOptions[BooleanOption
                     .ENABLE_APP_COMPILE_TIME_R_CLASS]
-                        && !variantType.isForTesting)
-                if (variantType.isAar || useCompileRClassInApp) {
+                        && !componentType.isForTesting)
+                if (componentType.isAar || useCompileRClassInApp) {
                     if (androidResourcesEnabled) {
                         artifacts.get(COMPILE_R_CLASS_JAR)
                     } else {
@@ -690,14 +690,14 @@ abstract class ComponentImpl(
                     }
                 } else {
                     Preconditions.checkState(
-                        variantType.isApk,
-                        "Expected APK type but found: $variantType"
+                        componentType.isApk,
+                        "Expected APK type but found: $componentType"
                     )
 
                     artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                 }
             } else { // Android test or unit test
-                if (variantType === VariantTypeImpl.ANDROID_TEST) {
+                if (componentType === ComponentTypeImpl.ANDROID_TEST) {
                     artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                 } else {
                     if (androidResourcesEnabled) {
@@ -712,8 +712,8 @@ abstract class ComponentImpl(
 
      fun getCompiledBuildConfig(): FileCollection {
         val isBuildConfigJar = getBuildConfigType() == BuildConfigType.JAR
-        val isAndroidTest = variantDslInfo.variantType == VariantTypeImpl.ANDROID_TEST
-        val isUnitTest = variantDslInfo.variantType == VariantTypeImpl.UNIT_TEST
+        val isAndroidTest = variantDslInfo.componentType == ComponentTypeImpl.ANDROID_TEST
+        val isUnitTest = variantDslInfo.componentType == ComponentTypeImpl.UNIT_TEST
         // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
         // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
         return if (isBuildConfigJar && !isAndroidTest && !isUnitTest && testedConfig == null) {
@@ -728,10 +728,10 @@ abstract class ComponentImpl(
     }
 
     private fun getCompiledManifest(): FileCollection {
-        val manifestClassRequired = variantDslInfo.variantType.requiresManifest &&
+        val manifestClassRequired = variantDslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
-        val isTest = variantDslInfo.variantType.isForTesting
-        val isAar = variantDslInfo.variantType.isAar
+        val isTest = variantDslInfo.componentType.isForTesting
+        val isAar = variantDslInfo.componentType.isAar
         return if (manifestClassRequired && !isAar && !isTest && testedConfig == null) {
             internalServices.fileCollection(artifacts.get(COMPILE_MANIFEST_JAR))
         } else {

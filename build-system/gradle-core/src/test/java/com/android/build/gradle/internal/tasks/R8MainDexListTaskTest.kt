@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -166,7 +166,7 @@ fun runR8(
         inputProguardMapping = null,
         proguardConfigurationFiles = listOf(),
         proguardConfigurations = proguardConfigurations,
-        isAar = VariantTypeImpl.BASE_APK.isAar,
+        isAar = ComponentTypeImpl.BASE_APK.isAar,
         errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
         dexingType = dexingType,
         useFullR8 = false,

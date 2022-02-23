@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
@@ -168,7 +168,7 @@ abstract class VariantImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    val testComponents = mutableMapOf<VariantType, ComponentImpl>()
+    val testComponents = mutableMapOf<ComponentType, ComponentImpl>()
     var testFixturesComponent: ComponentImpl? = null
 
     val externalExtensions: Map<Class<*>, Any>? by lazy {
@@ -197,7 +197,7 @@ abstract class VariantImpl(
             return _isMultiDexEnabled ?: (minSdkVersion.getFeatureLevel() >= 21)
         }
 
-    private val isBaseModule = variantDslInfo.variantType.isBaseModule
+    private val isBaseModule = variantDslInfo.componentType.isBaseModule
 
     override val needsMainDexListForBundle: Boolean
         get() = isBaseModule

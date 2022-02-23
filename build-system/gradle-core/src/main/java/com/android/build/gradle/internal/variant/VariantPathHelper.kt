@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.utils.toStrings
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -109,9 +109,9 @@ class VariantPathHelper(
 
     val manifestOutputDirectory: Provider<Directory>
         get() {
-            val variantType: VariantType = variantDslInfo.variantType
-            if (variantType.isTestComponent) {
-                if (variantType.isApk) { // ANDROID_TEST
+            val componentType: ComponentType = variantDslInfo.componentType
+            if (componentType.isTestComponent) {
+                if (componentType.isApk) { // ANDROID_TEST
                     return intermediatesDir("manifest", variantDslInfo.dirName)
                 }
             } else {

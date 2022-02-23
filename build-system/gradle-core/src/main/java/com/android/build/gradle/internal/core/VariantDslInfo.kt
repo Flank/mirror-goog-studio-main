@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableMap
@@ -58,7 +58,7 @@ interface VariantDslInfo {
 
     val componentIdentity: ComponentIdentity
 
-    val variantType: VariantType
+    val componentType: ComponentType
 
     /** The list of product flavors. Items earlier in the list override later items.  */
     val productFlavorList: List<ProductFlavor>
@@ -66,7 +66,7 @@ interface VariantDslInfo {
     /**
      * Optional tested config in case this variant is used for testing another variant.
      *
-     * @see VariantType.isTestComponent
+     * @see ComponentType.isTestComponent
      */
     val testedVariant: VariantDslInfo?
 
@@ -90,7 +90,7 @@ interface VariantDslInfo {
         // we only know if it is signed during configuration, if its the base module.
         // Otherwise, don't differentiate between signed and unsigned.
         val suffix =
-            if (isSigningReady || !variantType.isBaseModule)
+            if (isSigningReady || !componentType.isBaseModule)
                 SdkConstants.DOT_ANDROID_PACKAGE
             else "-unsigned.apk"
         return archivesBaseName + "-" + baseName + suffix

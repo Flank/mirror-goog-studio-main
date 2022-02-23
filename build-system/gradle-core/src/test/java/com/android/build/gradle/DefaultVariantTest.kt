@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
 import com.android.build.gradle.internal.variant.TestVariantInputModel
 import com.android.build.gradle.internal.variant.DimensionCombinator
 import com.android.build.gradle.internal.variant.VariantModelImpl
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
@@ -481,7 +481,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
     }
 
     override fun defaultWhen(given: TestVariantInputModel): String? {
-        val variantType = VariantTypeImpl.BASE_APK
+        val componentType = ComponentTypeImpl.BASE_APK
 
         // gather the variant lists from the input model.
         val variantComputer = DimensionCombinator(
@@ -495,7 +495,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         Mockito.`when`(globalTaskCreationConfig.services).thenReturn(dslServices)
 
         for (variant in variantComputer.computeVariants()) {
-            val name = VariantDslInfoBuilder.computeName(variant, variantType)
+            val name = VariantDslInfoBuilder.computeName(variant, componentType)
 
             val flavors = variant.productFlavors.map {
                 (given.productFlavors[it.second] ?: error("Cant find flavor ${it.second}")).productFlavor
@@ -523,7 +523,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 components.add(component)
 
                 Mockito.`when`(component.name).thenReturn(name)
-                Mockito.`when`(component.variantType).thenReturn(variantType)
+                Mockito.`when`(component.componentType).thenReturn(componentType)
                 Mockito.`when`(component.buildType).thenReturn(variant.buildType)
                 Mockito.`when`(component.productFlavors).thenReturn(variant.productFlavors)
 

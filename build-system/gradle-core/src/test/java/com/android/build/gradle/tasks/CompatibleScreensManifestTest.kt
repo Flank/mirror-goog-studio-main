@@ -38,7 +38,7 @@ import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.profile.NameAnonymizer
 import com.android.builder.profile.NameAnonymizerSerializer
 import com.google.common.base.Joiner
@@ -105,7 +105,7 @@ class CompatibleScreensManifestTest {
         `when`(appVariant.artifacts).thenReturn(artifacts)
         `when`(appVariant.taskContainer).thenReturn(taskContainer)
         `when`(appVariant.variantScope).thenReturn(scope)
-        `when`(appVariant.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(appVariant.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
         `when`(appVariant.variantData).thenReturn(variantData)
         `when`(appVariant.services).thenReturn(services)
         `when`<AndroidVersion>(appVariant.minSdkVersion).thenReturn(AndroidVersionImpl(21))
@@ -113,7 +113,7 @@ class CompatibleScreensManifestTest {
 
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
-        `when`(variantDslInfo.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(variantDslInfo.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
         `when`(variantDslInfo.componentIdentity).thenReturn(
             ComponentIdentityImpl(
                 "fullVariantName",
@@ -151,7 +151,7 @@ class CompatibleScreensManifestTest {
         assertThat(task.screenSizes).containsExactly("xxhpi", "xxxhdpi")
         assertThat(task.outputFolder.get().asFile).isEqualTo(temporaryFolder.root)
         assertThat(task.applicationId.get()).isEqualTo("com.foo")
-        assertThat(task.variantType.get()).isEqualTo(VariantTypeImpl.BASE_APK.toString())
+        assertThat(task.componentType.get()).isEqualTo(ComponentTypeImpl.BASE_APK.toString())
         assertThat(task.analyticsService.get()).isInstanceOf(AnalyticsService::class.java)
     }
 
@@ -171,7 +171,7 @@ class CompatibleScreensManifestTest {
         task.minSdkVersion.set("22" )
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
         task.applicationId.set("com.foo")
-        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.componentType.set(ComponentTypeImpl.BASE_APK.toString())
         task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
@@ -199,7 +199,7 @@ class CompatibleScreensManifestTest {
         task.minSdkVersion.set("22")
         task.screenSizes = ImmutableSet.of("xhdpi")
         task.applicationId.set("com.foo")
-        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.componentType.set(ComponentTypeImpl.BASE_APK.toString())
         task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
@@ -233,7 +233,7 @@ class CompatibleScreensManifestTest {
         task.minSdkVersion.set(task.project.provider { null })
         task.screenSizes = ImmutableSet.of("xhdpi")
         task.applicationId.set("com.foo")
-        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.componentType.set(ComponentTypeImpl.BASE_APK.toString())
         task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
@@ -277,7 +277,7 @@ class CompatibleScreensManifestTest {
         task.minSdkVersion.set("23")
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
         task.applicationId.set("com.foo")
-        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.componentType.set(ComponentTypeImpl.BASE_APK.toString())
         task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()

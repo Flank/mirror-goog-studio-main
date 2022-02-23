@@ -1274,7 +1274,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     creationConfig.getGlobal().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
-            if (creationConfig.getVariantType().isDynamicFeature()) {
+            if (creationConfig.getComponentType().isDynamicFeature()) {
                 packageAndroidArtifact
                         .getBaseModuleMetadata()
                         .from(
@@ -1309,7 +1309,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact.getCreatedBy().set(creationConfig.getGlobal().getCreatedBy());
 
-            if (creationConfig.getVariantType().isBaseModule()
+            if (creationConfig.getComponentType().isBaseModule()
                     && creationConfig
                             .getServices()
                             .getProjectOptions()
@@ -1323,9 +1323,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             // If we're in a dynamic feature, we use FEATURE_SIGNING_CONFIG_VERSIONS, published from
             // the base. Otherwise, we use the SIGNING_CONFIG_VERSIONS internal artifact.
-            if (creationConfig.getVariantType().isDynamicFeature()
+            if (creationConfig.getComponentType().isDynamicFeature()
                     || (creationConfig instanceof TestComponentImpl
-                        && creationConfig.getTestedConfig().getVariantType().isDynamicFeature())) {
+                            && creationConfig
+                                    .getTestedConfig()
+                                    .getComponentType()
+                                    .isDynamicFeature())) {
                 packageAndroidArtifact
                         .getSigningConfigVersions()
                         .from(
@@ -1415,7 +1418,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @Nullable
         public static FileCollection getFeatureDexFolder(
                 @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
-            if (!creationConfig.getVariantType().isDynamicFeature()) {
+            if (!creationConfig.getComponentType().isDynamicFeature()) {
                 return null;
             }
             return creationConfig
@@ -1430,7 +1433,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @Nullable
         public FileCollection getFeatureJavaResources(
                 @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
-            if (!creationConfig.getVariantType().isDynamicFeature()) {
+            if (!creationConfig.getComponentType().isDynamicFeature()) {
                 return null;
             }
             return creationConfig

@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
-import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
+import static com.android.builder.core.ComponentTypeImpl.ANDROID_TEST;
+import static com.android.builder.core.ComponentTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
@@ -63,7 +63,7 @@ public class ApiObjectFactory {
             return null;
         }
 
-        if (variantFactory.getVariantType().getHasTestComponents()) {
+        if (variantFactory.getComponentType().getHasTestComponents()) {
             BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
 
             ComponentImpl androidTestVariantProperties =
@@ -127,13 +127,13 @@ public class ApiObjectFactory {
         final BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
         VariantOutputFactory variantOutputFactory =
                 new VariantOutputFactory(
-                        (component.getVariantType().isAar())
+                        (component.getComponentType().isAar())
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
                         services,
                         extension,
                         variantApi,
-                        component.getVariantType(),
+                        component.getComponentType(),
                         component.getTaskContainer());
 
         component

@@ -399,7 +399,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     abstract val functionalTest: Property<Boolean>
 
     @get:Input
-    abstract val variantType: Property<String>
+    abstract val componentType: Property<String>
 
     @get:Optional
     @get:Input
@@ -480,7 +480,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.manifestOverlays.set(task.project.provider(variantSources::manifestOverlays))
             task.manifestOverlays.disallowChanges()
             task.apkData.set(creationConfig.outputs.getMainSplit())
-            task.variantType.setDisallowChanges(creationConfig.variantType.toString())
+            task.componentType.setDisallowChanges(creationConfig.componentType.toString())
             task.tmpDir.setDisallowChanges(
                 creationConfig.paths.intermediatesDir(
                     "tmp",

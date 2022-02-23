@@ -39,7 +39,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -128,7 +128,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @NonNull
         @Override
         public String getName() {
-            return computeTaskName(VariantType.UNIT_TEST_PREFIX);
+            return computeTaskName(ComponentType.UNIT_TEST_PREFIX);
         }
 
         @NonNull
@@ -178,7 +178,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                 // legacy transforms are removed as they are not
                                                 // supported in the current artifact transform
                                                 // based instrumentation.
-                                                if (testedConfig.getVariantType().isAar()
+                                                if (testedConfig.getComponentType().isAar()
                                                         && !jacocoArtifactTransform) {
                                                     jacocoTaskExtension.setExcludes(
                                                             Collections.singletonList("*"));

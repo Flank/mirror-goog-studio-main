@@ -97,7 +97,7 @@ class JavaCompileCreationAction(
             registerDataBindingOutputs(
                 dataBindingArtifactDir,
                 dataBindingExportClassListFile,
-                creationConfig.variantType.isExportDataBindingClassList,
+                creationConfig.componentType.isExportDataBindingClassList,
                 taskProvider,
                 artifacts,
                 forJavaCompile = true
@@ -142,7 +142,7 @@ class JavaCompileCreationAction(
             // if Kapt is not used; otherwise, they are the outputs of Kapt.
             if (!usingKapt) {
                 task.outputs.dir(dataBindingArtifactDir).withPropertyName("dataBindingArtifactDir")
-                if (creationConfig.variantType.isExportDataBindingClassList) {
+                if (creationConfig.componentType.isExportDataBindingClassList) {
                     task.outputs.file(dataBindingExportClassListFile)
                         .withPropertyName("dataBindingExportClassListFile")
                 }

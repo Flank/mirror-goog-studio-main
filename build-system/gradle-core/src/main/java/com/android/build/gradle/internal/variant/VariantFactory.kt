@@ -49,7 +49,7 @@ import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import org.gradle.api.Project
 
 /**
@@ -169,7 +169,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             readOnlyObjectProvider: ReadOnlyObjectProvider): BaseVariantImpl?
 
     val servicesForOldVariantObjectsOnly: BaseServices
-    val variantType: VariantType
+    val componentType: ComponentType
 
     /**
      * Callback before variant creation to allow extra work or validation

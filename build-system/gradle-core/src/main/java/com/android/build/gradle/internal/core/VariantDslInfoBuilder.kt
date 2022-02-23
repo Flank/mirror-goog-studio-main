@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.utils.createPublishingInfoForLibrary
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
@@ -54,7 +54,7 @@ import org.gradle.api.file.DirectoryProperty
  */
 class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> private constructor(
     private val dimensionCombination: DimensionCombination,
-    val variantType: VariantType,
+    val componentType: ComponentType,
     private val defaultConfig: DefaultConfig,
     private val defaultSourceProvider: SourceProvider,
     private val buildType: BuildType,
@@ -78,7 +78,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
         @JvmStatic
         fun <CommonExtensionT: CommonExtension<*, *, *, *>> getBuilder(
             dimensionCombination: DimensionCombination,
-            variantType: VariantType,
+            componentType: ComponentType,
             defaultConfig: DefaultConfig,
             defaultSourceSet: SourceProvider,
             buildType: BuildType,
@@ -96,7 +96,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
         ): VariantDslInfoBuilder<CommonExtensionT> {
             return VariantDslInfoBuilder(
                 dimensionCombination,
-                variantType,
+                componentType,
                 defaultConfig,
                 defaultSourceSet,
                 buildType,
@@ -128,7 +128,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
         @JvmOverloads
         fun computeName(
             dimensionCombination: DimensionCombination,
-            variantType: VariantType,
+            componentType: ComponentType,
             flavorNameCallback: ((String) -> Unit)? = null
         ): String {
             // compute the flavor name
@@ -144,7 +144,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             if (buildType == null) {
                 if (flavorName.isNotEmpty()) {
                     sb.append(flavorName)
-                } else if (!variantType.isTestComponent && !variantType.isTestFixturesComponent) {
+                } else if (!componentType.isTestComponent && !componentType.isTestFixturesComponent) {
                     sb.append("main")
                 }
             } else {
@@ -155,32 +155,32 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                     sb.append(buildType)
                 }
             }
-            if (variantType.isNestedComponent) {
+            if (componentType.isNestedComponent) {
                 if (sb.isEmpty()) {
                     // need the lower case version
-                    sb.append(variantType.prefix)
+                    sb.append(componentType.prefix)
                 } else {
-                    sb.append(variantType.suffix)
+                    sb.append(componentType.suffix)
                 }
             }
             return sb.toString()
         }
 
         /**
-         * Turns a string into a valid source set name for the given [VariantType], e.g.
+         * Turns a string into a valid source set name for the given [ComponentType], e.g.
          * "fooBarUnitTest" becomes "testFooBar".
          */
         @JvmStatic
         fun computeSourceSetName(
             baseName: String,
-            variantType: VariantType
+            componentType: ComponentType
         ): String {
             var name = baseName
-            if (name.endsWith(variantType.suffix)) {
-                name = name.substring(0, name.length - variantType.suffix.length)
+            if (name.endsWith(componentType.suffix)) {
+                name = name.substring(0, name.length - componentType.suffix.length)
             }
-            if (!variantType.prefix.isEmpty()) {
-                name = variantType.prefix.appendCapitalized(name)
+            if (!componentType.prefix.isEmpty()) {
+                name = componentType.prefix.appendCapitalized(name)
             }
             return name
         }
@@ -194,7 +194,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
         @JvmStatic
         fun computeBaseName(
             dimensionCombination: DimensionCombination,
-            variantType: VariantType) : String {
+            componentType: ComponentType) : String {
             val sb = StringBuilder()
             if (dimensionCombination.productFlavors.isNotEmpty()) {
                 for ((_, name) in dimensionCombination.productFlavors) {
@@ -212,11 +212,11 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 sb.append(it)
             }
 
-            if (variantType.isNestedComponent) {
+            if (componentType.isNestedComponent) {
                 if (sb.isNotEmpty()) {
                     sb.append('-')
                 }
-                sb.append(variantType.prefix)
+                sb.append(componentType.prefix)
             }
 
             if (sb.isEmpty()) {
@@ -235,7 +235,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
         @JvmStatic
         fun computeFullNameWithSplits(
             variantConfiguration: ComponentIdentity,
-            variantType: VariantType,
+            componentType: ComponentType,
             splitName: String): String {
             val sb = StringBuilder()
 
@@ -252,8 +252,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 sb.appendCapitalized(it)
             }
 
-            if (variantType.isNestedComponent) {
-                sb.append(variantType.suffix)
+            if (componentType.isNestedComponent) {
+                sb.append(componentType.suffix)
             }
             return sb.toString()
         }
@@ -330,7 +330,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 dimensionCombination.buildType,
                 dimensionCombination.productFlavors
             ),
-            variantType,
+            componentType,
             defaultConfig,
             buildType,
             // this could be removed once the product flavor is internal only.
@@ -353,7 +353,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     fun createVariantSources(): VariantSources {
         return VariantSources(
             name,
-            variantType,
+            componentType,
             defaultSourceProvider,
             buildTypeSourceProvider,
             flavors.map { it.second }.toImmutableList(),
@@ -366,7 +366,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
      * computes the name for the variant and the multi-flavor combination
      */
     private fun computeNames() {
-        variantName = computeName(dimensionCombination, variantType) {
+        variantName = computeName(dimensionCombination, componentType) {
             multiFlavorName = it
         }
     }

@@ -22,7 +22,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.VariantDimensionData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
-import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
@@ -69,21 +69,21 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
 
         if (includeAndroidTest) {
             DefaultAndroidSourceSet sourceSet =
-                    variantDimensionData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST);
+                    variantDimensionData.getTestSourceSet(ComponentTypeImpl.ANDROID_TEST);
             if (sourceSet != null) {
                 clonedContainers.add(
                         SourceProviderContainerImpl.create(
-                                VariantTypeImpl.ANDROID_TEST.getArtifactName(), sourceSet));
+                                ComponentTypeImpl.ANDROID_TEST.getArtifactName(), sourceSet));
             }
         }
 
         if (includeUnitTest) {
             DefaultAndroidSourceSet sourceSet =
-                    variantDimensionData.getTestSourceSet(VariantTypeImpl.UNIT_TEST);
+                    variantDimensionData.getTestSourceSet(ComponentTypeImpl.UNIT_TEST);
             if (sourceSet != null) {
                 clonedContainers.add(
                         SourceProviderContainerImpl.create(
-                                VariantTypeImpl.UNIT_TEST.getArtifactName(), sourceSet));
+                                ComponentTypeImpl.UNIT_TEST.getArtifactName(), sourceSet));
             }
         }
 

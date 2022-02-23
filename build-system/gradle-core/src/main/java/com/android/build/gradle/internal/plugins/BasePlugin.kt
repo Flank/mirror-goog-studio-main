@@ -246,7 +246,7 @@ abstract class BasePlugin<
         withProject("LegacyVariantInputManager") { project ->
             LegacyVariantInputManager(
             dslServices,
-            variantFactory.variantType,
+            variantFactory.componentType,
             SourceSetManager(
                 project,
                 isPackagePublished(),
@@ -557,7 +557,7 @@ abstract class BasePlugin<
             @Suppress("DEPRECATION")
             TaskManager.createTasksBeforeEvaluate(
                 project,
-                variantFactory.variantType,
+                variantFactory.componentType,
                 extension.sourceSets,
                 variantManager.globalTaskCreationConfig
             )
@@ -689,7 +689,7 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
             taskManagerConfig,
             extension
         )
-        taskManager.createTasks(variantFactory.variantType, createVariantModel(globalConfig))
+        taskManager.createTasks(variantFactory.componentType, createVariantModel(globalConfig))
         DependencyConfigurator(
             project,
             project.name,

@@ -81,8 +81,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONF
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG_VERSIONS
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
 import com.android.build.gradle.internal.utils.toImmutableSet
-import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentType
+import com.android.builder.core.ComponentTypeImpl
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.attributes.LibraryElements
@@ -97,7 +97,7 @@ import org.gradle.api.file.FileSystemLocation
  * [org.gradle.api.artifacts.Configuration] via the [PublishedConfigType] enum.)
  *
  *
- * This mapping is per [VariantType] to allow for different task outputs to be published
+ * This mapping is per [ComponentType] to allow for different task outputs to be published
  * under the same [ArtifactType].
  */
 class PublishingSpecs {
@@ -106,7 +106,7 @@ class PublishingSpecs {
      * The publishing spec for a variant
      */
     interface VariantSpec {
-        val variantType: VariantType
+        val componentType: ComponentType
         val outputs: Set<OutputSpec>
 
         fun getSpec(artifactType: ArtifactType, publishConfigType: PublishedConfigType?): OutputSpec?
@@ -123,11 +123,11 @@ class PublishingSpecs {
     }
 
     companion object {
-        private var builder: ImmutableMap.Builder<VariantType, VariantSpec>? = ImmutableMap.builder()
-        private lateinit var variantMap: Map<VariantType, VariantSpec>
+        private var builder: ImmutableMap.Builder<ComponentType, VariantSpec>? = ImmutableMap.builder()
+        private lateinit var variantMap: Map<ComponentType, VariantSpec>
 
         init {
-            variantSpec(VariantTypeImpl.BASE_APK) {
+            variantSpec(ComponentTypeImpl.BASE_APK) {
 
                 api(MANIFEST_METADATA, ArtifactType.MANIFEST_METADATA)
                 // use TYPE_JAR to give access to this via the model for now,
@@ -166,7 +166,7 @@ class PublishingSpecs {
                 runtime(LINT_MODEL, ArtifactType.BASE_MODULE_LINT_MODEL)
             }
 
-            variantSpec(VariantTypeImpl.OPTIONAL_APK) {
+            variantSpec(ComponentTypeImpl.OPTIONAL_APK) {
 
                 api(MANIFEST_METADATA, ArtifactType.MANIFEST_METADATA)
                 // use TYPE_JAR to give access to this via the model for now,
@@ -212,7 +212,7 @@ class PublishingSpecs {
             }
 
 
-            variantSpec(VariantTypeImpl.LIBRARY) {
+            variantSpec(ComponentTypeImpl.LIBRARY) {
                 publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
 
                 source(InternalArtifactType.SOURCE_JAR, ArtifactType.SOURCES_JAR)
@@ -263,7 +263,7 @@ class PublishingSpecs {
                 output(LINT_MODEL_METADATA, ArtifactType.LINT_MODEL_METADATA)
             }
 
-            variantSpec(VariantTypeImpl.TEST_FIXTURES) {
+            variantSpec(ComponentTypeImpl.TEST_FIXTURES) {
                 publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
 
                 api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
@@ -302,22 +302,22 @@ class PublishingSpecs {
 
             // Publishing will be done manually from the lint standalone plugin for now.
             // Eventually we should just unify the infrastructure to declare the publications here.
-            variantSpec(VariantTypeImpl.JAVA_LIBRARY)
+            variantSpec(ComponentTypeImpl.JAVA_LIBRARY)
             // empty specs
-            variantSpec(VariantTypeImpl.TEST_APK)
-            variantSpec(VariantTypeImpl.ANDROID_TEST)
-            variantSpec(VariantTypeImpl.UNIT_TEST)
+            variantSpec(ComponentTypeImpl.TEST_APK)
+            variantSpec(ComponentTypeImpl.ANDROID_TEST)
+            variantSpec(ComponentTypeImpl.UNIT_TEST)
 
             lock()
         }
 
         @JvmStatic
-        fun getVariantSpec(variantType: VariantType): VariantSpec {
-            return variantMap[variantType]!!
+        fun getVariantSpec(componentType: ComponentType): VariantSpec {
+            return variantMap[componentType]!!
         }
 
         @JvmStatic
-        internal fun getVariantMap(): Map<VariantType, VariantSpec> {
+        internal fun getVariantMap(): Map<ComponentType, VariantSpec> {
             return variantMap
         }
 
@@ -327,29 +327,29 @@ class PublishingSpecs {
         }
 
         private fun variantSpec(
-                variantType: VariantType,
-                action: VariantSpecBuilder.() -> Unit) {
-            val specBuilder = instantiateSpecBuilder(variantType)
+            componentType: ComponentType,
+            action: VariantSpecBuilder.() -> Unit) {
+            val specBuilder = instantiateSpecBuilder(componentType)
 
             action(specBuilder)
-            builder!!.put(variantType, specBuilder.toSpec())
+            builder!!.put(componentType, specBuilder.toSpec())
         }
 
-        private fun variantSpec(variantType: VariantType) {
-            builder!!.put(variantType, instantiateSpecBuilder(variantType).toSpec())
+        private fun variantSpec(componentType: ComponentType) {
+            builder!!.put(componentType, instantiateSpecBuilder(componentType).toSpec())
         }
 
-        private fun instantiateSpecBuilder(variantType: VariantType) =
-            when (variantType) {
-                VariantTypeImpl.BASE_APK -> AppVariantSpecBuilder(variantType)
-                VariantTypeImpl.LIBRARY -> LibraryVariantSpecBuilder(variantType)
-                VariantTypeImpl.TEST_FIXTURES -> TestFixturesVariantSpecBuilder(variantType)
-                else -> VariantSpecBuilderImpl(variantType)
+        private fun instantiateSpecBuilder(componentType: ComponentType) =
+            when (componentType) {
+                ComponentTypeImpl.BASE_APK -> AppVariantSpecBuilder(componentType)
+                ComponentTypeImpl.LIBRARY -> LibraryVariantSpecBuilder(componentType)
+                ComponentTypeImpl.TEST_FIXTURES -> TestFixturesVariantSpecBuilder(componentType)
+                else -> VariantSpecBuilderImpl(componentType)
             }
     }
 
     interface VariantSpecBuilder {
-        val variantType: VariantType
+        val componentType: ComponentType
 
         fun output(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
         fun api(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
@@ -382,9 +382,9 @@ private val AAB_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.
 // --- Implementation of the public Spec interfaces
 
 private class VariantPublishingSpecImpl(
-        override val variantType: VariantType,
-        private val parentSpec: PublishingSpecs.VariantSpec?,
-        override val outputs: Set<PublishingSpecs.OutputSpec>
+    override val componentType: ComponentType,
+    private val parentSpec: PublishingSpecs.VariantSpec?,
+    override val outputs: Set<PublishingSpecs.OutputSpec>
 ) : PublishingSpecs.VariantSpec {
 
     private var _artifactMap: Map<ArtifactType, List<PublishingSpecs.OutputSpec>>? = null
@@ -434,7 +434,7 @@ private data class OutputSpecImpl(
 // -- Implementation of the internal Spec Builder interfaces
 
 private open class VariantSpecBuilderImpl (
-        override val variantType: VariantType): PublishingSpecs.VariantSpecBuilder {
+        override val componentType: ComponentType): PublishingSpecs.VariantSpecBuilder {
 
     protected val outputs = mutableSetOf<PublishingSpecs.OutputSpec>()
 
@@ -451,41 +451,41 @@ private open class VariantSpecBuilderImpl (
     }
 
     override fun reverseMetadata(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
-        if (!variantType.publishToMetadata) {
-            throw RuntimeException("VariantType '$variantType' does not support metadata publishing")
+        if (!componentType.publishToMetadata) {
+            throw RuntimeException("ComponentType '$componentType' does not support metadata publishing")
         }
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, REVERSE_METADATA_ELEMENTS_ONLY))
     }
 
     override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
-        throw RuntimeException("This VariantSpecBuilder does not support publish. VariantType is $variantType")
+        throw RuntimeException("This VariantSpecBuilder does not support publish. ComponentType is $componentType")
     }
 
     override fun source(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
-        throw RuntimeException("This VariantSpecBuilder does not support source. VariantType is $variantType")
+        throw RuntimeException("This VariantSpecBuilder does not support source. ComponentType is $componentType")
     }
 
     override fun javaDoc(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
-        throw RuntimeException("This VariantSpecBuilder does not support javaDoc. VariantType is $variantType")
+        throw RuntimeException("This VariantSpecBuilder does not support javaDoc. ComponentType is $componentType")
     }
 
     fun toSpec(parentSpec: PublishingSpecs.VariantSpec? = null): PublishingSpecs.VariantSpec {
         return VariantPublishingSpecImpl(
-                variantType,
+                componentType,
                 parentSpec,
                 outputs.toImmutableSet())
     }
 }
 
-private class TestFixturesVariantSpecBuilder(variantType: VariantType):
-    VariantSpecBuilderImpl(variantType) {
+private class TestFixturesVariantSpecBuilder(componentType: ComponentType):
+    VariantSpecBuilderImpl(componentType) {
 
     override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
     }
 }
 
-private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
+private class LibraryVariantSpecBuilder(componentType: ComponentType): VariantSpecBuilderImpl(componentType) {
 
     override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
@@ -500,7 +500,7 @@ private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBu
     }
 }
 
-private class AppVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
+private class AppVariantSpecBuilder(componentType: ComponentType): VariantSpecBuilderImpl(componentType) {
 
     override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         if (artifactType == ArtifactType.BUNDLE) {

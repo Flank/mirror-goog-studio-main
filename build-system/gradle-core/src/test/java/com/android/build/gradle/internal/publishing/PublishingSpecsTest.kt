@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.publishing
 
 import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.attributes.LibraryElements
 import org.junit.Test
@@ -26,15 +26,15 @@ import org.junit.Test
 class PublishingSpecsTest {
 
     @Test
-    fun allVariantTypeExist() {
-        for (type in VariantTypeImpl.values()) {
+    fun allComponentTypeExist() {
+        for (type in ComponentTypeImpl.values()) {
             assertThat(PublishingSpecs.getVariantMap()).containsKey(type)
         }
     }
 
     @Test
     fun `check output spec of CLASSES_DIR artifact type`() {
-        val outputSpec = getVariantSpec(VariantTypeImpl.LIBRARY).getSpec(
+        val outputSpec = getVariantSpec(ComponentTypeImpl.LIBRARY).getSpec(
             AndroidArtifacts.ArtifactType.CLASSES_DIR,
             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
         )
@@ -64,8 +64,8 @@ class PublishingSpecsTest {
             AndroidArtifacts.ArtifactType.JAVA_DOC_JAR,
         )
 
-        val libraryOutputs = getVariantSpec(VariantTypeImpl.LIBRARY).outputs
-        val testFixturesOutputs = getVariantSpec(VariantTypeImpl.TEST_FIXTURES).outputs
+        val libraryOutputs = getVariantSpec(ComponentTypeImpl.LIBRARY).outputs
+        val testFixturesOutputs = getVariantSpec(ComponentTypeImpl.TEST_FIXTURES).outputs
         assertThat(libraryOutputs.filterNot {
             testFixturesExcludedArtifacts.contains(it.artifactType)
         }).containsExactlyElementsIn(testFixturesOutputs)

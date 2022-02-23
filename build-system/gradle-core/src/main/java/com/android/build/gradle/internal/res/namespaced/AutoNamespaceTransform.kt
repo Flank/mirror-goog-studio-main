@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.res.runAapt2Compile
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
@@ -275,7 +275,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             ),
             staticLibrary = true,
             resourceOutputApk = staticLibApk.toFile(),
-            variantType = VariantTypeImpl.LIBRARY,
+            componentType = ComponentTypeImpl.LIBRARY,
             mergeOnly = true,
             intermediateDir = aaptIntermediateDir.toFile()
         )

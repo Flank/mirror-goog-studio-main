@@ -22,9 +22,15 @@ import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
- * Type of a variant.
+ * Type of component.
+ *
+ * Each plugin will produce a main component (variant) with multiple nested components within the
+ * variant.
+ * For example, the library plugin produces a main variant of type [ComponentTypeImpl.LIBRARY] and
+ * might have attached components of type [ComponentTypeImpl.UNIT_TEST],
+ * [ComponentTypeImpl.ANDROID_TEST] and [ComponentTypeImpl.TEST_FIXTURES].
  */
-interface VariantType {
+interface ComponentType {
     /**
      * Returns true is the variant outputs an AAR.
      */
@@ -141,12 +147,12 @@ interface VariantType {
         const val TEST_FIXTURES_PREFIX = "testFixtures"
         const val TEST_FIXTURES_SUFFIX = "TestFixtures"
 
-        val testComponents: ImmutableList<VariantType>
+        val testComponents: ImmutableList<ComponentType>
             get() {
-                val result = ImmutableList.builder<VariantType>()
-                for (variantType in VariantTypeImpl.values()) {
-                    if (variantType.isTestComponent) {
-                        result.add(variantType)
+                val result = ImmutableList.builder<ComponentType>()
+                for (componentType in ComponentTypeImpl.values()) {
+                    if (componentType.isTestComponent) {
+                        result.add(componentType)
                     }
                 }
                 return result.build()
@@ -155,7 +161,7 @@ interface VariantType {
     }
 }
 
-enum class VariantTypeImpl(
+enum class ComponentTypeImpl(
     override val isAar: Boolean = false,
     override val isApk: Boolean = false,
     override val isBaseModule: Boolean = false,
@@ -174,7 +180,7 @@ enum class VariantTypeImpl(
     override val isExportDataBindingClassList: Boolean = false,
     override val analyticsVariantType: GradleBuildVariant.VariantType,
     override val canHaveSplits: Boolean = false
-): VariantType {
+): ComponentType {
     BASE_APK(
         isApk = true,
         isBaseModule = true,
@@ -227,24 +233,24 @@ enum class VariantTypeImpl(
     ANDROID_TEST(
         isApk = true,
         isForTesting = true,
-        prefix = VariantType.ANDROID_TEST_PREFIX,
-        suffix = VariantType.ANDROID_TEST_SUFFIX,
+        prefix = ComponentType.ANDROID_TEST_PREFIX,
+        suffix = ComponentType.ANDROID_TEST_SUFFIX,
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_ANDROID_TEST,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         analyticsVariantType = GradleBuildVariant.VariantType.ANDROID_TEST),
     UNIT_TEST(
         isForTesting = true,
-        prefix = VariantType.UNIT_TEST_PREFIX,
-        suffix = VariantType.UNIT_TEST_SUFFIX,
+        prefix = ComponentType.UNIT_TEST_PREFIX,
+        suffix = ComponentType.UNIT_TEST_SUFFIX,
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_UNIT_TEST,
         artifactType = ArtifactMetaData.TYPE_JAVA,
         analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST),
     TEST_FIXTURES(
         isAar = true,
-        prefix = VariantType.TEST_FIXTURES_PREFIX,
-        suffix = VariantType.TEST_FIXTURES_SUFFIX,
+        prefix = ComponentType.TEST_FIXTURES_PREFIX,
+        suffix = ComponentType.TEST_FIXTURES_SUFFIX,
         isTestFixturesComponent = true,
         publishToOtherModules = true,
         publishToRepository = true,

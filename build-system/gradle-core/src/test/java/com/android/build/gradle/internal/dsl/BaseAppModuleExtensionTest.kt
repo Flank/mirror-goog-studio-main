@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.google.common.truth.Truth.assertThat
 import groovy.util.Eval
 import org.gradle.api.NamedDomainObjectContainer
@@ -50,7 +50,7 @@ class BaseAppModuleExtensionTest {
         AndroidLocationsBuildService.RegistrationAction(ProjectFactory.project).execute()
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
-            VariantTypeImpl.BASE_APK,
+            ComponentTypeImpl.BASE_APK,
             SourceSetManager(
                 ProjectFactory.project,
                 false,

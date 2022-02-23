@@ -266,12 +266,12 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.items.set(creationConfig.buildConfigFields)
 
-            if (creationConfig.variantType.isTestComponent) {
+            if (creationConfig.componentType.isTestComponent) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_MANIFESTS, task.mergedManifests
                 )
             }
-            task.isLibrary = creationConfig.variantType.isAar
+            task.isLibrary = creationConfig.componentType.isAar
         }
     }
 }

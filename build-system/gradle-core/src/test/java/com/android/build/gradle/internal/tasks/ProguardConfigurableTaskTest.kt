@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
@@ -68,7 +68,7 @@ internal class ProguardConfigurableTaskTest {
         Truth.assertThat(task).isNotNull()
         val fileCollection = Mockito.mock(FileCollection::class.java)
         val folder = temporaryFolder.newFolder("proguard_files")
-        task.variantType.set(VariantTypeImpl.BASE_APK)
+        task.componentType.set(ComponentTypeImpl.BASE_APK)
         Truth.assertThat(
             task.reconcileDefaultProguardFile(
                 fileCollection,
@@ -85,7 +85,7 @@ internal class ProguardConfigurableTaskTest {
         Mockito.`when`(fileCollection.files).thenReturn(setOf(
             File(folder, "android.txt")
         ))
-        task.variantType.set(VariantTypeImpl.JAVA_LIBRARY)
+        task.componentType.set(ComponentTypeImpl.JAVA_LIBRARY)
         val result = task.reconcileDefaultProguardFile(
             fileCollection,
             FakeGradleProvider(project.layout.projectDirectory.dir(
@@ -112,7 +112,7 @@ internal class ProguardConfigurableTaskTest {
             File(srcFolder, "user2.txt"),
             defaultFile
         ))
-        task.variantType.set(VariantTypeImpl.BASE_APK)
+        task.componentType.set(ComponentTypeImpl.BASE_APK)
         val result = task.reconcileDefaultProguardFile(
             fileCollection,
             FakeGradleProvider(project.layout.projectDirectory.dir(
@@ -141,7 +141,7 @@ internal class ProguardConfigurableTaskTest {
             File(srcFolder, "user2.txt"),
             File(srcFolder, defaultFile.name),
         ))
-        task.variantType.set(VariantTypeImpl.BASE_APK)
+        task.componentType.set(ComponentTypeImpl.BASE_APK)
         val result = task.reconcileDefaultProguardFile(
             fileCollection,
             FakeGradleProvider(project.layout.projectDirectory.dir(

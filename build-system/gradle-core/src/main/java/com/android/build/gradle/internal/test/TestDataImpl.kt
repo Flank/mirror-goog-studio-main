@@ -54,7 +54,7 @@ class TestDataImpl(
     }
 
     override val libraryType =
-        testConfig.services.provider { testConfig.testedConfig.variantType.isAar }
+        testConfig.services.provider { testConfig.testedConfig.componentType.isAar }
 
     @get:Input
     val supportedAbis: Set<String> = testConfig.testedConfig.variantDslInfo.supportedAbis

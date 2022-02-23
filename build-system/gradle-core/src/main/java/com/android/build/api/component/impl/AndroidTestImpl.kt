@@ -159,7 +159,7 @@ open class AndroidTestImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() {
             return when {
-                testedConfig.variantType.isAar -> false
+                testedConfig.componentType.isAar -> false
                 else -> variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
             }
         }
@@ -244,7 +244,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = true
 
     override val testedApplicationId: Provider<String>
-        get() = if (testedConfig.variantType.isAar) {
+        get() = if (testedConfig.componentType.isAar) {
             // if the tested variant is an AAR, the test is self contained and therefore
             // testedAppID == appId
             applicationId
@@ -270,8 +270,8 @@ open class AndroidTestImpl @Inject constructor(
     override val shouldPackageDesugarLibDex: Boolean
         get() = when {
             !isCoreLibraryDesugaringEnabled -> false
-            testedConfig.variantType.isAar -> true
-            else -> testedConfig.variantType.isBaseModule && needsShrinkDesugarLibrary
+            testedConfig.componentType.isAar -> true
+            else -> testedConfig.componentType.isBaseModule && needsShrinkDesugarLibrary
         }
 
     override val minSdkVersionForDexing: AndroidVersion =

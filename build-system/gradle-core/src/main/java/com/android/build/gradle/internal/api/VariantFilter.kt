@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api
 import com.android.build.api.variant.VariantFilter
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeName
 import com.android.build.gradle.internal.variant.DimensionCombination
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
 
@@ -34,14 +34,14 @@ class VariantFilter(
     private lateinit var _defaultConfig: ProductFlavor
     private lateinit var _buildType: BuildType
     private var _flavors: List<ProductFlavor>? = null
-    private lateinit var _type: VariantType
+    private lateinit var _type: ComponentType
     private var _name: String? = null
 
     fun reset(
         dimensionCombination: DimensionCombination,
         defaultConfig: ProductFlavor,
         buildType: BuildType,
-        type: VariantType,
+        type: ComponentType,
         flavors: List<ProductFlavor>?
     ) {
         ignore = false

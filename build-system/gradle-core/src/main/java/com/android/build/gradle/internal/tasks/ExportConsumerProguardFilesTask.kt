@@ -150,8 +150,8 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
             super.configure(task)
 
             task.consumerProguardFiles.from(creationConfig.variantScope.consumerProguardFilesForFeatures)
-            task.isBaseModule = creationConfig.variantType.isBaseModule
-            task.isDynamicFeature = creationConfig.variantType.isDynamicFeature
+            task.isBaseModule = creationConfig.componentType.isBaseModule
+            task.isDynamicFeature = creationConfig.componentType.isDynamicFeature
 
             task.inputFiles.from(
                 task.consumerProguardFiles,
@@ -159,7 +159,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
                     .artifacts
                     .get(InternalArtifactType.GENERATED_PROGUARD_FILE)
             )
-            if (creationConfig.variantType.isDynamicFeature) {
+            if (creationConfig.componentType.isDynamicFeature) {
                 task.libraryKeepRules = creationConfig.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,

@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import com.android.build.gradle.tasks.sync.AppIdListTask
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactView
@@ -65,8 +65,8 @@ class ApplicationTaskManager(
     extension,
 ) {
 
-    override fun createTopLevelTasks(variantType: VariantType, variantModel: VariantModel) {
-        super.createTopLevelTasks(variantType, variantModel)
+    override fun createTopLevelTasks(componentType: ComponentType, variantModel: VariantModel) {
+        super.createTopLevelTasks(componentType, variantModel)
         taskFactory.register(
             AppIdListTask.CreationAction(
                 globalConfig,
@@ -140,8 +140,8 @@ class ApplicationTaskManager(
     /** Configure variantData to generate embedded wear application.  */
     private fun handleMicroApp(appVariant: ApplicationVariantImpl) {
         val variantDslInfo = appVariant.variantDslInfo
-        val variantType = appVariant.variantType
-        if (variantType.isBaseModule) {
+        val componentType = appVariant.componentType
+        if (componentType.isBaseModule) {
             val unbundledWearApp: Boolean? = variantDslInfo.isWearAppUnbundled
             if (unbundledWearApp != true && variantDslInfo.isEmbedMicroApp) {
                 val wearApp =
@@ -255,7 +255,7 @@ class ApplicationTaskManager(
         if (!debuggable) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variant))
         }
-        if (variant.variantType.isBaseModule) {
+        if (variant.componentType.isBaseModule) {
             taskFactory.register(ParseIntegrityConfigTask.CreationAction(variant))
             taskFactory.register(PackageBundleTask.CreationAction(variant))
             if (!debuggable) {

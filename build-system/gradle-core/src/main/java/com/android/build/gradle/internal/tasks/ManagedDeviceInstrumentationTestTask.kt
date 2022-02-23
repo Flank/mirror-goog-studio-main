@@ -434,7 +434,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
             task.testRunnerFactory.executionEnum.setDisallowChanges(executionEnum)
             val useUtp = shouldEnableUtp(
                 projectOptions, globalConfig.testOptions,
-                testedConfig?.variantType
+                testedConfig?.componentType
             )
             task.testRunnerFactory.unifiedTestPlatform.setDisallowChanges(useUtp)
 

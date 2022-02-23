@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
@@ -144,7 +144,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             manifestFile = manifestFile,
             options = AaptOptions(noCompress.get(), aaptAdditionalParameters.get()),
             resourceOutputApk = outputFile,
-            variantType = VariantTypeImpl.BASE_APK,
+            componentType = ComponentTypeImpl.BASE_APK,
             packageId = resOffset.orNull,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
@@ -248,7 +248,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.featureResourcePackages = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
-            if (creationConfig.variantType.isDynamicFeature && creationConfig is DynamicFeatureCreationConfig) {
+            if (creationConfig.componentType.isDynamicFeature && creationConfig is DynamicFeatureCreationConfig) {
                 task.resOffset.set(creationConfig.resOffset)
                 task.resOffset.disallowChanges()
             }

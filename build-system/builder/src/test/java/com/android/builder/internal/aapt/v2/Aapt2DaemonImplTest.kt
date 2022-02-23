@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -187,7 +187,7 @@ class Aapt2DaemonImplTest {
             resourceDirs = ImmutableList.of(compiledDir),
             resourceOutputApk = outputFile,
             options = AaptOptions(),
-            variantType = VariantTypeImpl.BASE_APK
+            componentType = ComponentTypeImpl.BASE_APK
         )
 
         daemon.link(request, logger)
@@ -224,7 +224,7 @@ class Aapt2DaemonImplTest {
             resourceOutputApk = outputFile,
             resourceDirs = ImmutableList.of(compiledDir),
             options = AaptOptions(),
-            variantType = VariantTypeImpl.BASE_APK
+            componentType = ComponentTypeImpl.BASE_APK
         )
         val exception = assertFailsWith(Aapt2Exception::class) {
             daemon.link(request.copy(intermediateDir = temporaryFolder.newFolder()), logger)
@@ -289,7 +289,7 @@ class Aapt2DaemonImplTest {
             resourceDirs = ImmutableList.of(compiledDir),
             resourceOutputApk = protoLinkedFile,
             options = AaptOptions(),
-            variantType = VariantTypeImpl.BASE_APK,
+            componentType = ComponentTypeImpl.BASE_APK,
             generateProtos = true
         )
         daemon.link(request, logger)

@@ -45,8 +45,8 @@ public class PseudoApiChangesTest {
                     "ManifestAttributeSupplier",
                     "StandardOutErrMessageReceiver",
                     "ToolsRevisionUtils",
-                    "VariantType",
-                    "VariantTypeImpl");
+                    "ComponentType",
+                    "ComponentTypeImpl");
 
     @Test
     public void stableImplementationClassesTest() throws IOException {

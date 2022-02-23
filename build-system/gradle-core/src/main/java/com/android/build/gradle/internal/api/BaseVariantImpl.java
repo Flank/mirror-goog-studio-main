@@ -229,7 +229,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public String getApplicationId() {
         // this getter cannot work for dynamic features as the applicationId comes from somewhere
         // else and cannot be known at config time.
-        if (component.getVariantType().isDynamicFeature()) {
+        if (component.getComponentType().isDynamicFeature()) {
             services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -701,7 +701,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         } else {
             throw new RuntimeException(
                     "Variant "
-                            + component.getVariantType().getName()
+                            + component.getComponentType().getName()
                             + " do not support adding BuildConfig fields");
         }
     }
@@ -715,7 +715,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         } else {
             throw new RuntimeException(
                     "Variant "
-                            + component.getVariantType().getName()
+                            + component.getComponentType().getName()
                             + " do not support adding resValue");
         }
     }

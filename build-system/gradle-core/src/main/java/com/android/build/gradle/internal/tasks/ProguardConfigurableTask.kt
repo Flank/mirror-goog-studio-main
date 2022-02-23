@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
@@ -70,7 +70,7 @@ abstract class ProguardConfigurableTask(
 ) : NonIncrementalTask() {
 
     @get:Input
-    abstract val variantType: Property<VariantType>
+    abstract val componentType: Property<ComponentType>
 
     @get:Input
     abstract val includeFeaturesInScopes: Property<Boolean>
@@ -131,7 +131,7 @@ abstract class ProguardConfigurableTask(
 
         // if this is not a base module, there should not be any default proguard files so just
         // return.
-        if (!variantType.get().isBaseModule) {
+        if (!componentType.get().isBaseModule) {
             return incomingProguardFile.files
         }
 
@@ -165,7 +165,7 @@ abstract class ProguardConfigurableTask(
     ) {
 
         private val includeFeaturesInScopes: Boolean = creationConfig.variantScope.consumesFeatureJars()
-        protected val variantType: VariantType = creationConfig.variantType
+        protected val componentType: ComponentType = creationConfig.componentType
         private val testedConfig = creationConfig.testedConfig
 
         // Override to make this true in proguard
@@ -183,7 +183,7 @@ abstract class ProguardConfigurableTask(
         @Suppress("DEPRECATION") // Legacy support (b/195153220)
         protected val inputScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> =
             when {
-                variantType.isAar -> mutableSetOf(
+                componentType.isAar -> mutableSetOf(
                     com.android.build.api.transform.QualifiedContent.Scope.PROJECT,
                     InternalScope.LOCAL_DEPS
                 )
@@ -204,12 +204,12 @@ abstract class ProguardConfigurableTask(
             @Suppress("DEPRECATION") // Legacy support (b/195153220)
             val referencedScopes: Set<com.android.build.api.transform.QualifiedContent.Scope> = run {
                 val set = Sets.newHashSetWithExpectedSize<com.android.build.api.transform.QualifiedContent.Scope>(5)
-                if (variantType.isAar) {
+                if (componentType.isAar) {
                     set.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
                     set.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                 }
 
-                if (variantType.isTestComponent) {
+                if (componentType.isTestComponent) {
                     set.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
                 }
 
@@ -286,7 +286,7 @@ abstract class ProguardConfigurableTask(
                 )
             }
 
-            task.variantType.set(variantType)
+            task.componentType.set(componentType)
 
             task.includeFeaturesInScopes.set(includeFeaturesInScopes)
 
@@ -339,7 +339,7 @@ abstract class ProguardConfigurableTask(
                     )
                     task.configurationFiles.from(configurationFiles)
                 }
-                creationConfig.variantType.isForTesting && !creationConfig.variantType.isTestComponent -> {
+                creationConfig.componentType.isForTesting && !creationConfig.componentType.isTestComponent -> {
                     // This is a test-only module and the app being tested was obfuscated with ProGuard.
                     applyProguardDefaultsForTest()
 
@@ -404,7 +404,7 @@ abstract class ProguardConfigurableTask(
 
             task.configurationFiles.from(configurationFiles)
 
-            if (creationConfig.variantType.isAar) {
+            if (creationConfig.componentType.isAar) {
                 keep("class **.R")
                 keep("class **.R$* {*;}")
             }

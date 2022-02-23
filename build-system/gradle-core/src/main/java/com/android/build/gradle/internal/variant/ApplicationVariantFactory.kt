@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.ide.common.build.GenericBuiltArtifact
 import com.android.ide.common.build.GenericBuiltArtifactsSplitOutputMatcher
@@ -167,8 +167,8 @@ class ApplicationVariantFactory(
         )
     }
 
-    override val variantType
-        get() = VariantTypeImpl.BASE_APK
+    override val componentType
+        get() = ComponentTypeImpl.BASE_APK
 
     private fun computeOutputs(
         appVariant: ApplicationVariantImpl,

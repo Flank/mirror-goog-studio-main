@@ -82,7 +82,7 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, V
     ) {
         super.preVariantCallback(project, dslExtension, model)
         validateVersionCodes(model)
-        if (!variantType.isDynamicFeature) {
+        if (!componentType.isDynamicFeature) {
             return
         }
 

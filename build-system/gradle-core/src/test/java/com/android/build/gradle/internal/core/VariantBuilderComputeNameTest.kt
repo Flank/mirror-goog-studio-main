@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.gradle.internal.variant.DimensionCombinationImpl
-import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentType
+import com.android.builder.core.ComponentTypeImpl
 import com.android.testutils.AbstractBuildGivenBuildExpectTest
 import org.junit.Test
 
@@ -83,7 +83,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `androidTest with build-type but not flavors`() {
         given {
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
             buildType = "debug"
         }
 
@@ -97,7 +97,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `androidTest with build-type and one flavor`() {
         given {
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
             buildType = "debug"
             flavors = listOf("one" to "flavor1")
         }
@@ -112,7 +112,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `androidTest with no build-types and one flavor`() {
         given {
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
             buildType = null
             flavors = listOf("one" to "flavor1")
         }
@@ -127,7 +127,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `androidTest with no build-types and no flavors`() {
         given {
-            variantType = VariantTypeImpl.ANDROID_TEST
+            componentType = ComponentTypeImpl.ANDROID_TEST
             buildType = null
         }
 
@@ -141,7 +141,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `unitTest with build-type but not flavors`() {
         given {
-            variantType = VariantTypeImpl.UNIT_TEST
+            componentType = ComponentTypeImpl.UNIT_TEST
             buildType = "debug"
         }
 
@@ -155,7 +155,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `unitTest with build-type and one flavor`() {
         given {
-            variantType = VariantTypeImpl.UNIT_TEST
+            componentType = ComponentTypeImpl.UNIT_TEST
             buildType = "debug"
             flavors = listOf("one" to "flavor1")
         }
@@ -170,7 +170,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `unitTest with no build-types and one flavor`() {
         given {
-            variantType = VariantTypeImpl.UNIT_TEST
+            componentType = ComponentTypeImpl.UNIT_TEST
             buildType = null
             flavors = listOf("one" to "flavor1")
         }
@@ -185,7 +185,7 @@ class VariantBuilderComputeNameTest :
     @Test
     fun `unitTest with no build-types and no flavors`() {
         given {
-            variantType = VariantTypeImpl.UNIT_TEST
+            componentType = ComponentTypeImpl.UNIT_TEST
             buildType = null
         }
 
@@ -208,10 +208,10 @@ class VariantBuilderComputeNameTest :
         var flavorName: String = ""
 
         return ResultBuilder().also {
-            it.name = VariantDslInfoBuilder.computeName(varCombo, given.variantType) {
+            it.name = VariantDslInfoBuilder.computeName(varCombo, given.componentType) {
                 flavorName = it
             }
-            it.baseName = VariantDslInfoBuilder.computeBaseName(varCombo, given.variantType)
+            it.baseName = VariantDslInfoBuilder.computeBaseName(varCombo, given.componentType)
             it.fullNameWithSplit = VariantDslInfoBuilder.computeFullNameWithSplits(
                 ComponentIdentityImpl(
                     it.name,
@@ -219,7 +219,7 @@ class VariantBuilderComputeNameTest :
                     given.buildType,
                     given.flavors
                 ),
-                given.variantType,"split"
+                given.componentType,"split"
             )
         }
 
@@ -228,7 +228,7 @@ class VariantBuilderComputeNameTest :
     fun variant(action: GivenBuilder.() -> Unit): GivenBuilder = GivenBuilder().also { action(it) }
 
     class GivenBuilder {
-        var variantType: VariantType = VariantTypeImpl.BASE_APK
+        var componentType: ComponentType = ComponentTypeImpl.BASE_APK
         var buildType: String? = "debug"
         var flavors: List<Pair<String, String>> = listOf()
     }
