@@ -175,6 +175,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 GradleDetector.MIN_SDK_TOO_LOW,
                 GradleDetector.NOT_INTERPOLATED,
                 GradleDetector.PATH,
+                GradleDetector.PLAY_SDK_INDEX_NON_COMPLIANT,
                 GradleDetector.PLUS,
                 GradleDetector.REMOTE_VERSION,
                 GradleDetector.RISKY_LIBRARY,
