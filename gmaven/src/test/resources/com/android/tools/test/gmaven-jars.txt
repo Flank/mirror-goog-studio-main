@@ -2170,6 +2170,17 @@ com/android/tools/layoutlib/layoutlib-api
   com/android/ide/common/rendering/api/
   com/android/resources/
 
+com/android/tools/lint/checks/proto/lint-checks-proto
+  META-INF/
+  META-INF/MANIFEST.MF
+  NOTICE
+  com/
+  com/android/
+  com/android/tools/
+  com/android/tools/lint/
+  com/android/tools/lint/checks/
+  index.proto
+
 com/android/tools/lint/lint
   META-INF/
   META-INF/MANIFEST.MF
@@ -2209,6 +2220,7 @@ com/android/tools/lint/lint-checks
   com/android/tools/lint/checks/
   plural-examples.txt
   private-apis.txt
+  sdk-index-offline-snapshot.proto.gz
   sdks-offline.xml
   typos/
   typos/typos-de.txt

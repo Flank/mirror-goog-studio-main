@@ -86,6 +86,7 @@ AGP_ARTIFACTS = [
     "//tools/base/ddmlib:tools.ddmlib",
     "//tools/base/device_validator:tools.dvlib",
     "//tools/base/layoutlib-api:tools.layoutlib-api",
+    "//tools/base/lint:lint-checks-proto",
     "//tools/base/lint:tools.lint-model",
     "//tools/base/lint/libs/lint-typedef-remover",
     "//tools/base/repository:tools.repository",

@@ -3,6 +3,18 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
+load("//tools/base/bazel:proto.bzl", "maven_proto_library")
+
+maven_proto_library(
+    name = "lint-checks-proto",
+    srcs = glob(["libs/lint-checks/src/main/**/*.proto"]),
+    coordinates = "com.android.tools.lint.checks.proto:lint-checks-proto:" + BASE_VERSION,
+    description = "A protobuf message used for Google Play SDK Index",
+    notice = "libs/lint-model/NOTICE",
+    resource_strip_prefix = "tools/base/lint/libs/lint-checks/src/main/proto/",
+    resources = ["libs/lint-checks/src/main/proto/index.proto"],
+    visibility = ["//visibility:public"],
+)
 
 # managed by go/iml_to_build
 iml_module(
@@ -138,6 +150,7 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
         "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:liblint-checks-proto",
     ],
 )
 
@@ -168,6 +181,7 @@ maven_library(
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/lint:lint-checks-proto",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "@maven//:com.google.code.gson.gson",
@@ -376,4 +390,13 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
     ],
+)
+
+load("//tools/base/bazel:jvm_import.bzl", "jvm_import")
+
+# managed by go/iml_to_build
+jvm_import(
+    name = "liblint-checks-proto",
+    jars = ["//tools/base/lint:liblint-checks-proto.lib.jar"],
+    visibility = ["//visibility:public"],
 )

@@ -51,6 +51,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.MINIMUM_TARGET_SDK
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
 import com.android.tools.lint.checks.GradleDetector.Companion.NOT_INTERPOLATED
 import com.android.tools.lint.checks.GradleDetector.Companion.PATH
+import com.android.tools.lint.checks.GradleDetector.Companion.PLAY_SDK_INDEX_NON_COMPLIANT
 import com.android.tools.lint.checks.GradleDetector.Companion.PLUS
 import com.android.tools.lint.checks.GradleDetector.Companion.PREVIOUS_MINIMUM_TARGET_SDK_VERSION
 import com.android.tools.lint.checks.GradleDetector.Companion.REMOTE_VERSION
@@ -70,10 +71,12 @@ import com.android.utils.FileUtils
 import junit.framework.TestCase
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.util.Calendar
 import java.util.function.Predicate
+import java.util.zip.GZIPOutputStream
 
 /**
  * NOTE: Many of these tests are duplicated in the Android Studio plugin
@@ -3132,154 +3135,63 @@ class GradleDetectorTest : AbstractCheckTest() {
             gradle(
                 """
                 dependencies {
-                    compile 'log4j:log4j:1.2.18' // OK
+                    compile 'log4j:log4j:1.2.18' // OK, latest
                     compile 'log4j:log4j:1.2.17' // OK
-                    compile 'log4j:log4j:1.2.16' // ERROR
-                    compile 'log4j:log4j:1.2.15' // ERROR
-                    compile 'log4j:log4j:1.2.14' // ERROR
-                    compile 'log4j:log4j:1.2.13' // ERROR
-                    compile 'log4j:log4j:1.2.12' // ERROR
-                    compile 'log4j:log4j:1.2.4'  // ERROR
-                    compile 'log4j:log4j:1.2.3'  // OK (not included in range)
-                    compile 'log4j:log4j:0.5'    // ERROR
-                    compile 'com.example.ads.thirdparty:example:7.3.1' // OK
-                    compile 'com.example.ads.thirdparty:example:8.0.0' // OK
-                    compile 'com.example.ads.thirdparty:example:7.2.2' // OK
-                    compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
-                    compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
-                    compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
-                    compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
-                    compile 'com.example.ads.thirdparty:example:7.0.5' // OK
-                    compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
-                    compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
-                    compile 'com.android.volley:volley:1.1.0'   // OK
+                    compile 'log4j:log4j:1.2.16' // Critical
+                    compile 'log4j:log4j:1.2.15' // Outdated
+                    compile 'log4j:log4j:1.2.14' // Non compliant
+                    compile 'log4j:log4j:1.2.13' // Ok (not in Index)
+                    compile 'com.example.ads.third.party:example:8.0.0' // OK
+                    compile 'com.example.ads.third.party:example:7.2.2' // OK
+                    compile 'com.example.ads.third.party:example:7.2.1' // OK
+                    compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
 
                     compile 'log4j:log4j:latest.release' // OK
                     compile 'log4j:log4j' // OK
                     compile 'log4j:log4j:_' // OK
+
+                    compile 'com.another.example:example' // Ok (not in Index)
                 }
                 """
             ).indented()
-        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY)
+        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY, PLAY_SDK_INDEX_NON_COMPLIANT)
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
-                build.gradle:10: Warning: A newer version of log4j:log4j than 1.2.3 is available: 1.2.17 [GradleDependency]
-                    compile 'log4j:log4j:1.2.3'  // OK (not included in range)
-                            ~~~~~~~~~~~~~~~~~~~
-                build.gradle:14: Warning: A newer version of com.example.ads.thirdparty:example than 7.2.2 is available: 7.3.1 [GradleDependency]
-                    compile 'com.example.ads.thirdparty:example:7.2.2' // OK
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:19: Warning: A newer version of com.example.ads.thirdparty:example than 7.0.5 is available: 7.3.1 [GradleDependency]
-                    compile 'com.example.ads.thirdparty:example:7.0.5' // OK
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:7: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
-                    compile 'log4j:log4j:1.2.13' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~
-                build.gradle:8: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
-                    compile 'log4j:log4j:1.2.12' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~
-                build.gradle:9: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
-                    compile 'log4j:log4j:1.2.4'  // ERROR
-                            ~~~~~~~~~~~~~~~~~~~
-                build.gradle:4: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
-                    compile 'log4j:log4j:1.2.16' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~
-                build.gradle:5: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
-                    compile 'log4j:log4j:1.2.15' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~
-                build.gradle:6: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
-                    compile 'log4j:log4j:1.2.14' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~
-                build.gradle:11: Error: This version is obsolete. Details: Library is obsolete. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
-                    compile 'log4j:log4j:0.5'    // ERROR
-                            ~~~~~~~~~~~~~~~~~
-                build.gradle:15: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
-                    compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:16: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
-                    compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:17: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
-                    compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:18: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
-                    compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:20: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
-                    compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                build.gradle:21: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
-                    compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                13 errors, 3 warnings
-                    """
+                    build.gradle:4: Warning: log4j:log4j version 1.2.16 has an associated message from its author [RiskyLibrary]
+                        compile 'log4j:log4j:1.2.16' // Critical
+                                ~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:11: Warning: com.example.ads.third.party:example version 7.2.0 has an associated message from its author [RiskyLibrary]
+                        compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:6: Error: log4j:log4j version 1.2.14 has policy issues that will block publishing [PlaySdkIndexNonCompliant]
+                        compile 'log4j:log4j:1.2.14' // Non compliant
+                                ~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:11: Error: com.example.ads.third.party:example version 7.2.0 has policy issues that will block publishing [PlaySdkIndexNonCompliant]
+                        compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:5: Warning: log4j:log4j version 1.2.15 has been marked as outdated by its author [OutdatedLibrary]
+                        compile 'log4j:log4j:1.2.15' // Outdated
+                                ~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:11: Warning: com.example.ads.third.party:example version 7.2.0 has been marked as outdated by its author [OutdatedLibrary]
+                        compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    2 errors, 4 warnings
+                """
             ).expectFixDiffs(
                 """
-                Fix for build.gradle line 10: Change to 1.2.17:
-                @@ -10 +10
-                -     compile 'log4j:log4j:1.2.3'  // OK (not included in range)
-                +     compile 'log4j:log4j:1.2.17'  // OK (not included in range)
-                Fix for build.gradle line 14: Change to 7.3.1:
-                @@ -14 +14
-                -     compile 'com.example.ads.thirdparty:example:7.2.2' // OK
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // OK
-                Fix for build.gradle line 19: Change to 7.3.1:
-                @@ -19 +19
-                -     compile 'com.example.ads.thirdparty:example:7.0.5' // OK
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // OK
-                Fix for build.gradle line 7: Change to 1.2.17:
-                @@ -7 +7
-                -     compile 'log4j:log4j:1.2.13' // ERROR
-                +     compile 'log4j:log4j:1.2.17' // ERROR
-                Fix for build.gradle line 8: Change to 1.2.17:
-                @@ -8 +8
-                -     compile 'log4j:log4j:1.2.12' // ERROR
-                +     compile 'log4j:log4j:1.2.17' // ERROR
-                Fix for build.gradle line 9: Change to 1.2.17:
-                @@ -9 +9
-                -     compile 'log4j:log4j:1.2.4'  // ERROR
-                +     compile 'log4j:log4j:1.2.17'  // ERROR
-                Fix for build.gradle line 4: Change to 1.2.17:
-                @@ -4 +4
-                -     compile 'log4j:log4j:1.2.16' // ERROR
-                +     compile 'log4j:log4j:1.2.17' // ERROR
-                Fix for build.gradle line 5: Change to 1.2.17:
-                @@ -5 +5
-                -     compile 'log4j:log4j:1.2.15' // ERROR
-                +     compile 'log4j:log4j:1.2.17' // ERROR
-                Fix for build.gradle line 6: Change to 1.2.17:
-                @@ -6 +6
-                -     compile 'log4j:log4j:1.2.14' // ERROR
-                +     compile 'log4j:log4j:1.2.17' // ERROR
-                Fix for build.gradle line 11: Change to 1.2.17:
-                @@ -11 +11
-                -     compile 'log4j:log4j:0.5'    // ERROR
-                +     compile 'log4j:log4j:1.2.17'    // ERROR
-                Fix for build.gradle line 15: Change to 7.3.1:
-                @@ -15 +15
-                -     compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
-                Fix for build.gradle line 16: Change to 7.3.1:
-                @@ -16 +16
-                -     compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
-                Fix for build.gradle line 17: Change to 7.3.1:
-                @@ -17 +17
-                -     compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
-                Fix for build.gradle line 18: Change to 7.3.1:
-                @@ -18 +18
-                -     compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
-                Fix for build.gradle line 20: Change to 7.3.1:
-                @@ -20 +20
-                -     compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
-                Fix for build.gradle line 21: Change to 7.3.1:
-                @@ -21 +21
-                -     compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
-                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
+                    Show URL for build.gradle line 4: View details in Google Play SDK index:
+                    http://index.example.url/
+                    Show URL for build.gradle line 11: View details in Google Play SDK index:
+                    http://another.example.url/
+                    Show URL for build.gradle line 6: View details in Google Play SDK index:
+                    http://index.example.url/
+                    Show URL for build.gradle line 11: View details in Google Play SDK index:
+                    http://another.example.url/
+                    Show URL for build.gradle line 5: View details in Google Play SDK index:
+                    http://index.example.url/
+                    Show URL for build.gradle line 11: View details in Google Play SDK index:
+                    http://another.example.url/
                 """
             )
     }
@@ -4612,36 +4524,102 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """.trimIndent()
             )
 
-            // Similarly set up the expected SDK registry network output from dl.google.com to
+            // Similarly set up the expected SDK Index network output from dl.google.com to
             // ensure stable SDK library suggestions in the tests
+            val index = Index.newBuilder()
+                .addSdks(Sdk.newBuilder()
+                    .setIndexUrl("http://index.example.url/")
+                    .addLibraries(Library.newBuilder()
+                        .setLibraryId(LibraryIdentifier.newBuilder()
+                            .setMavenId(LibraryIdentifier.MavenIdentifier.newBuilder()
+                                .setGroupId("log4j")
+                                .setArtifactId("log4j")
+                                .build()
+                            )
+                        )
+                        // Ok, latest, no issues
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("1.2.18")
+                            .setIsLatestVersion(true)
+                        )
+                        // Ok, latest, no issues
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("1.2.17")
+                            .setIsLatestVersion(false)
+                        )
+                        // Critical
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("1.2.16")
+                            .setIsLatestVersion(false)
+                            .setVersionLabels(LibraryVersionLabels.newBuilder()
+                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
+                            )
+                        )
+                        // Outdated
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("1.2.15")
+                            .setIsLatestVersion(false)
+                            .setVersionLabels(LibraryVersionLabels.newBuilder()
+                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
+                            )
+                        )
+                        // Policy
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("1.2.14")
+                            .setIsLatestVersion(false)
+                            .setVersionLabels(LibraryVersionLabels.newBuilder()
+                                .setNonCompliantIssueInfo(LibraryVersionLabels.NonCompliantPolicyInfo.newBuilder())
+                            )
+                        )
+                    )
+                )
+                .addSdks(Sdk.newBuilder()
+                    .setIndexUrl("http://another.example.url/")
+                    .addLibraries(Library.newBuilder()
+                        .setLibraryId(LibraryIdentifier.newBuilder()
+                            .setMavenId(LibraryIdentifier.MavenIdentifier.newBuilder()
+                                .setGroupId("com.example.ads.third.party")
+                                .setArtifactId("example")
+                                .build()
+                            )
+                        )
+                        // Ok, latest
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("8.0.0")
+                            .setIsLatestVersion(true)
+                        )
+                        // Ok
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("7.2.2")
+                            .setIsLatestVersion(false)
+                        )
+                        // Ok
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("7.2.1")
+                            .setIsLatestVersion(false)
+                        )
+                        // Outdated & non compliant & Critical
+                        .addVersions(LibraryVersion.newBuilder()
+                            .setVersionString("7.2.0")
+                            .setIsLatestVersion(false)
+                            .setVersionLabels(LibraryVersionLabels.newBuilder()
+                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
+                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
+                                .setNonCompliantIssueInfo(LibraryVersionLabels.NonCompliantPolicyInfo.newBuilder())
+                            )
+                        )
+                    )
+                )
+                .build()
+            val bos = ByteArrayOutputStream()
+            val gzip = GZIPOutputStream(bos)
+            gzip.write(index.toByteArray())
+            gzip.close()
             task.networkData(
-                SDK_REGISTRY_URL,
-                """
-            <sdk_metadata>
-             <library groupId="com.android.volley" artifactId="volley" recommended-version="1.1.0">
-              <versions from="1.1.0-rc2" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
-              <versions from="1.1.0-rc1" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
-              <versions from="1.0.0" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
-             </library>
-             <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
-              <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
-               <vulnerability description="Specifics and developer actions go here." cve="CVE-4313" />
-              </versions>
-              <versions from="1.2.4" to="1.2.13" status="insecure" description="Bad security bug CVE-4311" />
-               <vulnerability description="Buffer overflow vulnerability in this version." cve="CVE-4311" />
-              <versions to="1.2.0" status="obsolete" description="Library is obsolete." />
-             </library>
-             <library groupId="com.example.ads.thirdparty" artifactId="example" recommended-version="7.3.1">
-              <versions from="7.1.0" to="7.2.1" status="deprecated" description="Deprecated due to ANR issue">
-               <vulnerability description="Specifics and developer actions go here." />
-              </versions>
-              <versions to="7.0.0" status="deprecated" description="Deprecated due to ANR issue">
-               <vulnerability description="Specifics and developer actions go here." />
-              </versions>
-              </library>
-            </sdk_metadata>
-                """.trimIndent()
+                "${GooglePlaySdkIndex.GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_URL}${GooglePlaySdkIndex.GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE}",
+                bos.toByteArray()
             )
+            bos.close()
 
             // Also ensure we don't have a stale cache on disk.
             val cacheDir =
@@ -4682,7 +4660,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
             val cacheDir2 =
                 com.android.tools.lint.checks.infrastructure.TestLintClient()
-                    .getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
+                    .getCacheDir(GooglePlaySdkIndex.GOOGLE_PLAY_SDK_INDEX_KEY, true)
             if (cacheDir2 != null && cacheDir2.isDirectory) {
                 try {
                     FileUtils.deleteDirectoryContents(cacheDir2)

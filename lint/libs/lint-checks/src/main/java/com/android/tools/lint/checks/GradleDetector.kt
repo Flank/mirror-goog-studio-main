@@ -36,6 +36,8 @@ import com.android.io.CancellableFileIo
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
+import com.android.tools.lint.checks.GooglePlaySdkIndex.Companion.GOOGLE_PLAY_SDK_INDEX_KEY
+import com.android.tools.lint.checks.GooglePlaySdkIndex.Companion.GOOGLE_PLAY_SDK_INDEX_URL
 import com.android.tools.lint.checks.ManifestDetector.Companion.TARGET_NEWER
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
@@ -79,6 +81,7 @@ import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
+import java.nio.file.Path
 import java.util.Calendar
 import java.util.Collections
 import java.util.function.Predicate
@@ -998,42 +1001,25 @@ open class GradleDetector : Detector(), GradleScanner {
             }
         }
 
-        val sdkRegistry = getDeprecatedLibraryLookup(context.client)
-        val deprecated = sdkRegistry.getVersionInfo(dependency)
-        if (deprecated != null) {
-            val prefix: String
-            val issue: Issue
-            if (deprecated.status == "insecure") {
-                prefix = "This version is known to be insecure."
-                issue = RISKY_LIBRARY
-            } else {
-                prefix = "This version is ${deprecated.status}."
-                issue = DEPRECATED_LIBRARY
+        val sdkIndex = getGooglePlaySdkIndex(context.client)
+        if (sdkIndex.isReady()) {
+            val versionString = version.toString()
+            var reportCreated = false
+            if (sdkIndex.isLibraryNonCompliant(groupId, artifactId, versionString, context.file)) {
+                val message = "$groupId:$artifactId version $versionString has policy issues that will block publishing"
+                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                reportCreated = report(context, cookie, PLAY_SDK_INDEX_NON_COMPLIANT, message, fix)
             }
-
-            val suffix: String
-            val fix: LintFix?
-            val recommended = deprecated.recommended
-            if (recommended != null) {
-                suffix = " Consider switching to recommended version $recommended."
-                fix = getUpdateDependencyFix(dependency.revision, recommended)
-            } else {
-                suffix = ""
-                fix = null
+            // TODO: use severity field (b/224643959)
+            if (!reportCreated && sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, context.file)) {
+                val message = "$groupId:$artifactId version $versionString has an associated message from its author"
+                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                reportCreated = report(context, cookie, RISKY_LIBRARY, message, fix)
             }
-
-            val separatorDot =
-                if (deprecated.message.isNotEmpty() && !deprecated.message.endsWith("."))
-                    "."
-                else
-                    ""
-
-            val message = "$prefix Details: ${deprecated.message}$separatorDot$suffix"
-            report(context, cookie, issue, message, fix)
-        } else {
-            val recommended = sdkRegistry.getRecommendedVersion(dependency)
-            if (recommended != null && (newerVersion == null || recommended > newerVersion)) {
-                newerVersion = recommended
+            if (!reportCreated && sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
+                val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
+                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                report(context, cookie, DEPRECATED_LIBRARY, message, fix)
             }
         }
 
@@ -1806,9 +1792,10 @@ open class GradleDetector : Detector(), GradleScanner {
         message: String,
         fix: LintFix? = null,
         partial: Boolean = false
-    ) {
+    ): Boolean {
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
+        var reportCreated = false
         context.client.runReadAction(
             Runnable {
                 if (context.isEnabled(issue) && context is GradleContext) {
@@ -1828,9 +1815,11 @@ open class GradleDetector : Detector(), GradleScanner {
                     } else {
                         context.report(incident)
                     }
+                    reportCreated = true
                 }
             }
         )
+        return reportCreated
     }
 
     /**
@@ -2164,7 +2153,7 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     private var googleMavenRepository: GoogleMavenRepository? = null
-    private var deprecatedSdkRegistry: DeprecatedSdkRegistry? = null
+    private var googlePlaySdkIndex: GooglePlaySdkIndex? = null
 
     private fun getGoogleMavenRepoVersion(
         context: GradleContext,
@@ -2192,19 +2181,11 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
-    private fun getDeprecatedLibraryLookup(client: LintClient): DeprecatedSdkRegistry {
-        return deprecatedSdkRegistry ?: run {
-            val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
-            val repository = object : DeprecatedSdkRegistry(cacheDir?.toPath()) {
-
-                public override fun readUrlData(url: String, timeout: Int) =
-                    readUrlData(client, url, timeout)
-
-                public override fun error(throwable: Throwable, message: String?) =
-                    client.log(throwable, message)
-            }
-
-            deprecatedSdkRegistry = repository
+    private fun getGooglePlaySdkIndex(client: LintClient): GooglePlaySdkIndex {
+        return googlePlaySdkIndex ?: run {
+            val cacheDir = client.getCacheDir(GOOGLE_PLAY_SDK_INDEX_KEY, true)
+            val repository = playSdkIndexFactory(cacheDir?.toPath(), client)
+            googlePlaySdkIndex = repository
             repository
         }
     }
@@ -2671,10 +2652,11 @@ open class GradleDetector : Detector(), GradleScanner {
                 it from your app.
                 """,
             category = Category.COMPLIANCE,
-            priority = 8,
-            severity = Severity.ERROR,
+            priority = 6,
+            severity = Severity.WARNING,
             androidSpecific = true,
-            implementation = IMPLEMENTATION
+            implementation = IMPLEMENTATION,
+            moreInfo = GOOGLE_PLAY_SDK_INDEX_URL
         )
 
         /**
@@ -2743,10 +2725,11 @@ open class GradleDetector : Detector(), GradleScanner {
                 it from your app.
             """,
             category = Category.SECURITY,
-            priority = 8,
-            severity = Severity.ERROR,
+            priority = 7,
+            severity = Severity.WARNING,
             androidSpecific = true,
-            implementation = IMPLEMENTATION
+            implementation = IMPLEMENTATION,
+            moreInfo = GOOGLE_PLAY_SDK_INDEX_URL
         )
 
         @JvmField
@@ -2819,6 +2802,20 @@ open class GradleDetector : Detector(), GradleScanner {
             severity = Severity.WARNING,
             implementation = IMPLEMENTATION,
             moreInfo = "https://developer.android.com/r/tools/jcenter-end-of-service"
+        )
+
+        @JvmField
+        val PLAY_SDK_INDEX_NON_COMPLIANT = Issue.create(
+            id = "PlaySdkIndexNonCompliant",
+            briefDescription = "Library has policy issues in SDK Index",
+            explanation = """
+                This library version has policy issues that will block publishing in the Google Play Store.
+            """,
+            category = Category.COMPLIANCE,
+            priority = 8,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION,
+            moreInfo = GOOGLE_PLAY_SDK_INDEX_URL,
         )
 
         /** Gradle plugin IDs based on the Java plugin. */
@@ -3330,6 +3327,16 @@ open class GradleDetector : Detector(), GradleScanner {
                 "com.google.android.play:core" -> true
                 else -> false
             }
+        }
+
+        @JvmStatic
+        var playSdkIndexFactory: (Path?, LintClient) -> GooglePlaySdkIndex = { path: Path?, client: LintClient ->
+            val index = object : GooglePlaySdkIndex(client, path) {
+                public override fun readUrlData(url: String, timeout: Int) =
+                    readUrlData(client, url, timeout)
+            }
+            index.initialize()
+            index
         }
     }
 }
