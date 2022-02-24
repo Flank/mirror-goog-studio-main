@@ -1011,7 +1011,11 @@ abstract class VariantInputs {
         resValues.disallowChanges()
     }
 
-    fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
+    fun toLintModel(
+        module: LintModelModule,
+        partialResultsDir: File? = null,
+        desugaredMethodsFiles: Collection<File>
+    ): LintModelVariant {
         val dependencyCaches = DependencyCaches(
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get())
@@ -1050,7 +1054,8 @@ abstract class VariantInputs {
             shrinkable = mainArtifact.shrinkable.get(),
             buildFeatures = buildFeatures.toLintModel(),
             libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
-            partialResultsDir = partialResultsDir
+            partialResultsDir = partialResultsDir,
+            desugaredMethodsFiles = desugaredMethodsFiles
         )
     }
 

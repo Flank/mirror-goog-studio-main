@@ -417,8 +417,8 @@ class GradleModelMocker @JvmOverloads constructor(
                     shrinkable = buildType.isMinifyEnabled,
                     buildFeatures = buildFeatures,
                     libraryResolver = this,
-                    partialResultsDir = null
-
+                    partialResultsDir = null,
+                    desugaredMethodsFiles = emptySet()
                 )
             )
         }
@@ -2271,8 +2271,8 @@ private data class TestLintModelVariant(
     override val shrinkable: Boolean,
     override val buildFeatures: LintModelBuildFeatures,
     override val libraryResolver: LintModelLibraryResolver,
-    override val partialResultsDir: File?
-
+    override val partialResultsDir: File?,
+    override val desugaredMethodsFiles: Collection<File>
 ) : LintModelVariant {
     override val module: LintModelModule get() = _module()
 }

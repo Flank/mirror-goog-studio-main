@@ -130,7 +130,12 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     private fun writeLintModelFile() {
         val module = projectInputs.convertToLintModelModule()
 
-        val variant = variantInputs.toLintModel(module, partialResultsDirectory.get().asFile)
+        val variant =
+            variantInputs.toLintModel(
+                module,
+                partialResultsDirectory.get().asFile,
+                desugaredMethodsFiles.files
+            )
 
         val destination = lintModelDirectory.get().asFile.also { FileUtils.cleanOutputDir(it) }
 

@@ -255,7 +255,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     private fun writeLintModelFile() {
         val module = projectInputs.convertToLintModelModule()
 
-        val variant = variantInputs.toLintModel(module, partialResults.orNull?.asFile)
+        val variant =
+            variantInputs.toLintModel(
+                module,
+                partialResults.orNull?.asFile,
+                desugaredMethodsFiles = listOf()
+            )
 
         LintModelSerialization.writeModule(
             module = module,

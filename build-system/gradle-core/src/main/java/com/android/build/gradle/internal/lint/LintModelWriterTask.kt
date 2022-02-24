@@ -75,7 +75,12 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         val module = projectInputs.convertToLintModelModule()
-        val variant = variantInputs.toLintModel(module, partialResultsDir)
+        val variant =
+            variantInputs.toLintModel(
+                module,
+                partialResultsDir,
+                desugaredMethodsFiles = listOf()
+            )
         LintModelSerialization.writeModule(
             module = module,
             destination = outputDirectory.get().asFile,
