@@ -37,6 +37,7 @@ import com.android.build.api.dsl.DensitySplit
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.dsl.DexPackagingOptions
 import com.android.build.api.dsl.ExternalNativeBuild
+import com.android.build.api.dsl.FusedLibrariesExtension
 import com.android.build.api.dsl.JavaCompileOptions
 import com.android.build.api.dsl.JniLibsPackagingOptions
 import com.android.build.api.dsl.KeepRules
@@ -69,6 +70,7 @@ import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.DependenciesInfoImpl
 import com.android.build.gradle.internal.dsl.DexPackagingOptionsImpl
+import com.android.build.gradle.internal.dsl.FusedLibrariesExtensionImpl
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild as ExternalNativeBuildImpl
 import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.dsl.JavaCompileOptions as JavaCompileOptionsImpl
@@ -128,6 +130,9 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(Split::class.java, SplitOptions::class.java),
     SupportedPropertyType.Block(Splits::class.java, com.android.build.gradle.internal.dsl.Splits::class.java),
     SupportedPropertyType.Block(ViewBinding::class.java, ViewBindingOptionsImpl::class.java),
+
+    // FusedLibrary Extensions.
+    SupportedPropertyType.Block(FusedLibrariesExtension::class.java, FusedLibrariesExtensionImpl::class.java)
 )
 
 /**

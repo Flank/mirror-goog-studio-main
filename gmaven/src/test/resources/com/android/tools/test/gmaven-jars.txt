@@ -368,10 +368,12 @@ com/android/tools/build/gradle
   META-INF/gradle-plugins/com.android.asset-pack.properties
   META-INF/gradle-plugins/com.android.base.properties
   META-INF/gradle-plugins/com.android.dynamic-feature.properties
+  META-INF/gradle-plugins/com.android.fused-libraries.properties
   META-INF/gradle-plugins/com.android.internal.application.properties
   META-INF/gradle-plugins/com.android.internal.asset-pack-bundle.properties
   META-INF/gradle-plugins/com.android.internal.asset-pack.properties
   META-INF/gradle-plugins/com.android.internal.dynamic-feature.properties
+  META-INF/gradle-plugins/com.android.internal.fused-libraries.properties
   META-INF/gradle-plugins/com.android.internal.library.properties
   META-INF/gradle-plugins/com.android.internal.reporting.properties
   META-INF/gradle-plugins/com.android.internal.test.properties
@@ -446,6 +448,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/dsl/decorator/annotation/
   com/android/build/gradle/internal/errors/
   com/android/build/gradle/internal/feature/
+  com/android/build/gradle/internal/fusedlibs/
   com/android/build/gradle/internal/generators/
   com/android/build/gradle/internal/ide/
   com/android/build/gradle/internal/ide/dependencies/
