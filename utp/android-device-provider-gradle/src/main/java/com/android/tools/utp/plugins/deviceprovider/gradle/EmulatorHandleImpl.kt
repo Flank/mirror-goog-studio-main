@@ -17,22 +17,24 @@
 package com.android.tools.utp.plugins.deviceprovider.gradle
 
 import com.google.testing.platform.core.device.DeviceProviderException
+import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.lib.process.Handle
 import com.google.testing.platform.lib.process.inject.SubprocessComponent
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import java.util.logging.Logger
 
 /**
  * Component of the [GradleManagedDeviceLauncher] to handle the emulator instance
  */
 class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) : EmulatorHandle {
-    private companion object {
+    companion object {
         private const val EMULATOR_NO_WINDOW = "-no-window"
         private const val EMULATOR_GPU = "-gpu"
         private const val EMULATOR_NO_AUDIO = "-no-audio"
         private const val EMULATOR_NO_BOOT_ANIM = "-no-boot-anim"
         private const val EMULATOR_READ_ONLY = "-read-only"
     }
+
+    private val logger: Logger = getLogger()
 
     private lateinit var emulatorPath: String
 
@@ -73,10 +75,8 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
 
         val emulatorEnvironment = System.getenv().toMutableMap()
         emulatorEnvironment["ANDROID_AVD_HOME"] = avdFolder
-        processHandle = subprocessComponent.subprocess().executeAsync(
-                args = args,
-                environment = emulatorEnvironment
-        )
+        processHandle = subprocessComponent.subprocess()
+            .executeAsync(args, emulatorEnvironment, logger::info, logger::info)
 
         // In case the processHandle errored out.
         if (!processHandle.isAlive()) {
