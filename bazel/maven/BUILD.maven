@@ -4424,12 +4424,12 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.bouncycastle.bcpkix-jdk15on_1.56",
-    pom = "repository/org/bouncycastle/bcpkix-jdk15on/1.56/bcpkix-jdk15on-1.56.pom",
+    name = "org.bouncycastle.bcpkix-jdk15on_1.64",
+    pom = "repository/org/bouncycastle/bcpkix-jdk15on/1.64/bcpkix-jdk15on-1.64.pom",
     repo_root_path = "repository",
-    repo_path = "org/bouncycastle/bcpkix-jdk15on/1.56",
+    repo_path = "org/bouncycastle/bcpkix-jdk15on/1.64",
     deps = [
-        "org.bouncycastle.bcprov-jdk15on_1.56",
+        "org.bouncycastle.bcprov-jdk15on_1.64",
     ],
     visibility = ["//visibility:public"],
 )
@@ -4438,26 +4438,25 @@ maven_import(
     name = "org.bouncycastle.bcpkix-jdk15on",
     classifiers = [],
     jars = [
-        "repository/org/bouncycastle/bcpkix-jdk15on/1.56/bcpkix-jdk15on-1.56.jar"
+        "repository/org/bouncycastle/bcpkix-jdk15on/1.64/bcpkix-jdk15on-1.64.jar"
     ],
     exports = [
         "org.bouncycastle.bcprov-jdk15on",
     ],
     original_deps = [
-        "org.bouncycastle.bcprov-jdk15on_1.56",
+        "org.bouncycastle.bcprov-jdk15on_1.64",
     ],
-    pom = "repository/org/bouncycastle/bcpkix-jdk15on/1.56/bcpkix-jdk15on-1.56.pom",
+    pom = "repository/org/bouncycastle/bcpkix-jdk15on/1.64/bcpkix-jdk15on-1.64.pom",
     repo_root_path = "repository",
-    repo_path = "org/bouncycastle/bcpkix-jdk15on/1.56",
-    srcjar = "repository/org/bouncycastle/bcpkix-jdk15on/1.56/bcpkix-jdk15on-1.56-sources.jar",
+    repo_path = "org/bouncycastle/bcpkix-jdk15on/1.64",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.bouncycastle.bcprov-jdk15on_1.56",
-    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.56/bcprov-jdk15on-1.56.pom",
+    name = "org.bouncycastle.bcprov-jdk15on_1.64",
+    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.64/bcprov-jdk15on-1.64.pom",
     repo_root_path = "repository",
-    repo_path = "org/bouncycastle/bcprov-jdk15on/1.56",
+    repo_path = "org/bouncycastle/bcprov-jdk15on/1.64",
     visibility = ["//visibility:public"],
 )
 
@@ -4465,13 +4464,12 @@ maven_import(
     name = "org.bouncycastle.bcprov-jdk15on",
     classifiers = [],
     jars = [
-        "repository/org/bouncycastle/bcprov-jdk15on/1.56/bcprov-jdk15on-1.56.jar"
+        "repository/org/bouncycastle/bcprov-jdk15on/1.64/bcprov-jdk15on-1.64.jar"
     ],
     original_deps = [],
-    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.56/bcprov-jdk15on-1.56.pom",
+    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.64/bcprov-jdk15on-1.64.pom",
     repo_root_path = "repository",
-    repo_path = "org/bouncycastle/bcprov-jdk15on/1.56",
-    srcjar = "repository/org/bouncycastle/bcprov-jdk15on/1.56/bcprov-jdk15on-1.56-sources.jar",
+    repo_path = "org/bouncycastle/bcprov-jdk15on/1.64",
     visibility = ["//visibility:public"],
 )
 
@@ -25206,6 +25204,17 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.bouncycastle.bcpkix-jdk15on_1.56",
+    pom = "repository/org/bouncycastle/bcpkix-jdk15on/1.56/bcpkix-jdk15on-1.56.pom",
+    repo_root_path = "repository",
+    repo_path = "org/bouncycastle/bcpkix-jdk15on/1.56",
+    deps = [
+        "org.bouncycastle.bcprov-jdk15on_1.56",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.bouncycastle.bcprov-jdk15on_1.48",
     pom = "repository/org/bouncycastle/bcprov-jdk15on/1.48/bcprov-jdk15on-1.48.pom",
     repo_root_path = "repository",
@@ -25218,6 +25227,14 @@ maven_artifact(
     pom = "repository/org/bouncycastle/bcprov-jdk15on/1.52/bcprov-jdk15on-1.52.pom",
     repo_root_path = "repository",
     repo_path = "org/bouncycastle/bcprov-jdk15on/1.52",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.bouncycastle.bcprov-jdk15on_1.56",
+    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.56/bcprov-jdk15on-1.56.pom",
+    repo_root_path = "repository",
+    repo_path = "org/bouncycastle/bcprov-jdk15on/1.56",
     visibility = ["//visibility:public"],
 )
 
