@@ -76,26 +76,22 @@ class LinkEvalDominatorsTest: TestCase() {
     }
 
     private inline fun<reified T: Any> compute(g: Graph.Builder<T>) = with(g.build()) {
-        LinkEvalDominators.computeDominators(roots, next, prev)
+        LinkEvalDominators.computeDominators(roots, next)
     }
 }
 
-class Graph<T>(val roots: Set<T>, val next: (T) -> Stream<T>, val prev: (T) -> Stream<T>) {
+class Graph<T>(val roots: Set<T>, val next: (T) -> Stream<T>) {
     class Builder<T> {
         private val next = mutableMapOf<T, MutableSet<T>>()
-        private val prev = mutableMapOf<T, MutableSet<T>>()
         private val roots = mutableSetOf<T>()
 
         fun addEdges(from: T, vararg to: T) = this.also {
             next.getOrPut(from, ::mutableSetOf).addAll(to)
-            to.forEach { prev.getOrPut(it, ::mutableSetOf).add(from) }
         }
 
         fun addRoots(vararg roots: T) = this.also { this.roots.addAll(roots) }
 
-        fun build() = Graph(roots,
-                            { next[it]?.stream() ?: Stream.empty() },
-                            { prev[it]?.stream() ?: Stream.empty() })
+        fun build() = Graph(roots, { next[it]?.stream() ?: Stream.empty() })
     }
 }
 

@@ -225,7 +225,6 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
         val (instances, immDom) = LinkEvalDominators.computeDominators(
             gcRoots.mapNotNullTo(mutableSetOf(), RootObj::getReferredInstance),
             { it.hardForwardReferences.stream() },
-            { it.hardReverseReferences.stream() }
         )
 
         // We only update the retained sizes of objects in the dominator tree (i.e. reachable).

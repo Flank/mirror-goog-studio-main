@@ -16,12 +16,10 @@
 package com.android.tools.perflib.heap.analysis
 
 import gnu.trove.TIntArrayList
-import gnu.trove.TObjectIdentityHashingStrategy
-import gnu.trove.TObjectIntHashMap
-import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.Stack
 import java.util.stream.Stream
+import kotlin.streams.toList
 
 /**
  * Computes dominators based on the union-find data structure with path compression and linking by
@@ -32,25 +30,21 @@ import java.util.stream.Stream
 object LinkEvalDominators {
 
     /**
-     * @return 2 parallel arrays of each node and its immediate dominator,
+     * @return 2 parallel lists of each node and its immediate dominator,
      *         with `null` being the auxiliary root.
      */
-    inline fun <reified T : Any> computeDominators(
-        roots: Set<T>,
-        next: (T) -> Stream<T>,
-        prev: (T) -> Stream<T>
-    ): Result<T> {
+    fun <T : Any> computeDominators(roots: Set<T>, next: (T) -> Stream<T>): Result<T> {
         // Step 1 of paper.
         // Number the instances by their DFS-traversal order and record each one's parent in the DFS
         // tree.
         // Also gather predecessors and initialize semi-dominators in the same pass.
-        val (instances, parents, preds) = computeIndicesAndParents(roots, next, prev)
+        val (instances, parents, preds) = computeIndicesAndParents(roots, next)
         val semis = IntArray(instances.size) { it }
         val buckets = Array(instances.size) { TIntArrayList() }
         val doms = IntArray(instances.size)
         val ancestors = IntArray(instances.size) { INVALID_ANCESTOR }
         val labels = IntArray(instances.size) { it }
-        val immDom = arrayOfNulls<T>(instances.size)
+        val immDom = MutableList<T?>(instances.size) { null }
         for (currentNode in instances.size - 1 downTo 1) {
             // Step 2 of paper.
             // Compute each instance's semi-dominator
@@ -88,32 +82,27 @@ object LinkEvalDominators {
     }
 
     /** Traverse the instances depth-first, marking their order and parents in the DFS-tree  */
-    inline fun <reified T : Any> computeIndicesAndParents(
-        roots: Set<T>,
-        next: (T) -> Stream<T>,
-        prev: (T) -> Stream<T>
-    ): DFSResult<T> {
-        val parents = TObjectIntHashMap<T>(TObjectIdentityHashingStrategy())
-        val instances = ArrayList<T?>()
-        val nodeStack = Stack<T>()
+    private fun <T : Any> computeIndicesAndParents(roots: Set<T>, next: (T) -> Stream<T>): DFSResult<T> {
+        val instances = ArrayList<Node<T>?>()
+        val nodeStack = Stack<Node<T>>()
         instances.add(null) // auxiliary root at 0
+        val newNode = Node.newFactory(next)
         roots.forEach {
-            parents.put(it, 0)
-            nodeStack.push(it)
+            val root = newNode(it).apply { parent = 0; predecessors.add(0) }
+            nodeStack.push(root)
         }
-        val topoOrder = TObjectIntHashMap<T>(TObjectIdentityHashingStrategy())
-        val touched = Collections.newSetFromMap<T>(IdentityHashMap())
         while (!nodeStack.empty()) {
             val node = nodeStack.pop()
-            if (node !in touched) {
-                topoOrder.put(node, instances.size)
-                touched.add(node)
+            if (node.topoOrder < 0) {
+                node.topoOrder = instances.size
                 instances.add(node)
-            }
-            for (succ in next(node)) {
-                if (!touched.contains(succ)) {
-                    parents.put(succ, topoOrder.get(node))
-                    nodeStack.push(succ)
+
+                for (succ in node.successors) {
+                    succ.predecessors.add(node.topoOrder)
+                    if (succ.topoOrder < 0) {
+                        succ.parent = node.topoOrder
+                        nodeStack.push(succ)
+                    }
                 }
             }
         }
@@ -121,27 +110,21 @@ object LinkEvalDominators {
         val predIndices = arrayOfNulls<IntArray>(instances.size)
         for (i in 1 until instances.size) { // omit auxiliary root at [0]
             val instance = instances[i]!!
-            val order = topoOrder.get(instance)
-            parentIndices[order] = parents[instance]
-            val backRefs = prev(instance)
-                .filter(topoOrder::contains)
-                .mapToInt(topoOrder::get)
-                .toArray()
-            predIndices[order] = if (instance in roots) (0 + backRefs) else backRefs
+            parentIndices[i] = instance.parent
+            predIndices[i] = instance.predecessors.toNativeArray()
         }
-        return DFSResult(instances.toTypedArray(), parentIndices, predIndices)
+        return DFSResult(instances.map { it?.content }, parentIndices, predIndices)
     }
-
-    data class Result<T>(val topoOrder: Array<T?>, val immediateDominator: Array<T?>)
+    data class Result<T>(val topoOrder: List<T?>, val immediateDominator: List<T?>)
 }
 
-data class DFSResult<T>(
-    val instances: Array<T?>,
+private data class DFSResult<T>(
+    val instances: List<T?>,
     val parents: IntArray, // Predecessors not involved in DFS, but lumped in here for 1 pass. Paper did same.
     val predecessors: Array<IntArray?>
 )
 
-fun eval(ancestors: IntArray, labels: IntArray, semis: IntArray, node: Int) =
+private fun eval(ancestors: IntArray, labels: IntArray, semis: IntArray, node: Int) =
     when (ancestors[node]) {
         INVALID_ANCESTOR -> node
         else -> compress(ancestors, labels, semis, node)
@@ -171,10 +154,22 @@ private fun compress(ancestors: IntArray, labels: IntArray, semis: IntArray, nod
 }
 
 // 0 would coincide with valid parent. Paper uses 0 because they count from 1.
-const val INVALID_ANCESTOR = -1
-val EMPTY_INT_ARRAY = IntArray(0)
+private const val INVALID_ANCESTOR = -1
+private val EMPTY_INT_ARRAY = IntArray(0)
 
-operator fun Int.plus(ns: IntArray) = IntArray(ns.size + 1).also { out ->
-    System.arraycopy(ns, 0, out, 1, ns.size)
-    out[0] = this
+// Augment the original graph with additional information (e.g. topological order, predecessors'
+// orders, etc.)
+private class Node<T> private constructor(val content: T, next: (T) -> Stream<T>, wrap: (T) -> Node<T>) {
+    val successors: List<Node<T>> by lazy { next(content).map(wrap).toList() }
+    var topoOrder = -1 // topological order from our particular traversal, also used as id
+    var parent = -1
+    var predecessors = TIntArrayList()
+
+    companion object {
+        fun<T> newFactory(next: (T) -> Stream<T>): (T) -> Node<T> =
+            IdentityHashMap<T, Node<T>>().let { cache ->
+                fun wrap(content: T): Node<T> = cache.getOrPut(content) { Node(content, next, ::wrap) }
+                ::wrap
+            }
+    }
 }
