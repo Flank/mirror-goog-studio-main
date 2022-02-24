@@ -56,8 +56,7 @@ if [[ -d "${dist_dir}" ]]; then
 
   ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
-    -perfzip "${dist_dir}/perfgate_data.zip" \
-    -testlogs "${dist_dir}/logs/junit"
+    -perfzip "${dist_dir}/perfgate_data.zip"
 
   # Upload all test logs
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/bazel_test_logs.zip" {} \;

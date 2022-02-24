@@ -55,7 +55,6 @@ set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 @rem Extract test logs and perfgate data
 %JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
- -testlogs %DISTDIR%\logs\junit ^
  -perfzip %DISTDIR%\perfgate_data.zip
 
 :ENDSCRIPT
@@ -65,7 +64,13 @@ CALL %SCRIPTDIR%bazel.cmd shutdown
 @rem within the src directory.  This is due to the fact go/ab builds must be removable after
 @rem execution, and any open processes will prevent this removal on windows.
 CALL %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
-EXIT /B %exitcode%
+
+set /a BAZEL_EXITCODE_TEST_FAILURES=3
+
+IF %EXITCODE% equ %BAZEL_EXITCODE_TEST_FAILURES% (
+  EXIT /b 0
+)
+EXIT /b %EXITCODE%
 
 @rem HELPER FUNCTIONS
 :NORMALIZE_PATH
