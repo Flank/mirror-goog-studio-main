@@ -101,8 +101,7 @@ public class LintBaselineTest {
         } else {
             assertThat(result2.getTask(":app:lintDebug")).failed();
         }
-        // The Analysis task doesn't need to run again if the baseline file is deleted
-        //  and its inputs are otherwise unchanged FIXME(b/??? bug not yet filed STOPSHIP)
+        // The Analysis task doesn't need to run again if its inputs are unchanged.
         assertThat(result2.getTask(":app:lintAnalyzeDebug")).wasUpToDate();
         ScannerSubject.assertThat(result2.getStderr()).contains("Created baseline file");
         assertThat(baselineFile).exists();
@@ -173,7 +172,9 @@ public class LintBaselineTest {
         TestFileUtils.appendToFile(baselineFile, "\n\n\n\n");
         GradleBuildResult didWorkResult = getExecutor().run(":app:lint");
         assertThat(didWorkResult.getTask(":app:lintReportDebug")).didWork();
-        assertThat(didWorkResult.getTask(":app:lintAnalyzeDebug")).didWork();
+        // The lint analysis task should be up-to-date because the baseline file is not an input.
+        // Regression test for Issue 220390424.
+        assertThat(didWorkResult.getTask(":app:lintAnalyzeDebug")).wasUpToDate();
     }
 
     @Test
