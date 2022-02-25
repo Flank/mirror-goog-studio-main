@@ -23,7 +23,7 @@ import com.google.testing.platform.lib.process.inject.SubprocessComponent
 import java.util.logging.Logger
 
 /**
- * Component of the [GradleManagedDeviceLauncher] to handle the emulator instance
+ * Component of the [GradleManagedAndroidDeviceLauncher] to handle the emulator instance
  */
 class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) : EmulatorHandle {
     companion object {
@@ -32,6 +32,8 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
         private const val EMULATOR_NO_AUDIO = "-no-audio"
         private const val EMULATOR_NO_BOOT_ANIM = "-no-boot-anim"
         private const val EMULATOR_READ_ONLY = "-read-only"
+        private const val EMULATOR_VERBOSE = "-verbose"
+        private const val EMULATOR_SHOW_KERNEL = "-show-kernel"
     }
 
     private val logger: Logger = getLogger()
@@ -40,11 +42,15 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
 
     private lateinit var emulatorGpuFlag: String
 
+    private var showEmulatorKernelLogging: Boolean = false
+
     private lateinit var processHandle: Handle
 
-    override fun configure(emulatorPath: String, emulatorGpuFlag: String) {
+    override fun configure(
+        emulatorPath: String, emulatorGpuFlag: String, showEmulatorKernelLogging: Boolean) {
         this.emulatorPath = emulatorPath
-    this.emulatorGpuFlag = emulatorGpuFlag
+        this.emulatorGpuFlag = emulatorGpuFlag
+        this.showEmulatorKernelLogging = showEmulatorKernelLogging
     }
 
     override fun isAlive() =
@@ -70,6 +76,10 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
         args.add(emulatorGpuFlag)
         args.add(EMULATOR_READ_ONLY)
         args.add(EMULATOR_NO_BOOT_ANIM)
+        if (showEmulatorKernelLogging) {
+            args.add(EMULATOR_VERBOSE)
+            args.add(EMULATOR_SHOW_KERNEL)
+        }
         args.add("-id")
         args.add(avdId)
 

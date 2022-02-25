@@ -51,4 +51,7 @@ message GradleManagedDeviceConfig {
     // The gpu value passed to the emulator executable to create the managed
     // device.
     string emulator_gpu = 7;
+
+    // When enabled, "-verbose" and "-show-kernel" emulator options are added.
+    bool show_emulator_kernel_logging = 8;
 }

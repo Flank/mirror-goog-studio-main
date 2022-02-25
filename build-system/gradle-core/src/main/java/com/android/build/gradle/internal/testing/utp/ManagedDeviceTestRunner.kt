@@ -34,6 +34,7 @@ class ManagedDeviceTestRunner(
     private val useOrchestrator: Boolean,
     private val numShards: Int?,
     private val emulatorGpuFlag: String,
+    private val showEmulatorKernelLogging: Boolean,
     private val utpLoggingLevel: Level = Level.WARNING,
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
@@ -100,6 +101,7 @@ class ManagedDeviceTestRunner(
                         useOrchestrator,
                         resultListenerServerMetadata,
                         emulatorGpuFlag,
+                        showEmulatorKernelLogging,
                         shardConfig
                     )
                 }

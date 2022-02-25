@@ -118,6 +118,9 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         @get: Input
         abstract val emulatorGpuFlag: Property<String>
 
+        @get:Input
+        abstract val showEmulatorKernelLoggingFlag: Property<Boolean>
+
         fun createTestRunner(workerExecutor: WorkerExecutor): ManagedDeviceTestRunner {
 
             Preconditions.checkArgument(
@@ -138,6 +141,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 useOrchestrator,
                 testShardsSize.getOrNull(),
                 emulatorGpuFlag.get(),
+                showEmulatorKernelLoggingFlag.get(),
                 utpLoggingLevel.get()
             )
         }
@@ -435,6 +439,11 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
 
             task.testRunnerFactory.emulatorGpuFlag.setDisallowChanges(
                 computeManagedDeviceEmulatorMode(creationConfig.services.projectOptions)
+            )
+
+            task.testRunnerFactory.showEmulatorKernelLoggingFlag.setDisallowChanges(
+                creationConfig.services.projectOptions[
+                        BooleanOption.GRADLE_MANAGED_DEVICE_EMULATOR_SHOW_KERNEL_LOGGING]
             )
 
             val infoLoggingEnabled =

@@ -170,7 +170,8 @@ class UtpConfigFactoryTest {
             useOrchestrator: Boolean = false,
             additionalTestOutputDir: File? = null,
             shardConfig: ShardConfig? = null,
-            emulatorGpuFlag: String = "auto-no-window"
+            emulatorGpuFlag: String = "auto-no-window",
+            showEmulatorKernelLogging: Boolean = false,
     ): RunnerConfigProto.RunnerConfig {
         val managedDevice = UtpManagedDevice(
                 "deviceName",
@@ -197,6 +198,7 @@ class UtpConfigFactoryTest {
                 useOrchestrator,
                 testResultListenerServerMetadata,
                 emulatorGpuFlag,
+                showEmulatorKernelLogging,
                 shardConfig
         )
     }
@@ -523,6 +525,20 @@ class UtpConfigFactoryTest {
             deviceId = ":app:deviceNameDebugAndroidTest",
             useGradleManagedDeviceProvider = true,
             emulatorGpuFlag = "swiftshader_indirect"
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForManagedDeviceWithShowEmulatorKernelLogging() {
+        val runnerConfigProto = createForManagedDevice(
+            showEmulatorKernelLogging = true
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            deviceId = ":app:deviceNameDebugAndroidTest",
+            useGradleManagedDeviceProvider = true,
+            showEmulatorKernelLogging = true,
         )
     }
 

@@ -24,6 +24,7 @@ import com.google.testing.platform.lib.process.Subprocess
 import com.google.testing.platform.lib.process.inject.SubprocessComponent
 import org.junit.Assert.assertThrows
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -33,20 +34,23 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.nullable
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
 
 /**
  * Tests for [EmulatorHandleImpl]
  */
 @RunWith(JUnit4::class)
 class EmulatorHandleTest {
-    private companion object {
+    companion object {
         const val emulatorPath = "/path/to/emulator"
-	const val emulatorGpuFlag = "auto-no-window"
+        const val emulatorGpuFlag = "auto-no-window"
         const val avdName = "dev29_aosp_x86_Pixel_2"
         const val avdId = "someUniqueIdHere"
         const val avdFolder = "/path/to/gradle/avd"
     }
+
+    @get:Rule
+    val mockitoRule = MockitoJUnit.rule()
 
     @Mock
     private lateinit var subprocessComponent: SubprocessComponent
@@ -54,15 +58,17 @@ class EmulatorHandleTest {
     @Mock
     private lateinit var subprocess: Subprocess
 
-    private lateinit var emulatorHandle: EmulatorHandle
+    private var showEmulatorKernelLogging: Boolean = false
+
+    private val emulatorHandle: EmulatorHandle by lazy {
+        EmulatorHandleImpl(subprocessComponent).apply {
+            configure(emulatorPath, emulatorGpuFlag, showEmulatorKernelLogging)
+        }
+    }
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
         `when`(subprocessComponent.subprocess()).thenReturn(subprocess)
-
-        emulatorHandle = EmulatorHandleImpl(subprocessComponent)
-        emulatorHandle.configure(emulatorPath, emulatorGpuFlag)
     }
 
     @Test
@@ -113,6 +119,36 @@ class EmulatorHandleTest {
                     false
             )
         }
+    }
+
+    @Test
+    fun launchInstanceWithShowEmulatorKernelLoggingEnabled() {
+        showEmulatorKernelLogging = true
+        setEmulatorOutput()
+
+        emulatorHandle.launchInstance(
+            avdName,
+            avdFolder,
+            avdId,
+            enableDisplay = false
+        )
+
+        verifyCommand(
+            listOf(
+                "/path/to/emulator",
+                "@dev29_aosp_x86_Pixel_2",
+                "-no-window",
+                "-no-audio",
+                "-gpu",
+                "auto-no-window",
+                "-read-only",
+                "-no-boot-anim",
+                "-verbose",
+                "-show-kernel",
+                "-id",
+                "someUniqueIdHere",
+            ).joinToString(" ")
+        )
     }
 
     private fun setEmulatorOutput(fails: Boolean = false) {

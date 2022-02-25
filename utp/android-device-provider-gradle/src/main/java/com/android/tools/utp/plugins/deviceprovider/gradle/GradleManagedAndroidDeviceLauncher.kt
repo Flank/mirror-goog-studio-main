@@ -113,7 +113,8 @@ class GradleManagedAndroidDeviceLauncher(
                 PathProto.Path.parseFrom(
                         customConfig.managedDevice.emulatorPath.value
                 ).path,
-                customConfig.managedDevice.emulatorGpu)
+                customConfig.managedDevice.emulatorGpu,
+                customConfig.managedDevice.showEmulatorKernelLogging)
     }
 
     private fun makeDevice(): AndroidDevice {
