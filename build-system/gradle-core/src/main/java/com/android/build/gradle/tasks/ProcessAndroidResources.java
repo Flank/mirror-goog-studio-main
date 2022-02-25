@@ -23,6 +23,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -33,20 +34,23 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.DisableCachingByDefault;
+import org.gradle.work.Incremental;
 
 /** Base class for process resources / create R class task, to satisfy existing variants API. */
 @DisableCachingByDefault
-public abstract class ProcessAndroidResources extends IncrementalTask {
+public abstract class ProcessAndroidResources extends NewIncrementalTask {
 
     protected VariantOutputImpl mainSplit;
 
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
+    @Incremental
     public abstract DirectoryProperty getAaptFriendlyManifestFiles();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
+    @Incremental
     public abstract DirectoryProperty getManifestFiles();
 
     // This input in not required for the task to function properly.
@@ -56,6 +60,7 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     @Deprecated
+    @Incremental
     public abstract DirectoryProperty getMergedManifestFiles();
 
     // Used by the kotlin plugin.

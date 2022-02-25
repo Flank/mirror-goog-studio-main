@@ -59,7 +59,6 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.ide.common.process.ProcessException
-import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.ide.common.symbols.SymbolIo
 import com.android.utils.FileUtils
@@ -92,9 +91,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
+import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
@@ -131,16 +133,19 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:InputFiles
     @get:Optional
+    @get:Incremental
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val dependenciesFileCollection: ConfigurableFileCollection
 
     @get:InputFile
     @get:Optional
+    @get:Incremental
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val localResourcesFile: RegularFileProperty
 
     @get:InputFiles
     @get:Optional
+    @get:Incremental
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val sharedLibraryDependencies: ConfigurableFileCollection
 
@@ -212,6 +217,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:Classpath
     @get:Optional
+    @get:Incremental
     abstract val inputResourcesDir: DirectoryProperty
 
     @get:Input
@@ -251,17 +257,19 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Optional
     abstract val compiledDependenciesResources: ConfigurableFileCollection
 
-    override val incremental: Boolean
-        get() = useStableIds
+    @get:Internal
+    abstract val incrementalDirectory: DirectoryProperty
 
-    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        // For now, we don't care about what changed - we only want to preserve the res IDs from the
-        // previous run if stable IDs support is enabled.
-        doFullTaskAction(stableIdsOutputFileProperty.orNull?.asFile)
-    }
-
-    override fun doFullTaskAction() {
-        doFullTaskAction(null)
+    override fun doTaskAction(inputChanges: InputChanges) {
+        val stableIdsFile = stableIdsOutputFileProperty.orNull?.asFile
+        if (useStableIds && inputChanges.isIncremental) {
+            // For now, we don't care about what changed - we only want to preserve the res IDs from the
+            // previous run if stable IDs support is enabled.
+            doFullTaskAction(stableIdsFile)
+        } else {
+            stableIdsFile?.toPath()?.let { Files.deleteIfExists(it) }
+            doFullTaskAction(null)
+        }
     }
 
     fun doFullTaskAction(inputStableIdsFile: File?) {
@@ -289,7 +297,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             parameters.dependencies.from(dependenciesFileCollection)
             parameters.featureResourcePackages.from(featureResourcePackages)
             parameters.imports.from(sharedLibraryDependencies)
-            parameters.incrementalDirectory.set(incrementalFolder)
+            parameters.incrementalDirectory.set(incrementalDirectory)
             parameters.inputResourcesDirectory.set(inputResourcesDir)
             parameters.inputStableIdsFile.set(inputStableIdsFile)
             parameters.library.set(isLibrary)
@@ -491,7 +499,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
-            task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
+            task.incrementalDirectory.set(creationConfig.paths.getIncrementalDir(name))
+            task.incrementalDirectory.disallowChanges()
 
             task.resourceConfigs.setDisallowChanges(
                 if (creationConfig.variantType.canHaveSplits) {
