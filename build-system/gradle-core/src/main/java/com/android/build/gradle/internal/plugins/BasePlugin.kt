@@ -385,6 +385,7 @@ abstract class BasePlugin<
 
         AvdComponentsBuildService.RegistrationAction(
             project,
+            projectOptions,
             getManagedDeviceAvdFolder(
                 project.objects,
                 project.providers,

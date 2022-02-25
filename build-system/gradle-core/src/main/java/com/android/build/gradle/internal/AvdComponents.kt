@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.repository.Revision
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.utils.ILogger
 import org.gradle.api.Project
@@ -50,6 +52,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         val buildToolsRevision: Property<Revision>
         val androidLocationsService: Property<AndroidLocationsBuildService>
         val avdLocation: DirectoryProperty
+        val showEmulatorKernelLogging: Property<Boolean>
     }
 
     private val avdManager: AvdManager by lazy {
@@ -64,7 +67,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
                 parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
             ),
             locationsService,
-            AvdSnapshotHandler()
+            AvdSnapshotHandler(parameters.showEmulatorKernelLogging.get())
         )
     }
 
@@ -127,6 +130,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     class RegistrationAction(
         project: Project,
+        private val projectOptions: ProjectOptions,
         private val avdFolderLocation: Provider<Directory>,
         private val sdkService: Provider<SdkComponentsBuildService>,
         private val compileSdkVersion: Provider<String>,
@@ -143,6 +147,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
             parameters.buildToolsRevision.set(buildToolsRevision)
             parameters.sdkService.set(getBuildService(project.gradle.sharedServices))
             parameters.androidLocationsService.set(getBuildService(project.gradle.sharedServices))
+            parameters.showEmulatorKernelLogging.set(
+                projectOptions[BooleanOption.GRADLE_MANAGED_DEVICE_EMULATOR_SHOW_KERNEL_LOGGING])
         }
     }
 
