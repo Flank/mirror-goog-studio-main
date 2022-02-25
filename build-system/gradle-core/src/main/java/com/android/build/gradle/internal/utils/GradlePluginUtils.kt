@@ -61,7 +61,7 @@ private val pluginList = listOf(
         "Kotlin",
         "org.jetbrains.kotlin",
         "kotlin-gradle-plugin",
-        GradleVersion.parse("1.3.40")
+        GradleVersion.parse("1.5.20")
     )
 )
 
