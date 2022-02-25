@@ -132,6 +132,7 @@ build:sponge --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,htt
 build:ants --bes_keywords=android-test-storage
 build:ants --build_metadata="test_definition_name=android_studio/bazel"
 build:ants --build_metadata=generate_test_uri=fusion
+build:ants --build_metadata=test_run_severity=s0
 
 ## Base config for using the remote cache.
 ## This avoids building things which were already built by CI.
