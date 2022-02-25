@@ -122,7 +122,8 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             arguments = generateCommandLineArguments(),
             android = android.get(),
             fatalOnly = fatalOnly.get(),
-            await = false
+            await = false,
+            lintMode = LintMode.ANALYSIS
         )
     }
 
@@ -287,12 +288,12 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     creationConfig.global.lintOptions.checkOnly
                 }
             )
-            task.projectInputs.initialize(variant, isForAnalysis = true)
+            task.projectInputs.initialize(variant, LintMode.ANALYSIS)
             task.variantInputs.initialize(
                 variant,
                 checkDependencies = false,
                 warnIfProjectTreatedAsExternalDependency = false,
-                isForAnalysis = true
+                LintMode.ANALYSIS
             )
             task.lintTool.initialize(creationConfig.services)
             task.desugaredMethodsFiles.from(
@@ -340,8 +341,8 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     .orElse(false)
             )
         }
-        systemPropertyInputs.initialize(project.providers, isForAnalysis = true)
-        environmentVariableInputs.initialize(project.providers, isForAnalysis = true)
+        systemPropertyInputs.initialize(project.providers, LintMode.ANALYSIS)
+        environmentVariableInputs.initialize(project.providers, LintMode.ANALYSIS)
     }
 
     fun configureForStandalone(
@@ -363,7 +364,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 project,
                 javaPluginConvention,
                 lintOptions,
-                isForAnalysis = true
+                LintMode.ANALYSIS
             )
         this.variantInputs
             .initializeForStandalone(
@@ -372,7 +373,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 taskCreationServices.projectOptions,
                 fatalOnly,
                 checkDependencies = false,
-                isForAnalysis = true
+                LintMode.ANALYSIS
             )
         this.lintRuleJars.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory

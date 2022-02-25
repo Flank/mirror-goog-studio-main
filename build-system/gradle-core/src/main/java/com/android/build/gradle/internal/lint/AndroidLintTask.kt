@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.tools.lint.model.LintModelSerialization
+import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
@@ -196,6 +197,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Optional
     abstract val returnValueOutputFile: RegularFileProperty
 
+    @get:Input
+    abstract val lintMode: Property<LintMode>
+
     override fun doTaskAction() {
         lintTool.lintClassLoaderBuildService.get().shouldDispose = true
         if (systemPropertyInputs.lintAutofix.orNull == VALUE_TRUE) {
@@ -205,6 +209,20 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             )
         }
         writeLintModelFile()
+        if (lintMode.get() == LintMode.UPDATE_BASELINE) {
+            val baselineFile = projectInputs.lintOptions.outputBaselineFile.orNull?.asFile
+            // Warn and return early if no baseline file is specified.
+            if (baselineFile == null) {
+                logger.warn(getUpdateBaselineWarning())
+                return
+            }
+            // Delete existing baseline file if running the updateLintBaseline task.
+            projectInputs.lintOptions
+                .outputBaselineFile
+                .orNull
+                ?.asFile
+                ?.let { FileUtils.deleteIfExists(it) }
+        }
         workerExecutor.noIsolation().submit(AndroidLintLauncherWorkAction::class.java) { parameters ->
             parameters.arguments.set(generateCommandLineArguments())
             parameters.lintTool.set(lintTool)
@@ -212,6 +230,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             parameters.fatalOnly.set(fatalOnly)
             parameters.lintFixBuildService.set(lintFixBuildService)
             parameters.returnValueOutputFile.set(returnValueOutputFile)
+            parameters.lintMode.set(lintMode)
         }
     }
 
@@ -230,6 +249,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             // Build service to prevent multiple lint fix runs from happening concurrently.
             abstract val lintFixBuildService: Property<LintFixBuildService>
             abstract val returnValueOutputFile: RegularFileProperty
+            abstract val lintMode: Property<LintMode>
         }
 
         @get:Inject
@@ -244,6 +264,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 android = parameters.android.get(),
                 fatalOnly = parameters.fatalOnly.get(),
                 await = lintFixBuildService != null, // Allow only one lintFix to execute at a time.
+                lintMode = parameters.lintMode.get(),
                 returnValueOutputFile = parameters.returnValueOutputFile.orNull?.asFile
             )
         }
@@ -267,6 +288,35 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         )
     }
 
+    private fun getUpdateBaselineWarning(): String {
+        val example = if (android.get()) {
+            """
+                ```
+                android {
+                    lint {
+                        baseline = file("lint-baseline.xml")
+                    }
+                }
+                ```
+            """.trimIndent()
+        } else {
+            """
+                ```
+                lint {
+                    baseline = file("lint-baseline.xml")
+                }
+                ```
+            """.trimIndent()
+        }
+        return """
+            No baseline file is specified, so no baseline file will be created.
+
+            Please specify a baseline file in the build.gradle file like so:
+
+            $example
+        """.trimIndent()
+    }
+
     @VisibleForTesting
     internal fun generateCommandLineArguments(): List<String> {
 
@@ -278,6 +328,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         }
         if (fatalOnly.get()) {
             arguments += "--fatalOnly"
+        }
+        if (lintMode.get() == LintMode.UPDATE_BASELINE) {
+            arguments += "--update-baseline"
         }
         arguments += "--report-only"
         arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
@@ -371,6 +424,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val name: String = creationConfig.computeTaskName("lintReport")
         override val fatalOnly: Boolean get() = false
         override val autoFix: Boolean get() = false
+        override val lintMode: LintMode get() = LintMode.REPORTING
         override val description: String get() = "Run lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() =
@@ -427,6 +481,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val name: String = creationConfig.computeTaskName("lintFix")
         override val fatalOnly: Boolean get() = false
         override val autoFix: Boolean get() = true
+        override val lintMode: LintMode get() = LintMode.REPORTING
         override val description: String get() = "Fix lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() =
@@ -449,6 +504,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val name: String = creationConfig.computeTaskName("lintVitalReport")
         override val fatalOnly: Boolean get() = true
         override val autoFix: Boolean get() = false
+        override val lintMode: LintMode get() = LintMode.REPORTING
         override val description: String get() = "Run lint with only the fatal issues enabled on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() = false
@@ -467,6 +523,24 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         }
     }
 
+    /** Creates the updateLintBaseline task. */
+    class UpdateBaselineCreationAction(variant: VariantWithTests) : VariantCreationAction(variant) {
+        override val name: String = creationConfig.computeTaskName("updateLintBaseline")
+        override val fatalOnly: Boolean get() = false
+        override val autoFix: Boolean get() = false
+        override val lintMode: LintMode get() = LintMode.UPDATE_BASELINE
+        override val description: String
+            get() = "Update the lint baseline using the ${creationConfig.name} variant"
+        override val checkDependencies: Boolean
+            get() =
+                creationConfig.global.lintOptions.checkDependencies
+                        && !variant.main.variantType.isDynamicFeature
+
+        override fun configureOutputSettings(task: AndroidLintTask) {
+            // do nothing
+        }
+    }
+
     abstract class VariantCreationAction(val variant: VariantWithTests) :
             VariantTaskCreationAction<AndroidLintTask, ComponentCreationConfig>(variant.main) {
         final override val type: Class<AndroidLintTask> get() = AndroidLintTask::class.java
@@ -475,6 +549,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         abstract val autoFix: Boolean
         abstract val description: String
         abstract val checkDependencies: Boolean
+        abstract val lintMode: LintMode
 
         final override fun configure(task: AndroidLintTask) {
             super.configure(task)
@@ -484,7 +559,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
             task.initializeGlobalInputs(
                 project = creationConfig.services.projectInfo.getProject(),
-                isAndroid = true
+                isAndroid = true,
+                lintMode
             )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
             task.lintRuleJars.from(creationConfig.global.localCustomLintChecks)
@@ -509,6 +585,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.lintRuleJars.disallowChanges()
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.autoFix.setDisallowChanges(autoFix)
+            task.lintMode.setDisallowChanges(lintMode)
             if (autoFix) {
                 task.lintFixBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
             }
@@ -517,18 +594,18 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.checkOnly.setDisallowChanges(creationConfig.services.provider {
                 creationConfig.global.lintOptions.checkOnly
             })
-            task.projectInputs.initialize(variant, isForAnalysis = false)
+            task.projectInputs.initialize(variant, lintMode)
             task.outputs.upToDateWhen {
                 // Workaround for b/193244776
                 // Ensure the task runs if baselineFile is set and the file doesn't exist
-                task.projectInputs.lintOptions.baselineFile.orNull?.asFile?.exists() ?: true
+                task.projectInputs.lintOptions.inputBaselineFile.orNull?.asFile?.exists() ?: true
             }
             val hasDynamicFeatures = creationConfig.global.hasDynamicFeatures
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = true,
-                isForAnalysis = false
+                lintMode
             )
             val partialResults = if (fatalOnly) {
                 creationConfig.artifacts.get(InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS)
@@ -696,7 +773,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     private fun initializeGlobalInputs(
         project: Project,
-        isAndroid: Boolean
+        isAndroid: Boolean,
+        lintMode: LintMode
     ) {
         val buildServiceRegistry = project.gradle.sharedServices
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
@@ -721,8 +799,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     .map { it.equals("true", ignoreCase = true) }.orElse(false)
             )
         }
-        systemPropertyInputs.initialize(project.providers, isForAnalysis = false)
-        environmentVariableInputs.initialize(project.providers, isForAnalysis = false)
+        systemPropertyInputs.initialize(project.providers, lintMode)
+        environmentVariableInputs.initialize(project.providers, lintMode)
     }
 
     fun configureForStandalone(
@@ -732,13 +810,16 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         lintOptions: Lint,
         partialResults: Provider<Directory>,
         lintModelWriterTaskOutputDir: File,
+        lintMode: LintMode,
         fatalOnly: Boolean = false,
         autoFix: Boolean = false,
     ) {
         val project = taskCreationServices.projectInfo.getProject()
         initializeGlobalInputs(
-            project = project,
-            isAndroid = false)
+            project,
+            isAndroid = false,
+            lintMode
+        )
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
         this.analyticsService.setDisallowChanges(
@@ -746,6 +827,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         )
         this.fatalOnly.setDisallowChanges(fatalOnly)
         this.autoFix.setDisallowChanges(autoFix)
+        this.lintMode.setDisallowChanges(lintMode)
         if (autoFix) {
             this.lintFixBuildService.set(getBuildService(taskCreationServices.buildServiceRegistry))
         }
@@ -754,16 +836,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(taskCreationServices)
         this.projectInputs
-            .initializeForStandalone(
-                project,
-                javaPluginConvention,
-                lintOptions,
-                isForAnalysis = false
-            )
+            .initializeForStandalone(project, javaPluginConvention, lintOptions, lintMode)
         this.outputs.upToDateWhen {
             // Workaround for b/193244776
-            // Ensure the task runs if baselineFile is set and the file doesn't exist
-            this.projectInputs.lintOptions.baselineFile.orNull?.asFile?.exists() ?: true
+            // Ensure the task runs if inputBaselineFile is set and the file doesn't exist
+            this.projectInputs.lintOptions.inputBaselineFile.orNull?.asFile?.exists() ?: true
         }
         // Do not support check dependencies in the standalone lint plugin
         this.variantInputs
@@ -773,7 +850,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 taskCreationServices.projectOptions,
                 fatalOnly,
                 checkDependencies = false,
-                isForAnalysis = false
+                lintMode
             )
         this.lintRuleJars.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(
@@ -795,12 +872,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     false
                 }
             }
+            lintMode == LintMode.UPDATE_BASELINE -> {
+                // do nothing
+            }
             else -> {
                 configureOutputSettings(lintOptions)
             }
         }
         this.finalizeOutputTypes()
-
     }
 
     private fun configureOutputSettings(lintOptions: Lint) {

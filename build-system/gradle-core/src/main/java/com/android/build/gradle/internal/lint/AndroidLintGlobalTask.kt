@@ -50,6 +50,17 @@ abstract class AndroidLintGlobalTask: BaseTask() {
         }
     }
 
+    class UpdateBaselineCreationAction(
+        creationConfig: GlobalTaskCreationConfig
+    ) : BaseGlobalCreationAction(creationConfig) {
+        override val name: String get() = Companion.name
+        override val description: String
+            get() = "Updates the lint baseline using the default variant."
+        companion object {
+            const val name = "updateLintBaseline"
+        }
+    }
+
     abstract class BaseGlobalCreationAction(creationConfig: GlobalTaskCreationConfig) :
         GlobalTaskCreationAction<AndroidLintGlobalTask>(creationConfig) {
 

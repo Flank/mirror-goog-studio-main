@@ -29,6 +29,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.lint.LintMode;
 import com.android.build.gradle.internal.lint.LintTool;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
@@ -217,7 +218,8 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                 .submit(
                         getWorkerExecutor(),
                         "com.android.tools.lint.annotations.ExtractAnnotationsDriver",
-                        args);
+                        args,
+                        LintMode.EXTRACT_ANNOTATIONS);
     }
 
     private void addArgument(
