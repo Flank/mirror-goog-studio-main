@@ -94,7 +94,7 @@ public final class Base128OutputStream extends BufferedOutputStream {
   }
 
   /**
-   * Write a String to the stream. The string is prefixed by its length + 1.
+   * Writes a String to the stream. The string is prefixed by its length + 1.
    * Each character is then written using the {@link #writeChar} method.
    *
    * @param str the string to write or null
@@ -136,6 +136,20 @@ public final class Base128OutputStream extends BufferedOutputStream {
    */
   public void writeByte(byte value) throws IOException {
     super.write(value);
+  }
+
+  /**
+   * Writes an array of bytes to the stream. The bytes are prefixed by their number.
+   * Each byte is then written using the {@link #writeByte} method.
+   *
+   * @param bytes the array of bytes to write
+   * @throws IOException if an I/O error occurs.
+   */
+  public void writeBytes(@NotNull byte[] bytes) throws IOException {
+    writeInt(bytes.length);
+    for (byte b : bytes) {
+      writeByte(b);
+    }
   }
 
   /**

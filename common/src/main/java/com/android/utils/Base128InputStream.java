@@ -164,6 +164,25 @@ public final class Base128InputStream extends BufferedInputStream {
   }
 
   /**
+   * Reads an array of bytes from the stream. The bytes had to be written by {@link Base128OutputStream#writeBytes}.
+   *
+   * @return the array of bytes read from the stream
+   * @throws IOException if an I/O error occurs
+   * @throws StreamFormatException if an invalid data format is detected
+   */
+  public @NotNull byte[] readBytes() throws IOException, StreamFormatException {
+    int len = readInt();
+    if (len < 0) {
+      throw StreamFormatException.invalidFormat();
+    }
+    byte[] bytes = new byte[len];
+    for (int i = 0; i < len; i++) {
+      bytes[i] = readByte();
+    }
+    return bytes;
+  }
+
+  /**
    * Reads a boolean value from the stream.
    *
    * @return the value read from the stream
