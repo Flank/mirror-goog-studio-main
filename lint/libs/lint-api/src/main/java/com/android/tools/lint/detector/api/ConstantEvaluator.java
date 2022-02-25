@@ -61,6 +61,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import kotlin.text.StringsKt;
+import org.jetbrains.kotlin.asJava.elements.KtLightField;
+import org.jetbrains.kotlin.asJava.elements.KtLightMethod;
 import org.jetbrains.kotlin.asJava.elements.KtLightPsiLiteral;
 import org.jetbrains.kotlin.psi.KtDeclaration;
 import org.jetbrains.kotlin.psi.KtExpression;
@@ -2482,30 +2484,12 @@ public class ConstantEvaluator {
             // it has a constant expression and no getters and setters (and is not a var), then
             // compute
             // its value anyway.
-            //noinspection KotlinInternalInJava
-            if (node
-                    instanceof
-                    org.jetbrains.kotlin.asJava.classes.KtUltraLightMethodForSourceDeclaration) {
-                //noinspection KotlinInternalInJava
-                return valueFromProperty(
-                        ((org.jetbrains
-                                                .kotlin
-                                                .asJava
-                                                .classes
-                                                .KtUltraLightMethodForSourceDeclaration)
-                                        node)
-                                .getKotlinOrigin());
+            if (node instanceof KtLightMethod) {
+                return valueFromProperty(((KtLightMethod) node).getKotlinOrigin());
             }
 
-            //noinspection KotlinInternalInJava
-            if (node
-                    instanceof
-                    org.jetbrains.kotlin.asJava.classes.KtUltraLightFieldForSourceDeclaration) {
-                //noinspection KotlinInternalInJava
-                return valueFromProperty(
-                        ((org.jetbrains.kotlin.asJava.classes.KtUltraLightFieldForSourceDeclaration)
-                                        node)
-                                .getKotlinOrigin());
+            if (node instanceof KtLightField) {
+                return valueFromProperty(((KtLightField) node).getKotlinOrigin());
             }
 
             if (node instanceof KtProperty) {
