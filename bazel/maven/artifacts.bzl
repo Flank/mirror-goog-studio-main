@@ -165,7 +165,7 @@ DATA = [
     "androidx.appcompat:appcompat:1.0.2",
     "androidx.appcompat:appcompat:1.3.0",
     "androidx.appcompat:appcompat:1.3.0-beta01",
-    "androidx.benchmark:benchmark-gradle-plugin:1.0.0",
+    "androidx.benchmark:benchmark-gradle-plugin:1.1.0-beta04",
     "androidx.compose.animation:animation:1.2.0-alpha02",
     "androidx.compose.foundation:foundation:1.2.0-alpha02",
     "androidx.compose.compiler:compiler:1.0.3",
