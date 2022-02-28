@@ -123,7 +123,7 @@ public class DynamicFeaturePlugin
                         dynamicFeatureExtension,
                         forUnitTesting);
 
-        if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+        if (getProjectServices().getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             //noinspection unchecked,rawtypes I am so sorry.
             Class<com.android.build.api.dsl.DynamicFeatureExtension> instanceType =
                     (Class) DynamicFeatureExtension.class;

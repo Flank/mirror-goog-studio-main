@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api;
+package com.android.builder.utils
 
-import java.io.IOException;
+import com.android.Version
 
-/**
- * Updates the stable API file. Simply run inside Intellij to update the stable API file.
- */
-public class StableApiUpdater {
+/** The version used on developer.android.com */
+val agpReferenceDocsVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBeforeLast('.')
 
-    public static void main(String... args) throws IOException {
-        String dirPath =
-                "tools/base/build-system/gradle-api/src/test/resources/com/android/build/api";
-        StableApiTest.getStableApiTester().updateFile(dirPath);
-        StableApiTest.getIncubatingApiTester().updateFile(dirPath);
-    }
+private val agpReferenceDocsSitePrefix = "https://developer.android.com/reference/tools/gradle-api/$agpReferenceDocsVersion/"
+
+fun agpReferenceDocsUrl(path: String): String {
+    return agpReferenceDocsSitePrefix + path
 }

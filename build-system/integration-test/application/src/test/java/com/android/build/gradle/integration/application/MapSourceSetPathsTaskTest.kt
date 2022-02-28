@@ -22,9 +22,9 @@ class MapSourceSetPathsTaskTest {
 
     @Test
     fun `test should write file map`() {
-        project.executor()
+        val run = project.executor()
                 .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, true)
-                .run("assembleF1FaDebug")
+                .run("mapF1FaDebugSourceSetPaths")
         val filePathMapsDir = FileUtils.join(project.intermediatesDir, InternalArtifactType
                 .SOURCE_SET_PATH_MAP.getFolderName())
         val sourceSetMap = FileUtils.join(filePathMapsDir, "f1FaDebug", "file-map.txt")
@@ -45,6 +45,9 @@ class MapSourceSetPathsTaskTest {
                 .trimIndent().replace("/", File.separator)
         assertThat(sourceSetMap.exists()).isTrue()
         assertThat(sourceSetMap.readText()).contains(expectedContents)
+        val mergeResourcesTaskExecutions =
+            run.didWorkTasks.filter { it.startsWith(":merge") && it.endsWith("Resources") }
+        assertThat(mergeResourcesTaskExecutions).isEmpty()
     }
 
     @Test

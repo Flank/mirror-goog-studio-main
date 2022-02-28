@@ -2,11 +2,11 @@ package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.ResValue
 import com.android.aapt.Resources
-import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 const val XML_PREAMBLE = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
@@ -22,7 +22,7 @@ class TableExtractorTest {
   private fun testParse(
       input: String,
       config: ConfigDescription = ConfigDescription(),
-      mockLogger: BlameLoggerTest.MockLogger? = null
+      mockLogger: BlameLoggerTest.MockLogger = BlameLoggerTest.MockLogger()
   ): Boolean {
     val parseInput =
       """$XML_PREAMBLE
@@ -31,12 +31,17 @@ class TableExtractorTest {
       </resources>
     """.trimIndent()
 
-    val blameLogger = if (mockLogger != null) getMockBlameLogger(mockLogger) else null
+    val blameLogger = getMockBlameLogger(mockLogger)
 
     val extractor =
       TableExtractor(table, Source("test.xml"), config, TableExtractorOptions(), blameLogger)
 
-    return extractor.extract(parseInput.byteInputStream())
+      try {
+          extractor.extract(parseInput.byteInputStream())
+      } catch (e: Exception) {
+          return false
+      }
+      return true
   }
 
   private fun getValue(
@@ -59,7 +64,7 @@ class TableExtractorTest {
           TableExtractorOptions(),
           getMockBlameLogger(mockLogger))
 
-    assertThat(extractor.extract(input.byteInputStream())).isTrue()
+    extractor.extract(input.byteInputStream())
     assertThat(mockLogger.errors).isEmpty()
     assertThat(mockLogger.warnings).isEmpty()
   }
@@ -73,10 +78,12 @@ class TableExtractorTest {
       TableExtractor(
           table, Source("test.xml"), ConfigDescription(), TableExtractorOptions(), blameLogger)
 
-    assertThat(extractor.extract(input.byteInputStream())).isFalse()
-    assertThat(mockLogger.errors).hasSize(1)
-    assertThat(mockLogger.errors.single().first).contains(
-        "test.xml.rewritten:0:1: Root xml element of resource table not labeled \"resources\"")
+    val extractorException = assertFailsWith(Exception::class) {
+      extractor.extract(input.byteInputStream())
+    }
+    assertThat(extractorException).isNotNull()
+    assertThat(extractorException.message)
+      .contains("Root xml element of resource table not labeled 'resources' (test.xml.rewritten:0:1:).")
   }
 
   @Test

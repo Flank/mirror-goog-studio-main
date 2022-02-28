@@ -256,10 +256,6 @@ maven_repository(
     # Don't add new targets here, see above for how to migrate
     visibility = [
         "//tools/adt/idea/android:__pkg__",
-        "//tools/adt/idea/android-lang-databinding:__pkg__",
-        "//tools/adt/idea/android-lint:__pkg__",
-        "//tools/adt/idea/android-npw:__pkg__",
-        "//tools/adt/idea/android-templates:__pkg__",
         "//tools/adt/idea/android-uitests:__pkg__",
         "//tools/adt/idea/app-inspection/ide:__pkg__",
         "//tools/adt/idea/build-attribution:__pkg__",
@@ -496,5 +492,66 @@ gradle_build(
     ],
     tags = ["no_windows"],  # TODO(b/202837927) Investigate getting Dackka to run on windows
     tasks = [":base:gradle-api:dackkaZip"],
+    visibility = ["//visibility:public"],
+)
+
+maven_repository(
+    name = "metalava_tool",
+    artifacts = [
+        "@maven//:com.android.tools.metalava.metalava_1.0.0-alpha04",
+    ],
+)
+
+gradle_build(
+    name = "android_gradle_plugin_metalava_api",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    data = [
+        "//prebuilts/studio/jdk",
+        "//prebuilts/tools/common/dackka",
+    ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    output_file = "apis.zip",
+    output_file_source = "dist/apis.zip",
+    repos = [
+        "//tools/base:agp_dependencies",
+        "//tools/base:agp_artifacts",
+        ":metalava_tool",
+    ],
+    tags = ["no_windows"],  # TODO(b/202837927) Investigate getting metalava to run on windows
+    tasks = [":base:gradle-api:distMetalavaApiZip"],
+    visibility = ["//visibility:public"],
+)
+
+gradle_test(
+    name = "android_gradle_plugin_gradle_api_metalava_test",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    # keep sorted
+    data = [
+        ":agp_gradle_build_files",
+        "//prebuilts/studio/jdk",
+        "//tools:agp_gradle_build_files",
+        "//tools/base/build-system/builder-model:agp_gradle_build_files",
+        "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
+        "//tools/base/build-system/gradle-api:agp_gradle_build_files",
+        "//tools/base/build-system/gradle-api:agp_gradle_metalava_test_files",
+        "//tools/buildSrc:agp_gradle_build_files",
+        "//tools/buildSrc/base:agp_gradle_build_files",
+    ],
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    # keep sorted
+    repos = [
+        ":android_gradle_plugin_gradle_api_test_repository",
+        ":metalava_tool",
+        "//tools/base:agp_artifacts",
+        "//tools/base:agp_dependencies",
+    ],
+    tasks = [":base:gradle-api:metalavaTest"],
+    test_output_dir = "build/base/gradle-api/build/test-results/metalavaTest",
     visibility = ["//visibility:public"],
 )

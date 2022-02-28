@@ -39,6 +39,7 @@ import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
 import org.gradle.api.logging.Logger
 import java.io.File
+import java.nio.file.FileSystems
 
 /**
  * Rewrite exceptions to point to their original files.
@@ -153,9 +154,13 @@ fun rewriteLinkException(
  * @return A Blame Logger that can rewrite sources, to their correct locations pre-merge.
  */
 fun blameLoggerFor(
-    request: CompileResourceRequest, logger: LoggerWrapper) : BlameLogger {
+    request: CompileResourceRequest, logger: LoggerWrapper
+): BlameLogger {
     val sourcePathFunc = if (request.identifiedSourceSetMap.any()) {
-        relativeResourcePathToAbsolutePath(request.identifiedSourceSetMap)
+        relativeResourcePathToAbsolutePath(
+            request.identifiedSourceSetMap,
+            FileSystems.getDefault()
+        )
     } else {
         { it }
     }
@@ -205,11 +210,11 @@ private fun rewriteException(
 ): Aapt2Exception {
     try {
         var messages =
-                ToolOutputParser(
-                        Aapt2OutputParser(identifiedSourceSetMap),
-                        Message.Kind.SIMPLE,
-                        StdLogger(StdLogger.Level.INFO)
-                ).parseToolOutput(e.output ?: "", true)
+            ToolOutputParser(
+                Aapt2OutputParser(identifiedSourceSetMap),
+                Message.Kind.SIMPLE,
+                StdLogger(StdLogger.Level.INFO)
+            ).parseToolOutput(e.output ?: "", true)
         if (messages.isEmpty()) {
             // No messages were parsed, create a dummy message.
             messages = listOf(

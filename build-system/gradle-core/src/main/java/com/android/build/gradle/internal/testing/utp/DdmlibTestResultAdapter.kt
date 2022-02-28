@@ -88,6 +88,9 @@ class DdmlibTestResultAdapter(
                         getPlatformErrorMessage(testSuiteResult) + "\n"
                     )
                 }
+                testSuiteResult.issueList.forEach { issue ->
+                    ddmlibTestResultListener.addSystemError(issue.message + "\n")
+                }
                 ddmlibTestResultListener.testRunEnded(
                         System.currentTimeMillis() - startTimestamp,
                         mapOf()

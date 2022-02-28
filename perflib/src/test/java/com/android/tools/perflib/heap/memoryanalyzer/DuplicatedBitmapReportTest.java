@@ -52,7 +52,7 @@ public final class DuplicatedBitmapReportTest {
         // arrange
         File file = TestResources.getFile(getClass(), "/duplicated_bitmaps.android-hprof");
         Snapshot snapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
-        snapshot.computeDominators();
+        snapshot.computeRetainedSizes();
         snapshot.resolveClasses();
         DuplicatedBitmapAnalyzerTask task = new DuplicatedBitmapAnalyzerTask();
         DuplicatedBitmapReport report = new DuplicatedBitmapReport();

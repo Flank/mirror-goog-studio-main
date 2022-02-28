@@ -4,43 +4,43 @@
       <root url="file://$PROJECT_DIR$/external-annotations" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4/commons-io-2.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-test/1.4.32/kotlin-test-1.4.32.jar!/" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.20" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.3.2/jaxb-runtime-2.3.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/jakarta/xml/bind/jakarta.xml.bind-api/2.3.2/jakarta.xml.bind-api-2.3.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.3.2/txw2-2.3.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/3.0.8/istack-commons-runtime-3.0.8.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.8.1/stax-ex-1.8.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.16/FastInfoset-1.2.16.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/jakarta/activation/jakarta.activation-api/1.2.1/jakarta.activation-api-1.2.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/javax/activation/activation/1.1/activation-1.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre/guava-27.0.1-jre.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.10.0/protobuf-java-3.10.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.10.0/protobuf-java-util-3.10.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.21/kotlin-stdlib-1.4.21.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.4.21/kotlin-stdlib-jdk7-1.4.21.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/junit/junit/4.13.1/junit-4.13.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.32/kotlin-stdlib-common-1.4.32.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.4.32/kotlin-stdlib-jdk8-1.4.32.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.4.32/kotlin-stdlib-jdk7-1.4.32.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.4/commons-io-2.4.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-test/1.4.32/kotlin-test-1.4.32.jar!/" />
+      <root url="file://$MAVEN_REPOSITORY$/org/apache/commons/commons-compress/1.20" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jaxb/jaxb-runtime/2.3.2/jaxb-runtime-2.3.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/jakarta/xml/bind/jakarta.xml.bind-api/2.3.2/jakarta.xml.bind-api-2.3.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jaxb/txw2/2.3.2/txw2-2.3.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/sun/istack/istack-commons-runtime/3.0.8/istack-commons-runtime-3.0.8.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jvnet/staxex/stax-ex/1.8.1/stax-ex-1.8.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/sun/xml/fastinfoset/FastInfoset/1.2.16/FastInfoset-1.2.16.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/jakarta/activation/jakarta.activation-api/1.2.1/jakarta.activation-api-1.2.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/27.0.1-jre/guava-27.0.1-jre.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/protobuf/protobuf-java/3.10.0/protobuf-java-3.10.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/protobuf/protobuf-java-util/3.10.0/protobuf-java-util-3.10.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib/1.4.21/kotlin-stdlib-1.4.21.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/junit/junit/4.13.1/junit-4.13.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.32/kotlin-stdlib-common-1.4.32.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.4.32/kotlin-stdlib-jdk8-1.4.32.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.4.32/kotlin-stdlib-jdk7-1.4.32.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/net/java/dev/jna/jna/5.6.0/jna-5.6.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/intellij/annotations/12.0/annotations-12.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4/commons-io-2.4-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/junit/junit/4.13/junit-4.13-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/jakarta/xml/bind/jakarta.xml.bind-api/2.3.2/jakarta.xml.bind-api-2.3.2-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-test/1.4.32/kotlin-test-1.4.32-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.32/kotlin-stdlib-1.4.32-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.32/kotlin-stdlib-common-1.4.32-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.4.32/kotlin-stdlib-jdk7-1.4.32-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.4.32/kotlin-stdlib-jdk8-1.4.32-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.4/commons-io-2.4-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/junit/junit/4.13/junit-4.13-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/jakarta/xml/bind/jakarta.xml.bind-api/2.3.2/jakarta.xml.bind-api-2.3.2-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-test/1.4.32/kotlin-test-1.4.32-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib/1.4.32/kotlin-stdlib-1.4.32-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.32/kotlin-stdlib-common-1.4.32-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.4.32/kotlin-stdlib-jdk7-1.4.32-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.4.32/kotlin-stdlib-jdk8-1.4.32-sources.jar!/" />
     </SOURCES>
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.20" recursive="false" />
+    <jarDirectory url="file://$MAVEN_REPOSITORY$/org/apache/commons/commons-compress/1.20" recursive="false" />
   </library>
 </component>

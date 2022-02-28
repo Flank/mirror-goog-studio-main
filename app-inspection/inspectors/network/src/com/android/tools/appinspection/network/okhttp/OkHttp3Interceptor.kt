@@ -68,10 +68,10 @@ class OkHttp3Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
         val callstack = getOkHttpCallStack(request.javaClass.getPackage().name)
         val tracker = trackerFactory.trackConnection(request.url().toString(), callstack)
         tracker.trackRequest(request.method(), request.headers().toMultimap())
-        if (request.body() != null) {
+        request.body()?.let { body ->
             val outputStream = tracker.trackRequestBody(createNullOutputStream())
             val bufferedSink = Okio.buffer(Okio.sink(outputStream))
-            request.body().writeTo(bufferedSink)
+            body.writeTo(bufferedSink)
             bufferedSink.close()
         }
         return tracker
@@ -82,12 +82,13 @@ class OkHttp3Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
         fields.putAll(response.headers().toMultimap())
         fields["response-status-code"] = listOf(response.code().toString())
         tracker.trackResponse("", fields)
+        val body = response.body() ?: throw Exception("No response body found")
         val source = Okio.buffer(
-            Okio.source(tracker.trackResponseBody(response.body().source().inputStream()))
+            Okio.source(tracker.trackResponseBody(body.source().inputStream()))
         )
-        val body = ResponseBody.create(
-            response.body().contentType(), response.body().contentLength(), source
+        val responseBody = ResponseBody.create(
+            body.contentType(), body.contentLength(), source
         )
-        return response.newBuilder().body(body).build()
+        return response.newBuilder().body(responseBody).build()
     }
 }

@@ -111,7 +111,7 @@ public class TestPlugin
                         testExtension,
                         forUnitTesting);
 
-        if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+        if (getProjectServices().getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
             Class<com.android.build.api.dsl.TestExtension> instanceType =
                     (Class) TestExtension.class;

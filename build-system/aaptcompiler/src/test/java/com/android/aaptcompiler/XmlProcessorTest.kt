@@ -42,7 +42,9 @@ class XmlProcessorTest {
       parse(configDescription),
       Source(""),
       ResourceFile.Type.ProtoXml)
-    if (!processor.process(file, input.byteInputStream())) {
+    try {
+      processor.process(file, input.byteInputStream())
+    } catch (e: Exception) {
       return null
     }
     return file

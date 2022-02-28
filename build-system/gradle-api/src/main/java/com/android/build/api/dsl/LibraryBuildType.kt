@@ -37,7 +37,5 @@ interface LibraryBuildType :
     BuildType,
     LibraryVariantDimension {
     /** Whether this build type should be selected in Studio by default  */
-    @get:Incubating
-    @set:Incubating
     var isDefault: Boolean
 }

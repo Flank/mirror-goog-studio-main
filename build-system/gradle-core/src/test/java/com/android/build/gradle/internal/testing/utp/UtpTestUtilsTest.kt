@@ -150,6 +150,16 @@ class UtpTestUtilsTest {
         }.build())
     }
 
+    private fun UtpTestResultListener.stubTestSuiteFailing() {
+        val testSuiteResult = createFailedStubResultProto()
+        onTestResultEvent(TestResultEvent.newBuilder().apply {
+            testSuiteFinishedBuilder.apply {
+                deviceId = "deviceId"
+                this.testSuiteResult = Any.pack(testSuiteResult)
+            }
+        }.build())
+    }
+
     private fun verifyTestListenerIsInvoked() {
         val testSuiteResult = createStubResultProto()
         inOrder(mockUtpTestResultListener).apply {
@@ -188,6 +198,7 @@ class UtpTestUtilsTest {
             test_suite_meta_data {
               scheduled_test_case_count: 1
             }
+            test_status: PASSED
             test_result {
               test_case {
                 test_class: "ExampleInstrumentedTest"
@@ -195,6 +206,21 @@ class UtpTestUtilsTest {
                 test_method: "useAppContext"
               }
               test_status: PASSED
+            }
+        """)
+    }
+
+    private fun createFailedStubResultProto(): TestSuiteResultProto.TestSuiteResult {
+        return createResultProto("""
+            test_status: FAILED
+            issue {
+              namespace {
+                namespace: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+              }
+              severity: SEVERE
+              code: 1
+              name: "INSTRUMENTATION_FAILED"
+              message: "Test run failed to complete. Instrumentation run failed due to Process crashed."
             }
         """)
     }
@@ -281,6 +307,23 @@ class UtpTestUtilsTest {
     }
 
     @Test
+    fun runSuccessfullyButTestFailed() {
+        val results = runUtp { stubTestSuiteFailing() }
+
+        assertThat(results).containsExactly(UtpTestRunResult(false, createFailedStubResultProto()))
+
+        val resultsXml = utpResultDir.resolve("TEST-deviceName-projectName-variantName.xml")
+        assertThat(resultsXml).exists()
+        assertThat(resultsXml).containsAllOf(
+            """<testsuite tests="0" failures="0" errors="0" skipped="0"""",
+            """<property name="device" value="deviceName" />""",
+            """<property name="flavor" value="variantName" />""",
+            """<property name="project" value="projectName" />""",
+            """<system-err>Test run failed to complete. Instrumentation run failed due to Process crashed."""
+        )
+    }
+
+    @Test
     fun utpShouldBeEnabledByDefault() {
         val projectOptions = ProjectOptions(
             ImmutableMap.of(),
@@ -349,17 +392,56 @@ class UtpTestUtilsTest {
                   error_name: "DEVICE_PROVISION_FAILED"
                   error_classification: "UNDERLYING_TOOL"
                   error_message: "Failed trying to provide device controller."
+                  stack_trace: "This stacktrace should not be included in the error message."
                 }
                 cause {
                   summary {
                     error_message: "Gradle was unable to attach one or more devices to the adb server."
+                    stack_trace: "stacktrace line1\nstacktrace line2"
                   }
                 }
               }
             }
         """)
 
-        assertThat(getPlatformErrorMessage(resultProto))
-            .isEqualTo("PLATFORM ERROR: Gradle was unable to attach one or more devices to the adb server.")
+        assertThat(getPlatformErrorMessage(resultProto)).contains("""
+            Failed trying to provide device controller.
+            Gradle was unable to attach one or more devices to the adb server.
+            stacktrace line1
+            stacktrace line2
+            """.trimIndent())
+    }
+
+    @Test
+    fun getPlatformErrorMessageShouldReturnErrorMessageEvenIfErrorMessageIsMissingInProto() {
+        val resultProto = createResultProto("""
+            test_status: ERROR
+            platform_error {
+              error_detail {
+                summary {
+                  namespace {
+                    namespace: "com.google.testing.platform"
+                  }
+                  error_code: 3002
+                  error_name: "DEVICE_PROVISION_FAILED"
+                  error_classification: "UNDERLYING_TOOL"
+                  error_message: "Failed trying to provide device controller."
+                  stack_trace: "This stacktrace should not be included in the error message."
+                }
+                cause {
+                  summary {
+                    stack_trace: "stacktrace line1\nstacktrace line2"
+                  }
+                }
+              }
+            }
+        """)
+
+        assertThat(getPlatformErrorMessage(resultProto)).contains("""
+            Failed trying to provide device controller.
+            Unknown platform error occurred when running the UTP test suite. Please check logs for details.
+            stacktrace line1
+            stacktrace line2
+            """.trimIndent())
     }
 }

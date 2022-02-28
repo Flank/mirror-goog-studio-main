@@ -215,9 +215,11 @@ class XmlReporterTest {
         val tempDir = Files.createTempDirectory("testFullPaths")
         val rootDirectory = tempDir.toFile().canonicalFile
 
+        val lint = lint()
         val factory: () -> com.android.tools.lint.checks.infrastructure.TestLintClient =
             {
                 val client = com.android.tools.lint.checks.infrastructure.TestLintClient()
+                client.setLintTask(lint)
                 client.flags.isFullPath = true
                 client.pathVariables.clear()
                 client.pathVariables.add("TEST_ROOT", rootDirectory)
@@ -226,7 +228,7 @@ class XmlReporterTest {
                 client
             }
 
-        lint().files(sampleManifest, sampleLayout)
+        lint.files(sampleManifest, sampleLayout)
             .issues(HardcodedValuesDetector.ISSUE, ManifestDetector.SET_VERSION)
             .clientFactory(factory)
             .testModes(TestMode.PARTIAL)

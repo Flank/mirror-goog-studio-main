@@ -27,6 +27,7 @@ import com.android.tools.lint.checks.ApiDetector.Companion.REQUIRES_API_ANNOTATI
 import com.android.tools.lint.checks.EmptySuperDetector.Companion.EMPTY_SUPER_ANNOTATION
 import com.android.tools.lint.checks.OpenForTestingDetector.Companion.OPEN_FOR_TESTING_ANNOTATION
 import com.android.tools.lint.checks.ReturnThisDetector.Companion.RETURN_THIS_ANNOTATION
+import com.android.tools.lint.checks.TypedefDetector.Companion.ATTR_OPEN
 import com.android.tools.lint.checks.TypedefDetector.Companion.findIntDef
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
@@ -631,6 +632,10 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                         ?: annotation.findAttributeValue(null)?.skipParenthesizedExprDown()
                         ?: return
                     if (value.isArrayInitializer()) {
+                        val open = getAnnotationBooleanValue(annotation, ATTR_OPEN, false)
+                        if (open) {
+                            return
+                        }
                         val allowedValues = (value as UCallExpression).valueArguments
                         node.accept(SwitchChecker(node, allowedValues))
                     }

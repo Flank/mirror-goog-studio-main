@@ -27,7 +27,9 @@ readonly invocation_id="$(uuidgen)"
   --max_idle_secs=60 \
   test \
   --keep_going \
-  ${config_options} \
+  ${config_options} --config=sponge --config=ants \
+  --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+  --build_metadata=ab_target=perfgate-linux \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --define=meta_android_build_number=${build_number} \
@@ -46,7 +48,7 @@ readonly bazel_status=$?
 if [[ -d "${dist_dir}" ]]; then
 
   # Generate a simple html page that redirects to the test results page.
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 
   readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"

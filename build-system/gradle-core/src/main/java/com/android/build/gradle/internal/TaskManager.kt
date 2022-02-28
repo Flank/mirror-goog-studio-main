@@ -979,7 +979,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 && !creationConfig.variantType.isForTesting
                 && creationConfig.useResourceShrinker())
         val includeDependencies = true
-        val mergeResourcesTask = basicCreateMergeResourcesTask(
+        basicCreateMergeResourcesTask(
                 creationConfig,
                 MergeType.MERGE,
                 includeDependencies,
@@ -993,7 +993,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(
                     MapSourceSetPathsTask.CreateAction(
                         creationConfig,
-                        mergeResourcesTask,
                         includeDependencies
                     ))
         }

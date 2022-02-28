@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.cxx.model.BasicNdkBuildMock
 import com.android.testutils.GoldenFile
 import org.junit.Test
 import com.android.SdkConstants.NDK_DEFAULT_VERSION
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_VERSION_MAJOR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_VERSION_MINOR
 
 /**
  * Print CMakeSettings.json macros along with description and examples.
@@ -79,7 +81,14 @@ class SettingsJsonPropertiesGoldenFileTest {
                             val ndkBuildExample = ndkBuildExamples[macro]
                             result += "## " + macro.ref
                             result += macro.description
-                            if (ndkBuildExample == null) {
+
+                            // Hard code NDK major/minor version so the baseline doesn't change
+                            // when NDK version is updated
+                            if (macro == NDK_MODULE_NDK_VERSION_MAJOR) {
+                                result += "- example: 21"
+                            } else if (macro == NDK_MODULE_NDK_VERSION_MINOR) {
+                                result += "- example: 4"
+                            } else if (ndkBuildExample == null) {
                                 if (example.isNotBlank()) {
                                     result += "- example: $example"
                                 }

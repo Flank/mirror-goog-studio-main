@@ -161,22 +161,23 @@ class ProxyClassEval extends BackPorterEval {
             return super.invokeStaticMethod(method, args);
         }
 
-        Type[] parameterType = Type.getArgumentTypes(methodDesc);
+        // We interpret *all* static methods of proxy classes.
+        if (clazz.isProxyClass()) {
+            Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
+            Object result = clazz.invokeMethod(methodName, methodDesc, null, valueToObj(args));
+            return makeValue(result, Type.getReturnType(methodDesc));
+        }
+
         try {
             // If the method is a synthetic static added by Compose compiler, we must interpret it.
             // To detect these methods, we check if a given static method exists in the original,
             // and that it wasn't added by the user via a LiveEdit operation.
-            Method originalMethod = methodLookup(internalName, methodName, parameterType);
+            Type[] parameterTypes = Type.getArgumentTypes(methodDesc);
+            Method originalMethod = methodLookup(internalName, methodName, parameterTypes);
             boolean isLiveEdited = clazz.hasLiveEditedMethod(methodName, methodDesc);
             if (originalMethod == null && !isLiveEdited) {
                 Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
-
-                Object[] argValues = new Object[args.size()];
-                for (int i = 0; i < argValues.length; i++) {
-                    argValues[i] = args.get(i).obj();
-                }
-
-                Object result = clazz.invokeMethod(methodName, methodDesc, null, argValues);
+                Object result = clazz.invokeMethod(methodName, methodDesc, null, valueToObj(args));
                 return makeValue(result, Type.getReturnType(methodDesc));
             }
         } catch (ClassNotFoundException cnfe) {
@@ -193,12 +194,14 @@ class ProxyClassEval extends BackPorterEval {
     private static Object invokeProxy(
             Object proxy, String methodName, String methodDesc, List<? extends Value> args) {
         ProxyClassHandler handler = (ProxyClassHandler) Proxy.getInvocationHandler(proxy);
+        return handler.invokeMethod(proxy, methodName, methodDesc, valueToObj(args));
+    }
 
+    private static Object[] valueToObj(List<? extends Value> args) {
         Object[] argValues = new Object[args.size()];
         for (int i = 0; i < argValues.length; i++) {
             argValues[i] = args.get(i).obj();
         }
-
-        return handler.invokeMethod(proxy, methodName, methodDesc, argValues);
+        return argValues;
     }
 }

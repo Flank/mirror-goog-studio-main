@@ -51,7 +51,8 @@ class HtmlReporterTest {
     var temporaryFolder = TemporaryFolder()
 
     private fun checkReportOutput(expected: String) {
-        val rootDirectory = temporaryFolder.newFolder()
+        val rootDirectory = temporaryFolder.newFolder().canonicalFile
+        val lint = TestLintTask.lint()
         val factory: () -> TestLintClient = {
             val client = object : TestLintClient() {
                 override fun createDriver(
@@ -67,6 +68,7 @@ class HtmlReporterTest {
                     return super.createDriver(registry, request)
                 }
             }
+            client.setLintTask(lint)
             client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
             client.flags.suppressedIds.add(ManifestDetector.MOCK_LOCATION.id)
             client.flags.isFullPath = false
@@ -82,7 +84,7 @@ class HtmlReporterTest {
             var begin = output.indexOf(timestampPrefix)
             assertTrue(begin != -1)
             begin += timestampPrefix.length
-            val end = output.indexOf("</nav>", begin)
+            val end = output.indexOf(" by ", begin)
             assertTrue(end != -1)
             report = output.substring(0, begin) + "\$DATE" + output.substring(end)
 
@@ -96,7 +98,7 @@ class HtmlReporterTest {
         }
 
         val testName = javaClass.simpleName + "_" + testName.methodName
-        TestLintTask.lint()
+        lint
             // Set a custom directory such that lint doesn't delete the source directory after a run;
             // we need to access it after the test run for syntax highlighting in the reporting pass.
             .rootDirectory(rootDirectory)
@@ -215,8 +217,7 @@ document.getElementById(id).style.display = 'none';
     <div class="mdl-layout__header-row">
       <span class="mdl-layout-title">Lint Report: 1 error and 5 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">
-Check performed at ＄DATE</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at ＄DATE by Lint Unit Tests</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
@@ -734,8 +735,7 @@ document.getElementById(id).style.display = 'none';
     <div class="mdl-layout__header-row">
       <span class="mdl-layout-title">Lint Report: 1 error and 5 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">
-Check performed at ＄DATE</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at ＄DATE by Lint Unit Tests</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">

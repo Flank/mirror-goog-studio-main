@@ -522,6 +522,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
         // No longer the recommendation -- b/201700393
         "MediaCapabilities",
 
+        // No longer the recommendation -- b/216662628
+        "UnpackedNativeCode",
+
         // Deleted; no longer needed thanks to d8
         "Assert"
     )

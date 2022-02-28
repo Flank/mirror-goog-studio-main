@@ -194,12 +194,15 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 parameters.minSdkVersion.orNull,
                 parameters.targetSdkVersion.orNull,
                 parameters.maxSdkVersion.orNull,
+                testOnly = false,
                 parameters.manifestOutputFile.asFile.get().absolutePath,
                 parameters.aaptFriendlyManifestOutputFile.asFile.orNull?.absolutePath /* outInstantRunManifestLocation */,
                 ManifestMerger2.MergeType.LIBRARY /* outInstantAppManifestLocation */,
                 parameters.manifestPlaceholders.get(),
                 optionalFeatures,
-                emptyList(), parameters.reportFile.asFile.get(), LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
+                emptyList(),
+                parameters.reportFile.asFile.get(),
+                LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
             )
             val mergedXmlDocument =
                 mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)

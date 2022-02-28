@@ -124,6 +124,9 @@ class UtpTestRunner @JvmOverloads constructor(
             if (result.resultsProto?.hasPlatformError() == true) {
                 logger.error(null, getPlatformErrorMessage(result.resultsProto))
             }
+            result.resultsProto?.issueList?.forEach { issue ->
+                logger.error(null, issue.message)
+            }
         }
 
         val resultProtos = testSuiteResults

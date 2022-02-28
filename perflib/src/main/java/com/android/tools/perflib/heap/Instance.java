@@ -187,17 +187,13 @@ public abstract class Instance {
     }
 
     public void resetRetainedSize() {
-        List<Heap> allHeaps = mHeap.mSnapshot.mHeaps;
+        List<Heap> allHeaps = mHeap.mSnapshot.heapList;
         if (mRetainedSizes == null) {
             mRetainedSizes = new long[allHeaps.size()];
         } else {
             Arrays.fill(mRetainedSizes, 0);
         }
         mRetainedSizes[allHeaps.indexOf(mHeap)] = getSize() + getNativeSize();
-    }
-
-    public void addRetainedSize(int heapIndex, long size) {
-        mRetainedSizes[heapIndex] += size;
     }
 
     public void addRetainedSizes(Instance other) {

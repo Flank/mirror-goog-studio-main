@@ -249,3 +249,10 @@ Deprecated from AGP 7.2.0
   * com.android.build.api.variant.VariantBuilder.setUnitTestEnabled: void (boolean)
 Deprecated from AGP 7.3.0
   * com.android.build.api.variant.Sources.getRenderscript: com.android.build.api.variant.SourceDirectories ()
+  * com.android.build.api.variant.VariantFilter
+  * com.android.build.api.variant.VariantFilter.getBuildType: com.android.builder.model.BuildType ()
+  * com.android.build.api.variant.VariantFilter.getDefaultConfig: com.android.builder.model.ProductFlavor ()
+  * com.android.build.api.variant.VariantFilter.getFlavors: java.util.List<com.android.builder.model.ProductFlavor> ()
+  * com.android.build.api.variant.VariantFilter.getIgnore: boolean ()
+  * com.android.build.api.variant.VariantFilter.getName: java.lang.String ()
+  * com.android.build.api.variant.VariantFilter.setIgnore: void (boolean)

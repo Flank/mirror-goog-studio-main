@@ -1067,7 +1067,7 @@ public class TestLintClient extends LintCliClient {
                     if (mode != TestMode.DEFAULT) {
                         prologue +=
                                 ""
-                                        + "To debug the unit test in this test mode, add the following to the"
+                                        + "To debug the unit test in this test mode, add the following to the "
                                         + "lint() test task: testModes("
                                         + field
                                         + ")\n"
@@ -1206,7 +1206,8 @@ public class TestLintClient extends LintCliClient {
             Writer writer =
                     new BufferedWriter(
                             new OutputStreamWriter(new FileOutputStream(xmlFile), Charsets.UTF_8));
-            XmlWriter xmlWriter = new XmlWriter(this, XmlFileType.INCIDENTS, writer);
+            XmlWriter xmlWriter =
+                    new XmlWriter(this, XmlFileType.INCIDENTS, writer, getPathVariables());
             xmlWriter.writeIncidents(Collections.singletonList(incident), emptyList());
 
             // Read it back

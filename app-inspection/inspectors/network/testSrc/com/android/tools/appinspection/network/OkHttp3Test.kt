@@ -48,7 +48,7 @@ class OkHttp3Test {
         val fakeResponse = createFakeResponse(request)
 
         val response = client.newCall(request, fakeResponse).execute()
-        response.body().byteStream().use { it.readBytes() }
+        response.body()!!.byteStream().use { it.readBytes() }
 
         assertThat(inspectorRule.connection.httpData).hasSize(6)
         val httpRequestStarted = inspectorRule.connection.httpData.first().httpRequestStarted
@@ -76,7 +76,7 @@ class OkHttp3Test {
         val client = createFakeOkHttp3Client()
         val requestBody = object : RequestBody() {
             override fun contentType(): MediaType {
-                return MediaType.parse("text/text")
+                return MediaType.parse("text/text")!!
             }
 
             override fun writeTo(bufferedSink: BufferedSink) {
@@ -88,7 +88,7 @@ class OkHttp3Test {
         val fakeResponse = createFakeResponse(request)
 
         val response = client.newCall(request, fakeResponse).execute()
-        response.body().byteStream().use { it.readBytes() }
+        response.body()!!.byteStream().use { it.readBytes() }
 
         assertThat(inspectorRule.connection.httpData).hasSize(8)
         val httpRequestStarted = inspectorRule.connection.httpData.first().httpRequestStarted
@@ -123,7 +123,7 @@ class OkHttp3Test {
         }
 
         val response = client.newCall(request, fakeResponse).execute()
-        response.body().byteStream().use { it.readBytes() }
+        response.body()!!.byteStream().use { it.readBytes() }
 
         val events = inspectorRule.connection.httpData.groupBy { it.connectionId }
 

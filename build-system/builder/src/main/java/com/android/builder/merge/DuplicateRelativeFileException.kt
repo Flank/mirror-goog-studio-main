@@ -15,6 +15,8 @@
  */
 package com.android.builder.merge
 
+import com.android.builder.utils.agpReferenceDocsUrl
+
 /**
  * Exception by [StreamMergeAlgorithms.acceptOnlyOne] if more than one file needs to be
  * merged.
@@ -46,7 +48,7 @@ class DuplicateRelativeFileException constructor(
                 } else {
                     append(
                         "Adding a packagingOptions block may help, please refer to\n" +
-                                "https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html\n" +
+                                "${agpReferenceDocsUrl("com/android/build/api/dsl/ResourcesPackagingOptions")}\n" +
                                 "for more information"
                     )
                 }

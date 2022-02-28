@@ -175,14 +175,9 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
         }
     }
 
-    /**
-     * A callback to query arbitrary data. This is similar to {@link RenderParams#setFlag(SessionParams.Key,
-     * Object)}. The main difference is that when using this, the IDE doesn't have to compute the
-     * value in advance and thus may save on some computation.
-     * @since API 15
-     */
+    /** Returns the application ID for the project. */
     @Nullable
-    public <T> T getFlag(@NonNull SessionParams.Key<T> key) {
+    public String getApplicationId() {
         return null;
     }
 

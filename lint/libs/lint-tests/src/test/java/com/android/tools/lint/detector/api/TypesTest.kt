@@ -77,10 +77,10 @@ class TypesTest : TestCase() {
                 "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                 "            UParameter (name = times) [@org.jetbrains.annotations.NotNull var times: int]\n" +
                 "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                "            UBlockExpression [{...}] : PsiType:void\n" +
+                "            UBlockExpression [{...}] : PsiType:Unit\n" +
                 "        UMethod (name = getProperty2) [public final fun getProperty2() : java.lang.String = UastEmptyExpression]\n" +
-                "        UMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable property2: java.lang.String) : void = UastEmptyExpression]\n" +
-                "            UParameter (name = property2) [@org.jetbrains.annotations.Nullable var property2: java.lang.String]\n" +
+                "        UMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable value: java.lang.String) : void = UastEmptyExpression]\n" +
+                "            UParameter (name = value) [@org.jetbrains.annotations.Nullable var value: java.lang.String]\n" +
                 "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
                 "        UMethod (name = getProperty1) [public final fun getProperty1() : java.lang.String = UastEmptyExpression]\n" +
                 "        UMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @org.jetbrains.annotations.NotNull arg2: int) {...}]\n" +
@@ -147,7 +147,7 @@ class TypesTest : TestCase() {
                         UBlockExpression
                     UMethod (name = getProperty2)
                     UMethod (name = setProperty2)
-                        UParameter (name = property2)
+                        UParameter (name = value)
                             UAnnotation (fqName = org.jetbrains.annotations.Nullable)
                     UMethod (name = getProperty1)
                     UMethod (name = Kotlin)

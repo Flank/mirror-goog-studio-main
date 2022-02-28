@@ -265,13 +265,15 @@ public class Main {
         if (exitCode != ERRNO_INTERNAL_CONTINUE) {
             return exitCode;
         }
+
+        initializePathVariables(argumentState, client);
+
         initializeConfigurations(client, argumentState);
         exitCode = initializeReporters(client, argumentState);
         if (exitCode != ERRNO_INTERNAL_CONTINUE) {
             return exitCode;
         }
         LintRequest lintRequest = createLintRequest(client, argumentState);
-        createDefaultPathVariables(argumentState, client);
 
         exitCode = run(client, lintRequest, argumentState);
 
@@ -288,63 +290,68 @@ public class Main {
         return exitCode;
     }
 
+    private void initializePathVariables(ArgumentState argumentState, LintCliClient client) {
+        PathVariables pathVariables = client.getPathVariables();
+        if (argumentState.pathVariables != null) {
+            pathVariables.add(argumentState.pathVariables);
+            pathVariables.normalize();
+        }
+        createDefaultPathVariables(argumentState, client);
+    }
+
     private void createDefaultPathVariables(
             @NonNull ArgumentState argumentState, @NonNull LintCliClient client) {
         PathVariables pathVariables = client.getPathVariables();
-        if (!pathVariables.any()) {
-            // It's tempting to define a $PROJECT variable here to
-            // refer to the common parent director of all the project
-            // modules, but this does not work because when invoked
-            // in --analyze-only we'll take an individual module's
-            // folder, whereas with --report-only we'll take the parent
-            // directory, so the path resolves to different values
-            for (LintModelModule module : argumentState.modules) {
-                // Add project directory path variable
-                pathVariables.add(
-                        "{" + module.getModulePath() + "*projectDir}", module.getDir(), false);
-                // Add build directory path variable
-                pathVariables.add(
-                        "{" + module.getModulePath() + "*buildDir}",
-                        module.getBuildFolder(),
-                        false);
-                for (LintModelVariant variant : module.getVariants()) {
-                    int sourceProviderIndex = 0;
-                    for (LintModelSourceProvider sourceProvider : variant.getSourceProviders()) {
-                        addSourceProviderPathVariables(
-                                pathVariables,
-                                sourceProvider,
-                                "sourceProvider",
-                                sourceProviderIndex++,
-                                module.getModulePath(),
-                                variant.getName());
-                    }
-                    int testSourceProviderIndex = 0;
-                    for (LintModelSourceProvider testSourceProvider :
-                            variant.getTestSourceProviders()) {
-                        addSourceProviderPathVariables(
-                                pathVariables,
-                                testSourceProvider,
-                                "testSourceProvider",
-                                testSourceProviderIndex++,
-                                module.getModulePath(),
-                                variant.getName());
-                    }
-                    int testFixturesSourceProviderIndex = 0;
-                    for (LintModelSourceProvider testFixturesSourceProvider :
-                            variant.getTestFixturesSourceProviders()) {
-                        addSourceProviderPathVariables(
-                                pathVariables,
-                                testFixturesSourceProvider,
-                                "testFixturesSourceProvider",
-                                testFixturesSourceProviderIndex++,
-                                module.getModulePath(),
-                                variant.getName());
-                    }
+        // It's tempting to define a $PROJECT variable here to
+        // refer to the common parent director of all the project
+        // modules, but this does not work because when invoked
+        // in --analyze-only we'll take an individual module's
+        // folder, whereas with --report-only we'll take the parent
+        // directory, so the path resolves to different values
+        for (LintModelModule module : argumentState.modules) {
+            // Add project directory path variable
+            pathVariables.add(
+                    "{" + module.getModulePath() + "*projectDir}", module.getDir(), false);
+            // Add build directory path variable
+            pathVariables.add(
+                    "{" + module.getModulePath() + "*buildDir}", module.getBuildFolder(), false);
+            for (LintModelVariant variant : module.getVariants()) {
+                int sourceProviderIndex = 0;
+                for (LintModelSourceProvider sourceProvider : variant.getSourceProviders()) {
+                    addSourceProviderPathVariables(
+                            pathVariables,
+                            sourceProvider,
+                            "sourceProvider",
+                            sourceProviderIndex++,
+                            module.getModulePath(),
+                            variant.getName());
+                }
+                int testSourceProviderIndex = 0;
+                for (LintModelSourceProvider testSourceProvider :
+                        variant.getTestSourceProviders()) {
+                    addSourceProviderPathVariables(
+                            pathVariables,
+                            testSourceProvider,
+                            "testSourceProvider",
+                            testSourceProviderIndex++,
+                            module.getModulePath(),
+                            variant.getName());
+                }
+                int testFixturesSourceProviderIndex = 0;
+                for (LintModelSourceProvider testFixturesSourceProvider :
+                        variant.getTestFixturesSourceProviders()) {
+                    addSourceProviderPathVariables(
+                            pathVariables,
+                            testFixturesSourceProvider,
+                            "testFixturesSourceProvider",
+                            testFixturesSourceProviderIndex++,
+                            module.getModulePath(),
+                            variant.getName());
                 }
             }
-
-            pathVariables.sort();
         }
+
+        pathVariables.sort();
     }
 
     /** Adds necessary path variables to pathVariables. */
@@ -450,12 +457,6 @@ public class Main {
         MainLintClient(LintCliFlags flags, ArgumentState argumentState) {
             super(flags, LintClient.CLIENT_CLI);
             this.argumentState = argumentState;
-
-            PathVariables pathVariables = getPathVariables();
-            if (argumentState.pathVariables != null) {
-                pathVariables.add(argumentState.pathVariables);
-                pathVariables.normalize();
-            }
         }
 
         private Project unexpectedGradleProject = null;
@@ -505,16 +506,6 @@ public class Main {
             initializeDriver(driver);
 
             return driver;
-        }
-
-        @NonNull
-        @Override
-        public PathVariables getPathVariables() {
-            PathVariables pathVariables = argumentState.pathVariables;
-            if (pathVariables != null) {
-                return pathVariables;
-            }
-            return super.getPathVariables();
         }
 
         @NonNull
@@ -1356,13 +1347,10 @@ public class Main {
                                         + (input.isDirectory() ? ", not a file" : ""));
                         return ERRNO_INVALID_ARGS;
                     }
-                    if (argumentState.pathVariables == null) {
-                        argumentState.pathVariables = new PathVariables();
-                    }
                     try {
                         LintModelSerialization reader = LintModelSerialization.INSTANCE;
                         LintModelModule module =
-                                reader.readModule(input, null, true, argumentState.pathVariables);
+                                reader.readModule(input, null, true, client.getPathVariables());
                         argumentState.modules.add(module);
                     } catch (Throwable error) {
                         System.err.println(

@@ -25,9 +25,8 @@ import androidx.inspection.InspectorEnvironment
 import com.android.tools.appinspection.network.httpurl.wrapURLConnection
 import com.android.tools.appinspection.network.okhttp.OkHttp2Interceptor
 import com.android.tools.appinspection.network.okhttp.OkHttp3Interceptor
-import com.android.tools.appinspection.network.rules.BodyInterceptionRule
+import com.android.tools.appinspection.network.rules.InterceptionRule
 import com.android.tools.appinspection.network.rules.InterceptionRuleServiceImpl
-import com.android.tools.appinspection.network.rules.UrlInterceptionCriteria
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.OkHttpClient
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +39,8 @@ import studio.network.inspection.NetworkInspectorProtocol
 import java.net.URL
 import java.net.URLConnection
 import java.util.List
+import java.util.logging.Level
+import android.util.Log
 
 private const val POLL_INTERVAL_MS = 500L
 private const val MULTIPLIER_FACTOR = 1000 / POLL_INTERVAL_MS
@@ -59,7 +60,7 @@ class NetworkInspector(
     private val scope =
         CoroutineScope(SupervisorJob() + environment.executors().primary().asCoroutineDispatcher())
 
-    private val trackerService = HttpTrackerFactory(connection)
+    private val trackerService = HttpTrackerFactoryImpl(connection)
     private var isStarted = false
 
     private var okHttp2Interceptors: List<Interceptor>? = null
@@ -97,24 +98,16 @@ class NetworkInspector(
                         val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
                             interceptRuleAdded.ruleId,
-                            BodyInterceptionRule(
-                                interceptCommand.interceptRuleAdded.ruleId,
-                                UrlInterceptionCriteria(rule.url),
-                                rule.responseBody.toByteArray()
-                            )
+                            InterceptionRule(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
                     interceptCommand.hasInterceptRuleUpdated() -> {
-                        val interceptRuleUpdated = interceptCommand.interceptRuleAdded
-                        val rule = interceptRuleUpdated.rule
+                        val interceptRuleAdded = interceptCommand.interceptRuleUpdated
+                        val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
-                            interceptRuleUpdated.ruleId,
-                            BodyInterceptionRule(
-                                interceptCommand.interceptRuleAdded.ruleId,
-                                UrlInterceptionCriteria(rule.url),
-                                rule.responseBody.toByteArray()
-                            )
+                            interceptRuleAdded.ruleId,
+                            InterceptionRule(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
@@ -127,31 +120,43 @@ class NetworkInspector(
         }
     }
 
-    private fun startSpeedCollection() {
-        val application = environment.artTooling().findInstances(Application::class.java).single()
-        val uid = application.applicationInfo.uid
-
-        scope.launch {
-            var prevRxBytes = TrafficStats.getUidRxBytes(uid)
-            var prevTxBytes = TrafficStats.getUidTxBytes(uid)
-            while (true) {
-                delay(POLL_INTERVAL_MS)
-                val rxBytes = TrafficStats.getUidRxBytes(uid)
-                val txBytes = TrafficStats.getUidTxBytes(uid)
-                connection.sendEvent(
-                    NetworkInspectorProtocol.Event.newBuilder()
-                        .setSpeedEvent(
-                            NetworkInspectorProtocol.SpeedEvent.newBuilder()
-                                .setRxSpeed((rxBytes - prevRxBytes) * MULTIPLIER_FACTOR)
-                                .setTxSpeed((txBytes - prevTxBytes) * MULTIPLIER_FACTOR)
-                        )
-                        .setTimestamp(System.nanoTime())
-                        .build()
-                        .toByteArray()
-                )
-                prevRxBytes = rxBytes
-                prevTxBytes = txBytes
+    private fun startSpeedCollection() = scope.launch {
+        // The app can have multiple Application instances. In that case, we use the first non-null
+        // uid, which is most likely from the Application created by Android.
+        val uid = environment.artTooling().findInstances(Application::class.java)
+            .mapNotNull {
+                try {
+                    it.applicationInfo?.uid
+                } catch (e: Exception) {
+                    null
+                }
             }
+            .firstOrNull() ?: run {
+            Log.e(
+                this::class.java.name,
+                "Failed to find application instance. Collection of network speed is not available."
+            )
+            return@launch
+        }
+        var prevRxBytes = TrafficStats.getUidRxBytes(uid)
+        var prevTxBytes = TrafficStats.getUidTxBytes(uid)
+        while (true) {
+            delay(POLL_INTERVAL_MS)
+            val rxBytes = TrafficStats.getUidRxBytes(uid)
+            val txBytes = TrafficStats.getUidTxBytes(uid)
+            connection.sendEvent(
+                NetworkInspectorProtocol.Event.newBuilder()
+                    .setSpeedEvent(
+                        NetworkInspectorProtocol.SpeedEvent.newBuilder()
+                            .setRxSpeed((rxBytes - prevRxBytes) * MULTIPLIER_FACTOR)
+                            .setTxSpeed((txBytes - prevTxBytes) * MULTIPLIER_FACTOR)
+                    )
+                    .setTimestamp(System.nanoTime())
+                    .build()
+                    .toByteArray()
+            )
+            prevRxBytes = rxBytes
+            prevTxBytes = txBytes
         }
     }
 

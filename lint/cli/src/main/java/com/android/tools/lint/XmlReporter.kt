@@ -19,6 +19,7 @@ package com.android.tools.lint
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Incident
+import com.android.tools.lint.model.PathVariables
 import java.io.File
 import java.io.IOException
 
@@ -38,8 +39,11 @@ class XmlReporter constructor(
      * like whether locations are annotated with the surrounding source
      * contents.
      */
-    var type: XmlFileType
+    var type: XmlFileType,
 ) : Reporter(client, output) {
+
+    var pathVariables: PathVariables = client.pathVariables
+
     private var attributes: MutableMap<String, String>? = null
 
     fun setBaselineAttributes(client: LintClient, variant: String?, includeDependencies: Boolean) {
@@ -71,7 +75,7 @@ class XmlReporter constructor(
     @Throws(IOException::class)
     override fun write(stats: LintStats, incidents: List<Incident>, registry: IssueRegistry) {
         val writer = output?.bufferedWriter() ?: return
-        val xmlWriter = XmlWriter(client, type, writer)
+        val xmlWriter = XmlWriter(client, type, writer, pathVariables)
 
         val clientAttributes: List<Pair<String, String?>> =
             attributes?.asSequence()?.sortedBy { it.key }?.map { Pair(it.key, it.value) }?.toList()

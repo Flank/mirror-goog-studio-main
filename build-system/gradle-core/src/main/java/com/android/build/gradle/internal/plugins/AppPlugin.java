@@ -117,7 +117,7 @@ public class AppPlugin
                         applicationExtension,
                         forUnitTesting);
 
-        if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+        if (getProjectServices().getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
             Class<ApplicationExtension> instanceType = (Class) BaseAppModuleExtension.class;
             BaseAppModuleExtension android =

@@ -19,39 +19,34 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 /**
- * DSL object for configuring APK Splits options. Configuring this object allows you to build
- * [Multiple APKs](https://developer.android.com/studio/build/configure-apk-splits.html) and
- * [Configuration APKs](https://developer.android.com/topic/instant-apps/guides/config-splits.html).
+ * Options to configure Multiple APKs.
  *
- * If your app targets multiple device configurations, such as different screen densities and
- * [Application Binary Interfaces (ABIs)](https://developer.android.com/ndk/guides/abis.html), you
- * might want to avoid packaging resources for all configurations into a single large APK. To reduce
- * download sizes for your users, the Android plugin and Google Play Store provide the following
- * strategies to generate and serve build artifacts that each target a different device
- * configuration--so users download only the resources they need:
+ * [`android`][ApplicationExtension.splits]`.`[`splits`][Splits]
  *
- * - [Multiple APKs](https://developer.android.com/studio/build/configure-apk-splits.html): use this
- * to generate multiple stand-alone APKs. Each APK contains the code and resources required for a
- * given device configuration. The Android plugin and Google Play Store support generating multiple
- * APKs based on screen density and ABI. Because each APK represents a standalone APK that you
- * upload to the Google Play Store, make sure you appropriately
+ * If you publish your app to Google Play, you should build and upload an
+ * [Android App Bundle](https://developer.android.com/guide/app-bundle).
+ * When you do so, Google Play automatically generates and serves optimized APKs for each user’s
+ * device configuration, so they download only the code and resources they need to run your app.
+ * This is much simpler than managing multiple APKs manually.
+ *
+ * If you publish your app to a store that doesn't support the Android App Bundle format, you can
+ * publish
+ * [multiple APKs](https://developer.android.com/studio/build/configure-apk-splits.html)
+ * manually.
+ *
+ * The Android Gradle plugin supports generating multiple APKs based on screen density and
+ * [Application Binary Interface (ABI)](https://developer.android.com/ndk/guides/abis.html),
+ * where each APK contains the code and resources required for a given device configuration.
+ *
+ * You will also need to
  * [assign version codes to each APK](https://developer.android.com/studio/build/configure-apk-splits.html#configure-APK-versions)
  * so that you are able to manage updates later.
  *
- * - [Configuration APKs](https://developer.android.com/topic/instant-apps/guides/config-splits.html):
- * use this only if you're building [Android Instant Apps](https://developer.android.com/topic/instant-apps/index.html).
- * The Android plugin packages your app's device-agnostic code and resources in a base APK, and each
- * set of device-dependent binaries and resources in separate APKs, called configuration APKs.
- * Configuration APKs do not represent stand-alone versions of your app. That is, devices need to
- * download both the base APK and additional configuration APKs from the Google Play Store to run
- * your instant app. The Android plugin and Google Play Store support generating configuration APKs
- * based on screen density, ABI, and language locales. You specify properties in this block just as
- * you would when building multiple APKs. However, you need to also set
- * [`generatePureSplits`](https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits)
- * to `true`.
+ * Previously the Android Gradle plugin also supported building 'Configuration APKs' for Instant
+ * Apps using this `splits` block, but that has been superseded by the Android App Bundle format.
  */
 @Incubating
-interface Splits{
+interface Splits {
 
     /**
      * Encapsulates settings for
