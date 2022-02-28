@@ -26,6 +26,7 @@ import com.android.tools.proguard.ProguardMap
 import gnu.trove.THashSet
 import gnu.trove.TIntObjectHashMap
 import gnu.trove.TLongObjectHashMap
+import kotlin.streams.asStream
 
 /*
  * A snapshot of all of the heaps, and related meta-data, for the runtime at a given instant.
@@ -179,7 +180,7 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
 
     fun resolveReferences() {
         for (heap in heaps) {
-            heap.classes.forEach(ClassObj::resolveReferences)
+            heap.classes.forEach(Instance::resolveReferences)
             heap.forEachInstance { instance ->
                 instance.resolveReferences()
                 true
@@ -187,10 +188,26 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
         }
     }
 
-    fun compactMemory() = heaps.forEach { heap ->
-        heap.forEachInstance { instance ->
-            instance.compactMemory()
-            true
+    fun compactMemory() {
+        val cache = mutableMapOf<Set<Instance>, InstanceList>()
+        fun compactList(insts: InstanceList): InstanceList =
+            insts.onCases(InstanceList::of) { when {
+                it.isEmpty() -> InstanceList.Empty
+                else -> it.asSequence().filterNotNull().toHashSet().let { elems ->
+                    cache.getOrPut(elems) { InstanceList.of(elems.toTypedArray()) }
+                }
+            }}
+        fun compact(inst: Instance) {
+            inst._hardFwdRefs = compactList(inst._hardFwdRefs)
+            inst._hardRevRefs = compactList(inst._hardRevRefs)
+            inst._softRevRefs = compactList(inst._softRevRefs)
+        }
+        for (heap in heaps) {
+            heap.classes.forEach(::compact)
+            heap.forEachInstance { instance ->
+                compact(instance)
+                true
+            }
         }
     }
 
@@ -209,7 +226,6 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
         resolveReferences()
         compactMemory()
         ShortestDistanceVisitor().doVisit(gcRoots)
-        forEachReachableInstance(Instance::dedupeReferences)
 
         // Initialize retained sizes for all classes and objects, including unreachable ones.
         for (heap in heaps) {
@@ -224,7 +240,7 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
     private fun doComputeRetainedSizes() {
         val (instances, immDom) = LinkEvalDominators.computeDominators(
             gcRoots.mapNotNullTo(mutableSetOf(), RootObj::referredInstance),
-            { it.hardForwardReferences.stream() },
+            { it.hardForwardReferences.asStream() },
         )
 
         // We only update the retained sizes of objects in the dominator tree (i.e. reachable).

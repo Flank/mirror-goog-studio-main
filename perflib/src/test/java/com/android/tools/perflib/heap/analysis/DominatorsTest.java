@@ -23,10 +23,15 @@ import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
 import com.android.tools.perflib.heap.SnapshotBuilder;
+
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.util.stream.Stream;
+
+import kotlin.sequences.SequencesKt;
 
 // These are now tests on computing retained sizes and path-to-gc, rather than the lower-level
 // dominator algorithm
@@ -205,22 +210,22 @@ public class DominatorsTest extends TestCase {
         Instance instance9 = mSnapshot.findInstance(9);
         assertNotNull(instance9);
         assertNotNull(instance9.getSoftReverseReferences());
-        assertEquals(1, instance9.getHardReverseReferences().size());
-        assertEquals(1, instance9.getSoftReverseReferences().size());
+        assertEquals(1, SequencesKt.count(instance9.getHardReverseReferences()));
+        assertEquals(1, SequencesKt.count(instance9.getSoftReverseReferences()));
         assertEquals(6, instance9.getDistanceToGcRoot());
 
         Instance instance10 = mSnapshot.findInstance(10);
         assertNotNull(instance10);
         assertNotNull(instance10.getSoftReverseReferences());
-        assertEquals(1, instance10.getHardReverseReferences().size());
-        assertEquals(1, instance10.getSoftReverseReferences().size());
+        assertEquals(1, SequencesKt.count(instance10.getHardReverseReferences()));
+        assertEquals(1, SequencesKt.count(instance10.getSoftReverseReferences()));
         assertEquals(4, instance10.getDistanceToGcRoot());
 
         Instance instance11 = mSnapshot.findInstance(11);
         assertNotNull(instance11);
         assertNotNull(instance11.getSoftReverseReferences());
-        assertEquals(0, instance11.getHardReverseReferences().size());
-        assertEquals(1, instance11.getSoftReverseReferences().size());
+        assertEquals(0, SequencesKt.count(instance11.getHardReverseReferences()));
+        assertEquals(1, SequencesKt.count(instance11.getSoftReverseReferences()));
         assertEquals(Integer.MAX_VALUE, instance11.getDistanceToGcRoot());
 
         assertEquals(13, mSnapshot.getReachableInstances().size());
@@ -266,8 +271,11 @@ public class DominatorsTest extends TestCase {
     private void assertParentPathToGc(int node, int... parents) {
         for (int parent : parents) {
             Instance instance = mSnapshot.findInstance(node);
-            Stream<Instance> parentInstances = instance.getHardReverseReferences().stream()
-                    .filter(next -> next.getDistanceToGcRoot() < instance.getDistanceToGcRoot());
+
+            Stream<Instance> parentInstances =
+                    SequencesKt.toList(SequencesKt.filter(instance.getHardReverseReferences(),
+                                                          next -> next.getDistanceToGcRoot() < instance.getDistanceToGcRoot()))
+                            .stream();
             if (parentInstances.anyMatch(p -> p.getId() == parent)) {
                 return;
             }

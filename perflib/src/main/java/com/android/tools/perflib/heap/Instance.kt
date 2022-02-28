@@ -44,14 +44,17 @@ abstract class Instance internal constructor(
     //  the instance were removed.
     //  To save space, we only keep a primitive array here following the order in mSnapshot.mHeaps.
     private var retainedSizes: LongArray? = null
-    @JvmField val hardForwardReferences = ArrayList<Instance>()
+    internal var _hardFwdRefs: InstanceList = InstanceList.Empty
+    val hardForwardReferences: Sequence<Instance> get() = _hardFwdRefs.asInstanceSequence()
 
     //  List of all objects that hold a live reference to this object
-    open val hardReverseReferences = ArrayList<Instance>()
+    internal var _hardRevRefs: InstanceList = InstanceList.Empty
+    open val hardReverseReferences: Sequence<Instance> get() = _hardRevRefs.asInstanceSequence()
 
     //  List of all objects that hold a soft/weak/phantom reference to this object.
     //  Don't create an actual list until we need to.
-    open var softReverseReferences: ArrayList<Instance>? = null
+    var _softRevRefs: InstanceList = InstanceList.Empty
+    open val softReverseReferences: Sequence<Instance> get() = _softRevRefs.asInstanceSequence()
 
     open val classObj: ClassObj? get() = heap!!.mSnapshot.findClass(classId)
 
@@ -95,17 +98,6 @@ abstract class Instance internal constructor(
     abstract fun resolveReferences()
     abstract fun accept(visitor: Visitor)
 
-    /**
-     * Trims the variable size data to their minimal size to reduce memory usage.
-     */
-    fun compactMemory() {
-        // mHardForwardReferences trimmed in resolveReferences();
-        hardReverseReferences.trimToSize()
-        if (softReverseReferences != null) {
-            softReverseReferences!!.trimToSize()
-        }
-    }
-
     fun resetRetainedSize() {
         val allHeaps: List<Heap?> = heap!!.mSnapshot.heapList
         if (retainedSizes == null) {
@@ -137,29 +129,10 @@ abstract class Instance internal constructor(
      */
     fun addReverseReference(field: Field?, reference: Instance) {
         if (field != null && field.name == "referent" && reference.isSoftReference) {
-            if (softReverseReferences == null) {
-                softReverseReferences = ArrayList()
-            }
-            softReverseReferences!!.add(reference)
+            _softRevRefs += reference
         } else {
-            hardReverseReferences.add(reference)
+            _hardRevRefs += reference
         }
-    }
-
-    /**
-     * Removes all duplicate references AND references to itself.
-     */
-    fun dedupeReferences() {
-        fun dedupe(l: ArrayList<Instance>) {
-            val elems = l.toMutableSet().also { it.remove(this) }
-            if (elems.size != l.size) {
-                l.clear()
-                l.addAll(elems)
-            }
-            l.trimToSize()
-        }
-        dedupe(hardReverseReferences)
-        softReverseReferences?.let(::dedupe)
     }
 
     protected fun readValue(type: Type): Any? = when (type) {

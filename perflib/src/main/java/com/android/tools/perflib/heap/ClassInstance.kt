@@ -47,11 +47,10 @@ open class ClassInstance(id: Long, stack: StackTrace?, private val valuesOffset:
             if (fieldValue.value is Instance) {
                 fieldValue.value.addReverseReference(fieldValue.field, this)
                 if (!isSoftReference || fieldValue.field.name != "referent") {
-                    hardForwardReferences.add(fieldValue.value)
+                    _hardFwdRefs += fieldValue.value
                 }
             }
         }
-        hardForwardReferences.trimToSize() // Don't wait until the compactMemory stage to trim.
     }
 
     override fun accept(visitor: Visitor) {

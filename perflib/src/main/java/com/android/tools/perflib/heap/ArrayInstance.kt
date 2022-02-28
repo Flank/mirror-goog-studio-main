@@ -62,7 +62,7 @@ open class ArrayInstance(
             for (value in values) {
                 if (value is Instance) {
                     value.addReverseReference(null, this)
-                    hardForwardReferences.add(value)
+                    _hardFwdRefs += value
                 }
             }
         }

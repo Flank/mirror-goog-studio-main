@@ -83,7 +83,7 @@ open class ClassObj(
         for ((key, value) in staticFieldValues) {
             if (value is Instance) {
                 value.addReverseReference(key, this)
-                hardForwardReferences.add(value)
+                _hardFwdRefs += value
             }
         }
     }
