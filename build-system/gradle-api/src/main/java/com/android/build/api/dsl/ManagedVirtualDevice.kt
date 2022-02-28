@@ -40,7 +40,11 @@ interface ManagedVirtualDevice : Device {
 
     /**
      * The application binary interface for the device image.
+     *
+     * [abi] is deprecated. Use [require64Bit] instead which will allow you to select between the
+     * 32 bit and 64 bit system image if appropriate for your development environment.
      */
+    @Deprecated("Replaced with: require64Bit")
     var abi: String
 
     /**

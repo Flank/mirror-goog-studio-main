@@ -133,6 +133,8 @@ Deprecated from AGP UNKNOWN_VERSION
   * com.android.build.api.dsl.LintOptions.textOutput: void (java.lang.String)
   * com.android.build.api.dsl.LintOptions.warning: void (java.lang.String)
   * com.android.build.api.dsl.LintOptions.warning: void (java.lang.String[])
+  * com.android.build.api.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()
+  * com.android.build.api.dsl.ManagedVirtualDevice.setAbi: void (java.lang.String)
   * com.android.build.api.dsl.PackagingOptions.doNotStrip: void (java.lang.String)
   * com.android.build.api.dsl.PackagingOptions.exclude: void (java.lang.String)
   * com.android.build.api.dsl.PackagingOptions.getDoNotStrip: java.util.Set<java.lang.String> ()
