@@ -74,7 +74,8 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
             val gson = gsonBuilder.create()
             val redirectFileContent = inputFile.readText()
             val redirectedFile =
-                ListingFileRedirect.maybeExtractRedirectedFile(inputFile, redirectFileContent)
+                ListingFileRedirect.maybeExtractRedirectedFile(
+                    inputFile, redirectFileContent)
             val relativePathToUse = if (redirectedFile != null) {
                 redirectedFile.parentFile.toPath()
             } else {

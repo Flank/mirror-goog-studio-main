@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.packaging.JarFlinger
+import com.android.builder.utils.agpReferenceDocsVersion
 import com.android.ide.common.resources.FileStatus
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
@@ -391,7 +392,7 @@ class MergeJavaResWorkActionTest {
                  - ${jarFile1.absolutePath}
                  - ${jarFile2.absolutePath}
                 Adding a packagingOptions block may help, please refer to
-                https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html
+                https://developer.android.com/reference/tools/gradle-api/$agpReferenceDocsVersion/com/android/build/api/dsl/ResourcesPackagingOptions
                 for more information
             """.trimIndent()
         )

@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.UImplicitCallExpression
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.android.tools.lint.detector.api.findSelector
 import com.android.tools.lint.detector.api.isJava
@@ -274,6 +275,14 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             var prev: UElement = element.getParentOfType(UExpression::class.java, false) ?: return true
+
+            if (prev is UImplicitCallExpression) {
+                // Wrapped overloaded operator call: we need to point to the original element
+                // such that the identity check below (for example in the UIfExpression handling)
+                // recognizes it.
+                prev = prev.expression
+            }
+
             var curr: UElement = prev.uastParent ?: return true
             while (curr is UQualifiedReferenceExpression && curr.selector === prev || curr is UParenthesizedExpression) {
                 prev = curr

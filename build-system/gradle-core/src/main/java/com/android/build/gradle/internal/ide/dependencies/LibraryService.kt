@@ -198,7 +198,7 @@ class LibraryServiceImpl(
                                 attributes = getAttributeMap(it, productFlavors),
                                 capabilities = getCapabilityList(it),
                                 group = WRAPPED_AAR_GROUPID,
-                                name = stringCache.cacheString("${component.build.name}|${component.projectPath}"),
+                                name = stringCache.cacheString(component.getIdString()),
                                 version = stringCache.cacheString("unspecified"),
                                 isTestFixtures = false
                             )

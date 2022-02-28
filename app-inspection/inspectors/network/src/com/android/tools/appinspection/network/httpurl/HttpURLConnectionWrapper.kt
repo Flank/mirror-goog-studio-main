@@ -35,7 +35,7 @@ class HttpURLConnectionWrapper(
     private val trackedConnection: TrackedHttpURLConnection =
         TrackedHttpURLConnection(wrapped, callstack, trackerFactory)
 
-    override fun getHeaderFieldKey(n: Int): String {
+    override fun getHeaderFieldKey(n: Int): String? {
         return trackedConnection.getHeaderFieldKey(n)
     }
 
@@ -51,7 +51,7 @@ class HttpURLConnectionWrapper(
         trackedConnection.setChunkedStreamingMode(chunklen)
     }
 
-    override fun getHeaderField(n: Int): String {
+    override fun getHeaderField(n: Int): String? {
         return trackedConnection.getHeaderField(n)
     }
 
@@ -63,23 +63,23 @@ class HttpURLConnectionWrapper(
         return trackedConnection.instanceFollowRedirects
     }
 
-    override fun setRequestMethod(method: String) {
-        trackedConnection.requestMethod = method
+    override fun setRequestMethod(method: String?) {
+        trackedConnection.setRequestMethod(method)
     }
 
     override fun getRequestMethod(): String {
-        return trackedConnection.requestMethod
+        return trackedConnection.getRequestMethod()
     }
 
     override fun getResponseCode(): Int {
         return trackedConnection.responseCode
     }
 
-    override fun getResponseMessage(): String {
+    override fun getResponseMessage(): String? {
         return trackedConnection.responseMessage
     }
 
-    override fun getHeaderFieldDate(name: String, Default: Long): Long {
+    override fun getHeaderFieldDate(name: String?, Default: Long): Long {
         return trackedConnection.getHeaderFieldDate(name, Default)
     }
 
@@ -87,7 +87,7 @@ class HttpURLConnectionWrapper(
         return trackedConnection.permission
     }
 
-    override fun getErrorStream(): InputStream {
+    override fun getErrorStream(): InputStream? {
         return trackedConnection.errorStream
     }
 
@@ -119,11 +119,11 @@ class HttpURLConnectionWrapper(
         return trackedConnection.contentLengthLong
     }
 
-    override fun getContentType(): String {
+    override fun getContentType(): String? {
         return trackedConnection.contentType
     }
 
-    override fun getContentEncoding(): String {
+    override fun getContentEncoding(): String? {
         return trackedConnection.contentEncoding
     }
 
@@ -139,7 +139,7 @@ class HttpURLConnectionWrapper(
         return trackedConnection.lastModified
     }
 
-    override fun getHeaderField(name: String): String {
+    override fun getHeaderField(name: String?): String? {
         return trackedConnection.getHeaderField(name)
     }
 
@@ -147,11 +147,11 @@ class HttpURLConnectionWrapper(
         return trackedConnection.headerFields
     }
 
-    override fun getHeaderFieldInt(name: String, Default: Int): Int {
+    override fun getHeaderFieldInt(name: String?, Default: Int): Int {
         return trackedConnection.getHeaderFieldInt(name, Default)
     }
 
-    override fun getHeaderFieldLong(name: String, Default: Long): Long {
+    override fun getHeaderFieldLong(name: String?, Default: Long): Long {
         return trackedConnection.getHeaderFieldLong(name, Default)
     }
 
@@ -159,7 +159,7 @@ class HttpURLConnectionWrapper(
         return trackedConnection.content
     }
 
-    override fun getContent(classes: Array<Class<*>>): Any {
+    override fun getContent(classes: Array<Class<*>>): Any? {
         return trackedConnection.getContent(classes)
     }
 
@@ -223,15 +223,15 @@ class HttpURLConnectionWrapper(
         trackedConnection.defaultUseCaches = defaultusecaches
     }
 
-    override fun setRequestProperty(key: String, value: String) {
+    override fun setRequestProperty(key: String?, value: String?) {
         trackedConnection.setRequestProperty(key, value)
     }
 
-    override fun addRequestProperty(key: String, value: String) {
+    override fun addRequestProperty(key: String?, value: String?) {
         trackedConnection.addRequestProperty(key, value)
     }
 
-    override fun getRequestProperty(key: String): String {
+    override fun getRequestProperty(key: String?): String? {
         return trackedConnection.getRequestProperty(key)
     }
 

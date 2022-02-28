@@ -158,11 +158,10 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
       error->append(msg);
       Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
       status = TraceStopStatus::APP_PROCESS_DIED;
-    }
-
-    // Make sure pid is what is expected. A startup profiling didn't have pid
-    // available when it started, so it is an exception.
-    if (ongoing_recording.pid != kStartupProfilingPid &&
+    } else if (
+        // Make sure pid is what is expected. A startup profiling didn't have
+        // pid available when it started, so it is an exception.
+        ongoing_recording.pid != kStartupProfilingPid &&
         ongoing_recording.pid != current_pid) {
       // Looks like the app was restarted. Simpleperf died as a result.
       string msg = "Recorded pid and current app pid do not match: Aborting";

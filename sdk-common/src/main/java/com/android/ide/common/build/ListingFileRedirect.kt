@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.build
 
+import com.android.utils.ILogger
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringReader
@@ -44,20 +45,30 @@ object ListingFileRedirect {
         }
     }
 
-    fun maybeExtractRedirectedFile(redirectFile: File, redirectFileContent: String? = null): File? {
+    fun maybeExtractRedirectedFile(
+        redirectFile: File,
+        redirectFileContent: String? = null,
+        logger: ILogger? = null,
+    ): File? {
         val fileContent = redirectFileContent ?: redirectFile.readText()
         return if (fileContent.startsWith(REDIRECT_MARKER)) {
+
+            logger?.info("Redirect file detected")
             val fileLocator = Properties().also {
                 it.load(StringReader(fileContent))
             }
-            redirectFile.parentFile.resolve(
-                fileLocator.getProperty(
-                    REDIRECT_PROPERTY_NAME
-                )
-            )
-        } else null
+            fileLocator.getProperty(
+                REDIRECT_PROPERTY_NAME
+            ).let {
+                logger?.info("Redirect file pointing to %s", it)
+                redirectFile.parentFile.resolve(it)
+            }
+        } else {
+            logger?.info("No redirect file present, should be output.json")
+            null
+        }
     }
 
-    fun getListingFile(inputFile: File) =
-        maybeExtractRedirectedFile(inputFile) ?: inputFile
+    fun getListingFile(inputFile: File, logger: ILogger? = null) =
+        maybeExtractRedirectedFile(inputFile, logger = logger) ?: inputFile
 }

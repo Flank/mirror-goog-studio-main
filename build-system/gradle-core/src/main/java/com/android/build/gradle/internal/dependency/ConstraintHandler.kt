@@ -18,6 +18,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.services.StringCachingBuildService
+import com.android.build.gradle.internal.ide.dependencies.getIdString
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -46,25 +47,25 @@ internal fun Configuration.alignWith(
 
         srcConfiguration.incoming.resolutionResult.allDependencies { dependency ->
             if (dependency is ResolvedDependencyResult) {
-                val id = dependency.selected.id
-                if (id is ModuleComponentIdentifier) {
+                val componentIdentifier = dependency.selected.id
+                if (componentIdentifier is ModuleComponentIdentifier) {
                     // using a repository with a flatDir to stock local AARs will result in an
                     // external module dependency with no version.
-                    if (!id.version.isNullOrEmpty()) {
-                        if (!isTest || id.module != "listenablefuture" || id.group != "com.google.guava" || id.version != "1.0") {
+                    if (!componentIdentifier.version.isNullOrEmpty()) {
+                        if (!isTest || componentIdentifier.module != "listenablefuture" || componentIdentifier.group != "com.google.guava" || componentIdentifier.version != "1.0") {
                             dependencyHandler.constraints.add(
                                 configName,
-                                "${id.group}:${id.module}:${id.version}"
+                                "${componentIdentifier.group}:${componentIdentifier.module}:${componentIdentifier.version}"
                             ) { constraint ->
-                                constraint.because(stringCachingService.cacheString("$srcConfigName uses version ${id.version}"))
+                                constraint.because(stringCachingService.cacheString("$srcConfigName uses version ${componentIdentifier.version}"))
                                 constraint.version { versionConstraint ->
-                                    versionConstraint.strictly(id.version)
+                                    versionConstraint.strictly(componentIdentifier.version)
                                 }
                             }
                         }
                     }
-                } else if (id is ProjectComponentIdentifier
-                    && id.build.isCurrentBuild
+                } else if (componentIdentifier is ProjectComponentIdentifier
+                    && componentIdentifier.build.isCurrentBuild
                     && dependency.requested is ModuleComponentSelector
                 ) {
                     // Requested external library has been replaced with the project dependency,
@@ -74,8 +75,9 @@ internal fun Configuration.alignWith(
                     // project is from the current build.
                     resolutionStrategy.dependencySubstitution.let { sb ->
                         sb.substitute(dependency.requested)
-                            .because(stringCachingService.cacheString("$srcConfigName uses project ${id.projectPath}"))
-                            .using(sb.project(id.projectPath))
+                            .because(stringCachingService.cacheString(
+                                "$srcConfigName uses project ${componentIdentifier.getIdString()}"))
+                            .using(sb.project(componentIdentifier.getIdString()))
                     }
                 }
             }

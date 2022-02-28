@@ -48,7 +48,12 @@ object GenericBuiltArtifactsLoader {
      */
     @JvmStatic
     fun loadFromFile(inputFile: File?, logger: ILogger): GenericBuiltArtifacts? {
-        if (inputFile == null || !inputFile.exists()) {
+        if (inputFile == null) {
+            logger.info("null redirect file passed to loadFromFile")
+            return null
+        }
+        if (!inputFile.exists()) {
+            logger.info("%s file does not exist", inputFile.absolutePath)
             return null
         }
         val gsonBuilder = GsonBuilder()
@@ -73,7 +78,7 @@ object GenericBuiltArtifactsLoader {
             try {
                 gson.fromJson(it, GenericBuiltArtifacts::class.java)
             } catch (e: Exception) {
-                logger.quiet("Cannot parse build output metadata file, please run a clean build")
+                logger.error(e, "Cannot parse build output metadata file, please run a clean build")
                 return null
             }
         }

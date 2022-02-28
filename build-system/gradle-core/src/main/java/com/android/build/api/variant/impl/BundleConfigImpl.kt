@@ -17,8 +17,23 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.BundleConfig
-import com.android.build.api.variant.CodeTransparency
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 
 class BundleConfigImpl(
-    override val codeTransparency: CodeTransparencyImpl
-): BundleConfig
+    override val codeTransparency: CodeTransparencyImpl,
+    val variantServices: VariantPropertiesApiServices,
+): BundleConfig {
+
+    internal val metadataFiles = variantServices.listPropertyOf(MetadataRecord::class.java) {}
+
+    override fun addMetadataFile(metadataDirectory: String, file: Provider<RegularFile>) {
+        metadataFiles.add(
+            MetadataRecord(
+                metadataDirectory,
+                file
+            )
+        )
+    }
+}

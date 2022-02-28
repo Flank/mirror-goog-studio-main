@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
@@ -56,5 +58,21 @@ class AnalyticsEnabledBundleConfigTest {
         ).isEqualTo(VariantPropertiesMethodType.GET_CODE_TRANSPARENCY_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
             .codeTransparency
+    }
+
+    @Test
+    fun testAddMetadataFile() {
+        val provider = Mockito.mock(Provider::class.java) as Provider<RegularFile>
+        proxy.addMetadataFile(
+            "com.android.build",
+            provider,
+        )
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.BUNDLE_CONFIG_ADD_METADATA_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .addMetadataFile("com.android.build", provider )
     }
 }

@@ -79,11 +79,11 @@ class BlameLogger(
         }
     }
 
-    fun error(message: String, source: Source? = null, t: Throwable? = null) {
+    fun error(message: String, source: Source? = null, throwable: Throwable? = null) {
         if (source != null) {
-            logger.error(t, "${getOutputSource(source)}$message")
+            logger.error(throwable, "${getOutputSource(source)}$message")
         } else {
-            logger.error(t, message)
+            logger.error(throwable, message)
         }
     }
 

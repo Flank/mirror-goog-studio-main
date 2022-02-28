@@ -1656,7 +1656,7 @@ abstract class ArtifactInput {
             if (projectRuntimeLintModels.isPresent) {
                 val thisProject =
                     ProjectKey(
-                        artifactCollectionsInputs.buildMapping.currentBuild,
+                        artifactCollectionsInputs.buildMapping.currentBuild!!,
                         artifactCollectionsInputs.projectPath,
                         artifactCollectionsInputs.variantName
                     )

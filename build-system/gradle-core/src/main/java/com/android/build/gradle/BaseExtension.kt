@@ -258,7 +258,22 @@ abstract class BaseExtension protected constructor(
     override val testServers: List<TestServer>
         get() = testServerList
 
+    /**
+     * The [Transform] API is planned to be removed in Android Gradle plugin 8.0.
+     *
+     * There is no single replacement. For more information about how to migrate, see
+     * [https://developer.android.com/studio/releases/gradle-plugin-roadmap]
+     */
+    @Deprecated(
+        "The transform API is planned to be removed in Android Gradle plugin 8.0."
+    )
     fun registerTransform(transform: Transform, vararg dependencies: Any) {
+        dslServices.deprecationReporter.reportDeprecatedApi(
+            newApiElement = null,
+            oldApiElement = "android.registerTransform",
+            url = "https://developer.android.com/studio/releases/gradle-plugin-api-updates#transform-api",
+            deprecationTarget = DeprecationReporter.DeprecationTarget.TRANSFORM_API
+        )
         _transforms.add(transform)
         _transformDependencies.add(listOf(dependencies))
     }
@@ -277,6 +292,7 @@ abstract class BaseExtension protected constructor(
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.")
     }
 
+    @Deprecated("Use AndroidComponentsExtension.beforeVariants API to disable specific variants")
     open fun variantFilter(variantFilter: Action<VariantFilter>) {
         this.variantFilter = variantFilter
     }
