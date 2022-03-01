@@ -117,15 +117,15 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             "build/intermediates/javac/debug/classes"
 
         // Original source files in app/src/main/java
-        private const val APP_PACKAGE = "com.example.app"
-        private const val APP_MAIN_ACTIVITY_CLASS = "$APP_PACKAGE.MainActivity"
+        private const val APP_NAMESPACE = "com.example.app"
+        private const val APP_MAIN_ACTIVITY_CLASS = "$APP_NAMESPACE.MainActivity"
 
         // Original source files in lib/src/main/java
-        private const val LIB_PACKAGE = "com.example.lib"
-        private const val LIB_DATA_1_CLASS = "$LIB_PACKAGE.Data1"
-        private const val LIB_DATA_2_CLASS = "$LIB_PACKAGE.Data2"
-        private const val LIB_LONER_1_CLASS = "$LIB_PACKAGE.Loner1"
-        private const val LIB_LONER_2_CLASS = "$LIB_PACKAGE.Loner2"
+        private const val LIB_NAMESPACE = "com.example.lib"
+        private const val LIB_DATA_1_CLASS = "$LIB_NAMESPACE.Data1"
+        private const val LIB_DATA_2_CLASS = "$LIB_NAMESPACE.Data2"
+        private const val LIB_LONER_1_CLASS = "$LIB_NAMESPACE.Loner1"
+        private const val LIB_LONER_2_CLASS = "$LIB_NAMESPACE.Loner2"
 
         // Original layout files in lib/src/main/res/layout
         private const val LIB_LAYOUT_1 = "layout1"
@@ -175,7 +175,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
     }
 
     private fun setUpApp(): MinimalSubProject {
-        val app = MinimalSubProject.app(APP_PACKAGE)
+        val app = MinimalSubProject.app(APP_NAMESPACE)
 
         // 1. Create build.gradle file
         app.withFile(
@@ -185,6 +185,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 minSdkVersion = "23"
                 dataBindingEnabled = true
+                namespace = APP_NAMESPACE
                 addDependency(
                     dependency = "'androidx.appcompat:appcompat:$ANDROIDX_VERSION'"
                 )
@@ -195,7 +196,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // 2. Create AndroidManifest.xml file
         app.withFile(
             "src/main/AndroidManifest.xml",
-            with(ManifestFileBuilder(APP_PACKAGE)) {
+            with(ManifestFileBuilder()) {
                 addApplicationTag(APP_MAIN_ACTIVITY_CLASS)
                 build()
             })
@@ -203,7 +204,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // 3. Create source files
         app.withFile(
             "$SOURCE_DIR/${getPath(APP_MAIN_ACTIVITY_CLASS)}.java",
-            with(JavaSourceFileBuilder(APP_PACKAGE)) {
+            with(JavaSourceFileBuilder(APP_NAMESPACE)) {
                 addImports(
                     "android.os.Bundle",
                     "androidx.appcompat.app.AppCompatActivity",
@@ -246,7 +247,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
     }
 
     private fun setUpLib(): MinimalSubProject {
-        val lib = MinimalSubProject.lib(LIB_PACKAGE)
+        val lib = MinimalSubProject.lib(LIB_NAMESPACE)
 
         // 1. Create build.gradle file
         lib.withFile(
@@ -256,6 +257,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 minSdkVersion = "23"
                 dataBindingEnabled = true
+                namespace = LIB_NAMESPACE
                 addDependency(
                     dependency = "'androidx.constraintlayout:constraintlayout:" +
                             "$ANDROIDX_CONSTRAINT_LAYOUT_VERSION'"
@@ -266,14 +268,14 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // 2. Create AndroidManifest.xml file
         lib.withFile(
             "src/main/AndroidManifest.xml",
-            with(ManifestFileBuilder(LIB_PACKAGE)) {
+            with(ManifestFileBuilder()) {
                 build()
             })
 
         // 3. Create source files
         lib.withFile(
             "$SOURCE_DIR/${getPath(LIB_DATA_1_CLASS)}.java",
-            with(JavaSourceFileBuilder(LIB_PACKAGE)) {
+            with(JavaSourceFileBuilder(LIB_NAMESPACE)) {
                 addImports(
                     "android.widget.TextView",
                     "android.widget.Toast",
@@ -326,7 +328,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             })
         lib.withFile(
             "$SOURCE_DIR/${getPath(LIB_DATA_2_CLASS)}.java",
-            with(JavaSourceFileBuilder(LIB_PACKAGE)) {
+            with(JavaSourceFileBuilder(LIB_NAMESPACE)) {
                 addImports(
                     "android.widget.TextView",
                     "android.widget.Toast",
@@ -379,7 +381,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             })
         lib.withFile(
             "$SOURCE_DIR/${getPath(LIB_LONER_1_CLASS)}.java",
-            with(JavaSourceFileBuilder(LIB_PACKAGE)) {
+            with(JavaSourceFileBuilder(LIB_NAMESPACE)) {
                 addClass(
                     """
                     public class Loner1 {
@@ -390,7 +392,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             })
         lib.withFile(
             "$SOURCE_DIR/${getPath(LIB_LONER_2_CLASS)}.java",
-            with(JavaSourceFileBuilder(LIB_PACKAGE)) {
+            with(JavaSourceFileBuilder(LIB_NAMESPACE)) {
                 addClass(
                     """
                     public class Loner2 {

@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +44,6 @@ import org.gradle.api.provider.Provider;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.initialization.GradlePropertiesController;
 import org.gradle.internal.service.DefaultServiceRegistry;
-import org.gradle.internal.service.scopes.GradleScopeServices;
 import org.gradle.internal.service.scopes.ProjectScopeServices;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.gradle.tooling.events.OperationCompletionListener;
@@ -94,7 +92,7 @@ public class TestProjects {
 
     private static final String MANIFEST_TEMPLATE =
             // language=xml
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?><manifest package=\"%s\"></manifest>";
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><manifest></manifest>";
 
     @NonNull
     public static Builder builder(@NonNull Path projectDir) {
@@ -150,14 +148,8 @@ public class TestProjects {
 
             Path manifest = projectDir.resolve("src/main/AndroidManifest.xml");
 
-            String content;
-            if (manifestContent.equals(MANIFEST_TEMPLATE)) {
-                content = String.format(manifestContent, applicationId);
-            } else {
-                content = manifestContent;
-            }
             Files.createDirectories(manifest.getParent());
-            Files.write(manifest, ImmutableList.of(content));
+            Files.write(manifest, ImmutableList.of(manifestContent));
 
             ProjectBuilder projectBuilder =
                     ProjectBuilder.builder()

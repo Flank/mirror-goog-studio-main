@@ -26,6 +26,8 @@ class BuildFileBuilder {
 
     var dataBindingEnabled: Boolean = false
 
+    var namespace: String? = null
+
     private val dependencies: StringBuilder = StringBuilder()
 
     fun addDependency(configuration: String = "implementation", dependency: String) {
@@ -56,6 +58,10 @@ class BuildFileBuilder {
 
         if (dataBindingEnabled) {
             contents.append("\n\nandroid.buildFeatures.dataBinding = true")
+        }
+
+        if (namespace != null) {
+            contents.append("\n\nandroid.namespace \"$namespace\"")
         }
 
         if (!dependencies.isEmpty()) {

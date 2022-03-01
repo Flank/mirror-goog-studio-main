@@ -109,12 +109,12 @@ class EmptyActivityProjectBuilder {
 
     private fun createAppSubProject(
         @Suppress("SameParameterValue") subprojectName: String,
-        packageName: String,
+        namespace: String,
         minSdkVersion: Int,
         useKotlin: Boolean
     ): GradleProject {
         val app = EmptyGradleProject(subprojectName)
-        val packagePath = packageName.replace('.', '/')
+        val packagePath = namespace.replace('.', '/')
 
         // 1. Create build.gradle file
         app.addFile(
@@ -124,6 +124,7 @@ class EmptyActivityProjectBuilder {
                 this.useKotlin = useKotlin
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 this.minSdkVersion = minSdkVersion.toString()
+                this.namespace = namespace
                 appDependencies.forEach {
                     addDependency(dependency = "project(\"${it.path}\")")
                 }
@@ -157,7 +158,7 @@ class EmptyActivityProjectBuilder {
         // 2. Create AndroidManifest.xml file
         app.addFile(
             "src/main/AndroidManifest.xml",
-            with(ManifestFileBuilder(packageName)) {
+            with(ManifestFileBuilder()) {
                 addApplicationTag("MainActivity")
                 build()
             })
@@ -172,7 +173,7 @@ class EmptyActivityProjectBuilder {
             app.addFile(
                 "src/main/java/$packagePath/MainActivity.kt",
                 """
-                package $packageName
+                package $namespace
 
                 import $appCompatActivityClass
                 import android.os.Bundle
@@ -190,7 +191,7 @@ class EmptyActivityProjectBuilder {
             app.addFile(
                 "src/main/java/$packagePath/MainActivity.java",
                 """
-                package $packageName;
+                package $namespace;
 
                 import $appCompatActivityClass;
                 import android.os.Bundle;
@@ -207,7 +208,7 @@ class EmptyActivityProjectBuilder {
             )
         }
         if (withUnitTest) {
-            addUnitTest(app, packageName, useKotlin)
+            addUnitTest(app, namespace, useKotlin)
         }
 
         // 4. Create layout file
@@ -282,7 +283,7 @@ class EmptyActivityProjectBuilder {
      */
     fun addAndroidLibrary(
         subprojectName: String = LIB,
-        packageName: String = COM_EXAMPLE_LIB,
+        namespace: String = COM_EXAMPLE_LIB,
         minSdkVersion: Int = DEFAULT_MIN_SDK_VERSION,
         useKotlin: Boolean = false,
         addImplementationDependencyFromApp: Boolean = false // default to false to match AS behavior
@@ -297,6 +298,7 @@ class EmptyActivityProjectBuilder {
                 this.useKotlin = useKotlin
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 this.minSdkVersion = minSdkVersion.toString()
+                this.namespace = namespace
                 if (withUnitTest) {
                     addDependency(
                         configuration = "testImplementation",
@@ -310,13 +312,13 @@ class EmptyActivityProjectBuilder {
         // 2. Create AndroidManifest.xml file
         lib.addFile(
             "src/main/AndroidManifest.xml",
-            with(ManifestFileBuilder(packageName)) {
+            with(ManifestFileBuilder()) {
                 build()
             })
 
         // 3. Create source files
         if (withUnitTest) {
-            addUnitTest(lib, packageName, useKotlin)
+            addUnitTest(lib, namespace, useKotlin)
         }
 
         librarySubProjects.add(lib)

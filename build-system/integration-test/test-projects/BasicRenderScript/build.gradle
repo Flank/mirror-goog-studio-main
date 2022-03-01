@@ -24,6 +24,7 @@ List<String> dirs = [
 
 android {
     namespace "com.example.android.basicrenderscript"
+    testNamespace "com.example.android.basicrenderscript.tests"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion rootProject.buildToolsVersion
 

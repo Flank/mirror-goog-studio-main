@@ -91,8 +91,6 @@ class PrecompileRemoteResourcesTest {
         .withFile(
             "src/main/AndroidManifest.xml",
             """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                         xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="com.precompileRemoteResourcesTest.publishedLib"
                     android:versionName="@com.precompileRemoteResourcesTest.publishedLib:string/my_version_name">
                 </manifest>""".trimIndent()
         )
@@ -116,13 +114,6 @@ class PrecompileRemoteResourcesTest {
                     <background android:drawable="@drawable/ic_launcher_background" />
                 </adaptive-icon>
             """.trimIndent()
-        )
-        .withFile(
-            "src/main/AndroidManifest.xml",
-            """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.localLib" >
-                </manifest>""".trimIndent()
         )
 
     private val app = MinimalSubProject.app("com.example.app")
@@ -156,8 +147,7 @@ class PrecompileRemoteResourcesTest {
         .withFile(
             "src/main/AndroidManifest.xml",
             """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.app" >
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="app_name" android:icon="@mipmap/ic_launcher">
                         <activity android:name="MainActivity"
                                   android:label="app_name">

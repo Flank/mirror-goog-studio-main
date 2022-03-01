@@ -93,6 +93,7 @@ class ExtractNativeLibsPackagingTest(
                     """
                         apply plugin: 'com.android.application'
                         android {
+                            namespace "com.example"
                             compileSdk = ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
                             defaultConfig {
                                 minSdk = $minSdk
@@ -104,9 +105,7 @@ class ExtractNativeLibsPackagingTest(
                 .withFile(
                     "src/main/AndroidManifest.xml",
                     """
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example">
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                             <application $extractNativeLibsAttribute/>
                         </manifest>
                         """.trimIndent()
@@ -114,9 +113,7 @@ class ExtractNativeLibsPackagingTest(
                 .withFile(
                     "src/androidTest/AndroidManifest.xml",
                     """
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example">
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                             <application $extractNativeLibsAttribute/>
                         </manifest>
                         """.trimIndent()
@@ -135,6 +132,7 @@ class ExtractNativeLibsPackagingTest(
                     """
                         apply plugin: 'com.android.test'
                         android {
+                            namespace "com.example"
                             compileSdk = ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
                             defaultConfig {
                                 minSdk = $minSdk
@@ -146,9 +144,7 @@ class ExtractNativeLibsPackagingTest(
                 .withFile(
                     "src/main/AndroidManifest.xml",
                     """
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example">
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                             <application $extractNativeLibsAttribute/>
                         </manifest>
                         """.trimIndent()

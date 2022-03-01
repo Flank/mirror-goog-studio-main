@@ -95,6 +95,7 @@ class UseEmbeddedDexPackagingTest(
                     """
                         apply plugin: 'com.android.application'
                         android {
+                            namespace "com.test"
                             compileSdk = ${DEFAULT_COMPILE_SDK_VERSION}
                             defaultConfig {
                                 minSdk = $minSdk
@@ -106,11 +107,9 @@ class UseEmbeddedDexPackagingTest(
                 .withFile(
                     "src/main/AndroidManifest.xml",
                     """
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                         xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="com.test">
-                    <application $useEmbeddedAttribute/>
-                </manifest>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                            <application $useEmbeddedAttribute/>
+                        </manifest>
                     """.trimIndent()
                 )
         )

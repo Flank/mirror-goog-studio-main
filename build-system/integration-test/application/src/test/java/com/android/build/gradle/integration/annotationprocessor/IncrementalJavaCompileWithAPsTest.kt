@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.annotationprocessor
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_COMPILE_SDK_VERSION
@@ -72,7 +71,7 @@ class IncrementalJavaCompileWithAPsTest(
         private const val COMPILED_CLASSES_DIR =
             "build/intermediates/javac/debug/classes"
 
-        private const val MAIN_ACTIVITY_PACKAGE = "com.example.app"
+        private const val NAMESPACE = "com.example.app"
         private const val MAIN_ACTIVITY = "MainActivity"
 
         private const val ANNOTATED_PACKAGE = "com.example.annotated"
@@ -113,10 +112,10 @@ class IncrementalJavaCompileWithAPsTest(
     }
 
     private fun setUpApp(): MinimalSubProject {
-        val packagePath = MAIN_ACTIVITY_PACKAGE.replace('.', '/')
+        val packagePath = NAMESPACE.replace('.', '/')
         val layoutName = "activity_main"
         val helloTextId = "helloTextId"
-        val app = MinimalSubProject.app(MAIN_ACTIVITY_PACKAGE)
+        val app = MinimalSubProject.app(NAMESPACE)
 
         app.withFile(
             "src/main/res/layout/$layoutName.xml",
@@ -128,7 +127,7 @@ class IncrementalJavaCompileWithAPsTest(
 
         app.withFile(
             "src/main/AndroidManifest.xml",
-            with(ManifestFileBuilder(MAIN_ACTIVITY_PACKAGE)) {
+            with(ManifestFileBuilder()) {
                 addApplicationTag(MAIN_ACTIVITY)
                 build()
             })
@@ -139,6 +138,7 @@ class IncrementalJavaCompileWithAPsTest(
                 plugin = app.plugin
                 compileSdkVersion = DEFAULT_COMPILE_SDK_VERSION
                 minSdkVersion = "23"
+                namespace = NAMESPACE
                 addDependency(
                     dependency = "'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'"
                 )
@@ -179,7 +179,7 @@ class IncrementalJavaCompileWithAPsTest(
         // Add the main activity class that references the generated classes
         app.withFile(
             "src/main/java/$packagePath/$MAIN_ACTIVITY.java",
-            with(JavaSourceFileBuilder(MAIN_ACTIVITY_PACKAGE)) {
+            with(JavaSourceFileBuilder(NAMESPACE)) {
                 addImports("android.support.v7.app.AppCompatActivity", "android.os.Bundle")
                 addClass(
                     """
@@ -426,7 +426,7 @@ class IncrementalJavaCompileWithAPsTest(
         val generatedSourceDir = if (withKapt)
             GENERATED_SOURCE_KAPT_DIR else GENERATED_SOURCE_DIR
 
-        val mainActivityPackagePath = MAIN_ACTIVITY_PACKAGE.replace('.', '/')
+        val mainActivityPackagePath = NAMESPACE.replace('.', '/')
         val annotatedPackagePath = ANNOTATED_PACKAGE.replace('.', '/')
         val generatedPackagePath = GENERATED_PACKAGE.replace('.', '/')
 

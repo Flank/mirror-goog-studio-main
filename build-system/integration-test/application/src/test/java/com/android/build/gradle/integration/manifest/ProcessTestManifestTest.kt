@@ -86,8 +86,7 @@ class ProcessTestManifestTest {
         FileUtils.createFile(
             project.file("src/androidTest/AndroidManifest.xml"),
             """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.helloworld.test">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application>
                         <receiver android:name="com.example.helloworld.TestReceiver" />
                     </application>
@@ -102,7 +101,6 @@ class ProcessTestManifestTest {
             """
                 <?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            package="com.example.helloworld"
                             android:versionCode="1"
                             android:versionName="1.0">
 
@@ -166,8 +164,7 @@ class ProcessTestManifestTest {
         FileUtils.createFile(
             project.file("src/androidTest/AndroidManifest.xml"),
             """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.helloworld.test">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application>
                         <receiver android:name="com.example.helloworld.TestReceiver" />
                     </application>
@@ -177,8 +174,7 @@ class ProcessTestManifestTest {
         FileUtils.createFile(
             project.file("src/androidTestFlavor1/AndroidManifest.xml"),
             """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.helloworld.test">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application
                         android:allowBackup="true">
                     </application>
@@ -188,8 +184,7 @@ class ProcessTestManifestTest {
         FileUtils.createFile(
             project.file("src/androidTestFlavor2/AndroidManifest.xml"),
             """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.helloworld.test">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application
                         android:supportsRtl="true">
                     </application>
@@ -199,8 +194,7 @@ class ProcessTestManifestTest {
         FileUtils.createFile(
             project.file("src/androidTestDebug/AndroidManifest.xml"),
             """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.helloworld.test">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application
                         android:isGame="false">
                     </application>
@@ -263,7 +257,6 @@ class ProcessTestManifestTest {
                 """
                 <?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            package="com.example.helloworld"
                             android:versionCode="1"
                             android:versionName="1.0">
 
@@ -309,7 +302,6 @@ class ProcessTestManifestTest {
                 """
                 <?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            package="com.example.helloworld"
                             android:versionCode="1"
                             android:versionName="1.0">
 
