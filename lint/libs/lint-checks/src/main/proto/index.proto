@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package play.console.sdk.exports.index.external;
+
+option java_package = "com.android.tools.lint.checks";
+option java_multiple_files = true;
+
+// SDK Index messages used by external clients, like Android Studio.
+//
+// Before making any changes to messages in this file, you must keep in mind
+// that:
+// - Binary compatibility is paramount. Consumers of these messages can stay in
+//   the wild for a long time (3+ years). Before making any change make sure
+//   older clients will still be able to read the messages.
+// - External clients will store a copy of this file in their repo, so any
+//   changes made here also need to be reflected in their code base.
+//   TODO(b/204306325): Document how to update their files.
+// - You should probably avoid adding any dependencies to this file. Since
+//   external clients are built from separate repos, we would have to copy any
+//   dependencies to them as well.
+
+// SDK Index.
+message Index {
+  // SDKs from the SDK Index, in no particular order.
+  // The list doesn't have duplicates, but it's not guaranteed to contain all
+  // SDKs in the Index, since some might not have any relevant data for external
+  // clients.
+  repeated Sdk sdks = 1;
+}
+
+// Represents an SDK and its libraries.
+message Sdk {
+  // Libraries in this SDK, in no particular order.
+  // Guaranteed to contain at least one library.
+  // This library list is not exhaustive, libraries that don't have relevant
+  // data to external clients will be skipped.
+  repeated Library libraries = 1;
+
+  // Fully qualified URL pointing to the SDK Index page for this SDK.
+  // Example:
+  // https://play.google.com/sdks/details/com-google-android-gms-play-services-ads
+  // Required.
+  string index_url = 2;
+}
+
+// Represents a library in the SDK Index.
+message Library {
+  // Unique identifier for this library.
+  // Required.
+  LibraryIdentifier library_id = 1;
+
+  // Library versions, in no particular order.
+  // This version list is not exhaustive, versions that don't have relevant
+  // data for external clients will be skipped.
+  repeated LibraryVersion versions = 2;
+}
+
+// Uniquely identifies a library in the index.
+message LibraryIdentifier {
+  // Maven Identifier of this library.
+  // Required.
+  MavenIdentifier maven_id = 1;
+
+  // Represents a Maven identifier.
+  message MavenIdentifier {
+    // Group ID.
+    // Required.
+    string group_id = 1;
+
+    // Artifact ID.
+    // Required.
+    string artifact_id = 2;
+  }
+}
+
+// Represents a Library version.
+message LibraryVersion {
+  // Human readable library version string (i.e. "1.1.0").
+  // Required.
+  string version_string = 1;
+
+  // Relevant labels for this library version.
+  // Required.
+  LibraryVersionLabels version_labels = 2;
+
+  // Whether this version is the latest known version of the library.
+  bool is_latest_version = 3;
+}
+
+// Labels that can be added to a library version.
+message LibraryVersionLabels {
+  // The developer added a warning message to this version, indicating a
+  // critical issue.
+  CriticalIssueInfo critical_issue_info = 1;
+  // The developer marked this version as outdated.
+  OutdatedIssueInfo outdated_issue_info = 2;
+  // This version is not complying to Google Play policies.
+  NonCompliantPolicyInfo non_compliant_issue_info = 3;
+
+  enum Severity {
+    UNKNOWN_SEVERITY = 0;
+    // The Play store could stop publishing an app using this library version.
+    BLOCKING_SEVERITY = 1;
+    // This version has the issues outlined on the labels above, but it's not
+    // severe enough to block publishing.
+    NON_BLOCKING_SEVERITY = 2;
+  }
+  Severity severity = 4;
+
+  message CriticalIssueInfo {}
+
+  message OutdatedIssueInfo {}
+
+  message NonCompliantPolicyInfo {}
+}
