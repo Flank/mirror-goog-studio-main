@@ -996,7 +996,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @NonNull
         @Override
         public List<File> findGlobalRuleJars(@Nullable LintDriver driver, boolean warnDeprecated) {
-            // Don't pick up random custom rules in ~/.android/lint when running unit tests
+            // Don't pick up random custom rules from $ANDROID_LINT_JARS when running unit tests
             return Collections.emptyList();
         }
 

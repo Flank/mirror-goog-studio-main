@@ -38,38 +38,6 @@ class LintGlobalRuleJarsTest {
     val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
     @Test
-    fun `Jars in prefs directory affect up-to-date checking`() {
-        // Use an isolated android_prefs_root folder so this test doesn't affect other lint tests.
-        val executor = project.executor().withPerTestPrefsRoot(true).apply {
-            // invoke a build to force initialization of preferencesRootDir
-            run("tasks")
-        }
-        val prefsLintDir = FileUtils.join(executor.preferencesRootDir, ".android", "lint")
-        FileUtils.cleanOutputDir(prefsLintDir)
-
-        val lintTaskName = ":lintDebug"
-        val lintReportTaskName = ":lintReportDebug"
-        val lintAnalyzeTaskName = ":lintAnalyzeDebug"
-        executor.run(lintTaskName)
-        executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintReportTaskName)).wasUpToDate()
-            assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
-        }
-
-        FileUtils.createFile(prefsLintDir.resolve("abcdefg.jar"), "FOO_BAR")
-        executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintReportTaskName)).didWork()
-            assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
-            assertThat(result.stdout).contains("(abcdefg.jar); this will stop working soon.")
-        }
-
-        // Now switch to the shared android_prefs_root folder to test we don't see the warning
-        executor.withPerTestPrefsRoot(false).run(lintTaskName).also { result ->
-            assertThat(result.stdout).doesNotContain("this will stop working soon.")
-        }
-    }
-
-    @Test
     fun `Jars set via environment variable affect up-to-date checking`() {
         val lintJar = temporaryFolder.newFolder().resolve("abcdefg.jar")
 
