@@ -931,7 +931,7 @@ coverage_report(
         "//tools/analytics-library/tracker:tools.analytics-tracker_tests.test",
         "//tools/apksig:all",
         "//tools/apkzlib:apkzlib_tests",
-        "//tools/base/adblib:tools.adblib.tests.test",
+        "//tools/base/adblib:adblib.tests.test",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources_tests",
         "//tools/base/apkparser:tools.tests",
         "//tools/base/apkparser/analyzer:studio.android.sdktools.analyzer_tests",
