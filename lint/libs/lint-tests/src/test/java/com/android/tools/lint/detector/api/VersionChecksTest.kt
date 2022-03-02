@@ -3629,6 +3629,123 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testWhen221488045() {
+        // Regression test for https://issuetracker.google.com/221488045
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.Activity
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                @RequiresApi(Build.VERSION_CODES.Q)
+                class Test(activity: Activity, listener: Listener) {
+                    private var callSystemUiHelper: CallSystemUiHelper = when (Build.VERSION.SDK_INT) {
+                        Build.VERSION_CODES.R -> CallSystemUiHelperImplR(activity, listener) // OK
+                        Build.VERSION_CODES.S -> CallSystemUiHelperImplS(activity, listener) // OK
+                        else -> CallSystemUiHelperImplQ(activity, listener) // OK
+                    }
+                }
+
+                class Listener
+                open class CallSystemUiHelper
+
+                @RequiresApi(Build.VERSION_CODES.R)
+                class CallSystemUiHelperImplR(activity: Activity, listener: Listener) : CallSystemUiHelper()
+
+                @RequiresApi(Build.VERSION_CODES.S)
+                class CallSystemUiHelperImplS(activity: Activity, listener: Listener) : CallSystemUiHelper()
+
+                @RequiresApi(Build.VERSION_CODES.Q)
+                class CallSystemUiHelperImplQ(activity: Activity, listener: Listener) : CallSystemUiHelper()
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testSwitchOnSdkInt() {
+        // Additional regression test for https://issuetracker.google.com/221488045
+        lint().files(
+            manifest().minSdk(8),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.annotation.TargetApi
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                class Test {
+                    @TargetApi(10)
+                    fun test() {
+                        when (Build.VERSION.SDK_INT) {
+                            10, 11, 12 -> {
+                                requires9()  // OK 1
+                                requires10() // OK 2
+                                requires11() // ERROR 1 (could be 10)
+                                requires12() // ERROR 2 (could be 10)
+                                requires13() // ERROR 3
+                            }
+                            13, 15 -> { // notice gap (14)
+                                requires11() // OK 3
+                                requires12() // OK 4
+                                requires13() // OK 5
+                                requires14() // ERROR 4 (not covered by this case)
+                                requires15() // ERROR 5 (could be 13)
+                                requires16() // ERROR 6
+                            }
+                            else -> {
+                                requires9()  // OK 6
+                                requires12() // OK 7
+                                requires13() // OK 8
+                                requires14() // ERROR 7
+                            }
+                        }
+                    }
+                }
+
+                @RequiresApi(9)  private fun requires9()  { }
+                @RequiresApi(10) private fun requires10() { }
+                @RequiresApi(11) private fun requires11() { }
+                @RequiresApi(12) private fun requires12() { }
+                @RequiresApi(13) private fun requires13() { }
+                @RequiresApi(14) private fun requires14() { }
+                @RequiresApi(15) private fun requires15() { }
+                @RequiresApi(16) private fun requires16() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(ApiDetector.UNSUPPORTED).run().expect(
+            """
+            src/test/pkg/Test.kt:14: Error: Call requires API level 11 (current min is 10): requires11 [NewApi]
+                            requires11() // ERROR 1 (could be 10)
+                            ~~~~~~~~~~
+            src/test/pkg/Test.kt:15: Error: Call requires API level 12 (current min is 10): requires12 [NewApi]
+                            requires12() // ERROR 2 (could be 10)
+                            ~~~~~~~~~~
+            src/test/pkg/Test.kt:16: Error: Call requires API level 13 (current min is 10): requires13 [NewApi]
+                            requires13() // ERROR 3
+                            ~~~~~~~~~~
+            src/test/pkg/Test.kt:22: Error: Call requires API level 14 (current min is 10): requires14 [NewApi]
+                            requires14() // ERROR 4 (not covered by this case)
+                            ~~~~~~~~~~
+            src/test/pkg/Test.kt:23: Error: Call requires API level 15 (current min is 10): requires15 [NewApi]
+                            requires15() // ERROR 5 (could be 13)
+                            ~~~~~~~~~~
+            src/test/pkg/Test.kt:24: Error: Call requires API level 16 (current min is 10): requires16 [NewApi]
+                            requires16() // ERROR 6
+                            ~~~~~~~~~~
+            src/test/pkg/Test.kt:30: Error: Call requires API level 14 (current min is 10): requires14 [NewApi]
+                            requires14() // ERROR 7
+                            ~~~~~~~~~~
+            7 errors, 0 warnings
+            """
+        )
+    }
+
     override fun getDetector(): Detector {
         return ApiDetector()
     }

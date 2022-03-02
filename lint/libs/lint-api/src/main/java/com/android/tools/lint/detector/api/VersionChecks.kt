@@ -83,6 +83,7 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.visitor.AbstractUastVisitor
+import kotlin.math.min
 
 private typealias ApiLevelLookup = (UElement) -> Int
 
@@ -534,29 +535,64 @@ class VersionChecks(
 
                 val switch = current.getParentOfType(USwitchExpression::class.java, true)
                 val entries = switch?.body?.expressions?.filterIsInstance<USwitchClauseExpression>() ?: emptyList()
-                var prevConstraint: ApiConstraint? = null
-                for (entry in entries) {
-                    if (entry === current) {
-                        break
+                val switchExpression = switch?.expression
+                val casesAreApiLevels = switchExpression != null && isSdkInt(switchExpression)
+                if (casesAreApiLevels && lowerBound) {
+                    if (current.caseValues.isNotEmpty()) {
+                        // It's for a specific set of API values listed by the case values.
+                        // Take the min of these values and now we can allow methods for that API level and up
+                        val apiLevel = current.caseValues.fold(-1) { min, expression ->
+                            val apiLevel = getApiLevel(expression, apiLookup)
+                            if (min == -1) apiLevel else min(min, apiLevel)
+                        }
+                        if (apiLevel != -1) {
+                            return atMost(apiLevel)
+                        }
+                    } else {
+                        val apiLevels = mutableSetOf<Int>()
+                        // it's the else clause: subtract out all the other API levels in the case
+                        // statements
+                        for (entry in entries) {
+                            for (case in entry.caseValues) {
+                                apiLevels.add(getApiLevel(case, apiLookup))
+                            }
+                        }
+                        val (_, target) = getTargetApiAnnotation(switch)
+                        val min = kotlin.math.max(target, project?.minSdk ?: -1)
+                        var firstMissing = min + 1
+                        while (true) {
+                            if (!apiLevels.contains(firstMissing)) {
+                                break
+                            }
+                            firstMissing++
+                        }
+                        return atMost(firstMissing - 1)
+                    }
+                } else {
+                    var prevConstraint: ApiConstraint? = null
+                    for (entry in entries) {
+                        if (entry === current) {
+                            break
+                        }
+
+                        for (case in entry.caseValues) {
+                            val constraint = getVersionCheckConditional(
+                                element = case,
+                                and = true,
+                                apiLookup = apiLookup
+                            ) ?: getVersionCheckConditional(
+                                element = case,
+                                and = false,
+                                apiLookup = apiLookup
+                            )
+
+                            prevConstraint = if (prevConstraint == null) constraint else prevConstraint and constraint
+                        }
                     }
 
-                    for (case in entry.caseValues) {
-                        val constraint = getVersionCheckConditional(
-                            element = case,
-                            and = true,
-                            apiLookup = apiLookup
-                        ) ?: getVersionCheckConditional(
-                            element = case,
-                            and = false,
-                            apiLookup = apiLookup
-                        )
-
-                        prevConstraint = if (prevConstraint == null) constraint else prevConstraint and constraint
+                    if (prevConstraint != null) {
+                        return prevConstraint.adjust(0, -2).not()
                     }
-                }
-
-                if (prevConstraint != null) {
-                    return prevConstraint.adjust(0, -2).not()
                 }
             } else if (current is UCallExpression &&
                 (prev as? UExpression)?.skipParenthesizedExprDown() is ULambdaExpression
