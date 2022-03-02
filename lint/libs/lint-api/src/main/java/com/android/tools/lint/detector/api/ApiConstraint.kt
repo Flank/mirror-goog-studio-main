@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.checks
+package com.android.tools.lint.detector.api
 
 import kotlin.math.max
 import kotlin.math.min

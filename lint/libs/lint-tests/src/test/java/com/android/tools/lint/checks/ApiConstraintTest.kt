@@ -16,14 +16,14 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.ApiConstraint.Companion.above
-import com.android.tools.lint.checks.ApiConstraint.Companion.atLeast
-import com.android.tools.lint.checks.ApiConstraint.Companion.atMost
-import com.android.tools.lint.checks.ApiConstraint.Companion.below
-import com.android.tools.lint.checks.ApiConstraint.Companion.deserialize
-import com.android.tools.lint.checks.ApiConstraint.Companion.range
-import com.android.tools.lint.checks.ApiConstraint.Companion.same
-import com.android.tools.lint.checks.ApiConstraint.Companion.serialize
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.above
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.atLeast
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.atMost
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.below
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.deserialize
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.range
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.same
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.serialize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

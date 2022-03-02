@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint.checks
+package com.android.tools.lint.detector.api
 
-import com.android.tools.lint.checks.VersionChecks.Companion.getMinSdkVersionFromMethodName
+import com.android.tools.lint.checks.AbstractCheckTest
+import com.android.tools.lint.checks.ApiDetector
+import com.android.tools.lint.checks.SdkIntDetector
+import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.PARTIAL
-import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.VersionChecks.Companion.getMinSdkVersionFromMethodName
 
 /**
  * Unit tests for [VersionChecks]. This is using the ApiDetector to
@@ -2728,14 +2731,14 @@ class VersionChecksTest : AbstractCheckTest() {
                     private void requires20() {
                     }
 
-//                    @RequiresApi(23)
-//                    private void requires23() {
-//                    }
+                    @RequiresApi(23)
+                    private void requires23() {
+                    }
 
                     void test() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-//                                requires23();
+                                requires23();
                             } else {
                                 requires20();
                             }

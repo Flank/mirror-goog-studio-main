@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TypeEvaluator
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.VersionChecks
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementFactory

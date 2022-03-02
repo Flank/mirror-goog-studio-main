@@ -23,7 +23,6 @@ import com.android.SdkConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.support.AndroidxName
-import com.android.tools.lint.checks.ApiDetector.Companion.REQUIRES_API_ANNOTATION
 import com.android.tools.lint.checks.EmptySuperDetector.Companion.EMPTY_SUPER_ANNOTATION
 import com.android.tools.lint.checks.OpenForTestingDetector.Companion.OPEN_FOR_TESTING_ANNOTATION
 import com.android.tools.lint.checks.ReturnThisDetector.Companion.RETURN_THIS_ANNOTATION
@@ -61,6 +60,7 @@ import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValues
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getDoubleAttribute
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
+import com.android.tools.lint.detector.api.VersionChecks.Companion.REQUIRES_API_ANNOTATION
 import com.android.tools.lint.detector.api.getAutoBoxedType
 import com.android.tools.lint.detector.api.getKotlinDelegatePropertyType
 import com.android.tools.lint.detector.api.isKotlin
@@ -113,7 +113,6 @@ import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.max
 
 /** Checks annotations to make sure they are valid */
 class AnnotationDetector : Detector(), SourceCodeScanner {

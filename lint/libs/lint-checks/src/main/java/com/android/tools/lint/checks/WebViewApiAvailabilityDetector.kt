@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.VersionChecks
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 

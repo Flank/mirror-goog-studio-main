@@ -47,13 +47,11 @@ import com.android.SdkConstants.FQCN_FRAME_LAYOUT
 import com.android.SdkConstants.FQCN_TARGET_API
 import com.android.SdkConstants.FRAME_LAYOUT
 import com.android.SdkConstants.PREFIX_ANDROID
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.SdkConstants.TAG
 import com.android.SdkConstants.TAG_ANIMATED_VECTOR
 import com.android.SdkConstants.TAG_ITEM
 import com.android.SdkConstants.TAG_STYLE
 import com.android.SdkConstants.TAG_VECTOR
-import com.android.SdkConstants.TARGET_API
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.SdkConstants.VIEW_TAG
@@ -64,16 +62,9 @@ import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.sdklib.SdkVersionInfo
-import com.android.support.AndroidxName
 import com.android.tools.lint.checks.ApiLookup.equivalentName
 import com.android.tools.lint.checks.ApiLookup.startsWithEquivalentPrefix
 import com.android.tools.lint.checks.RtlDetector.ATTR_SUPPORTS_RTL
-import com.android.tools.lint.checks.VersionChecks.Companion.SDK_INT
-import com.android.tools.lint.checks.VersionChecks.Companion.codeNameToApi
-import com.android.tools.lint.checks.VersionChecks.Companion.getVersionCheckConditional
-import com.android.tools.lint.checks.VersionChecks.Companion.isPrecededByVersionCheckExit
-import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
-import com.android.tools.lint.client.api.AndroidPlatformAnnotations
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
@@ -101,6 +92,15 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
+import com.android.tools.lint.detector.api.VersionChecks.Companion.REQUIRES_API_ANNOTATION
+import com.android.tools.lint.detector.api.VersionChecks.Companion.SDK_INT
+import com.android.tools.lint.detector.api.VersionChecks.Companion.getTargetApiAnnotation
+import com.android.tools.lint.detector.api.VersionChecks.Companion.getTargetApiForAnnotation
+import com.android.tools.lint.detector.api.VersionChecks.Companion.getVersionCheckConditional
+import com.android.tools.lint.detector.api.VersionChecks.Companion.isPrecededByVersionCheckExit
+import com.android.tools.lint.detector.api.VersionChecks.Companion.isRequiresApiAnnotation
+import com.android.tools.lint.detector.api.VersionChecks.Companion.isTargetAnnotation
+import com.android.tools.lint.detector.api.VersionChecks.Companion.isWithinVersionCheckConditional
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.asCall
@@ -2331,9 +2331,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     companion object {
-        @JvmField
-        val REQUIRES_API_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi")
-
         const val KEY_FILE = "file"
         const val KEY_REQUIRES_API = "requiresApi"
         const val KEY_FOLDER_NAME = "folderName"
@@ -2540,24 +2537,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         private fun apiLevelFix(api: Int): LintFix {
             return LintFix.create().data(KEY_REQUIRES_API, api)
-        }
-
-        private fun isTargetAnnotation(fqcn: String): Boolean {
-            return fqcn == FQCN_TARGET_API ||
-                isRequiresApiAnnotation(fqcn) ||
-                fqcn == SDK_SUPPRESS_ANNOTATION ||
-                fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION ||
-                fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
-                fqcn == TARGET_API || // with missing imports
-                fqcn.startsWith(AndroidPlatformAnnotations.PLATFORM_ANNOTATIONS_PREFIX) &&
-                isTargetAnnotation(AndroidPlatformAnnotations.toAndroidxAnnotation(fqcn))
-        }
-
-        private fun isRequiresApiAnnotation(fqcn: String): Boolean {
-            return REQUIRES_API_ANNOTATION.isEquals(fqcn) ||
-                fqcn == "RequiresApi" || // With missing imports
-                fqcn.startsWith(AndroidPlatformAnnotations.PLATFORM_ANNOTATIONS_PREFIX) &&
-                isRequiresApiAnnotation(AndroidPlatformAnnotations.toAndroidxAnnotation(fqcn))
         }
 
         /**
@@ -2957,38 +2936,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             return -1
         }
 
-        @JvmOverloads
-        @JvmStatic
-        fun getTargetApiAnnotation(
-            scope: UElement?,
-            isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
-        ): Pair<UAnnotation?, Int> {
-            var current = scope
-            while (current != null) {
-                if (current is UAnnotated) {
-                    //noinspection AndroidLintExternalAnnotations
-                    for (annotation in current.uAnnotations) {
-                        val target = getTargetApiForAnnotation(annotation, isApiLevelAnnotation)
-                        if (target != -1) {
-                            return annotation to target
-                        }
-                    }
-                }
-                if (current is UFile) {
-                    break
-                }
-                current = current.uastParent
-            }
-
-            return NO_ANNOTATION_FOUND
-        }
-
-        /**
-         * Return value for no annotation found from
-         * [getTargetApiAnnotation]
-         */
-        private val NO_ANNOTATION_FOUND: Pair<UAnnotation?, Int> = null to -1
-
         @JvmStatic
         fun getApiLevel(context: JavaContext, annotation: UAnnotation, qualifiedName: String): Int {
             var api =
@@ -3052,87 +2999,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val target = getTargetApiForAnnotation(annotation, isApiLevelAnnotation)
                 if (target != -1) {
                     return target
-                }
-            }
-
-            return -1
-        }
-
-        private fun getTargetApiForAnnotation(annotation: UAnnotation, isApiLevelAnnotation: (String) -> Boolean): Int {
-            val fqcn = annotation.qualifiedName
-            if (fqcn != null && isApiLevelAnnotation(fqcn)) {
-                val attributeList = annotation.attributeValues
-                for (attribute in attributeList) {
-                    if (fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
-                        fqcn == SDK_SUPPRESS_ANNOTATION ||
-                        fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION
-                    ) {
-                        val name = attribute.name
-                        if (name == null || !(name.startsWith("minSdk") || name == "codeName")) {
-                            continue
-                        }
-                    }
-                    val expression = attribute.expression
-                    if (expression is ULiteralExpression) {
-                        val value = expression.value
-                        if (value is Int) {
-                            return value
-                        } else if (value is String) {
-                            return codeNameToApi(value)
-                        }
-                    } else {
-                        val apiLevel = ConstantEvaluator.evaluate(null, expression) as? Int
-                        if (apiLevel != null) {
-                            return apiLevel
-                        } else if (expression is UReferenceExpression) {
-                            val name = expression.resolvedName
-                            if (name != null) {
-                                return codeNameToApi(name)
-                            }
-                        } else {
-                            return codeNameToApi(expression.asSourceString())
-                        }
-                    }
-                }
-            } else if (fqcn == null) {
-                // Work around bugs in UAST type resolution for file annotations:
-                // parse the source string instead.
-                val psi = annotation.sourcePsi ?: return -1
-                if (psi is PsiCompiledElement) {
-                    return -1
-                }
-                val text = psi.text
-                val start = text.indexOf('(')
-                if (start == -1) {
-                    return -1
-                }
-                val colon = text.indexOf(':') // skip over @file: etc
-                val annotationString = text.substring(if (colon < start) colon + 1 else 0, start)
-                if (isApiLevelAnnotation(annotationString)) {
-                    val end = text.indexOf(')', start + 1)
-                    if (end != -1) {
-                        var name = text.substring(start + 1, end)
-                        // Strip off attribute name and qualifiers, e.g.
-                        //   @RequiresApi(api = Build.VERSION.O) -> O
-                        var index = name.indexOf('=')
-                        if (index != -1) {
-                            name = name.substring(index + 1).trim()
-                        }
-                        index = name.indexOf('.')
-                        if (index != -1) {
-                            name = name.substring(index + 1)
-                        }
-                        if (name.isNotEmpty()) {
-                            if (name[0].isDigit()) {
-                                val api = Integer.parseInt(name)
-                                if (api > 0) {
-                                    return api
-                                }
-                            } else {
-                                return codeNameToApi(name)
-                            }
-                        }
-                    }
                 }
             }
 

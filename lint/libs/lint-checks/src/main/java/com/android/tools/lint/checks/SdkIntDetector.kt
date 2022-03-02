@@ -17,9 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.sdklib.SdkVersionInfo
-import com.android.tools.lint.checks.VersionChecks.Companion.CHECKS_SDK_INT_AT_LEAST_ANNOTATION
-import com.android.tools.lint.client.api.JavaEvaluator
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
@@ -29,15 +26,17 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.PartialResult
-import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.VersionChecks.Companion.CHECKS_SDK_INT_AT_LEAST_ANNOTATION
+import com.android.tools.lint.detector.api.VersionChecks.Companion.SDK_INT_VERSION_DATA
+import com.android.tools.lint.detector.api.VersionChecks.SdkIntAnnotation.Companion.getFieldKey
+import com.android.tools.lint.detector.api.VersionChecks.SdkIntAnnotation.Companion.getMethodKey
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiParameterList
 import com.intellij.psi.PsiType
@@ -57,7 +56,6 @@ import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.UastBinaryOperator
-import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.skipParenthesizedExprDown
@@ -91,7 +89,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
     }
 
     companion object {
-        fun isLambdaType(context: JavaContext, type: PsiType?): Boolean {
+        private fun isLambdaType(context: JavaContext, type: PsiType?): Boolean {
             val rawType = (type as? PsiClassType)?.rawType() ?: return false
             val fqn = rawType.canonicalText
             if (fqn == "java.lang.Runnable" ||
@@ -271,7 +269,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                     if (!context.isGlobalAnalysis()) {
                         // Store data for VersionChecks used by for example ApiDetector
                         val methodDesc = getMethodKey(context.evaluator, method)
-                        val map = context.getPartialResults(ISSUE).map()
+                        val map = context.getPartialResults(SDK_INT_VERSION_DATA).map()
                         // See VersionChecks#isKnownVersionCheck
                         map.put(
                             methodDesc,
@@ -294,7 +292,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                         if (!context.isGlobalAnalysis()) {
                             // Store data for the Version Check, used from ApiDetector etc
                             val methodDesc = getMethodKey(context.evaluator, method)
-                            val map = context.getPartialResults(ISSUE).map()
+                            val map = context.getPartialResults(SDK_INT_VERSION_DATA).map()
                             map.put(
                                 methodDesc,
                                 "parameter=$index${if (lambda != -1) ",lambda=$lambda" else ""}"
@@ -348,7 +346,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                 if (!context.isGlobalAnalysis()) {
                     // Store data for VersionChecks used by for example ApiDetector
                     val fieldDesc = getFieldKey(context.evaluator, field)
-                    val map = context.getPartialResults(ISSUE).map()
+                    val map = context.getPartialResults(SDK_INT_VERSION_DATA).map()
                     map.put(fieldDesc, "api=$atLeast")
                 }
             }
@@ -359,79 +357,6 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             return context.evaluator.getAllAnnotations(annotated, false).any {
                 it.qualifiedName == CHECKS_SDK_INT_AT_LEAST_ANNOTATION
             }
-        }
-
-        private fun getMethodKey(
-            evaluator: JavaEvaluator,
-            method: UMethod
-        ): String {
-            val desc = evaluator.getMethodDescription(
-                method,
-                includeName = false,
-                includeReturn = false
-            )
-            val cls = method.getContainingUClass()?.let { evaluator.getQualifiedName(it) }
-            return "$cls#${method.name}$desc"
-        }
-
-        private fun getFieldKey(
-            evaluator: JavaEvaluator,
-            field: UField
-        ): String {
-            val cls = field.getContainingUClass()?.let { evaluator.getQualifiedName(it) }
-            return "$cls#${field.name}"
-        }
-
-        private fun getMethodKey(
-            evaluator: JavaEvaluator,
-            method: PsiMethod
-        ): String {
-            val desc = evaluator.getMethodDescription(
-                method,
-                includeName = false,
-                includeReturn = false
-            )
-            val cls = method.containingClass?.let { evaluator.getQualifiedName(it) }
-            return "$cls#${method.name}$desc"
-        }
-
-        private fun getFieldKey(
-            evaluator: JavaEvaluator,
-            field: PsiField
-        ): String {
-            val cls = field.containingClass?.let { evaluator.getQualifiedName(it) }
-            return "$cls#${field.name}"
-        }
-
-        fun findSdkIntAnnotation(
-            client: LintClient,
-            evaluator: JavaEvaluator,
-            project: Project,
-            owner: PsiModifierListOwner
-        ): SdkIntAnnotation? {
-            val key = when (owner) {
-                is PsiMethod -> getMethodKey(evaluator, owner)
-                is PsiField -> getFieldKey(evaluator, owner)
-                else -> return null
-            }
-            val map = client.getPartialResults(project, ISSUE).map()
-            val args = map[key] ?: return null
-            val api = findAttribute(args, "api")?.toIntOrNull()
-            val codename = findAttribute(args, "codename")
-            val parameter = findAttribute(args, "parameter")?.toIntOrNull()
-            val lambda = findAttribute(args, "lambda")?.toIntOrNull()
-            return SdkIntAnnotation(api, codename, parameter, lambda)
-        }
-
-        private fun findAttribute(args: String, name: String): String? {
-            val key = "$name="
-            val index = args.indexOf(key)
-            if (index == -1) {
-                return null
-            }
-            val start = index + key.length
-            val end = args.indexOf(',', start).let { if (it == -1) args.length else it }
-            return args.substring(start, end)
         }
     }
 }
