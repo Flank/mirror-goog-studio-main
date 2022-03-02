@@ -33,7 +33,7 @@ public abstract class WearComponent extends AppComponent {
         public static final String GET_WEAR_DEBUG_SURFACE_VERSION =
                 "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation version";
         public static final String DEBUG_SURFACE_SET_DEBUG_APP =
-                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-debug-app --ecn component"; // + component name
+                "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-debug-app --es package"; // + package name
 
         public static final String AM_SET_DEBUG_APP = "am set-debug-app -w";
     }
