@@ -3,55 +3,54 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 # managed by go/iml_to_build
 iml_module(
-    name = "studio.android.sdktools.adblib",
+    name = "studio.android.sdktools.adblib.tools",
     srcs = ["src"],
-    iml_files = ["android.sdktools.adblib.iml"],
+    iml_files = ["android.sdktools.adblib.tools.iml"],
     test_srcs = ["test/src"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
+        "//tools/base/adblib:studio.android.sdktools.adblib[module]",
+        "//tools/adt/idea/android-adb:intellij.android.adb[module]",
     ],
 )
 
-# Build adblib as a standalone library, with side effect of ensuring that adblib does not
-# use unwanted dependencies from "studio-sdk" in the iml_module rule above
-# Build with: bazel build //tools/base/adblib:adblib
 kotlin_library(
-    name = "adblib",
+    name = "adblib.tools",
     srcs = glob([
         "src/**/*.kt",
         "src/**/*.java",
     ]),
-    resource_strip_prefix = "tools/base/adblib",
-    visibility = [
-        "//tools/base/adblib-tools:__subpackages__",
+    friends = [
+        "//tools/base/adblib:adblib",
     ],
+    resource_strip_prefix = "tools/base/adblib.tools",
+    visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/adblib",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
     ],
 )
 
-# Test adblib as a standalone library, with side effect of ensuring that adblib does not
-# use unwanted dependencies from "studio-sdk" in the iml_module rule above
-# Run tests with: bazel test //tools/base/adblib:adblib.tests.test
 kotlin_test(
-    name = "adblib.tests",
+    name = "adblib.tools.tests",
     srcs = glob([
         "test/src/**/*.kt",
         "test/src/**/*.java",
     ]),
-    # So that we can use adblib "internal" classes/functions from Unit Tests
-    friends = [":adblib"],
-    jvm_flags = ["-Dtest.suite.jar=adblib.tests.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
-    visibility = [
-        "//tools/base/adblib-tools:__subpackages__",
+    friends = [
+        "//tools/base/adblib:adblib",
+        "//tools/base/adblib:adblib.tests.testlib",
     ],
+    jvm_flags = ["-Dtest.suite.jar=adblib.tools.tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    visibility = ["//visibility:public"],
     deps = [
-        ":adblib",
+        ":adblib.tools",
+        "//tools/base/adblib:adblib.tests.testlib",
         # For "JarTestSuite"
         "//tools/base/testutils:tools.testutils",
         # For JUnit4 support
