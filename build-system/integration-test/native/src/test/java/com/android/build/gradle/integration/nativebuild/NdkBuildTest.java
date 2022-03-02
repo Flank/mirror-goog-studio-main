@@ -26,6 +26,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
@@ -375,5 +376,14 @@ public class NdkBuildTest {
         for (File output : allBuildOutputs) {
             assertThat(output).doesNotExist();
         }
+    }
+
+    /** Regression test for http://b/159411906. */
+    @Test
+    public void testCleanDoesNotDependOnPrebuildTask() throws IOException, InterruptedException {
+        GradleBuildResult result = project.executor().run("clean");
+        TruthHelper.assertThat(result.getTaskStates()).doesNotContainKey(":preBuild");
+        TruthHelper.assertThat(result.getTask(":externalNativeBuildCleanRelease")).didWork();
+        TruthHelper.assertThat(result.getTask(":externalNativeBuildCleanDebug")).didWork();
     }
 }
