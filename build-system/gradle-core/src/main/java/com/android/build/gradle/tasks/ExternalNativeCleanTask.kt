@@ -132,7 +132,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
 fun createVariantCxxCleanTask(
         configurationModel : CxxConfigurationModel,
         creationConfig: VariantCreationConfig
-) = object : VariantTaskCreationAction<ExternalNativeCleanTask, VariantCreationConfig>(creationConfig) {
+) = object : VariantTaskCreationAction<ExternalNativeCleanTask, VariantCreationConfig>(creationConfig, false) {
     override val name = computeTaskName("externalNativeBuildClean")
     override val type = ExternalNativeCleanTask::class.java
 
