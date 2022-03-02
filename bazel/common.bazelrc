@@ -10,6 +10,10 @@ common --enable_platform_specific_config
 # Remote Build Execution requires a strong hash function, such as SHA256.
 startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
 
+# resource_jars are removed in Bazel 5.0, prevent new usages from being added.
+# Once Bazel is upgraded (b/220902606) this can be removed.
+build --incompatible_disallow_resource_jars
+
 # Enforces UTF-8 encoding in bazel tests.
 test --test_env='LC_ALL=en_US.UTF-8'
 test --jvmopt='-Dsun.jnu.encoding=UTF-8'
