@@ -87,6 +87,12 @@ enum class IntegerOption(
      */
     MANAGED_DEVICE_SHARD_POOL_SIZE("android.experimental.androidTest.numManagedDeviceShards", ApiStage.Experimental),
 
+    /**
+     * The timeout duration in minute for Gradle Managed Device setup steps (booting AVD and creating snapshot image)
+     * If the value is 0 or negative value, it will never time out.
+     */
+    GRADLE_MANAGED_DEVICE_SETUP_TIMEOUT_MINUTES("android.experimental.testOptions.managedDevices.setupTimeoutMinutes", ApiStage.Experimental),
+
     /* ------------
      * REMOVED APIS
      */

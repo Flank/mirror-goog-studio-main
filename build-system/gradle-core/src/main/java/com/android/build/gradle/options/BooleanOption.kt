@@ -148,6 +148,16 @@ enum class BooleanOption(
      */
     GRADLE_MANAGED_DEVICE_EMULATOR_SHOW_KERNEL_LOGGING("android.experimental.testOptions.managedDevices.emulator.showKernelLogging", false, FeatureStage.Experimental),
 
+    /**
+     * Gradle Managed devices officially supports Android devices on API level 27 and higher because
+     * using the API level 26 and lower devices increase instability. When a user tries to use those
+     * old API devices, GMD task throws an exception and task fails by default.
+     *
+     * When this flag is enabled, it allows a user to use any old API level devices regardless of
+     * its instability.
+     */
+    GRADLE_MANAGED_DEVICE_ALLOW_OLD_API_LEVEL_DEVICES("android.experimental.testOptions.managedDevices.allowOldApiLevelDevices", false, FeatureStage.Experimental),
+
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
 
