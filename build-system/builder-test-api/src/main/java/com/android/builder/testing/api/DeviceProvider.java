@@ -17,15 +17,17 @@
 package com.android.builder.testing.api;
 
 import com.android.annotations.NonNull;
-import com.google.common.annotations.Beta;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Provides a list of remote or local devices.
+ *
+ * @deprecated use <a href="https://developer.android.com/studio/preview/features#gmd">gradle
+ *     managed devices</a>.
  */
-@Beta
+@Deprecated
 public abstract class DeviceProvider {
 
     /**

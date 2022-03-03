@@ -18,13 +18,15 @@ package com.android.builder.testing.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.annotations.Beta;
 import java.io.File;
 
 /**
  * Base interface for Remote CI Servers.
+ *
+ * @deprecated use <a href="https://developer.android.com/studio/preview/features#gmd">gradle
+ *     managed devices</a>.
  */
-@Beta
+@Deprecated
 public abstract class TestServer {
 
     /**
