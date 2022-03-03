@@ -18,12 +18,14 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
-import com.android.repository.Revision
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.repository.Revision
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.utils.ILogger
+import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -33,7 +35,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import javax.inject.Inject
 
 /**
  * Build Service for loading and creating Android Virtual Devices.
@@ -53,6 +54,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         val androidLocationsService: Property<AndroidLocationsBuildService>
         val avdLocation: DirectoryProperty
         val showEmulatorKernelLogging: Property<Boolean>
+        val deviceSetupTimeoutMinutes: Property<Int>
     }
 
     private val avdManager: AvdManager by lazy {
@@ -67,7 +69,10 @@ abstract class AvdComponentsBuildService @Inject constructor(
                 parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
             ),
             locationsService,
-            AvdSnapshotHandler(parameters.showEmulatorKernelLogging.get())
+            AvdSnapshotHandler(
+                parameters.showEmulatorKernelLogging.get(),
+                parameters.deviceSetupTimeoutMinutes.getOrNull()
+            )
         )
     }
 
@@ -149,6 +154,9 @@ abstract class AvdComponentsBuildService @Inject constructor(
             parameters.androidLocationsService.set(getBuildService(project.gradle.sharedServices))
             parameters.showEmulatorKernelLogging.set(
                 projectOptions[BooleanOption.GRADLE_MANAGED_DEVICE_EMULATOR_SHOW_KERNEL_LOGGING])
+            parameters.deviceSetupTimeoutMinutes.set(
+                projectOptions[IntegerOption.GRADLE_MANAGED_DEVICE_SETUP_TIMEOUT_MINUTES]
+            )
         }
     }
 

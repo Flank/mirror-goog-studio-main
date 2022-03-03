@@ -19,7 +19,6 @@ package com.android.build.gradle.internal
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import java.io.File
-import java.lang.RuntimeException
 import java.nio.file.Files.readAllLines
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -27,16 +26,21 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 
 private const val EMULATOR_EXECUTABLE = "emulator"
-private const val SNAPSHOT_CHECK_TIMEOUT_SEC = 600L
+private const val DEFAULT_DEVICE_BOOT_AND_SNAPSHOT_CHECK_TIMEOUT_SEC = 600L
 private const val WAIT_AFTER_BOOT_MS = 60000L
-private const val DEVICE_BOOT_TIMEOUT_SEC = 600L
 private const val ADB_TIMEOUT_SEC = 60L
 private const val MINIMUM_MAJOR_VERSION = 30
 private const val MINIMUM_MINOR_VERSION = 6
 private const val MINIMUM_MICRO_VERSION = 4
 
+/**
+ * @param deviceBootAndSnapshotCheckTimeoutSec a timeout duration in minute for AVD device to boot
+ * and for snapshot to be created. If null, the default value (10 minutes) is used. If zero or
+ * negative value is passed, it waits infinitely.
+ */
 class AvdSnapshotHandler(
     private val showEmulatorKernelLogging: Boolean,
+    private val deviceBootAndSnapshotCheckTimeoutSec: Int?,
     private val processFactory: (List<String>) -> ProcessBuilder = { ProcessBuilder(it) }) {
     /**
      * Checks whether the emulator directory contains a valid emulator executable, and returns it.
@@ -114,7 +118,7 @@ class AvdSnapshotHandler(
                     override fun err(line: String?) {}
                 }
             )
-            if (!process.waitFor(SNAPSHOT_CHECK_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+            process.waitUntilTimeout(logger) {
                 process.destroy()
             }
         } catch (e: Exception) {
@@ -122,6 +126,21 @@ class AvdSnapshotHandler(
             throw RuntimeException(e)
         }
         return success
+    }
+
+    private fun Process.waitUntilTimeout(logger: ILogger, onTimeout: () -> Unit) {
+        val timeoutSec =
+            deviceBootAndSnapshotCheckTimeoutSec?.toLong() ?:
+            DEFAULT_DEVICE_BOOT_AND_SNAPSHOT_CHECK_TIMEOUT_SEC
+        if (timeoutSec > 0) {
+            logger.verbose("Waiting for a process to complete (timeout $timeoutSec seconds)")
+            if (!waitFor(timeoutSec, TimeUnit.SECONDS)) {
+                onTimeout()
+            }
+        } else {
+            logger.verbose("Waiting for a process to complete (no timeout)")
+            waitFor()
+        }
     }
 
     /**
@@ -185,7 +204,7 @@ class AvdSnapshotHandler(
                     }
                 }
             )
-            if (!process.waitFor(DEVICE_BOOT_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+            process.waitUntilTimeout(logger) {
                 logger.verbose("Snapshot creation timed out. Closing emulator.")
                 closeEmulatorWithId(adbExecutable, process, deviceId, logger)
                 process.waitFor()
