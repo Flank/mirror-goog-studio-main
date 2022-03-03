@@ -31,7 +31,7 @@ abstract class DataBindingOptions @Inject @WithLazyInitialization("lateInit") co
     private val featuresProvider: Supplier<BuildFeatures>,
     private val dslServices: DslServices
 ) : com.android.builder.model.DataBindingOptions, com.android.build.api.dsl.DataBinding {
-    override var isEnabled: Boolean
+    override var enable: Boolean
         get() {
             return when (val buildFeatures = featuresProvider.get()) {
                 is ApplicationBuildFeatures -> buildFeatures.dataBinding
@@ -48,6 +48,18 @@ abstract class DataBindingOptions @Inject @WithLazyInitialization("lateInit") co
                 else -> dslServices.logger
                     .warn("dataBinding.setEnabled has no impact on this sub-project type")
             }
+        }
+
+    override var isEnabled: Boolean
+        get() = enable
+        set(value) {
+            enable = value
+        }
+
+    override var isEnabledForTests: Boolean
+        get() = enableForTests
+        set(value) {
+            enableForTests = value
         }
 
     @Suppress("unused") // call injected in the constructor by the dsl decorator

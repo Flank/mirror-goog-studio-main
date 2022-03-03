@@ -34,9 +34,15 @@ interface DataBinding {
      */
     var addKtx: Boolean?
 
-    /** Whether to run data binding code generation for test projects. */
+    @Deprecated("deprecated, use enableForTests", ReplaceWith("enableForTests"))
     var isEnabledForTests: Boolean
 
-    /** Whether to enable data binding. */
+    /** Whether to run data binding code generation for test projects. */
+    var enableForTests: Boolean
+
+    @Deprecated("deprecated, use enable", ReplaceWith("enable"))
     var isEnabled: Boolean
+
+    /** Whether to enable data binding. */
+    var enable: Boolean
 }

@@ -836,18 +836,24 @@ package com.android.build.api.dsl {
   public interface DataBinding {
     method public boolean getAddDefaultAdapters();
     method public Boolean? getAddKtx();
+    method public boolean getEnable();
+    method public boolean getEnableForTests();
     method public String? getVersion();
-    method public boolean isEnabled();
-    method public boolean isEnabledForTests();
+    method @Deprecated public boolean isEnabled();
+    method @Deprecated public boolean isEnabledForTests();
     method public void setAddDefaultAdapters(boolean addDefaultAdapters);
     method public void setAddKtx(Boolean? addKtx);
-    method public void setEnabled(boolean isEnabled);
-    method public void setEnabledForTests(boolean isEnabledForTests);
+    method public void setEnable(boolean enable);
+    method public void setEnableForTests(boolean enableForTests);
+    method @Deprecated public void setEnabled(boolean isEnabled);
+    method @Deprecated public void setEnabledForTests(boolean isEnabledForTests);
     method public void setVersion(String? version);
     property public abstract boolean addDefaultAdapters;
     property public abstract Boolean? addKtx;
-    property public abstract boolean isEnabled;
-    property public abstract boolean isEnabledForTests;
+    property public abstract boolean enable;
+    property public abstract boolean enableForTests;
+    property @Deprecated public abstract boolean isEnabled;
+    property @Deprecated public abstract boolean isEnabledForTests;
     property public abstract String? version;
   }
 

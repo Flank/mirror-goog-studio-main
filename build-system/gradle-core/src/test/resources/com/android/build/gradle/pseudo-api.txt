@@ -1204,8 +1204,12 @@ com.android.build.gradle.internal.dsl.CoreShaderOptions.getGlslcArgs: java.util.
 com.android.build.gradle.internal.dsl.CoreShaderOptions.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()
 com.android.build.gradle.internal.dsl.DataBindingOptions implements com.android.builder.model.DataBindingOptions, com.android.build.api.dsl.DataBinding
 com.android.build.gradle.internal.dsl.DataBindingOptions.<init>: com.android.build.gradle.internal.dsl.DataBindingOptions (java.util.function.Supplier<com.android.build.api.dsl.BuildFeatures>, com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.DataBindingOptions.getEnable: boolean ()
 com.android.build.gradle.internal.dsl.DataBindingOptions.isEnabled: boolean ()
+com.android.build.gradle.internal.dsl.DataBindingOptions.isEnabledForTests: boolean ()
+com.android.build.gradle.internal.dsl.DataBindingOptions.setEnable: void (boolean)
 com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabled: void (boolean)
+com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabledForTests: void (boolean)
 com.android.build.gradle.internal.dsl.DefaultConfig extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationDefaultConfig, com.android.build.api.dsl.DynamicFeatureDefaultConfig, com.android.build.api.dsl.LibraryDefaultConfig, com.android.build.api.dsl.TestDefaultConfig
 com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gradle.internal.dsl.DefaultConfig (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.DensitySplit
