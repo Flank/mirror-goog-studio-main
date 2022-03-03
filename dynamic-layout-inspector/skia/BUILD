@@ -44,7 +44,6 @@ cc_binary(
     ] + select({
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
-            "-std=c++14",
             "-Wno-implicit-fallthrough",
             "-Wno-missing-field-initializers",
             "-Wno-thread-safety-analysis",
@@ -55,7 +54,11 @@ cc_binary(
             "-mssse3",
         ],
     }),
-    deps = [":skia-lib"],
+    deps = [
+        ":skia-lib",
+        "@freetype_repo//:libft2",
+        "@libpng_repo//:libpng",
+    ],
 )
 
 cc_library(
@@ -74,7 +77,6 @@ cc_library(
     ] + select({
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
-            "-std=c++14",
             "-Wno-implicit-fallthrough",
             "-Wno-missing-field-initializers",
             "-Wno-thread-safety-analysis",
@@ -94,7 +96,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
-        "@skia_repo//:libskia",
+        # TODO(b/202336345): use @skia_repo//:libskia when skia build rules are ready.
+        "@prebuilt_skia//:libskia",
     ],
     alwayslink = 1,
 )
@@ -120,6 +123,8 @@ cc_library(
         ":skia-lib",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
+        "@freetype_repo//:libft2",
+        "@libpng_repo//:libpng",
     ],
     alwayslink = 1,
 )
