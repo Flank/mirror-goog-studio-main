@@ -64,8 +64,8 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
     override fun localJar(action: LocalJarBuilder.() -> Unit): LocalJarBuilder =
             LocalJarBuilderImpl().also { action(it) }
 
-    override fun project(path: String, testFixtures: Boolean): ProjectDependencyBuilder =
-            ProjectDependencyBuilderImpl(path, testFixtures)
+    override fun project(path: String, testFixtures: Boolean, configuration: String?): ProjectDependencyBuilder =
+            ProjectDependencyBuilderImpl(path, testFixtures, configuration)
 
     override fun externalLibrary(path: String, testFixtures: Boolean): ExternalDependencyBuilder =
         ExternalDependencyBuilderImpl(path, testFixtures)
@@ -87,11 +87,17 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
                     }
                 }
                 is ProjectDependencyBuilder -> {
-                    if (dependency.testFixtures) {
-                        sb.append("$scope testFixtures(project('${dependency.path}'))\n")
+                    val projectStr = dependency.configuration?.let { configName ->
+                        "project(path: '${dependency.path}', configuration: '$configName')"
+                    } ?: "project('${dependency.path}')"
+
+                    val dependencyStr = if (dependency.testFixtures) {
+                        "testFixtures($projectStr)"
                     } else {
-                        sb.append("$scope project('${dependency.path}')\n")
+                        projectStr
                     }
+
+                    sb.append("$scope $dependencyStr\n")
                 }
                 is MavenRepoGenerator.Library -> sb.append("$scope '${dependency.mavenCoordinate}'\n")
                 is LocalJarBuilderImpl -> {
@@ -130,7 +136,8 @@ private class LocalJarBuilderImpl(
 
 private class ProjectDependencyBuilderImpl(
     override val path: String,
-    override val testFixtures: Boolean
+    override val testFixtures: Boolean,
+    override val configuration: String? = null
 ): ProjectDependencyBuilder
 
 private class ExternalDependencyBuilderImpl(
