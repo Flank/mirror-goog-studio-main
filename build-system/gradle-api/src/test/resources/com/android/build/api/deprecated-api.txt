@@ -153,6 +153,8 @@ Deprecated from AGP UNKNOWN_VERSION
   * com.android.build.api.dsl.TestBaseFlavor.targetSdkVersion: void (int)
   * com.android.build.api.dsl.TestBaseFlavor.targetSdkVersion: void (java.lang.String)
   * com.android.build.api.dsl.TestOptions.failureRetention: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.FailureRetention, kotlin.Unit>)
+  * com.android.build.api.dsl.TestOptions.getDeviceGroups: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> ()
+  * com.android.build.api.dsl.TestOptions.getDevices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> ()
   * com.android.build.api.dsl.TestOptions.getFailureRetention: com.android.build.api.dsl.FailureRetention ()
   * com.android.build.api.dsl.VariantDimension.getMultiDexKeepFile: java.io.File ()
   * com.android.build.api.dsl.VariantDimension.setManifestPlaceholders: java.lang.Void (java.util.Map<java.lang.String, ?>)
