@@ -22,8 +22,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.Native
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -49,8 +48,7 @@ class HeaderInCmakeListsTest(private val cmakeVersionInDsl: String) {
     companion object {
         @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
-        fun data() =
-            arrayOf(DEFAULT_CMAKE_VERSION, OFF_STAGE_CMAKE_VERSION)
+        fun data() = CMakeVersion.FOR_TESTING.map { it.version }.toTypedArray()
     }
 
     @Rule

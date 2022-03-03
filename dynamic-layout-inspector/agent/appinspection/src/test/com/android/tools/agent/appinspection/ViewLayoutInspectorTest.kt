@@ -22,6 +22,7 @@ import android.graphics.Picture
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.os.Build
 import android.os.Looper
 import android.view.Surface
 import android.view.View
@@ -33,6 +34,7 @@ import android.webkit.WebView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatButton
 import checkNextEventMatching
+import com.android.testutils.PropertySetterRule
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
@@ -70,7 +72,17 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.concurrent.thread
 
-class ViewLayoutInspectorTest {
+class ViewLayoutInspectorTestWithWorkaround : ViewLayoutInspectorTestBase() {
+    @get:Rule
+    val apiLevelRule = PropertySetterRule(31, Build.VERSION::SDK_INT)
+}
+
+class ViewLayoutInspectorTest : ViewLayoutInspectorTestBase() {
+    @get:Rule
+    val apiLevelRule = PropertySetterRule(33, Build.VERSION::SDK_INT)
+}
+
+abstract class ViewLayoutInspectorTestBase {
 
     @get:Rule
     val mainLooperRule = MainLooperRule()
@@ -1085,7 +1097,7 @@ class ViewLayoutInspectorTest {
         checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
         }
-        checkNonProgressEvent(eventQueue) { event ->
+        val check = { event: Event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
 
             event.layoutEvent.screenshot.let { screenshot ->
@@ -1094,7 +1106,8 @@ class ViewLayoutInspectorTest {
 
                 // The full screenshot byte array is width * height
                 assertThat(decompressedBytes.size).isEqualTo(
-                    BITMAP_HEADER_SIZE + mainScreen.width * mainScreen.height)
+                    BITMAP_HEADER_SIZE + mainScreen.width * mainScreen.height
+                )
                 // Check the bitmap header
                 assertThat(decompressedBytes.take(BITMAP_HEADER_SIZE)).isEqualTo(
                     ((mainScreen.width).toBytes() + (mainScreen.height).toBytes() +
@@ -1111,6 +1124,9 @@ class ViewLayoutInspectorTest {
                 )
             }
         }
+        checkNonProgressEvent(eventQueue, check)
+        // There will be a second one to capture the end of any animation.
+        checkNonProgressEvent(eventQueue, check)
 
         floatingDialog.viewRootImpl = ViewRootImpl()
         floatingDialog.viewRootImpl.mSurface = Surface()
@@ -1419,7 +1435,7 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val fakeBitmapHeader = byteArrayOf(1, 2, 3) // trailed by 0s
+        val fakeBitmapHeader = byteArrayOf(1, 123, 121) // trailed by 0s
         val fakePicture1 = Picture(byteArrayOf(2, 1)) // Will be ignored because of BITMAP mode
         val fakePicture2 = Picture(byteArrayOf(2, 2))
 
@@ -1466,6 +1482,7 @@ class ViewLayoutInspectorTest {
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
             }
+            ThreadUtils.runOnMainThread { }.get() // Wait for notifications to be reset
             root.viewRootImpl = ViewRootImpl()
             root.viewRootImpl.mSurface = Surface()
             root.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
@@ -1473,7 +1490,7 @@ class ViewLayoutInspectorTest {
             checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             }
-            checkNonProgressEvent(eventQueue) { event ->
+            val check = { event: Event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
 
                 event.layoutEvent.screenshot.let { screenshot ->
@@ -1482,7 +1499,8 @@ class ViewLayoutInspectorTest {
 
                     // The full screenshot byte array is width * height
                     assertThat(decompressedBytes.size).isEqualTo(
-                        (BITMAP_HEADER_SIZE + root.width * scale * root.height * scale).toInt())
+                        (BITMAP_HEADER_SIZE + root.width * scale * root.height * scale).toInt()
+                    )
                     // Check the bitmap header
                     assertThat(decompressedBytes.take(BITMAP_HEADER_SIZE)).isEqualTo(
                         ((root.width * scale).toInt().toBytes() +
@@ -1500,6 +1518,9 @@ class ViewLayoutInspectorTest {
                     )
                 }
             }
+            checkNonProgressEvent(eventQueue, check)
+            // There will be a second one to capture the end of any animation.
+            checkNonProgressEvent(eventQueue, check)
 
             // Send another event without the screenshot type specified and verify it isn't changed
             val dontUpdateScreenshotCommand = Command.newBuilder().apply {
@@ -1511,10 +1532,11 @@ class ViewLayoutInspectorTest {
                 dontUpdateScreenshotCommand.toByteArray(),
                 inspectorRule.commandCallback
             )
+            ThreadUtils.runOnMainThread { }.get() // Wait for notifications to be reset
 
             responseQueue.take()
             root.forcePictureCapture(fakePicture1)
-            checkNonProgressEvent(eventQueue) { event ->
+            val check2 = { event:Event ->
                 event.layoutEvent.screenshot.let { screenshot ->
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
@@ -1523,7 +1545,9 @@ class ViewLayoutInspectorTest {
                         (BITMAP_HEADER_SIZE + root.width * scale2 * root.height * scale2).toInt())
                 }
             }
-
+            checkNonProgressEvent(eventQueue, check2)
+            // Again there will be a second event
+            checkNonProgressEvent(eventQueue, check2)
             // Send another event without the scale specified and verify it isn't changed
             val dontUpdateScaleCommand = Command.newBuilder().apply {
                 updateScreenshotTypeCommandBuilder.apply {
@@ -1536,6 +1560,8 @@ class ViewLayoutInspectorTest {
             )
 
             responseQueue.take()
+            ThreadUtils.runOnMainThread { }.get() // Wait for notifications to be reset
+
             root.forcePictureCapture(fakePicture1)
             checkNonProgressEvent(eventQueue) { event ->
                 event.layoutEvent.screenshot.let { screenshot ->
@@ -1597,6 +1623,7 @@ class ViewLayoutInspectorTest {
                 dontUpdateScaleCommand.toByteArray(),
                 inspectorRule.commandCallback
             )
+            ThreadUtils.runOnMainThread { }.get() // Wait for notifications to be reset
 
             responseQueue.take()
             root.forcePictureCapture(fakePicture2)
@@ -1733,35 +1760,6 @@ class ViewLayoutInspectorTest {
                 .isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
             assertThat(response.startFetchResponse.error)
                 .isEqualTo("Activity must be hardware accelerated for live inspection")
-        }
-    }
-
-    @Test
-    fun detachedRootDuringStartReturnsError() = createViewInspector { viewInspector ->
-        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
-        inspectorRule.commandCallback.replyListeners.add { bytes ->
-            responseQueue.add(bytes)
-        }
-        val context = Context("view.inspector.test", Resources(mutableMapOf()))
-        // attach info will be null -> error
-        val root = View(context)
-        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
-
-        val startFetchCommand = Command.newBuilder().apply {
-            startFetchCommandBuilder.apply {
-                continuous = true
-            }
-        }.build()
-        viewInspector.onReceiveCommand(
-            startFetchCommand.toByteArray(),
-            inspectorRule.commandCallback
-        )
-        responseQueue.take().let { bytes ->
-            val response = Response.parseFrom(bytes)
-            assertThat(response.specializedCase)
-                .isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
-            assertThat(response.startFetchResponse.error)
-                .isEqualTo("Given view isn't attached")
         }
     }
 

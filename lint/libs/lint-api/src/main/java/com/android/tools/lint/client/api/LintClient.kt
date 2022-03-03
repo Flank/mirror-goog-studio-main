@@ -1242,8 +1242,8 @@ abstract class LintClient {
      * Finds any custom lint rule jars that should be included for
      * analysis, regardless of project.
      *
-     * The default implementation locates custom lint jars in
-     * ~/.android/lint/ and in $ANDROID_LINT_JARS
+     * The default implementation locates custom lint jars set via
+     * $ANDROID_LINT_JARS
      *
      * @return a list of rule jars (possibly empty).
      */
@@ -1254,45 +1254,8 @@ abstract class LintClient {
         }
 
         // Look for additional detectors registered by the user, via
-        // (1) an environment variable (useful for build servers etc), and
-        // (2) via jar files in the .android/lint directory
+        // an environment variable
         var files: MutableList<File>? = null
-        try {
-            val lint = AndroidLocationsSingleton.prefsLocation.resolve("lint").toFile()
-            if (lint.exists()) {
-                val list = lint.listFiles()
-                if (list != null) {
-                    for (jarFile in list) {
-                        if (endsWith(jarFile.name, DOT_JAR)) {
-                            if (files == null) {
-                                files = ArrayList()
-                            }
-                            files.add(jarFile)
-
-                            // Don't flag the same warnings for each analyzed module -- doing it in the reporting
-                            // task is enough and avoids a lot of redundant/duplicate warnings
-                            if (warnDeprecated && driver?.mode != LintDriver.DriverMode.ANALYSIS_ONLY) {
-                                // TODO(b/197755365) Once this behavior changes here in LintClient, update AGP's
-                                //  behavior in AndroidLintTask and AndroidLintAnalysisTask, and update the message in
-                                //  AndroidLintTextOutputTask accordingly.
-                                val message =
-                                    "Loaded lint jar file from ${jarFile.parent} (${jarFile.name}); this will stop " +
-                                        "working soon. If you need to push lint rules into a build, use the " +
-                                        "`ANDROID_LINT_JARS` environment variable or the `--lint-rule-jars` " +
-                                        "flag or a `lint.xml` file setting `<lint lintJars=\"path\"...>`"
-                                report(this, IssueRegistry.LINT_WARNING, message, jarFile, driver = driver)
-                                if (isStudio) {
-                                    log(Severity.WARNING, null, message, jarFile.parent, jarFile.name)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (ignore: AndroidLocationsException) {
-            // Ignore -- no android dir, so no rules to load.
-        }
-
         val lintClassPath = System.getenv("ANDROID_LINT_JARS")
         if (lintClassPath != null && lintClassPath.isNotEmpty()) {
             val paths = lintClassPath.split(File.pathSeparator)

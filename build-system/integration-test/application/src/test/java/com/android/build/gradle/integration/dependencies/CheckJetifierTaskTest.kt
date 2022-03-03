@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -106,7 +105,6 @@ class CheckJetifierTaskTest {
             .with(BooleanOption.USE_ANDROID_X, true)
             .with(BooleanOption.ENABLE_JETIFIER, true)
             .with(StringOption.IDE_CHECK_JETIFIER_RESULT_FILE, resultFile.path)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run("checkJetifier")
     }
 

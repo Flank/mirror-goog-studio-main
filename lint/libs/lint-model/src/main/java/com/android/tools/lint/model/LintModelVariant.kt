@@ -65,6 +65,12 @@ interface LintModelVariant {
      * partial analysis.
      */
     val partialResultsDir: File?
+
+    /**
+     * Files listing any D8 backported desugared methods or core library
+     * desugared methods.
+     */
+    val desugaredMethodsFiles: Collection<File>
 }
 
 class DefaultLintModelVariant(
@@ -111,6 +117,7 @@ class DefaultLintModelVariant(
     override val libraryResolver: LintModelLibraryResolver,
 
     override val partialResultsDir: File?,
+    override val desugaredMethodsFiles: Collection<File>,
 ) : LintModelVariant {
     override fun toString(): String = name
 }

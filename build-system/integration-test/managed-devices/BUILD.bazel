@@ -68,6 +68,17 @@ gradle_connected_test(
     deps = TEST_DEPS,
 )
 
+gradle_connected_test(
+    name = "TestApplicationManagedDeviceTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/manageddevice/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/utp"],
+    jvm_flags = sdk_jvm_flags,
+    maven_repos = TEST_MAVEN_REPOS,
+    # b/219103375
+    tags = ["very_flaky"],
+    deps = TEST_DEPS,
+)
+
 # Maven repo with all the dependencies required by test projects.
 #
 # Quick way of updating this list:

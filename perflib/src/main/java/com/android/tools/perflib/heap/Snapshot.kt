@@ -156,7 +156,7 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
                 // We under-approximate the size of the class by including the size of Class.class
                 // and the size of static fields, and omitting padding, vtable and imtable sizes.
                 var classSize = javaLangClassSize
-                for (f in classObj.mStaticFields) {
+                for (f in classObj.staticFields) {
                     classSize += getTypeSize(f.type)
                 }
                 classObj.size = classSize
@@ -171,7 +171,7 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
     }
 
     fun identifySoftReferences() {
-        for (classObj in findAllDescendantClasses(ClassObj.getReferenceClassName())) {
+        for (classObj in findAllDescendantClasses(ClassObj.referenceClassName)) {
             classObj.setIsSoftReference()
             referenceClasses.add(classObj)
         }
@@ -223,25 +223,21 @@ class Snapshot @VisibleForTesting constructor(val buffer: DataBuffer) : Capture(
 
     private fun doComputeRetainedSizes() {
         val (instances, immDom) = LinkEvalDominators.computeDominators(
-            gcRoots.mapNotNullTo(mutableSetOf(), RootObj::getReferredInstance),
+            gcRoots.mapNotNullTo(mutableSetOf(), RootObj::referredInstance),
             { it.hardForwardReferences.stream() },
-            { it.hardReverseReferences.stream() }
         )
 
         // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
         // It's important to traverse in reverse topological order
         for (i in instances.indices.reversed()) {
-            val node = instances[i]
-            val dom = immDom[i]
-            node?.setImmediateDominator(dom ?: SENTINEL_ROOT)
-            dom?.addRetainedSizes(node)
+            immDom[i]?.addRetainedSizes(instances[i]!!)
         }
     }
 
     private inline fun forEachReachableInstance(crossinline visit: (Instance) -> Unit) =
         object : NonRecursiveVisitor() {
             override fun defaultAction(instance: Instance) {
-                if (instance.immediateDominator != null) {
+                if (instance.isReachable) {
                     visit(instance)
                 }
             }

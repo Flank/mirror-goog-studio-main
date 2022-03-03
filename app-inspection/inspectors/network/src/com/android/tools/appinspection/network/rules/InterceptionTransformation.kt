@@ -16,24 +16,178 @@
 
 package com.android.tools.appinspection.network.rules
 
-import studio.network.inspection.NetworkInspectorProtocol
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyModified
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderAdded
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.HeaderReplaced
+import studio.network.inspection.NetworkInspectorProtocol.Transformation.StatusCodeReplaced
+import java.io.IOException
 import java.io.InputStream
+import java.util.regex.Pattern
+import java.util.zip.GZIPInputStream
+import java.util.zip.ZipException
 
 interface InterceptionTransformation {
 
     fun transform(response: NetworkResponse): NetworkResponse
 }
 
-class BodyReplacedTransformation(proto: NetworkInspectorProtocol.Transformation.BodyReplaced) :
-    InterceptionTransformation {
+/**
+ * A transformation class that changes the status code from response headers.
+ */
+class StatusCodeReplacedTransformation(
+    statusCodeReplaced: StatusCodeReplaced
+) : InterceptionTransformation {
 
-    private val body: InputStream
-
-    init {
-        body = proto.body.toByteArray().inputStream()
-    }
+    private val targetCodeProto = statusCodeReplaced.targetCode
+    private val replacingCode = statusCodeReplaced.newCode
 
     override fun transform(response: NetworkResponse): NetworkResponse {
-        return response.copy(body = body)
+        val statusHeader = response.responseHeaders["null"] ?: return response
+        val statusLine = statusHeader.getOrNull(0) ?: return response
+        if (statusLine.startsWith("HTTP/1.")) {
+            val codePos = statusLine.indexOf(' ')
+            if (codePos > 0) {
+                var phrasePos = statusLine.indexOf(' ', codePos + 1)
+                if (phrasePos < 0) {
+                    phrasePos = statusLine.length
+                }
+                val code = statusLine.substring(codePos + 1, phrasePos)
+                if (targetCodeProto.matches(code)) {
+                    val prefix = statusLine.substring(0, codePos)
+                    val suffix = statusLine.substring(phrasePos)
+                    val newHeaders = response.responseHeaders.toMutableMap()
+                    newHeaders["null"] = listOf("$prefix $replacingCode$suffix")
+                    newHeaders[FIELD_RESPONSE_STATUS_CODE] = listOf(replacingCode)
+                    return response.copy(responseHeaders = newHeaders)
+                }
+            }
+        }
+        return response
+    }
+}
+
+/**
+ * A transformation class that adds a pair of header and value to the response.
+ */
+class HeaderAddedTransformation(
+    private val headerAdded: HeaderAdded
+) : InterceptionTransformation {
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        val headers = response.responseHeaders.toMutableMap()
+        val values = headers.getOrPut(headerAdded.name) { listOf() }.toMutableList()
+        values.add(headerAdded.value)
+        headers[headerAdded.name] = values
+        return response.copy(responseHeaders = headers)
+    }
+}
+
+/**
+ * A transformation class that finds the all target name-value pairs and replaces them with a
+ * new pair.
+ */
+class HeaderReplacedTransformation(
+    private val headerReplaced: HeaderReplaced
+) : InterceptionTransformation {
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        var anyMatched = false
+
+        // Remove all matched header values.
+        val headers = response.responseHeaders.mapValues { (headerKey, headerValues) ->
+            if (headerReplaced.targetName.matches(headerKey)) {
+                headerValues.filter {
+                    val matched = headerReplaced.targetValue.matches(it)
+                    if (matched) {
+                        anyMatched = true
+                    }
+                    !matched
+                }
+            } else headerValues
+        }.filter {
+            it.value.isNotEmpty()
+        }.toMutableMap()
+
+        // Add the replaced header and value.
+        if (anyMatched) {
+            headers[headerReplaced.newName] =
+                (headers[headerReplaced.newName] ?: listOf()) + listOf(headerReplaced.newValue)
+        }
+        return response.copy(responseHeaders = headers)
+    }
+}
+
+/**
+ * A transformation class that replaces the response body.
+ */
+class BodyReplacedTransformation(
+    private val bodyReplaced: BodyReplaced
+) : InterceptionTransformation {
+
+    private val body: InputStream get() = bodyReplaced.body.toByteArray().inputStream()
+    private val gzipBody: InputStream get() = bodyReplaced.body.toByteArray().gzip().inputStream()
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        return response.copy(body = if (isContentCompressed(response)) gzipBody else body)
+    }
+}
+
+/**
+ * A transformation class that replaces the target text segments from response body.
+ */
+class BodyModifiedTransformation(
+    private val bodyModified: BodyModified
+) : InterceptionTransformation {
+
+    override fun transform(response: NetworkResponse): NetworkResponse {
+        if (!isSupportedTextType(response)) {
+            return response
+        }
+
+        val isCompressed = isContentCompressed(response)
+        try {
+            val inputStream = if (isCompressed) GZIPInputStream(response.body) else response.body
+            val body = inputStream.bufferedReader().use { it.readText() }
+            var newBody = bodyModified.targetText.toRegex()
+                .replace(body, bodyModified.newText)
+                .toByteArray()
+            if (isCompressed) {
+                newBody = newBody.gzip()
+            }
+            return response.copy(body = newBody.inputStream())
+        } catch (ignored: IOException) {
+            // If we got here, it means we failed to unzip data that was supposedly zipped.
+            return response
+        } catch (ignored: ZipException) {
+            return response
+        }
+    }
+
+    /**
+     * @return true if its type is "text" or its subtype is a known text subtype.
+     */
+    private fun isSupportedTextType(response: NetworkResponse): Boolean {
+        val contentHeaderValues = response.responseHeaders[FIELD_CONTENT_TYPE] ?: return false
+        val mimeType = contentHeaderValues.getOrNull(0) ?: return false
+        val typeAndSubType = mimeType.split(Pattern.compile("/"), 2)
+        if (typeAndSubType.isEmpty()) {
+            return false
+        }
+        val type = typeAndSubType[0]
+        if (type.equals("text", ignoreCase = true)) {
+            return true
+        }
+        if (typeAndSubType.size == 2) {
+            // Without suffix: json, xml, html, etc.
+            // With suffix: vnd.api+json, svg+xml, etc.
+            // See also: https://en.wikipedia.org/wiki/Media_type#Suffix
+            val subtypeAndSuffix = typeAndSubType[1].split(Pattern.compile("\\+"), 2)
+            val suffix = subtypeAndSuffix.last()
+            return listOf("csv", "html", "json", "xml").any {
+                it.equals(suffix, ignoreCase = true)
+            }
+        }
+        return false
     }
 }

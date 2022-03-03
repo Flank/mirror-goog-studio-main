@@ -1,5 +1,6 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
+load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -39,20 +40,25 @@ filegroup(
 )
 
 java_library(
-    name = "studio-profiler",
+    name = "studio-profiler-core",
     srcs = [
         ":common-srcs-excluding-energy",
         ":echo-sample-srcs",
         ":supportlib-srcs",
     ],
-    resource_jars = select({
-        "//tools/base/bazel:windows": [],
-        "//conditions:default": ["//tools/base/profiler/native/agent:supportjni"],
-    }),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "@maven//:androidx.annotation.annotation",
     ],
+)
+
+merge_jars(
+    name = "studio-profiler",
+    out = "studio-profiler.jar",
+    jars = ["libstudio-profiler-core.jar"] + select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [],  #"//tools/base/profiler/native/agent:supportjni"],
+    }),
 )
 
 java_library(

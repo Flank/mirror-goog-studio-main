@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.fixture.model.NativeUt
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readAsFileIndex;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
-import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,6 +32,7 @@ import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
 import com.android.builder.model.v2.models.ndk.NativeModule;
@@ -70,7 +70,7 @@ public class CmakeStlMatrixTest {
                 GradleTestProject.builder()
                         .fromTestApp(
                                 HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-                        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                        .setCmakeVersion(CMakeVersion.DEFAULT.getSdkFolderName())
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                         .setWithCmakeDirInLocalProp(true)
                         .create();

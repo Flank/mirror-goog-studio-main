@@ -34,6 +34,7 @@ project.afterEvaluate {
                 throw new GradleException("Failed DeviceProvider usage: " + error)
             }
         }
+        notCompatibleWithConfigurationCache("Use project instance in doLast block")
     }
 
     configure(fake2Upload) {
@@ -43,6 +44,7 @@ project.afterEvaluate {
                 throw new GradleException("Failed TestServer usage: " + error)
             }
         }
+        notCompatibleWithConfigurationCache("Use project instance in doLast block")
     }
 }
 

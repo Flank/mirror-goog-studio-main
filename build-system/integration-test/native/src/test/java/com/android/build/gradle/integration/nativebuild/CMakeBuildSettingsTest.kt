@@ -23,8 +23,7 @@ import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.testutils.truth.PathSubject.assertThat
@@ -55,8 +54,8 @@ class CMakeBuildSettingsTest(
         @JvmStatic
         fun data() =
                 cartesianOf(
-                        arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
-                        arrayOf(true, false)
+                    CMakeVersion.values().map { it.version }.toTypedArray(),
+                    arrayOf(true, false)
                 )
     }
 

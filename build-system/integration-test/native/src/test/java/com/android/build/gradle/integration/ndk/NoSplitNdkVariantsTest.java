@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -41,7 +40,6 @@ public class NoSplitNdkVariantsTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(new HelloWorldJniApp())
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 

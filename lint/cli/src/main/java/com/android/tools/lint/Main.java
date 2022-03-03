@@ -177,6 +177,8 @@ public class Main {
     private static final String ARG_CONTINUE_AFTER_BASELINE_CREATED =
             "--continue-after-baseline-created";
     private static final String ARG_WRITE_REF_BASELINE = "--write-reference-baseline";
+    private static final String ARG_MISSING_BASELINE_IS_EMPTY_BASELINE =
+            "--missing-baseline-is-empty-baseline";
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
     private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
@@ -1445,6 +1447,8 @@ public class Main {
                 flags.setOutputBaselineFile(output);
                 flags.setUpdateBaseline(true);
                 flags.setContinueAfterBaselineCreated(true);
+            } else if (arg.equals(ARG_MISSING_BASELINE_IS_EMPTY_BASELINE)) {
+                flags.setMissingBaselineIsEmptyBaseline(true);
             } else if (arg.equals(ARG_ALLOW_SUPPRESS)) {
                 flags.setAllowSuppress(true);
             } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {
@@ -2140,6 +2144,13 @@ public class Main {
                             + " and "
                             + ARG_CONTINUE_AFTER_BASELINE_CREATED
                             + ".",
+                    ARG_MISSING_BASELINE_IS_EMPTY_BASELINE,
+                    "Treat a missing baseline file as an empty baseline file. In most cases, this "
+                            + "means that if the baseline file does not exist, a new one will not "
+                            + "be created. But in the case when "
+                            + ARG_UPDATE_BASELINE
+                            + " is also used and there are lint issues, a new baseline file will "
+                            + "be created, and the lint issues will be written to it.",
                     ARG_ALLOW_SUPPRESS,
                     "Whether to allow suppressing issues that have been explicitly registered "
                             + "as not suppressible.",

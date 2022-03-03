@@ -142,6 +142,12 @@ enum class BooleanOption(
      */
     UNINSTALL_INCOMPATIBLE_APKS("android.experimental.testOptions.uninstallIncompatibleApks", false, FeatureStage.Experimental),
 
+    /**
+     * When enabled, "-show-kernel" and "-verbose" flags are used when running an Android emulator
+     * for Gradle Managed devices.
+     */
+    GRADLE_MANAGED_DEVICE_EMULATOR_SHOW_KERNEL_LOGGING("android.experimental.testOptions.managedDevices.emulator.showKernelLogging", false, FeatureStage.Experimental),
+
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
 

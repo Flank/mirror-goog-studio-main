@@ -55,6 +55,11 @@ public class View {
                 callback.onPictureCaptured(picture);
             }
         }
+
+        @VisibleForTesting
+        public ThreadedRenderer getRenderer() {
+            return mThreadedRenderer;
+        }
     }
 
     public interface OnCreateContextMenuListener {
@@ -72,6 +77,7 @@ public class View {
     private int mScrollX = 0;
     private int mScrollY = 0;
     private ViewGroup.LayoutParams mLayoutParams = new ViewGroup.LayoutParams();
+    @Nullable private ViewTreeObserver mViewTreeObserver = null;
 
     private ViewRootImpl mViewRootImpl;
 
@@ -236,6 +242,13 @@ public class View {
         matrix.transformedPoints = mTransformedPoints;
     }
 
+    public ViewTreeObserver getViewTreeObserver() {
+        if (mViewTreeObserver == null) {
+            mViewTreeObserver = new ViewTreeObserver();
+        }
+        return mViewTreeObserver;
+    }
+
     @VisibleForTesting
     public void setViewRootImpl(ViewRootImpl viewRootImpl) {
         mViewRootImpl = viewRootImpl;
@@ -248,6 +261,11 @@ public class View {
     // Only works with views where setAttachInfo was called on them
     @VisibleForTesting
     public void forcePictureCapture(Picture picture) {
-        mAttachInfo.forcePictureCapture(picture);
+        if (mAttachInfo != null) {
+            mAttachInfo.forcePictureCapture(picture);
+        }
+        if (mViewTreeObserver != null) {
+            mViewTreeObserver.fireFrameCommit();
+        }
     }
 }

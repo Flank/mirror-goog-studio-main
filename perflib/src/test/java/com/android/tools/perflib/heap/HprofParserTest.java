@@ -231,8 +231,8 @@ public class HprofParserTest extends TestCase {
 
         mSnapshot.identifySoftReferences();
 
-        assertTrue(subSoftReferenceClass.getIsSoftReference());
-        assertTrue(subSubSoftReferenceClass.getIsSoftReference());
+        assertTrue(subSoftReferenceClass.isSoftReference());
+        assertTrue(subSubSoftReferenceClass.isSoftReference());
     }
 
     public void testHprofParser() throws IOException, ParseException {

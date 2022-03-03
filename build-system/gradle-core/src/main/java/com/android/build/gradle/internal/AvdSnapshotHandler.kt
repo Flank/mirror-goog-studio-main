@@ -36,6 +36,7 @@ private const val MINIMUM_MINOR_VERSION = 6
 private const val MINIMUM_MICRO_VERSION = 4
 
 class AvdSnapshotHandler(
+    private val showEmulatorKernelLogging: Boolean,
     private val processFactory: (List<String>) -> ProcessBuilder = { ProcessBuilder(it) }) {
     /**
      * Checks whether the emulator directory contains a valid emulator executable, and returns it.
@@ -78,11 +79,13 @@ class AvdSnapshotHandler(
     ): Boolean {
         logger.info("Checking $snapshotName on device $avdName is loadable.")
         val processBuilder = processFactory(
-            listOf(
+            listOfNotNull(
                 emulatorExecutable.absolutePath,
                 "@$avdName",
                 "-no-window",
                 "-no-boot-anim",
+                "-verbose".takeIf { showEmulatorKernelLogging },
+                "-show-kernel".takeIf { showEmulatorKernelLogging },
                 "-gpu",
                 emulatorGpuFlag,
                 "-check-snapshot-loadable",
@@ -142,12 +145,14 @@ class AvdSnapshotHandler(
         val deviceId = "${avdName}_snapshot"
 
         val processBuilder = processFactory(
-            listOf(
+            listOfNotNull(
                 emulatorExecutable.absolutePath,
                 "@${avdName}",
                 "-no-window",
                 "-no-boot-anim",
                 "-no-audio",
+                "-verbose".takeIf { showEmulatorKernelLogging },
+                "-show-kernel".takeIf { showEmulatorKernelLogging },
                 "-id",
                 deviceId,
                 "-gpu",

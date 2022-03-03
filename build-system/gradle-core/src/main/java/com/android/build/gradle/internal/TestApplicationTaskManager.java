@@ -43,7 +43,7 @@ import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.sync.TestModuleVariantModelTask;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
-import java.util.List;
+import java.util.Collection;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -60,9 +60,9 @@ public class TestApplicationTaskManager
 
     public TestApplicationTaskManager(
             @NonNull Project project,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
-            @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesImpl> testFixturesComponents,
+            @NonNull Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
+            @NonNull Collection<? extends TestComponentImpl> testComponents,
+            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {
@@ -124,6 +124,13 @@ public class TestApplicationTaskManager
                         });
 
         taskFactory.configure(CONNECTED_ANDROID_TEST, task -> task.dependsOn(instrumentTestTask));
+
+        createTestDevicesForVariant(
+                testVariantProperties,
+                testData,
+                null,
+                testVariantProperties.getName(),
+                VariantType.ANDROID_TEST_SUFFIX);
     }
 
     @Override

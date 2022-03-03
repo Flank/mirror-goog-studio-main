@@ -19,14 +19,14 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import org.junit.Rule
 import org.junit.Test
 
 class VulkanTest {
     @get:Rule
     val project = GradleTestProject.builder()
-        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+        .setCmakeVersion(CMakeVersion.DEFAULT.sdkFolderName)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .fromTestProject("vulkan").create()

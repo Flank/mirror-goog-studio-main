@@ -17,13 +17,19 @@
 package com.android.tools.perflib.heap.analysis;
 
 import com.android.testutils.TestResources;
-import com.android.tools.perflib.heap.*;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
-
+import com.android.tools.perflib.heap.ClassObj;
+import com.android.tools.perflib.heap.Heap;
+import com.android.tools.perflib.heap.Instance;
+import com.android.tools.perflib.heap.Snapshot;
+import com.android.tools.perflib.heap.SnapshotBuilder;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.util.stream.Stream;
 
+// These are now tests on computing retained sizes and path-to-gc, rather than the lower-level
+// dominator algorithm
 public class DominatorsTest extends TestCase {
 
     private Snapshot mSnapshot;
@@ -40,11 +46,6 @@ public class DominatorsTest extends TestCase {
         mSnapshot.computeRetainedSizes();
 
         assertEquals(6, mSnapshot.getReachableInstances().size());
-        assertDominates(1, 2);
-        assertDominates(1, 3);
-        assertDominates(1, 4);
-        assertDominates(1, 6);
-        assertDominates(3, 5);
 
         assertParentPathToGc(2, 1);
         assertParentPathToGc(3, 1);
@@ -65,9 +66,6 @@ public class DominatorsTest extends TestCase {
         mSnapshot.computeRetainedSizes();
 
         assertEquals(4, mSnapshot.getReachableInstances().size());
-        assertDominates(1, 2);
-        assertDominates(1, 3);
-        assertDominates(1, 4);
 
         assertParentPathToGc(2, 1);
         assertParentPathToGc(3, 1);
@@ -88,11 +86,6 @@ public class DominatorsTest extends TestCase {
         mSnapshot.computeRetainedSizes();
 
         assertEquals(6, mSnapshot.getReachableInstances().size());
-        assertDominates(1, 3);
-        assertDominates(2, 4);
-        // Node 5 is reachable via both roots, neither of which can be the sole dominator.
-        assertEquals(mSnapshot.SENTINEL_ROOT, mSnapshot.findInstance(5).getImmediateDominator());
-        assertDominates(5, 6);
 
         assertParentPathToGc(3, 1);
         assertParentPathToGc(4, 2);
@@ -177,8 +170,6 @@ public class DominatorsTest extends TestCase {
 
         mSnapshot.computeRetainedSizes();
 
-        assertEquals(mSnapshot.findInstance(1), mSnapshot.findInstance(4).getImmediateDominator());
-        assertEquals(mSnapshot.findInstance(4), mSnapshot.findInstance(6).getImmediateDominator());
         assertEquals(36, mSnapshot.findInstance(1).getRetainedSize(1));
         assertEquals(2, mSnapshot.findInstance(2).getRetainedSize(1));
         assertEquals(8, mSnapshot.findInstance(3).getRetainedSize(1));
@@ -202,12 +193,12 @@ public class DominatorsTest extends TestCase {
         for (Heap heap : mSnapshot.getHeaps()) {
             ClassObj softClass = heap.getClass(SnapshotBuilder.SOFT_REFERENCE_ID);
             if (softClass != null) {
-                assertTrue(softClass.getIsSoftReference());
+                assertTrue(softClass.isSoftReference());
             }
 
             ClassObj softAndHardClass = heap.getClass(SnapshotBuilder.SOFT_AND_HARD_REFERENCE_ID);
             if (softAndHardClass != null) {
-                assertTrue(softAndHardClass.getIsSoftReference());
+                assertTrue(softAndHardClass.isSoftReference());
             }
         }
 
@@ -251,7 +242,6 @@ public class DominatorsTest extends TestCase {
 
         // An object reachable via two GC roots, a JNI global and a Thread.
         Instance instance = mSnapshot.findInstance(0xB0EDFFA0);
-        assertEquals(Snapshot.SENTINEL_ROOT, instance.getImmediateDominator());
 
         int appIndex = mSnapshot.getHeapIndex(mSnapshot.getHeap("app"));
         int zygoteIndex = mSnapshot.getHeapIndex(mSnapshot.getHeap("zygote"));
@@ -271,20 +261,14 @@ public class DominatorsTest extends TestCase {
     }
 
     /**
-     * Asserts that nodeA dominates nodeB in mHeap.
-     */
-    private void assertDominates(int nodeA, int nodeB) {
-        assertEquals(mSnapshot.findInstance(nodeA),
-                mSnapshot.findInstance(nodeB).getImmediateDominator());
-    }
-
-    /**
      * Asserts that one of the parents is the direct parent to node in the shortest path to the GC root.
      */
     private void assertParentPathToGc(int node, int... parents) {
         for (int parent : parents) {
-            Instance parentInstance = mSnapshot.findInstance(node).getNextInstanceToGcRoot();
-            if (parentInstance != null && parentInstance.getId() == parent) {
+            Instance instance = mSnapshot.findInstance(node);
+            Stream<Instance> parentInstances = instance.getHardReverseReferences().stream()
+                    .filter(next -> next.getDistanceToGcRoot() < instance.getDistanceToGcRoot());
+            if (parentInstances.anyMatch(p -> p.getId() == parent)) {
                 return;
             }
         }

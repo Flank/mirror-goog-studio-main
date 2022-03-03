@@ -28,8 +28,7 @@ import com.android.build.gradle.integration.common.fixture.model.recoverExisting
 import com.android.build.gradle.integration.ndk.ModuleToModuleDepsTest.BuildSystemConfig.CMake
 import com.android.build.gradle.integration.ndk.ModuleToModuleDepsTest.BuildSystemConfig.NdkBuild
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.decodeLoggingMessage
@@ -94,8 +93,8 @@ class ModuleToModuleDepsTest(
         @JvmStatic
         fun data() =
             cartesianOf(
-                    arrayOf(NdkBuild, CMake(OFF_STAGE_CMAKE_VERSION), CMake(DEFAULT_CMAKE_VERSION)),
-                    arrayOf(NdkBuild, CMake(OFF_STAGE_CMAKE_VERSION), CMake(DEFAULT_CMAKE_VERSION)),
+                    arrayOf<BuildSystemConfig>(NdkBuild) + CMakeVersion.FOR_TESTING.map { CMake(it.version) }.toTypedArray(),
+                    arrayOf<BuildSystemConfig>(NdkBuild) + CMakeVersion.FOR_TESTING.map { CMake(it.version) }.toTypedArray(),
                     arrayOf("", ":no-prefab"),
                     arrayOf("", ":no-prefab-publish"),
                     arrayOf(".a", ".so"),

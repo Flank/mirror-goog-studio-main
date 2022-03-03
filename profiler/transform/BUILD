@@ -1,11 +1,11 @@
-load("//tools/base/bazel:utils.bzl", "java_jarjar", "flat_archive")
+load("//tools/base/bazel:utils.bzl", "flat_archive", "java_jarjar")
 
 java_library(
     name = "transform",
     srcs = glob(["src/main/java/**/*.java"]),
-    resource_jars = [":dependencies"],
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
+    runtime_deps = [":dependencies.jar"],
     deps = [
         "@maven//:org.ow2.asm.asm",
     ],
@@ -14,6 +14,7 @@ java_library(
 java_jarjar(
     name = "profilers-transform",
     srcs = [
+        ":dependencies.jar",
         ":transform",
         "@maven//:org.ow2.asm.asm",
     ],

@@ -31,16 +31,13 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Project
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -77,17 +74,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     @get:Input
     abstract val abortOnError: Property<Boolean>
 
-    /**
-     * The lint rule jars found in .android/lint. These jars are currently passed to lint via
-     * --lint-rule-jars in [AndroidLintTask] and [AndroidLintAnalysisTask], but this behavior has
-     * been deprecated. We warn in this task in case those other tasks are UP-TO-DATE.
-     */
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    abstract val deprecatedGlobalRuleJars: ConfigurableFileCollection
-
     override fun doTaskAction() {
-        maybeWarnAboutDeprecatedGlobalRuleJars()
         if (outputStream.get() != OutputStream.ABBREVIATED) {
             textReportInputFile.get().asFile.let { textReportFile ->
                 val text = textReportFile.readText()
@@ -141,20 +128,6 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             append("\nThe full lint text report is located at:\n  ")
             append(file.absolutePath)
         }.toString()
-    }
-
-    private fun maybeWarnAboutDeprecatedGlobalRuleJars() {
-        val deprecatedJars = deprecatedGlobalRuleJars.files.filter { it.isFile }
-        if (deprecatedJars.isNotEmpty()) {
-            val parent: String = deprecatedJars[0].parent
-            val jarNames = deprecatedJars.joinToString { it.name }
-            logger.warn(
-                "Loaded lint jar file from $parent ($jarNames); this will stop working soon. If " +
-                        "you need to push lint rules into a build, use the `ANDROID_LINT_JARS` " +
-                        "environment variable or a `lint.xml` file setting " +
-                        "`<lint lintJars=\"path\"...>`"
-            )
-        }
     }
 
     class SingleVariantCreationAction(variant: VariantCreationConfig) :
@@ -230,9 +203,6 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
         }
         val locationsBuildService =
             getBuildService<AndroidLocationsBuildService>(project.gradle.sharedServices)
-        this.deprecatedGlobalRuleJars.fromDisallowChanges(
-            AndroidLintTask.getGlobalLintJarsInPrefsDir(project, locationsBuildService)
-        )
     }
 
     internal fun configureForStandalone(

@@ -31,8 +31,6 @@ public class ShortestDistanceVisitor extends NonRecursiveVisitor {
                 }
             });
 
-    private Instance mPreviousInstance = null;
-
     private int mVisitDistance = 0;
 
     @Override
@@ -41,9 +39,8 @@ public class ShortestDistanceVisitor extends NonRecursiveVisitor {
                 (parent == null ||
                         child.getSoftReverseReferences() == null ||
                         !child.getSoftReverseReferences().contains(parent) ||
-                        child.getIsSoftReference())) {
+                        child.isSoftReference())) {
             child.setDistanceToGcRoot(mVisitDistance);
-            child.setNextInstanceToGcRoot(mPreviousInstance);
             mPriorityQueue.add(child);
         }
     }
@@ -61,7 +58,6 @@ public class ShortestDistanceVisitor extends NonRecursiveVisitor {
         while (!mPriorityQueue.isEmpty()) {
             Instance node = mPriorityQueue.poll();
             mVisitDistance = node.getDistanceToGcRoot() + 1;
-            mPreviousInstance = node;
             node.accept(this);
         }
     }

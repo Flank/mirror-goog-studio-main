@@ -34,8 +34,10 @@ import java.util.concurrent.locks.ReentrantLock
 
 /**
  * In the initial public version of Q there was a bug in `ViewDebug#startRenderingCommandsCapture`
- * that would sometimes crash apps. The code here was original a fixed version of that, but since
- * then has diverged a little due to the requirements of the layout inspector.
+ * that would sometimes crash apps. The code here is a fixed version of that.
+ *
+ * This class is no longer necessary starting in T. ViewDebug should be used directly for T+
+ * devices.
  */
 object SkiaQWorkaround {
 
@@ -60,9 +62,8 @@ object SkiaQWorkaround {
     fun startRenderingCommandsCapture(
         tree: View,
         executor: Executor,
-        callback: Callable<OutputStream?>,
-        shouldSerialize: () -> Boolean
-    ): AutoCloseable {
+        callback: Callable<OutputStream?>
+    ): AutoCloseable? {
         try {
             VMDebug.allowHiddenApiReflectionFrom(SkiaQWorkaround::class.java)
         }
@@ -70,8 +71,8 @@ object SkiaQWorkaround {
             throw UnsupportedOperationException("Unable to enable reflection. " +
                     "App must be built with debugging enabled.")
         }
-        val attachInfo = getFieldValue(tree, "mAttachInfo")
-            ?: throw IllegalArgumentException("Given view isn't attached")
+        // If mAttachInfo is null this window may be gone but the roots detector hasn't run yet.
+        val attachInfo = getFieldValue(tree, "mAttachInfo") ?: return null
         val handler = getFieldValue(attachInfo, "mHandler") as Handler?
         check(!(handler == null || handler.looper != Looper.myLooper())) {
             ("Called on the wrong thread."
@@ -81,13 +82,19 @@ object SkiaQWorkaround {
             getFieldValue(attachInfo, "mThreadedRenderer")
                 ?: throw IllegalStateException("Unable to get ThreadedRenderer")
         val streamingPictureCallbackHandler = StreamingPictureCallbackHelper.createCallback(
-            renderer, callback, executor, shouldSerialize)
-        VMDebug.allowHiddenApiReflectionFrom(streamingPictureCallbackHandler.javaClass)
-        VMDebug.allowHiddenApiReflectionFrom(StreamingPictureCallbackHelper::class.java)
-        StreamingPictureCallbackHelper.setPictureCaptureCallback(
-            renderer, streamingPictureCallbackHandler
-        )
-        return streamingPictureCallbackHandler as AutoCloseable
+            renderer, callback, executor) as AutoCloseable
+        try {
+            VMDebug.allowHiddenApiReflectionFrom(streamingPictureCallbackHandler.javaClass)
+            VMDebug.allowHiddenApiReflectionFrom(StreamingPictureCallbackHelper::class.java)
+            StreamingPictureCallbackHelper.setPictureCaptureCallback(
+                renderer, streamingPictureCallbackHandler
+            )
+        }
+        catch (exception: Exception) {
+            streamingPictureCallbackHandler.close()
+            throw exception
+        }
+        return streamingPictureCallbackHandler
     }
 
     private object StreamingPictureCallbackHelper {
@@ -108,16 +115,15 @@ object SkiaQWorkaround {
         }
 
         fun createCallback(
-            renderer: Any, callback: Callable<OutputStream?>, executor: Executor, shouldSerialize: () -> Boolean
+            renderer: Any, callback: Callable<OutputStream?>, executor: Executor
         ): Any {
-            return StreamingPictureCallbackHandler(renderer, callback, executor, shouldSerialize)
+            return StreamingPictureCallbackHandler(renderer, callback, executor)
         }
 
         private class StreamingPictureCallbackHandler(
             private val mRenderer: Any,
             private val mCallback: Callable<OutputStream?>,
-            private val mExecutor: Executor,
-            private val shouldSerialize: () -> Boolean
+            private val mExecutor: Executor
         ) : AutoCloseable, HardwareRenderer.PictureCapturedCallback, Runnable {
             private val mLock = ReentrantLock(false)
             private val mQueue = ArrayDeque<ByteArray>(3)
@@ -142,25 +148,19 @@ object SkiaQWorkaround {
                     mRenderThread = Thread.currentThread()
                 }
                 var needsInvoke = true
-                if (shouldSerialize()) {
-                    if (mQueue.size == 3) {
-                        mQueue.removeLast()
-                        needsInvoke = false
-                    }
-                    try {
-                        Picture::class.java
-                            .getDeclaredMethod("writeToStream", OutputStream::class.java)
-                            .invoke(picture, mByteStream)
-                    } catch (e: Exception) {
-                        // shouldn't happen
-                    }
-                    mQueue.add(mByteStream.toByteArray())
-                    mByteStream.reset()
+                if (mQueue.size == 3) {
+                    mQueue.removeLast()
+                    needsInvoke = false
                 }
-                else {
-                    // If we're not serializing there's no point in keeping the bytes around.
-                    mQueue.clear()
+                try {
+                    Picture::class.java
+                        .getDeclaredMethod("writeToStream", OutputStream::class.java)
+                        .invoke(picture, mByteStream)
+                } catch (e: Exception) {
+                    // shouldn't happen
                 }
+                mQueue.add(mByteStream.toByteArray())
+                mByteStream.reset()
                 mLock.unlock()
                 if (needsInvoke) {
                     mExecutor.execute(this)
@@ -179,9 +179,7 @@ object SkiaQWorkaround {
                                 + "invokes asynchronously"
                     )
                 }
-                // Note picture will be null if shouldSerialize() was false during onPictureCaptured
-                // (even if shouldSerialize() is true now).
-                if (isStopped || picture == null) {
+                if (isStopped) {
                     return
                 }
                 var stream: OutputStream? = null

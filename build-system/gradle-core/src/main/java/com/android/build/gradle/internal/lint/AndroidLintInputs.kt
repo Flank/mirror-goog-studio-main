@@ -319,7 +319,7 @@ abstract class ProjectInputs {
         initializeFromProject(creationConfig.services.projectInfo.getProject(), isForAnalysis)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
 
-        lintOptions.initialize(globalConfig.lintOptions)
+        lintOptions.initialize(globalConfig.lintOptions, isForAnalysis)
         resourcePrefix.setDisallowChanges(globalConfig.resourcePrefix)
 
         dynamicFeatures.setDisallowChanges(globalConfig.dynamicFeatures)
@@ -339,7 +339,7 @@ abstract class ProjectInputs {
     ) {
         initializeFromProject(project, isForAnalysis)
         projectType.setDisallowChanges(LintModelModuleType.JAVA_LIBRARY)
-        lintOptions.initialize(dslLintOptions)
+        lintOptions.initialize(dslLintOptions, isForAnalysis)
         resourcePrefix.setDisallowChanges("")
         dynamicFeatures.setDisallowChanges(setOf())
         val mainSourceSet = javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
@@ -445,7 +445,7 @@ abstract class LintOptionsInput {
     @get:Input
     abstract val severityOverrides: MapProperty<String, LintModelSeverity>
 
-    fun initialize(lintOptions: Lint) {
+    fun initialize(lintOptions: Lint, isForAnalysis: Boolean) {
         disable.setDisallowChanges(lintOptions.disable)
         enable.setDisallowChanges(lintOptions.enable)
         checkOnly.setDisallowChanges(lintOptions.checkOnly)
@@ -463,7 +463,9 @@ abstract class LintOptionsInput {
         checkDependencies.setDisallowChanges(lintOptions.checkDependencies)
         lintOptions.lintConfig?.let { lintConfig.set(it) }
         lintConfig.disallowChanges()
-        lintOptions.baseline?.let { baselineFile.set(it) }
+        if (!isForAnalysis) {
+            lintOptions.baseline?.let { baselineFile.set(it) }
+        }
         baselineFile.disallowChanges()
         severityOverrides.setDisallowChanges((lintOptions as LintImpl).severityOverridesMap)
     }
@@ -1009,7 +1011,11 @@ abstract class VariantInputs {
         resValues.disallowChanges()
     }
 
-    fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
+    fun toLintModel(
+        module: LintModelModule,
+        partialResultsDir: File? = null,
+        desugaredMethodsFiles: Collection<File>
+    ): LintModelVariant {
         val dependencyCaches = DependencyCaches(
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get())
@@ -1048,7 +1054,8 @@ abstract class VariantInputs {
             shrinkable = mainArtifact.shrinkable.get(),
             buildFeatures = buildFeatures.toLintModel(),
             libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
-            partialResultsDir = partialResultsDir
+            partialResultsDir = partialResultsDir,
+            desugaredMethodsFiles = desugaredMethodsFiles
         )
     }
 

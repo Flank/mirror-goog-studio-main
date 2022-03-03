@@ -81,7 +81,7 @@ public class Heap {
 
     public final void addClass(long id, @NonNull ClassObj theClass) {
         mClassesById.put(id, theClass);
-        mClassesByName.put(theClass.mClassName, theClass);
+        mClassesByName.put(theClass.getClassName(), theClass);
     }
 
     public final ClassObj getClass(long id) {
@@ -114,7 +114,7 @@ public class Heap {
     public final void dumpSubclasses() {
         for (Object value : mClassesById.getValues()) {
             ClassObj theClass = (ClassObj) value;
-            int count = theClass.mSubclasses.size();
+            int count = theClass.getSubclasses().size();
 
             if (count > 0) {
                 System.out.println(theClass);

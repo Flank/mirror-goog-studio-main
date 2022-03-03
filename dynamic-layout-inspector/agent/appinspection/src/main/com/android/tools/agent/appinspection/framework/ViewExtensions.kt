@@ -16,8 +16,8 @@
 
 package com.android.tools.agent.appinspection.framework
 
-import android.content.res.Resources
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Rect
 import android.util.Log
 import android.view.PixelCopy
@@ -74,16 +74,16 @@ fun View.takeScreenshot(scale: Float, bitmapType: BitmapType): Bitmap? {
         bitmapType.toBitmapConfig()
     )
     return try {
-        val location = IntArray(2)
-        getLocationInSurface(location)
-        val bounds = Rect(location[0], location[1], width + location[0], height + location[1])
-        val resultCode = SynchronousPixelCopy().request(viewRootImpl.mSurface, bounds, bitmap)
-        if (resultCode == PixelCopy.SUCCESS) {
-            bitmap
-        } else {
-            Log.w("ViewLayoutInspector", "PixelCopy got error code $resultCode")
-            null
-        }
+            val location = IntArray(2)
+            getLocationInSurface(location)
+            val bounds = Rect(location[0], location[1], width + location[0], height + location[1])
+            val resultCode = SynchronousPixelCopy().request(viewRootImpl.mSurface, bounds, bitmap)
+            if (resultCode == PixelCopy.SUCCESS) {
+                bitmap
+            } else {
+                Log.w("ViewLayoutInspector", "PixelCopy got error code $resultCode")
+                null
+            }
     } catch (t: Throwable) {
         Log.w("ViewLayoutInspector", t)
         null

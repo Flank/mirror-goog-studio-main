@@ -814,28 +814,34 @@ public class LocalMavenRepositoryGenerator {
                     Artifact artifact = request.getArtifact();
                     String path = session.getLocalRepositoryManager().getPathForRemoteArtifact(artifact, repository, "");
                     File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
-                    File[] versions = artifactPath.listFiles();
-                    if (versions != null) {
+                    File[] files = artifactPath.listFiles();
+                    List<Version> versions = new ArrayList<>();
+                    if (files != null) {
                         if (verbose) {
                             System.out.println(
-                                    "Found version files for artifact: "
-                                            + Arrays.toString(versions));
+                                    "Found version files for artifact: " + Arrays.toString(files));
                         }
-                        for (File version : versions) {
+                        for (File version : files) {
                             if (!version.isDirectory()) {
                                 continue;
                             }
                             try {
                                 Version parsedVersion = versionScheme.parseVersion(version.getName());
                                 if (versionConstraint.containsVersion(parsedVersion)) {
-                                    result.addVersion(parsedVersion);
-                                    if (verbose) {
-                                        System.out.println("Added version: " + parsedVersion);
-                                    }
+                                    versions.add(parsedVersion);
                                 }
                             } catch (InvalidVersionSpecificationException e) {
                                 // Ignore invalid versions.
                                 continue;
+                            }
+                        }
+                        // Sort and traverse in descending order. This is used to deterministically
+                        // add the highest versions first, regardless of filesystem order.
+                        Collections.sort(versions);
+                        for (int i = versions.size() - 1; i >= 0; i--) {
+                            result.addVersion(versions.get(i));
+                            if (verbose) {
+                                System.out.println("Added version: " + versions.get(i));
                             }
                         }
                         if (!result.getVersions().isEmpty()) {

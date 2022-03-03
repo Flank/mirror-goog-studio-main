@@ -49,9 +49,9 @@ import org.gradle.api.file.FileCollection
 
 class ApplicationTaskManager(
     project: Project,
-    private val variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
-    testComponents: List<TestComponentImpl>,
-    testFixturesComponents: List<TestFixturesImpl>,
+    private val variants: Collection<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
+    testComponents: Collection<TestComponentImpl>,
+    testFixturesComponents: Collection<TestFixturesImpl>,
     globalConfig: GlobalTaskCreationConfig,
     localConfig: TaskManagerConfig,
     extension: BaseExtension,

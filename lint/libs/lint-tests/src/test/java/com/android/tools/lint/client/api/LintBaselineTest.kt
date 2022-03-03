@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.testutils.TestUtils
+import com.android.testutils.truth.PathSubject
 import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
@@ -1297,6 +1298,258 @@ class LintBaselineTest {
         } finally {
             gradleUserFile.delete()
         }
+    }
+
+    @Test
+    fun testMissingBaselineIsEmptyBaseline_withLintIssue() {
+        // Test the --missing-baseline-is-empty-baseline flag when there is a lint issue.
+        // This test checks 3 scenarios:
+        //   (1) --missing-baseline-is-empty-baseline is used, but not --update-baseline, in which
+        //       case we expect the issue to be reported and no new baseline file to be written.
+        //   (2) --missing-baseline-is-empty-baseline and --update-baseline are both used, in which
+        //       case we expect a new baseline file to be written.
+        //   (3) --missing-baseline-is-empty-baseline is not used, in which case we expect a new
+        //       baseline file to be written.
+
+        val root = temporaryFolder.newFolder().canonicalFile.absoluteFile
+
+        val testFile = kotlin(
+            """
+            package test.pkg
+            val path = "/sdcard/path"
+            """
+        ).indented()
+
+        val baseline = File(root, "lint-baseline.xml")
+        val project = lint().files(testFile).createProjects(root).single()
+
+        // First run with --missing-baseline-is-empty-baseline flag and check that no baseline file
+        // is written.
+        MainTest.checkDriver(
+            // Expected output
+            "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+                    "0 errors, 1 warnings",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            arrayOf(
+                "--missing-baseline-is-empty-baseline",
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--baseline",
+                baseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        PathSubject.assertThat(baseline).doesNotExist()
+
+        // Then run with --missing-baseline-is-empty-baseline and --update-baseline flags and check
+        // that a baseline file is written.
+        MainTest.checkDriver(
+            // Expected output
+            "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+                    "0 errors, 1 warnings",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_CREATED_BASELINE,
+            arrayOf(
+                "--missing-baseline-is-empty-baseline",
+                "--update-baseline",
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--baseline",
+                baseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        @Language("XML")
+        val expectedBaselineContents =
+            """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <issues>
+
+                    <issue
+                        id="SdCardPath"
+                        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead">
+                        <location
+                            file="src/test/pkg/test.kt"
+                            line="2"
+                            column="13"/>
+                    </issue>
+
+                </issues>
+            """.trimIndent()
+        PathSubject.assertThat(baseline).exists()
+        assertEquals(expectedBaselineContents, readBaseline(baseline))
+
+        // Then run without --missing-baseline-is-empty-baseline flag and check that a baseline file
+        // is written.
+        baseline.delete()
+        PathSubject.assertThat(baseline).doesNotExist()
+        MainTest.checkDriver(
+            // Expected output
+            "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+                    "0 errors, 1 warnings",
+            // Expected error
+            "Created baseline file ROOT" + File.separator + "lint-baseline.xml\n" +
+                    "\n" +
+                    "Also breaking the build in case this was not intentional. If you\n" +
+                    "deliberately created the baseline file, re-run the build and this\n" +
+                    "time it should succeed without warnings.\n" +
+                    "\n" +
+                    "If not, investigate the baseline path in the lintOptions config\n" +
+                    "or verify that the baseline file has been checked into version\n" +
+                    "control.\n",
+            // Expected exit code
+            ERRNO_CREATED_BASELINE,
+            arrayOf(
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--baseline",
+                baseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        PathSubject.assertThat(baseline).exists()
+        assertEquals(expectedBaselineContents, readBaseline(baseline))
+    }
+
+    @Test
+    fun testMissingBaselineIsEmptyBaseline_withoutLintIssue() {
+        // Test the --missing-baseline-is-empty-baseline flag when there is not a lint issue.
+        // This test checks 3 scenarios:
+        //   (1) --missing-baseline-is-empty-baseline is used, in which we expect no new baseline
+        //       file to be written.
+        //   (2) --missing-baseline-is-empty-baseline is not used, in which case we expect a new
+        //       baseline file to be written.
+        //   (3) --missing-baseline-is-empty-baseline and --update-baseline are both used, in which
+        //       case we expect the existing baseline file to be deleted.
+
+        val root = temporaryFolder.newFolder().canonicalFile.absoluteFile
+
+        val testFile = kotlin(
+            """
+            package test.pkg
+            """
+        ).indented()
+
+        val baseline = File(root, "lint-baseline.xml")
+        val project = lint().files(testFile).createProjects(root).single()
+
+        // First run with --missing-baseline-is-empty-baseline flag and check that no baseline file
+        // is written.
+        MainTest.checkDriver(
+            // Expected output
+            "No issues found.",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            arrayOf(
+                "--missing-baseline-is-empty-baseline",
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--baseline",
+                baseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        PathSubject.assertThat(baseline).doesNotExist()
+
+        // Then run without --missing-baseline-is-empty-baseline flag and check that a baseline file
+        // is written.
+        MainTest.checkDriver(
+            // Expected output
+            "No issues found.",
+            // Expected error
+            "Created baseline file ROOT" + File.separator + "lint-baseline.xml\n" +
+                    "\n" +
+                    "Also breaking the build in case this was not intentional. If you\n" +
+                    "deliberately created the baseline file, re-run the build and this\n" +
+                    "time it should succeed without warnings.\n" +
+                    "\n" +
+                    "If not, investigate the baseline path in the lintOptions config\n" +
+                    "or verify that the baseline file has been checked into version\n" +
+                    "control.\n",
+            // Expected exit code
+            ERRNO_CREATED_BASELINE,
+            arrayOf(
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--baseline",
+                baseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        @Language("XML")
+        val expectedBaselineContents =
+            """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <issues>
+
+                </issues>
+            """.trimIndent()
+        PathSubject.assertThat(baseline).exists()
+        assertEquals(expectedBaselineContents, readBaseline(baseline))
+
+        // Then run with --missing-baseline-is-empty-baseline and --update-baseline flags and check
+        // that the baseline file is deleted.
+        MainTest.checkDriver(
+            // Expected output
+            "No issues found.",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_CREATED_BASELINE,
+            arrayOf(
+                "--missing-baseline-is-empty-baseline",
+                "--update-baseline",
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--baseline",
+                baseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        PathSubject.assertThat(baseline).doesNotExist()
     }
 
     companion object {

@@ -85,6 +85,8 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -99,9 +101,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     public LibraryTaskManager(
             @NonNull Project project,
-            @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
-            @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesImpl> testFixturesComponents,
+            @NonNull Collection<? extends ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
+            @NonNull Collection<? extends TestComponentImpl> testComponents,
+            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {

@@ -30,8 +30,16 @@ class InterceptionRule(proto: InterceptRule) {
         criteria = InterceptionCriteria(proto.criteria)
         transformations = proto.transformationList.mapNotNull { transformationProto ->
             when {
+                transformationProto.hasStatusCodeReplaced() ->
+                    StatusCodeReplacedTransformation(transformationProto.statusCodeReplaced)
+                transformationProto.hasHeaderAdded() ->
+                    HeaderAddedTransformation(transformationProto.headerAdded)
+                transformationProto.hasHeaderReplaced() ->
+                    HeaderReplacedTransformation(transformationProto.headerReplaced)
                 transformationProto.hasBodyReplaced() ->
                     BodyReplacedTransformation(transformationProto.bodyReplaced)
+                transformationProto.hasBodyModified() ->
+                    BodyModifiedTransformation(transformationProto.bodyModified)
                 else -> null
             }
         }

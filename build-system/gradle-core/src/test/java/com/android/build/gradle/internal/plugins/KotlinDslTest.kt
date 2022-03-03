@@ -142,7 +142,7 @@ class KotlinDslTest {
 
     @Test
     fun testDslLocking() {
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
         val exception = assertFailsWith(AgpDslLockedException::class) {
             android.compileSdk = 28
         }
@@ -157,7 +157,7 @@ class KotlinDslTest {
 
     @Test
     fun testDslLockingLists() {
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
         val exception = assertFailsWith(AgpDslLockedException::class) {
             android.flavorDimensions += "test"
         }
@@ -172,7 +172,7 @@ class KotlinDslTest {
 
     @Test
     fun testDslLockingCollections() {
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
         assertFailsWith(AgpDslLockedException::class) {
             android.buildTypes.create("customBuildType")
         }.also { exception ->
@@ -215,7 +215,7 @@ class KotlinDslTest {
         val orange = android.productFlavors.create("orange")
         orange.dimension = "fruit"
         val qa = android.signingConfigs.create("qa")
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
 
         assertFailsWith(AgpDslLockedException::class) {
             debug.isCrunchPngs = true
@@ -411,7 +411,7 @@ class KotlinDslTest {
             variant.mergedFlavor.consumerProguardFiles += fileG // While not applicable to apps, the same objects are used for libraries
             variant.mergedFlavor.testProguardFiles += fileH
         }
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
         assertThat(applicationVariants).hasSize(2)
         applicationVariants.first().also { variant ->
             assertThat(variant.mergedFlavor.manifestPlaceholders).containsExactly("a", "b")

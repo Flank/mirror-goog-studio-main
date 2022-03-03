@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.ndk
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
@@ -56,17 +57,17 @@ class PrefabPublishingTest(
     }
 
     companion object {
-
         @Parameterized.Parameters(name = "variant = {0}, build system = {1}, cmake = {2}")
         @JvmStatic
-        fun data() = listOf(
-            arrayOf("debug", NativeBuildSystem.CMAKE, "3.10.2"),
-            arrayOf("debug", NativeBuildSystem.CMAKE, "3.18.1"),
-            arrayOf("debug", NativeBuildSystem.NDK_BUILD, "N/A"),
-            arrayOf("release", NativeBuildSystem.CMAKE, "3.10.2"),
-            arrayOf("release", NativeBuildSystem.CMAKE, "3.18.1"),
-            arrayOf("release", NativeBuildSystem.NDK_BUILD, "N/A")
-        )
+        fun data() = arrayOf("debug", "release").map { config ->
+            CMakeVersion.FOR_TESTING.map {
+                arrayOf(
+                    config,
+                    NativeBuildSystem.CMAKE,
+                    it.version
+                )
+            } + arrayOf(arrayOf(config, NativeBuildSystem.NDK_BUILD, "N/A"))
+        }.flatten()
     }
 
     @Before

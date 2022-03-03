@@ -116,7 +116,6 @@ class ModelBuilder<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : ApkSigningConfig,
         ExtensionT : CommonExtension<
                 BuildFeaturesT,
                 BuildTypeT,
@@ -247,7 +246,9 @@ class ModelBuilder<
         val variantDimensionInfo = DimensionInformation.createFrom(variants)
         val androidTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<AndroidTest>())
         val unitTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<UnitTest>())
-        val testFixtures = DimensionInformation.createFrom(variants.mapNotNull { it.testFixturesComponent })
+        val testFixtures = DimensionInformation.createFrom(variants
+            .filterIsInstance<VariantImpl>()
+            .mapNotNull { it.testFixturesComponent })
 
         // for now grab the first buildFeatureValues as they cannot be different.
         val buildFeatures = variantModel.buildFeatures
@@ -316,8 +317,9 @@ class ModelBuilder<
         }
 
         // gather variants
-        val variantList = variants.map {
-            createBasicVariant(it, buildFeatures)
+        val variantList = variants
+            .filterIsInstance<VariantImpl>()
+            .map { createBasicVariant(it, buildFeatures)
         }
 
         return BasicAndroidProjectImpl(
@@ -338,7 +340,7 @@ class ModelBuilder<
     }
 
     private fun buildAndroidProjectModel(project: Project): AndroidProject {
-        val variants = variantModel.variants
+        val variants = variantModel.variants.filterIsInstance<VariantImpl>()
 
         // Keep track of the result of parsing each manifest for instant app value.
         // This prevents having to reparse the
@@ -525,7 +527,9 @@ class ModelBuilder<
     ): VariantDependencies? {
         // get the variant to return the dependencies for
         val variantName = parameter.variantName
-        val variant = variantModel.variants.singleOrNull { it.name == variantName }
+        val variant = variantModel.variants
+            .filterIsInstance<VariantImpl>()
+            .singleOrNull { it.name == variantName }
             ?: return null
 
         val buildMapping = project.gradle.computeBuildMapping()

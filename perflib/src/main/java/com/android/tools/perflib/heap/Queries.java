@@ -99,10 +99,10 @@ public class Queries {
         //  Now that we have a final list of classes, group them by package
         for (ClassObj theClass : classes) {
             String packageName = DEFAULT_PACKAGE;
-            int lastDot = theClass.mClassName.lastIndexOf('.');
+            int lastDot = theClass.getClassName().lastIndexOf('.');
 
             if (lastDot != -1) {
-                packageName = theClass.mClassName.substring(0, lastDot);
+                packageName = theClass.getClassName().substring(0, lastDot);
             }
 
             Set<ClassObj> classSet = result.get(packageName);
@@ -198,7 +198,7 @@ public class Queries {
     private static ArrayList<ClassObj> traverseSubclasses(@NonNull ClassObj base) {
         ArrayList<ClassObj> result = new ArrayList<ClassObj>();
 
-        for (ClassObj subclass : base.mSubclasses) {
+        for (ClassObj subclass : base.getSubclasses()) {
             result.add(subclass);
             result.addAll(traverseSubclasses(subclass));
         }
@@ -236,7 +236,7 @@ public class Queries {
             newHeap.forEachInstance(new TObjectProcedure<Instance>() {
                 @Override
                 public boolean execute(Instance instance) {
-                    Instance oldInstance = oldHeap.getInstance(instance.mId);
+                    Instance oldInstance = oldHeap.getInstance(instance.getId());
 
                     /*
                      * If this instance wasn't in the old heap, or was there,

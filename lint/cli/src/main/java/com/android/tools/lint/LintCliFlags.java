@@ -77,7 +77,7 @@ public class LintCliFlags {
     private File lintOverrideConfig;
     private boolean showAll;
     private boolean removedFixedBaselineIssues;
-    private boolean writeBaselineIfMissing = true;
+    private boolean missingBaselineIsEmptyBaseline;
     private boolean updateBaseline;
     private boolean continueAfterBaselineCreated;
     private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
@@ -689,14 +689,14 @@ public class LintCliFlags {
         removedFixedBaselineIssues = removeFixed;
     }
 
-    /** If true, write the baseline file if missing. (This is the default.) */
-    public boolean isWriteBaselineIfMissing() {
-        return writeBaselineIfMissing;
+    /** If true, treat a missing baseline file as an empty baseline file. */
+    public boolean getMissingBaselineIsEmptyBaseline() {
+        return missingBaselineIsEmptyBaseline;
     }
 
-    /** If true, write the baseline file if missing. (This is the default.) */
-    public void setWriteBaselineIfMissing(boolean writeBaselineIfMissing) {
-        this.writeBaselineIfMissing = writeBaselineIfMissing;
+    /** If true, treat a missing baseline file as an empty baseline file. */
+    public void setMissingBaselineIsEmptyBaseline(boolean missingBaselineIsEmptyBaseline) {
+        this.missingBaselineIsEmptyBaseline = missingBaselineIsEmptyBaseline;
     }
 
     /** If true, rewrite the baseline file on exit. */

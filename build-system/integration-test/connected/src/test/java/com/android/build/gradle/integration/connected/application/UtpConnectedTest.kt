@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils

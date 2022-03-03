@@ -44,11 +44,11 @@ public class LibraryPluginDslTest {
     private LibraryPlugin plugin;
     private LibraryExtension android;
     private VariantChecker checker;
+    private Project project;
 
     @Before
     public void setUp() throws Exception {
-        Project project =
-                TestProjects.builder(projectDirectory.newFolder("project").toPath())
+        project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
                         .withPlugin(TestProjects.Plugin.LIBRARY)
                         .build();
         android = project.getExtensions().getByType(LibraryExtension.class);
@@ -60,7 +60,7 @@ public class LibraryPluginDslTest {
 
     @Test
     public void testBasic() {
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(2);
@@ -75,7 +75,7 @@ public class LibraryPluginDslTest {
     @Test
     public void testNewBuildType() {
         android.getBuildTypes().create("custom");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(3);
@@ -92,7 +92,7 @@ public class LibraryPluginDslTest {
     public void testNewBuildType_testBuildType() {
         android.getBuildTypes().create("custom");
         android.setTestBuildType("custom");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(3);
@@ -125,7 +125,7 @@ public class LibraryPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.getPostprocessing().setRemoveUnusedResources(true);
         try {
-            plugin.createAndroidTasks();
+            plugin.createAndroidTasks(project);
             fail("Expected resource shrinker error");
         } catch (EvalIssueException e) {
             assertThat(e)
@@ -134,6 +134,6 @@ public class LibraryPluginDslTest {
         }
 
         debug.getPostprocessing().setRemoveUnusedResources(false);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
     }
 }

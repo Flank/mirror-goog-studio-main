@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -110,9 +109,9 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     abstract val environmentVariableInputs: EnvironmentVariableInputs
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
-    abstract val desugarMethodsFiles: ConfigurableFileCollection
+    abstract val desugaredMethodsFiles: ConfigurableFileCollection
 
     override fun doTaskAction() {
         lintTool.lintClassLoaderBuildService.get().shouldDispose = true
@@ -130,7 +129,12 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     private fun writeLintModelFile() {
         val module = projectInputs.convertToLintModelModule()
 
-        val variant = variantInputs.toLintModel(module, partialResultsDirectory.get().asFile)
+        val variant =
+            variantInputs.toLintModel(
+                module,
+                partialResultsDirectory.get().asFile,
+                desugaredMethodsFiles.files
+            )
 
         val destination = lintModelDirectory.get().asFile.also { FileUtils.cleanOutputDir(it) }
 
@@ -177,7 +181,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         arguments.add("--client-name", "AGP")
         arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
 
-        desugarMethodsFiles.forEach {
+        desugaredMethodsFiles.forEach {
             arguments.add("--Xdesugared-methods", "${it.toPath()}")
         }
 
@@ -291,7 +295,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 isForAnalysis = true
             )
             task.lintTool.initialize(creationConfig.services)
-            task.desugarMethodsFiles.from(
+            task.desugaredMethodsFiles.from(
                 getDesugaredMethods(
                     task.project,
                     creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
@@ -300,6 +304,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     creationConfig.global.bootClasspath
                 )
             )
+            task.desugaredMethodsFiles.disallowChanges()
         }
     }
 
@@ -318,14 +323,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
 
-        val locationBuildService =
-                getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)
-
-        this.lintRuleJars.from(
-            // TODO(b/197755365) stop including these jars in AGP 7.2
-            AndroidLintTask.getGlobalLintJarsInPrefsDir(project, locationBuildService)
-        )
-        // Also include Lint jars set via the environment variable ANDROID_LINT_JARS
+        // Include Lint jars set via the environment variable ANDROID_LINT_JARS
         val globalLintJarsFromEnvVariable: Provider<List<String>> =
                 project.providers.environmentVariable(ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE)
                         .orElse("")

@@ -82,7 +82,7 @@ public class AppPluginInternalTest {
     @Test
     public void testBasic() {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         final VariantInputModel variantInputModel = plugin.getVariantInputModel();
         TestCase.assertEquals(2, variantInputModel.getBuildTypes().size());
@@ -126,7 +126,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         TestCase.assertEquals(
                 Integer.valueOf(1), plugin.getExtension().getDefaultConfig().getVersionCode());
@@ -166,7 +166,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         TestCase.assertEquals(3, plugin.getVariantInputModel().getBuildTypes().size());
 
@@ -206,7 +206,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         TestCase.assertEquals(2, plugin.getVariantInputModel().getProductFlavors().size());
 
@@ -263,7 +263,7 @@ public class AppPluginInternalTest {
                         + "\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         TestCase.assertEquals(5, plugin.getVariantInputModel().getProductFlavors().size());
 
@@ -358,7 +358,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         List<ComponentImpl> components = getComponents(plugin.getVariantManager());
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
@@ -466,7 +466,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         List<ComponentImpl> components = getComponents(plugin.getVariantManager());
         ComponentImpl variant;
@@ -506,7 +506,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         // check that the debug buildType has the updated debug signing config.
         BuildType buildType =
@@ -558,7 +558,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         Exception recordedException = null;
         try {
-            plugin.createAndroidTasks();
+            plugin.createAndroidTasks(project);
         } catch (Exception e) {
             recordedException = e;
         }
@@ -576,7 +576,7 @@ public class AppPluginInternalTest {
         android.getCompileOptions().setTargetCompatibility(JavaVersion.VERSION_1_8);
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         ((ProjectStateInternal) project.getState()).configured();
 
         JavaCompile compileDebugJavaWithJavac =
@@ -591,7 +591,7 @@ public class AppPluginInternalTest {
     @Test
     public void testAsmVersionIsTheLatest() throws IllegalAccessException {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
         List<ComponentImpl> components = getComponents(plugin.getVariantManager());
 
         VariantCheckers.checkDefaultVariants(components);

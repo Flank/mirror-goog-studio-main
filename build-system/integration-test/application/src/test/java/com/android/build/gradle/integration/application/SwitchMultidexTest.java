@@ -22,7 +22,6 @@ import static com.android.testutils.truth.DexSubject.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -47,8 +46,6 @@ public class SwitchMultidexTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    // http://b/155766476
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Before

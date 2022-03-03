@@ -114,6 +114,7 @@ public class AndroidDebugBridge {
     /** Full path to adb. */
     private String mAdbOsLocation = null;
 
+    private AdbVersion mAdbVersion;
     private boolean mVersionCheck;
 
     private boolean mStarted = false;
@@ -160,6 +161,13 @@ public class AndroidDebugBridge {
          * @param isSuccessful if the bridge is successfully restarted.
          */
         default void restartCompleted(boolean isSuccessful) {}
+
+        /**
+         * Sent when an error occurred during initialization.
+         *
+         * @param exception the exception that occurred.
+         */
+        default void initializationError(@NonNull Exception exception) {}
     }
 
     /**
@@ -753,6 +761,14 @@ public class AndroidDebugBridge {
     }
 
     /**
+     * @return version of the ADB server if we were able to successfully retrieve it, {@code null}
+     *     otherwise.
+     */
+    public @Nullable AdbVersion getCurrentAdbVersion() {
+        return mAdbVersion;
+    }
+
+    /**
      * Returns the devices.
      *
      * @see #hasInitialDeviceList()
@@ -832,7 +848,8 @@ public class AndroidDebugBridge {
         mAdbOsLocation = osLocation;
 
         try {
-            checkAdbVersion();
+            mAdbVersion = fetchAdbVersion();
+            mVersionCheck = checkAdbVersion(mAdbVersion);
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
@@ -845,41 +862,53 @@ public class AndroidDebugBridge {
     }
 
     /**
-     * Queries adb for its version number and checks that it is atleast {@link #MIN_ADB_VERSION}.
+     * Queries adb for its version number.
+     *
+     * @return a {@link AdbVersion} if adb responds correctly, or null otherwise
      */
-    private void checkAdbVersion() throws IOException {
-        // default is bad check
-        mVersionCheck = false;
-
+    private @Nullable AdbVersion fetchAdbVersion() throws IOException {
         if (mAdbOsLocation == null) {
-            return;
+            return null;
         }
 
         File adb = new File(mAdbOsLocation);
         ListenableFuture<AdbVersion> future = getAdbVersion(adb);
-        AdbVersion version;
         try {
-            version = future.get(DEFAULT_START_ADB_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            return future.get(DEFAULT_START_ADB_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            return;
+            return null;
         } catch (java.util.concurrent.TimeoutException e) {
             String msg = "Unable to obtain result of 'adb version'";
             Log.logAndDisplay(LogLevel.ERROR, ADB, msg);
-            return;
+            return null;
         } catch (ExecutionException e) {
             Log.logAndDisplay(LogLevel.ERROR, ADB, e.getCause().getMessage());
             Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-            return;
+            return null;
         }
+    }
 
-        if (version.compareTo(MIN_ADB_VERSION) > 0) {
-            mVersionCheck = true;
+    /**
+     * Checks if given AdbVersion is at least {@link #MIN_ADB_VERSION}.
+     *
+     * @return true if given version is at least minimum, false otherwise
+     */
+    private static boolean checkAdbVersion(@Nullable AdbVersion adbVersion) {
+        // default is bad check
+        boolean passes = false;
+
+        if (adbVersion == null) {
+            Log.logAndDisplay(LogLevel.ERROR, ADB, "Could not determine adb version.");
+        } else if (adbVersion.compareTo(MIN_ADB_VERSION) > 0) {
+            passes = true;
         } else {
-            String message = String.format(
-                    "Required minimum version of adb: %1$s."
-                            + "Current version is %2$s", MIN_ADB_VERSION, version);
+            String message =
+                    String.format(
+                            "Required minimum version of adb: %1$s." + "Current version is %2$s",
+                            MIN_ADB_VERSION, adbVersion);
             Log.logAndDisplay(LogLevel.ERROR, ADB, message);
         }
+        return passes;
     }
 
     interface AdbOutputProcessor<T> {
@@ -1087,7 +1116,7 @@ public class AndroidDebugBridge {
         mStarted = true;
 
         // Start the underlying services.
-        mDeviceMonitor = new DeviceMonitor(this);
+        mDeviceMonitor = new DeviceMonitor(this, new MonitorErrorHandler());
         mDeviceMonitor.start();
 
         return true;
@@ -1186,7 +1215,7 @@ public class AndroidDebugBridge {
             }
 
             if (isSuccessful && mDeviceMonitor == null) {
-                mDeviceMonitor = new DeviceMonitor(this);
+                mDeviceMonitor = new DeviceMonitor(this, new MonitorErrorHandler());
                 mDeviceMonitor.start();
             }
         }
@@ -1630,6 +1659,20 @@ public class AndroidDebugBridge {
             return port;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Not a valid port number");
+        }
+    }
+
+    private static class MonitorErrorHandler implements DeviceMonitor.MonitorErrorHandler {
+        @Override
+        public void initializationError(@NonNull Exception e) {
+            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+                // we attempt to catch any exception so that a bad listener doesn't kill our thread
+                try {
+                    listener.initializationError(e);
+                } catch (Throwable t) {
+                    Log.e(DDMS, t);
+                }
+            }
         }
     }
 }

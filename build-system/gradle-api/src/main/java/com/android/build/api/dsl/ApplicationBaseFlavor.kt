@@ -26,8 +26,6 @@ interface ApplicationBaseFlavor :
      *
      * See [Set the Application ID](https://developer.android.com/studio/build/application-id.html)
      */
-    @get:Incubating
-    @set:Incubating
     var applicationId: String?
 
     /**
@@ -35,8 +33,6 @@ interface ApplicationBaseFlavor :
      *
      * See [Versioning Your Application](http://developer.android.com/tools/publishing/versioning.html)
      */
-    @get:Incubating
-    @set:Incubating
     var versionCode: Int?
 
     /**
@@ -44,8 +40,6 @@ interface ApplicationBaseFlavor :
      *
      * See [Versioning Your Application](http://developer.android.com/tools/publishing/versioning.html)
      */
-    @get:Incubating
-    @set:Incubating
     var versionName: String?
 
     /**
@@ -55,8 +49,6 @@ interface ApplicationBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    @get:Incubating
-    @set:Incubating
     var targetSdk: Int?
 
     @Deprecated("Replaced by targetSdk property")
@@ -70,9 +62,6 @@ interface ApplicationBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-
-    @get:Incubating
-    @set:Incubating
     var targetSdkPreview: String?
 
     @Deprecated("Replaced by targetSdkPreview property")
@@ -89,8 +78,6 @@ interface ApplicationBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    @get:Incubating
-    @set:Incubating
     var maxSdk: Int?
 
     @Deprecated("Replaced by maxSdk property")

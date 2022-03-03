@@ -31,59 +31,43 @@ interface AndroidSourceSet : Named {
     override fun getName(): String
 
     /** The Java source for this source-set */
-    @get:Incubating
     val java: AndroidSourceDirectorySet
     /** The Java source for this source-set */
-    @Incubating
     fun java(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Kotlin source for this source-set */
-    @get:Incubating
     val kotlin: AndroidSourceDirectorySet
     /** The Java source for this source-set */
-    @Incubating
     fun kotlin(action: Action<AndroidSourceDirectorySet>)
 
     /** The Java-style resources for this source-set */
-    @get:Incubating
     val resources: AndroidSourceDirectorySet
     /** The Java-style resources for this source-set */
-    @Incubating
     fun resources(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android Manifest file for this source-set. */
-    @get:Incubating
     val manifest: AndroidSourceFile
     /** The Android Manifest file for this source-set. */
-    @Incubating
     fun manifest(action: AndroidSourceFile.() -> Unit)
 
     /** The Android Resources directory for this source-set. */
-    @get:Incubating
     val res: AndroidSourceDirectorySet
     /** The Android Resources directory for this source-set. */
-    @Incubating
     fun res(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android Assets directory for this source set.*/
-    @get:Incubating
     val assets: AndroidSourceDirectorySet
     /** The Android Assets directory for this source set.*/
-    @Incubating
     fun assets(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android AIDL source directory for this source set. */
-    @get:Incubating
     val aidl: AndroidSourceDirectorySet
     /** The Android AIDL source directory for this source set. */
-    @Incubating
     fun aidl(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android RenderScript source directory for this source set. */
-    @get:Incubating
     val renderscript: AndroidSourceDirectorySet
     /** The Android RenderScript source directory for this source set. */
-    @Incubating
     fun renderscript(action: AndroidSourceDirectorySet.() -> Unit)
 
     /**
@@ -102,26 +86,20 @@ interface AndroidSourceSet : Named {
     fun jni(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android JNI libs directory for this source-set */
-    @get:Incubating
     val jniLibs: AndroidSourceDirectorySet
     /** The Android JNI libs directory for this source-set */
-    @Incubating
     fun jniLibs(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android shaders directory for this source set. */
-    @get:Incubating
     val shaders: AndroidSourceDirectorySet
 
     /** The Android shaders directory for this source set. */
-    @Incubating
     fun shaders(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The machine learning models directory for this source set. */
-    @get:Incubating
     val mlModels: AndroidSourceDirectorySet
 
     /** The machine learning models directory for this source set. */
-    @Incubating
     fun mlModels(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** Returns the name of the api configuration for this source set.  */

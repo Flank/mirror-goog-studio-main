@@ -23,10 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.SimpleNativeLib
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -53,7 +50,7 @@ class CmakeMultiModuleTest(
             )
           )
         )
-        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+        .setCmakeVersion(CMakeVersion.DEFAULT.sdkFolderName)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .create()
@@ -62,10 +59,10 @@ class CmakeMultiModuleTest(
         @Parameterized.Parameters(name = "version={0} hasFoldableVariants={1} enableConfigurationFolding={2}")
         @JvmStatic
         fun data() =
-                cartesianOf(
-                        arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
-                        arrayOf(true, false)
-                )
+            cartesianOf(
+                CMakeVersion.values().map { it.version }.toTypedArray(),
+                arrayOf(true, false)
+            )
     }
 
     @Before

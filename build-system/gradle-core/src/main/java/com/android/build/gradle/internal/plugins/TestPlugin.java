@@ -21,6 +21,10 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.SdkComponents;
+import com.android.build.api.dsl.TestBuildFeatures;
+import com.android.build.api.dsl.TestBuildType;
+import com.android.build.api.dsl.TestDefaultConfig;
+import com.android.build.api.dsl.TestProductFlavor;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.AndroidComponentsExtension;
@@ -52,6 +56,8 @@ import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
+
+import java.util.Collection;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -64,6 +70,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'test' projects. */
 public class TestPlugin
         extends BasePlugin<
+                    TestBuildFeatures,
+                    TestBuildType,
+                    TestDefaultConfig,
+                    TestProductFlavor,
                     com.android.build.api.dsl.TestExtension,
                     TestAndroidComponentsExtension,
                     TestVariantBuilderImpl,
@@ -88,7 +98,12 @@ public class TestPlugin
 
     @NonNull
     @Override
-    protected ExtensionData<com.android.build.api.dsl.TestExtension> createExtension(
+    protected ExtensionData<
+            TestBuildFeatures,
+            TestBuildType,
+            TestDefaultConfig,
+            TestProductFlavor,
+            com.android.build.api.dsl.TestExtension> createExtension(
             @NonNull DslServices dslServices,
             @NonNull
                     DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
@@ -226,9 +241,9 @@ public class TestPlugin
     @Override
     protected TestApplicationTaskManager createTaskManager(
             @NonNull Project project,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
-            @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesImpl> testFixturesComponents,
+            @NonNull Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
+            @NonNull Collection<? extends TestComponentImpl> testComponents,
+            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {

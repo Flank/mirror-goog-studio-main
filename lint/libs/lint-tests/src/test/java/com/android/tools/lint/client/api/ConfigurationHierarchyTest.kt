@@ -16,15 +16,20 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.MainTest.checkDriver
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.ApiDetector
+import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.JavaPerformanceDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.SdCardDetector
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
@@ -653,6 +658,114 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
                 1 errors, 0 warnings
                 """
             )
+    }
+
+    fun testIgnoreParentConfiguration() {
+        // If you specify some shared configuration for a third party check in a parent directory,
+        // don't flag that issue as unknown from projects which do not have the third party check
+        // configured.
+        // Regression test for https://issuetracker.google.com/218829887
+        val lib = project(
+            kotlin("fun testLib() { }"),
+            gradle("apply plugin: 'com.android.library'")
+        ).name("lib")
+
+        val main = project(
+            kotlin("fun testApp() { }"),
+            xml(
+                "../lint.xml",
+                """
+                <lint>
+                    <!-- This is in a parent of all; will work everywhere.
+                         The `MyIssueId` issue is not available in all modules, so
+                         this test makes sure we don't flag it. As a future
+                         enhancement we could track whether it's defined in *any* module
+                         and flag it if not. -->
+                    <issue id="MyIssueId" severity="ignore" />
+                </lint>
+            """
+            ).indented(),
+            gradle("apply plugin: 'com.android.application'")
+        ).dependsOn(lib).name("app")
+
+        val temp = TemporaryFolder()
+        temp.create()
+        lint()
+            // HardcodedValuesDetector must be present to verify issue-validation; see LintCliClient#validateIssueIds
+            .issues(HardcodedValuesDetector.ISSUE, *manifestIssues)
+            .projects(main)
+            .rootDirectory(temp.root.canonicalFile)
+            .useTestConfiguration(false)
+            .allowDuplicates()
+            .reportFrom(main)
+            .run()
+            .expectClean()
+        temp.delete()
+    }
+
+    fun testSkipOverrideLocationIfGeneric() {
+        // If you have an override configuration, but that configuration does not specify
+        // a specific issue, make sure we don't pick up a default location from it (which
+        // would then mean we wouldn't have the actual configuration location from the non-override
+        // location.
+        val lib = project(
+            kotlin("fun testLib() { }")
+        ).name("lib")
+
+        val main = project(
+            kotlin("fun testApp() { }"),
+            xml(
+                "lint.xml",
+                """
+                <lint>
+                    <issue id="SomeUnknownIssue1" severity="ignore" />
+                </lint>
+            """
+            ).indented()
+        ).dependsOn(lib).name("app")
+
+        val temp = TemporaryFolder()
+        temp.create()
+
+        val root = temp.root.canonicalFile
+        val projectDir = lint().projects(main).createProjects(root).single { it.name == "app" }
+
+        val listener: LintListener = object : LintListener {
+            override fun update(driver: LintDriver, type: LintListener.EventType, project: Project?, context: Context?) {
+                // Make sure we have an associated location for the override configuration; in a Gradle project,
+                // this would be set from the lint model. There isn't an associated "location" for a flag configuration
+                // supplied from command line flags so here we're simulating what would happen in a gradle project
+                // (where the flags are associated with the build.gradle file) such that we can ensure we properly
+                // only pick up locations from the build.gradle file when the issue is actually configured by that
+                // build.gradle configuration
+                if (type == LintListener.EventType.STARTING) {
+                    val overrides = driver.client.configurations.overrides as FlagConfiguration
+                    val buildFile = File(projectDir, FN_BUILD_GRADLE)
+                    overrides.associatedLocation = Location.create(buildFile)
+                }
+            }
+        }
+        checkDriver(
+            "" +
+                "build.gradle: Warning: Unknown issue id \"SomeUnknownIssue2\" [UnknownIssueId]\n" +
+                "lint.xml:2: Warning: Unknown issue id \"SomeUnknownIssue1\" [UnknownIssueId]\n" +
+                "    <issue id=\"SomeUnknownIssue1\" severity=\"ignore\" />\n" +
+                "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 2 warnings",
+            "", // Expected exit code
+            LintCliFlags.ERRNO_SUCCESS,
+            arrayOf<String>(
+                "--disable",
+                "LintError",
+                "--disable",
+                "UsesMinSdkAttributes,UnusedResources,ButtonStyle,UnusedResources,AllowBackup,LintError,SomeUnknownIssue2",
+                projectDir.path
+            ),
+            null,
+            listener
+        )
+
+        temp.delete()
     }
 
     // TODO: Multi projects

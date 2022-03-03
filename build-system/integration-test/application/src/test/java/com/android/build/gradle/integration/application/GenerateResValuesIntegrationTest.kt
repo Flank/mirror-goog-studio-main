@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -49,7 +48,6 @@ class GenerateResValuesIntegrationTest {
                 )
                 .build()
         )
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Before

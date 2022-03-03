@@ -51,6 +51,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.InputChanges
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
@@ -105,8 +106,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:Internal
     abstract val symbolTableBuildService: Property<SymbolTableBuildService>
 
-    @Throws(IOException::class)
-    override fun doFullTaskAction() {
+    override fun doTaskAction(inputChanges: InputChanges) {
         val manifestBuiltArtifacts = BuiltArtifactsLoaderImpl().load(manifestFiles)
             ?: throw RuntimeException("Cannot load generated manifests, file a bug")
         val manifest = File(chooseOutput(manifestBuiltArtifacts).outputFile)

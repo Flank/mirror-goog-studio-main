@@ -195,10 +195,13 @@ class UtpConfigFactory {
         useOrchestrator: Boolean,
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
         emulatorGpuFlag: String,
+        showEmulatorKernelLogging: Boolean,
         shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
-            addDevice(createGradleManagedDevice(device, utpDependencies, emulatorGpuFlag))
+            addDevice(
+                createGradleManagedDevice(
+                    device, utpDependencies, emulatorGpuFlag, showEmulatorKernelLogging))
             addTestFixture(
                 createTestFixture(
                     null, null, appApks, additionalInstallOptions, helperApks, testData,
@@ -264,13 +267,15 @@ class UtpConfigFactory {
     private fun createGradleManagedDevice(
         managedDevice: UtpManagedDevice,
         utpDependencies: UtpDependencies,
-        emulatorGpuFlag: String
+        emulatorGpuFlag: String,
+        showEmulatorKernelLogging: Boolean,
     ): DeviceProto.Device {
         return DeviceProto.Device.newBuilder().apply {
             deviceIdBuilder.apply {
                 id = managedDevice.id
             }
-            provider = createGradleDeviceProvider(managedDevice, utpDependencies, emulatorGpuFlag)
+            provider = createGradleDeviceProvider(
+                managedDevice, utpDependencies, emulatorGpuFlag, showEmulatorKernelLogging)
         }.build()
     }
 
@@ -278,6 +283,7 @@ class UtpConfigFactory {
         deviceInfo: UtpManagedDevice,
         utpDependencies: UtpDependencies,
         emulatorGpuFlag: String,
+        showEmulatorKernelLogging: Boolean,
     ): ExtensionProto.Extension {
         return ANDROID_DEVICE_PROVIDER_GRADLE.toExtensionProto(
             utpDependencies, GradleManagedAndroidDeviceProviderConfig::newBuilder) {
@@ -293,6 +299,7 @@ class UtpConfigFactory {
                 }.build())
                 gradleDslDeviceName = deviceInfo.deviceName
                 emulatorGpu = emulatorGpuFlag
+                this.showEmulatorKernelLogging = showEmulatorKernelLogging
             }
             adbServerPort = DEFAULT_ADB_SERVER_PORT
         }

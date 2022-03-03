@@ -42,8 +42,8 @@ import java.util.Comparator
 
 class VariantModelImpl(
     override val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
-    private val testBuilderTypeProvider: () -> String,
-    private val variantProvider: () -> List<VariantImpl>,
+    private val testBuilderTypeProvider: () -> String?,
+    private val variantProvider: () -> List<ComponentImpl>,
     private val testComponentProvider: () -> List<TestComponentImpl>,
     private val buildFeaturesProvider: () -> BuildFeatureValues,
     override val projectTypeV1: Int,
@@ -57,7 +57,7 @@ class VariantModelImpl(
     override val syncIssueReporter: SyncIssueReporter
         get() = globalConfig.services.issueReporter as SyncIssueReporter
 
-    override val variants: List<VariantImpl>
+    override val variants: List<ComponentImpl>
         get() = variantProvider()
 
     override val testComponents: List<TestComponentImpl>
@@ -124,7 +124,7 @@ class VariantModelImpl(
         // Ignore test, base feature and feature variants.
         // * Test variants have corresponding production variants
         // * Hybrid feature variants have corresponding library variants.
-        val defaultComponent: VariantImpl? = variants.minWithOrNull(preferredDefaultVariantScopeComparator)
+        val defaultComponent: ComponentImpl? = variants.minWithOrNull(preferredDefaultVariantScopeComparator)
 
         return defaultComponent?.name
     }

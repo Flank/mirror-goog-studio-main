@@ -825,6 +825,7 @@ private class LintModelVariantWriter(
         printer.printFiles("consumerProguardFiles", variant.consumerProguardFiles, indent)
         printer.printStrings("resourceConfigurations", variant.resourceConfigurations, indent)
         variant.partialResultsDir?.let { printer.printFile("partialResultsDir", it, indent) }
+        printer.printFiles("desugaredMethodsFiles", variant.desugaredMethodsFiles, indent)
         printer.println(">")
 
         writeBuildFeatures(variant.buildFeatures, indent + 1)
@@ -1657,6 +1658,7 @@ private class LintModelVariantReader(
             val consumerProguardFiles = getFiles("consumerProguardFiles")
             val resourceConfigurations = getStrings("resourceConfigurations")
             val partialResultsDir: File? = getOptionalFile("partialResultsDir")
+            val desugaredMethodsFiles = getFiles("desugaredMethodsFiles")
             var resValues: Map<String, LintModelResourceField> = emptyMap()
             var manifestPlaceholders: Map<String, String> = emptyMap()
             var sourceProviders: List<LintModelSourceProvider> = emptyList()
@@ -1729,7 +1731,8 @@ private class LintModelVariantReader(
                 shrinkable = shrinkable,
                 buildFeatures = buildFeatures!!,
                 libraryResolver = libraryResolver,
-                partialResultsDir = partialResultsDir
+                partialResultsDir = partialResultsDir,
+                desugaredMethodsFiles = desugaredMethodsFiles
             )
         } catch (e: XmlPullParserException) {
             throw IOException(e)

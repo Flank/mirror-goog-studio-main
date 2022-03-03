@@ -136,7 +136,7 @@ class BuildTypeTest {
 
     private fun getBuildTypeWithName(name: String): com.android.builder.model.BuildType {
         project.apply(
-            ImmutableMap.of<String, String?>(
+            ImmutableMap.of(
                 "plugin",
                 "com.android.application"
             )

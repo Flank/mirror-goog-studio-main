@@ -16,7 +16,11 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.AndroidProjectTypes
+import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -28,7 +32,15 @@ import javax.inject.Inject
 
 /** Gradle plugin class for 'application' projects.  */
 abstract class AbstractAppPlugin<
-        AndroidT : CommonExtension<*, *, *, *>,
+        BuildFeaturesT: BuildFeatures,
+        BuildTypeT: BuildType,
+        DefaultConfigT: DefaultConfig,
+        ProductFlavorT: ProductFlavor,
+        AndroidT: CommonExtension<
+                BuildFeaturesT,
+                BuildTypeT,
+                DefaultConfigT,
+                ProductFlavorT>,
         AndroidComponentsT : AndroidComponentsExtension<
                 in AndroidT,
                 in VariantBuilderT,
@@ -38,7 +50,8 @@ abstract class AbstractAppPlugin<
 @Inject constructor(
         registry: ToolingModelBuilderRegistry?,
         componentFactory: SoftwareComponentFactory?,
-        listenerRegistry: BuildEventsListenerRegistry?) : BasePlugin<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT>(
+        listenerRegistry: BuildEventsListenerRegistry?
+) : BasePlugin<BuildFeaturesT, BuildTypeT, DefaultConfigT, ProductFlavorT, AndroidT, AndroidComponentsT, VariantBuilderT, VariantT>(
         registry!!,
         componentFactory!!,
         listenerRegistry!!

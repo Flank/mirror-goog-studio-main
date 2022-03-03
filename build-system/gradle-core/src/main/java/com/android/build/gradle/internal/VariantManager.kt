@@ -119,7 +119,7 @@ class VariantManager<
     @Deprecated("Use dslExtension")  private val oldExtension: BaseExtension,
     private val dslExtension: CommonExtensionT,
     private val androidComponentsExtension: AndroidComponentsT,
-    val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<CommonExtension<*, *, *, *>, VariantBuilder, Variant>,
+    val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<CommonExtensionT, VariantBuilder, Variant>,
     private val variantFactory: VariantFactory<VariantBuilderT, VariantT>,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     val globalTaskCreationConfig: GlobalTaskCreationConfig,
@@ -276,7 +276,7 @@ class VariantManager<
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         variantType: VariantType,
         globalConfig: GlobalVariantBuilderConfig,
-    ): VariantComponentInfo<VariantBuilderT, VariantT>? {
+    ): VariantComponentInfo<CommonExtensionT, VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
@@ -327,7 +327,7 @@ class VariantManager<
                 project.path, variantBuilder.name)
 
         val userVisibleVariantBuilder =
-                variantBuilder.createUserVisibleVariantObject<VariantBuilder>(
+            variantBuilder.createUserVisibleVariantObject<VariantBuilder>(
                         projectServices,
                         profileEnabledVariantBuilder,
                 )
@@ -473,7 +473,7 @@ class VariantManager<
         dimensionCombination: DimensionCombination,
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-        mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>
+        mainComponentInfo: VariantComponentInfo<CommonExtensionT, VariantBuilderT, VariantT>
     ): TestFixturesImpl {
         val testFixturesVariantType = VariantTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
@@ -651,7 +651,7 @@ class VariantManager<
         dimensionCombination: DimensionCombination,
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-        testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
+        testedComponentInfo: VariantComponentInfo<CommonExtensionT, VariantBuilderT, VariantT>,
         variantType: VariantType,
         testFixturesEnabled: Boolean,
         inconsistentTestAppId: Boolean
@@ -992,7 +992,7 @@ class VariantManager<
 
                 variantApiOperationsRegistrar.dslExtensions.forEach { registeredExtension ->
                     registeredExtension.configurator.invoke(variantExtensionConfig).let {
-                        variantBuilder.registerExtension<Any>(
+                        variantBuilder.registerExtension(
                             if (it is GeneratedSubclass) it.publicType() else it.javaClass,
                             it
                         )

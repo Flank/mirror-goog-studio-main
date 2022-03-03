@@ -110,7 +110,7 @@ public class AppPluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         checkGeneratedDensities(
                 "mergeF1DebugResources", "ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi");
@@ -122,7 +122,7 @@ public class AppPluginDslTest {
 
     @Test
     public void testUseSupportLibrary_default() throws Exception {
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(getTask("mergeDebugResources", MergeResources.class)
                         .isVectorSupportLibraryUsed())
@@ -156,7 +156,7 @@ public class AppPluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(
                         getTask("mergeF1DebugResources", MergeResources.class)
@@ -177,7 +177,7 @@ public class AppPluginDslTest {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(DEFAULT_RELEASE);
     }
@@ -187,7 +187,7 @@ public class AppPluginDslTest {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setObfuscate(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(DEFAULT_RELEASE);
     }
@@ -198,7 +198,7 @@ public class AppPluginDslTest {
         release.getPostprocessing().setCodeShrinker("r8");
         release.getPostprocessing().setRemoveUnusedCode(false);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).doesNotContain(R8_RELEASE);
     }
@@ -209,7 +209,7 @@ public class AppPluginDslTest {
         release.getPostprocessing().setCodeShrinker("r8");
         release.getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(R8_RELEASE);
     }
@@ -246,7 +246,7 @@ public class AppPluginDslTest {
         release.setShrinkResources(true);
 
         try {
-            plugin.createAndroidTasks();
+            plugin.createAndroidTasks(project);
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("requires unused code shrinking");
         }
@@ -278,7 +278,7 @@ public class AppPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.setMinifyEnabled(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
@@ -295,7 +295,7 @@ public class AppPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.setMinifyEnabled(false);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
@@ -305,7 +305,7 @@ public class AppPluginDslTest {
     public void testShrinkerChoice_newDsl_noInstantRun() throws Exception {
         android.getBuildTypes().getByName("debug").getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
     }
@@ -320,7 +320,7 @@ public class AppPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.setMinifyEnabled(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
         assertThat(project.getTasks().getNames()).contains(R8_DEBUG_ANDROID_TEST);
@@ -332,7 +332,7 @@ public class AppPluginDslTest {
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(DEFAULT_DEBUG_ANDROID_TEST);
@@ -345,7 +345,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setObfuscate(true);
 
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
         assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG_ANDROID_TEST);
@@ -378,7 +378,7 @@ public class AppPluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
     }
 
     @Test
@@ -396,7 +396,7 @@ public class AppPluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks();
+        plugin.createAndroidTasks(project);
 
         assertThat(android.getDefaultConfig().getResourceConfigurations()).containsExactly("en");
 

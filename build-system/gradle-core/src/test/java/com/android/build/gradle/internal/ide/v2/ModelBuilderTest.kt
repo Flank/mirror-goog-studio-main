@@ -180,7 +180,7 @@ class ModelBuilderTest {
 
     //---------------
 
-    fun <T> ModelBuilder<*,*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
+    fun <T> ModelBuilder<*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
         return modelClass.cast(buildAll(modelClass.name, project))
     }
 
@@ -200,7 +200,6 @@ class ModelBuilderTest {
                     ApplicationBuildType,
                     ApplicationDefaultConfig,
                     ApplicationProductFlavor,
-                    SigningConfig,
                     ApplicationExtension> {
 
         // for now create an app extension

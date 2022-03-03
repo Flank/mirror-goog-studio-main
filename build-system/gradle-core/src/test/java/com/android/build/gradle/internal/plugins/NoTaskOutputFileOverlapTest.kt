@@ -54,7 +54,7 @@ class NoTaskOutputFileOverlapTest {
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
         val plugin = project.plugins.getPlugin(LibraryPlugin::class.java)
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
 
         validateNoOverlappingTaskOutputs(project, projectDir)
     }
@@ -69,7 +69,7 @@ class NoTaskOutputFileOverlapTest {
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
         val plugin = project.plugins.getPlugin(AppPlugin::class.java)
-        plugin.createAndroidTasks()
+        plugin.createAndroidTasks(project)
 
         validateNoOverlappingTaskOutputs(project, projectDir)
     }

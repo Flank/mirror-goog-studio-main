@@ -46,8 +46,7 @@ class DexingArtifactTransformWithTransformApiTest {
 
     @Test
     fun testArtifactTransformsNotUsedForReleaseVariant() {
-        // b/149978740
-        project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run("assembleRelease")
+        project.executor().run("assembleRelease")
         project.buildResult.stdout.use { scanner ->
             ScannerSubject.assertThat(scanner)
                 .doesNotContain(DexingNoClasspathTransform::class.java.simpleName)

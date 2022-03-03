@@ -19,16 +19,20 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.fixtures.FakeGradleExecOperations
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInjectableService
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.builder.files.SerializableChange
+import com.android.builder.files.SerializableInputChanges
 import com.android.ide.common.resources.FileStatus
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import com.android.utils.PathUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.provider.Provider
-import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
@@ -40,75 +44,84 @@ import kotlin.reflect.jvm.javaMethod
 /**
  * Unit tests for [StripDebugSymbolsTask].
  */
-class StripDebugSymbolsTaskTest {
+class StripDebugSymbolsTaskUnitTest {
 
     @get: Rule
     val temporaryFolder = TemporaryFolder()
     private val execOperations = FakeGradleExecOperations()
 
     private lateinit var inputDir: File
+    private lateinit var firstRunInputChanges: SerializableInputChanges
     private lateinit var x86Foo: File
     private lateinit var x86DoNotStrip: File
     private lateinit var armeabiFoo: File
     private lateinit var armeabiDoNotStrip: File
     private lateinit var outputDir: File
     private lateinit var fakeExe: File
-    private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
     private lateinit var workers: WorkerExecutor
-    private lateinit var instantiatorTask: AndroidVariantTask
+    private lateinit var projectPath: Provider<String>
+    private lateinit var analyticsService: Provider<AnalyticsService>
+    private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
 
     @Before
     fun setUp() {
         // create input dir with lib/x86/foo.so, lib/x86/doNotStrip.so, lib/armeabi/foo.so,
         // and lib/armeabi/doNotStrip.so files
+        val inputFiles = mutableListOf<SerializableChange>()
         inputDir = temporaryFolder.newFolder("inputDir")
         x86Foo = FileUtils.join(inputDir, "lib", "x86", "foo.so")
         FileUtils.createFile(x86Foo, "foo")
         assertThat(x86Foo).exists()
+        inputFiles += change(x86Foo)
         x86DoNotStrip = FileUtils.join(inputDir, "lib", "x86", "doNotStrip.so")
         FileUtils.createFile(x86DoNotStrip, "doNotStrip")
         assertThat(x86DoNotStrip).exists()
+        inputFiles += change(x86DoNotStrip)
         armeabiFoo = FileUtils.join(inputDir, "lib", "armeabi", "foo.so")
         FileUtils.createFile(armeabiFoo, "foo")
         assertThat(armeabiFoo).exists()
+        inputFiles += change(armeabiFoo)
         armeabiDoNotStrip = FileUtils.join(inputDir, "lib", "armeabi", "doNotStrip.so")
         FileUtils.createFile(armeabiDoNotStrip, "doNotStrip")
         assertThat(armeabiDoNotStrip).exists()
-
+        inputFiles += change(armeabiDoNotStrip)
+        firstRunInputChanges = SerializableInputChanges(listOf(inputDir), inputFiles)
         outputDir = temporaryFolder.newFolder("outputDir")
 
         fakeExe = temporaryFolder.newFile("fake.exe")
-        stripToolFinderProvider = FakeGradleProvider(
-            SymbolStripExecutableFinder(mapOf(Pair(Abi.X86, fakeExe), Pair(Abi.ARMEABI, fakeExe)))
-        )
-
-        with(ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()) {
-            workers = FakeGradleWorkExecutor(
-                objects, temporaryFolder.newFolder(), listOf(
-                    FakeInjectableService(
-                        StripDebugSymbolsRunnable::execOperations.getter.javaMethod!!,
-                        execOperations
+        workers = FakeGradleWorkExecutor(
+            FakeObjectFactory.factory, temporaryFolder.newFolder(), listOf(
+                FakeInjectableService(
+                    StripDebugSymbolsDelegate::workers.getter.javaMethod!!,
+                    FakeGradleWorkExecutor(
+                        FakeObjectFactory.factory, temporaryFolder.newFolder(), listOf(
+                            FakeInjectableService(
+                                StripDebugSymbolsRunnable::execOperations.getter.javaMethod!!,
+                                execOperations
+                            ),
+                        )
                     )
-                )
+                ),
             )
-            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
-            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
-        }
+        )
+        projectPath = FakeProviderFactory.factory.provider { ":fake-project" }
+        analyticsService = FakeProviderFactory.factory.provider(::FakeNoOpAnalyticsService)
+        stripToolFinderProvider =  FakeProviderFactory.factory.provider { SymbolStripExecutableFinder(mapOf(Pair(Abi.X86, fakeExe), Pair(Abi.ARMEABI, fakeExe))) }
     }
 
     @Test
     fun `test non-incremental`() {
         val keepDebugSymbols = setOf("**/doNotStrip.so")
 
-        StripDebugSymbolsDelegate(
-            workers,
-            inputDir,
-            outputDir,
-            keepDebugSymbols,
-            stripToolFinderProvider,
-            null,
-            instantiatorTask
-        ).run()
+        workers.noIsolation().submit(
+            StripDebugSymbolsDelegate::class.java,
+        ) {
+            it.initializeWith(projectPath, "fakeTask", analyticsService)
+            it.stripToolFinder.set(stripToolFinderProvider)
+            it.keepDebugSymbols.set(keepDebugSymbols)
+            it.changes.set(firstRunInputChanges)
+            it.outputDir.set(outputDir)
+        }
 
         // Check that executable only runs for x86Foo and armeabiFoo (not doNotStrip files)
         assertThat(execOperations.capturedExecutions).named("number of invocations").hasSize(2)
@@ -145,20 +158,19 @@ class StripDebugSymbolsTaskTest {
     @Test
     fun `test incremental`() {
 
-        val changedInputs =
-            mapOf(Pair(x86Foo, FileStatus.NEW), Pair(armeabiDoNotStrip, FileStatus.NEW))
+        val changedInputs = listOf(change(x86Foo), change(armeabiDoNotStrip))
 
         val excludePatterns = setOf("**/doNotStrip.so")
 
-        StripDebugSymbolsDelegate(
-            workers,
-            inputDir,
-            outputDir,
-            excludePatterns,
-            stripToolFinderProvider,
-            changedInputs,
-            instantiatorTask
-        ).run()
+        workers.noIsolation().submit(
+            StripDebugSymbolsDelegate::class.java,
+        ) {
+            it.initializeWith(projectPath, "fakeTask", analyticsService)
+            it.keepDebugSymbols.set(excludePatterns)
+            it.stripToolFinder.set(stripToolFinderProvider)
+            it.changes.set(SerializableInputChanges(listOf(inputDir), changedInputs))
+            it.outputDir.set(outputDir)
+        }
 
         // Check that executable only runs for x86Foo
         // Check that executable only runs for x86Foo and armeabiFoo (not doNotStrip files)
@@ -182,5 +194,9 @@ class StripDebugSymbolsTaskTest {
         assertThat(File(outputDir, x86DoNotStripPath)).doesNotExist()
         val armeabiFooPath = armeabiFoo.toRelativeString(inputDir)
         assertThat(File(outputDir, armeabiFooPath)).doesNotExist()
+    }
+
+    private fun change(file: File, fileStatus: FileStatus = FileStatus.NEW): SerializableChange {
+        return SerializableChange(file, fileStatus, PathUtils.toSystemIndependentPath(inputDir.toPath().relativize(file.toPath())))
     }
 }

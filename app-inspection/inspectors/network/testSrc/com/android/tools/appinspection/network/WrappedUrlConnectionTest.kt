@@ -46,12 +46,11 @@ class WrappedUrlConnectionTest {
                     override fun disconnect() = Unit
                     override fun error(message: String) = Unit
                     override fun trackRequestBody(stream: OutputStream) = stream
-                    override fun trackRequest(method: String, fields: Map<String, List<String>>
+                    override fun trackRequest(
+                        method: String, fields: Map<String, List<String>>
                     ) = Unit
-                    override fun trackResponse(
-                        response: String?,
-                        fields: Map<String, List<String>>
-                    ) = Unit
+
+                    override fun trackResponseHeaders(fields: Map<String, List<String>>) = Unit
                     override fun trackResponseBody(stream: InputStream) = stream
                 }
             }
@@ -61,6 +60,7 @@ class WrappedUrlConnectionTest {
                 connection: NetworkConnection,
                 response: NetworkResponse
             ) = response
+
             override fun addRule(ruleId: Int, rule: InterceptionRule) = Unit
             override fun removeRule(ruleId: Int) = Unit
         }

@@ -102,6 +102,7 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.URL
+import java.nio.file.Files
 import kotlin.math.max
 
 /**
@@ -330,40 +331,36 @@ open class LintCliClient : LintClient {
             emitBaselineDiagnostics(baseline, baseline.file, stats)
         }
         val outputBaselineFile = flags.outputBaselineFile
+        val writeBaselineIfMissing = !flags.missingBaselineIsEmptyBaseline || flags.isUpdateBaseline
         if (outputBaselineFile != null && baseline != null) {
             baseline.file = outputBaselineFile
             baseline.close()
             // Not setting exit code to ERRNO_CREATED_BASELINE; that's the contract for this flag
-        } else if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing ||
+        } else if (baselineFile != null && !baselineFile.exists() && writeBaselineIfMissing ||
             outputBaselineFile != null && baseline == null
         ) {
-            val file = outputBaselineFile ?: baselineFile!!
-            val dir = file.parentFile
-            var ok = true
-            if (dir != null && !dir.isDirectory) {
-                ok = dir.mkdirs()
-            }
-            if (!ok) {
-                System.err.println("Couldn't create baseline folder $dir")
-                return ERRNO_INVALID_ARGS
-            } else {
-                val reporter = Reporter.createXmlReporter(
-                    this,
-                    file,
-                    XmlFileType.BASELINE
+            val fileToWrite = outputBaselineFile ?: baselineFile!!
+            val exitCode =
+                writeNewBaselineFile(
+                    stats,
+                    file = fileToWrite,
+                    writeEmptyBaseline =
+                        !flags.missingBaselineIsEmptyBaseline || outputBaselineFile != null
                 )
-                reporter.pathVariables = pathVariables.filter(PathVariables::isPrivatePathVariable)
-                reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
-                reporter.write(stats, definiteIncidents, driver.registry)
-                // With --write-reference-baseline we continue even if the baseline was written
-                if (outputBaselineFile == null) {
-                    System.err.println(getBaselineCreationMessage(file))
-                    return if (flags.isContinueAfterBaselineCreated) {
-                        ERRNO_SUCCESS
-                    } else {
-                        ERRNO_CREATED_BASELINE
-                    }
+            if (exitCode != ERRNO_INTERNAL_CONTINUE) {
+                return exitCode
+            }
+            if (!flags.isUpdateBaseline && outputBaselineFile == null) {
+                System.err.println(getBaselineCreationMessage(fileToWrite))
+            }
+            when {
+                outputBaselineFile != null -> {
+                    // With --write-reference-baseline we continue even if the baseline was written
                 }
+                flags.isUpdateBaseline || !flags.isContinueAfterBaselineCreated -> {
+                    return ERRNO_CREATED_BASELINE
+                }
+                else -> return ERRNO_SUCCESS
             }
         } else if (baseline != null &&
             baseline.writeOnClose &&
@@ -373,7 +370,11 @@ open class LintCliClient : LintClient {
             baseline.close()
             return ERRNO_CREATED_BASELINE
         } else if (baseline != null && flags.isUpdateBaseline) {
-            baseline.close()
+            if (flags.missingBaselineIsEmptyBaseline && definiteIncidents.isEmpty()) {
+                flags.baselineFile?.toPath()?.let { Files.deleteIfExists(it) }
+            } else {
+                baseline.close()
+            }
             return ERRNO_CREATED_BASELINE
         }
 
@@ -389,6 +390,40 @@ open class LintCliClient : LintClient {
         }
 
         return if (flags.isSetExitCode) if (hasErrors) ERRNO_ERRORS else ERRNO_SUCCESS else ERRNO_SUCCESS
+    }
+
+    /**
+     * Writes a new baseline file.
+     *
+     * In the case when [writeEmptyBaseline] is false and there are no incidents, does not write a
+     * new baseline file and deletes any existing baseline file.
+     *
+     * @param stats the [LintStats]
+     * @param file the file to write to.
+     * @param writeEmptyBaseline whether to write a file when there are no lint issues.
+     * @return [ERRNO_INTERNAL_CONTINUE] or another exit code in case of a problem
+     */
+    private fun writeNewBaselineFile(
+        stats: LintStats,
+        file: File,
+        writeEmptyBaseline: Boolean
+    ): Int {
+        if (writeEmptyBaseline || definiteIncidents.isNotEmpty()) {
+            val dir = file.parentFile
+            if (dir != null && !dir.isDirectory) {
+                if (!dir.mkdirs()) {
+                    System.err.println("Couldn't create baseline folder $dir")
+                    return ERRNO_INVALID_ARGS
+                }
+            }
+            val reporter = Reporter.createXmlReporter(this, file, XmlFileType.BASELINE)
+            reporter.pathVariables = pathVariables.filter(PathVariables::isPrivatePathVariable)
+            reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
+            reporter.write(stats, definiteIncidents, driver.registry)
+        } else {
+            Files.deleteIfExists(file.toPath())
+        }
+        return ERRNO_INTERNAL_CONTINUE
     }
 
     protected open fun sortResults() {

@@ -17,10 +17,11 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
-import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
+
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -32,7 +33,7 @@ public class RsEnabledAnnotationTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("extractRsEnabledAnnotations")
-                    .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                    .setCmakeVersion(CMakeVersion.DEFAULT.getSdkFolderName())
                     .setWithCmakeDirInLocalProp(true)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();

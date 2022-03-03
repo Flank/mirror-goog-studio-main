@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.testing.utp.worker
 
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.testing.utp.UtpDependency
-import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.ide.common.process.BaseProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.ide.common.process.ProcessOutput
 import javax.inject.Inject
 import org.gradle.api.logging.Logging
 import org.gradle.process.ExecOperations
@@ -50,9 +50,21 @@ abstract class RunUtpWorkAction : WorkAction<RunUtpWorkParameters> {
                 parameters.loggingProperties.asFile.get().absolutePath}")
         }.createJavaProcess()
 
-        javaProcessExecutor.execute(
-            javaProcessInfo,
-            LoggedProcessOutputHandler(LoggerWrapper(logger))).apply {
+        val processOutputHandler = object: BaseProcessOutputHandler() {
+            override fun handleOutput(processOutput: ProcessOutput) {
+                processOutput as BaseProcessOutput
+                val stdout = processOutput.standardOutputAsString
+                if (stdout.isNotBlank()) {
+                    logger.info(stdout)
+                }
+                val stderr = processOutput.errorOutputAsString
+                if (stderr.isNotBlank()) {
+                    logger.info(stderr)
+                }
+            }
+        }
+
+        javaProcessExecutor.execute(javaProcessInfo, processOutputHandler).apply {
             rethrowFailure()
         }
     }

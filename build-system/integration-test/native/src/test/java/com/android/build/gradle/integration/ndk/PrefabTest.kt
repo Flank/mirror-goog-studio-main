@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.ndk
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
@@ -34,6 +33,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 
 @RunWith(Parameterized::class)
 class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: String) {
@@ -43,24 +43,22 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     @JvmField
     val project = GradleTestProject.builder().fromTestProject("prefabApp")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Rule
     @JvmField
     val prefabNoDepsProject = GradleTestProject.builder().fromTestProject("prefabNoDeps")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     companion object {
         @Parameterized.Parameters(name = "build system = {0}, cmake = {1}")
         @JvmStatic
-        fun data() = listOf(
-                arrayOf(NativeBuildSystem.CMAKE, "3.10.2"),
-                arrayOf(NativeBuildSystem.CMAKE, "3.18.1"),
-                arrayOf(NativeBuildSystem.NDK_BUILD, "N/A")
-        )
+        fun data() =
+            CMakeVersion.FOR_TESTING.map { arrayOf(NativeBuildSystem.CMAKE, it.version) } +
+                    listOf(
+                        arrayOf(NativeBuildSystem.NDK_BUILD, "N/A")
+                    )
     }
 
     fun setupProject(project: GradleTestProject) {

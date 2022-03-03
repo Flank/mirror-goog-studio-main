@@ -30,12 +30,14 @@ class ManagedDeviceUtilsTest {
         SystemPropertyOverrides().use { systemPropertyOverrides ->
             systemPropertyOverrides.setProperty("os.arch", "x86_64")
 
-            // Any aosp api 29 and below has an x86 image.
+            // Any aosp api 29 and below (except 26) has an x86 image.
             assertThat(computeAbiFromArchitecture(false, 25, "aosp")).isEqualTo("x86")
             assertThat(computeAbiFromArchitecture(false, 29, "aosp")).isEqualTo("x86")
             // Any aosp api 30 and above doesn't have an x86 image.
             assertThat(computeAbiFromArchitecture(false, 30, "aosp")).isEqualTo("x86_64")
             assertThat(computeAbiFromArchitecture(false, 31, "aosp")).isEqualTo("x86_64")
+            // aosp api 26 doesn't have an x86 image
+            assertThat(computeAbiFromArchitecture(false, 26, "aosp")).isEqualTo("x86_64")
 
             // Google api 30 and below has an x86 image.
             assertThat(computeAbiFromArchitecture(false, 25, "google")).isEqualTo("x86")

@@ -33,6 +33,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /*
  * This establishes a socket connection to the adb host, and issues a {@link
@@ -59,7 +60,9 @@ public class DeviceListMonitorTask implements Runnable {
     private volatile boolean mQuit;
 
     interface UpdateListener {
-        void connectionError(@NonNull Exception e);
+        void initializationError(@NonNull Exception e);
+
+        void listFetchError(@NonNull Exception e);
 
         void deviceListUpdate(@NonNull Map<String, IDevice.DeviceState> devices);
     }
@@ -122,8 +125,14 @@ public class DeviceListMonitorTask implements Runnable {
                 if (mAdbConnection != null && !mMonitoring) {
                     mMonitoring = sendDeviceListMonitoringRequest();
                 }
+            } catch (AsynchronousCloseException ace) {
+                // this happens because of a call to Quit. We do nothing, and the loop will break.
+            } catch (IOException | TimeoutException ex) {
+                handleExceptionInInitialDeviceListBuilding(ex, mListener::initializationError);
+            }
 
-                if (mMonitoring) {
+            try {
+                if (mAdbConnection != null && mMonitoring) {
                     int length = AdbSocketUtils.readLength(mAdbConnection, mLengthBuffer);
 
                     if (length >= 0) {
@@ -136,8 +145,8 @@ public class DeviceListMonitorTask implements Runnable {
                 }
             } catch (AsynchronousCloseException ace) {
                 // this happens because of a call to Quit. We do nothing, and the loop will break.
-            } catch (IOException | TimeoutException ex) {
-                handleExceptionInMonitorLoop(ex);
+            } catch (IOException ex) {
+                handleExceptionInInitialDeviceListBuilding(ex, mListener::listFetchError);
             }
         } while (!mQuit);
     }
@@ -161,7 +170,8 @@ public class DeviceListMonitorTask implements Runnable {
         }
     }
 
-    private void handleExceptionInMonitorLoop(@NonNull Exception e) {
+    private void handleExceptionInInitialDeviceListBuilding(
+            @NonNull Exception e, @NonNull Consumer<Exception> errorHandler) {
         if (!mQuit) {
             if (e instanceof TimeoutException) {
                 Log.e("DeviceMonitor", "Adb connection Error: timeout");
@@ -177,7 +187,7 @@ public class DeviceListMonitorTask implements Runnable {
                 }
                 mAdbConnection = null;
 
-                mListener.connectionError(e);
+                errorHandler.accept(e);
             }
         }
     }
