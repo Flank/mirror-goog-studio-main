@@ -20,8 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.profile.GradleAnalyticsEnvironment;
-import com.android.build.gradle.internal.profile.GradleSystemEnvironment;
 import com.android.tools.analytics.AnalyticsSettings;
 import com.android.utils.Environment;
 import com.google.common.collect.ImmutableMap;
@@ -61,8 +59,8 @@ public final class ProjectOptions {
         AnalyticsSettings.initialize(
                 LoggerWrapper.getLogger(ProjectOptions.class),
                 null,
-                new GradleAnalyticsEnvironment());
-        Environment.initialize(new GradleSystemEnvironment());
+                com.android.tools.analytics.Environment.getSYSTEM());
+        Environment.initialize(Environment.Companion.getSYSTEM());
     }
 
     @NonNull
