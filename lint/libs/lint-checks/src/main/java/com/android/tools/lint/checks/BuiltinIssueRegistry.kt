@@ -283,6 +283,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 MissingClassDetector.INSTANTIATABLE,
                 MissingClassDetector.MISSING,
                 MissingIdDetector.ISSUE,
+                MissingInflatedIdDetector.ISSUE,
                 MissingPrefixDetector.MISSING_NAMESPACE,
                 MotionLayoutDetector.INVALID_SCENE_FILE_REFERENCE,
                 MotionLayoutIdDetector.MISSING_ID,
