@@ -1014,6 +1014,9 @@ class VariantManager<
                         .setDexBuilder(GradleBuildVariant.DexBuilderTool.D8_DEXER)
                         .setDexMerger(GradleBuildVariant.DexMergerTool.D8_MERGER)
                         .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
+                        .setHasUnitTest(variant.unitTest != null)
+                        .setHasAndroidTest((variant as? HasAndroidTest)?.androidTest != null)
+                        .setHasTestFixtures((variant as? HasTestFixtures)?.testFixtures != null)
                         .testExecution = AnalyticsUtil.toProto(dslExtension.testOptions.execution.toExecutionEnum() ?: TestOptions.Execution.HOST)
 
                     if (variant.minifiedEnabled) {
