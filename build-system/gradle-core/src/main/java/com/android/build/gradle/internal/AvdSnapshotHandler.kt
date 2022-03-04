@@ -21,14 +21,19 @@ import com.android.utils.ILogger
 import java.io.File
 import java.nio.file.Files.readAllLines
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 
 private const val EMULATOR_EXECUTABLE = "emulator"
 private const val DEFAULT_DEVICE_BOOT_AND_SNAPSHOT_CHECK_TIMEOUT_SEC = 600L
-private const val WAIT_AFTER_BOOT_MS = 60000L
 private const val ADB_TIMEOUT_SEC = 60L
+
+// This is an extra wait time after the AVD boot completed before taking system snapshot image
+// for stability.
+private const val WAIT_AFTER_BOOT_MS = 5000L
+
 private const val MINIMUM_MAJOR_VERSION = 30
 private const val MINIMUM_MINOR_VERSION = 6
 private const val MINIMUM_MICRO_VERSION = 4
@@ -180,9 +185,25 @@ class AvdSnapshotHandler(
         )
         processBuilder.environment()["ANDROID_AVD_HOME"] = avdLocation.absolutePath
         val process = processBuilder.start()
-        var bootCompleted = false
-
+        val bootCompleted = AtomicBoolean(false)
         try {
+            val onBootCompletedCallbackFunc = {
+                if (!bootCompleted.getAndSet(true)) {
+                    logger.verbose("Booting $avdName is completed.")
+                    Thread.sleep(WAIT_AFTER_BOOT_MS)
+                    closeEmulatorWithId(adbExecutable, process, deviceId, logger)
+                }
+            }
+            Thread {
+                while(!bootCompleted.get() && process.isAlive) {
+                    if (isBootCompleted(deviceId, adbExecutable, logger)) {
+                        onBootCompletedCallbackFunc()
+                        break
+                    }
+                    logger.verbose("Waiting for $avdName to boot up.")
+                    Thread.sleep(5000)
+                }
+            }.start()
             GrabProcessOutput.grabProcessOutput(
                 process,
                 GrabProcessOutput.Wait.ASYNC,
@@ -191,9 +212,7 @@ class AvdSnapshotHandler(
                         line ?: return
                         logger.verbose(line)
                         if (line.contains("boot completed")) {
-                            bootCompleted = true
-                            Thread.sleep(WAIT_AFTER_BOOT_MS)
-                            closeEmulatorWithId(adbExecutable, process, deviceId, logger)
+                            onBootCompletedCallbackFunc()
                         }
                     }
 
@@ -215,7 +234,7 @@ class AvdSnapshotHandler(
                     fewer shards.
                 """.trimIndent())
             }
-            if (!bootCompleted) {
+            if (!bootCompleted.get()) {
                 error("""
                     Gradle was not able to complete device setup for: $avdName
                     The emulator failed to open the managed device to generate the snapshot.
@@ -229,6 +248,42 @@ class AvdSnapshotHandler(
             process.waitFor()
             throw e
         }
+    }
+
+    private fun isBootCompleted(deviceId: String, adbExecutable: File, logger: ILogger): Boolean {
+        val emulatorSerial = try {
+            findDeviceSerialWithId(adbExecutable, deviceId)
+        } catch (e: Exception) {
+            logger.verbose("Failed to check if the device boot is completed due to an error: $e")
+            return false
+        }
+        val getPropProcess = processFactory(
+            listOf(
+                adbExecutable.absolutePath,
+                "-s",
+                emulatorSerial,
+                "shell",
+                "getprop",
+                "sys.boot_completed",
+            )
+        ).start()
+        val bootCompleted = AtomicBoolean(false)
+        GrabProcessOutput.grabProcessOutput(
+            getPropProcess,
+            GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
+            object : GrabProcessOutput.IProcessOutput {
+                override fun out(line: String?) {
+                    line ?: return
+                    if (line.trim().toIntOrNull() == 1) {
+                        logger.info("sys.boot_completed=1")
+                        bootCompleted.set(true)
+                    }
+                }
+
+                override fun err(line: String?) {}
+            }
+        )
+        return bootCompleted.get()
     }
 
     /**
