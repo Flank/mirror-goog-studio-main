@@ -545,16 +545,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(ExtractAnnotations.CreationAction(testFixturesComponent))
         }
 
-        val instrumented: Boolean =
-            testFixturesComponent.variantDslInfo.isAndroidTestCoverageEnabled
-
-        if (instrumented) {
-            createJacocoTask(testFixturesComponent)
-        }
-
-        maybeCreateTransformClassesWithAsmTask(
-            testFixturesComponent,
-            instrumented /* Unit Tests do not use offline instrumentation. */)
+        maybeCreateTransformClassesWithAsmTask(testFixturesComponent)
 
         // packaging tasks
 
@@ -1555,10 +1546,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // This should be done automatically by the classpath
         //        TaskFactoryUtils.dependsOn(javacTask,
         // testedVariantScope.getTaskContainer().getJavacTask());
-        maybeCreateTransformClassesWithAsmTask(
-            unitTestCreationConfig as ComponentImpl,
-            isTestCoverageEnabled = false
-        )
+        maybeCreateTransformClassesWithAsmTask(unitTestCreationConfig as ComponentImpl)
 
 
         // TODO: use merged java res for unit tests (bug 118690729)
@@ -2083,10 +2071,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 createJacocoTask(creationConfig)
             }
         }
-        maybeCreateTransformClassesWithAsmTask(
-            creationConfig as ComponentImpl,
-            isAndroidTestCoverageEnabled
-        )
+        maybeCreateTransformClassesWithAsmTask(creationConfig as ComponentImpl)
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -3282,8 +3267,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun maybeCreateTransformClassesWithAsmTask(
-        creationConfig: ComponentImpl,
-        isTestCoverageEnabled: Boolean
+        creationConfig: ComponentImpl
     ) {
         if (creationConfig.projectClassesAreInstrumented) {
             creationConfig
@@ -3293,8 +3277,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
             taskFactory.register(
                     TransformClassesWithAsmTask.CreationAction(
-                        creationConfig,
-                        isTestCoverageEnabled
+                        creationConfig
                     )
             )
             if (creationConfig.asmFramesComputationMode
