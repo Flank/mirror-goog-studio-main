@@ -93,6 +93,7 @@ class AvdSnapshotHandler(
                 "@$avdName",
                 "-no-window",
                 "-no-boot-anim",
+                "-no-audio",
                 "-verbose".takeIf { showEmulatorKernelLogging },
                 "-show-kernel".takeIf { showEmulatorKernelLogging },
                 "-gpu",
@@ -123,9 +124,6 @@ class AvdSnapshotHandler(
                     override fun err(line: String?) {}
                 }
             )
-            process.waitUntilTimeout(logger) {
-                process.destroy()
-            }
         } catch (e: Exception) {
             process.destroy()
             throw RuntimeException(e)
