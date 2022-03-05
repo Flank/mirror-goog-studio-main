@@ -1767,7 +1767,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             // Builtin R8 desugaring, such as rewriting compare calls (see b/36390874)
-            if (DesugaredMethodLookup.isDesugared(owner, name, desc)) {
+            if (DesugaredMethodLookup.isDesugared(owner, name, desc, context.project)) {
                 return
             }
 
