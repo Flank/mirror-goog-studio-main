@@ -1746,7 +1746,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
 
-        logger.warn("WARNING: The Gradle Managed Device DSL and associated tests are experimental")
         val managedDevices = getManagedDevices()
         taskFactory.register(
                 ManagedDeviceCleanTask.CreationAction(
