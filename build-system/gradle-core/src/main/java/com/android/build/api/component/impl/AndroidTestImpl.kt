@@ -52,6 +52,7 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -311,6 +312,11 @@ open class AndroidTestImpl @Inject constructor(
 
     override val ignoreAllLibraryKeepRules: Boolean
         get() = variantDslInfo.ignoreAllLibraryKeepRules
+
+
+    // Only instrument library androidTests. In app modules, the main classes are instrumented.
+    override val useJacocoTransformInstrumentation: Boolean
+        get() = isTestCoverageEnabled && testedConfig.componentType.isAar
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

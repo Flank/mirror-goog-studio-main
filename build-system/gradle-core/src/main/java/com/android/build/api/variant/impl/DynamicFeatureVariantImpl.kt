@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -184,6 +185,9 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         }
 
     override val signingConfigImpl: SigningConfigImpl? = null
+
+    override val useJacocoTransformInstrumentation: Boolean
+        get() = variantDslInfo.isAndroidTestCoverageEnabled
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, only present for old variant API.
