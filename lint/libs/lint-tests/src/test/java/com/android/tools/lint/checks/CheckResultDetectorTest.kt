@@ -1369,6 +1369,41 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test214582872() {
+        lint().files(
+            kotlin(
+                "src/test.kt",
+                """
+                import androidx.annotation.CheckResult
+
+                fun foo() {}
+
+                // in a real scenario this would be an inherited package annotation not intended for this Unit element
+                @CheckResult
+                val baz = foo()
+
+                @CheckResult
+                val bar: Unit = TODO()
+
+                fun test() {
+                    bar
+                    baz
+                }
+                """
+            ).indented(),
+            java(
+                """
+                public class Foo {
+                    public void test() {
+                        TestKt.getBaz();
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).allowDuplicates().run().expectClean()
+    }
+
     private val javaxCheckReturnValueSource = java(
         """
         package javax.annotation;
