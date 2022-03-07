@@ -93,7 +93,7 @@ class AbbExecCommandHandler : DeviceCommandHandler("abb_exec") {
         }
 
 
-        if (parameters[parameters.size-1] != "-") {
+        if (parameters[parameters.size - 1] != "-") {
             val sessionID = parameters[1]
             if (sessionID == PackageManager.BAD_SESSION) {
                 return "Error: (request with FAIL_ME session)"
@@ -110,10 +110,11 @@ class AbbExecCommandHandler : DeviceCommandHandler("abb_exec") {
         }
 
         val expectedBytesLength = parameters[sizeIndex].toInt()
-        val buffer= ByteArray(1024)
+        val buffer = ByteArray(1024)
         var totalBytesRead = 0
         while (totalBytesRead < expectedBytesLength) {
-            val numRead: Int = input.read(buffer, 0, Math.min(buffer.size, expectedBytesLength - totalBytesRead))
+            val numRead: Int =
+                input.read(buffer, 0, Math.min(buffer.size, expectedBytesLength - totalBytesRead))
             if (numRead < 0) {
                 break
             }
