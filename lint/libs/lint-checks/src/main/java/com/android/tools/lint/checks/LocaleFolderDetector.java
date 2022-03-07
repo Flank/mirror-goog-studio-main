@@ -259,7 +259,10 @@ public class LocaleFolderDetector extends Detector
             }
 
             String region = locale.getRegion();
-            if (region != null && locale.hasRegion() && region.length() == 3) {
+            if (region != null
+                    && locale.hasRegion()
+                    && region.length() == 3
+                    && !Character.isDigit(region.charAt(0))) {
                 String regionAlpha2 = LocaleManager.getRegionAlpha2(region.toUpperCase(Locale.UK));
                 if (regionAlpha2 != null) {
                     String message =

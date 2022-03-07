@@ -72,7 +72,8 @@ res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter region cod
             xml("res/values/strings.xml", stringsXml),
             xml("res/values-no/strings.xml", stringsXml),
             xml("res/values-b+kok+IN//strings.xml", stringsXml), // OK
-            xml("res/values-b+nor+NOR/strings.xml", stringsXml)
+            xml("res/values-b+nor+NOR/strings.xml", stringsXml),
+            xml("res/values-b+es+419/strings.xml", stringsXml)
         ).run().expect(expected)
     }
 
