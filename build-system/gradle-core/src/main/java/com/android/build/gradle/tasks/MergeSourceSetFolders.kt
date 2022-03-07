@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.BuilderConstants
-import com.android.builder.model.SourceProvider
 import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
 import com.android.ide.common.resources.AssetMerger
 import com.android.ide.common.resources.AssetSet
@@ -62,8 +61,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.Callable
-import java.util.function.Function
 
 @CacheableTask
 abstract class MergeSourceSetFolders : IncrementalTask() {
@@ -340,7 +337,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                     ANDROID_AAPT_IGNORE
                 )
             )
-            task.assetSets.setDisallowChanges(assets.asAssetSets(task.aaptEnv))
+            task.assetSets.setDisallowChanges(assets.getAscendingOrderAssetSets(task.aaptEnv))
 
             task.sourceFolderInputs.fromDisallowChanges(assets.all)
         }

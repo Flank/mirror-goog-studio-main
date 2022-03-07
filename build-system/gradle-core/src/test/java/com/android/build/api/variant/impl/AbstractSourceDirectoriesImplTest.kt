@@ -29,7 +29,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
-import java.io.IOException
 
 internal class AbstractSourceDirectoriesImplTest {
 
@@ -56,7 +55,7 @@ internal class AbstractSourceDirectoriesImplTest {
     fun testAddSrcDir() {
         val testTarget = createTestTarget()
         val addedSource = temporaryFolder.newFolder("somewhere/safe")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
 
@@ -71,7 +70,7 @@ internal class AbstractSourceDirectoriesImplTest {
     fun testAddIllegalSrcDir() {
         val testTarget = createTestTarget()
         val addedSource = File(temporaryFolder.root, "somewhere/not/existing")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
     }
@@ -80,7 +79,7 @@ internal class AbstractSourceDirectoriesImplTest {
     fun testAddIllegalFileAsSrcDir() {
         val testTarget = createTestTarget()
         val addedSource = temporaryFolder.newFile("new_file")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
     }
@@ -100,7 +99,7 @@ internal class AbstractSourceDirectoriesImplTest {
         }
 
         val testTarget = createTestTarget()
-        testTarget.add(taskProvider, AddingTask::output)
+        testTarget.addGeneratedSourceDirectory(taskProvider, AddingTask::output)
         Truth.assertThat(listOfSources.size).isEqualTo(1)
         val directoryProperty = listOfSources.single().asFiles { project.objects.directoryProperty() }
         Truth.assertThat(directoryProperty.get().asFile.absolutePath).isEqualTo(
@@ -115,7 +114,7 @@ internal class AbstractSourceDirectoriesImplTest {
         Mockito.`when`(pattern.excludes).thenReturn(setOf("*.bak"))
         val testTarget = createTestTarget(pattern)
         val addedSource = temporaryFolder.newFolder("somewhere/safe")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
 
@@ -127,7 +126,7 @@ internal class AbstractSourceDirectoriesImplTest {
     }
 
     private fun createTestTarget(patternFilterable: PatternFilterable? = null) =
-        object: AbstractSourceDirectoriesImpl(
+        object: SourceDirectoriesImpl(
             "_for_test",
             project.layout.projectDirectory,
             patternFilterable

@@ -22,6 +22,7 @@ import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodTy
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.VariantPropertiesAccess
 import org.junit.Test
+import java.io.File
 import kotlin.test.assertNotNull
 
 class AddCustomSourceTest: VariantApiBaseTest(TestType.Script) {
@@ -145,8 +146,8 @@ To register the custom sources, you just need to use
                         }
 
                         variant.sources.getByName("toml").also {
-                                it.addSrcDir("src/${'$'}{variant.name}/toml")
-                                it.add(addSourceTaskProvider, AddCustomSources::outputFolder)
+                                it.addStaticSourceDirectory("src/${'$'}{variant.name}/toml")
+                                it.addGeneratedSourceDirectory(addSourceTaskProvider, AddCustomSources::outputFolder)
                         }
                         println(variant.sources.getByName("toml"))
 
@@ -157,6 +158,8 @@ To register the custom sources, you just need to use
                 }
                 """.trimIndent()
                 testingElements.addManifest( this)
+                addDirectory("src/debug/toml") { writeTomlFile(this) }
+                addDirectory("src/release/toml") { writeTomlFile(this) }
             }
         }
         withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
@@ -268,10 +271,11 @@ where source files will be generated and added to the compilation task.
                         val addSourceTaskProvider =  project.tasks.register<AddCustomSources>("${ '$' }{variant.name}AddCustomSources") {
                             outputFolder.set(File(project.layout.buildDirectory.asFile.get(), "toml/gen"))
                         }
+                        File(project.projectDir, "third_party/${'$'}{variant.name}/toml").mkdirs()
 
                         variant.sources.getByName("toml").also {
-                                it.addSrcDir("third_party/${'$'}{variant.name}/toml")
-                                it.add(addSourceTaskProvider, AddCustomSources::outputFolder)
+                                it.addStaticSourceDirectory("third_party/${'$'}{variant.name}/toml")
+                                it.addGeneratedSourceDirectory(addSourceTaskProvider, AddCustomSources::outputFolder)
                         }
                         println(variant.sources.getByName("toml"))
 
@@ -446,6 +450,15 @@ The merging activity is implemented by the :app:debugMergeTomlSources and the do
             assertNotNull(this)
             Truth.assertThat(output).contains("Merged folder is")
         }
+    }
+
+    fun writeTomlFile(parentDirectory: File) {
+        File(parentDirectory, "example.toml").writeText("""
+                        title = "TOML Example"
+
+                        [owner]
+                        name = "AGP Team"
+                    """.trimIndent())
     }
 }
 

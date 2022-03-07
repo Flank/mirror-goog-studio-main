@@ -31,7 +31,7 @@ import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
-import com.android.build.api.variant.impl.SourceDirectoriesImpl
+import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -156,7 +156,7 @@ abstract class ComponentImpl(
             variantSources.customSourceList.forEach{ (_, srcEntries) ->
                 srcEntries.forEach { customSourceDirectory ->
                     sourcesImpl.extras.maybeCreate(customSourceDirectory.sourceTypeName).also {
-                        (it as SourceDirectoriesImpl).addSource(
+                        (it as FlatSourceDirectoriesImpl).addSource(
                                 FileBasedDirectoryEntryImpl(
                                     customSourceDirectory.sourceTypeName,
                                     customSourceDirectory.directory,

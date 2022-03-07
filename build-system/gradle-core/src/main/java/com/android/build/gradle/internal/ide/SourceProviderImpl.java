@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.api.variant.impl.AbstractSourceDirectoriesImpl;
+import com.android.build.api.variant.impl.SourceDirectoriesImpl;
 import com.android.build.api.variant.impl.SourcesImpl;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.v2.CustomSourceDirectory;
@@ -99,7 +99,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.customDirectories = sourceProvider.getCustomDirectories();
     }
 
-    private Collection<File> getSourcesForIdeModel(AbstractSourceDirectoriesImpl sourceDirectories) {
+    private Collection<File> getSourcesForIdeModel(SourceDirectoriesImpl sourceDirectories) {
         return sourceDirectories.variantSourcesForModel$gradle_core(
                 directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
     }

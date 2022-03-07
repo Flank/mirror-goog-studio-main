@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.SourceAndOverlayDirectories
+import com.android.build.api.variant.SourceDirectories
 import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -25,13 +25,13 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.util.PatternFilterable
 import java.io.File
 
-open class SourceAndOverlayDirectoriesImpl(
+open class LayeredSourceDirectoriesImpl(
     _name: String,
     projectDirectory: Directory,
     private val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?
-): AbstractSourceDirectoriesImpl(_name, projectDirectory, variantDslFilters),
-    SourceAndOverlayDirectories {
+): SourceDirectoriesImpl(_name, projectDirectory, variantDslFilters),
+    SourceDirectories.Layered {
 
     // For compatibility with the old variant API, we must allow reading the content of this list
     // before it is finalized.

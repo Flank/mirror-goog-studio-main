@@ -16,8 +16,6 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.AbstractSourceDirectories
-import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -47,7 +45,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getJava() {
         testAnalytics(
-            SourceDirectories::class.java,
+            SourceDirectories.Flat::class.java,
             Sources::java,
             VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE
         )
@@ -56,7 +54,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getKotlin() {
         testAnalytics(
-            SourceDirectories::class.java,
+            SourceDirectories.Flat::class.java,
             Sources::kotlin,
             VariantPropertiesMethodType.SOURCES_KOTLIN_ACCESS_VALUE
         )
@@ -65,7 +63,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getRenderscript() {
         testAnalytics(
-            SourceDirectories::class.java,
+            SourceDirectories.Flat::class.java,
             Sources::renderscript,
             VariantPropertiesMethodType.SOURCES_RENDERSCRIPT_ACCESS_VALUE
         )
@@ -74,7 +72,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getMlModels() {
         testAnalytics(
-            SourceAndOverlayDirectories::class.java,
+            SourceDirectories.Layered::class.java,
             Sources::mlModels,
             VariantPropertiesMethodType.SOURCES_ML_MODELS_ACCESS_VALUE
         )
@@ -83,7 +81,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getAidl() {
         testAnalytics(
-            SourceDirectories::class.java,
+            SourceDirectories.Flat::class.java,
             Sources::aidl,
             VariantPropertiesMethodType.SOURCES_AIDL_ACCESS_VALUE
         )
@@ -92,7 +90,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getRes() {
         testAnalytics(
-            SourceAndOverlayDirectories::class.java,
+            SourceDirectories.Layered::class.java,
             Sources::res,
             VariantPropertiesMethodType.SOURCES_RES_ACCESS_VALUE
         )
@@ -101,7 +99,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getJniLibs() {
         testAnalytics(
-            SourceAndOverlayDirectories::class.java,
+            SourceDirectories.Layered::class.java,
             Sources::jniLibs,
             VariantPropertiesMethodType.SOURCES_JNI_ACCESS_VALUE
         )
@@ -110,7 +108,7 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getShaders() {
         testAnalytics(
-            SourceAndOverlayDirectories::class.java,
+            SourceDirectories.Layered::class.java,
             Sources::shaders,
             VariantPropertiesMethodType.SOURCES_SHADERS_ACCESS_VALUE
         )
@@ -119,13 +117,13 @@ class AnalyticsEnabledSourcesTest {
     @Test
     fun getAssets() {
         testAnalytics(
-            SourceAndOverlayDirectories::class.java,
+            SourceDirectories.Layered::class.java,
             Sources::assets,
             VariantPropertiesMethodType.SOURCES_ASSETS_ACCESS_VALUE
         )
     }
 
-    private fun <T: AbstractSourceDirectories> testAnalytics(
+    private fun <T: SourceDirectories> testAnalytics(
         type: Class<T>,
         accessor: (sources: Sources) -> T?,
         analyticsEnumValue: Int,
@@ -134,8 +132,8 @@ class AnalyticsEnabledSourcesTest {
         Mockito.`when`(accessor(delegate)).thenReturn(mockedType)
 
         val sourcesProxy = accessor(proxy)
-        Truth.assertThat(sourcesProxy is AnalyticsEnabledAbstractSourceDirectories).isTrue()
-        Truth.assertThat((sourcesProxy as AnalyticsEnabledAbstractSourceDirectories).delegate)
+        Truth.assertThat(sourcesProxy is AnalyticsEnabledSourceDirectories).isTrue()
+        Truth.assertThat((sourcesProxy as AnalyticsEnabledSourceDirectories).delegate)
             .isEqualTo(mockedType)
 
         Truth.assertThat(

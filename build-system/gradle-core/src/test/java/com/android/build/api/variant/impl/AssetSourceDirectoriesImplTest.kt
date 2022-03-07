@@ -72,8 +72,8 @@ internal class AssetSourceDirectoriesImplTest {
             null
         )
 
-        Truth.assertThat(testTarget.asAssetSets(FakeGradleProvider("aapt_env"))).isNotNull()
-        Truth.assertThat(testTarget.asAssetSets(FakeGradleProvider("aapt_env")).get()).isEmpty()
+        Truth.assertThat(testTarget.getAscendingOrderAssetSets(FakeGradleProvider("aapt_env"))).isNotNull()
+        Truth.assertThat(testTarget.getAscendingOrderAssetSets(FakeGradleProvider("aapt_env")).get()).isEmpty()
     }
 
     @Test
@@ -117,8 +117,8 @@ internal class AssetSourceDirectoriesImplTest {
             FileBasedDirectoryEntryImpl("higher3", temporaryFolder.newFolder("higher3")),
         )))
 
-        Truth.assertThat(testTarget.asAssetSets(FakeGradleProvider("aapt_env"))).isNotNull()
-        val assetSets = testTarget.asAssetSets(FakeGradleProvider("aapt_env")).get()
+        Truth.assertThat(testTarget.getAscendingOrderAssetSets(FakeGradleProvider("aapt_env"))).isNotNull()
+        val assetSets = testTarget.getAscendingOrderAssetSets(FakeGradleProvider("aapt_env")).get()
         Truth.assertThat(assetSets).hasSize(3)
         Truth.assertThat(assetSets[0].configName).isEqualTo("lowest")
         Truth.assertThat(assetSets[1].configName).isEqualTo("lower")

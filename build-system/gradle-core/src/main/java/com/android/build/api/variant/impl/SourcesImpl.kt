@@ -17,7 +17,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.DefaultSourcesProvider
-import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.api.AndroidSourceDirectorySet
@@ -47,8 +46,8 @@ class SourcesImpl(
     private val variantSourceSet: DefaultAndroidSourceSet?,
 ): Sources {
 
-    override val java: SourceDirectoriesImpl =
-        SourceDirectoriesImpl(
+    override val java: FlatSourceDirectoriesImpl =
+        FlatSourceDirectoriesImpl(
             SourceType.JAVA.name,
             projectDirectory,
             variantServices,
@@ -61,8 +60,8 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.java)
         }
 
-    override val kotlin: SourceDirectoriesImpl =
-        SourceDirectoriesImpl(
+    override val kotlin: FlatSourceDirectoriesImpl =
+        FlatSourceDirectoriesImpl(
             SourceType.KOTLIN.name,
             projectDirectory,
             variantServices,
@@ -157,9 +156,9 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.mlModels)
         }
 
-    override val aidl: SourceDirectories?
+    override val aidl: SourceDirectories.Flat?
         get() = defaultSourceProvider.aidl?.let { defaultAidlDirectories ->
-            SourceDirectoriesImpl(
+            FlatSourceDirectoriesImpl(
                 SourceType.AIDL.name,
                 projectDirectory,
                 variantServices,
@@ -170,9 +169,9 @@ class SourcesImpl(
             }
         }
 
-    override val renderscript: SourceDirectories?
+    override val renderscript: SourceDirectories.Flat?
         get() = defaultSourceProvider.renderscript?.let { defaultRenderscriptDirectories ->
-            SourceDirectoriesImpl(
+            FlatSourceDirectoriesImpl(
                 SourceType.RENDERSCRIPT.name,
                 projectDirectory,
                 variantServices,
@@ -183,9 +182,9 @@ class SourcesImpl(
             }
         }
 
-    internal val extras: NamedDomainObjectContainer<SourceDirectoriesImpl> by lazy {
+    internal val extras: NamedDomainObjectContainer<FlatSourceDirectoriesImpl> by lazy {
         variantServices.domainObjectContainer(
-            SourceDirectoriesImpl::class.java,
+            FlatSourceDirectoriesImpl::class.java,
             SourceProviderFactory(
                 variantServices,
                 projectDirectory,
@@ -193,15 +192,15 @@ class SourcesImpl(
         )
     }
 
-    override fun getByName(name: String): SourceDirectories = extras.maybeCreate(name)
+    override fun getByName(name: String): SourceDirectories.Flat = extras.maybeCreate(name)
 
     class SourceProviderFactory(
         private val variantServices: VariantServices,
         private val projectDirectory: Directory,
-    ): NamedDomainObjectFactory<SourceDirectoriesImpl> {
+    ): NamedDomainObjectFactory<FlatSourceDirectoriesImpl> {
 
-        override fun create(name: String): SourceDirectoriesImpl =
-            SourceDirectoriesImpl(
+        override fun create(name: String): FlatSourceDirectoriesImpl =
+            FlatSourceDirectoriesImpl(
                 _name = name,
                 projectDirectory = projectDirectory,
                 variantServices = variantServices,
@@ -217,7 +216,7 @@ class SourcesImpl(
      * AGP as they should all use this [SourcesImpl] from now on.
      */
     private fun resetVariantSourceSet(
-        target: AbstractSourceDirectoriesImpl,
+        target: SourceDirectoriesImpl,
         sourceSet: AndroidSourceDirectorySet?,
     ) {
         if (sourceSet != null) {

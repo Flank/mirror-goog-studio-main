@@ -25,14 +25,14 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.util.PatternFilterable
 
 /**
- * Specialization of [SourceAndOverlayDirectoriesImpl] for [SourceType.ASSETS]
+ * Specialization of [LayeredSourceDirectoriesImpl] for [SourceType.ASSETS]
  */
 class AssetSourceDirectoriesImpl(
     _name: String,
     projectDirectory: Directory,
     val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?,
-) : SourceAndOverlayDirectoriesImpl(_name, projectDirectory, variantServices, variantDslFilters) {
+) : LayeredSourceDirectoriesImpl(_name, projectDirectory, variantServices, variantDslFilters) {
 
     /**
      * Returns the dynamic list of [AssetSet] based on the current list of [DirectoryEntry]
@@ -44,7 +44,7 @@ class AssetSourceDirectoriesImpl(
      * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
      * @return a [Provider] of a [List] of [AssetSet].
      */
-    fun asAssetSets(
+    fun getAscendingOrderAssetSets(
         aaptEnv: Provider<String>
     ): Provider<List<AssetSet>> {
 

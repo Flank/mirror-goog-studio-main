@@ -126,9 +126,9 @@ internal class SourceDirectoriesImplTest {
         addedSourceFromTask: File,
         addedSrcDir: File,
         patternFilterable: PatternFilterable? = null
-    ): SourceDirectoriesImpl {
+    ): FlatSourceDirectoriesImpl {
 
-        val testTarget = SourceDirectoriesImpl(
+        val testTarget = FlatSourceDirectoriesImpl(
             "_for_test",
             project.layout.projectDirectory,
             variantServices,
@@ -145,9 +145,9 @@ internal class SourceDirectoriesImplTest {
             })
         }
 
-        testTarget.add(taskProvider, AddingTask::output)
+        testTarget.addGeneratedSourceDirectory(taskProvider, AddingTask::output)
 
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSrcDir.absolutePath,
         )
 

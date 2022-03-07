@@ -256,7 +256,7 @@ Deprecated from AGP 7.3.0
   * com.android.build.api.dsl.DataBinding.isEnabledForTests: boolean ()
   * com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
   * com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
-  * com.android.build.api.variant.Sources.getRenderscript: com.android.build.api.variant.SourceDirectories ()
+  * com.android.build.api.variant.Sources.getRenderscript: com.android.build.api.variant.SourceDirectories$Flat ()
   * com.android.build.api.variant.VariantFilter
   * com.android.build.api.variant.VariantFilter.getBuildType: com.android.builder.model.BuildType ()
   * com.android.build.api.variant.VariantFilter.getDefaultConfig: com.android.builder.model.ProductFlavor ()

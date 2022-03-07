@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.SourceAndOverlayDirectories
+import com.android.build.api.variant.SourceDirectories
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -31,17 +31,17 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
 
-class AnalyticsEnabledSourceAndOverlayDirectoriesTest {
+class AnalyticsEnabledLayeredTest {
 
     @get:Rule
     val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
     @Mock
-    lateinit var delegate: SourceAndOverlayDirectories
+    lateinit var delegate: SourceDirectories.Layered
 
     private val stats = GradleBuildVariant.newBuilder()
-    private val proxy: AnalyticsEnabledSourceAndOverlayDirectories by lazy {
-        object: AnalyticsEnabledSourceAndOverlayDirectories(delegate, stats, FakeObjectFactory.factory) {}
+    private val proxy: AnalyticsEnabledLayered by lazy {
+        object: AnalyticsEnabledLayered(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     @Test

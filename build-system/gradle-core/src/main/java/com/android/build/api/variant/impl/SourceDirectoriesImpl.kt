@@ -17,79 +17,63 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.SourceDirectories
-import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.Task
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternFilterable
-import org.jetbrains.kotlin.gradle.utils.`is`
+import org.gradle.api.tasks.util.PatternSet
 import java.io.File
 
-/**
- * A set of source directories for a specific [SourceType]
- *
- * @param _name name of the source directories, as returned by [SourceType.name]
- * @param projectDirectory the project's directory.
- * @param variantServices the variant's [VariantServices]
- * @param variantDslFilters filters set on the variant specific source directory in the DSL, may be null if
- * the is no variant specific source directory.
- */
-class SourceDirectoriesImpl(
+abstract class SourceDirectoriesImpl(
     private val _name: String,
     private val projectDirectory: Directory,
-    private val variantServices: VariantServices,
-    variantDslFilters: PatternFilterable?
-): AbstractSourceDirectoriesImpl(_name, projectDirectory, variantDslFilters), SourceDirectories {
+    private val variantDslFilters: PatternFilterable?
+): SourceDirectories {
 
-    // For compatibility with the old variant API, we must allow reading the content of this list
-    // before it is finalized.
-    protected val variantSources = variantServices.newListPropertyForInternalUse(
-        type = DirectoryEntry::class.java,
-    )
-
-    // this will contain all the directories
-    private val directories = variantServices.newListPropertyForInternalUse(
-        type = Directory::class.java,
-    )
-
-    override val all: Provider<List<Directory>> = directories
-
-    //
-    // Internal APIs.
-    //
-
-    override fun addSource(directoryEntry: DirectoryEntry) {
-        variantSources.add(directoryEntry)
-        directories.add(directoryEntry.asFiles(variantServices::directoryProperty))
-    }
-
-
-    internal fun getAsFileTrees(): Provider<List<ConfigurableFileTree>> =
-            variantSources.map { entries: MutableList<DirectoryEntry> ->
-                entries.map { sourceDirectory ->
-                    sourceDirectory.asFileTree(variantServices::fileTree)
-                }
-            }
-
-    internal fun addSources(sourceDirectories: Iterable<DirectoryEntry>) {
-        sourceDirectories.forEach(::addSource)
-    }
-
-    /*
-     * Internal API that can only be used by the model.
+    /**
+     * Filters to use for the variant source folders only.
+     * This will be initialized from the variant DSL source folder filters if it exists or empty
+     * if it does not.
      */
-    override fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File> {
-        val files = mutableListOf<File>()
-        variantSources.get()
-            .filter { filter.invoke(it) }
-            .forEach {
-                val asDirectoryProperty = it.asFiles(variantServices::directoryProperty)
-                if (asDirectoryProperty.isPresent) {
-                    files.add(asDirectoryProperty.get().asFile)
-                }
-            }
-        return files
+    val filter = PatternSet().also {
+        if (variantDslFilters != null) {
+            it.setIncludes(variantDslFilters.includes)
+            it.setExcludes(variantDslFilters.excludes)
+        }
     }
+
+    override fun <T : Task> addGeneratedSourceDirectory(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {12
+        val mappedValue: Provider<Directory> = taskProvider.flatMap {
+            wiredWith(it)
+        }
+        addSource(
+            TaskProviderBasedDirectoryEntryImpl(
+                "$name-${taskProvider.name}",
+                mappedValue,
+                isUserAdded = true,
+            )
+        )
+    }
+
+    override fun getName(): String = _name
+
+    override fun addStaticSourceDirectory(srcDir: String) {
+        val directory = projectDirectory.dir(srcDir)
+        if (!directory.asFile.exists() || !directory.asFile.isDirectory) {
+            throw IllegalArgumentException("$srcDir does not point to a directory")
+        }
+        addSource(
+            FileBasedDirectoryEntryImpl(
+                name = "variant",
+                directory = directory.asFile,
+                filter = filter,
+                isUserAdded = true
+            )
+        )
+    }
+
+    internal abstract fun addSource(directoryEntry: DirectoryEntry)
+
+    internal abstract fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean ): List<File>
 }

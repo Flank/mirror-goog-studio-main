@@ -31,7 +31,7 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
 
-internal class SourceAndOverlayDirectoriesImplTest {
+internal class LayeredSourceDirectoriesImplTest {
     @get:Rule
     val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
@@ -85,9 +85,9 @@ internal class SourceAndOverlayDirectoriesImplTest {
         Truth.assertThat(allSources[4].first().asFile.name).contains("lowest")
     }
 
-    private fun createTestTarget(): SourceAndOverlayDirectoriesImpl {
+    private fun createTestTarget(): LayeredSourceDirectoriesImpl {
 
-        val testTarget = SourceAndOverlayDirectoriesImpl(
+        val testTarget = LayeredSourceDirectoriesImpl(
             "_for_test",
             project.layout.projectDirectory,
             variantServices,
@@ -117,7 +117,7 @@ internal class SourceAndOverlayDirectoriesImplTest {
             FileBasedDirectoryEntryImpl("highest1", temporaryFolder.newFolder("highest1"))
         )
 
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             temporaryFolder.newFolder("somewhere/safe").absolutePath,
         )
 

@@ -19,33 +19,24 @@ package com.android.build.api.component.analytics
 import com.android.build.api.variant.SourceDirectories
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.TaskProvider
 import javax.inject.Inject
 
-abstract class AnalyticsEnabledSourceDirectories @Inject constructor(
-    open val delegate: SourceDirectories,
-    val stats: GradleBuildVariant.Builder,
-    val objectFactory: ObjectFactory,
-): SourceDirectories  {
+open class AnalyticsEnabledLayered @Inject constructor(
+    override val delegate: SourceDirectories.Layered,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory,
+):
+    AnalyticsEnabledSourceDirectories(delegate, stats, objectFactory),
+    SourceDirectories.Layered
+{
 
-    override fun <T : Task> addGeneratedSourceDirectory(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.SOURCES_DIRECTORIES_ADD_VALUE
-        delegate.addGeneratedSourceDirectory(taskProvider, wiredWith)
-    }
-
-    override fun getName(): String {
-        return delegate.name
-    }
-
-    override fun addStaticSourceDirectory(srcDir: String) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.SOURCES_DIRECTORIES_SRC_DIR_VALUE
-        delegate.addStaticSourceDirectory(srcDir)
-    }
-
+    override val all: Provider<List<Collection<Directory>>>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_AND_OVERLAY_DIRECTORIES_GET_ALL_VALUE
+            return delegate.all
+        }
 }

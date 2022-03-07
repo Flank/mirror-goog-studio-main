@@ -1936,11 +1936,6 @@ package com.android.build.api.variant {
     property public abstract org.gradle.api.provider.Property<java.lang.Integer> minCompileSdk;
   }
 
-  @org.gradle.api.Incubating public interface AbstractSourceDirectories extends org.gradle.api.Named {
-    method public <TASK extends org.gradle.api.Task> void add(org.gradle.api.tasks.TaskProvider<TASK> taskProvider, kotlin.jvm.functions.Function1<? super TASK,? extends org.gradle.api.provider.Provider<org.gradle.api.file.Directory>> wiredWith);
-    method public void addSrcDir(String srcDir);
-  }
-
   public interface AndroidComponentsExtension<DslExtensionT extends com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>, VariantBuilderT extends com.android.build.api.variant.VariantBuilder, VariantT extends com.android.build.api.variant.Variant> extends com.android.build.api.variant.DslLifecycle<DslExtensionT> {
     method public void beforeVariants(optional com.android.build.api.variant.VariantSelector selector, kotlin.jvm.functions.Function1<? super VariantBuilderT,kotlin.Unit> callback);
     method public void beforeVariants(optional com.android.build.api.variant.VariantSelector selector, org.gradle.api.Action<VariantBuilderT> callback);
@@ -2364,36 +2359,41 @@ package com.android.build.api.variant {
     property public abstract org.gradle.api.provider.Property<java.lang.Boolean> enableV4Signing;
   }
 
-  @org.gradle.api.Incubating public interface SourceAndOverlayDirectories extends com.android.build.api.variant.AbstractSourceDirectories {
+  @org.gradle.api.Incubating public interface SourceDirectories extends org.gradle.api.Named {
+    method public <TASK extends org.gradle.api.Task> void addGeneratedSourceDirectory(org.gradle.api.tasks.TaskProvider<TASK> taskProvider, kotlin.jvm.functions.Function1<? super TASK,? extends org.gradle.api.provider.Provider<org.gradle.api.file.Directory>> wiredWith);
+    method public void addStaticSourceDirectory(String srcDir);
+  }
+
+  @org.gradle.api.Incubating public static interface SourceDirectories.Flat extends com.android.build.api.variant.SourceDirectories {
+    method public org.gradle.api.provider.Provider<? extends java.util.Collection<org.gradle.api.file.Directory>> getAll();
+    property public abstract org.gradle.api.provider.Provider<? extends java.util.Collection<org.gradle.api.file.Directory>> all;
+  }
+
+  @org.gradle.api.Incubating public static interface SourceDirectories.Layered extends com.android.build.api.variant.SourceDirectories {
     method public org.gradle.api.provider.Provider<java.util.List<java.util.Collection<org.gradle.api.file.Directory>>> getAll();
     property public abstract org.gradle.api.provider.Provider<java.util.List<java.util.Collection<org.gradle.api.file.Directory>>> all;
   }
 
-  @org.gradle.api.Incubating public interface SourceDirectories extends com.android.build.api.variant.AbstractSourceDirectories {
-    method public org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.Directory>> getAll();
-    property public abstract org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.Directory>> all;
-  }
-
   @org.gradle.api.Incubating public interface Sources {
-    method public com.android.build.api.variant.SourceDirectories? getAidl();
-    method public com.android.build.api.variant.SourceAndOverlayDirectories getAssets();
-    method public com.android.build.api.variant.SourceDirectories getByName(String name);
-    method public com.android.build.api.variant.SourceDirectories getJava();
-    method public com.android.build.api.variant.SourceAndOverlayDirectories getJniLibs();
-    method public com.android.build.api.variant.SourceDirectories getKotlin();
-    method public com.android.build.api.variant.SourceAndOverlayDirectories getMlModels();
-    method @Deprecated public com.android.build.api.variant.SourceDirectories? getRenderscript();
-    method public com.android.build.api.variant.SourceAndOverlayDirectories getRes();
-    method public com.android.build.api.variant.SourceAndOverlayDirectories? getShaders();
-    property public abstract com.android.build.api.variant.SourceDirectories? aidl;
-    property public abstract com.android.build.api.variant.SourceAndOverlayDirectories assets;
-    property public abstract com.android.build.api.variant.SourceDirectories java;
-    property public abstract com.android.build.api.variant.SourceAndOverlayDirectories jniLibs;
-    property public abstract com.android.build.api.variant.SourceDirectories kotlin;
-    property public abstract com.android.build.api.variant.SourceAndOverlayDirectories mlModels;
-    property @Deprecated public abstract com.android.build.api.variant.SourceDirectories? renderscript;
-    property public abstract com.android.build.api.variant.SourceAndOverlayDirectories res;
-    property public abstract com.android.build.api.variant.SourceAndOverlayDirectories? shaders;
+    method public com.android.build.api.variant.SourceDirectories.Flat? getAidl();
+    method public com.android.build.api.variant.SourceDirectories.Layered? getAssets();
+    method public com.android.build.api.variant.SourceDirectories.Flat getByName(String name);
+    method public com.android.build.api.variant.SourceDirectories.Flat? getJava();
+    method public com.android.build.api.variant.SourceDirectories.Layered? getJniLibs();
+    method public com.android.build.api.variant.SourceDirectories.Flat? getKotlin();
+    method public com.android.build.api.variant.SourceDirectories.Layered? getMlModels();
+    method @Deprecated public com.android.build.api.variant.SourceDirectories.Flat? getRenderscript();
+    method public com.android.build.api.variant.SourceDirectories.Layered? getRes();
+    method public com.android.build.api.variant.SourceDirectories.Layered? getShaders();
+    property public abstract com.android.build.api.variant.SourceDirectories.Flat? aidl;
+    property public abstract com.android.build.api.variant.SourceDirectories.Layered? assets;
+    property public abstract com.android.build.api.variant.SourceDirectories.Flat? java;
+    property public abstract com.android.build.api.variant.SourceDirectories.Layered? jniLibs;
+    property public abstract com.android.build.api.variant.SourceDirectories.Flat? kotlin;
+    property public abstract com.android.build.api.variant.SourceDirectories.Layered? mlModels;
+    property @Deprecated public abstract com.android.build.api.variant.SourceDirectories.Flat? renderscript;
+    property public abstract com.android.build.api.variant.SourceDirectories.Layered? res;
+    property public abstract com.android.build.api.variant.SourceDirectories.Layered? shaders;
   }
 
   public interface TestAndroidComponentsExtension extends com.android.build.api.variant.AndroidComponentsExtension<com.android.build.api.dsl.TestExtension,com.android.build.api.variant.TestVariantBuilder,com.android.build.api.variant.TestVariant> {

@@ -38,7 +38,6 @@ import com.android.tools.apk.analyzer.AaptInvoker
 import com.android.tools.apk.analyzer.ApkAnalyzerImpl
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
-import com.google.wireless.android.sdk.stats.ArtifactAccess
 import com.google.wireless.android.sdk.stats.VariantPropertiesAccess
 import org.junit.Test
 import org.mockito.Mockito
@@ -100,7 +99,7 @@ class AddJavaSourceTest: VariantApiBaseTest(TestType.Script) {
                     fun taskAction() {
 
                         sourceFolders.get().forEach { directory ->
-                            println(">>> Got a Directory ${ '$' }directory")
+                            println(">>> Got a Directory ${'$'}directory")
                             println("<<<")
                         }
                     }
@@ -116,14 +115,16 @@ class AddJavaSourceTest: VariantApiBaseTest(TestType.Script) {
 
                 androidComponents {
                     onVariants { variant ->
-                        val addSourceTaskProvider =  project.tasks.register<AddJavaSources>("${ '$' }{variant.name}AddSources") {
+                        val addSourceTaskProvider =  project.tasks.register<AddJavaSources>("${'$'}{variant.name}AddSources") {
                             outputFolder.set(project.layout.buildDirectory.dir("gen"))
                         }
 
-                        variant.sources.java.add(addSourceTaskProvider, AddJavaSources::outputFolder)
+                        variant.sources.java?.let { java ->
+                            java.addGeneratedSourceDirectory(addSourceTaskProvider, AddJavaSources::outputFolder)
 
-                        project.tasks.register<DisplayAllSources>("${ '$' }{variant.name}DisplayAllSources") {
-                            sourceFolders.set(variant.sources.java.all)
+                            project.tasks.register<DisplayAllSources>("${'$'}{variant.name}DisplayAllSources") {
+                                sourceFolders.set(java.all)
+                            }
                         }
                     }
                 }
@@ -159,14 +160,12 @@ where source files will be generated and added to the compilation task.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 if (it.isDebug) {
-                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(6)
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(4)
                     Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList.map(VariantPropertiesAccess::getType))
                         .containsExactly(
                             VariantPropertiesMethodType.COMPONENT_SOURCES_ACCESS_VALUE,
                             VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE,
                             VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE,
-                            VariantPropertiesMethodType.COMPONENT_SOURCES_ACCESS_VALUE,
-                            VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE,
                             VariantPropertiesMethodType.SOURCES_DIRECTORIES_ADD_VALUE,
                         )
                 }
@@ -259,10 +258,12 @@ where source files will be generated and added to the compilation task.
 
                 androidComponents {
                     onVariants { variant ->
-                        variant.sources.java.addSrcDir("custom/src/java/${'$'}{variant.name}")
+                        variant.sources.java?.let { java ->
+                            java.addStaticSourceDirectory("custom/src/java/${'$'}{variant.name}")
 
-                        project.tasks.register<DisplayAllSources>("${ '$' }{variant.name}DisplayAllSources") {
-                            sourceFolders.set(variant.sources.java.all)
+                            project.tasks.register<DisplayAllSources>("${'$'}{variant.name}DisplayAllSources") {
+                                sourceFolders.set(java.all)
+                            }
                         }
                     }
                 }
@@ -297,14 +298,12 @@ to use the [SourceDirectories.srcDir] family of methods
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 if (it.isDebug) {
-                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(6)
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(4)
                     Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList.map(VariantPropertiesAccess::getType))
                         .containsExactly(
                             VariantPropertiesMethodType.COMPONENT_SOURCES_ACCESS_VALUE,
                             VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE,
                             VariantPropertiesMethodType.SOURCES_DIRECTORIES_GET_ALL_VALUE,
-                            VariantPropertiesMethodType.COMPONENT_SOURCES_ACCESS_VALUE,
-                            VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE,
                             VariantPropertiesMethodType.SOURCES_DIRECTORIES_SRC_DIR_VALUE,
                     )
                 }
