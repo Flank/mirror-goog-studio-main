@@ -19,6 +19,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -121,5 +122,44 @@ class UpdateLintBaselineStandaloneTest {
                 ```
                 """.trimIndent()
             )
+    }
+
+    @Test
+    fun testMissingBaselineIsEmptyBaseline() {
+        // Test that android.experimental.lint.missingBaselineIsEmptyBaseline has the desired
+        // effects when running the updateLintBaseline and lint tasks.
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                lint {
+                    baseline = file('lint-baseline.xml')
+                    disable 'UseValueOf', 'JavaPluginLanguageLevel'
+                }
+            """.trimIndent()
+        )
+
+        // First run updateLintBaseline without the boolean flag and check that an empty baseline
+        // file is written.
+        val baselineFile = File(project.projectDir, "lint-baseline.xml")
+        PathSubject.assertThat(baselineFile).doesNotExist()
+        project.executor().run("updateLintBaseline")
+        PathSubject.assertThat(baselineFile).exists()
+        PathSubject.assertThat(baselineFile).doesNotContain("</issue>")
+
+        // Then run updateLinBaseline with the boolean flag and check that the baseline file is
+        // deleted.
+        project.executor()
+            .with(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE, true)
+            .run("updateLintBaseline")
+        PathSubject.assertThat(baselineFile).doesNotExist()
+
+        // Finally, run lint with the boolean flag and without a baseline file when there is an
+        // issue, in which case the build should fail.
+        TestFileUtils.searchAndReplace(project.buildFile, "disable", "error")
+        val result = project.executor()
+            .with(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE, true)
+            .expectFailure()
+            .run("lint")
+        ScannerSubject.assertThat(result.stdout).contains("UseValueOf")
     }
 }

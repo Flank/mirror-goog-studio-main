@@ -192,6 +192,12 @@ enum class BooleanOption(
     /** Whether to force the APK to be deterministic. */
     FORCE_DETERMINISTIC_APK("android.experimental.forceDeterministicApk", false, FeatureStage.Experimental),
 
+    MISSING_LINT_BASELINE_IS_EMPTY_BASELINE(
+        "android.experimental.lint.missingBaselineIsEmptyBaseline",
+        false,
+        FeatureStage.Experimental,
+    ),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */

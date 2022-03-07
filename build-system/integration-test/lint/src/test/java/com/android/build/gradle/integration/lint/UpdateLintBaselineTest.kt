@@ -16,9 +16,11 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -32,6 +34,12 @@ class UpdateLintBaselineTest {
 
     @get:Rule
     val project = builder().fromTestProject("lintBaseline").create()
+
+    @get:Rule
+    val projectWithoutIssues =
+        builder().fromTestApp(MinimalSubProject.app("com.example.app"))
+            .withName("projectWithoutIssues")
+            .create()
 
     @Test
     fun checkUpdateLintBaseline() {
@@ -114,5 +122,46 @@ class UpdateLintBaselineTest {
                 ```
                 """.trimIndent()
             )
+    }
+
+    @Test
+    fun testMissingBaselineIsEmptyBaseline() {
+        // Test that android.experimental.lint.missingBaselineIsEmptyBaseline has the desired
+        // effects when running the updateLintBaseline and lint tasks.
+        TestFileUtils.appendToFile(
+            projectWithoutIssues.buildFile,
+            """
+                android {
+                    lint {
+                        disable 'MissingApplicationIcon'
+                        baseline = file('lint-baseline.xml')
+                    }
+                }
+            """.trimIndent()
+        )
+
+        // First run updateLintBaseline without the boolean flag and check that an empty baseline
+        // file is written.
+        val baselineFile = File(projectWithoutIssues.projectDir, "lint-baseline.xml")
+        PathSubject.assertThat(baselineFile).doesNotExist()
+        projectWithoutIssues.executor().run("updateLintBaseline")
+        PathSubject.assertThat(baselineFile).exists()
+        PathSubject.assertThat(baselineFile).doesNotContain("</issue>")
+
+        // Then run updateLinBaseline with the boolean flag and check that the baseline file is
+        // deleted.
+        projectWithoutIssues.executor()
+            .with(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE, true)
+            .run("updateLintBaseline")
+        PathSubject.assertThat(baselineFile).doesNotExist()
+
+        // Finally, run lint with the boolean flag and without a baseline file when there is an
+        // issue, in which case the build should fail.
+        TestFileUtils.searchAndReplace(projectWithoutIssues.buildFile, "disable", "error")
+        val result = projectWithoutIssues.executor()
+            .with(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE, true)
+            .expectFailure()
+            .run("lint")
+        ScannerSubject.assertThat(result.stdout).contains("MissingApplicationIcon")
     }
 }

@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -199,6 +200,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     @get:Input
     abstract val lintMode: Property<LintMode>
+
+    @get:Input
+    abstract val missingBaselineIsEmptyBaseline: Property<Boolean>
 
     override fun doTaskAction() {
         lintTool.lintClassLoaderBuildService.get().shouldDispose = true
@@ -394,6 +398,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         arguments += lintTool.initializeLintCacheDir()
         if (systemPropertyInputs.lintBaselinesContinue.orNull == VALUE_TRUE) {
             arguments += "--continue-after-baseline-created"
+        }
+        if (missingBaselineIsEmptyBaseline.get()) {
+            arguments += "--missing-baseline-is-empty-baseline"
         }
 
         // Pass information to lint using the --client-id, --client-name, and --client-version flags
@@ -717,6 +724,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.initializeOutputTypesConvention()
             configureOutputSettings(task)
             task.finalizeOutputTypes()
+            task.missingBaselineIsEmptyBaseline
+                .setDisallowChanges(
+                    creationConfig.services
+                        .projectOptions
+                        .getProvider(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE)
+                )
         }
 
         abstract fun configureOutputSettings(task: AndroidLintTask)
@@ -880,6 +893,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             }
         }
         this.finalizeOutputTypes()
+        this.missingBaselineIsEmptyBaseline
+            .setDisallowChanges(
+                taskCreationServices.projectOptions
+                    .getProvider(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE)
+            )
     }
 
     private fun configureOutputSettings(lintOptions: Lint) {
