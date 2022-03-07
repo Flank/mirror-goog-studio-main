@@ -44,6 +44,7 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.util.logging.Level
 import org.gradle.api.Project
+import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -69,6 +70,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
 
@@ -415,6 +417,95 @@ class ManagedDeviceInstrumentationTestTaskTest {
             logger = any()
         )
         verifyNoMoreInteractions(testRunner)
+
+        assertThat(task.getTestFailed()).isFalse()
+    }
+
+    @Test
+    fun taskAction_testFailuresPath() {
+        val task = basicTaskSetup()
+
+        val testRunner = mock(ManagedDeviceTestRunner::class.java)
+        doReturn(false).`when`(testRunner).runTests(
+            managedDevice = any(),
+            outputDirectory = any(),
+            coverageOutputDirectory = any(),
+            additionalTestOutputDir = eq(null),
+            projectPath = any(),
+            variantName = any(),
+            testData = any(),
+            additionalInstallOptions = any(),
+            helperApks = any(),
+            logger = any()
+        )
+        println("TestRunner: $testRunner")
+
+        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any())
+        `when`(runnerFactory.executionEnum)
+            .thenReturn(FakeGradleProperty(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR))
+
+        task.setIgnoreFailures(false)
+
+        try {
+            task.doTaskAction()
+
+            error("Should not reach.")
+        } catch (e: GradleException) {
+            assertThat(e.message).startsWith("There were failing tests")
+        }
+
+        verify(testRunner).runTests(
+            managedDevice = argThat {
+                it.deviceName == "testDevice1"
+                        && it.avdName == "avd_for_test_device"
+                        && it.api == 29
+                        && it.abi == "x86"
+            },
+            outputDirectory = eq(resultsFolder),
+            coverageOutputDirectory = eq(codeCoverage),
+            additionalTestOutputDir = eq(null),
+            projectPath = eq("project_path"),
+            variantName = eq("flavor_name"),
+            testData = any(),
+            additionalInstallOptions = eq(listOf()),
+            helperApks = any(),
+            logger = any()
+        )
+        verifyNoMoreInteractions(testRunner)
+
+        assertThat(task.getTestFailed()).isTrue()
+    }
+
+    @Test
+    fun taskAction_noTestsPath() {
+        val task = basicTaskSetup()
+
+        val testRunner = mock(ManagedDeviceTestRunner::class.java)
+        doReturn(false).`when`(testRunner).runTests(
+            managedDevice = any(),
+            outputDirectory = any(),
+            coverageOutputDirectory = any(),
+            additionalTestOutputDir = eq(null),
+            projectPath = any(),
+            variantName = any(),
+            testData = any(),
+            additionalInstallOptions = any(),
+            helperApks = any(),
+            logger = any()
+        )
+        println("TestRunner: $testRunner")
+
+        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any())
+        `when`(runnerFactory.executionEnum)
+            .thenReturn(FakeGradleProperty(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR))
+
+        // When the data has no Tests, the testRunner should not be run.
+        doReturn(FakeGradleProperty(false))
+            .`when`(testData).hasTests(any(), any(), any())
+
+        task.doTaskAction()
+
+        verifyNoInteractions(testRunner)
 
         assertThat(task.getTestFailed()).isFalse()
     }

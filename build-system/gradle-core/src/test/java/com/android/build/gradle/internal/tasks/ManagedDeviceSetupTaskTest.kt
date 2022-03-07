@@ -19,16 +19,20 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
+import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl
+import com.android.build.gradle.options.StringOption
 import com.android.repository.Revision
 import com.android.testutils.MockitoKt
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.argThat
 import com.android.testutils.MockitoKt.eq
+import com.android.testutils.SystemPropertyOverrides
+import com.android.utils.Environment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -78,11 +82,18 @@ class ManagedDeviceSetupTaskTest {
 
     @Before
     fun setup() {
+        Environment.initialize()
+
         mockVersionedSdkLoader = mock(VersionedSdkLoader::class.java)
         `when`(mockVersionedSdkLoader.offlineMode).thenReturn(false)
 
         project = ProjectBuilder.builder().withProjectDir(temporaryFolderRule.newFolder()).build()
         `when`(sdkService.sdkLoader(any(), any())).thenReturn(mockVersionedSdkLoader)
+
+        // Setup Build Services for configuration.
+        val mockGeneralRegistration = mock(BuildServiceRegistration::class.java, RETURNS_DEEP_STUBS)
+        `when`(globalConfig.services.buildServiceRegistry.registrations.getByName(any()))
+            .thenReturn(mockGeneralRegistration)
     }
 
     private fun basicTaskSetup(): ManagedDeviceSetupTask {
@@ -126,6 +137,11 @@ class ManagedDeviceSetupTaskTest {
         val property = project.objects.property(ValueClass::class.java)
         property.set(providedValue)
         return property
+    }
+
+    private fun <T> mockEmptyProperty(): Property<T> {
+        @Suppress("UNCHECKED_CAST")
+        return mock(Property::class.java) as Property<T>
     }
 
     @Test
@@ -187,6 +203,107 @@ class ManagedDeviceSetupTaskTest {
             .offlineMode
         verifyNoMoreInteractions(mockVersionedSdkLoader)
         verifyNoInteractions(avdService)
+    }
+
+    @Test
+    fun creationAction_configureTask() {
+        try {
+            // Need to use a custom set up environment to ensure deterministic behavior.
+            SystemPropertyOverrides().use { systemPropertyOverrides ->
+                // This will ensure the config believes we are running on an x86_64 Linux machine.
+                // This will guarantee the x86 system-images are selected.
+                systemPropertyOverrides.setProperty("os.name", "Linux")
+                Environment.instance = object : Environment() {
+                    override fun getVariable(name: EnvironmentVariable): String? =
+                        if (name.key == "HOSTTYPE") "x86_64" else null
+                }
+                systemPropertyOverrides.setProperty("os.arch", "x86_64")
+
+                val config = ManagedDeviceSetupTask.CreationAction(
+                    "setupTaskName",
+                    ManagedVirtualDevice("testName").also {
+                        it.device = "Pixel 3"
+                        it.apiLevel = 27
+                        it.systemImageSource = "aosp"
+                    },
+                    globalConfig
+                )
+
+                val task = mock(ManagedDeviceSetupTask::class.java, RETURNS_DEEP_STUBS)
+
+                // default path for emulator mode ("auto-no-window")
+                `when`(
+                    globalConfig.services.projectOptions[
+                            StringOption.GRADLE_MANAGED_DEVICE_EMULATOR_GPU_MODE])
+                    .thenReturn(null)
+
+                `when`(globalConfig.compileSdkHashString).thenReturn("some_version")
+                `when`(globalConfig.buildToolsRevision).thenReturn(Revision.parseRevision("5.1"))
+
+                // We need to create mock properties to verify/capture values in the task as
+                // RETURNS_DEEP_STUBS does not work as expected with verify. Also, we can't use
+                // FakeGradleProperties because they do not support disallowChanges().
+                val sdkProperty = mockEmptyProperty<SdkComponentsBuildService>()
+                val avdProperty = mockEmptyProperty<AvdComponentsBuildService>()
+                val compileSdkVersion = mockEmptyProperty<String>()
+                val buildToolsRevision = mockEmptyProperty<Revision>()
+                val abiProperty = mockEmptyProperty<String>()
+                val apiLevel = mockEmptyProperty<Int>()
+                val systemImageVendor = mockEmptyProperty<String>()
+                val hardwareProfile = mockEmptyProperty<String>()
+                val emulatorGpuFlag = mockEmptyProperty<String>()
+
+                `when`(task.sdkService).thenReturn(sdkProperty)
+                `when`(task.avdService).thenReturn(avdProperty)
+                `when`(task.compileSdkVersion).thenReturn(compileSdkVersion)
+                `when`(task.buildToolsRevision).thenReturn(buildToolsRevision)
+                `when`(task.abi).thenReturn(abiProperty)
+                `when`(task.apiLevel).thenReturn(apiLevel)
+                `when`(task.systemImageVendor).thenReturn(systemImageVendor)
+                `when`(task.hardwareProfile).thenReturn(hardwareProfile)
+                `when`(task.emulatorGpuFlag).thenReturn(emulatorGpuFlag)
+
+                config.configure(task)
+
+                verify(sdkProperty).set(any<Provider<SdkComponentsBuildService>>())
+                verify(sdkProperty).disallowChanges()
+                verifyNoMoreInteractions(sdkProperty)
+
+                verify(avdProperty).set(any<Provider<AvdComponentsBuildService>>())
+                verify(avdProperty).disallowChanges()
+                verifyNoMoreInteractions(avdProperty)
+
+                verify(compileSdkVersion).set("some_version")
+                verify(compileSdkVersion).disallowChanges()
+                verifyNoMoreInteractions(compileSdkVersion)
+
+                verify(buildToolsRevision).set(Revision.parseRevision("5.1"))
+                verify(buildToolsRevision).disallowChanges()
+                verifyNoMoreInteractions(buildToolsRevision)
+
+                verify(abiProperty).set("x86")
+                verify(abiProperty).disallowChanges()
+                verifyNoMoreInteractions(abiProperty)
+
+                verify(apiLevel).set(27)
+                verify(apiLevel).disallowChanges()
+                verifyNoMoreInteractions(apiLevel)
+
+                verify(systemImageVendor).set("aosp")
+                verify(systemImageVendor).disallowChanges()
+                verifyNoMoreInteractions(systemImageVendor)
+
+                verify(hardwareProfile).set("Pixel 3")
+                verify(hardwareProfile).disallowChanges()
+                verifyNoMoreInteractions(hardwareProfile)
+
+                verify(emulatorGpuFlag).set("auto-no-window")
+                verify(emulatorGpuFlag).disallowChanges()
+                verifyNoMoreInteractions(emulatorGpuFlag)
+            }
+        } finally {
+            Environment.instance = Environment.SYSTEM
+        }
     }
 
     @Test

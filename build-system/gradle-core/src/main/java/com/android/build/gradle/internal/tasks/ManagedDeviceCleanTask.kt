@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -52,7 +53,8 @@ abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
                 " managed devices to be rebuilt when tests are run.")
     fun setPreserveDefinedOption(value: Boolean) = preserveDefined.set(value)
 
-    override fun doTaskAction() {
+    @VisibleForTesting
+    public override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceCleanRunnable::class.java) {
             it.initializeWith(projectPath, path, analyticsService)
             it.avdService.set(avdService)
