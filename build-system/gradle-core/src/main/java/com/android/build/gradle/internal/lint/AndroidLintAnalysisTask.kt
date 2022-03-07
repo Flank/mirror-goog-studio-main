@@ -182,10 +182,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         arguments.add("--client-name", "AGP")
         arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
 
-        desugaredMethodsFiles.forEach {
-            arguments.add("--Xdesugared-methods", "${it.toPath()}")
-        }
-
         return Collections.unmodifiableList(arguments)
     }
 
