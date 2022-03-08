@@ -3,6 +3,7 @@
 
 import os
 import os.path
+import platform as plat
 import re
 import subprocess
 import sys
@@ -16,7 +17,7 @@ def main():
   if sys.platform.startswith('linux'):
     platform = 'linux-x86_64'
   elif sys.platform == 'darwin':
-    platform = 'darwin-x86_64'
+    platform = 'darwin-arm64' if plat.machine() == 'arm64' else 'darwin-x86_64'
   elif sys.platform == 'win32':
     platform = 'windows-x86_64'
   else:
