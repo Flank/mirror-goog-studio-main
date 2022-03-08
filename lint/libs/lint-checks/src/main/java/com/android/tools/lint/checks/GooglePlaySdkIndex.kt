@@ -36,9 +36,9 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
 ) {
     companion object {
         const val DEFAULT_SHOW_MESSAGES = true
-        const val DEFAULT_SHOW_LINKS = true
-        const val DEFAULT_SHOW_POLICY_ISSUES = true
-        const val DEFAULT_SHOW_CRITICAL_ISSUES = true
+        const val DEFAULT_SHOW_LINKS = false
+        const val DEFAULT_SHOW_POLICY_ISSUES = false
+        const val DEFAULT_SHOW_CRITICAL_ISSUES = false
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE = "snapshot.gz"
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE = "sdk-index-offline-snapshot.proto.gz"
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_URL = "https://dl.google.com/play-sdk/index/"

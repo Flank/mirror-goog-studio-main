@@ -3130,7 +3130,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         }
     }
 
-    fun testDeprecatedLibrary() {
+    fun testSdkIndexLibrary() {
         lint().files(
             gradle(
                 """
@@ -3158,42 +3158,15 @@ class GradleDetectorTest : AbstractCheckTest() {
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
-                    build.gradle:4: Warning: log4j:log4j version 1.2.16 has an associated message from its author [RiskyLibrary]
-                        compile 'log4j:log4j:1.2.16' // Critical
-                                ~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:11: Warning: com.example.ads.third.party:example version 7.2.0 has an associated message from its author [RiskyLibrary]
-                        compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
-                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:6: Error: log4j:log4j version 1.2.14 has policy issues that will block publishing [PlaySdkIndexNonCompliant]
-                        compile 'log4j:log4j:1.2.14' // Non compliant
-                                ~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:11: Error: com.example.ads.third.party:example version 7.2.0 has policy issues that will block publishing [PlaySdkIndexNonCompliant]
-                        compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
-                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     build.gradle:5: Warning: log4j:log4j version 1.2.15 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'log4j:log4j:1.2.15' // Outdated
                                 ~~~~~~~~~~~~~~~~~~~~
                     build.gradle:11: Warning: com.example.ads.third.party:example version 7.2.0 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    2 errors, 4 warnings
+                    0 errors, 2 warnings
                 """
-            ).expectFixDiffs(
-                """
-                    Show URL for build.gradle line 4: View details in Google Play SDK index:
-                    http://index.example.url/
-                    Show URL for build.gradle line 11: View details in Google Play SDK index:
-                    http://another.example.url/
-                    Show URL for build.gradle line 6: View details in Google Play SDK index:
-                    http://index.example.url/
-                    Show URL for build.gradle line 11: View details in Google Play SDK index:
-                    http://another.example.url/
-                    Show URL for build.gradle line 5: View details in Google Play SDK index:
-                    http://index.example.url/
-                    Show URL for build.gradle line 11: View details in Google Play SDK index:
-                    http://another.example.url/
-                """
-            )
+            ).expectFixDiffs("")
     }
 
     fun testAndroidxMixedDependencies() {
