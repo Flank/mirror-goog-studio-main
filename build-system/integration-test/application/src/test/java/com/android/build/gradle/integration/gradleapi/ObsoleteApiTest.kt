@@ -93,12 +93,12 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
     @Test
     fun `test via model`() {
-        val modelContainer = project
-            .model()
+        val model = project.modelV2()
             .with(BooleanOption.DEBUG_OBSOLETE_API, true)
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchAndroidProjects()
-        val syncIssues = modelContainer.onlyModelSyncIssues
+            .fetchModels()
+        val issueModel = model.container.singleProjectInfo.issues ?: throw RuntimeException("failed to get issue model")
+        val syncIssues = issueModel.syncIssues
 
         when(provider.name) {
             "Kotlin" -> {
