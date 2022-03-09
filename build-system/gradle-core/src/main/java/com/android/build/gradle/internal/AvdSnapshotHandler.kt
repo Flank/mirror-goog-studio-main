@@ -185,23 +185,44 @@ class AvdSnapshotHandler(
         val process = processBuilder.start()
         val bootCompleted = AtomicBoolean(false)
         try {
-            val onBootCompletedCallbackFunc = {
-                if (!bootCompleted.getAndSet(true)) {
-                    logger.verbose("Booting $avdName is completed.")
-                    Thread.sleep(WAIT_AFTER_BOOT_MS)
-                    closeEmulatorWithId(adbExecutable, process, deviceId, logger)
-                }
-            }
             Thread {
-                while(!bootCompleted.get() && process.isAlive) {
-                    if (isBootCompleted(deviceId, adbExecutable, logger)) {
-                        onBootCompletedCallbackFunc()
+                lateinit var emulatorSerial: String
+                while(process.isAlive) {
+                    try {
+                        emulatorSerial = findDeviceSerialWithId(adbExecutable, deviceId)
+                        break
+                    } catch (e: Exception) {
+                        logger.verbose("Waiting for $avdName to be attached to adb.")
+                    }
+                    Thread.sleep(5000)
+                }
+                logger.verbose("$avdName is attached to adb ($emulatorSerial).")
+
+                while(process.isAlive) {
+                    if (isBootCompleted(emulatorSerial, adbExecutable, logger)) {
                         break
                     }
                     logger.verbose("Waiting for $avdName to boot up.")
                     Thread.sleep(5000)
                 }
+                logger.verbose("Booting $avdName is completed.")
+
+                while(process.isAlive) {
+                    if (isPackageManagerStarted(emulatorSerial, adbExecutable)) {
+                        break
+                    }
+                    logger.verbose("Waiting for PackageManager to be ready on $avdName.")
+                    Thread.sleep(5000)
+                }
+                logger.verbose("PackageManager is ready on $avdName.")
+
+                if (process.isAlive) {
+                    bootCompleted.set(true)
+                    Thread.sleep(WAIT_AFTER_BOOT_MS)
+                    killDevice(adbExecutable, emulatorSerial)
+                }
             }.start()
+
             GrabProcessOutput.grabProcessOutput(
                 process,
                 GrabProcessOutput.Wait.ASYNC,
@@ -209,15 +230,11 @@ class AvdSnapshotHandler(
                     override fun out(line: String?) {
                         line ?: return
                         logger.verbose(line)
-                        if (line.contains("boot completed")) {
-                            onBootCompletedCallbackFunc()
-                        }
                     }
 
                     override fun err(line: String?) {
-                        if (!line.isNullOrBlank()) {
-                            logger.info(line)
-                        }
+                        line ?: return
+                        logger.verbose(line)
                     }
                 }
             )
@@ -248,40 +265,76 @@ class AvdSnapshotHandler(
         }
     }
 
-    private fun isBootCompleted(deviceId: String, adbExecutable: File, logger: ILogger): Boolean {
-        val emulatorSerial = try {
-            findDeviceSerialWithId(adbExecutable, deviceId)
-        } catch (e: Exception) {
-            logger.verbose("Failed to check if the device boot is completed due to an error: $e")
-            return false
+    private fun isBootCompleted(emulatorSerial: String, adbExecutable: File, logger: ILogger): Boolean {
+        val bootCompleted = AtomicBoolean(false)
+        getDeviceProperty("sys.boot_completed", emulatorSerial, adbExecutable) {
+            if (it.toIntOrNull() == 1) {
+                logger.info("sys.boot_completed=1")
+                bootCompleted.set(true)
+            }
         }
+        if (bootCompleted.get()) {
+            return true
+        }
+
+        getDeviceProperty("dev.bootcomplete", emulatorSerial, adbExecutable) {
+            if (it.toIntOrNull() == 1) {
+                logger.info("dev.bootcomplete=1")
+                bootCompleted.set(true)
+            }
+        }
+        return bootCompleted.get()
+    }
+
+    private fun isPackageManagerStarted(emulatorSerial: String, adbExecutable: File): Boolean {
+        val result = AtomicBoolean(false)
+        runAdbShell(emulatorSerial, adbExecutable, listOf("/system/bin/pm", "path", "android")) {
+            if (it.contains("package:")) {
+                result.set(true)
+            }
+        }
+        return result.get()
+    }
+
+    private fun getDeviceProperty(
+        propertyName: String,
+        emulatorSerial: String,
+        adbExecutable: File,
+        stdoutTextProcessor: (String)->Unit) {
+        runAdbShell(
+            emulatorSerial,
+            adbExecutable,
+            listOf("getprop", propertyName),
+            stdoutTextProcessor
+        )
+    }
+
+    private fun runAdbShell(
+        emulatorSerial: String,
+        adbExecutable: File,
+        shellCommandArgs: List<String>,
+        stdoutTextProcessor: (String)->Unit) {
         val getPropProcess = processFactory(
             listOf(
                 adbExecutable.absolutePath,
                 "-s",
                 emulatorSerial,
                 "shell",
-                "getprop",
-                "sys.boot_completed",
-            )
+            ) + shellCommandArgs
         ).start()
-        val bootCompleted = AtomicBoolean(false)
+
         GrabProcessOutput.grabProcessOutput(
             getPropProcess,
             GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
             object : GrabProcessOutput.IProcessOutput {
                 override fun out(line: String?) {
                     line ?: return
-                    if (line.trim().toIntOrNull() == 1) {
-                        logger.info("sys.boot_completed=1")
-                        bootCompleted.set(true)
-                    }
+                    stdoutTextProcessor(line.trim())
                 }
 
                 override fun err(line: String?) {}
             }
         )
-        return bootCompleted.get()
     }
 
     /**
