@@ -32,6 +32,11 @@ interface LibraryBuildFeatures : BuildFeatures {
      *     `android.library.defaults.buildfeatures.androidresources=false`
      * in the gradle.properties file at the root project of your build.
      *
+     * Once set to 'false', flag disables
+     * [com.android.build.api.dsl.LibraryBuildFeatures.dataBinding],
+     * [com.android.build.api.dsl.BuildFeatures.viewBinding],
+     * [com.android.build.api.dsl.BuildFeatures.renderScript].
+     *
      * More information about this feature at: TBD
      */
     @get:Incubating
