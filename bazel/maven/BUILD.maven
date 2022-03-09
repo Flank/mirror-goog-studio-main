@@ -73,13 +73,13 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta09",
-    pom = "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09/jetifier-core-1.0.0-beta09.pom",
+    name = "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta10",
+    pom = "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta10/jetifier-core-1.0.0-beta10.pom",
     repo_root_path = "repository",
-    repo_path = "com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09",
+    repo_path = "com/android/tools/build/jetifier/jetifier-core/1.0.0-beta10",
     deps = [
         "com.google.code.gson.gson_2.8.0",
-        "org.jetbrains.kotlin.kotlin-stdlib_1.3.60",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.3.71",
     ],
     visibility = ["//visibility:public"],
 )
@@ -88,7 +88,7 @@ maven_import(
     name = "com.android.tools.build.jetifier.jetifier-core",
     classifiers = [],
     jars = [
-        "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09/jetifier-core-1.0.0-beta09.jar"
+        "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta10/jetifier-core-1.0.0-beta10.jar"
     ],
     exports = [
         "com.google.code.gson.gson",
@@ -96,26 +96,26 @@ maven_import(
     ],
     original_deps = [
         "com.google.code.gson.gson_2.8.0",
-        "org.jetbrains.kotlin.kotlin-stdlib_1.3.60",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.3.71",
     ],
-    pom = "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09/jetifier-core-1.0.0-beta09.pom",
+    pom = "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta10/jetifier-core-1.0.0-beta10.pom",
     repo_root_path = "repository",
-    repo_path = "com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09",
+    repo_path = "com/android/tools/build/jetifier/jetifier-core/1.0.0-beta10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.android.tools.build.jetifier.jetifier-processor_1.0.0-beta09",
-    pom = "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09/jetifier-processor-1.0.0-beta09.pom",
+    name = "com.android.tools.build.jetifier.jetifier-processor_1.0.0-beta10",
+    pom = "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta10/jetifier-processor-1.0.0-beta10.pom",
     repo_root_path = "repository",
-    repo_path = "com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09",
+    repo_path = "com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta10",
     deps = [
-        "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta09",
-        "org.ow2.asm.asm_6.0",
-        "org.ow2.asm.asm-util_6.0",
-        "org.ow2.asm.asm-commons_6.0",
+        "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta10",
+        "org.ow2.asm.asm_8.0.1",
+        "org.ow2.asm.asm-util_8.0.1",
+        "org.ow2.asm.asm-commons_8.0.1",
         "org.jdom.jdom2_2.0.6",
-        "org.jetbrains.kotlin.kotlin-stdlib_1.3.60",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.3.71",
     ],
     visibility = ["//visibility:public"],
 )
@@ -124,7 +124,7 @@ maven_import(
     name = "com.android.tools.build.jetifier.jetifier-processor",
     classifiers = [],
     jars = [
-        "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09/jetifier-processor-1.0.0-beta09.jar"
+        "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta10/jetifier-processor-1.0.0-beta10.jar"
     ],
     exports = [
         "com.android.tools.build.jetifier.jetifier-core",
@@ -135,16 +135,16 @@ maven_import(
         "org.jetbrains.kotlin.kotlin-stdlib",
     ],
     original_deps = [
-        "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta09",
-        "org.ow2.asm.asm_6.0",
-        "org.ow2.asm.asm-util_6.0",
-        "org.ow2.asm.asm-commons_6.0",
+        "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta10",
+        "org.ow2.asm.asm_8.0.1",
+        "org.ow2.asm.asm-util_8.0.1",
+        "org.ow2.asm.asm-commons_8.0.1",
         "org.jdom.jdom2_2.0.6",
-        "org.jetbrains.kotlin.kotlin-stdlib_1.3.60",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.3.71",
     ],
-    pom = "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09/jetifier-processor-1.0.0-beta09.pom",
+    pom = "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta10/jetifier-processor-1.0.0-beta10.pom",
     repo_root_path = "repository",
-    repo_path = "com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09",
+    repo_path = "com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta10",
     visibility = ["//visibility:public"],
 )
 
@@ -16668,6 +16668,18 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta09",
+    pom = "repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09/jetifier-core-1.0.0-beta09.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/build/jetifier/jetifier-core/1.0.0-beta09",
+    deps = [
+        "com.google.code.gson.gson_2.8.0",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.3.60",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.android.tools.build.jetifier.jetifier-processor_1.0.0-beta02",
     pom = "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta02/jetifier-processor-1.0.0-beta02.pom",
     repo_root_path = "repository",
@@ -16695,6 +16707,22 @@ maven_artifact(
         "org.jdom.jdom2_2.0.6",
         "org.jetbrains.kotlin.kotlin-stdlib_1.3.0",
         "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta04",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.android.tools.build.jetifier.jetifier-processor_1.0.0-beta09",
+    pom = "repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09/jetifier-processor-1.0.0-beta09.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta09",
+    deps = [
+        "com.android.tools.build.jetifier.jetifier-core_1.0.0-beta09",
+        "org.ow2.asm.asm_6.0",
+        "org.ow2.asm.asm-util_6.0",
+        "org.ow2.asm.asm-commons_6.0",
+        "org.jdom.jdom2_2.0.6",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.3.60",
     ],
     visibility = ["//visibility:public"],
 )
@@ -29596,6 +29624,18 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.ow2.asm.asm-analysis_8.0.1",
+    pom = "repository/org/ow2/asm/asm-analysis/8.0.1/asm-analysis-8.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-analysis/8.0.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm-tree_8.0.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.ow2.asm.asm-commons_5.0.4",
     pom = "repository/org/ow2/asm/asm-commons/5.0.4/asm-commons-5.0.4.pom",
     repo_root_path = "repository",
@@ -29641,6 +29681,20 @@ maven_artifact(
         "org.ow2.asm.asm_7.0",
         "org.ow2.asm.asm-tree_7.0",
         "org.ow2.asm.asm-analysis_7.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.ow2.asm.asm-commons_8.0.1",
+    pom = "repository/org/ow2/asm/asm-commons/8.0.1/asm-commons-8.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-commons/8.0.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm_8.0.1",
+        "org.ow2.asm.asm-tree_8.0.1",
+        "org.ow2.asm.asm-analysis_8.0.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -29727,6 +29781,18 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.ow2.asm.asm-tree_8.0.1",
+    pom = "repository/org/ow2/asm/asm-tree/8.0.1/asm-tree-8.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-tree/8.0.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm_8.0.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.ow2.asm.asm-util_5.1",
     pom = "repository/org/ow2/asm/asm-util/5.1/asm-util-5.1.pom",
     repo_root_path = "repository",
@@ -29760,6 +29826,20 @@ maven_artifact(
         "org.ow2.asm.asm_7.0",
         "org.ow2.asm.asm-tree_7.0",
         "org.ow2.asm.asm-analysis_7.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.ow2.asm.asm-util_8.0.1",
+    pom = "repository/org/ow2/asm/asm-util/8.0.1/asm-util-8.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-util/8.0.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm_8.0.1",
+        "org.ow2.asm.asm-tree_8.0.1",
+        "org.ow2.asm.asm-analysis_8.0.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -29814,6 +29894,15 @@ maven_artifact(
     pom = "repository/org/ow2/asm/asm/8.0/asm-8.0.pom",
     repo_root_path = "repository",
     repo_path = "org/ow2/asm/asm/8.0",
+    parent = "org.ow2.ow2_1.5",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.ow2.asm.asm_8.0.1",
+    pom = "repository/org/ow2/asm/asm/8.0.1/asm-8.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm/8.0.1",
     parent = "org.ow2.ow2_1.5",
     visibility = ["//visibility:public"],
 )
