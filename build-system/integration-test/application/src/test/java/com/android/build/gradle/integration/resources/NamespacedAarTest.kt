@@ -19,13 +19,10 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.utils.getDebugVariant
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -60,8 +57,6 @@ class NamespacedAarTest {
                     "src/main/AndroidManifest.xml",
                     """
                                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                                         xmlns:dist="http://schemas.android.com/apk/distribution"
-                                    package="com.example.publishedLib"
                                     android:versionName="@com.example.publishedLib:string/my_version_name">
                                 </manifest>""")
 
