@@ -17,13 +17,12 @@
 package com.android.build.gradle.integration.api
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.ModelContainer
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.SyncIssue
+import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -57,8 +56,8 @@ class PluginVersionCheckTest {
                 "apply plugin: 'com.jakewharton.butterknife'"
         )
 
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        val syncIssues = model.getNonDeprecationIssues()
+        val model = project.modelV2().ignoreSyncIssues().fetchModels()
+        val syncIssues = model.container.getNonDeprecationIssues()
         assertThat(syncIssues).hasSize(1)
         val syncIssue = syncIssues.single()
 
@@ -95,12 +94,14 @@ class PluginVersionCheckTest {
                 "apply plugin: 'com.jakewharton.butterknife'"
         )
 
-        val model = project.model().fetchAndroidProjects()
-        assertThat(model.getNonDeprecationIssues()).isEmpty()
+        val model = project.modelV2().fetchModels()
+        model.container.getNonDeprecationIssues().isEmpty()
 
         project.executor().run("generateDebugR2")
     }
 
-    private fun ModelContainer<AndroidProject>.getNonDeprecationIssues() =
-        onlyModelSyncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
+    private fun ModelContainerV2.getNonDeprecationIssues(): List<SyncIssue> {
+        val issueModel = this.singleProjectInfo.issues ?: throw RuntimeException("Failed to get issue model")
+        return issueModel.syncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
+    }
 }
