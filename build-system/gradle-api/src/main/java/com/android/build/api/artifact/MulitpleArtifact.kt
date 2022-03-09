@@ -53,28 +53,24 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
      * as directories.
      *
      * This is not the whole list of classes as some are generated, or processed as jars. In order
-     * to process all classes, one should also consume [ALL_CLASSES_JARS]
+     * to process all classes, one should also consume [PROJECT_CLASSES_JARS]
      */
     @Incubating
-    object ALL_CLASSES_DIRS:
+    object PROJECT_CLASSES_DIRS:
             MultipleArtifact<Directory>(DIRECTORY),
-            Appendable,
-            Transformable,
-            Replaceable
+            Appendable
 
     /**
      * Classes that will eventually be dex'ed for this module, that were generated, or processed
      * as jar files.
      *
      * This is not the whole list of classes as some are generated, or processed as directories.
-     * In order to process all classes, one should also consume [ALL_CLASSES_DIRS]
+     * In order to process all classes, one should also consume [PROJECT_CLASSES_DIRS]
      */
     @Incubating
-    object ALL_CLASSES_JARS:
+    object PROJECT_CLASSES_JARS:
             MultipleArtifact<RegularFile>(FILE),
-            Appendable,
-            Transformable,
-            Replaceable
+            Appendable
 
     /**
      * Assets that will be packaged in the resulting APK or Bundle.
@@ -91,6 +87,32 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
     @Incubating
     object ASSETS:
         MultipleArtifact<Directory>(DIRECTORY),
+        Appendable,
+        Transformable,
+        Replaceable
+
+    /**
+     * This artifact type is deprecated, [PROJECT_CLASSES_DIRS] should be used instead.
+     */
+    @Deprecated(
+        message = "Use PROJECT_CLASSES_DIRS",
+        replaceWith = ReplaceWith("PROJECT_CLASSES_DIRS")
+    )
+    object ALL_CLASSES_DIRS:
+        MultipleArtifact<Directory>(DIRECTORY),
+        Appendable,
+        Transformable,
+        Replaceable
+
+    /**
+     * This artifact type is deprecated, [PROJECT_CLASSES_JARS] should be used instead.
+     */
+    @Deprecated(
+        message = "Use PROJECT_CLASSES_JARS",
+        replaceWith = ReplaceWith("PROJECT_CLASSES_JARS")
+    )
+    object ALL_CLASSES_JARS:
+        MultipleArtifact<RegularFile>(FILE),
         Appendable,
         Transformable,
         Replaceable

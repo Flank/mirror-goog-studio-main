@@ -47,7 +47,7 @@ import java.util.Collections
  * Implementation will delegate most of its [FileSystemLocationProperty] handling to
  * [ArtifactContainer] only handling the [TaskProvider] relationships.
  *
- * This call will also contains some AGP private methods for added services to support AGP
+ * This call will also contain some AGP private methods for added services to support AGP
  * specific services like setting initial AGP providers.
  */
 class ArtifactsImpl(
@@ -59,6 +59,14 @@ class ArtifactsImpl(
     private val objects= project.objects
     internal val buildDirectory = project.layout.buildDirectory
     private val outstandingRequests = Collections.synchronizedList(ArrayList<ArtifactOperationRequest>())
+
+    init {
+        @Suppress("DEPRECATION")
+        republish(MultipleArtifact.PROJECT_CLASSES_DIRS, MultipleArtifact.ALL_CLASSES_DIRS)
+
+        @Suppress("DEPRECATION")
+        republish(MultipleArtifact.PROJECT_CLASSES_JARS, MultipleArtifact.ALL_CLASSES_JARS)
+    }
 
     override fun getBuiltArtifactsLoader(): BuiltArtifactsLoader {
         return BuiltArtifactsLoaderImpl()
@@ -97,16 +105,6 @@ class ArtifactsImpl(
         type.getOutputPath(buildDirectory, identifier, *paths)
 
     /**
-     * Returns a [RegularFile] that can be used to output a [Single]
-     * @param type expect output [SingleArtifact]
-     * @param paths the extra folder to add when constructing the file path.
-     */
-    internal fun getOutputRegularFile(
-            type: Single<RegularFile>,
-            vararg paths: String) =
-            buildDirectory.file(type.getOutputPath(buildDirectory, identifier, *paths).absolutePath)
-
-    /**
      * Returns the [ArtifactContainer] for the passed [type]. The instance may be allocated as part
      * of the call if there is not [ArtifactContainer] for this [type] registered yet.
      *
@@ -137,6 +135,12 @@ class ArtifactsImpl(
     fun <T: FileSystemLocation> republish(
         source: Single<T>,
         target: Single<T>) {
+        storageProvider.getStorage(target.kind).copy(target, getArtifactContainer(source))
+    }
+
+    private fun <T: FileSystemLocation> republish(
+        source: Multiple<T>,
+        target: Multiple<T>) {
         storageProvider.getStorage(target.kind).copy(target, getArtifactContainer(source))
     }
 
@@ -253,8 +257,8 @@ class ArtifactsImpl(
     }
 
     private val allClasses = project.files().from(
-        getAll(MultipleArtifact.ALL_CLASSES_DIRS),
-        getAll(MultipleArtifact.ALL_CLASSES_JARS)
+        getAll(MultipleArtifact.PROJECT_CLASSES_DIRS),
+        getAll(MultipleArtifact.PROJECT_CLASSES_JARS)
     )
 
     /**

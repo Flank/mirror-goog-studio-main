@@ -112,12 +112,12 @@ package com.android.build.api.artifact {
   public abstract sealed class MultipleArtifact<FileTypeT extends org.gradle.api.file.FileSystemLocation> extends com.android.build.api.artifact.Artifact.Multiple<FileTypeT> {
   }
 
-  @org.gradle.api.Incubating public static final class MultipleArtifact.ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
-    field public static final com.android.build.api.artifact.MultipleArtifact.ALL_CLASSES_DIRS INSTANCE;
+  @Deprecated public static final class MultipleArtifact.ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+    field @Deprecated public static final com.android.build.api.artifact.MultipleArtifact.ALL_CLASSES_DIRS INSTANCE;
   }
 
-  @org.gradle.api.Incubating public static final class MultipleArtifact.ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
-    field public static final com.android.build.api.artifact.MultipleArtifact.ALL_CLASSES_JARS INSTANCE;
+  @Deprecated public static final class MultipleArtifact.ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+    field @Deprecated public static final com.android.build.api.artifact.MultipleArtifact.ALL_CLASSES_JARS INSTANCE;
   }
 
   @org.gradle.api.Incubating public static final class MultipleArtifact.ASSETS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
@@ -126,6 +126,14 @@ package com.android.build.api.artifact {
 
   public static final class MultipleArtifact.MULTIDEX_KEEP_PROGUARD extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.MultipleArtifact.MULTIDEX_KEEP_PROGUARD INSTANCE;
+  }
+
+  @org.gradle.api.Incubating public static final class MultipleArtifact.PROJECT_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable {
+    field public static final com.android.build.api.artifact.MultipleArtifact.PROJECT_CLASSES_DIRS INSTANCE;
+  }
+
+  @org.gradle.api.Incubating public static final class MultipleArtifact.PROJECT_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Appendable {
+    field public static final com.android.build.api.artifact.MultipleArtifact.PROJECT_CLASSES_JARS INSTANCE;
   }
 
   public interface OutOperationRequest<FileTypeT extends org.gradle.api.file.FileSystemLocation> {

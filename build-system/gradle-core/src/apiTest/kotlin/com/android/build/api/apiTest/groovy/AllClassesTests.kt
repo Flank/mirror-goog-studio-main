@@ -190,7 +190,7 @@ expected result : a list of classes and jar files.
                     TaskProvider<ModifyClassesTask> taskProvider = project.tasks.register(variant.getName() + "ModifyAllClasses", ModifyClassesTask.class)
                     variant.artifacts.use(taskProvider)
                         .wiredWith( { it.getAllClasses() }, { it.getOutput() })
-                        .toTransform(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE)
+                        .toTransform(MultipleArtifact.PROJECT_CLASSES_DIRS.INSTANCE)
                 })
             }
         """.trimIndent()
@@ -283,11 +283,9 @@ expected result : a list of classes and jar files.
             import com.android.build.api.artifact.MultipleArtifact;
 
             import org.gradle.api.DefaultTask;
-            import org.gradle.api.file.Directory;
-            import org.gradle.api.tasks.TaskAction;
+                        import org.gradle.api.tasks.TaskAction;
             import javassist.ClassPool;
             import javassist.CtClass;
-            import java.io.FileInputStream;
 
             abstract class AddClassesTask extends DefaultTask {
 
@@ -312,7 +310,7 @@ expected result : a list of classes and jar files.
                     TaskProvider<AddClassesTask> taskProvider = project.tasks.register(variant.getName() + "AddAllClasses", AddClassesTask.class)
                     variant.artifacts.use(taskProvider)
                         .wiredWith( { it.getOutput() })
-                        .toAppendTo(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE)
+                        .toAppendTo(MultipleArtifact.PROJECT_CLASSES_DIRS.INSTANCE)
                 })
             }
         """.trimIndent()
