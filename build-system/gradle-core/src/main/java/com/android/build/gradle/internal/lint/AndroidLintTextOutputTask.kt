@@ -101,7 +101,12 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
                 if (returnValue == ERRNO_ERRORS && !abortOnError.get()) {
                     return
                 }
-                maybeThrowException(returnValue, android.get(), fatalOnly.get())
+                maybeThrowException(
+                    returnValue,
+                    android.get(),
+                    fatalOnly.get(),
+                    lintMode = LintMode.REPORTING
+                )
             }
         }
     }

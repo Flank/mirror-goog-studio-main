@@ -23,17 +23,20 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.R8ParallelBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.MainDexListConfig
 import com.android.builder.dexing.ProguardConfig
@@ -42,7 +45,6 @@ import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.getR8Version
 import com.android.builder.dexing.runR8
-import com.android.ide.common.blame.MessageReceiver
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import org.gradle.api.file.ConfigurableFileCollection
@@ -50,6 +52,8 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
@@ -78,8 +82,6 @@ import javax.inject.Inject
  * Output is dex or class files, depending on whether we are building an APK, or AAR.
  */
 
-
-// TODO(b/139181913): add workers
 @CacheableTask
 abstract class R8Task @Inject constructor(
     projectLayout: ProjectLayout
@@ -302,6 +304,10 @@ abstract class R8Task @Inject constructor(
 
             val artifacts = creationConfig.artifacts
 
+            val r8Service = getBuildService<R8ParallelBuildService>(creationConfig.services.buildServiceRegistry)
+
+            task.usesService(r8Service)
+
             task.enableDesugaring.set(
                 creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.R8
                         && !variantType.isAar)
@@ -440,68 +446,79 @@ abstract class R8Task @Inject constructor(
             }
         }
 
-        shrink(
-            bootClasspath = bootClasspath.toList(),
-            minSdkVersion = minSdkVersion.get(),
-            isDebuggable = debuggable.get(),
-            enableDesugaring = enableDesugaring.get(),
-            disableTreeShaking = disableTreeShaking.get(),
-            disableMinification = disableMinification.get(),
-            mainDexListFiles = mutableListOf<File>().also {
-                if (multiDexKeepFile.isPresent) {
-                    it.add(multiDexKeepFile.get())
-                }
-            },
-            mainDexRulesFiles = mutableListOf<File>().also {
-                it.addAll(mainDexRulesFiles.toList())
-                if (multiDexKeepProguard.isPresent) {
-                    it.add(multiDexKeepProguard.get().asFile)
-                }
-            },
-            inputProguardMapping =
+        val logger = LoggerWrapper.getLogger(R8Task::class.java)
+        logger
+            .info(
+                """
+                |R8 is a new Android code shrinker. If you experience any issues, please file a bug at
+                |https://issuetracker.google.com, using 'Shrinker (R8)' as component name.
+                |Current version is: ${getR8Version()}.
+                |""".trimMargin()
+            )
+        workerExecutor.noIsolation().submit(R8Runnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.bootClasspath.from(bootClasspath.toList())
+            it.minSdkVersion.set(minSdkVersion.get())
+            it.debuggable.set(debuggable.get())
+            it.disableTreeShaking.set(disableTreeShaking.get())
+            it.enableDesugaring.set(enableDesugaring.get())
+            it.disableMinification.set(disableMinification.get())
+            it.mainDexListFiles.from(
+                mutableListOf<File>().also {
+                    if (multiDexKeepFile.isPresent) {
+                        it.add(multiDexKeepFile.get())
+                    }
+                })
+            it.mainDexRulesFiles.from(
+                mutableListOf<File>().also {
+                    it.addAll(mainDexRulesFiles.toList())
+                    if (multiDexKeepProguard.isPresent) {
+                        it.add(multiDexKeepProguard.get().asFile)
+                    }
+                })
+            it.mainDexListOutput.set(mainDexListOutput.orNull?.asFile)
+            it.proguardConfigurationFiles.from(
+                reconcileDefaultProguardFile(
+                    getFilteredConfigurationFiles(
+                        ignoredLibraryKeepRules.get(),
+                        ignoreAllLibraryKeepRules.get(),
+                        libraryKeepRules,
+                        configurationFiles,
+                        LoggerWrapper.getLogger(R8Task::class.java)),
+                    extractedDefaultProguardFile))
+            it.inputProguardMapping.set(
                 if (testedMappingFile.isEmpty) {
                     null
                 } else {
                     testedMappingFile.singleFile
-                },
-            proguardConfigurationFiles =  reconcileDefaultProguardFile(
-                    getFilteredConfigurationFiles(
-                            ignoredLibraryKeepRules.get(),
-                            ignoreAllLibraryKeepRules.get(),
-                            libraryKeepRules,
-                            configurationFiles,
-                            LoggerWrapper.getLogger(R8Task::class.java)),
-                    extractedDefaultProguardFile),
-            proguardConfigurations = proguardConfigurations,
-            variantType = variantType.orNull,
-            messageReceiver = MessageReceiverImpl(errorFormatMode.get(), logger),
-            dexingType = dexingType,
-            useFullR8 = useFullR8.get(),
-            referencedInputs = (referencedClasses + referencedResources).toList(),
-            classes =
+                })
+            it.proguardConfigurations.set(proguardConfigurations)
+            it.aar.set(variantType.orNull?.isAar == true)
+            it.dexingType.set(dexingType)
+            it.useFullR8.set(useFullR8.get())
+            it.referencedInputs.from((referencedClasses + referencedResources).toList())
+            it.classes.from(
                 if (includeFeaturesInScopes.get()) {
                     listOf(baseJar.get().asFile)
                 } else {
                     classes.toList()
-                },
-            resources = resources.toList(),
-            proguardOutputFiles =
-                ProguardOutputFiles(
-                    mappingFile.get().asFile.toPath(),
-                    getProguardSeedsOutput().get().toPath(),
-                    getProguardUsageOutput().get().toPath(),
-                    getProguardConfigurationOutput().get().toPath(),
-                    getMissingKeepRulesOutput().get().toPath()),
-            output = output.get().asFile,
-            outputResources = outputResources.get().asFile,
-            mainDexListOutput = mainDexListOutput.orNull?.asFile,
-            featureClassJars = featureClassJars.toList(),
-            featureJavaResourceJars = featureJavaResourceJarsList,
-            featureDexDir = featureDexDir.asFile.orNull,
-            featureJavaResourceOutputDir = featureJavaResourceOutputDir.asFile.orNull,
-            libConfiguration = coreLibDesugarConfig.orNull,
-            outputKeepRulesDir = projectOutputKeepRules.asFile.orNull,
-        )
+                })
+            it.resources.from(resources.toList())
+            it.mappingFile.set(mappingFile.get().asFile)
+            it.proguardSeedsOutput.set(getProguardSeedsOutput().get())
+            it.proguardUsageOutput.set(getProguardUsageOutput().get())
+            it.proguardConfigurationOutput.set(getProguardConfigurationOutput().get())
+            it.missingKeepRulesOutput.set(getMissingKeepRulesOutput().get())
+            it.output.set(output.get().asFile)
+            it.outputResources.set(outputResources.get().asFile)
+            it.featureClassJars.from(featureClassJars.toList())
+            it.featureJavaResourceJars.from(featureJavaResourceJarsList)
+            it.featureDexDir.set(featureDexDir.asFile.orNull)
+            it.featureJavaResourceOutputDir.set(featureJavaResourceOutputDir.asFile.orNull)
+            it.libConfiguration.set(coreLibDesugarConfig.orNull)
+            it.outputKeepRulesDir.set(projectOutputKeepRules.asFile.orNull)
+            it.errorFormatMode.set(errorFormatMode.get())
+        }
     }
 
     companion object {
@@ -514,40 +531,36 @@ abstract class R8Task @Inject constructor(
             disableMinification: Boolean,
             mainDexListFiles: List<File>,
             mainDexRulesFiles: List<File>,
-            inputProguardMapping: File?,
-            proguardConfigurationFiles: Collection<File>,
-            proguardConfigurations: MutableList<String>,
-            variantType: VariantType?,
-            messageReceiver: MessageReceiver,
+            mainDexListOutput: File?,
             dexingType: DexingType,
             useFullR8: Boolean,
             referencedInputs: List<File>,
             classes: List<File>,
             resources: List<File>,
-            proguardOutputFiles: ProguardOutputFiles,
+            proguardConfigurationFiles: Collection<File>,
+            inputProguardMapping: File?,
+            proguardConfigurations: MutableList<String>,
+            isAar: Boolean,
+            mappingFile: File,
+            proguardSeedsOutput: File,
+            proguardUsageOutput: File,
+            proguardConfigurationOutput: File,
+            missingKeepRulesOutput: File,
             output: File,
             outputResources: File,
-            mainDexListOutput: File?,
             featureClassJars: List<File>,
             featureJavaResourceJars: List<File>,
             featureDexDir: File?,
             featureJavaResourceOutputDir: File?,
             libConfiguration: String?,
             outputKeepRulesDir: File?,
+            errorFormatMode: SyncOptions.ErrorFormatMode,
         ) {
-            val logger = LoggerWrapper.getLogger(R8Task::class.java)
-            logger
-                .info(
-                    """
-                |R8 is a new Android code shrinker. If you experience any issues, please file a bug at
-                |https://issuetracker.google.com, using 'Shrinker (R8)' as component name.
-                |Current version is: ${getR8Version()}.
-                |""".trimMargin()
-                )
+            val logger = LoggerWrapper.getLogger(R8ParallelBuildService::class.java)
 
             val r8OutputType: R8OutputType
             val outputFormat: Format
-            if (variantType?.isAar == true) {
+            if (isAar) {
                 r8OutputType = R8OutputType.CLASSES
                 outputFormat = Format.JAR
             } else {
@@ -566,14 +579,13 @@ abstract class R8Task @Inject constructor(
                 Format.JAR -> FileUtils.deleteIfExists(output)
             }
 
-            val toolConfig = ToolConfig(
-                minSdkVersion = minSdkVersion,
-                isDebuggable = isDebuggable,
-                disableTreeShaking = disableTreeShaking,
-                disableDesugaring = !enableDesugaring,
-                disableMinification = disableMinification,
-                r8OutputType = r8OutputType,
-            )
+            val proguardOutputFiles =
+                ProguardOutputFiles(
+                    mappingFile.toPath(),
+                    proguardSeedsOutput.toPath(),
+                    proguardUsageOutput.toPath(),
+                    proguardConfigurationOutput.toPath(),
+                    missingKeepRulesOutput.toPath())
 
             val proguardConfig = ProguardConfig(
                 proguardConfigurationFiles.map { it.toPath() },
@@ -593,7 +605,17 @@ abstract class R8Task @Inject constructor(
                 MainDexListConfig()
             }
 
+            val toolConfig = ToolConfig(
+                minSdkVersion = minSdkVersion,
+                isDebuggable = isDebuggable,
+                disableTreeShaking = disableTreeShaking,
+                disableDesugaring = !enableDesugaring,
+                disableMinification = disableMinification,
+                r8OutputType = r8OutputType,
+            )
+
             val outputKeepRulesFile = outputKeepRulesDir?.resolve("output")
+
             // When invoking R8 we filter out missing files. E.g. javac output may not exist if
             // there are no Java sources. See b/151605314 for details.
             runR8(
@@ -606,7 +628,7 @@ abstract class R8Task @Inject constructor(
                 toolConfig,
                 proguardConfig,
                 mainDexListConfig,
-                messageReceiver,
+                MessageReceiverImpl(errorFormatMode, Logging.getLogger(R8Runnable::class.java)),
                 useFullR8,
                 featureClassJars.map { it.toPath() },
                 featureJavaResourceJars.map { it.toPath() },
@@ -625,6 +647,81 @@ abstract class R8Task @Inject constructor(
                     null
                 }
             }
+        }
+    }
+
+    abstract class R8Runnable : ProfileAwareWorkAction<R8Runnable.Params>() {
+
+        abstract class Params : ProfileAwareWorkAction.Parameters() {
+            abstract val bootClasspath: ConfigurableFileCollection
+            abstract val minSdkVersion: Property<Int>
+            abstract val debuggable: Property<Boolean>
+            abstract val disableTreeShaking: Property<Boolean>
+            abstract val enableDesugaring: Property<Boolean>
+            abstract val disableMinification: Property<Boolean>
+            abstract val mainDexListFiles: ConfigurableFileCollection
+            abstract val mainDexRulesFiles: ConfigurableFileCollection
+            abstract val mainDexListOutput: RegularFileProperty
+            abstract val dexingType: Property<DexingType>
+            abstract val useFullR8: Property<Boolean>
+            abstract val referencedInputs: ConfigurableFileCollection
+            abstract val classes: ConfigurableFileCollection
+            abstract val resources: ConfigurableFileCollection
+            abstract val proguardConfigurationFiles: ConfigurableFileCollection
+            abstract val inputProguardMapping: RegularFileProperty
+            abstract val proguardConfigurations: ListProperty<String>
+            abstract val aar: Property<Boolean>
+            abstract val mappingFile: RegularFileProperty
+            abstract val proguardSeedsOutput: RegularFileProperty
+            abstract val proguardUsageOutput: RegularFileProperty
+            abstract val proguardConfigurationOutput: RegularFileProperty
+            abstract val missingKeepRulesOutput: RegularFileProperty
+            abstract val output: RegularFileProperty
+            abstract val outputResources: RegularFileProperty
+            abstract val featureClassJars: ConfigurableFileCollection
+            abstract val featureJavaResourceJars: ConfigurableFileCollection
+            abstract val featureDexDir: DirectoryProperty
+            abstract val featureJavaResourceOutputDir: DirectoryProperty
+            abstract val libConfiguration: Property<String>
+            abstract val outputKeepRulesDir: DirectoryProperty
+            abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+        }
+
+        override fun run() {
+            shrink(
+                parameters.bootClasspath.files.toList(),
+                parameters.minSdkVersion.get(),
+                parameters.debuggable.get(),
+                parameters.enableDesugaring.get(),
+                parameters.disableTreeShaking.get(),
+                parameters.disableMinification.get(),
+                parameters.mainDexListFiles.files.toList(),
+                parameters.mainDexRulesFiles.files.toList(),
+                parameters.mainDexListOutput.orNull?.asFile,
+                parameters.dexingType.get(),
+                parameters.useFullR8.get(),
+                parameters.referencedInputs.files.toList(),
+                parameters.classes.files.toList(),
+                parameters.resources.files.toList(),
+                parameters.proguardConfigurationFiles.files.toList(),
+                parameters.inputProguardMapping.orNull?.asFile,
+                parameters.proguardConfigurations.get(),
+                parameters.aar.get(),
+                parameters.mappingFile.get().asFile,
+                parameters.proguardSeedsOutput.get().asFile,
+                parameters.proguardUsageOutput.get().asFile,
+                parameters.proguardConfigurationOutput.get().asFile,
+                parameters.missingKeepRulesOutput.get().asFile,
+                parameters.output.get().asFile,
+                parameters.outputResources.get().asFile,
+                parameters.featureClassJars.files.toList(),
+                parameters.featureJavaResourceJars.files.toList(),
+                parameters.featureDexDir.orNull?.asFile,
+                parameters.featureJavaResourceOutputDir.orNull?.asFile,
+                parameters.libConfiguration.orNull,
+                parameters.outputKeepRulesDir.orNull?.asFile,
+                parameters.errorFormatMode.get(),
+            )
         }
     }
 }

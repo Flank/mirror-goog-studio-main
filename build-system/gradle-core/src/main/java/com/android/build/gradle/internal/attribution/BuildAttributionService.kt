@@ -92,12 +92,9 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                 )
                 serviceRegistration.parameters.javaInfo.set(
                     JavaInfo(
-                        version = project.providers.systemProperty("java.version")
-                            .forUseAtConfigurationTime().getOrElse(""),
-                        vendor = project.providers.systemProperty("java.vendor")
-                            .forUseAtConfigurationTime().getOrElse(""),
-                        home = project.providers.systemProperty("java.home")
-                            .forUseAtConfigurationTime().getOrElse(""),
+                        version = System.getProperty("java.version") ?: "",
+                        vendor = System.getProperty("java.vendor") ?: "",
+                        home = System.getProperty("java.home") ?: "",
                         vmArguments = HostData.runtimeBean?.inputArguments ?: emptyList()
                     )
                 )

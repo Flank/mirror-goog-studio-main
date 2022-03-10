@@ -55,8 +55,7 @@ class DynamicFeatureConnectedTest {
                 """.trimMargin())
             .apply { replaceFile(TestSourceFile("src/main/AndroidManifest.xml",
                 """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    |        xmlns:dist="http://schemas.android.com/apk/distribution"
-                    |        package="com.example.app">
+                    |        xmlns:dist="http://schemas.android.com/apk/distribution">
                     |    <dist:module dist:title="@string/app_title">
                     |    </dist:module>
                     |    <application />
@@ -66,8 +65,7 @@ class DynamicFeatureConnectedTest {
             .appendToBuild("android.defaultConfig.testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'")
             .apply { replaceFile(TestSourceFile("src/main/AndroidManifest.xml",
                 """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    |        xmlns:dist="http://schemas.android.com/apk/distribution"
-                    |        package="com.example.app.dynamic.feature">
+                    |        xmlns:dist="http://schemas.android.com/apk/distribution">
                     |    <dist:module dist:onDemand="true" dist:title="@string/df_title">
                     |        <dist:fusing dist:include="true" />
                     |    </dist:module>

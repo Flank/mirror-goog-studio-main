@@ -100,9 +100,11 @@ import com.android.tools.lint.checks.WearStandaloneAppDetector
 import com.android.tools.lint.checks.WrongCallDetector
 import com.android.tools.lint.checks.WrongCaseDetector
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.TextFormat
 import com.android.utils.SdkUtils
 import java.io.File
 import java.io.IOException
@@ -544,6 +546,19 @@ abstract class Reporter protected constructor(
             }
             return studioFixes?.contains(issue) ?: false
         }
+    }
+}
+
+/**
+ * Returns the path to display for a given incident. This is like
+ * [LintClient.getDisplayPath], but also takes into account the
+ * [LintCliFlags.fullPath] property to use absolute paths if requested.
+ */
+fun Incident.getPath(client: LintCliClient, file: File = this.file): String {
+    return if (project != null) {
+        client.getDisplayPath(project, file, client.flags.isFullPath)
+    } else {
+        client.getDisplayPath(file, null, TextFormat.TEXT)
     }
 }
 

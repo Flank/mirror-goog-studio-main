@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
+package com.android.build.gradle.internal.dsl
 
-import org.gradle.api.Incubating
+import com.android.build.api.dsl.FusedLibrariesExtension
+import com.android.build.gradle.internal.services.DslServices
+import javax.inject.Inject
 
-@Incubating
-interface StoreArchive {
+abstract class FusedLibrariesExtensionImpl @Inject constructor(
+    val dslServices: DslServices,
+): FusedLibrariesExtension{
 
-    /**
-     * Archive is an app state that allows an official app store to reclaim device storage and
-     * disable app functionality temporarily until the user interacts with the app again. Upon
-     * interaction the latest available version of the app will be restored while leaving user data
-     * unaffected.
-     */
-    @get:Incubating
-    @set:Incubating
-    var enable: Boolean?
+    abstract override var namespace: String?
 }

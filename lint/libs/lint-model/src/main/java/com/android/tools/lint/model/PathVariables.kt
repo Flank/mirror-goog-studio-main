@@ -306,6 +306,11 @@ class PathVariables {
             }
         }
 
+        /**
+         * Returns true if the given [path] appears to use a path
+         * variable, e.g. `$VAR/foo/bar` does, `${VAR}/foo/bar` does,
+         * and `/foo/bar` does not.
+         */
         fun startsWithVariable(path: String, variable: String): Boolean {
             if (path.startsWith("$")) {
                 val hasBraces = path.length > 1 && path[1] == '{'

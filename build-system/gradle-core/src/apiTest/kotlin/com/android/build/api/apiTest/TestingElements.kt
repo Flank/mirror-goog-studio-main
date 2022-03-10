@@ -106,8 +106,9 @@ class TestingElements(val language: ScriptingLanguage) {
         )
     }
 
-    fun addCommonAndroidBuildLogic() =
-                """compileSdkVersion(29)
+    fun addCommonAndroidBuildLogic(namespace: String = "com.android.build.example.minimal") =
+                """namespace = "$namespace"
+                compileSdkVersion(29)
                 defaultConfig {
                     minSdkVersion(21)
                 }"""
@@ -116,8 +117,7 @@ class TestingElements(val language: ScriptingLanguage) {
         builder.manifest =
             // language=xml
             """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.android.build.example.minimal">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="Minimal">
                         <activity android:name="MainActivity">
                             <intent-filter>
@@ -130,12 +130,11 @@ class TestingElements(val language: ScriptingLanguage) {
             """.trimIndent()
     }
 
-    fun addLibraryManifest(libName: String, builder: VariantApiBaseTest.GivenBuilder) {
+    fun addLibraryManifest(builder: VariantApiBaseTest.GivenBuilder) {
         builder.manifest =
                 // language=xml
             """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.android.build.example.$libName">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application>
                     </application>
                 </manifest>

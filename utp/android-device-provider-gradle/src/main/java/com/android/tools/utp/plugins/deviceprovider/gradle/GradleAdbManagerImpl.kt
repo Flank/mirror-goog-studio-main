@@ -16,13 +16,16 @@
 
 package com.android.tools.utp.plugins.deviceprovider.gradle
 
+import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.lib.process.execute
 import com.google.testing.platform.lib.process.inject.SubprocessComponent
+import java.util.logging.Logger
 
 /**
  * Component of the [GradleManagedAndroidDeviceLauncher] to handle calls to adb.
  */
 class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent) : GradleAdbManager {
+    private val logger: Logger = getLogger()
     private lateinit var adbPath: String
 
     override fun configure(adbPath: String) {
@@ -37,16 +40,6 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
                     "emu",
                     "avd",
                     "id"
-            )
-
-    private fun getAdbBootCheckArgs(serial: String): List<String> =
-            listOf(
-                    adbPath,
-                    "-s",
-                    serial,
-                    "shell",
-                    "getprop",
-                    "sys.boot_completed"
             )
 
     private fun getAdbCloseArgs(serial: String): List<String> =
@@ -84,20 +77,80 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
      * Returns whether the given device has booted or not
      */
     override fun isBootLoaded(deviceSerial: String): Boolean {
+        return isBootCompleted(deviceSerial) && isPackageManagerStarted(deviceSerial)
+    }
+
+    private fun isBootCompleted(deviceSerial: String): Boolean {
         var success = false
 
         subprocessComponent.subprocess().execute(
-                args = getAdbBootCheckArgs(deviceSerial),
-                environment = System.getenv(),
-                stdoutProcessor = { line ->
-                    val trimmed = line.trim()
-                    if (trimmed == "1") {
-                        success = true
-                    }
+            args = listOf(
+                adbPath,
+                "-s",
+                deviceSerial,
+                "shell",
+                "getprop",
+                "sys.boot_completed"
+            ),
+            environment = System.getenv(),
+            stdoutProcessor = { line ->
+                val trimmed = line.trim()
+                if (trimmed == "1") {
+                    logger.info("sys.boot_completed=1 ($deviceSerial)")
+                    success = true
                 }
+            }
         )
 
-        return success;
+        if (success) {
+            return true
+        }
+
+        subprocessComponent.subprocess().execute(
+            args = listOf(
+                adbPath,
+                "-s",
+                deviceSerial,
+                "shell",
+                "getprop",
+                "dev.bootcomplete"
+            ),
+            environment = System.getenv(),
+            stdoutProcessor = { line ->
+                val trimmed = line.trim()
+                if (trimmed == "1") {
+                    logger.info("dev.bootcomplete=1 ($deviceSerial)")
+                    success = true
+                }
+            }
+        )
+
+        return success
+    }
+
+    private fun isPackageManagerStarted(deviceSerial: String): Boolean {
+        var success = false
+
+        subprocessComponent.subprocess().execute(
+            args = listOf(
+                adbPath,
+                "-s",
+                deviceSerial,
+                "shell",
+                "/system/bin/pm",
+                "path",
+                "android"
+            ),
+            environment = System.getenv(),
+            stdoutProcessor = { line ->
+                if (line.contains("package:")) {
+                    logger.info("Package Manager is ready ($deviceSerial)")
+                    success = true
+                }
+            }
+        )
+
+        return success
     }
 
     /**

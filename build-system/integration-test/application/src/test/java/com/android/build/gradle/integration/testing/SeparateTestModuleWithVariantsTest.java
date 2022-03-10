@@ -101,8 +101,7 @@ public class SeparateTestModuleWithVariantsTest {
         Files.deleteIfExists(manifest);
         String content =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "      package=\"com.android.tests.basic.test\">\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
                         + "      <uses-sdk android:minSdkVersion=\"16\" android:targetSdkVersion=\"16\" />\n"
                         + "      <instrumentation android:name=\"android.test.InstrumentationTestRunner\"\n"
                         + "                       android:targetPackage=\"com.android.tests.basic\"\n"

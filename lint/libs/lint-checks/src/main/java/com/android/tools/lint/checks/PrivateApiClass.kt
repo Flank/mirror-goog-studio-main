@@ -23,10 +23,10 @@ import java.util.HashMap
 /**
  * Represents a class and its hidden methods/fields, which are not part
  * of the public SDK.
- * <p>Each member has an attached reflective access {@link Restriction},
+ * <p>Each member has an attached reflective access [Restriction],
  * corresponding to the platform's runtime behavior (e.g. a reflective
- * call to a denied method is forbidden on all API versions, a call
- * to a maybe allowed method will be allowed with a warning, etc.)
+ * call to a denied method is forbidden on all API versions, a call to a
+ * maybe allowed method will be allowed with a warning, etc.)
  */
 class PrivateApiClass(name: String) : ApiClassBase(name) {
 

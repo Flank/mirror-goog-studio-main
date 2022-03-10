@@ -45,12 +45,10 @@ class GradleEnvironmentProviderImpl(private val providerFactory: ProviderFactory
 class EnvironmentProviderImpl(private val gradleEnvironmentProvider: GradleEnvironmentProvider) :
     EnvironmentProvider {
     override fun getSystemProperty(key: String): String? {
-        return gradleEnvironmentProvider.getSystemProperty(key)
-            .forUseAtConfigurationTime().orNull
+        return gradleEnvironmentProvider.getSystemProperty(key).orNull
     }
 
     override fun getEnvVariable(key: String): String? {
-        return gradleEnvironmentProvider.getEnvVariable(key)
-            .forUseAtConfigurationTime().orNull
+        return gradleEnvironmentProvider.getEnvVariable(key).orNull
     }
 }

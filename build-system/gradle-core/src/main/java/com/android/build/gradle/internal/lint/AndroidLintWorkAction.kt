@@ -48,6 +48,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val fatalOnly: Property<Boolean>
         abstract val runInProcess: Property<Boolean>
         abstract val returnValueOutputFile: RegularFileProperty
+        abstract val lintMode: Property<LintMode>
     }
 
     override fun execute() {
@@ -71,7 +72,12 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
                 return@execute
             }
         }
-        maybeThrowException(execResult, parameters.android.get(), parameters.fatalOnly.get())
+        maybeThrowException(
+            execResult,
+            parameters.android.get(),
+            parameters.fatalOnly.get(),
+            parameters.lintMode.get()
+        )
     }
 
     private fun runLint(arguments: List<String>): Int {
@@ -209,7 +215,12 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         }
 
         @JvmStatic
-        fun maybeThrowException(execResult: Int, android: Boolean, fatalOnly: Boolean) =
+        fun maybeThrowException(
+            execResult: Int,
+            android: Boolean,
+            fatalOnly: Boolean,
+            lintMode: LintMode
+        ) {
             when (execResult) {
                 ERRNO_SUCCESS -> {}
                 ERRNO_ERRORS -> throw RuntimeException(getErrorMessage(android, fatalOnly))
@@ -217,10 +228,15 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
                 ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
                 ERRNO_HELP -> throw IllegalStateException("Internal error: Unexpected lint help call")
                 ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")
-                ERRNO_CREATED_BASELINE -> throw RuntimeException("Aborting build since new baseline file was created")
+                ERRNO_CREATED_BASELINE -> {
+                    if (lintMode != LintMode.UPDATE_BASELINE) {
+                        throw RuntimeException("Aborting build since new baseline file was created")
+                    }
+                }
                 ERRNO_APPLIED_SUGGESTIONS -> throw RuntimeException("Aborting build since sources were modified to apply quickfixes after compilation")
                 else -> throw IllegalStateException("Internal error: unexpected lint return value $execResult")
             }
+        }
 
         private fun getErrorMessage(android: Boolean, fatalOnly: Boolean) : String = when {
             !android -> """

@@ -44,12 +44,11 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
             plugins {
                     id("com.android.library")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
 
             ${testingElements.getSimpleManifestTransformerTask()}
             android {
-                ${testingElements.addCommonAndroidBuildLogic()}
+                ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.module")}
             }
             androidComponents {
                 onVariants { variant ->
@@ -64,7 +63,7 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
                 }
             }
             """.trimIndent()
-                testingElements.addLibraryManifest("module", this)
+                testingElements.addLibraryManifest(this)
             }
             addModule(":app") {
                 buildFile =

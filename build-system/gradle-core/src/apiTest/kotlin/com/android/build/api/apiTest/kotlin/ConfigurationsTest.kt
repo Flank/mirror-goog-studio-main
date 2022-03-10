@@ -37,10 +37,9 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
                         }
 
                         android {
-                            ${testingElements.addCommonAndroidBuildLogic()}
+                            ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.lib1")}
                         }
                         """.trimIndent()
-                testingElements.addLibraryManifest(libName = "lib1", this)
             }
             addModule(":lib2") {
                 buildFile =
@@ -52,10 +51,9 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
                         }
 
                         android {
-                            ${testingElements.addCommonAndroidBuildLogic()}
+                            ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.lib2")}
                         }
                         """.trimIndent()
-                testingElements.addLibraryManifest(libName = "lib2", this)
             }
             addModule(":app") {
                 buildFile =

@@ -101,12 +101,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             getBuildService(taskCreationServices.buildServiceRegistry)
         )
         this.projectInputs
-            .initializeForStandalone(
-                project,
-                javaConvention,
-                lintOptions,
-                isForAnalysis = false
-            )
+            .initializeForStandalone(project, javaConvention, lintOptions, LintMode.MODEL_WRITING)
         // The artifact produced is only used by lint tasks with checkDependencies=true
         this.variantInputs
             .initializeForStandalone(
@@ -115,7 +110,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
                 taskCreationServices.projectOptions,
                 fatalOnly = false,
                 checkDependencies = true,
-                isForAnalysis = false
+                LintMode.MODEL_WRITING
             )
         this.partialResultsDir = partialResultsDir
         this.partialResultsDirPath = partialResultsDir.absolutePath
@@ -170,12 +165,12 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
 
         override fun configure(task: LintModelWriterTask) {
             super.configure(task)
-            task.projectInputs.initialize(variant, isForAnalysis = false)
+            task.projectInputs.initialize(variant, LintMode.MODEL_WRITING)
             task.variantInputs.initialize(
                 variant,
                 checkDependencies = checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = false,
-                isForAnalysis = false,
+                LintMode.MODEL_WRITING,
                 addBaseModuleLintModel = creationConfig is DynamicFeatureCreationConfig
             )
             task.partialResultsDir =

@@ -51,7 +51,10 @@ interface TestOptions {
      * List of test devices for this project for use with the Unified Test Platform
      *
      * These APIs are experimental and may change without notice.
+     *
+     * [devices] is deprecated, use [managedDevices.devices] to specify Gradle Managed Devices
      */
+    @Deprecated("devices is deprecated in testOptions, use managedDevices.devices instead")
     val devices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<Device>
 
     /**
@@ -62,7 +65,13 @@ interface TestOptions {
      * individual device.
      *
      * These APIs are experimental and may change without notice.
+     *
+     * [deviceGroups] is deprecated, use [managedDevices.groups] to specify groups of
+     * Gradle Managed Devices.
      */
+    @Deprecated(
+        "deviceGroups is deprecated in testOptions, use managedDevices.groups instead"
+    )
     val deviceGroups: NamedDomainObjectContainer<DeviceGroup>
 
     /**

@@ -85,7 +85,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         val method = usageInfo.referenced as? PsiMethod ?: return
-        if (method.returnType == PsiType.VOID || method.isConstructor) {
+        val returnType = method.returnType ?: return
+        if (returnType == PsiType.VOID || method.isConstructor || returnType.canonicalText == "kotlin.Unit") {
             return
         }
 

@@ -274,9 +274,28 @@ class LibraryServiceImpl(
         } else {
             val projectInfo = getProjectInfo(artifact.variant)
 
+            // In general, we do not need to provide the artifact for project dependencies
+            // because on the IDE side we're just going to do a project to project dependency link.
+            // However, there are cases where consumed Java projects have different published
+            // artifacts. This could be done properly via attributes and/or capabilities
+            // (e.g. the test fixtures in a java-library project), but it could also be done
+            // by simply creating a custom artifact tied to a custom configuration. This could be
+            // either tied to a source set or just a random jar task.
+            // In order to resolve this on the IDE, we need to pass some other info so that the
+            // IDE can match this dependency to the proper sourceset of the java project (basically
+            // something similar to attributes/capabilities). Unfortunately the dependency
+            // model coming from Gradle does not contain anything useful.
+            // Because of this we rely on passing the artifact itself, so that we can match it
+            // with the model of the java project which itself has the artifact path for all its
+            // "custom" variants (that don't use attributes/capabilities).
+            val artifactFile = artifact.artifactFile?.takeIf {
+                it.extension == "jar"
+            }
+
             LibraryImpl.createProjectLibrary(
                 stringCache.cacheString(projectInfo.computeKey()),
                 projectInfo,
+                artifactFile = artifactFile,
                 lintJar = artifact.publishedLintJar,
             )
         }

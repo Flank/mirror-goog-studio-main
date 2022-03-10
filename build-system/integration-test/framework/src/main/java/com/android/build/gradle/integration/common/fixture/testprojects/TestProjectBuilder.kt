@@ -274,7 +274,10 @@ interface DependenciesBuilder {
      * @param path the project path
      * @param testFixtures whether the dependency is on the test fixtures of the project.
      */
-    fun project(path: String, testFixtures: Boolean = false): ProjectDependencyBuilder
+    fun project(
+        path: String,
+        testFixtures: Boolean = false,
+        configuration: String? = null): ProjectDependencyBuilder
 
     /**
      * Creates a [ExternalDependencyBuilder] to be passed to [implementation] or any other scope
@@ -298,6 +301,12 @@ interface LocalJarBuilder {
 interface ProjectDependencyBuilder {
     val path: String
     val testFixtures: Boolean
+
+    /**
+     * the configuration that is targeted on the publishing project. This is legacy
+     * for the case that pre-dates variant-aware publishing.
+     */
+    val configuration: String?
 }
 
 interface ExternalDependencyBuilder {

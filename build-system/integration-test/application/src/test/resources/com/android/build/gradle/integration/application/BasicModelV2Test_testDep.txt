@@ -880,7 +880,7 @@
    > libraries:
       > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
          - type               = PROJECT
-         - artifact           = (null)
+         - artifact           = {PROJECT}/build/intermediates/compile_app_classes_jar/debug/classes.jar{!}
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":"

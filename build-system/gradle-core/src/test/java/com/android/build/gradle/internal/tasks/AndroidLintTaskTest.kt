@@ -20,6 +20,7 @@ import com.android.Version
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.lint.AndroidLintTask
+import com.android.build.gradle.internal.lint.LintMode
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
@@ -73,10 +74,13 @@ class AndroidLintTaskTest {
         task.printStackTrace.set(false)
         task.lintTool.lintCacheDirectory.set(temporaryFolder.newFolder())
         task.lintTool.versionKey.set("test-version")
+        task.lintMode.set(LintMode.REPORTING)
+        task.missingBaselineIsEmptyBaseline.set(true)
         val commandLineArguments = task.generateCommandLineArguments().joinToString(" ")
         assertThat(commandLineArguments).contains("--client-id gradle")
         assertThat(commandLineArguments).contains("--client-name AGP")
         assertThat(commandLineArguments)
             .contains("--client-version ${Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+        assertThat(commandLineArguments).contains("--missing-baseline-is-empty-baseline")
     }
 }

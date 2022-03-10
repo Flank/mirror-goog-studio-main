@@ -76,12 +76,15 @@ public class Complication extends WearComponent {
     }
 
     public enum ComplicationType {
+        // These name should match the types from
+        // https://developer.android.com/reference/androidx/wear/watchface/complications/data/ComplicationType
         SHORT_TEXT(3),
         LONG_TEXT(4),
         RANGED_VALUE(5),
-        MONOCHROMATIC_IMAGE(6),
+        ICON(6),
         SMALL_IMAGE(7),
-        PHOTO_IMAGE(8);
+        LARGE_IMAGE(8),
+        NO_DATA(10);
 
         private final int typeValue;
 

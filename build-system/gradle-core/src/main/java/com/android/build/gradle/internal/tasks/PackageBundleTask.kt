@@ -283,10 +283,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             val bundleOptimizations = Config.Optimizations.newBuilder()
                 .setSplitsConfig(splitsConfig)
                 .setUncompressNativeLibraries(uncompressNativeLibrariesConfig)
-
-            parameters.bundleOptions.get().enableStoreArchive?.let {
-                bundleOptimizations.setStoreArchive(Config.StoreArchive.newBuilder().setEnabled(it))
-            }
+                .setStoreArchive(Config.StoreArchive.newBuilder().setEnabled(parameters.bundleOptions.get().enableStoreArchive))
 
             if (parameters.bundleNeedsFusedStandaloneConfig.get()) {
                 bundleOptimizations.setStandaloneConfig(
@@ -455,8 +452,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         @get:Optional
         val defaultDeviceTier: String?,
         @get:Input
-        @get:Optional
-        val enableStoreArchive: Boolean?,
+        val enableStoreArchive: Boolean,
     ) : Serializable
 
     data class AssetPackOptionsForAssetPackBundle(
@@ -649,7 +645,7 @@ private fun com.android.build.api.dsl.Bundle.convert() =
       textureDefaultFormat = texture.defaultFormat,
       enableDeviceTier = deviceTier.enableSplit,
       defaultDeviceTier = deviceTier.defaultTier,
-      enableStoreArchive = storeArchive.enable,
+      enableStoreArchive = storeArchive.enable ?: true,
     )
 
 private fun AssetPackBundleExtension.convert() =
@@ -661,7 +657,7 @@ private fun AssetPackBundleExtension.convert() =
         textureDefaultFormat = texture.defaultFormat,
         enableDeviceTier = deviceTier.enableSplit,
         defaultDeviceTier = deviceTier.defaultTier,
-        enableStoreArchive = null,
+        enableStoreArchive = false,
     )
 
 /**

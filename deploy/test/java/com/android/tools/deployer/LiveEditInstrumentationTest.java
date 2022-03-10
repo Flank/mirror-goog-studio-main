@@ -95,7 +95,10 @@ public class LiveEditInstrumentationTest extends AgentTestBase {
 
         installer.update(request);
         Deploy.LiveEditResponse response = installer.getLiveEditResponse();
-        Assert.assertEquals(Deploy.LiveEditResponse.Status.OK, response.getStatus());
+        Assert.assertEquals(
+                "Got Error Message: " + response.getErrorMessage(),
+                Deploy.LiveEditResponse.Status.OK,
+                response.getStatus());
 
         Assert.assertTrue(
                 android.waitForInput("invalidateGroupsWithKey(1122)", RETURN_VALUE_TIMEOUT));

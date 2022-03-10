@@ -226,8 +226,7 @@ private fun registerD8BackportedMethodsTransform(
             parameters.d8Version.set(d8Version)
 
             if (coreLibDesugar) {
-                parameters.coreLibDesugarConfig.set(
-                    getDesugarLibConfig(project).forUseAtConfigurationTime())
+                parameters.coreLibDesugarConfig.set(getDesugarLibConfig(project))
                 parameters.bootclasspath.from(bootclasspath)
             }
         }

@@ -160,7 +160,9 @@ public class LiveUpdateDeployer {
         requestBuilder.addAllProcessIds(pids);
         requestBuilder.setArch(arch);
         requestBuilder.setPackageName(packageName);
-
+        requestBuilder.setComposable(param.isComposable);
+        requestBuilder.setStartOffset(param.startOffSet);
+        requestBuilder.setEndOffset(param.endOffSet);
         requestBuilder.setTargetClass(
                 Deploy.LiveEditClass.newBuilder()
                         .setClassName(param.className)

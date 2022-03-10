@@ -19,24 +19,33 @@ package com.android.build.gradle.internal
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import java.io.File
-import java.lang.RuntimeException
 import java.nio.file.Files.readAllLines
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 
 private const val EMULATOR_EXECUTABLE = "emulator"
-private const val SNAPSHOT_CHECK_TIMEOUT_SEC = 600L
-private const val WAIT_AFTER_BOOT_MS = 60000L
-private const val DEVICE_BOOT_TIMEOUT_SEC = 600L
+private const val DEFAULT_DEVICE_BOOT_AND_SNAPSHOT_CHECK_TIMEOUT_SEC = 600L
 private const val ADB_TIMEOUT_SEC = 60L
+
+// This is an extra wait time after the AVD boot completed before taking system snapshot image
+// for stability.
+private const val WAIT_AFTER_BOOT_MS = 5000L
+
 private const val MINIMUM_MAJOR_VERSION = 30
 private const val MINIMUM_MINOR_VERSION = 6
 private const val MINIMUM_MICRO_VERSION = 4
 
+/**
+ * @param deviceBootAndSnapshotCheckTimeoutSec a timeout duration in minute for AVD device to boot
+ * and for snapshot to be created. If null, the default value (10 minutes) is used. If zero or
+ * negative value is passed, it waits infinitely.
+ */
 class AvdSnapshotHandler(
     private val showEmulatorKernelLogging: Boolean,
+    private val deviceBootAndSnapshotCheckTimeoutSec: Int?,
     private val processFactory: (List<String>) -> ProcessBuilder = { ProcessBuilder(it) }) {
     /**
      * Checks whether the emulator directory contains a valid emulator executable, and returns it.
@@ -84,6 +93,7 @@ class AvdSnapshotHandler(
                 "@$avdName",
                 "-no-window",
                 "-no-boot-anim",
+                "-no-audio",
                 "-verbose".takeIf { showEmulatorKernelLogging },
                 "-show-kernel".takeIf { showEmulatorKernelLogging },
                 "-gpu",
@@ -114,14 +124,26 @@ class AvdSnapshotHandler(
                     override fun err(line: String?) {}
                 }
             )
-            if (!process.waitFor(SNAPSHOT_CHECK_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-                process.destroy()
-            }
         } catch (e: Exception) {
             process.destroy()
             throw RuntimeException(e)
         }
         return success
+    }
+
+    private fun Process.waitUntilTimeout(logger: ILogger, onTimeout: () -> Unit) {
+        val timeoutSec =
+            deviceBootAndSnapshotCheckTimeoutSec?.toLong() ?:
+            DEFAULT_DEVICE_BOOT_AND_SNAPSHOT_CHECK_TIMEOUT_SEC
+        if (timeoutSec > 0) {
+            logger.verbose("Waiting for a process to complete (timeout $timeoutSec seconds)")
+            if (!waitFor(timeoutSec, TimeUnit.SECONDS)) {
+                onTimeout()
+            }
+        } else {
+            logger.verbose("Waiting for a process to complete (no timeout)")
+            waitFor()
+        }
     }
 
     /**
@@ -161,9 +183,46 @@ class AvdSnapshotHandler(
         )
         processBuilder.environment()["ANDROID_AVD_HOME"] = avdLocation.absolutePath
         val process = processBuilder.start()
-        var bootCompleted = false
-
+        val bootCompleted = AtomicBoolean(false)
         try {
+            Thread {
+                lateinit var emulatorSerial: String
+                while(process.isAlive) {
+                    try {
+                        emulatorSerial = findDeviceSerialWithId(adbExecutable, deviceId)
+                        break
+                    } catch (e: Exception) {
+                        logger.verbose("Waiting for $avdName to be attached to adb.")
+                    }
+                    Thread.sleep(5000)
+                }
+                logger.verbose("$avdName is attached to adb ($emulatorSerial).")
+
+                while(process.isAlive) {
+                    if (isBootCompleted(emulatorSerial, adbExecutable, logger)) {
+                        break
+                    }
+                    logger.verbose("Waiting for $avdName to boot up.")
+                    Thread.sleep(5000)
+                }
+                logger.verbose("Booting $avdName is completed.")
+
+                while(process.isAlive) {
+                    if (isPackageManagerStarted(emulatorSerial, adbExecutable)) {
+                        break
+                    }
+                    logger.verbose("Waiting for PackageManager to be ready on $avdName.")
+                    Thread.sleep(5000)
+                }
+                logger.verbose("PackageManager is ready on $avdName.")
+
+                if (process.isAlive) {
+                    bootCompleted.set(true)
+                    Thread.sleep(WAIT_AFTER_BOOT_MS)
+                    killDevice(adbExecutable, emulatorSerial)
+                }
+            }.start()
+
             GrabProcessOutput.grabProcessOutput(
                 process,
                 GrabProcessOutput.Wait.ASYNC,
@@ -171,21 +230,15 @@ class AvdSnapshotHandler(
                     override fun out(line: String?) {
                         line ?: return
                         logger.verbose(line)
-                        if (line.contains("boot completed")) {
-                            bootCompleted = true
-                            Thread.sleep(WAIT_AFTER_BOOT_MS)
-                            closeEmulatorWithId(adbExecutable, process, deviceId, logger)
-                        }
                     }
 
                     override fun err(line: String?) {
-                        if (!line.isNullOrBlank()) {
-                            logger.info(line)
-                        }
+                        line ?: return
+                        logger.verbose(line)
                     }
                 }
             )
-            if (!process.waitFor(DEVICE_BOOT_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+            process.waitUntilTimeout(logger) {
                 logger.verbose("Snapshot creation timed out. Closing emulator.")
                 closeEmulatorWithId(adbExecutable, process, deviceId, logger)
                 process.waitFor()
@@ -196,7 +249,7 @@ class AvdSnapshotHandler(
                     fewer shards.
                 """.trimIndent())
             }
-            if (!bootCompleted) {
+            if (!bootCompleted.get()) {
                 error("""
                     Gradle was not able to complete device setup for: $avdName
                     The emulator failed to open the managed device to generate the snapshot.
@@ -210,6 +263,78 @@ class AvdSnapshotHandler(
             process.waitFor()
             throw e
         }
+    }
+
+    private fun isBootCompleted(emulatorSerial: String, adbExecutable: File, logger: ILogger): Boolean {
+        val bootCompleted = AtomicBoolean(false)
+        getDeviceProperty("sys.boot_completed", emulatorSerial, adbExecutable) {
+            if (it.toIntOrNull() == 1) {
+                logger.info("sys.boot_completed=1")
+                bootCompleted.set(true)
+            }
+        }
+        if (bootCompleted.get()) {
+            return true
+        }
+
+        getDeviceProperty("dev.bootcomplete", emulatorSerial, adbExecutable) {
+            if (it.toIntOrNull() == 1) {
+                logger.info("dev.bootcomplete=1")
+                bootCompleted.set(true)
+            }
+        }
+        return bootCompleted.get()
+    }
+
+    private fun isPackageManagerStarted(emulatorSerial: String, adbExecutable: File): Boolean {
+        val result = AtomicBoolean(false)
+        runAdbShell(emulatorSerial, adbExecutable, listOf("/system/bin/pm", "path", "android")) {
+            if (it.contains("package:")) {
+                result.set(true)
+            }
+        }
+        return result.get()
+    }
+
+    private fun getDeviceProperty(
+        propertyName: String,
+        emulatorSerial: String,
+        adbExecutable: File,
+        stdoutTextProcessor: (String)->Unit) {
+        runAdbShell(
+            emulatorSerial,
+            adbExecutable,
+            listOf("getprop", propertyName),
+            stdoutTextProcessor
+        )
+    }
+
+    private fun runAdbShell(
+        emulatorSerial: String,
+        adbExecutable: File,
+        shellCommandArgs: List<String>,
+        stdoutTextProcessor: (String)->Unit) {
+        val getPropProcess = processFactory(
+            listOf(
+                adbExecutable.absolutePath,
+                "-s",
+                emulatorSerial,
+                "shell",
+            ) + shellCommandArgs
+        ).start()
+
+        GrabProcessOutput.grabProcessOutput(
+            getPropProcess,
+            GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
+            object : GrabProcessOutput.IProcessOutput {
+                override fun out(line: String?) {
+                    line ?: return
+                    stdoutTextProcessor(line.trim())
+                }
+
+                override fun err(line: String?) {}
+            }
+        )
     }
 
     /**

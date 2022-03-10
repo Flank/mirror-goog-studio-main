@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.integration.resources
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
@@ -41,13 +39,6 @@ class LibraryNoPrecompiledResourcesTest {
         )
         .withFile("src/main/java/test/Data.java",
             "package test; public class Data {}")
-        .withFile(
-            "src/main/AndroidManifest.xml",
-            """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.test.localLib" >
-                </manifest>""".trimIndent()
-        )
 
     private val app = MinimalSubProject.app("com.example.app")
         .appendToBuild(
@@ -86,8 +77,7 @@ class LibraryNoPrecompiledResourcesTest {
         .withFile(
             "src/main/AndroidManifest.xml",
             """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.example.app" >
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="app_name" android:icon="@mipmap/ic_launcher">
                         <activity android:name="MainActivity"
                                   android:label="app_name">

@@ -15,8 +15,10 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.utils.SdkUtils
+import com.android.tools.lint.detector.api.Project
+import com.android.utils.SdkUtils.urlToFile
 import com.google.common.annotations.VisibleForTesting
+import org.jetbrains.annotations.TestOnly
 import java.io.File
 import java.io.IOException
 import java.net.JarURLConnection
@@ -78,11 +80,40 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
 
     companion object {
         /**
-         * Checks whether the method for the given [owner], [name] and
-         * internal [desc] string is desugared.
+         * Checks whether the method for the given [owner], [name]
+         * and internal [desc] string is desugared. If [project] is
+         * not null, provides the surrounding context for the lookup
+         * (which should take into account build system configuration
+         * like which version of d8/r8 is used and the corresponding
+         * desugaring list.)
          */
-        fun isDesugared(owner: String, name: String, desc: String): Boolean {
-            return lookup.isDesugared(owner, name, desc)
+        fun isDesugared(owner: String, name: String, desc: String, project: Project? = null): Boolean {
+            return getLookup(project).isDesugared(owner, name, desc)
+        }
+
+        /**
+         * Looks up the [DesugaredMethodLookup] instance to use for
+         * analysis in the given project, or if null (or if dealing with
+         * an older project definition not specifying desugaring files),
+         * falls back to the default.
+         */
+        private fun getLookup(project: Project?): DesugaredMethodLookup {
+            if (project != null) {
+                val model = project.buildVariant
+                if (model != null) {
+                    val desugaredMethodsFiles = model.desugaredMethodsFiles
+                    if (desugaredMethodsFiles.isNotEmpty()) { // otherwise talking to older version of AGP
+                        val lookup = project.getClientProperty<DesugaredMethodLookup>(DesugaredMethodLookup::class.java)
+                        if (lookup != null) {
+                            return lookup
+                        }
+                        val newLookup = createDesugaredMethodLookup(desugaredMethodsFiles)
+                        project.putClientProperty(DesugaredMethodLookup::class.java, newLookup)
+                        return newLookup
+                    }
+                }
+            }
+            return lookup
         }
 
         /**
@@ -108,7 +139,7 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
                         }
                     } else {
                         val file = if (path.startsWith("file:")) {
-                            SdkUtils.urlToFile(URL(path))
+                            urlToFile(URL(path))
                         } else {
                             File(path)
                         }
@@ -135,10 +166,33 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
         }
 
         /**
+         * Creates a new [DesugaredMethodLookup] for the given
+         * collection of files.
+         */
+        private fun createDesugaredMethodLookup(files: Collection<File>): DesugaredMethodLookup {
+            assert(files.isNotEmpty())
+            val lines = ArrayList<String>(1024)
+            for (file in files) {
+                file.forEachLine {
+                    if (it.isNotBlank()) {
+                        lines.add(it)
+                    }
+                }
+            }
+            lines.sort()
+
+            // make sure the files aren't Windows line separator encoded or that the line sequence methods handles it gracefully
+            assert(lines.isNotEmpty() && !lines[0].endsWith('\r'))
+
+            return DesugaredMethodLookup(lines.toTypedArray())
+        }
+
+        /**
          * Returns the lookup to the default state. This is temporary;
          * once we switch to this being initialized from the lint model
          * there will be no static state here.
          */
+        @TestOnly
         fun reset() {
             lookup = DesugaredMethodLookup(defaultDesugaredMethods)
         }

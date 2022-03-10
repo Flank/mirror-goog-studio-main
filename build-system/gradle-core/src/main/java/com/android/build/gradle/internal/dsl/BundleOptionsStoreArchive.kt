@@ -16,6 +16,6 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.StoreArchive
+import com.android.build.api.dsl.BundleStoreArchive
 
-abstract class BundleOptionsStoreArchive : StoreArchive
+abstract class BundleOptionsStoreArchive : BundleStoreArchive

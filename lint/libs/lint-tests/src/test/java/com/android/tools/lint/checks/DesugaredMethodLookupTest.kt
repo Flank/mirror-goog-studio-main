@@ -16,15 +16,18 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.infrastructure.TestFiles
-import com.android.utils.SdkUtils
+import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.SdkUtils.fileToUrl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.mock
 import java.io.File
 import kotlin.test.assertNotEquals
+import org.mockito.Mockito.`when` as whenCalling
 
 class DesugaredMethodLookupTest {
     @Test
@@ -103,7 +106,7 @@ class DesugaredMethodLookupTest {
         // Test file URL paths
         file1.writeText(desc1 + desc2)
         try {
-            assertNull(DesugaredMethodLookup.setDesugaredMethods(listOf(SdkUtils.fileToUrl(file1).toExternalForm())))
+            assertNull(DesugaredMethodLookup.setDesugaredMethods(listOf(fileToUrl(file1).toExternalForm())))
             check()
         } finally {
             DesugaredMethodLookup.reset()
@@ -127,5 +130,41 @@ class DesugaredMethodLookupTest {
         file1.delete()
         val missingFile = file1.path
         assertEquals(missingFile, DesugaredMethodLookup.setDesugaredMethods(listOf(missingFile)))
+    }
+
+    @Test
+    fun testDesugaringFromModel() {
+        val desc1 =
+            "" +
+                "abc/def/GHI\$JKL#abc(III)Z\n" +
+                "def/gh/IJ\n"
+        val desc2 =
+            "" +
+                "g/hijk/l/MN#op\n" +
+                "hij/kl/mn/O#pQr()Z\n"
+
+        val file1 = File.createTempFile("desc1", ".txt").apply { writeText(desc1) }
+        val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }
+        val project = mock(Project::class.java)
+        val variant = mock(LintModelVariant::class.java)
+        whenCalling(project.buildVariant).thenReturn(variant)
+        whenCalling(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
+        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", project))
+        assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", project))
+        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)", project))
+        assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()", project))
+        // Make sure we're *NOT* picking up metadata from the fallback list
+        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", project))
+
+        // Make sure we handle missing desugared-metadata gracefully
+        whenCalling(variant.desugaredMethodsFiles).thenReturn(null)
+        val project2 = mock(Project::class.java)
+        val variant2 = mock(LintModelVariant::class.java)
+        whenCalling(project2.buildVariant).thenReturn(variant2)
+        whenCalling(variant2.desugaredMethodsFiles).thenReturn(emptyList())
+        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", project2))
+        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", project2))
+        // make sure we're picking up the defaults in that case
+        assertTrue(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", project2))
     }
 }

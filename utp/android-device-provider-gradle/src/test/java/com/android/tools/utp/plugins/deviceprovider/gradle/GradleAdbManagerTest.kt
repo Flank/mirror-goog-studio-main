@@ -16,6 +16,7 @@
 
 package com.android.tools.utp.plugins.deviceprovider.gradle
 
+import com.android.testutils.MockitoKt.eq
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.lib.process.Handle
 import com.google.testing.platform.lib.process.Subprocess
@@ -129,11 +130,18 @@ class GradleAdbManagerTest {
     @Test
     fun isBootLoaded_allCases() {
         // Successful boot
-        setAdbOutput(listOf("1"))
+        setBootStates(sysBootCompleted = true, packageManagerRunning = true)
+        assertThat(adbManager.isBootLoaded("emulator-5554")).isTrue()
+
+        setBootStates(devBootComplete = true, packageManagerRunning = true)
         assertThat(adbManager.isBootLoaded("emulator-5554")).isTrue()
 
         // Not booted yet
-        setAdbOutput(listOf("0"))
+        setBootStates()
+        assertThat(adbManager.isBootLoaded("emulator-5554")).isFalse()
+
+        // Booted but package manager hasn't started yet.
+        setBootStates(sysBootCompleted = true)
         assertThat(adbManager.isBootLoaded("emulator-5554")).isFalse()
 
         // Device disconnected
@@ -141,10 +149,26 @@ class GradleAdbManagerTest {
         assertThat(adbManager.isBootLoaded("emulator-5554")).isFalse()
     }
 
-    private fun setAdbOutput(output: List<String>) {
+    private fun setBootStates(
+        sysBootCompleted: Boolean = false,
+        devBootComplete: Boolean = false,
+        packageManagerRunning: Boolean = false,
+    ) {
+        setAdbOutput(
+            listOf(if (sysBootCompleted) "1" else "0"),
+            eq(listOf(adbPath, "-s", "emulator-5554", "shell", "getprop", "sys.boot_completed")))
+        setAdbOutput(
+            listOf(if (devBootComplete) "1" else "0"),
+            eq(listOf(adbPath, "-s", "emulator-5554", "shell", "getprop", "dev.bootcomplete")))
+        setAdbOutput(
+            listOf(if (packageManagerRunning) "package:" else ""),
+            eq(listOf(adbPath, "-s", "emulator-5554", "shell", "/system/bin/pm", "path", "android")))
+    }
+
+    private fun setAdbOutput(output: List<String>, args: List<String> = anyList()) {
         `when`(
                 subprocess.executeAsync(
-                        anyList(),
+                        args,
                         anyMap(),
                         nullable(),
                         nullable()

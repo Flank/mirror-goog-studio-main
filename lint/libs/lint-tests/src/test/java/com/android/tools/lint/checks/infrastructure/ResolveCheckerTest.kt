@@ -51,7 +51,7 @@ class ResolveCheckerTest {
         } catch (e: Throwable) {
             assertEquals(
                 """
-                app/src/test/pkg/Test.kt:4: Error:
+                src/test/pkg/Test.kt:4: Error:
                 Couldn't resolve this import [LintError]
                                     import invalid.Cls // ERROR
                                            ~~~~~~~~~~~
@@ -98,7 +98,7 @@ class ResolveCheckerTest {
         } catch (e: Throwable) {
             assertEquals(
                 """
-                app/src/test/pkg/Test.java:6: Error:
+                src/test/pkg/Test.java:6: Error:
                 Couldn't resolve this reference [LintError]
                                             Object o2 = MenuItem.SHOW_AS_ACTION_ALWAYS; // ERROR
                                                                  ~~~~~~~~~~~~~~~~~~~~~
@@ -143,7 +143,7 @@ class ResolveCheckerTest {
         } catch (e: Throwable) {
             assertEquals(
                 """
-                app/src/test/pkg/test.kt:5: Error:
+                src/test/pkg/test.kt:5: Error:
                 Couldn't resolve this call [LintError]
                                         android.widget.Toast.makeText() // OK
                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

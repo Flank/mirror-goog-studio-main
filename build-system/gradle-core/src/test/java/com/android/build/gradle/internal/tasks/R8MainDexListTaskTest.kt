@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
-import com.android.builder.dexing.ProguardOutputFiles
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -147,8 +146,6 @@ fun runR8(
     featureDexDir: File? = null,
     featureJavaResourceOutputDir: File?
 ) {
-
-
     val proguardConfigurations: MutableList<String> = mutableListOf(
         "-ignorewarnings")
 
@@ -169,21 +166,18 @@ fun runR8(
         inputProguardMapping = null,
         proguardConfigurationFiles = listOf(),
         proguardConfigurations = proguardConfigurations,
-        variantType = VariantTypeImpl.BASE_APK,
-        messageReceiver = NoOpMessageReceiver(),
+        isAar = VariantTypeImpl.BASE_APK.isAar,
+        errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
         dexingType = dexingType,
         useFullR8 = false,
         referencedInputs = referencedInputs,
         classes = classes,
         resources = resources,
-        proguardOutputFiles =
-            ProguardOutputFiles(
-                mappingFile.toPath(),
-                proguardOutputDir.resolve("seeds.txt").toPath(),
-                proguardOutputDir.resolve("usage.txt").toPath(),
-                proguardOutputDir.resolve("configuration.txt").toPath(),
-                proguardOutputDir.resolve("missing_rules.txt").toPath(),
-            ),
+        mappingFile = mappingFile,
+        proguardSeedsOutput = proguardOutputDir.resolve("seeds.txt"),
+        proguardUsageOutput = proguardOutputDir.resolve("usage.txt"),
+        proguardConfigurationOutput = proguardOutputDir.resolve("configuration.txt"),
+        missingKeepRulesOutput = proguardOutputDir.resolve("missing_rules.txt"),
         output = output,
         outputResources = outputDir.resolve("java_res.jar").toFile(),
         mainDexListOutput = null,

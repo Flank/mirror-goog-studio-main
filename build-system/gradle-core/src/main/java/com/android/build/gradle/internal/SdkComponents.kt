@@ -87,16 +87,16 @@ abstract class SdkComponentsBuildService @Inject constructor(
         SdkLocationSourceSet(parameters.projectRootDir.get().asFile)
     }
 
-    class Environment(providerFactory: ProviderFactory): SdkLibDataFactory.Environment() {
+    class Environment: SdkLibDataFactory.Environment() {
         private val systemProperties = SystemProperty.values().associate {
-            it to providerFactory.systemProperty(it.key).forUseAtConfigurationTime().orNull
+            it to System.getProperty(it.key)
         }
         override fun getSystemProperty(property: SystemProperty): String? {
             return systemProperties[property]
         }
     }
 
-    val environment = Environment(providerFactory)
+    val environment = Environment()
 
     // Trick to not initialize the sdkHandler just to call unload() on it. Using the Delegate
     // allows to test wether or not the [SdkHandler] has been initialized.

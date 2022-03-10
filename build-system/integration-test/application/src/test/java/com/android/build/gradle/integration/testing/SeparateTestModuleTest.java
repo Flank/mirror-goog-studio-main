@@ -177,8 +177,7 @@ public class SeparateTestModuleTest {
         FileUtils.deleteIfExists(testProject.file("src/main/AndroidManifest.xml"));
         String manifestContent =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "      package=\"com.android.tests.basic.test\">\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
                         + "      <instrumentation android:name=\"android.test.InstrumentationTestRunner\"\n"
                         + "                       android:targetPackage=\"com.android.tests.basic\"\n"
                         + "                       android:handleProfiling=\"false\"\n"

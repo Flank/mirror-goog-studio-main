@@ -99,8 +99,11 @@ final class ConnectionHandler implements Runnable {
                                             request.mTargetDevice,
                                             request.mArguments);
                         } else {
-                            sendFailWithReason(
-                                    "Unimplemented host command received: " + request.mCommand);
+                            String err =
+                                    String.format(
+                                            "Unimplemented host command received: '%s'",
+                                            request.mCommand);
+                            sendFailWithReason(err);
                         }
                     }
                 } else {
@@ -120,8 +123,11 @@ final class ConnectionHandler implements Runnable {
                             return;
                         }
                     }
-                    sendFailWithReason(
-                            "Command not handled [" + request.mCommand + "] " + request.mArguments);
+                    String err =
+                            String.format(
+                                    "Command not handled '%s' '%s'",
+                                    request.mCommand, request.mArguments);
+                    sendFailWithReason(err);
                     // If we receive an unknown command, exit the loop
                     return;
                 }
@@ -152,7 +158,8 @@ final class ConnectionHandler implements Runnable {
 
         String[] splitPayload = payload.split(":", 2);
         if (splitPayload.length < 2) {
-            sendFailWithReason("Invalid host command: " + payload);
+            String err = String.format("Invalid host command: '%s'", payload);
+            sendFailWithReason(err);
             return null;
         }
 
@@ -195,7 +202,10 @@ final class ConnectionHandler implements Runnable {
                                                     DeviceState.HostConnectionType.USB));
                             break;
                         default:
-                            sendFailWithReason("Invalid command specified in payload: " + payload);
+                            String err =
+                                    String.format(
+                                            "Invalid command specified in payload: '%s'", payload);
+                            sendFailWithReason(err);
                             return null;
                     }
 
@@ -226,7 +236,8 @@ final class ConnectionHandler implements Runnable {
                 device = findDeviceWithSerial(serial);
                 break;
             default:
-                sendFailWithReason("Invalid transport specified in payload: " + payload);
+                String err = String.format("Invalid transport specified in payload: '%s'", payload);
+                sendFailWithReason(err);
                 return null;
         }
 
@@ -275,7 +286,7 @@ final class ConnectionHandler implements Runnable {
                     .filter(streamDevice -> serial.equals(streamDevice.getDeviceId()))
                     .findAny();
             if (!streamResult.isPresent()) {
-                sendFailWithReason("No device with serial: " + serial + " is connected.");
+                sendFailWithReason("No device with serial: '" + serial + "' is connected.");
                 return null;
             }
             return streamResult.get();
@@ -299,7 +310,8 @@ final class ConnectionHandler implements Runnable {
         String[] splitPayload =
                 payload.equals("track-jdwp") ? new String[] {payload, ""} : payload.split(":", 2);
         if (splitPayload.length < 2) {
-            sendFailWithReason("Invalid host command: " + payload);
+            String err = String.format("Invalid host command: '%s'", payload);
+            sendFailWithReason(err);
             return null;
         }
 

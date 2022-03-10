@@ -32,8 +32,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
                 manifest =
                         // language=xml
                     """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.android.build.example.minimal">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="Minimal">
                         <activity android:name="${"$"}{MyName}">
                             <intent-filter>
@@ -110,8 +109,7 @@ known at configuration time.
                 manifest =
                         // language=xml
                     """<?xml version="1.0" encoding="utf-8"?>
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="com.android.build.example.minimal">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                     <application android:label="Minimal">
                         <activity android:name="${"$"}{MyName}">
                             <intent-filter>

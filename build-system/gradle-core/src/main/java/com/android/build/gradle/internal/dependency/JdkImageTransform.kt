@@ -103,7 +103,7 @@ fun getJdkImageFromTransform(
                 ArtifactAttributes.ARTIFACT_FORMAT,
                 ANDROID_JDK_IMAGE
             )
-            it.attribute(ATTR_JDK_ID, getJdkId(project, javaCompiler))
+            it.attribute(ATTR_JDK_ID, getJdkId(javaCompiler))
         }
     }.artifacts.artifactFiles
 }
@@ -122,26 +122,25 @@ private fun registerJdkImageTransform(project: Project, javaCompiler: JavaCompil
         spec.from.attribute(ArtifactAttributes.ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.JAR.type)
         spec.to.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ANDROID_JDK_IMAGE)
         spec.parameters.projectName.setDisallowChanges(project.name)
-        spec.parameters.jdkId.setDisallowChanges(getJdkId(project, javaCompiler))
-        spec.parameters.javaHome.setDisallowChanges(getJavaHome(project, javaCompiler))
+        spec.parameters.jdkId.setDisallowChanges(getJdkId(javaCompiler))
+        spec.parameters.javaHome.setDisallowChanges(getJavaHome(javaCompiler))
     }
 
     extraProperties.set(JDK_IMAGE_TRANSFORM_REGISTERER, true)
 }
 
-private fun getJavaHome(project: Project, javaCompiler: JavaCompiler?): File {
+private fun getJavaHome(javaCompiler: JavaCompiler?): File {
     if (javaCompiler != null) {
         return javaCompiler.metadata.installationPath.asFile
     }
-    return File(project.providers.systemProperty("java.home").forUseAtConfigurationTime().get())
+    return File(System.getProperty("java.home"))
 }
 
-private fun getJdkId(project: Project, javaCompiler: JavaCompiler?): String {
+private fun getJdkId(javaCompiler: JavaCompiler?): String {
     if (javaCompiler != null) {
         return javaCompiler.metadata.jvmVersion + javaCompiler.metadata.vendor
     }
-    return project.providers.systemProperty("java.version").forUseAtConfigurationTime().get() +
-        project.providers.systemProperty("java.vendor").forUseAtConfigurationTime().get()
+    return System.getProperty("java.version") + System.getProperty("java.vendor")
 }
 
 private const val JDK_IMAGE_TRANSFORM_REGISTERER = "android.agp.jdk.image.transform.registered"

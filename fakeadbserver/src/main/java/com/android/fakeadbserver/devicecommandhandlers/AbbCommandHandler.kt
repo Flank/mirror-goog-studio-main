@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,42 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.fakeadbserver.hostcommandhandlers
+package com.android.fakeadbserver.devicecommandhandlers
 
-import com.android.fakeadbserver.CommandHandler
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
+import com.android.fakeadbserver.shellv2commandhandlers.ShellV2Protocol
 import java.io.IOException
 import java.net.Socket
 
-class AbbCommandHandler : HostCommandHandler() {
+class AbbCommandHandler : DeviceCommandHandler(COMMAND) {
   companion object {
     const val COMMAND = "abb"
+    const val SEPARATOR = "\u0000"
   }
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState?, args: String): Boolean {
+  override fun invoke(
+      fakeAdbServer: FakeAdbServer,
+      socket: Socket,
+      device: DeviceState,
+      args: String
+  ) {
     try {
-      val output = respSocket.getOutputStream()
+        val protocol = ShellV2Protocol(socket)
+        protocol.writeOkay()
 
-      CommandHandler.writeOkay(output)
+        val response: String = when {
+            args.startsWith("package${SEPARATOR}install-create") -> installMultiple()
+            args.startsWith("package${SEPARATOR}install-commit") -> installCommit()
+            else -> ""
+        }
 
-      val response: String = when {
-        args.startsWith("package install-create") -> installMultiple()
-        args.startsWith("package install-commit") -> installCommit()
-        else -> ""
-      }
-
-      CommandHandler.writeString(output, response)
+      protocol.writeStdout(response.toByteArray())
+      protocol.writeExitCode(0)
     } catch(ignored: IOException) {
     }
-
-    return false
   }
 
   /**
    * Handler for commands that look like:
    *
-   *    adb abb package install-create -r -t --ephemeral -S 1298948
+   *    adb abb package install-multiple -r -t -S 1234
    */
   private fun installMultiple(): String {
     return "Success: created install session [1234]"
@@ -57,7 +61,7 @@ class AbbCommandHandler : HostCommandHandler() {
   /**
    * handler for commands that look like:
    *
-   *    adb abb package install-commit 538681231
+   *    adb abb package install-commit XXXXX
    */
   private fun installCommit(): String {
     return "Success\n"

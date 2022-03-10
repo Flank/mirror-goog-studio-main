@@ -25,5 +25,6 @@ enum class ProjectType {
     APPLICATION,
     LIBRARY,
     DYNAMIC_FEATURE,
-    TEST
+    TEST,
+    FUSED_LIBRARIES
 }

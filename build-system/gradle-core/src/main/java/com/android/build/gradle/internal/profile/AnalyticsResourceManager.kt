@@ -291,10 +291,10 @@ class AnalyticsResourceManager constructor(
         }
 
         profileBuilder
-            .setOsName(getSystemProperty(providers,"os.name"))
-            .setOsVersion(getSystemProperty(providers,"os.version"))
-            .setJavaVersion(getSystemProperty(providers,"java.version"))
-            .setJavaVmVersion(getSystemProperty(providers,"java.vm.version"))
+            .setOsName(getSystemProperty("os.name"))
+            .setOsVersion(getSystemProperty("os.version"))
+            .setJavaVersion(getSystemProperty("java.version"))
+            .setJavaVmVersion(getSystemProperty("java.vm.version"))
             .setMaxMemory(Runtime.getRuntime().maxMemory())
             .setGradleVersion(project.gradle.gradleVersion)
 
@@ -402,15 +402,8 @@ class AnalyticsResourceManager constructor(
         }
     }
 
-    private fun getSystemProperty(
-        providerFactory: ProviderFactory,
-        propertyName: String
-    ): String {
-        return providerFactory
-            .systemProperty(propertyName)
-            .forUseAtConfigurationTime()
-            .orElse("")
-            .get()
+    private fun getSystemProperty(propertyName: String): String {
+        return System.getProperty(propertyName) ?: ""
     }
 
     private fun getFinalProfile() : GradleBuildProfile {

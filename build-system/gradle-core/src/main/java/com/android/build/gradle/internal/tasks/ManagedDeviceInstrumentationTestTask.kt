@@ -53,6 +53,7 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.model.TestOptions
 import com.android.repository.Revision
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions
 import java.io.File
 import java.util.logging.Level
@@ -165,7 +166,10 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
     private var shouldIgnore: Boolean = false
 
     // For analytics only
-    private lateinit var dependencies: ArtifactCollection
+    @get: Internal
+    @get: VisibleForTesting
+    lateinit var dependencies: ArtifactCollection
+        private set
 
     @get: Input
     abstract val deviceName: Property<String>
@@ -232,7 +236,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
     @OutputDirectory
     abstract fun getAdditionalTestOutputDir(): DirectoryProperty
 
-    override fun doTaskAction() {
+    public override fun doTaskAction() {
         val emulatorProvider = avdComponents.get().emulatorDirectory
         Preconditions.checkArgument(
                 emulatorProvider.isPresent(),
@@ -390,6 +394,17 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
 
             task.deviceName.setDisallowChanges(device.name)
             task.avdName.setDisallowChanges(computeAvdName(device))
+
+            if (device.apiLevel <= 26 &&
+                !projectOptions[BooleanOption.GRADLE_MANAGED_DEVICE_ALLOW_OLD_API_LEVEL_DEVICES]) {
+                throw GradleException("""
+                    API level 26 and lower is currently not supported for Gradle Managed devices.
+                    Your current configuration requires API level ${device.apiLevel}.
+                    While it's not recommended, you can use API levels 26 and lower by adding
+                    android.experimental.testOptions.managedDevices.allowOldApiLevelDevices=true
+                    to your gradle.properties file.
+                """.trimIndent())
+            }
 
             task.apiLevel.setDisallowChanges(device.apiLevel)
             task.abi.setDisallowChanges(computeAbiFromArchitecture(device))

@@ -30,7 +30,7 @@ import java.util.UUID
 abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
     protected val project: Project,
     private val buildServiceClass: Class<ServiceT>,
-    private val maxParalleUsages: Int? = null
+    private val maxParallelUsages: Int? = null
 ) where ServiceT : BuildService<ParamsT>, ParamsT : BuildServiceParameters {
     open fun execute(): Provider<ServiceT> {
         return project.gradle.sharedServices.registerIfAbsent(
@@ -38,7 +38,7 @@ abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
             buildServiceClass
         ) { buildServiceSpec ->
             buildServiceSpec.parameters?.let { params -> configure(params) }
-            maxParalleUsages?.let { buildServiceSpec.maxParallelUsages.set(it) }
+            maxParallelUsages?.let { buildServiceSpec.maxParallelUsages.set(it) }
         }
     }
 

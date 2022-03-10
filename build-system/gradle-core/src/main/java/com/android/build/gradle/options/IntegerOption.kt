@@ -70,6 +70,11 @@ enum class IntegerOption(
     AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize", ApiStage.Experimental),
 
     /**
+     * Max number of R8 workers to run at once
+     */
+    R8_MAX_WORKERS("android.r8.maxWorkers", ApiStage.Experimental),
+
+    /**
      * Flags for Android Test Retention
      * >=1: enable Android Test Retention and set it as maximum number of snapshots.
      * 0: disable Android Test Retention.
@@ -81,6 +86,12 @@ enum class IntegerOption(
      * The number of shards ran on Managed Devices during testing.
      */
     MANAGED_DEVICE_SHARD_POOL_SIZE("android.experimental.androidTest.numManagedDeviceShards", ApiStage.Experimental),
+
+    /**
+     * The timeout duration in minute for Gradle Managed Device setup steps (booting AVD and creating snapshot image)
+     * If the value is 0 or negative value, it will never time out.
+     */
+    GRADLE_MANAGED_DEVICE_SETUP_TIMEOUT_MINUTES("android.experimental.testOptions.managedDevices.setupTimeoutMinutes", ApiStage.Experimental),
 
     /* ------------
      * REMOVED APIS

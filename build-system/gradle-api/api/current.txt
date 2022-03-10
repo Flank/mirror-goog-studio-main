@@ -624,10 +624,10 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public com.android.build.api.dsl.BundleDeviceTier getDeviceTier();
     method @org.gradle.api.Incubating public org.gradle.api.file.DirectoryProperty getIntegrityConfigDir();
     method public com.android.build.api.dsl.BundleLanguage getLanguage();
-    method @org.gradle.api.Incubating public com.android.build.api.dsl.StoreArchive getStoreArchive();
+    method public com.android.build.api.dsl.BundleStoreArchive getStoreArchive();
     method public com.android.build.api.dsl.BundleTexture getTexture();
     method public void language(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage,kotlin.Unit> action);
-    method @org.gradle.api.Incubating public void storeArchive(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.StoreArchive,kotlin.Unit> action);
+    method public void storeArchive(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleStoreArchive,kotlin.Unit> action);
     method public void texture(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture,kotlin.Unit> action);
     property public abstract com.android.build.api.dsl.BundleAbi abi;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.BundleCodeTransparency codeTransparency;
@@ -635,7 +635,7 @@ package com.android.build.api.dsl {
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.BundleDeviceTier deviceTier;
     property @org.gradle.api.Incubating public abstract org.gradle.api.file.DirectoryProperty integrityConfigDir;
     property public abstract com.android.build.api.dsl.BundleLanguage language;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.StoreArchive storeArchive;
+    property public abstract com.android.build.api.dsl.BundleStoreArchive storeArchive;
     property public abstract com.android.build.api.dsl.BundleTexture texture;
   }
 
@@ -670,6 +670,12 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public Boolean? getEnableSplit();
     method @org.gradle.api.Incubating public void setEnableSplit(Boolean? enableSplit);
     property @org.gradle.api.Incubating public abstract Boolean? enableSplit;
+  }
+
+  public interface BundleStoreArchive {
+    method public Boolean? getEnable();
+    method public void setEnable(Boolean? enable);
+    property public abstract Boolean? enable;
   }
 
   public interface BundleTexture {
@@ -836,18 +842,24 @@ package com.android.build.api.dsl {
   public interface DataBinding {
     method public boolean getAddDefaultAdapters();
     method public Boolean? getAddKtx();
+    method public boolean getEnable();
+    method public boolean getEnableForTests();
     method public String? getVersion();
-    method public boolean isEnabled();
-    method public boolean isEnabledForTests();
+    method @Deprecated public boolean isEnabled();
+    method @Deprecated public boolean isEnabledForTests();
     method public void setAddDefaultAdapters(boolean addDefaultAdapters);
     method public void setAddKtx(Boolean? addKtx);
-    method public void setEnabled(boolean isEnabled);
-    method public void setEnabledForTests(boolean isEnabledForTests);
+    method public void setEnable(boolean enable);
+    method public void setEnableForTests(boolean enableForTests);
+    method @Deprecated public void setEnabled(boolean isEnabled);
+    method @Deprecated public void setEnabledForTests(boolean isEnabledForTests);
     method public void setVersion(String? version);
     property public abstract boolean addDefaultAdapters;
     property public abstract Boolean? addKtx;
-    property public abstract boolean isEnabled;
-    property public abstract boolean isEnabledForTests;
+    property public abstract boolean enable;
+    property public abstract boolean enableForTests;
+    property @Deprecated public abstract boolean isEnabled;
+    property @Deprecated public abstract boolean isEnabledForTests;
     property public abstract String? version;
   }
 
@@ -999,6 +1011,12 @@ package com.android.build.api.dsl {
     method @Deprecated public void setMaxSnapshots(int maxSnapshots);
     property @Deprecated public abstract boolean enable;
     property @Deprecated public abstract int maxSnapshots;
+  }
+
+  @org.gradle.api.Incubating public interface FusedLibrariesExtension {
+    method @org.gradle.api.Incubating public String? getNamespace();
+    method @org.gradle.api.Incubating public void setNamespace(String? namespace);
+    property @org.gradle.api.Incubating public abstract String? namespace;
   }
 
   @org.gradle.api.Incubating public interface HasInitWith<T> {
@@ -1550,12 +1568,6 @@ package com.android.build.api.dsl {
     property public abstract java.util.Collection<java.lang.String> densityFilters;
   }
 
-  @org.gradle.api.Incubating public interface StoreArchive {
-    method @org.gradle.api.Incubating public Boolean? getEnable();
-    method @org.gradle.api.Incubating public void setEnable(Boolean? enable);
-    property @org.gradle.api.Incubating public abstract Boolean? enable;
-  }
-
   public interface TestBaseFlavor extends com.android.build.api.dsl.BaseFlavor com.android.build.api.dsl.TestVariantDimension {
     method @org.gradle.api.Incubating public Integer? getMaxSdk();
     method @org.gradle.api.Incubating public Integer? getTargetSdk();
@@ -1612,8 +1624,8 @@ package com.android.build.api.dsl {
     method public void emulatorSnapshots(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.EmulatorSnapshots,kotlin.Unit> action);
     method @Deprecated public void failureRetention(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.FailureRetention,kotlin.Unit> action);
     method public boolean getAnimationsDisabled();
-    method public org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> getDeviceGroups();
-    method public org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> getDevices();
+    method @Deprecated public org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> getDeviceGroups();
+    method @Deprecated public org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> getDevices();
     method public com.android.build.api.dsl.EmulatorSnapshots getEmulatorSnapshots();
     method public String getExecution();
     method @Deprecated public com.android.build.api.dsl.FailureRetention getFailureRetention();
@@ -1628,8 +1640,8 @@ package com.android.build.api.dsl {
     method public void setResultsDir(String? resultsDir);
     method public void unitTests(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions,kotlin.Unit> action);
     property public abstract boolean animationsDisabled;
-    property public abstract org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> deviceGroups;
-    property public abstract org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> devices;
+    property @Deprecated public abstract org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> deviceGroups;
+    property @Deprecated public abstract org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> devices;
     property public abstract com.android.build.api.dsl.EmulatorSnapshots emulatorSnapshots;
     property public abstract String execution;
     property @Deprecated public abstract com.android.build.api.dsl.FailureRetention failureRetention;
@@ -2555,6 +2567,11 @@ package com.android.build.gradle.api {
 
   public final class AndroidBasePlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
     ctor public AndroidBasePlugin();
+    method public void apply(org.gradle.api.Project project);
+  }
+
+  @org.gradle.api.Incubating public final class FusedLibrariesPlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
+    ctor public FusedLibrariesPlugin();
     method public void apply(org.gradle.api.Project project);
   }
 

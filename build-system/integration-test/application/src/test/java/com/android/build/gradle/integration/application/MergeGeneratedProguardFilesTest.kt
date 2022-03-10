@@ -36,7 +36,7 @@ private const val ANNOTATION_PROCESSOR = "${ANNOTATION}Processor"
 
 private const val ANNOTAION_MODULE = ":annotation_proguard"
 
-private const val MAIN_ACTIVITY_PACKAGE = "com.example.app"
+private const val NAMESPACE = "com.example.app"
 private const val MAIN_ACTIVITY = "MainActivity"
 
 private const val LIB_PACKAGE = "com.example.lib"
@@ -51,7 +51,7 @@ class MergeGeneratedProguardFilesTest(
     annotateMainActivity: Boolean,
     annotateDependency: Boolean) {
     private val annotationPackagePath = ANNOTATION_PACKAGE.replace('.', '/')
-    private val mainPackagePath = MAIN_ACTIVITY_PACKAGE.replace('.', '/')
+    private val mainPackagePath = NAMESPACE.replace('.', '/')
     private val libPath = LIB_PACKAGE.replace('.', '/')
 
     companion object {
@@ -65,7 +65,7 @@ class MergeGeneratedProguardFilesTest(
     }
 
     private val app =
-        MinimalSubProject.app(MAIN_ACTIVITY_PACKAGE)
+        MinimalSubProject.app(NAMESPACE)
             .withFile(
                 "src/main/res/layout/$LAYOUT_NAME.xml",
                 with(LayoutFileBuilder()) {
@@ -74,14 +74,14 @@ class MergeGeneratedProguardFilesTest(
             )
             .withFile(
                 "src/main/AndroidManifest.xml",
-                with(ManifestFileBuilder(MAIN_ACTIVITY_PACKAGE)) {
+                with(ManifestFileBuilder()) {
                     addApplicationTag(MAIN_ACTIVITY)
                     build()
                 })
             .withFile(
                 "src/main/java/$mainPackagePath/$MAIN_ACTIVITY.java",
                 """
-                package $MAIN_ACTIVITY_PACKAGE;
+                package $NAMESPACE;
                 import android.support.v7.app.AppCompatActivity;
                 import android.os.Bundle;
                 import $LIB_PACKAGE.Dummy;
@@ -103,6 +103,7 @@ class MergeGeneratedProguardFilesTest(
                 apply plugin: 'com.android.application'
 
                 android {
+                    namespace "$NAMESPACE"
                     compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
 
                     defaultConfig {

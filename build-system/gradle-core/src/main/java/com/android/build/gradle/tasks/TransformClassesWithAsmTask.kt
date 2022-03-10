@@ -453,8 +453,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        component: ComponentImpl,
-        val isTestCoverageEnabled: Boolean
+        component: ComponentImpl
     ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentImpl>(
         component
     ) {

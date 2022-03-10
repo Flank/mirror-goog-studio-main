@@ -519,6 +519,8 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 paths do not play well with baselines, shared HTML reports, remote
                 caching, etc. If you really want this, you can set the property
                 `lint().allowAbsolutePathsInMessages(true)`.
+
+                Error message was: `found error in TESTROOT/default/app/res/drawable/drawable.xml!`
                 """,
                 java.lang.AssertionError::class.java
             )

@@ -79,7 +79,7 @@ abstract class ProjectOptionService : BuildService<ProjectOptionService.Params> 
                     val argValue = it.value.toString();
                     customArgs[argName] = argValue
                     // Make sure we invalidate configuration cache if existing custom arguments change
-                    project.providers.gradleProperty(it.key).forUseAtConfigurationTime().get();
+                    project.property(it.key)
                 }
             }
             parameters.customTestRunnerArgs.set(customArgs)

@@ -85,7 +85,6 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -245,7 +244,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             createJacocoTask(libraryVariant);
         }
 
-        maybeCreateTransformClassesWithAsmTask(libraryVariant, instrumented);
+        maybeCreateTransformClassesWithAsmTask(libraryVariant);
 
         // ----- External Transforms -----
         // apply all the external transforms.
