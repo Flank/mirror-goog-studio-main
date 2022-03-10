@@ -93,7 +93,10 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
     @get:Inject
     abstract val inputChanges: InputChanges
 
-    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    // Use RELATIVE path sensitivity since we use [FileChange.normalizedPath] to calculate the
+    // derived dex file relative path. This will ensure we find the derived file when deletion is
+    // required. Revert to CLASSPATH once Gradle 7.5 is used : b/224524454 
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputArtifact
     @get:Incremental
     abstract val primaryInput: Provider<FileSystemLocation>
