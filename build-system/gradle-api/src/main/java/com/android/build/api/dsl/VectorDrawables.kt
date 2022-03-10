@@ -21,7 +21,6 @@ import org.gradle.api.Incubating
 /**
  * DSL object used to configure `vector` drawable options.
  */
-@Incubating
 interface VectorDrawables {
     /**
      * Densities used when generating PNGs from vector drawables at build time. For the PNGs to be
@@ -33,6 +32,7 @@ interface VectorDrawables {
      * See
      * [Supporting Multiple Screens](http://developer.android.com/guide/practices/screens_support.html).
      */
+    @get:Incubating
     val generatedDensities: MutableSet<String>?
 
     /**
@@ -45,6 +45,7 @@ interface VectorDrawables {
      * See
      * [Supporting Multiple Screens](http://developer.android.com/guide/practices/screens_support.html).
      */
+    @Incubating
     fun generatedDensities(vararg densities: String)
 
     /**
@@ -52,5 +53,7 @@ interface VectorDrawables {
      *
      * See [Vector Asset Studio](http://developer.android.com/tools/help/vector-asset-studio.html).
      */
+    @get:Incubating
+    @set:Incubating
     var useSupportLibrary: Boolean?
 }

@@ -1724,13 +1724,13 @@ package com.android.build.api.dsl {
     property @org.gradle.api.Incubating public abstract java.util.List<java.io.File> testProguardFiles;
   }
 
-  @org.gradle.api.Incubating public interface VectorDrawables {
-    method public void generatedDensities(java.lang.String... densities);
-    method public java.util.Set<java.lang.String>? getGeneratedDensities();
-    method public Boolean? getUseSupportLibrary();
-    method public void setUseSupportLibrary(Boolean? useSupportLibrary);
-    property public abstract java.util.Set<java.lang.String>? generatedDensities;
-    property public abstract Boolean? useSupportLibrary;
+  public interface VectorDrawables {
+    method @org.gradle.api.Incubating public void generatedDensities(java.lang.String... densities);
+    method @org.gradle.api.Incubating public java.util.Set<java.lang.String>? getGeneratedDensities();
+    method @org.gradle.api.Incubating public Boolean? getUseSupportLibrary();
+    method @org.gradle.api.Incubating public void setUseSupportLibrary(Boolean? useSupportLibrary);
+    property @org.gradle.api.Incubating public abstract java.util.Set<java.lang.String>? generatedDensities;
+    property @org.gradle.api.Incubating public abstract Boolean? useSupportLibrary;
   }
 
   public interface ViewBinding {
