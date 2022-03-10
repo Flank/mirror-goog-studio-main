@@ -16,11 +16,9 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
 import org.gradle.api.tasks.testing.Test
 
 /** Options for controlling unit tests execution. */
-@Incubating
 interface UnitTestOptions {
     /**
      * Whether unmocked methods from android.jar should throw exceptions or return default

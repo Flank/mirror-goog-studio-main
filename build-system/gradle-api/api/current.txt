@@ -1675,7 +1675,7 @@ package com.android.build.api.dsl {
     property public abstract String? testNamespace;
   }
 
-  @org.gradle.api.Incubating public interface UnitTestOptions {
+  public interface UnitTestOptions {
     method public void all(kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test,kotlin.Unit> configAction);
     method public boolean isIncludeAndroidResources();
     method public boolean isReturnDefaultValues();
