@@ -3635,7 +3635,7 @@ class LintDriver(
                 sb.append("You can try disabling it with something like this:\n")
                 val indent = "\u00a0\u00a0\u00a0\u00a0" // non-breaking spaces
                 sb.append("${indent}android {\n")
-                sb.append("$indent${indent}lintOptions {\n")
+                sb.append("$indent${indent}lint {\n")
                 sb.append("$indent$indent${indent}disable ${associated.second.joinToString { "\"${it.id}\"" }}\n")
                 sb.append("$indent$indent}\n")
                 sb.append("$indent}\n")

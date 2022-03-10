@@ -79,7 +79,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
                         The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.
                         You can try disabling it with something like this:
                             android {
-                                lintOptions {
+                                lint {
                                     disable "_TestCrash"
                                 }
                             }
