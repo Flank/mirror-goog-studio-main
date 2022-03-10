@@ -354,6 +354,8 @@ filegroup(
             # Bazel can't handle paths with spaces in them.
             "ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/python3/lib/python3.9/site-packages/setuptools/command/launcher manifest.xml",
             "ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/python3/lib/python3.9/site-packages/setuptools/script (dev).tmpl",
+            "ndk/23.1.7779620/toolchains/llvm/prebuilt/darwin-x86_64/python3/lib/python3.9/site-packages/setuptools/command/launcher manifest.xml",
+            "ndk/23.1.7779620/toolchains/llvm/prebuilt/darwin-x86_64/python3/lib/python3.9/site-packages/setuptools/script (dev).tmpl",
         ],
     ),
     visibility = ["//visibility:public"],
