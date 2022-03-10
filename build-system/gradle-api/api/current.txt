@@ -333,22 +333,22 @@ package com.android.build.api.dsl {
   }
 
   public interface ApkSigningConfig extends com.android.build.api.dsl.SigningConfig org.gradle.api.Named {
-    method @org.gradle.api.Incubating public Boolean? getEnableV1Signing();
-    method @org.gradle.api.Incubating public Boolean? getEnableV2Signing();
-    method @org.gradle.api.Incubating public Boolean? getEnableV3Signing();
-    method @org.gradle.api.Incubating public Boolean? getEnableV4Signing();
+    method public Boolean? getEnableV1Signing();
+    method public Boolean? getEnableV2Signing();
+    method public Boolean? getEnableV3Signing();
+    method public Boolean? getEnableV4Signing();
     method @Deprecated @org.gradle.api.Incubating public boolean isV1SigningEnabled();
     method @Deprecated @org.gradle.api.Incubating public boolean isV2SigningEnabled();
-    method @org.gradle.api.Incubating public void setEnableV1Signing(Boolean? enableV1Signing);
-    method @org.gradle.api.Incubating public void setEnableV2Signing(Boolean? enableV2Signing);
-    method @org.gradle.api.Incubating public void setEnableV3Signing(Boolean? enableV3Signing);
-    method @org.gradle.api.Incubating public void setEnableV4Signing(Boolean? enableV4Signing);
+    method public void setEnableV1Signing(Boolean? enableV1Signing);
+    method public void setEnableV2Signing(Boolean? enableV2Signing);
+    method public void setEnableV3Signing(Boolean? enableV3Signing);
+    method public void setEnableV4Signing(Boolean? enableV4Signing);
     method @Deprecated @org.gradle.api.Incubating public void setV1SigningEnabled(boolean isV1SigningEnabled);
     method @Deprecated @org.gradle.api.Incubating public void setV2SigningEnabled(boolean isV2SigningEnabled);
-    property @org.gradle.api.Incubating public abstract Boolean? enableV1Signing;
-    property @org.gradle.api.Incubating public abstract Boolean? enableV2Signing;
-    property @org.gradle.api.Incubating public abstract Boolean? enableV3Signing;
-    property @org.gradle.api.Incubating public abstract Boolean? enableV4Signing;
+    property public abstract Boolean? enableV1Signing;
+    property public abstract Boolean? enableV2Signing;
+    property public abstract Boolean? enableV3Signing;
+    property public abstract Boolean? enableV4Signing;
     property @Deprecated @org.gradle.api.Incubating public abstract boolean isV1SigningEnabled;
     property @Deprecated @org.gradle.api.Incubating public abstract boolean isV2SigningEnabled;
   }

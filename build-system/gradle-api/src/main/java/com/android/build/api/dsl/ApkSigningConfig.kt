@@ -46,8 +46,6 @@ interface ApkSigningConfig: SigningConfig, Named {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
-    @get:Incubating
-    @set:Incubating
     var enableV1Signing: Boolean?
 
     /**
@@ -56,8 +54,6 @@ interface ApkSigningConfig: SigningConfig, Named {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
-    @get:Incubating
-    @set:Incubating
     var enableV2Signing: Boolean?
 
     /**
@@ -66,15 +62,11 @@ interface ApkSigningConfig: SigningConfig, Named {
      *
      * See [APK Signature Scheme v3](https://source.android.com/security/apksigning/v3)
      */
-    @get:Incubating
-    @set:Incubating
     var enableV3Signing: Boolean?
 
     /**
      * Enable signing using APK Signature Scheme v4 (aka v4 signing). If null, a default value is
      * used.
      */
-    @get:Incubating
-    @set:Incubating
     var enableV4Signing: Boolean?
 }
