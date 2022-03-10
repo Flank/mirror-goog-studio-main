@@ -30,6 +30,9 @@ interface VariantCreationConfig: ComponentCreationConfig {
 
     val buildConfigFields: MapProperty<String, BuildConfigField<out java.io.Serializable>>
 
+    @Deprecated("DO NOT USE, use buildConfigFields map property")
+    val dslBuildConfigFields: Map<String, BuildConfigField<out java.io.Serializable>>
+
     val resValues: MapProperty<ResValue.Key, ResValue>
 
     val packaging: Packaging

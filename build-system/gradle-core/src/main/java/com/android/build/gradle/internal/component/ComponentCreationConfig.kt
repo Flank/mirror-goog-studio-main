@@ -31,11 +31,13 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -174,4 +176,21 @@ interface ComponentCreationConfig : ComponentIdentity {
     val packageJacocoRuntime: Boolean
 
     val javaCompilation: JavaCompilation
+
+    // ---------------------------------------------------------------------------------------------
+    // VARIANT DSL INFO REPLACEMENTS
+    // ---------------------------------------------------------------------------------------------
+    // TODO: Figure out if we should be exposing any of the below
+
+    val isUnitTestCoverageEnabled: Boolean
+
+    val isAndroidTestCoverageEnabled: Boolean
+
+    val publishInfo: VariantPublishingInfo?
+
+    // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
+    // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
+    // switches to the new variant API.
+    @Deprecated("DO NOT USE, this is just for KAPT legacy support")
+    fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
 }

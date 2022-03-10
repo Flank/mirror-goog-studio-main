@@ -234,8 +234,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             taskFactory.register(new ExtractAnnotations.CreationAction(libraryVariant));
         }
 
-        final boolean instrumented =
-                libraryVariant.getVariantDslInfo().isAndroidTestCoverageEnabled();
+        final boolean instrumented = libraryVariant.isAndroidTestCoverageEnabled();
 
         TransformManager transformManager = libraryVariant.getTransformManager();
 
@@ -358,7 +357,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                             task.dependsOn(variant.getArtifacts().get(SingleArtifact.AAR.INSTANCE));
                         });
 
-        VariantPublishingInfo publishInfo = variant.getVariantDslInfo().getPublishInfo();
+        VariantPublishingInfo publishInfo = variant.getPublishInfo();
         if (publishInfo != null) {
             List<ComponentPublishingInfo> components = publishInfo.getComponents();
 

@@ -110,6 +110,9 @@ abstract class VariantImpl(
         )
     }
 
+    override val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
+        get() = variantDslInfo.getBuildConfigFields()
+
     // for compatibility with old variant API.
     fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
         buildConfigFields.put(key, BuildConfigField(type, value, comment))

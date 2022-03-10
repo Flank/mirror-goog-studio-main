@@ -607,7 +607,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
         val variantDependencies = testFixturesComponent.variantDependencies
-        testFixturesComponent.variantDslInfo.publishInfo?.components?.forEach {
+        testFixturesComponent.publishInfo?.components?.forEach {
             val componentName = it.componentName
             val component = project.components.findByName(componentName) as AdhocComponentWithVariants? ?:
             localConfig.componentFactory.adhoc(componentName).let { project.components.add(it) } as AdhocComponentWithVariants
@@ -1064,7 +1064,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .services
                     .projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
             if (!isBuildConfigBytecodeEnabled
-                    || !creationConfig.variantDslInfo.getBuildConfigFields().isEmpty()) {
+                    // TODO(b/224758957): This is wrong we need to check the final build config
+                    //  fields from the variant API
+                    || creationConfig.dslBuildConfigFields.isNotEmpty()
+            ) {
                 creationConfig.taskContainer.sourceGenTask.dependsOn(generateBuildConfigTask)
             }
         }
@@ -1631,7 +1634,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val ant = JacocoConfigurations.getJacocoAntTaskConfiguration(
             project, JacocoTask.getJacocoVersion(unitTestCreationConfig))
 
-        if (unitTestCreationConfig.variantDslInfo.isUnitTestCoverageEnabled) {
+        if (unitTestCreationConfig.isUnitTestCoverageEnabled) {
            project.pluginManager.apply(JacocoPlugin::class.java)
         }
         val runTestsTask =
@@ -1640,7 +1643,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 test: Task -> test.dependsOn(runTestsTask)
         }
 
-        if (unitTestCreationConfig.variantDslInfo.isUnitTestCoverageEnabled) {
+        if (unitTestCreationConfig.isUnitTestCoverageEnabled) {
             project.plugins.withType(JacocoPlugin::class.java) {
                 // Jacoco plugin is applied and test coverage enabled, ∴ generate coverage report.
                 taskFactory.register(
@@ -1895,7 +1898,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Register a test coverage report generation task to every managedDeviceCheck
         // task.
-        if ((variant?.variantDslInfo?.isAndroidTestCoverageEnabled == true) &&
+        if ((variant?.isAndroidTestCoverageEnabled == true) &&
                 creationConfig is TestComponentImpl) {
             val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
                 project, JacocoTask.getJacocoVersion(creationConfig)
@@ -1905,7 +1908,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     creationConfig, jacocoAntConfiguration
                 )
             )
-            variant?.taskContainer?.coverageReportTask?.dependsOn(reportTask)
+            variant.taskContainer.coverageReportTask?.dependsOn(reportTask)
             for (managedDevice in managedDevices) {
                 taskFactory.configure(
                     managedDeviceAllVariantsTaskName(managedDevice)
@@ -1976,7 +1979,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.configure(
                 CONNECTED_ANDROID_TEST
         ) { connectedAndroidTest: Task -> connectedAndroidTest.dependsOn(connectedTask) }
-        if (testedVariant.variantDslInfo.isAndroidTestCoverageEnabled) {
+        if (testedVariant.isAndroidTestCoverageEnabled) {
             val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
                     project, JacocoTask.getJacocoVersion(androidTestProperties))
             val reportTask = taskFactory.register(
@@ -2041,7 +2044,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      */
     fun createPostCompilationTasks(creationConfig: ApkCreationConfig) {
         Preconditions.checkNotNull(creationConfig.taskContainer.javacTask)
-        val variantDslInfo = creationConfig.variantDslInfo
         val variantScope = creationConfig.variantScope
         val transformManager = creationConfig.transformManager
         taskFactory.register(MergeGeneratedProguardFilesCreationAction(creationConfig))
@@ -2052,7 +2054,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val jacocoTransformEnabled = creationConfig.services
                 .projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
         val isAndroidTestCoverageEnabled =
-            variantDslInfo.isAndroidTestCoverageEnabled && !creationConfig.componentType.isForTesting
+            creationConfig.isAndroidTestCoverageEnabled && !creationConfig.componentType.isForTesting
 
         // Previous (non-gradle-transform) jacoco instrumentation (pre-legacy-transform).
         if (isAndroidTestCoverageEnabled && !jacocoTransformEnabled) {
@@ -2359,7 +2361,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         val instrumentedClasses: FileCollection =
             if (jacocoTransformEnabled &&
-                creationConfig.variantDslInfo.isAndroidTestCoverageEnabled &&
+                creationConfig.isAndroidTestCoverageEnabled &&
                     creationConfig !is ApplicationCreationConfig) {
                 // For libraries that can be published,avoid publishing classes
                 // with runtime dependencies on Jacoco.
@@ -2427,8 +2429,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
         // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
         // new variant API.
-        creationConfig.variantDslInfo.javaCompileOptions.annotationProcessorOptions
-            .compilerArgumentProviders.add(dataBindingArgs)
+        creationConfig.addDataBindingArgsToOldVariantApi(dataBindingArgs)
 
         // add it the new Variant API objects, this is what our tasks use.
         processorOptions.argumentProviders.add(dataBindingArgs)
@@ -2575,14 +2576,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 val componentType = creationConfig.componentType
                 if (!componentType.isNestedComponent) {
                     val taskContainer = creationConfig.taskContainer
-                    val variantDslInfo = creationConfig.variantDslInfo
                     val buildType = creationConfig.buildType
                     val assembleTask = taskContainer.assembleTask
                     if (buildType != null) {
                         assembleMap.put(buildType, assembleTask)
                     }
-                    for (flavor in variantDslInfo.productFlavorList) {
-                        assembleMap.put(flavor.name, assembleTask)
+                    for (flavor in creationConfig.productFlavors) {
+                        assembleMap.put(flavor.first, assembleTask)
                     }
 
                     // if 2+ flavor dimensions, then make an assemble for the flavor combo
@@ -2596,8 +2596,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         if (buildType != null) {
                             bundleMap.put(buildType, bundleTask)
                         }
-                        for (flavor in variantDslInfo.productFlavorList) {
-                            bundleMap.put(flavor.name, bundleTask)
+                        for (flavor in creationConfig.productFlavors) {
+                            bundleMap.put(flavor.first, bundleTask)
                         }
 
                         // if 2+ flavor dimensions, then make an assemble for the flavor combo
@@ -2931,8 +2931,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .assetGenTask =
                 taskFactory.register(creationConfig.computeTaskName("generate", "Assets"))
         if (!creationConfig.componentType.isForTesting
-                && (creationConfig.variantDslInfo.isAndroidTestCoverageEnabled
-                    || creationConfig.variantDslInfo.isUnitTestCoverageEnabled)) {
+                && (creationConfig.isAndroidTestCoverageEnabled
+                    || creationConfig.isUnitTestCoverageEnabled)) {
             creationConfig
                     .taskContainer
                     .coverageReportTask = taskFactory.register(

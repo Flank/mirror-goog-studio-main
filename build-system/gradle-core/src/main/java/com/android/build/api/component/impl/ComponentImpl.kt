@@ -29,7 +29,6 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.SourceDirectoriesImpl
@@ -41,7 +40,6 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
-import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -60,6 +58,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -69,6 +68,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -95,7 +95,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.Collections
 import java.util.concurrent.Callable
 
 abstract class ComponentImpl(
@@ -768,6 +767,8 @@ abstract class ComponentImpl(
         return if (!buildConfigEnabled) {
             BuildConfigType.NONE
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
+            // TODO(b/224758957): This is wrong we need to check the final build config fields from
+            //  the variant API
             && variantDslInfo.getBuildConfigFields().none()
         ) {
             BuildConfigType.JAR
@@ -814,6 +815,17 @@ abstract class ComponentImpl(
 
     override val packageJacocoRuntime: Boolean
         get() = false
+
+    override val isUnitTestCoverageEnabled: Boolean
+        get() = variantDslInfo.isUnitTestCoverageEnabled
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = variantDslInfo.isAndroidTestCoverageEnabled
+    override val publishInfo: VariantPublishingInfo?
+        get() = variantDslInfo.publishInfo
+    override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
+        variantDslInfo.javaCompileOptions.annotationProcessorOptions
+            .compilerArgumentProviders.add(args)
+    }
 
     companion object {
         // String to

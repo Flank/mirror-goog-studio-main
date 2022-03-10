@@ -211,7 +211,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             val outputBytecode = creationConfig.services.projectOptions
                     .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
-            val generateItems = creationConfig.variantDslInfo.getBuildConfigFields().any()
+            // TODO(b/224758957): This is wrong we need to check the final build config fields from
+            //  the variant API
+            val generateItems = creationConfig.dslBuildConfigFields.any()
             creationConfig.taskContainer.generateBuildConfigTask = taskProvider
             if (outputBytecode && !generateItems) {
                 creationConfig.artifacts.setInitialProvider(
