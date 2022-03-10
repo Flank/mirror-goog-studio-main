@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.databinding
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
@@ -45,8 +44,6 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("databindingMultiModule")
-        // FIXME(b/195978143)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=" + useAndroidX)
         .addGradleProperties(BooleanOption.ENABLE_JETIFIER.propertyName + "=" + useAndroidX)
         .create()

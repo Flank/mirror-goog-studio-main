@@ -43,7 +43,9 @@ public class SeparateTestModuleWithVariantsTest {
         // Check :test:assembleDebug succeeds on its own, i.e. compiles the app module.
         project.execute("clean", ":test:assembleDebug");
         project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // b/224561168
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+                .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=3")
                 .run(":test:checkDependencies");
     }
 

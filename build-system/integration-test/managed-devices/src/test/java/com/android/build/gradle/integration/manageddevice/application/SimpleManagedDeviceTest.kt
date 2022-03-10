@@ -1,11 +1,9 @@
 package com.android.build.gradle.integration.manageddevice.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.manageddevice.utils.getStandardExecutor
-import com.android.build.gradle.integration.manageddevice.utils.setupLicenses
 import com.android.build.gradle.integration.manageddevice.utils.setupSdkDir
 import com.android.build.gradle.integration.manageddevice.utils.setupSdkRepo
 import com.android.testutils.truth.PathSubject.assertThat
@@ -18,10 +16,7 @@ import org.junit.Test
 class SimpleManagedDeviceTest {
 
     @get:Rule
-    val project = GradleTestProjectBuilder().fromTestProject("utp").apply {
-        // TODO(b/215756076): Make Managed Device Tasks Configuration Cachable
-        withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-    }.create()
+    val project = GradleTestProjectBuilder().fromTestProject("utp").create()
 
     private lateinit var sdkImageSource: File
     private lateinit var appProject: GradleTestProject
