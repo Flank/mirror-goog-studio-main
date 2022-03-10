@@ -1620,32 +1620,32 @@ package com.android.build.api.dsl {
     property public abstract boolean enable;
   }
 
-  @org.gradle.api.Incubating public interface TestOptions {
-    method public void emulatorSnapshots(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.EmulatorSnapshots,kotlin.Unit> action);
-    method @Deprecated public void failureRetention(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.FailureRetention,kotlin.Unit> action);
+  public interface TestOptions {
+    method @org.gradle.api.Incubating public void emulatorSnapshots(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.EmulatorSnapshots,kotlin.Unit> action);
+    method @Deprecated @org.gradle.api.Incubating public void failureRetention(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.FailureRetention,kotlin.Unit> action);
     method public boolean getAnimationsDisabled();
-    method @Deprecated public org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> getDeviceGroups();
-    method @Deprecated public org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> getDevices();
-    method public com.android.build.api.dsl.EmulatorSnapshots getEmulatorSnapshots();
+    method @Deprecated @org.gradle.api.Incubating public org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> getDeviceGroups();
+    method @Deprecated @org.gradle.api.Incubating public org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> getDevices();
+    method @org.gradle.api.Incubating public com.android.build.api.dsl.EmulatorSnapshots getEmulatorSnapshots();
     method public String getExecution();
-    method @Deprecated public com.android.build.api.dsl.FailureRetention getFailureRetention();
-    method public com.android.build.api.dsl.ManagedDevices getManagedDevices();
+    method @Deprecated @org.gradle.api.Incubating public com.android.build.api.dsl.FailureRetention getFailureRetention();
+    method @org.gradle.api.Incubating public com.android.build.api.dsl.ManagedDevices getManagedDevices();
     method public String? getReportDir();
     method public String? getResultsDir();
     method public com.android.build.api.dsl.UnitTestOptions getUnitTests();
-    method public void managedDevices(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ManagedDevices,kotlin.Unit> action);
+    method @org.gradle.api.Incubating public void managedDevices(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ManagedDevices,kotlin.Unit> action);
     method public void setAnimationsDisabled(boolean animationsDisabled);
     method public void setExecution(String execution);
     method public void setReportDir(String? reportDir);
     method public void setResultsDir(String? resultsDir);
     method public void unitTests(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions,kotlin.Unit> action);
     property public abstract boolean animationsDisabled;
-    property @Deprecated public abstract org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> deviceGroups;
-    property @Deprecated public abstract org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> devices;
-    property public abstract com.android.build.api.dsl.EmulatorSnapshots emulatorSnapshots;
+    property @Deprecated @org.gradle.api.Incubating public abstract org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> deviceGroups;
+    property @Deprecated @org.gradle.api.Incubating public abstract org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> devices;
+    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.EmulatorSnapshots emulatorSnapshots;
     property public abstract String execution;
-    property @Deprecated public abstract com.android.build.api.dsl.FailureRetention failureRetention;
-    property public abstract com.android.build.api.dsl.ManagedDevices managedDevices;
+    property @Deprecated @org.gradle.api.Incubating public abstract com.android.build.api.dsl.FailureRetention failureRetention;
+    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.ManagedDevices managedDevices;
     property public abstract String? reportDir;
     property public abstract String? resultsDir;
     property public abstract com.android.build.api.dsl.UnitTestOptions unitTests;
