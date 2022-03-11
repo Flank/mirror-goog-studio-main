@@ -282,6 +282,7 @@ local_maven_repository(
         "androidx.appcompat:appcompat:1.3.0",
         "androidx.appcompat:appcompat:1.3.0-beta01",
         "androidx.benchmark:benchmark-gradle-plugin:1.0.0",
+        "androidx.benchmark:benchmark-gradle-plugin:1.1.0-beta04",
         "androidx.compose.compiler:compiler:1.0.3",
         "androidx.compose.compiler:compiler:1.0.5",
         "androidx.compose.compiler:compiler:1.1.0-beta01",

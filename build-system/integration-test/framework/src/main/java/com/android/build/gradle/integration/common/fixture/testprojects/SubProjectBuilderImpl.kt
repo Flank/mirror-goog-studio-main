@@ -32,7 +32,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
     private val files = mutableMapOf<String, SourceFile>()
     private val buildFileActions = mutableListOf<() -> String>()
 
-    override var plugins: MutableList<PluginType> = mutableListOf()
+    override var plugins = mutableListOf<PluginType>()
     internal val dependencies: DependenciesBuilderImpl = DependenciesBuilderImpl()
 
     private val wrappedLibraries = mutableListOf<Pair<String, ByteArray>>()

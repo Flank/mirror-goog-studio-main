@@ -86,7 +86,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
         public static final int S = 31;
     }
 
-    private static final Pattern PREVIEW_PATTERN = Pattern.compile("^[A-Z][0-9A-Za-z_]*$");
+    public static final Pattern PREVIEW_PATTERN = Pattern.compile("^[A-Z][0-9A-Za-z_]*$");
 
     private static final long serialVersionUID = 1L;
 
