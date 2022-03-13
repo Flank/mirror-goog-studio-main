@@ -11,7 +11,7 @@ java_library(
     name = "utils",
     srcs = glob(["src/com/android/tools/utils/*.java"]),
     visibility = ["//tools/base/bazel/sdk:__pkg__"],
-    deps = ["@io_bazel_rules_kotlin//src/main/protobuf:worker_protocol_java_proto"],
+    deps = ["@bazel_tools//src/main/protobuf:worker_protocol_java_proto"],
 )
 
 config_setting(
