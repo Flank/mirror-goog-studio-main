@@ -44,7 +44,7 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
         srcs = srcs,
         outs = [name + ".coverage.baseline.srcs"],
         tags = cov_sources_tags,
-        cmd = "printf '$(RULEDIR)/%s\n' {} | sed -e 's%^$(BINDIR)/%%' >$@".format(" ".join(srcs)),
+        cmd = "printf '$(RULEDIR)/%s\n' $(SRCS) | sed -e 's%^$(BINDIR)/%%' >$@",
     )
 
     native.genrule(
