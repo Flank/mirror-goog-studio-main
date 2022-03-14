@@ -76,8 +76,8 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotli
     # See https://github.com/bazelbuild/rules_kotlin/issues/211.
     args.add_joined(friend_jars, join_with = ",", format_joined = "-Xfriend-paths=%s")
 
-    args.add_joined("-cp", classpath, join_with = ":")
-    args.add("-o", out)
+    args.add_joined("-cp", classpath, join_with = ctx.configuration.host_path_separator)
+    args.add("-d", out)
     args.add_all(srcs)
 
     # Add custom kotlinc options last so that they override the global options.
