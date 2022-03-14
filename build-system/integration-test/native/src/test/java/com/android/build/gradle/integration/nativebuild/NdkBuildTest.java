@@ -386,4 +386,13 @@ public class NdkBuildTest {
         TruthHelper.assertThat(result.getTask(":externalNativeBuildCleanRelease")).didWork();
         TruthHelper.assertThat(result.getTask(":externalNativeBuildCleanDebug")).didWork();
     }
+
+    /** Regression test for http://b/159411906. */
+    @Test
+    public void testConfigureTasksDependencies() throws IOException, InterruptedException {
+        GradleBuildResult result = project.executor().run("configureNdkBuildDebug[arm64-v8a]");
+        TruthHelper.assertThat(result.getTask(":preDebugBuild")).wasUpToDate();
+        result = project.executor().run("configureNdkBuildRelease[arm64-v8a]");
+        TruthHelper.assertThat(result.getTask(":preReleaseBuild")).wasUpToDate();
+    }
 }

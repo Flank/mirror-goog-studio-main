@@ -149,6 +149,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                                 PREFAB_PACKAGE_CONFIGURATION
                             ).artifactFiles
                         )
+                        configureTask.dependsOn(variant.taskContainer.preBuildTask)
                     }
                     is ConfigureGroup -> {
                         taskFactory.register(name)
