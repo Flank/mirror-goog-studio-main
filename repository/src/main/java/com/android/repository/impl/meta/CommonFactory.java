@@ -134,7 +134,9 @@ public abstract class CommonFactory {
     @NonNull
     public Dependency createDependencyType(@Nullable Revision minRevision, @NonNull String path) {
         Dependency d = createDependencyType();
-        d.setMinRevision(createRevisionType(minRevision));
+        if (minRevision != null) {
+            d.setMinRevision(createRevisionType(minRevision));
+        }
         d.setPath(path);
         return d;
     }
