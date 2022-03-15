@@ -39,6 +39,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.bind.JAXBException;
@@ -130,7 +131,7 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
         double progressMax = 0;
         double progressIncrement = 1. / versionsSize;
         for (int version = versionsSize; xml == null && version > 0; version--) {
-            String urlStr = String.format(mUrl, version);
+            String urlStr = String.format(Locale.ROOT, mUrl, version);
             try {
                 url = new URL(urlStr);
                 xml =
