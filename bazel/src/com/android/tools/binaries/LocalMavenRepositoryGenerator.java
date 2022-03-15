@@ -906,44 +906,56 @@ public class LocalMavenRepositoryGenerator {
 
             // Create new dependency nodes for the import dependencies.
             List<DependencyNode> importDependencyNodes =
-                    rawPomModel.getDependencyManagement().getDependencies()
-                        .stream()
-                        .filter(d -> d.getType().equals("pom") && d.getScope().equals("import"))
-                        .map(d -> {
-                            try {
-                                File pomFile = repository.getPomFile(new DefaultArtifact(
-                                        d.getGroupId(),
-                                        d.getArtifactId(),
-                                        "pom",
-                                        d.getVersion()
-                                ));
-                                return new DefaultArtifact(
-                                        d.getGroupId(),
-                                        d.getArtifactId(),
-                                        Strings.emptyToNull(d.getClassifier()),
-                                        "pom",
-                                        d.getVersion(),
-                                        Collections.emptyMap(),
-                                        pomFile);
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .map(a -> {
-                            // If there already is a node that represents this import dependency,
-                            // then we don't want to re-create the same dependency node.
-                            // If there already is a node that represents the target artifact, but
-                            // with a different scope (e.g., scope=compile|runtime), then we prefer
-                            // to use that node (i.e., perform scope resolution).
-                            String key = a.toString();
-                            if (!allNodes.containsKey(key)) {
-                                allNodes.put(
-                                        key,
-                                        new DefaultDependencyNode(new Dependency(a, "import")));
-                            }
-                            return allNodes.get(key);
-                        })
-                    .collect(Collectors.toList());
+                    rawPomModel.getDependencyManagement().getDependencies().stream()
+                            .filter(d -> d.getType().equals("pom") && d.getScope().equals("import"))
+                            .map(
+                                    d -> {
+                                        // Since we are working with the raw pom model, the model
+                                        // may contain unsubstituted project variables.
+                                        // https://maven.apache.org/guides/introduction/introduction-to-the-pom.html#project-interpolation-and-variables
+                                        String version =
+                                                d.getVersion().equals("${project.version}")
+                                                        ? node.getArtifact().getVersion()
+                                                        : d.getVersion();
+                                        try {
+                                            File pomFile =
+                                                    repository.getPomFile(
+                                                            new DefaultArtifact(
+                                                                    d.getGroupId(),
+                                                                    d.getArtifactId(),
+                                                                    "pom",
+                                                                    version));
+                                            return new DefaultArtifact(
+                                                    d.getGroupId(),
+                                                    d.getArtifactId(),
+                                                    Strings.emptyToNull(d.getClassifier()),
+                                                    "pom",
+                                                    version,
+                                                    Collections.emptyMap(),
+                                                    pomFile);
+                                        } catch (Exception e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })
+                            .map(
+                                    a -> {
+                                        // If there already is a node that represents this import
+                                        // dependency, then we don't want to re-create the same
+                                        // dependency node.
+                                        // If there already is a node that represents the target
+                                        // artifact, but with a different scope
+                                        // (e.g., scope=compile|runtime), then we prefer
+                                        // to use that node (i.e., perform scope resolution).
+                                        String key = a.toString();
+                                        if (!allNodes.containsKey(key)) {
+                                            allNodes.put(
+                                                    key,
+                                                    new DefaultDependencyNode(
+                                                            new Dependency(a, "import")));
+                                        }
+                                        return allNodes.get(key);
+                                    })
+                            .collect(Collectors.toList());
             if (!importDependencyNodes.isEmpty()) {
                 // The original children list is read-only, so we create a
                 // new list that contains items from both lists.
