@@ -298,7 +298,6 @@ public class VariantDslInfoTest {
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
                         variantServices,
-                        null, /* BuildType */
                         Mockito.mock(BaseExtension.class),
                         Mockito.mock(CommonExtension.class),
                         false,

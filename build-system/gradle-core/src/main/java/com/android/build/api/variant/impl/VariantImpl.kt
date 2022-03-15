@@ -31,8 +31,8 @@ import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOptions
@@ -125,23 +125,23 @@ abstract class VariantImpl(
     override val externalNativeBuild: ExternalNativeBuild? by lazy {
         variantDslInfo.nativeBuildSystem?.let { nativeBuildType ->
             when(nativeBuildType) {
-                VariantManager.NativeBuiltType.CMAKE ->
+                NativeBuiltType.CMAKE ->
                     variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
                         ExternalCmakeImpl(
                                 it,
                                 variantServices
                         )
                     }
-                VariantManager.NativeBuiltType.NDK_BUILD ->
+                NativeBuiltType.NDK_BUILD ->
                     variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
                         ExternalNdkBuildImpl(
                                 it,
                                 variantServices
                         )
                     }
-                VariantManager.NativeBuiltType.NINJA -> {
+                NativeBuiltType.NINJA -> {
                     ExternalNinjaImpl(
-                        variantDslInfo.externalNativeNinjaOptions,
+                        externalNativeNinjaOptions,
                         variantServices
                     )
                 }

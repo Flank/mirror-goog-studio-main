@@ -355,6 +355,8 @@ abstract class ComponentImpl(
     // by default, we delegate to the build features flags.
     override val buildConfigEnabled: Boolean
         get() = buildFeatures.buildConfig
+    override val externalNativeExperimentalProperties: Map<String, Any>
+        get() = variantDslInfo.externalNativeExperimentalProperties
 
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
         internalServices.mapPropertyOf(

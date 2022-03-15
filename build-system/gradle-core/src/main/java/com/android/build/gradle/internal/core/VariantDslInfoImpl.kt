@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
+import com.android.build.gradle.internal.cxx.configure.ninja
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
@@ -114,7 +115,6 @@ open class VariantDslInfoImpl internal constructor(
     private val dslServices: DslServices,
     private val services: VariantServices,
     private val buildDirectory: DirectoryProperty,
-    override val nativeBuildSystem: VariantManager.NativeBuiltType?,
     override val publishInfo: VariantPublishingInfo?,
     override val experimentalProperties: Map<String, Any>,
     /**
@@ -849,6 +849,14 @@ open class VariantDslInfoImpl internal constructor(
         )
     }
 
+    override val nativeBuildSystem: NativeBuiltType?
+        get() {
+            if (externalNativeExperimentalProperties.ninja.path != null) return NativeBuiltType.NINJA
+            if (extension.externalNativeBuild.ndkBuild.path != null) return NativeBuiltType.NDK_BUILD
+            if (extension.externalNativeBuild.cmake.path != null) return NativeBuiltType.CMAKE
+            return null
+        }
+
     override val ndkConfig: MergedNdkConfig
         get() = mergedNdkConfig
 
@@ -1154,6 +1162,17 @@ open class VariantDslInfoImpl internal constructor(
 
     override val ignoreAllLibraryKeepRules: Boolean
         get() = mergedOptimization.ignoreAllLibraryKeepRules
+
+    override val externalNativeExperimentalProperties: Map<String, Any>
+        get() {
+            // merge global and variant properties
+            val mergedProperties = mutableMapOf<String, Any>()
+            mergedProperties.putAll(extension.externalNativeBuild.experimentalProperties)
+            mergedProperties.putAll(
+                mergedExternalNativeBuildOptions.externalNativeExperimentalProperties
+            )
+            return mergedProperties
+        }
 
     companion object {
 

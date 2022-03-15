@@ -22,7 +22,6 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
@@ -38,7 +37,6 @@ import com.android.build.gradle.internal.utils.createPublishingInfoForApp
 import com.android.build.gradle.internal.utils.createPublishingInfoForLibrary
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
-import com.android.builder.core.BuilderConstants
 import com.android.builder.core.ComponentType
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
@@ -63,7 +61,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val manifestDataProvider: ManifestDataProvider,
     private val dslServices: DslServices,
     private val variantServices: VariantServices,
-    private val nativeBuildSystem: VariantManager.NativeBuiltType?,
     private val oldExtension: BaseExtension,
     private val extension: CommonExtensionT,
     private val hasDynamicFeatures: Boolean,
@@ -87,7 +84,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
             variantServices: VariantServices,
-            nativeBuildSystem: VariantManager.NativeBuiltType? = null,
             oldExtension: BaseExtension,
             extension: CommonExtensionT,
             hasDynamicFeatures: Boolean,
@@ -105,7 +101,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 manifestDataProvider,
                 dslServices,
                 variantServices,
-                nativeBuildSystem,
                 oldExtension,
                 extension,
                 hasDynamicFeatures,
@@ -341,7 +336,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslServices,
             variantServices,
             buildDirectory,
-            nativeBuildSystem,
             publishingInfo,
             experimentalProperties,
             inconsistentTestAppId,

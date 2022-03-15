@@ -19,13 +19,12 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.NinjaMetadataGenerator
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
-import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.ninja
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
@@ -184,12 +183,13 @@ data class CxxConfigurationParameters(
  */
 fun tryCreateConfigurationParameters(
     projectOptions: ProjectOptions,
-    variant: VariantImpl) : CxxConfigurationParameters? {
+    variant: VariantImpl
+): CxxConfigurationParameters? {
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
     val project = projectInfo.getProject()
     val (buildSystem, makeFile, configureScript, buildStagingFolder) =
-        getProjectPath(variant.variantDslInfo, globalConfig.externalNativeBuild) ?: return null
+        getProjectPath(variant, globalConfig.externalNativeBuild) ?: return null
 
     val cxxFolder = findCxxFolder(
         buildSystem,
@@ -316,11 +316,11 @@ fun tryCreateConfigurationParameters(
  *   ndkBuild in the same project.
  */
 private fun getProjectPath(
-    variantDslInfo : VariantDslInfo,
-    config: ExternalNativeBuild)
-        : NativeProjectPath? {
+    component: ComponentCreationConfig,
+    config: ExternalNativeBuild
+): NativeProjectPath? {
     val externalProjectPaths = listOfNotNull(
-        variantDslInfo.ninja.path?.let { NativeProjectPath(NINJA, it, variantDslInfo.ninja.configure, variantDslInfo.ninja.buildStagingDirectory) },
+        component.ninja.path?.let { NativeProjectPath(NINJA, it, component.ninja.configure, component.ninja.buildStagingDirectory) },
         config.cmake.path?.let { NativeProjectPath(CMAKE, it, null, config.cmake.buildStagingDirectory) },
         config.ndkBuild.path?.let { NativeProjectPath(NDK_BUILD, it, null, config.ndkBuild.buildStagingDirectory) })
 

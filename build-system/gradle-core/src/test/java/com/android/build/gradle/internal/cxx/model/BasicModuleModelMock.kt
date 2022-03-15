@@ -311,6 +311,7 @@ open class BasicModuleModelMock {
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(variantExternalNativeBuild).`when`(this.variantImpl).externalNativeBuild
         doReturn(mergedNdkConfig).`when`(this.variantImpl).ndkConfig
+        doReturn(variantExperimentalProperties).`when`(this.variantImpl).externalNativeExperimentalProperties
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
@@ -392,7 +393,6 @@ open class BasicModuleModelMock {
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
         doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
         doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
-        doReturn(variantExperimentalProperties).`when`(variantDslInfo).experimentalProperties
         doReturn(true).`when`(variantImpl).debuggable
 
         val ndkInfo = NdkR19Info(ndkFolder)

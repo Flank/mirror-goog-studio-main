@@ -29,7 +29,6 @@ import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
@@ -206,7 +205,7 @@ interface VariantDslInfo {
      */
     val targetDeployApiFromIDE: Int?
 
-    val nativeBuildSystem: VariantManager.NativeBuiltType?
+    val nativeBuildSystem: NativeBuiltType?
 
     val ndkConfig: MergedNdkConfig
 
@@ -349,4 +348,6 @@ interface VariantDslInfo {
 
     // DO NOT USE, Use CreationConfig and subtypes methods.
     val experimentalProperties: Map<String, Any>
+
+    val externalNativeExperimentalProperties: Map<String, Any>
 }

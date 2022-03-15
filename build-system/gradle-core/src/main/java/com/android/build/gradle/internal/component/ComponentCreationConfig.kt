@@ -98,6 +98,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion
     val targetSdkVersionOverride: AndroidVersion?
+    val externalNativeExperimentalProperties: Map<String, Any>
 
     // ---------------------------------------------------------------------------------------------
     // ---------------------------------------------------------------------------------------------
