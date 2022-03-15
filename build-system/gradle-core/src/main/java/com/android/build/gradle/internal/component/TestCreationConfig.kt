@@ -32,6 +32,4 @@ interface TestCreationConfig: ComponentCreationConfig {
     val testedApplicationId: Provider<String>
 
     val isTestCoverageEnabled: Boolean
-
-    val manifestPlaceholders: MapProperty<String, String>
 }

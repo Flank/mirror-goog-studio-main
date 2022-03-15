@@ -46,6 +46,9 @@ class DeepLinkTest {
         // test support for '+', '-', and '.' as per https://tools.ietf.org/html/rfc3986#section-3.1
         assertThat(DeepLink.fromUri("a+-.://www.example.com", UNKNOWN, false).schemes)
             .containsExactly("a+-.")
+
+        assertThat(DeepLink.fromUri("\${foo}://www.example.com", UNKNOWN, false).schemes)
+            .containsExactly("\${foo}")
     }
 
     @Test
@@ -83,6 +86,8 @@ class DeepLinkTest {
 
         assertThat(DeepLink.fromUri(".*.example.com", UNKNOWN, false).host)
                 .isEqualTo("*.example.com")
+
+        assertThat(DeepLink.fromUri("\${foo}", UNKNOWN, false).host).isEqualTo("\${foo}")
 
         assertThat(DeepLink.fromUri("*.example.com", UNKNOWN, false).host).isNull()
 
@@ -155,6 +160,9 @@ class DeepLinkTest {
                 .isEqualTo("/foo\${applicationId}")
 
         assertThat(DeepLink.fromUri("file:/{1}foo{2}", UNKNOWN, false).path).isEqualTo("/.*foo.*")
+
+        assertThat(DeepLink.fromUri("file:/foo\${foo}", UNKNOWN, false).path)
+            .isEqualTo("/foo\${foo}")
     }
 
     @Test

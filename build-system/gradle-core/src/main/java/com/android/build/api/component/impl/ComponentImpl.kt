@@ -93,6 +93,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -345,6 +346,14 @@ abstract class ComponentImpl(
     // by default, we delegate to the build features flags.
     override val buildConfigEnabled: Boolean
         get() = buildFeatures.buildConfig
+
+    override val manifestPlaceholders: MapProperty<String, String> by lazy {
+        internalServices.mapPropertyOf(
+            String::class.java,
+            String::class.java,
+            variantDslInfo.manifestPlaceholders
+        )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

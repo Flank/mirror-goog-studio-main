@@ -17,11 +17,8 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.dsl.AndroidResources
-import org.gradle.api.provider.MapProperty
 
 interface LibraryCreationConfig: VariantCreationConfig, AarCreationConfig {
-    val manifestPlaceholders: MapProperty<String, String>
-
     /**
      * Access to the (locked) AndroidResources DSL.
      * Libraries don't allow overriding these values via the Variant API but they still need access

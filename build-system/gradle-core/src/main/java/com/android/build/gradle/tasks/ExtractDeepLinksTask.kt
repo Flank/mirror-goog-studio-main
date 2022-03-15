@@ -19,10 +19,8 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants.FD_RES_NAVIGATION
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
-import com.android.ide.common.resources.ResourceSet
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
 import com.android.utils.FileUtils
@@ -30,31 +28,37 @@ import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
-import java.util.stream.Collectors
 
 private val DOT_XML_EXT = Regex("\\.xml$")
 
+/**
+ * A task that parses the navigation xml files and produces a single navigation.json file with the
+ * deep link data needed for any downstream app manifest merging.
+ */
 @CacheableTask
-abstract class ExtractDeepLinksTask: AndroidVariantTask() {
+abstract class ExtractDeepLinksTask: NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val navFilesFolders: ListProperty<Directory>
 
+    @get:Optional
+    @get:Input
+    abstract val manifestPlaceholders: MapProperty<String, String>
+
     @get:OutputFile
     abstract val navigationJson: RegularFileProperty
 
-    @TaskAction
-    fun create() {
+    override fun doTaskAction() {
         val navigationIds = mutableSetOf<String>()
         val navDatas = mutableListOf<NavigationXmlDocumentData>()
         navFilesFolders.get().forEach { directory ->
@@ -67,7 +71,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
                             navDatas.add(
                                 NavigationXmlLoader
                                     .load(navigationId, navigationFile, inputStream)
-                                    .convertToData())
+                                    .convertToData(manifestPlaceholders.get().toMap()))
                         }
                     }
                 }
@@ -112,6 +116,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
                     }
                 }
             )
+            task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
         }
     }
 }

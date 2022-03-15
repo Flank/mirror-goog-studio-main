@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
@@ -87,6 +88,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val pseudoLocalesEnabled: Property<Boolean>
     val androidResourcesEnabled: Boolean
     val buildConfigEnabled: Boolean
+    val manifestPlaceholders: MapProperty<String, String>
 
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion

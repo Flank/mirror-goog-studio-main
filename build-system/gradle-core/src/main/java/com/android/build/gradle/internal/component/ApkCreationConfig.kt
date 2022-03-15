@@ -20,7 +20,6 @@ import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.impl.BundleConfigImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
-import org.gradle.api.provider.MapProperty
 import java.io.File
 
 /**
@@ -29,8 +28,6 @@ import java.io.File
 interface ApkCreationConfig: ConsumableCreationConfig {
 
     val androidResources: AndroidResources
-
-    val manifestPlaceholders: MapProperty<String, String>
 
     val embedsMicroApp: Boolean
 

@@ -133,14 +133,6 @@ open class AndroidTestImpl @Inject constructor(
         variantDslInfo.applicationId
     )
 
-    override val manifestPlaceholders: MapProperty<String, String> by lazy {
-        internalServices.mapPropertyOf(
-            String::class.java,
-            String::class.java,
-            variantDslInfo.manifestPlaceholders
-        )
-    }
-
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
                 variantDslInfo.androidResources,

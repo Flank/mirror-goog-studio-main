@@ -31,7 +31,6 @@ import com.android.SdkConstants.TAG_CATEGORY
 import com.android.SdkConstants.TAG_DATA
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.utils.XmlUtils
-import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import org.w3c.dom.Element
 import org.w3c.dom.NamedNodeMap
@@ -206,7 +205,6 @@ object NavGraphExpander {
      *
      * If duplicate [DeepLink]s are found, throws a [NavGraphException]
      */
-    @VisibleForTesting
     @Throws(NavGraphException::class)
     fun findDeepLinks(
         navigationXmlId: String,

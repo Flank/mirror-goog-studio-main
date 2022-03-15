@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
-import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
@@ -116,15 +115,6 @@ abstract class VariantImpl(
     // for compatibility with old variant API.
     fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
         buildConfigFields.put(key, BuildConfigField(type, value, comment))
-    }
-
-    override val manifestPlaceholders: MapProperty<String, String> by lazy {
-        @Suppress("UNCHECKED_CAST")
-        internalServices.mapPropertyOf(
-            String::class.java,
-            String::class.java,
-            variantDslInfo.manifestPlaceholders
-        )
     }
 
     override val packaging: Packaging by lazy {

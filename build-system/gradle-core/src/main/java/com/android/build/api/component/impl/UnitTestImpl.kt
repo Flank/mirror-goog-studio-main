@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -142,17 +141,6 @@ open class UnitTestImpl @Inject constructor(
                 stats
             ) as T
         }
-
-    /**
-     * for unit tests, the placeholders are from the tested variant.
-     */
-    override val manifestPlaceholders: MapProperty<String, String> by lazy {
-        internalServices.mapPropertyOf(
-                String::class.java,
-                String::class.java,
-                variantDslInfo.manifestPlaceholders
-        )
-    }
 
     /**
      * There is no build config fields for unit tests.
