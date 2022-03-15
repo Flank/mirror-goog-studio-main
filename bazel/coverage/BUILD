@@ -867,8 +867,7 @@ coverage_report(
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
-        # TODO(b/182573662) too flaky for coverage
-        #"//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/backgroundtask/model:app-inspection.inspectors.backgroundtask.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/backgroundtask/view:app-inspection.inspectors.backgroundtask.view.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
