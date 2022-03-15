@@ -820,7 +820,7 @@ interface CommonExtension<
     fun compileSdkVersion(apiLevel: Int)
 
     @Incubating
-    @Deprecated("Replaced by compileSdk")
+    @Deprecated("Replaced by compileSdkPreview")
     fun compileSdkVersion(version: String)
 
     /**
