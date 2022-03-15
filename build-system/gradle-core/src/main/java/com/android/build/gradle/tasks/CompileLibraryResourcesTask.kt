@@ -337,7 +337,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             }
             task.inputDirectoriesAsAbsolute.from(inputDirectories)
             task.crunchPng.setDisallowChanges(creationConfig.variantScope.isCrunchPngs)
-            task.pseudoLocalesEnabled.set(creationConfig.variantDslInfo.isPseudoLocalesEnabled)
+            task.pseudoLocalesEnabled.setDisallowChanges(creationConfig.pseudoLocalesEnabled)
             task.relativeResourcePathsEnabled.setDisallowChanges(useRelativeInputDirectories)
             task.excludeValuesFiles.set(false)
             task.dependsOn(creationConfig.taskContainer.resourceGenTask)
