@@ -27,6 +27,7 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -7780,6 +7781,58 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "    @SdkSuppress(minSdkVersion = 21, maxSdkVersion = 29)\n"
                                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "0 errors, 2 warnings");
+    }
+
+    public void test224572537() {
+        lint().files(
+                        manifest().minSdk(14),
+                        kotlin(
+                                        ""
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "import android.database.Cursor\n"
+                                                + "\n"
+                                                + "fun isFirst(cursor: Cursor): Boolean {\n"
+                                                + "    cursor.use {\n"
+                                                + "        return it.isFirst\n"
+                                                + "    }\n"
+                                                + "}\n")
+                                .indented(),
+                        kotlin(
+                                        ""
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "import android.content.Context\n"
+                                                + "import android.util.AttributeSet\n"
+                                                + "\n"
+                                                + "class Toolbar(context: Context, i: Int, attrs: AttributeSet?) {\n"
+                                                + "    init {\n"
+                                                + "        if (attrs != null) {\n"
+                                                + "            context.obtainStyledAttributes(attrs, R.styleable.Toolbar).use {\n"
+                                                + "            }\n"
+                                                + "        }\n"
+                                                + "    }\n"
+                                                + "}")
+                                .indented(),
+                        java(""
+                                        + "package test.pkg;\n"
+                                        + "public class R {\n"
+                                        + "    public static class styleable {\n"
+                                        + "        public static final int[] Toolbar = new int[] {};\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented())
+                .testModes(TestMode.DEFAULT)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/Toolbar.kt:9: Error: Implicit cast from TypedArray to AutoCloseable requires API level 31 (current min is 14) [NewApi]\n"
+                                + "            context.obtainStyledAttributes(attrs, R.styleable.Toolbar).use {\n"
+                                + "                                                                       ~~~\n"
+                                + "src/test/pkg/test.kt:6: Error: Implicit cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
+                                + "    cursor.use {\n"
+                                + "           ~~~\n"
+                                + "2 errors, 0 warnings");
     }
 
     @Override
