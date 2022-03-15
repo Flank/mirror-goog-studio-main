@@ -47,7 +47,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -71,7 +70,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.ProjectInfo;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.AnchorTaskNames;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -976,9 +974,6 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull ComponentImpl component) {
-        VariantScope variantScope = component.getVariantScope();
-        VariantDslInfo variantDslInfo = component.getVariantDslInfo();
-
         com.android.build.api.variant.impl.SigningConfigImpl signingConfig = null;
         boolean isSigningReady = false;
         if (component instanceof ApkCreationConfig) {
@@ -1065,7 +1060,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 additionalRuntimeApks,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
-                variantDslInfo.getSupportedAbis(),
+                component.getSupportedAbis(),
                 instantRun,
                 testOptions,
                 taskContainer.getConnectedTestTask() == null

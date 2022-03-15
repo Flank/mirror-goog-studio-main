@@ -30,6 +30,7 @@ import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -189,7 +190,7 @@ class ApplicationVariantFactory(
             populateMultiApkOutputs(abis, densities, globalConfig)
         variantOutputs.forEach { appVariant.addVariantOutput(it) }
         restrictEnabledOutputs(
-                appVariant.variantDslInfo,
+                appVariant,
                 appVariant.outputs,
                 globalConfig
         )
@@ -301,11 +302,11 @@ class ApplicationVariantFactory(
     }
 
     private fun restrictEnabledOutputs(
-        variantDslInfo: VariantDslInfo,
+        component: ComponentCreationConfig,
         variantOutputs: VariantOutputList,
         globalConfig: GlobalTaskCreationConfig
     ) {
-        val supportedAbis: Set<String> = variantDslInfo.supportedAbis
+        val supportedAbis: Set<String> = component.supportedAbis
         val projectOptions = projectServices.projectOptions
         val buildTargetAbi =
             (if (projectOptions[BooleanOption.BUILD_ONLY_TARGET_ABI]

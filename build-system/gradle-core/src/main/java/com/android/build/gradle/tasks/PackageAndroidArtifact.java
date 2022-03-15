@@ -1284,9 +1284,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
             packageAndroidArtifact.getBaseModuleMetadata().disallowChanges();
-            if (!variantDslInfo.getSupportedAbis().isEmpty()) {
+            if (!creationConfig.getSupportedAbis().isEmpty()) {
                 // If the build author has set the supported Abis that is respected
-                packageAndroidArtifact.getAbiFilters().set(variantDslInfo.getSupportedAbis());
+                packageAndroidArtifact.getAbiFilters().set(creationConfig.getSupportedAbis());
             } else {
                 // Otherwise, use the injected Abis if set.
                 packageAndroidArtifact

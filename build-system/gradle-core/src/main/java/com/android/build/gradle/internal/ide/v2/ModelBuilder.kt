@@ -627,7 +627,6 @@ class ModelBuilder<
 
     private fun createAndroidArtifact(component: ComponentImpl): AndroidArtifactImpl {
         val variantData = component.variantData
-        val variantDslInfo = component.variantDslInfo
         // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer
 
@@ -703,7 +702,7 @@ class ModelBuilder<
             isSigned = signingConfig?.hasConfig() ?: false,
 
 
-            abiFilters = variantDslInfo.supportedAbis,
+            abiFilters = component.supportedAbis,
             testInfo = testInfo,
             bundleInfo = getBundleInfo(component),
             codeShrinker = CodeShrinker.R8.takeIf {

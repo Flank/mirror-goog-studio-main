@@ -188,6 +188,8 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val publishInfo: VariantPublishingInfo?
 
+    val supportedAbis: Set<String>
+
     // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
     // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
     // switches to the new variant API.

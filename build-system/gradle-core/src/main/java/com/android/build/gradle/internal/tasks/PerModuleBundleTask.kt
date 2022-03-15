@@ -312,7 +312,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     )
                 )
             } else {
-                task.abiFilters.set(creationConfig.variantDslInfo.supportedAbis)
+                task.abiFilters.set(creationConfig.supportedAbis)
             }
             task.abiFilters.disallowChanges()
             task.appMetadata.disallowChanges()

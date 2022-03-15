@@ -57,7 +57,7 @@ class TestDataImpl(
         testConfig.services.provider { testConfig.testedConfig.componentType.isAar }
 
     @get:Input
-    val supportedAbis: Set<String> = testConfig.testedConfig.variantDslInfo.supportedAbis
+    val supportedAbis: Set<String> = testConfig.testedConfig.supportedAbis
 
     override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider, logger: ILogger

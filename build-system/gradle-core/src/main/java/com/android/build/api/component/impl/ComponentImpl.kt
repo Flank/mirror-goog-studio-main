@@ -822,6 +822,8 @@ abstract class ComponentImpl(
         get() = variantDslInfo.isAndroidTestCoverageEnabled
     override val publishInfo: VariantPublishingInfo?
         get() = variantDslInfo.publishInfo
+    override val supportedAbis: Set<String>
+        get() = variantDslInfo.supportedAbis
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
         variantDslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
