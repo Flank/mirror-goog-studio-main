@@ -139,7 +139,7 @@ public class SplitApkInstaller extends SplitApkInstallerBase {
             InstallReceiver receiver = new InstallReceiver();
             AdbHelper.executeRemoteCommand(
                     AndroidDebugBridge.getSocketAddress(),
-                    AdbHelper.AdbService.EXEC,
+                    getServiceWrite(),
                     command,
                     getDevice(),
                     receiver,

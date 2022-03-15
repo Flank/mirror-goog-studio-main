@@ -70,7 +70,7 @@ public class IntegrationTest {
 
     private static final String RELEASE = "8.0";
 
-    private static final String SDK = "26";
+    private static final String SDK = "30";
 
     private static final int REASONABLE_TIMEOUT_S = 5;
 

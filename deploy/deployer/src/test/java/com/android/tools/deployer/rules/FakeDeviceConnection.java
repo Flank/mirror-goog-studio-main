@@ -18,6 +18,7 @@ package com.android.tools.deployer.rules;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.fakeadbserver.FakeAdbServer;
+import com.android.fakeadbserver.hostcommandhandlers.FeaturesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.tools.deployer.devices.DeviceId;
 import com.android.tools.deployer.devices.FakeDevice;
@@ -70,6 +71,9 @@ public class FakeDeviceConnection implements TestRule {
 
         FakeDeviceHandler handler = new FakeDeviceHandler();
         builder.addDeviceHandler(handler);
+        builder.setHostCommandHandler(FeaturesCommandHandler.COMMAND, FeaturesCommandHandler::new);
+        builder.setHostCommandHandler(
+                FeaturesCommandHandler.HOST_COMMAND, FeaturesCommandHandler::new);
 
         server = builder.build();
         handler.connect(device, server);

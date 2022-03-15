@@ -100,6 +100,7 @@ public class SplitApkInstallerTest extends TestCase {
     }
 
     private SplitApkInstaller createInstaller() {
+        EasyMock.expect(mMockIDevice.supportsFeature(IDevice.Feature.ABB_EXEC)).andStubReturn(true);
         EasyMock.expect(mMockIDevice.getVersion())
                 .andStubReturn(
                         new AndroidVersion(

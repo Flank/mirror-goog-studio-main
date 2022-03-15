@@ -18,6 +18,7 @@ package com.android.fakeadbserver.shellcommandhandlers
 import com.android.fakeadbserver.CommandHandler
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
+import com.android.fakeadbserver.PackageManager
 import java.io.IOException
 import java.net.Socket
 
@@ -35,6 +36,7 @@ class CmdCommandHandler : SimpleShellHandler("cmd") {
       CommandHandler.writeOkay(output)
 
       val response: String = when {
+        args.split(" ").contains(PackageManager.BAD_FLAG) -> "Error: (requested to fail via -BAD_FAG)"
         args.startsWith("package install-create") -> installMultiple()
         args.startsWith("package install-commit") -> installCommit()
         else -> ""

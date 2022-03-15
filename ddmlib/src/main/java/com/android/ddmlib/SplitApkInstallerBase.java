@@ -26,19 +26,66 @@ import java.util.concurrent.TimeUnit;
 public abstract class SplitApkInstallerBase {
     private static final String LOG_TAG = "SplitApkInstallerBase";
 
-    @NonNull private final IDevice mDevice;
+    // To introduce install over abbExec smoothly, we protect it with this flag. This can safely be
+    // deleted once we are confident it did not break anything.
+    private static boolean abbExecAllowed = true;
+
+    @NonNull protected final IDevice mDevice;
     @NonNull private final String mOptions;
     @NonNull private final String mPrefix;
+
+    // We need two services. The most recent devices uses the same ABB_EXEC but to remain backward
+    // compatible we must mimic how install used to take place with SHELL for create, commit and
+    // EXEC for write. Once we fix unify Fakeadbserver pm handling, we can move to having only
+    // once service for all four types of queries.
+    @NonNull private final AdbHelper.AdbService mService;
+    @NonNull private final AdbHelper.AdbService mServiceWrite;
 
     protected SplitApkInstallerBase(@NonNull IDevice device, @NonNull String options) {
         this.mDevice = device;
         this.mOptions = options;
-        this.mPrefix =
-                mDevice.getVersion()
-                                .isGreaterOrEqualThan(
-                                        AndroidVersion.BINDER_CMD_AVAILABLE.getApiLevel())
-                        ? "cmd package"
-                        : "pm";
+
+        // Multiple install strategies are available, offering increasing speed, depending on the
+        // device capabilities.
+        //
+        // API <24, we must use "pm" (which connects to "package" binder service) over EXEC adb
+        // service. This is the slowest option.
+        // API >= 24, we use "cmd" (specifying "package" binder service ) over EXEC adb
+        // service.
+        // If available (likely API >=30 ), we use "package" binder service over ABB_EXEC
+        // adb service. This is the fastest option to date.
+        //
+        // Note that two completely different services are involved :
+        //    - ADB services (see services.txt for more details).
+        //    - Android Binder services.
+
+        if (mDevice.supportsFeature(IDevice.Feature.ABB_EXEC) && abbExecAllowed) {
+            this.mPrefix = "package";
+            this.mService = AdbHelper.AdbService.ABB_EXEC;
+            this.mServiceWrite = AdbHelper.AdbService.ABB_EXEC;
+        } else if (supportsCmd(device)) {
+            this.mPrefix = "cmd package";
+            this.mService = AdbHelper.AdbService.SHELL;
+            this.mServiceWrite = AdbHelper.AdbService.EXEC;
+        } else {
+            this.mPrefix = "pm";
+            this.mService = AdbHelper.AdbService.SHELL;
+            this.mServiceWrite = AdbHelper.AdbService.EXEC;
+        }
+
+        Log.i(
+                LOG_TAG,
+                String.format(
+                        "Install-Write Strategy '%s' over '%s'", mPrefix, mServiceWrite.name()));
+    }
+
+    private static boolean supportsCmd(IDevice device) {
+        return device.getVersion()
+                .isGreaterOrEqualThan(AndroidVersion.BINDER_CMD_AVAILABLE.getApiLevel());
+    }
+
+    static void setAbbExecAllowed(boolean allowed) {
+        abbExecAllowed = allowed;
     }
 
     protected String createMultiInstallSession(
@@ -51,7 +98,16 @@ public abstract class SplitApkInstallerBase {
         if (!options.trim().isEmpty()) {
             cmd = cmd + " " + options;
         }
-        mDevice.executeShellCommand(cmd, receiver, timeout, unit);
+        AdbHelper.executeRemoteCommand(
+                AndroidDebugBridge.getSocketAddress(),
+                mService,
+                cmd,
+                mDevice,
+                receiver,
+                0L,
+                timeout,
+                unit,
+                null);
         String sessionId = receiver.getSessionId();
         if (sessionId == null) {
             String message = String.format("'%s'", cmd);
@@ -86,7 +142,16 @@ public abstract class SplitApkInstallerBase {
                     IOException, InstallException {
         String command = mPrefix + " install-commit " + sessionId;
         InstallReceiver receiver = new InstallReceiver();
-        mDevice.executeShellCommand(command, receiver, timeout, unit);
+        AdbHelper.executeRemoteCommand(
+                AndroidDebugBridge.getSocketAddress(),
+                mService,
+                command,
+                mDevice,
+                receiver,
+                0L,
+                timeout,
+                unit,
+                null);
         if (!receiver.isSuccessfullyCompleted()) {
             String message =
                     String.format(
@@ -105,7 +170,16 @@ public abstract class SplitApkInstallerBase {
                     IOException, InstallException {
         String command = mPrefix + " install-abandon " + sessionId;
         InstallReceiver receiver = new InstallReceiver();
-        mDevice.executeShellCommand(command, receiver, timeout, unit);
+        AdbHelper.executeRemoteCommand(
+                AndroidDebugBridge.getSocketAddress(),
+                mService,
+                command,
+                mDevice,
+                receiver,
+                0L,
+                timeout,
+                unit,
+                null);
         if (!receiver.isSuccessfullyCompleted()) {
             Log.e(LOG_TAG, String.format("Failed to abandon install session %s", sessionId));
         }
@@ -124,6 +198,16 @@ public abstract class SplitApkInstallerBase {
     @NonNull
     protected String getOptions() {
         return mOptions;
+    }
+
+    @NonNull
+    protected AdbHelper.AdbService getService() {
+        return mService;
+    }
+
+    @NonNull
+    protected AdbHelper.AdbService getServiceWrite() {
+        return mServiceWrite;
     }
 
     @NonNull

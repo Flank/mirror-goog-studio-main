@@ -21,12 +21,15 @@ import com.android.fakeadbserver.CommandHandler;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
+import com.android.tools.deployer.devices.shell.Arguments;
+import com.android.tools.deployer.devices.shell.Cmd;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -70,12 +73,30 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
                             return shell(device, args, socket);
                         case "sync":
                             return sync(device, args, socket);
+                        case "abb_exec":
+                            return abb_exec(device, args, socket);
                     }
                     return false;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace(System.err);
+        }
+        return false;
+    }
+
+    private boolean abb_exec(FakeDevice device, String args, Socket socket) throws IOException {
+        String[] argArray = args.split("\u0000");
+        device.getShell().getHistory().add("abb_exec " + String.join(" ", argArray));
+        CommandHandler.writeOkay(socket.getOutputStream());
+        Arguments parameters = new Arguments(argArray);
+        Cmd cmd = new Cmd();
+        try (PrintStream ps = new PrintStream(socket.getOutputStream())) {
+            int rc = cmd.run(device, parameters, socket.getInputStream(), ps);
+            ps.flush();
+            if (rc == 0) {
+                return true;
+            }
         }
         return false;
     }

@@ -24,6 +24,8 @@ import java.net.Socket
 import java.nio.charset.Charset
 import java.util.regex.Pattern
 
+// TODO: Unify ExecCommandHandler and CmdCommandHandler and PackageManagerCommandHandler,
+//       and AbbExecCommandHandler
 class ExecCommandHandler : DeviceCommandHandler("exec") {
   companion object {
     const val PING_EXEC = "ping"
@@ -38,6 +40,8 @@ class ExecCommandHandler : DeviceCommandHandler("exec") {
 
       val response: String = when {
         args.startsWith("cmd package install-write") -> installWrite(args, socket.getInputStream())
+        args.startsWith("package install-create") -> installMultiple()
+        args.startsWith("package install-commit") -> installCommit()
         args.equals(PING_EXEC) -> PING_EXEC_OUTPUT
         else -> ""
       }
@@ -47,6 +51,24 @@ class ExecCommandHandler : DeviceCommandHandler("exec") {
     catch (ignored: IOException) {
     }
   }
+
+    /**
+     * Handler for commands that look like:
+     *
+     *    adb shell cmd package install-create -r -t --ephemeral -S 1298948
+     */
+    private fun installMultiple(): String {
+        return "Success: created install session [1234]"
+    }
+
+    /**
+     * handler for commands that look like:
+     *
+     *    adb shell cmd package install-commit 538681231
+     */
+    private fun installCommit(): String {
+        return "Success\n"
+    }
 
   /**
    * Handler for commands that look like:
