@@ -86,9 +86,6 @@ public final class FakeAdbServer implements AutoCloseable {
      */
     private final Map<String, Supplier<HostCommandHandler>> mHostCommandHandlers = new HashMap<>();
 
-    private final Map<String, Supplier<DeviceCommandHandler>> mDeviceCommandHandlers =
-            new HashMap<>();
-
     private final List<DeviceCommandHandler> mHandlers = new ArrayList<>();
 
     private final Map<String, DeviceState> mDevices = new HashMap<>();
