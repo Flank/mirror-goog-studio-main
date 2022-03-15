@@ -8,7 +8,7 @@ load("//tools/base/bazel:proto.bzl", "maven_proto_library")
 maven_proto_library(
     name = "lint-checks-proto",
     srcs = glob(["libs/lint-checks/src/main/**/*.proto"]),
-    coordinates = "com.android.tools.lint.checks.proto:lint-checks-proto:" + BASE_VERSION,
+    coordinates = "com.android.tools:play-sdk-proto:" + BASE_VERSION,
     description = "A protobuf message used for Google Play SDK Index",
     notice = "libs/lint-model/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-checks/src/main/proto/",

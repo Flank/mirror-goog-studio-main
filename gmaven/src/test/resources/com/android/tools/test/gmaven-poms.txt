@@ -199,6 +199,12 @@ com.android.tools:ninepatch
   dependencies:
     com.google.guava:guava (runtime)
 
+com.android.tools:play-sdk-proto
+  pomName=com.android.tools.play-sdk-proto
+  description=A protobuf message used for Google Play SDK Index
+  dependencies:
+    com.google.protobuf:protobuf-java (runtime)
+
 com.android.tools:repository
   pomName=com.android.tools.repository
   description=A library for downloading and managing package repositories
@@ -645,7 +651,7 @@ com.android.tools.lint:lint-checks
     com.android.tools.external.org-jetbrains:uast (runtime)
     com.android.tools:common (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.android.tools.lint.checks.proto:lint-checks-proto (runtime)
+    com.android.tools:play-sdk-proto (runtime)
     com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
     com.google.code.gson:gson (runtime)
@@ -703,12 +709,6 @@ com.android.tools.lint:lint-typedef-remover
     com.android.tools:annotations (runtime)
     com.google.guava:guava (runtime)
     org.ow2.asm:asm (runtime)
-
-com.android.tools.lint.checks.proto:lint-checks-proto
-  pomName=com.android.tools.lint.checks.proto.lint-checks-proto
-  description=A protobuf message used for Google Play SDK Index
-  dependencies:
-    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.pixelprobe:pixelprobe
   pomName=Pixel Probe

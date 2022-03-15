@@ -2170,17 +2170,6 @@ com/android/tools/layoutlib/layoutlib-api
   com/android/ide/common/rendering/api/
   com/android/resources/
 
-com/android/tools/lint/checks/proto/lint-checks-proto
-  META-INF/
-  META-INF/MANIFEST.MF
-  NOTICE
-  com/
-  com/android/
-  com/android/tools/
-  com/android/tools/lint/
-  com/android/tools/lint/checks/
-  index.proto
-
 com/android/tools/lint/lint
   META-INF/
   META-INF/MANIFEST.MF
@@ -2299,6 +2288,17 @@ com/android/tools/pixelprobe/pixelprobe
   icc/
   icc/cmyk/
   icc/cmyk/USWebCoatedSWOP.icc
+
+com/android/tools/play-sdk-proto
+  META-INF/
+  META-INF/MANIFEST.MF
+  NOTICE
+  com/
+  com/android/
+  com/android/tools/
+  com/android/tools/lint/
+  com/android/tools/lint/checks/
+  index.proto
 
 com/android/tools/repository
   META-INF/
