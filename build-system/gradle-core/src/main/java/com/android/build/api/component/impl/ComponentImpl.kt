@@ -77,6 +77,7 @@ import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.IssueReporter
+import com.android.builder.model.VectorDrawablesOptions
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
@@ -824,6 +825,8 @@ abstract class ComponentImpl(
         get() = variantDslInfo.publishInfo
     override val supportedAbis: Set<String>
         get() = variantDslInfo.supportedAbis
+    override val vectorDrawables: VectorDrawablesOptions
+        get() = variantDslInfo.vectorDrawables
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
         variantDslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)

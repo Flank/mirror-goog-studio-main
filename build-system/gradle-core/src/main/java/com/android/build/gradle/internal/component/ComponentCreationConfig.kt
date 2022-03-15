@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
+import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -189,6 +190,8 @@ interface ComponentCreationConfig : ComponentIdentity {
     val publishInfo: VariantPublishingInfo?
 
     val supportedAbis: Set<String>
+
+    val vectorDrawables: VectorDrawablesOptions
 
     // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
     // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT

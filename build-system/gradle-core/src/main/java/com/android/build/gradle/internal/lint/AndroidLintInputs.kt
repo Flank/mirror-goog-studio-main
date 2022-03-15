@@ -1337,7 +1337,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
         )
         useSupportLibraryVectorDrawables.setDisallowChanges(
-            componentImpl.variantDslInfo.vectorDrawables.useSupportLibrary ?: false
+            componentImpl.vectorDrawables.useSupportLibrary ?: false
         )
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))

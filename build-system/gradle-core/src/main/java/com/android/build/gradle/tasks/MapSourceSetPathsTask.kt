@@ -187,7 +187,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             task.localResources.setDisallowChanges(
                 creationConfig.sources.res.getLocalSourcesAsFileCollection()
             )
-            if (creationConfig.variantDslInfo.vectorDrawables.useSupportLibrary == false) {
+            if (creationConfig.vectorDrawables.useSupportLibrary == false) {
                 task.generatedPngsOutputDir.setDisallowChanges(
                     (creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES)
                             as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {
