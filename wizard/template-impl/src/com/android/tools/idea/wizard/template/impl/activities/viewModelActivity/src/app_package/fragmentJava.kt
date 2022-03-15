@@ -49,18 +49,18 @@ public class ${fragmentClass} extends Fragment {
 
     private ${viewModelClass} mViewModel;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mViewModel = $viewModelInitializationBlock
+        // TODO: Use the ViewModel
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.${fragmentLayout}, container, false);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        mViewModel = $viewModelInitializationBlock
-        // TODO: Use the ViewModel
     }
 
 }

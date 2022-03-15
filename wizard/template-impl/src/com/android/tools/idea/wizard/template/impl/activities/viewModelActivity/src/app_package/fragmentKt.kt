@@ -48,15 +48,15 @@ class ${fragmentClass} : Fragment() {
 
     private lateinit var viewModel: ${viewModelClass}
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = $viewModelInitializationBlock
+        // TODO: Use the ViewModel
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.${fragmentLayout}, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = $viewModelInitializationBlock
-        // TODO: Use the ViewModel
     }
 
 }
