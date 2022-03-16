@@ -117,8 +117,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             task.versionCode.setDisallowChanges(creationConfig.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(creationConfig.outputs.getMainSplit().versionName)
             task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis.sorted())
-            task.ignoredLibraryKeepRules.setDisallowChanges(
-                    creationConfig.variantDslInfo.ignoredLibraryKeepRules)
+            task.ignoredLibraryKeepRules.setDisallowChanges(creationConfig.ignoredLibraryKeepRules)
             task.ignoreAllLibraryKeepRules.setDisallowChanges(
                     creationConfig.ignoreAllLibraryKeepRules)
         }
