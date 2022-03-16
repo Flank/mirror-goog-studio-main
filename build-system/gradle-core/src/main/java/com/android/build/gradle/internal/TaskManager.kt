@@ -441,6 +441,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // android resources tasks
         if (testFixturesComponent.androidResourcesEnabled) {
             taskFactory.register(ExtractDeepLinksTask.CreationAction(testFixturesComponent))
+            taskFactory.register(ExtractDeepLinksTask.AarCreationAction(testFixturesComponent))
 
             createGenerateResValuesTask(testFixturesComponent)
 

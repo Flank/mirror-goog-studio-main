@@ -248,6 +248,9 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // Information neeeded to resolve included navigation graphs into intent filters
     object NAVIGATION_JSON: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Similar to [NAVIGATION_JSON], but it lacks the source file information, which shouldn't be in
+    // the AAR.
+    object NAVIGATION_JSON_FOR_AAR: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // --- Namespaced android res ---
     // An AAPT2 static library: InternalArtifactType<RegularFile>(FILE), Replaceable containing only the current sub-project's resources.

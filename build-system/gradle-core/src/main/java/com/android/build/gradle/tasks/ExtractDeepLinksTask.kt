@@ -17,18 +17,22 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_NAVIGATION
+import com.android.SdkConstants.FN_NAVIGATION_JSON
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.ide.common.blame.SourceFilePosition
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
 import com.android.utils.FileUtils
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -55,6 +59,15 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, String>
 
+    /**
+     * If [forAar] is true, (1) use [SourceFilePosition.UNKNOWN] to avoid leaking source file
+     * locations into the AAR, and (2) don't write an output navigation.json when there are no
+     * navigation xml inputs because we don't want to package an empty navigation.json in the AAR.
+     */
+    @get:Optional
+    @get:Input
+    abstract val forAar: Property<Boolean>
+
     @get:OutputFile
     abstract val navigationJson: RegularFileProperty
 
@@ -71,25 +84,48 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
                             navDatas.add(
                                 NavigationXmlLoader
                                     .load(navigationId, navigationFile, inputStream)
-                                    .convertToData(manifestPlaceholders.get().toMap()))
+                                    .convertToData(manifestPlaceholders.get().toMap(), forAar.get())
+                            )
                         }
                     }
                 }
             }
         }
-        FileUtils.writeToFile(
-            navigationJson.asFile.get(),
-            GsonBuilder().setPrettyPrinting().create().toJson(navDatas))
+        if (!forAar.get() || navDatas.isNotEmpty()) {
+            FileUtils.writeToFile(
+                navigationJson.asFile.get(),
+                GsonBuilder().setPrettyPrinting().create().toJson(navDatas)
+            )
+        }
     }
 
     class CreationAction(
+        creationConfig: ComponentCreationConfig
+    ) : BaseCreationAction(creationConfig) {
+        override val forAar = false
+        override val internalArtifactType = InternalArtifactType.NAVIGATION_JSON
+        override val name: String
+            get() = computeTaskName("extractDeepLinks")
+    }
+
+    class AarCreationAction(
+        creationConfig: ComponentCreationConfig
+    ) : BaseCreationAction(creationConfig) {
+        override val forAar = true
+        override val internalArtifactType = InternalArtifactType.NAVIGATION_JSON_FOR_AAR
+        override val name: String
+            get() = computeTaskName("extractDeepLinksForAar")
+    }
+
+    abstract class BaseCreationAction(
         creationConfig: ComponentCreationConfig
     ) : VariantTaskCreationAction<ExtractDeepLinksTask, ComponentCreationConfig>(
         creationConfig
     ) {
 
-        override val name: String
-            get() = computeTaskName("extractDeepLinks")
+        abstract val forAar: Boolean
+        abstract val internalArtifactType: InternalArtifactType<RegularFile>
+
         override val type: Class<ExtractDeepLinksTask>
             get() = ExtractDeepLinksTask::class.java
 
@@ -100,7 +136,7 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ExtractDeepLinksTask::navigationJson
-            ).withName("navigation.json").on(InternalArtifactType.NAVIGATION_JSON)
+            ).withName(FN_NAVIGATION_JSON).on(internalArtifactType)
         }
 
         override fun configure(
@@ -117,6 +153,7 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
                 }
             )
             task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
+            task.forAar.set(forAar)
         }
     }
 }

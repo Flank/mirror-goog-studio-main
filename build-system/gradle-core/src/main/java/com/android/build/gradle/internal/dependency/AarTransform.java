@@ -27,6 +27,7 @@ import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
+import static com.android.SdkConstants.FN_NAVIGATION_JSON;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
@@ -96,6 +97,7 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             ArtifactType.PREFAB_PACKAGE,
             ArtifactType.AAR_METADATA,
             ArtifactType.ART_PROFILE,
+            ArtifactType.NAVIGATION_JSON,
         };
     }
 
@@ -201,6 +203,9 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                                 input,
                                 SdkConstants.FN_ART_PROFILE),
                         transformOutputs);
+                break;
+            case NAVIGATION_JSON:
+                outputIfExists(new File(input, FN_NAVIGATION_JSON), transformOutputs);
                 break;
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);

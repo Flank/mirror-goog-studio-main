@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
+import com.android.utils.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
@@ -137,6 +138,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             }
             if (creationConfig.androidResourcesEnabled) {
                 task.from(artifacts.get(InternalArtifactType.PUBLIC_RES))
+                task.from(artifacts.get(InternalArtifactType.NAVIGATION_JSON_FOR_AAR))
             }
             task.from(artifacts.get(InternalArtifactType.ANNOTATIONS_ZIP))
             task.from(artifacts.get(InternalArtifactType.AAR_MAIN_JAR))
