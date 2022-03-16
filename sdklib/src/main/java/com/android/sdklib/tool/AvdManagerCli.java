@@ -60,6 +60,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -242,7 +244,9 @@ class AvdManagerCli extends CommandLineParser {
 
             @Override
             public void info(@NonNull String msgFormat, Object... args) {
-                System.out.printf(msgFormat, args);
+                if (!cli.get().isSilent()) {
+                    System.out.printf(msgFormat, args);
+                }
             }
 
             @Override
@@ -652,16 +656,28 @@ class AvdManagerCli extends CommandLineParser {
           .collect(Collectors.joining("\n"));
     }
 
-    /**
-     * Creates a new AVD. This is a text based creation with command line prompt.
-     */
-    private void createAvd() {
-        ProgressIndicator progress = new ConsoleProgressIndicator() {
+    /** Creates a {@code ProgressIndicator} that takes verbosity preferences into account. */
+    private ProgressIndicator createProgressIndicator() {
+        PrintStream out = System.out;
+        PrintStream err = System.err;
+        if (isSilent()) {
+            // Prevent the progress indicator from printing anything when the user wants a silent
+            // run.
+            OutputStream nullStream = new NullOutputStream();
+            out = new PrintStream(nullStream);
+        }
+
+        return new ConsoleProgressIndicator(out, err) {
             @Override
             public void logVerbose(@NonNull String s) {
                 // don't log verbose messages
             }
         };
+    }
+
+    /** Creates a new AVD. This is a text based creation with command line prompt. */
+    private void createAvd() {
+        ProgressIndicator progress = createProgressIndicator();
         String packagePath = getParamPkgPath();
         if (packagePath == null) {
             errorAndExit(
@@ -1078,12 +1094,14 @@ class AvdManagerCli extends CommandLineParser {
     @NonNull
     private Map<String, String> promptForHardware() throws IOException {
         byte[] readLineBuffer = new byte[256];
-        String result;
         String defaultAnswer = "no";
+        String result = defaultAnswer;
 
         mSdkLog.info("Do you wish to create a custom hardware profile? [%s] ", defaultAnswer);
 
-        result = readLine(readLineBuffer).trim();
+        if (!isSilent()) {
+            result = readLine(readLineBuffer).trim();
+        }
         // handle default:
         if (result.isEmpty()) {
             result = defaultAnswer;
@@ -1427,6 +1445,20 @@ class AvdManagerCli extends CommandLineParser {
     private void errorAndExit(String format, Object... args) {
         mSdkLog.error(null, format, args);
         throw new RuntimeException();
+    }
+
+    /**
+     * Discards all writes. This class can be replaced by OutputStream.nullOutputStream when we
+     * switch to Java 11. There are technically slightly different semantics (e.g. the Java-11
+     * version throws an exception when you write to a closed stream), but those shouldn't impact
+     * AvdManager.
+     */
+    private static class NullOutputStream extends OutputStream {
+        @Override
+        public void write(int b) throws IOException {}
+
+        @Override
+        public void write(byte b[], int off, int len) throws IOException {}
     }
 
     @VisibleForTesting

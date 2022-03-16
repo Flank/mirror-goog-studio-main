@@ -17,6 +17,7 @@
 package com.android.sdklib.tool;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -44,6 +45,8 @@ import com.android.testutils.MockLog;
 import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,6 +66,10 @@ public class AvdManagerCliTest {
     private final Path sdkPath = InMemoryFileSystems.getSomeRoot(fileSystem).resolve("sdk");
     private final Path avdPath = InMemoryFileSystems.getSomeRoot(fileSystem).resolve("avd");
     private final Path emuLibPath = sdkPath.resolve("emulator/lib");
+    private final String android25GoogleApisSdkPath = "system-images;android-25;google_apis;x86";
+    private final String android25GoogleApisPlayStoreSdkPath =
+            "system-images;android-25;google_apis_playstore;x86";
+    private final String android26WearSdkPath = "system-images;android-26;android-wear;armeabi-v7a";
 
     private AndroidSdkHandler mSdkHandler;
     private MockLog mLogger;
@@ -74,9 +81,9 @@ public class AvdManagerCliTest {
     @Before
     public void setUp() throws Exception {
         RepositoryPackages packages = new RepositoryPackages();
-        String gApiPath = "system-images;android-25;google_apis;x86";
         FakePackage.FakeLocalPackage p1 =
-                new FakePackage.FakeLocalPackage(gApiPath, sdkPath.resolve("gapi"));
+                new FakePackage.FakeLocalPackage(
+                        android25GoogleApisSdkPath, sdkPath.resolve("gapi"));
         DetailsTypes.SysImgDetailsType details1 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details1.getTags().add(IdDisplay.create("google_apis", "Google APIs"));
@@ -88,9 +95,9 @@ public class AvdManagerCliTest {
                 p1.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
         InMemoryFileSystems.recordExistingFile(p1.getLocation().resolve(AvdManager.USERDATA_IMG));
 
-        String gPlayPath = "system-images;android-25;google_apis_playstore;x86";
         FakePackage.FakeLocalPackage p2 =
-                new FakePackage.FakeLocalPackage(gPlayPath, sdkPath.resolve("play"));
+                new FakePackage.FakeLocalPackage(
+                        android25GoogleApisPlayStoreSdkPath, sdkPath.resolve("play"));
         DetailsTypes.SysImgDetailsType details2 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details2.getTags().add(IdDisplay.create("google_apis_playstore", "Google Play"));
@@ -102,9 +109,8 @@ public class AvdManagerCliTest {
                 p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
         InMemoryFileSystems.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 
-        String wearPath = "system-images;android-26;android-wear;armeabi-v7a";
         FakePackage.FakeLocalPackage p3 =
-                new FakePackage.FakeLocalPackage(wearPath, sdkPath.resolve("wear"));
+                new FakePackage.FakeLocalPackage(android26WearSdkPath, sdkPath.resolve("wear"));
         DetailsTypes.SysImgDetailsType details3 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details3.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
@@ -139,10 +145,14 @@ public class AvdManagerCliTest {
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
         mGapiImage =
                 systemImageManager.getImageAt(
-                        mSdkHandler.getLocalPackage(gApiPath, progress).getLocation());
+                        mSdkHandler
+                                .getLocalPackage(android25GoogleApisSdkPath, progress)
+                                .getLocation());
         mGPlayImage =
                 systemImageManager.getImageAt(
-                        mSdkHandler.getLocalPackage(gPlayPath, progress).getLocation());
+                        mSdkHandler
+                                .getLocalPackage(android25GoogleApisPlayStoreSdkPath, progress)
+                                .getLocation());
         Files.createDirectories(sdkPath.resolve("skins").resolve("nexus_s"));
     }
 
@@ -152,7 +162,7 @@ public class AvdManagerCliTest {
                 new String[] {
                     "create", "avd",
                     "--name", "testAvd",
-                    "-k", "system-images;android-25;google_apis;x86",
+                    "-k", android25GoogleApisSdkPath,
                     "-d", "Nexus 6P"
                 });
         mAvdManager.reloadAvds(mLogger);
@@ -204,10 +214,10 @@ public class AvdManagerCliTest {
     public void createAvd_withPlayStore() throws Exception {
         mCli.run(
                 new String[] {
-                        "create", "avd",
-                        "--name", "testAvd",
-                        "-k", "system-images;android-25;google_apis_playstore;x86",
-                        "-d", "Nexus 6P"
+                    "create", "avd",
+                    "--name", "testAvd",
+                    "-k", android25GoogleApisPlayStoreSdkPath,
+                    "-d", "Nexus 6P"
                 });
         mAvdManager.reloadAvds(mLogger);
         AvdInfo info = mAvdManager.getAvd("testAvd", true);
@@ -233,19 +243,19 @@ public class AvdManagerCliTest {
     @Test
     public void deleteAvd() throws Exception {
         mCli.run(
-          new String[] {
-            "create", "avd",
-            "--name", "testAvd1",
-            "-k", "system-images;android-25;google_apis;x86",
-            "-d", "Nexus 6P"
-          });
+                new String[] {
+                    "create", "avd",
+                    "--name", "testAvd1",
+                    "-k", android25GoogleApisSdkPath,
+                    "-d", "Nexus 6P"
+                });
         mCli.run(
-          new String[] {
-            "create", "avd",
-            "--name", "testAvd2",
-            "-k", "system-images;android-26;android-wear;armeabi-v7a",
-            "-d", "Nexus 6P"
-          });
+                new String[] {
+                    "create", "avd",
+                    "--name", "testAvd2",
+                    "-k", android26WearSdkPath,
+                    "-d", "Nexus 6P"
+                });
         mAvdManager.reloadAvds(mLogger);
         assertEquals(2, mAvdManager.getAllAvds().length);
 
@@ -261,12 +271,12 @@ public class AvdManagerCliTest {
     @Test
     public void moveAvd() throws Exception {
         mCli.run(
-          new String[] {
-            "create", "avd",
-            "--name", "testAvd1",
-            "-k", "system-images;android-25;google_apis;x86",
-            "-d", "Nexus 6P"
-          });
+                new String[] {
+                    "create", "avd",
+                    "--name", "testAvd1",
+                    "-k", android25GoogleApisSdkPath,
+                    "-d", "Nexus 6P"
+                });
         Path moved = avdPath.resolve("moved");
         mCli.run(
                 new String[] {
@@ -285,19 +295,19 @@ public class AvdManagerCliTest {
     @Test
     public void listAvds() throws Exception {
         mCli.run(
-          new String[]{
-            "create", "avd",
-            "--name", "testGapiAvd",
-            "-k", "system-images;android-25;google_apis;x86",
-            "-d", "Nexus 6P"
-          });
+                new String[] {
+                    "create", "avd",
+                    "--name", "testGapiAvd",
+                    "-k", android25GoogleApisSdkPath,
+                    "-d", "Nexus 6P"
+                });
         mCli.run(
-          new String[]{
-            "create", "avd",
-            "--name", "testWearApi",
-            "-k", "system-images;android-26;android-wear;armeabi-v7a",
-            "-d", "wearos_small_round"
-          });
+                new String[] {
+                    "create", "avd",
+                    "--name", "testWearApi",
+                    "-k", android26WearSdkPath,
+                    "-d", "wearos_small_round"
+                });
         mAvdManager.reloadAvds(mLogger);
         mLogger.clear();
         mCli.run(new String[] {"list", "avds"});
@@ -546,9 +556,11 @@ public class AvdManagerCliTest {
 
         assertEquals(
                 "E Package path (-k) not specified. Valid system image paths are:\n"
-                        + "system-images;android-25;google_apis_playstore;x86\n"
-                        + "system-images;android-26;android-wear;armeabi-v7a\n"
-                        + "system-images;android-25;google_apis;x86",
+                        + android25GoogleApisPlayStoreSdkPath
+                        + "\n"
+                        + android26WearSdkPath
+                        + "\n"
+                        + android25GoogleApisSdkPath,
                 Joiner.on("").join(mLogger.getMessages()));
         mLogger.clear();
         try {
@@ -563,10 +575,47 @@ public class AvdManagerCliTest {
 
         assertEquals(
                 "E Package path is not valid. Valid system image paths are:\n"
-                        + "system-images;android-25;google_apis_playstore;x86\n"
-                        + "system-images;android-26;android-wear;armeabi-v7a\n"
-                        + "system-images;android-25;google_apis;x86",
+                        + android25GoogleApisPlayStoreSdkPath
+                        + "\n"
+                        + android26WearSdkPath
+                        + "\n"
+                        + android25GoogleApisSdkPath,
                 Joiner.on("").join(mLogger.getMessages()));
+    }
+
+    @Test
+    public void isSilent() {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream originalStdout = System.out;
+
+        try {
+            // Replace stdout so that we can capture what is logged
+            System.setOut(new PrintStream(outputStream));
+            mCli.run(
+                    new String[] {
+                        "--silent",
+                        "create",
+                        "avd",
+                        "--force",
+                        "--name",
+                        "testAvd",
+                        "-k",
+                        android25GoogleApisSdkPath,
+                        "-d",
+                        "Nexus 6P"
+                    });
+            // Make sure we actually created an AVD
+            AvdInfo info = mAvdManager.getAvd("testAvd", true);
+            assertNotNull("created AVD", info);
+
+            // Note: it is possible that nothing is logged even without the "--silent" flag being
+            // being specified.
+            assertEquals("stdout", outputStream.toString(), "");
+            assertTrue("isSilent", mCli.isSilent());
+
+        } finally {
+            System.setOut(originalStdout);
+        }
     }
 
     @Test
@@ -576,7 +625,7 @@ public class AvdManagerCliTest {
                     new String[] {
                         "create", "avd",
                         "--name", "testAvd",
-                        "-k", "system-images;android-25;google_apis;x86",
+                        "-k", android25GoogleApisSdkPath,
                         "-d", "Nexus 6P",
                         "--tag", "foo"
                     });
@@ -585,6 +634,7 @@ public class AvdManagerCliTest {
             // expected
         }
 
+        assertFalse("isSilent", mCli.isSilent());
         assertEquals(
                 "E Invalid --tag foo for the selected package. Valid tags are:\n" + "google_apis",
                 Joiner.on("").join(mLogger.getMessages()));
