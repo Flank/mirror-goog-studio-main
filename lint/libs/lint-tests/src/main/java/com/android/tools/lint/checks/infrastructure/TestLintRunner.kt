@@ -39,12 +39,12 @@ import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.collect.Lists
 import com.google.common.collect.ObjectArrays
 import com.google.common.io.Files
+import com.google.errorprone.annotations.CheckReturnValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import java.io.File
 import java.io.IOException
 import java.util.EnumSet
-import javax.annotation.CheckReturnValue
 import kotlin.math.ceil
 import kotlin.math.log10
 import kotlin.math.max
