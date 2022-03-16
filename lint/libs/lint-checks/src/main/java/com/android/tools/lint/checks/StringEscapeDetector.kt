@@ -41,10 +41,10 @@ class StringEscapeDetector : ResourceXmlDetector() {
                 Apostrophes (') must always be escaped (with a \\\\), unless they appear \
                 in a string which is itself escaped in double quotes (\").
                 """,
-            Category.MESSAGES,
-            9,
-            Severity.ERROR,
-            Implementation(
+            category = Category.MESSAGES,
+            priority = 9,
+            severity = Severity.ERROR,
+            implementation = Implementation(
                 StringEscapeDetector::class.java,
                 Scope.RESOURCE_FILE_SCOPE
             )
@@ -84,9 +84,9 @@ class StringEscapeDetector : ResourceXmlDetector() {
     }
 
     /**
-     * Check the XML for the string format. This is a port of portions of the code in
-     * frameworks/base/libs/androidfw/ResourceTypes.cpp (and in particular, the stringToValue and
-     * collectString methods)
+     * Check the XML for the string format. This is a port of portions
+     * of the code in frameworks/base/libs/androidfw/ResourceTypes.cpp
+     * (and in particular, the stringToValue and collectString methods)
      */
     private fun checkXmlEscapes(
         context: XmlContext,
@@ -118,8 +118,8 @@ class StringEscapeDetector : ResourceXmlDetector() {
                 if (c == '\\') {
                     break
                 }
-                if (quoted.code == 0 && c.isWhitespace()
-                    && (c != ' ' || string[p + 1].isWhitespace())
+                if (quoted.code == 0 && c.isWhitespace() &&
+                    (c != ' ' || string[p + 1].isWhitespace())
                 ) {
                     break
                 }
@@ -179,9 +179,9 @@ class StringEscapeDetector : ResourceXmlDetector() {
                                     p++
                                     i++
                                     val h = string[p]
-                                    if ((h < '0' || h > '9')
-                                        && (h < 'a' || h > 'f')
-                                        && (h < 'A' || h > 'F')
+                                    if ((h < '0' || h > '9') &&
+                                        (h < 'a' || h > 'f') &&
+                                        (h < 'A' || h > 'F')
                                     ) {
                                         val location = context.getLocation(textNode, p, p + 1)
                                         context.report(

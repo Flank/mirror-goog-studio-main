@@ -599,7 +599,7 @@ document.getElementById(id).style.display = 'none';
         val issues = registry.issues
         return issues.filter { issue ->
             val vendor = issue.vendor ?: issue.registry?.vendor
-            vendor != AOSP_VENDOR
+            vendor != AOSP_VENDOR && issue.isEnabledByDefault()
         }
     }
 
