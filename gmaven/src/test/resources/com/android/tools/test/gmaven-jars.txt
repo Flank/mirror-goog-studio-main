@@ -2116,6 +2116,7 @@ com/android/tools/lint/lint-checks
   com/android/tools/lint/
   com/android/tools/lint/checks/
   private-apis.txt
+  sdk-index-offline-snapshot.proto.gz
   sdks-offline.xml
   typos/
   typos/typos-de.txt
@@ -2194,6 +2195,17 @@ com/android/tools/pixelprobe/pixelprobe
   icc/
   icc/cmyk/
   icc/cmyk/USWebCoatedSWOP.icc
+
+com/android/tools/play-sdk-proto
+  META-INF/
+  META-INF/MANIFEST.MF
+  NOTICE
+  com/
+  com/android/
+  com/android/tools/
+  com/android/tools/lint/
+  com/android/tools/lint/checks/
+  index.proto
 
 com/android/tools/repository
   META-INF/
