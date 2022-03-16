@@ -134,6 +134,12 @@ com.android.dynamic-feature:com.android.dynamic-feature.gradle.plugin
   dependencies:
     com.android.tools.build:gradle ()
 
+com.android.fused-libraries:com.android.fused-libraries.gradle.plugin
+  pomName=com.android.tools.build.gradle
+  description=Gradle plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle ()
+
 com.android.library:com.android.library.gradle.plugin
   pomName=com.android.tools.build.gradle
   description=Gradle plug-in to build Android applications.
@@ -180,12 +186,6 @@ com.android.tools:ninepatch
   description=draws a bitmap in nine or more sections
   dependencies:
     com.google.guava:guava (runtime)
-
-com.android.tools:play-sdk-proto
-  pomName=com.android.tools.play-sdk-proto
-  description=A set of protobuf messages used for Google Play SDK
-  dependencies:
-    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools:repository
   pomName=com.android.tools.repository
@@ -620,7 +620,6 @@ com.android.tools.lint:lint-checks
     com.android.tools.external.org-jetbrains:uast (runtime)
     com.android.tools:common (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.android.tools:play-sdk-proto (runtime)
     com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
     com.google.code.gson:gson (runtime)
