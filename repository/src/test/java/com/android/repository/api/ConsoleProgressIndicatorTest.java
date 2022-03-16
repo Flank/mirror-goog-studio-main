@@ -67,7 +67,7 @@ public class ConsoleProgressIndicatorTest {
                         + "[===                                    ] 10%                                   \r"
                         + "                                                                                \r"
                         + "[===                                    ] 10%                                   \r"
-                        + "[=======================================] 100%                                  \r";
+                        + "[=======================================] 100%                                  \r" + System.lineSeparator();
         assertEquals(expected, out.toString());
         assertEquals(
                 "Warning: warning"
