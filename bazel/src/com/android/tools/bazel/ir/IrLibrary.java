@@ -33,6 +33,15 @@ public class IrLibrary extends IrNode {
     }
 
     public void addFile(File file) {
+        if (file.toString().contains("$MAVEN_REPOSITORY$")) {
+            String owned = owner == null ? "" : " (Owned by " + owner.getName() + ")";
+            throw new IllegalStateException(
+                    "Library: "
+                            + name
+                            + owned
+                            + " cannot use $MAVEN_REPOSITORY$, "
+                            + "please point to the jar file in prebuilts instead.");
+        }
         files.add(file);
     }
 

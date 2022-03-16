@@ -27,7 +27,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,7 @@ import org.jetbrains.jps.model.java.compiler.JpsJavaCompilerConfiguration;
 import org.jetbrains.jps.model.java.compiler.JpsJavaCompilerOptions;
 import org.jetbrains.jps.model.library.JpsLibrary;
 import org.jetbrains.jps.model.library.JpsOrderRootType;
+import org.jetbrains.jps.model.library.JpsRepositoryLibraryType;
 import org.jetbrains.jps.model.module.JpsDependencyElement;
 import org.jetbrains.jps.model.module.JpsLibraryDependency;
 import org.jetbrains.jps.model.module.JpsModule;
@@ -81,11 +81,8 @@ public class ImlToIr {
         // Depending on class initialization order this property will be read, so it needs to be set.
         System.setProperty("idea.home.path", projectPath);
 
-        HashMap<String, String> pathVariables = new HashMap<>();
-        pathVariables.put("MAVEN_REPOSITORY", workspace.resolve("prebuilts/tools/common/m2/repository").toString());
-
         JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
-        JpsProjectLoader.loadProject(project, pathVariables, projectPath);
+        JpsProjectLoader.loadProject(project, new HashMap<>(), projectPath);
         logger.info(
                 "Loaded project %s with %d modules.",
                 project.getName(), project.getModules().size());
@@ -180,6 +177,13 @@ public class ImlToIr {
                     }
                     IrLibrary irLibrary = libraryToIr.get(library);
                     if (irLibrary == null) {
+                        if (library.getType() == JpsRepositoryLibraryType.INSTANCE) {
+                            throw new IllegalStateException(
+                                    "Library: "
+                                            + library.getName()
+                                            + " of type \"repository\" "
+                                            + "is not allowed, please use prebuilts instead.");
+                        }
                         irLibrary = new IrLibrary(library.getName(), owner);
                         List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
                         // Newer versions of jps sort the files correctly, for now using legacy
