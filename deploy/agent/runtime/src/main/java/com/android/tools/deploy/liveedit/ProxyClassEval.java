@@ -89,16 +89,28 @@ class ProxyClassEval extends BackPorterEval {
     @Override
     public Value invokeSpecial(
             @NonNull Value target, MethodDescription method, @NonNull List<? extends Value> args) {
+        final String ownerInternalName = method.getOwnerInternalName();
         final String methodName = method.getName();
         final String methodDesc = method.getDesc();
 
         if (method.isConstructor()) {
-            // We're calling a super() constructor, which LiveEdit doesn't support yet.
+            // We're calling a super() constructor.
             if (target.obj() instanceof ProxyClass) {
+                Log.v("live.deploy.lambda", "invokeSpecial: " + method);
+
+                Object[] argValues = new Object[args.size()];
+                for (int i = 0; i < argValues.length; i++) {
+                    argValues[i] = args.get(i).obj();
+                }
+
+                ProxyClassHandler handler =
+                        (ProxyClassHandler) Proxy.getInvocationHandler(target.obj());
+                handler.initSuperClass(ownerInternalName, argValues, target.obj());
+
                 return Value.VOID_VALUE;
             }
             // If we're calling the constructor of a proxied class, set up a new proxy instance.
-            LiveEditClass clazz = context.getClass(method.getOwnerInternalName());
+            LiveEditClass clazz = context.getClass(ownerInternalName);
             if (isProxyClass(clazz)) {
                 Log.v("live.deploy.lambda", "invokeSpecial: " + method);
 
@@ -164,7 +176,8 @@ class ProxyClassEval extends BackPorterEval {
         // We interpret *all* static methods of proxy classes.
         if (clazz.isProxyClass()) {
             Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
-            Object result = clazz.invokeMethod(methodName, methodDesc, null, valueToObj(args));
+            Object result =
+                    clazz.invokeDeclaredMethod(methodName, methodDesc, null, valueToObj(args));
             return makeValue(result, Type.getReturnType(methodDesc));
         }
 
@@ -177,7 +190,8 @@ class ProxyClassEval extends BackPorterEval {
             boolean isLiveEdited = clazz.hasLiveEditedMethod(methodName, methodDesc);
             if (originalMethod == null && !isLiveEdited) {
                 Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
-                Object result = clazz.invokeMethod(methodName, methodDesc, null, valueToObj(args));
+                Object result =
+                        clazz.invokeDeclaredMethod(methodName, methodDesc, null, valueToObj(args));
                 return makeValue(result, Type.getReturnType(methodDesc));
             }
         } catch (ClassNotFoundException cnfe) {
@@ -185,6 +199,16 @@ class ProxyClassEval extends BackPorterEval {
         }
 
         return super.invokeStaticMethod(method, args);
+    }
+
+    @Override
+    public boolean isInstanceOf(@NonNull Value target, @NonNull Type type) {
+        if (target.obj() instanceof ProxyClass) {
+            ProxyClassHandler handler =
+                    (ProxyClassHandler) Proxy.getInvocationHandler(target.obj());
+            return handler.isInstanceOf(type);
+        }
+        return super.isInstanceOf(target, type);
     }
 
     private static boolean isProxyClass(LiveEditClass clazz) {

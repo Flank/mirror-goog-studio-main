@@ -21,6 +21,7 @@
 
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/agent/native/live_edit_dex.h"
 #include "tools/base/deploy/agent/native/recompose.h"
 #include "tools/base/deploy/agent/native/transform/stub_transform.h"
 #include "tools/base/deploy/agent/native/transform/transforms.h"
@@ -93,12 +94,19 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     return resp;
   }
 
+  auto app_loader = ClassFinder(jvmti, jni).GetApplicationClassLoader();
+
+  // Add the LiveEdit dex library to the application classloader.
+  if (!SetUpLiveEditDex(jvmti, jni, req.package_name())) {
+    resp.set_status(proto::LiveEditResponse::LAMBDA_DEX_LOAD_FAILED);
+    resp.set_error_message("Could not set up live edit dex");
+    return resp;
+  }
+
   SetDebugMode(jni, req.debugmodeenabled());
 
   JniClass live_edit_stubs(jni,
                            "com/android/tools/deploy/liveedit/LiveEditStubs");
-
-  auto app_loader = ClassFinder(jvmti, jni).GetApplicationClassLoader();
   live_edit_stubs.CallStaticVoidMethod("init", "(Ljava/lang/ClassLoader;)V",
                                        app_loader);
 

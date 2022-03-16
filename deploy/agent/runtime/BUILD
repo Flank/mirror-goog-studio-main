@@ -48,7 +48,8 @@ coverage_java_library(
 coverage_java_library(
     name = "liveedit_java",
     srcs = glob([
-        "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
+        "src/main/java/com/android/tools/deploy/liveedit/*.java",
+        "src/main/java/com/android/tools/deploy/liveedit/backported/*.java",
     ]),
     deps = [
         ":asm4",
@@ -59,12 +60,26 @@ coverage_java_library(
     ],
 )
 
+coverage_java_library(
+    name = "liveedit_lambdalib_java",
+    srcs = glob([
+        "src/main/java/com/android/tools/deploy/liveedit/superclasses/*.java",
+    ]),
+    deps = [
+        ":liveedit_java",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
+)
+
 kotlin_library(
     name = "runtime_kotlin_test",
     srcs = glob([
         "src/test/**/*.kt",
     ]),
     visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
 )
 
 java_library(
@@ -96,6 +111,7 @@ coverage_java_test(
         ":instrument_java",
         ":interpreter_common",
         ":liveedit_java",
+        ":liveedit_lambdalib_java",
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
@@ -115,4 +131,24 @@ dex_library(
         ":asm4",
     ],
     visibility = ["//visibility:public"],
+)
+
+# Contains all Live Edit classes that need to be loaded by the application class loader.
+dex_library(
+    name = "live_edit_app_jar",
+    dexer = "D8",
+    flags = ["--min-api 26"],
+    jars = [
+        ":liveedit_lambdalib_java",
+    ],
+)
+
+# Extracts the Live Edit dex from the jar so it can be added to the dex path of the class loader.
+genrule(
+    name = "live_edit_dex",
+    srcs = [":live_edit_app_jar"],
+    outs = ["live_edit.dex"],
+    cmd = "$(location //tools/base/bazel:unzipper) $(location :live_edit_app_jar) classes.dex:$(location :live_edit.dex)",
+    tools = ["//tools/base/bazel:unzipper"],
+    visibility = ["//tools/base/deploy:__subpackages__"],
 )
