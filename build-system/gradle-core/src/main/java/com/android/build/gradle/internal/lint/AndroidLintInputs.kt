@@ -1562,8 +1562,7 @@ abstract class ArtifactInput {
     @get:Nested
     abstract val artifactCollectionsInputs: Property<ArtifactCollectionsInputs>
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     @get:Optional
     val projectRuntimeExplodedAarsFileCollection: FileCollection?
         get() = projectRuntimeExplodedAars?.artifactFiles
@@ -1571,8 +1570,7 @@ abstract class ArtifactInput {
     @get:Internal
     var projectRuntimeExplodedAars: ArtifactCollection? = null
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     @get:Optional
     val projectCompileExplodedAarsFileCollection: FileCollection?
         get() = projectCompileExplodedAars?.artifactFiles
