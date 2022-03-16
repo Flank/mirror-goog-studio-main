@@ -398,9 +398,9 @@ class UtpConfigFactoryTest {
             runnerConfigProto,
             useTestStorageService = true,
             instrumentationArgs = mapOf(
-                "useTestStorageService" to "true",
                 "coverage" to "true",
                 "coverageFile" to "/data/data/com.example.application/coverage.ec",
+                "useTestStorageService" to "true",
             ),
             testCoverageConfig = """
                 single_coverage_file: "/data/data/com.example.application/coverage.ec"
