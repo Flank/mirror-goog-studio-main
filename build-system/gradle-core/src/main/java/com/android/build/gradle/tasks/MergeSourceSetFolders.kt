@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -47,29 +47,33 @@ import com.google.common.collect.Lists
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileType
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.FileChange
+import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 import java.io.File
 import java.io.IOException
 
 @CacheableTask
-abstract class MergeSourceSetFolders : IncrementalTask() {
+abstract class MergeSourceSetFolders : NewIncrementalTask() {
 
-    // ----- PUBLIC TASK API -----
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
-    // ----- PRIVATE TASK API -----
+    @get:LocalState
+    abstract val incrementalFolder: DirectoryProperty
 
     // supplier of the assets set, for execution only.
     @get:Internal("for testing")
@@ -80,11 +84,13 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     internal var libraryCollection: ArtifactCollection? = null
 
     @get:InputFiles
+    @get:Incremental
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val shadersOutputDir: DirectoryProperty
 
     @get:InputFiles
+    @get:Incremental
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val mlModelsOutputDir: DirectoryProperty
@@ -101,13 +107,31 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     @get:Optional
     abstract val aaptEnv: Property<String>
 
-    override val incremental: Boolean
-        @Internal
-        get() = true
+    override fun doTaskAction(inputChanges: InputChanges) {
+        if (inputChanges.isIncremental) {
+            val changes = mutableMapOf<File, FileStatus>()
+            changes.collectChanges(inputChanges.getFileChanges(shadersOutputDir))
+            changes.collectChanges(inputChanges.getFileChanges(mlModelsOutputDir))
+            changes.collectChanges(inputChanges.getFileChanges(sourceFolderInputs))
+            changes.collectChanges(inputChanges.getFileChanges(libraries))
+            doIncrementalTaskAction(changes)
+        } else {
+            doFullTaskAction()
+        }
+
+    }
+
+    private fun MutableMap<File, FileStatus>.collectChanges(changes: Iterable<FileChange>) {
+        changes.forEach { change ->
+            if (change.fileType == FileType.FILE) {
+                put(change.file, change.changeType.toSerializable())
+            }
+        }
+    }
 
     @Throws(IOException::class)
-    override fun doFullTaskAction() {
-        val incFolder = incrementalFolder!!
+    private fun doFullTaskAction() {
+        val incFolder = incrementalFolder.get().asFile
 
         // this is full run, clean the previous output
         val destinationDir = outputDir.get().asFile
@@ -150,12 +174,14 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     }
 
     @Throws(IOException::class)
-    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
+    private fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
+        val incrementalFolder = incrementalFolder.get().asFile
+
         // create a merger and load the known state.
         val merger = AssetMerger()
         try {
             Workers.withGradleWorkers(projectPath.get(), path, workerExecutor, analyticsService).use { workerExecutor ->
-                if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder!!, true, aaptEnv.orNull)) {
+                if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder, true, aaptEnv.orNull)) {
                     doFullTaskAction()
                     return
                 }
@@ -213,7 +239,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 merger.mergeData(writer, false /*doCleanUp*/)
 
                 // No exception? Write the known state.
-                merger.writeBlobTo(incrementalFolder!!, writer, false)
+                merger.writeBlobTo(incrementalFolder, writer, false)
             }
         } catch (e: Exception) {
             MergingException.findAndReportMergingException(
@@ -222,7 +248,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             try {
                 throw e
             } catch (mergingException: MergingException) {
-                merger.cleanBlob(incrementalFolder!!)
+                merger.cleanBlob(incrementalFolder)
                 throw ResourceException(mergingException.message, mergingException)
             }
 
@@ -232,13 +258,16 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    fun getLibraries(): FileCollection? = libraryCollection?.artifactFiles
+    @get:Optional
+    @get:InputFiles
+    @get:Incremental
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val libraries: ConfigurableFileCollection
+
 
     // input list for the source folder based asset folders.
     @get:InputFiles
+    @get:Incremental
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceFolderInputs: ConfigurableFileCollection
 
@@ -323,7 +352,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         ) {
             super.configure(task)
 
-            task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
+            task.incrementalFolder.set(creationConfig.paths.getIncrementalDir(name))
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
         }
@@ -392,7 +421,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             if (includeDependencies) {
                 task.libraryCollection = creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)
+                task.libraries.from(task.libraryCollection?.artifactFiles)
             }
+            task.libraries.disallowChanges()
 
             task.dependsOn(creationConfig.taskContainer.assetGenTask)
         }

@@ -49,7 +49,6 @@ class MergeSourceSetFoldersTest {
     private lateinit var task: MergeSourceSetFolders
 
     @Before
-    @Throws(IOException::class)
     fun setUp() {
         val testDir = temporaryFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
@@ -58,7 +57,6 @@ class MergeSourceSetFoldersTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun singleSetWithSingleFile() {
         val file = File("src/main")
         val mainSet = createAssetSet(BuilderConstants.MAIN, file)
@@ -67,7 +65,6 @@ class MergeSourceSetFoldersTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun singleSetWithMultiFiles() {
         val file = File("src/main")
         val file2 = File("src/main2")
@@ -77,7 +74,6 @@ class MergeSourceSetFoldersTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun twoSetsWithSingleFile() {
         val file = File("src/main")
         val mainSet = createAssetSet(BuilderConstants.MAIN, file)
@@ -89,20 +85,18 @@ class MergeSourceSetFoldersTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun singleSetWithDependency() {
-        val file = File("src/main")
+        val file = File("src/main").absoluteFile
         val mainSet = createAssetSet(BuilderConstants.MAIN, file)
 
-        val file2 = File("foo/bar/1.0")
+        val file2 = File("foo/bar/1.0").absoluteFile
         val librarySets = setupLibraryDependencies(file2, ":path")
 
-        assertThat(task.getLibraries()!!.files).containsExactly(file2)
+        assertThat(task.libraries.files).containsExactly(file2)
         assertThat(task.computeAssetSetList()).containsExactly(librarySets[0], mainSet).inOrder()
     }
 
     @Test
-    @Throws(Exception::class)
     fun singleSetWithRenderscript() {
         val file = File("src/main")
         val mainSet = createAssetSet(BuilderConstants.MAIN, file)
@@ -116,7 +110,6 @@ class MergeSourceSetFoldersTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun singleSetWithMlModels() {
         val file = File("src/main")
         val mainSet = createAssetSet(BuilderConstants.MAIN, file)
@@ -129,7 +122,6 @@ class MergeSourceSetFoldersTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun everything() {
         val file = File("src/main")
         val file2 = File("src/main2")
@@ -138,8 +130,8 @@ class MergeSourceSetFoldersTest {
         val debugFile = File("src/debug")
         val debugSet = createAssetSet("debug", debugFile)
 
-        val libFile = File("foo/bar/1.0")
-        val libFile2 = File("foo/bar/2.0")
+        val libFile = File("foo/bar/1.0").absoluteFile
+        val libFile2 = File("foo/bar/2.0").absoluteFile
 
         // the order returned by the dependency is meant to be in the wrong order (consumer first,
         // when we want dependent first for the merger), so the order in the asset set should be
@@ -154,7 +146,7 @@ class MergeSourceSetFoldersTest {
         val shaderFile = File("shader")
         task.shadersOutputDir.set(shaderFile)
 
-        assertThat(task.getLibraries()!!.files).containsExactly(libFile, libFile2)
+        assertThat(task.libraries.files).containsExactly(libFile, libFile2)
         assertThat(task.computeAssetSetList())
             .containsExactly(librarySet2, librarySet, mainSet, debugSet)
             .inOrder()
@@ -206,13 +198,11 @@ class MergeSourceSetFoldersTest {
             i += 2
         }
 
-        val fileCollection = mock(FileCollection::class.java)
-        `when`(fileCollection.files).thenReturn(files)
-
         `when`(libraries.artifacts).thenReturn(artifacts)
-        `when`(libraries.artifactFiles).thenReturn(fileCollection)
+        `when`(libraries.artifactFiles).thenReturn(task.libraries)
 
         task.libraryCollection = libraries
+        task.libraries.from(files)
 
         return assetSets
     }
