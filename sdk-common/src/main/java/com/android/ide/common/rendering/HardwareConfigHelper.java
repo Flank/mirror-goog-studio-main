@@ -327,11 +327,20 @@ public class HardwareConfigHelper {
                         || "android-automotive-playstore".equals(device.getTagId()));
     }
 
+    /** Whether the given device is a PC device */
+    public static boolean isDesktop(@Nullable Device device) {
+        return device != null && "android-desktop".equals(device.getTagId());
+    }
+
     /**
      * Whether the given device appears to be a mobile device (e.g. not wear, tv, auto, etc)
      */
     public static boolean isMobile(@Nullable Device device) {
-        return !isTv(device) && !isWear(device) && !isThings(device) && !isAutomotive(device);
+        return !isTv(device)
+                && !isWear(device)
+                && !isThings(device)
+                && !isAutomotive(device)
+                && !isDesktop(device);
     }
 
     /**

@@ -4,6 +4,7 @@ import static com.android.ide.common.rendering.HardwareConfigHelper.getGenericLa
 import static com.android.ide.common.rendering.HardwareConfigHelper.getNexusLabel;
 import static com.android.ide.common.rendering.HardwareConfigHelper.getNexusMenuLabel;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isAutomotive;
+import static com.android.ide.common.rendering.HardwareConfigHelper.isDesktop;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isGeneric;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isMobile;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isNexus;
@@ -202,5 +203,19 @@ public class HardwareConfigHelperTest extends TestCase {
         assertEquals(
                 "Automotive (1024p landscape) (1024 × 768, mdpi)",
                 getGenericLabel(automotive1024p));
+    }
+
+    public void testDesktopGeneric() {
+        DeviceManager deviceManager = getDeviceManager();
+        Device desktop_medium = deviceManager.getDevice("desktop_medium", "Google");
+        assertNotNull(desktop_medium);
+        assertFalse(isWear(desktop_medium));
+        assertFalse(isTv(desktop_medium));
+        assertFalse(isMobile(desktop_medium));
+        assertFalse(isAutomotive(desktop_medium));
+        assertTrue(isDesktop(desktop_medium));
+        assertFalse(desktop_medium.isScreenRound());
+        assertFalse(isGeneric(desktop_medium));
+        assertEquals("Medium Desktop (3840 × 2160, xhdpi)", getGenericLabel(desktop_medium));
     }
 }
