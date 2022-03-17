@@ -330,9 +330,6 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.configure(task)
 
-            val variantDslInfo = creationConfig.variantDslInfo
-            val variantSources = creationConfig.variantSources
-
             task.targetApi.setDisallowChanges(creationConfig.renderscriptTargetApi)
 
             task.supportMode.setDisallowChanges(renderscript.supportModeEnabled)
@@ -349,7 +346,7 @@ abstract class RenderscriptCompile : NdkTask() {
 
             task.objOutputDir = creationConfig.paths.renderscriptObjOutputDir
 
-            task.ndkConfig = variantDslInfo.ndkConfig
+            task.ndkConfig = creationConfig.ndkConfig
 
             task.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
             task.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)

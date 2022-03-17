@@ -181,7 +181,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             task.aaptIntermediateDir =
                     FileUtils.join(
-                            creationConfig.services.projectInfo.getIntermediatesDir(), "res-link-intermediate", creationConfig.variantDslInfo.dirName)
+                            creationConfig.services.projectInfo.getIntermediatesDir(), "res-link-intermediate", creationConfig.dirName)
 
             task.namespace.setDisallowChanges(creationConfig.namespace)
 

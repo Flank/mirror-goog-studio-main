@@ -505,7 +505,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                         if (creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
-                            && creationConfig.variantDslInfo.isAndroidTestCoverageEnabled
+                            && creationConfig.isAndroidTestCoverageEnabled
                         ) {
                             AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
                         } else {

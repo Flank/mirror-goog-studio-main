@@ -26,6 +26,7 @@ import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -196,6 +197,18 @@ interface ComponentCreationConfig : ComponentIdentity {
     val supportedAbis: Set<String>
 
     val vectorDrawables: VectorDrawablesOptions
+
+    val ndkConfig: MergedNdkConfig
+
+    val renderscriptNdkModeEnabled: Boolean
+
+    val isJniDebuggable: Boolean
+
+    val defaultGlslcArgs: List<String>
+
+    val scopedGlslcArgs: Map<String, List<String>>
+
+    val isWearAppUnbundled: Boolean?
 
     // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
     // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT

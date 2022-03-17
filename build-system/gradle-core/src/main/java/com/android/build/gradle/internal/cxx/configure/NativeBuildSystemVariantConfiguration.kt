@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.tasks.NativeBuildSystem
 
 /**
@@ -32,10 +31,11 @@ data class NativeBuildSystemVariantConfig(
     val cppFlags: List<String>,
     val targets: Set<String>)
 
+// TODO(b/225137414): stop resolving variant properties
 fun createNativeBuildSystemVariantConfig(
     buildSystem: NativeBuildSystem,
-    variant: Variant,
-    variantDslInfo: VariantDslInfo) : NativeBuildSystemVariantConfig {
+    variant: VariantImpl
+): NativeBuildSystemVariantConfig {
 
     /**
      * The set of abiFilters from the externalNativeBuild part of the DSL. For example,
@@ -65,7 +65,7 @@ fun createNativeBuildSystemVariantConfig(
      *     }
      * </pre>
      */
-    val ndkAbiFilters: Set<String> = variantDslInfo.ndkConfig.abiFilters
+    val ndkAbiFilters: Set<String> = variant.ndkConfig.abiFilters
 
 
     /**

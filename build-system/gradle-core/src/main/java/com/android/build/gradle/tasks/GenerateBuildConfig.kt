@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.generators.BuildConfigByteCodeGenerator
 import com.android.build.gradle.internal.generators.BuildConfigData
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -29,6 +30,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.compiling.GeneratedCodeFileCreator
 import com.android.build.gradle.internal.generators.BuildConfigGenerator
 import com.android.utils.FileUtils
+import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -235,7 +237,6 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val variantDslInfo = creationConfig.variantDslInfo
             val services = creationConfig.services
             task.namespace.setDisallowChanges(creationConfig.namespace)
 
@@ -256,14 +257,14 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(creationConfig.debuggable)
 
-            task.buildTypeName.setDisallowChanges(variantDslInfo.componentIdentity.buildType)
+            task.buildTypeName.setDisallowChanges(creationConfig.buildType)
 
             // no need to memoize, variant configuration does that already.
             task.flavorName.setDisallowChanges(
                 services.provider { creationConfig.flavorName ?: "" })
 
             task.flavorNamesWithDimensionNames.setDisallowChanges(services.provider {
-                variantDslInfo.flavorNamesWithDimensionNames
+                creationConfig.getFlavorNamesWithDimensionNames()
             })
 
             task.items.set(creationConfig.buildConfigFields)
@@ -276,4 +277,31 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.isLibrary = creationConfig.componentType.isAar
         }
     }
+}
+
+/**
+ * Return the names of the applied flavors.
+ *
+ *
+ * The list contains the dimension names as well.
+ *
+ * @return the list, possibly empty if there are no flavors.
+ */
+private fun ComponentCreationConfig.getFlavorNamesWithDimensionNames(): List<String> {
+    if (productFlavorList.isEmpty()) {
+        return emptyList()
+    }
+    val names: List<String>
+    val count = productFlavorList.size
+    if (count > 1) {
+        names =
+            Lists.newArrayListWithCapacity(count * 2)
+        for (i in 0 until count) {
+            names.add(productFlavorList[i].name)
+            names.add(productFlavorList[i].dimension)
+        }
+    } else {
+        names = listOf(productFlavorList[0].name)
+    }
+    return names
 }

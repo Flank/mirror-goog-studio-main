@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.manifest.ManifestData;
 import com.android.build.gradle.internal.manifest.ManifestDataKt;
@@ -1160,8 +1159,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull final TaskT packageAndroidArtifact) {
             super.configure(packageAndroidArtifact);
 
-            VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
-
             packageAndroidArtifact
                     .getMinSdkVersion()
                     .set(
@@ -1263,7 +1260,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getAssets()
                     .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
-            packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
+            packageAndroidArtifact.setJniDebugBuild(creationConfig.isJniDebuggable());
             packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 

@@ -310,7 +310,7 @@ open class BasicModuleModelMock {
 
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(variantExternalNativeBuild).`when`(this.variantImpl).externalNativeBuild
-        doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig
+        doReturn(mergedNdkConfig).`when`(this.variantImpl).ndkConfig
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk

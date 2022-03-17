@@ -121,7 +121,7 @@ class ApplicationTaskManager(
 
         handleMicroApp(variant)
 
-        val publishInfo = variant.variantDslInfo.publishInfo!!
+        val publishInfo = variant.publishInfo!!
 
         for (component in publishInfo.components) {
             val configType = if (component.type == AbstractPublishing.Type.APK) {
@@ -139,11 +139,10 @@ class ApplicationTaskManager(
 
     /** Configure variantData to generate embedded wear application.  */
     private fun handleMicroApp(appVariant: ApplicationVariantImpl) {
-        val variantDslInfo = appVariant.variantDslInfo
         val componentType = appVariant.componentType
         if (componentType.isBaseModule) {
-            val unbundledWearApp: Boolean? = variantDslInfo.isWearAppUnbundled
-            if (unbundledWearApp != true && variantDslInfo.isEmbedMicroApp) {
+            val unbundledWearApp: Boolean? = appVariant.isWearAppUnbundled
+            if (unbundledWearApp != true && appVariant.embedsMicroApp) {
                 val wearApp =
                         appVariant.variantDependencies.wearAppConfiguration
                         ?: error("Wear app with no wearApp configuration")

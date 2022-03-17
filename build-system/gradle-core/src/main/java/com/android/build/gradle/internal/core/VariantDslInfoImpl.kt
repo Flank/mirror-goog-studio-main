@@ -278,34 +278,6 @@ open class VariantDslInfoImpl internal constructor(
         return sb.toString()
     }
 
-    /**
-     * Return the names of the applied flavors.
-     *
-     *
-     * The list contains the dimension names as well.
-     *
-     * @return the list, possibly empty if there are no flavors.
-     */
-    override val flavorNamesWithDimensionNames: List<String>
-        get() {
-            if (productFlavorList.isEmpty()) {
-                return emptyList()
-            }
-            val names: List<String>
-            val count = productFlavorList.size
-            if (count > 1) {
-                names =
-                    Lists.newArrayListWithCapacity(count * 2)
-                for (i in 0 until count) {
-                    names.add(productFlavorList[i].name)
-                    names.add(productFlavorList[i].dimension)
-                }
-            } else {
-                names = listOf(productFlavorList[0].name)
-            }
-            return names
-        }
-
     override fun hasFlavors(): Boolean {
         return productFlavorList.isNotEmpty()
     }

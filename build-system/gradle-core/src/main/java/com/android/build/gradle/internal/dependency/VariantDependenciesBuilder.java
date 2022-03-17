@@ -285,7 +285,7 @@ public class VariantDependenciesBuilder {
             if (testFixturesEnabled) {
                 dependencies.add(runtimeClasspath.getName(), dependencies.testFixtures(project));
             }
-            if (testedVariant.getVariantDslInfo().getComponentType().isAar()
+            if (testedVariant.getComponentType().isAar()
                     || !variantDslInfo.getComponentType().isApk()) {
                 runtimeClasspath.getDependencies().add(dependencies.create(project));
             }

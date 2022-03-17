@@ -95,7 +95,7 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
 
     // Use RELATIVE path sensitivity since we use [FileChange.normalizedPath] to calculate the
     // derived dex file relative path. This will ensure we find the derived file when deletion is
-    // required. Revert to CLASSPATH once Gradle 7.5 is used : b/224524454 
+    // required. Revert to CLASSPATH once Gradle 7.5 is used : b/224524454
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputArtifact
     @get:Incremental
@@ -338,7 +338,7 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
         asmTransformedVariant =
             if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null,
-        isAndroidTestCoverageEnabled = creationConfig.variantDslInfo.isAndroidTestCoverageEnabled,
+        isAndroidTestCoverageEnabled = creationConfig.isAndroidTestCoverageEnabled,
         useTransformInstrumentation =
             creationConfig.services
                 .projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]

@@ -272,7 +272,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.minSdkVersion = creationConfig.minSdkVersion.apiLevel
 
-            task.resConfig = creationConfig.variantDslInfo.resourceConfigurations
+            task.resConfig = creationConfig.resourceConfigurations
 
             task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE

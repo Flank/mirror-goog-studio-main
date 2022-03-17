@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -841,6 +842,19 @@ abstract class ComponentImpl(
         get() = variantDslInfo.supportedAbis
     override val vectorDrawables: VectorDrawablesOptions
         get() = variantDslInfo.vectorDrawables
+    override val ndkConfig: MergedNdkConfig
+        get() = variantDslInfo.ndkConfig
+    override val renderscriptNdkModeEnabled: Boolean
+        get() = variantDslInfo.renderscriptNdkModeEnabled
+    override val isJniDebuggable: Boolean
+        get() = variantDslInfo.isJniDebuggable
+    override val defaultGlslcArgs: List<String>
+        get() = variantDslInfo.defaultGlslcArgs
+    override val scopedGlslcArgs: Map<String, List<String>>
+        get() = variantDslInfo.scopedGlslcArgs
+    override val isWearAppUnbundled: Boolean?
+        get() = variantDslInfo.isWearAppUnbundled
+
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
         variantDslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)

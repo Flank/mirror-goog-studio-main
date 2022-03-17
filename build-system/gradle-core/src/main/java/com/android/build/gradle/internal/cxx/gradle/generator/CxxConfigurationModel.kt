@@ -304,9 +304,7 @@ fun tryCreateConfigurationParameters(
         prefabPackageConfigurationList = prefabPackageConfigurationList,
         implicitBuildTargetSet = prefabTargets,
         variantName = variant.name,
-        nativeVariantConfig = createNativeBuildSystemVariantConfig(
-            buildSystem, variant, variant.variantDslInfo
-        ),
+        nativeVariantConfig = createNativeBuildSystemVariantConfig(buildSystem, variant),
         outputOptions = outputOptions
     )
 }

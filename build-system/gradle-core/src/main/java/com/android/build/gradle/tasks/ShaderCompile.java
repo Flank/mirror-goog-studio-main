@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.NdkHandlerInput;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -285,8 +284,6 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ShaderCompile task) {
             super.configure(task);
-            final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
-
             setDisallowChanges(
                     task.getSdkBuildService(),
                     BuildServicesKt.getBuildService(
@@ -300,8 +297,8 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
-            task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
-            task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());
+            task.setDefaultArgs(creationConfig.getDefaultGlslcArgs());
+            task.setScopedArgs(creationConfig.getScopedGlslcArgs());
             SdkComponentsKt.initialize(task.getNdkHandlerInput(), creationConfig);
         }
     }

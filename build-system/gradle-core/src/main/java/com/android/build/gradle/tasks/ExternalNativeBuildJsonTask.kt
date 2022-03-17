@@ -86,7 +86,7 @@ fun createCxxConfigureTask(
         super.configure(task)
         task.abi = abi
         task.variantName = abi.variant.variantName
-        if (creationConfig.variantDslInfo.renderscriptNdkModeEnabled) {
+        if (creationConfig.renderscriptNdkModeEnabled) {
             creationConfig
                 .artifacts
                 .setTaskInputToFinalProduct(

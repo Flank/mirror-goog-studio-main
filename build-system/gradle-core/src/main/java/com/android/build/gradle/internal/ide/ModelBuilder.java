@@ -1173,7 +1173,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
         // this is incorrect as it cannot get the final value, we should always add the folder
         // as a potential source origin and let the IDE deal with it.
-        boolean ndkMode = component.getVariantDslInfo().getRenderscriptNdkModeEnabled();
+        boolean ndkMode = component.getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Callable<Directory> renderscriptCallable =
                     () -> artifacts.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();

@@ -376,8 +376,6 @@ abstract class ProguardConfigurableTask(
             task: ProguardConfigurableTask,
             creationConfig: ConsumableCreationConfig
         ) {
-            val variantDslInfo = creationConfig.variantDslInfo
-
             val postprocessingFeatures = creationConfig.variantScope.postprocessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
@@ -409,7 +407,7 @@ abstract class ProguardConfigurableTask(
                 keep("class **.R$* {*;}")
             }
 
-            if (variantDslInfo.isAndroidTestCoverageEnabled) {
+            if (creationConfig.isAndroidTestCoverageEnabled) {
                 // when collecting coverage, don't remove the JaCoCo runtime
                 keep("class com.vladium.** {*;}")
                 keep("class org.jacoco.** {*;}")

@@ -142,16 +142,6 @@ interface VariantDslInfo {
      */
     fun computeDirNameWithSplits(vararg splitNames: String): String
 
-    /**
-     * Return the names of the applied flavors.
-     *
-     *
-     * The list contains the dimension names as well.
-     *
-     * @return the list, possibly empty if there are no flavors.
-     */
-    val flavorNamesWithDimensionNames: List<String>
-
     fun hasFlavors(): Boolean
 
     /**

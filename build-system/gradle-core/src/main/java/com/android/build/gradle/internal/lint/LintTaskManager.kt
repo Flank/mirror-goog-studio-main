@@ -120,7 +120,7 @@ class LintTaskManager constructor(
 
             val mainVariant = variantWithTests.main
             if (mainVariant.componentType.isBaseModule &&
-                !mainVariant.variantDslInfo.isDebuggable &&
+                !mainVariant.debuggable &&
                 globalTaskCreationConfig.lintOptions.checkReleaseBuilds
             ) {
                 taskFactory.register(
