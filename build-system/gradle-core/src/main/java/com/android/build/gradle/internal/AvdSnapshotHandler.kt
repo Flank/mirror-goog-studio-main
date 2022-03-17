@@ -109,7 +109,7 @@ class AvdSnapshotHandler(
         try {
             GrabProcessOutput.grabProcessOutput(
                 process,
-                GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
+                GrabProcessOutput.Wait.WAIT_FOR_READERS,
                 object : GrabProcessOutput.IProcessOutput {
                     override fun out(line: String?) {
                         line ?: return
@@ -325,7 +325,7 @@ class AvdSnapshotHandler(
 
         GrabProcessOutput.grabProcessOutput(
             getPropProcess,
-            GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
+            GrabProcessOutput.Wait.WAIT_FOR_READERS,
             object : GrabProcessOutput.IProcessOutput {
                 override fun out(line: String?) {
                     line ?: return
