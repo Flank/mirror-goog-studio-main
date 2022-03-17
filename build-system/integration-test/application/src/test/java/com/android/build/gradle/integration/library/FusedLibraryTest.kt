@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.library
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -28,7 +27,7 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class FusedLibrariesTest(
+class FusedLibraryTest(
         private val includePublishing: Boolean,
 ) {
 
@@ -49,7 +48,7 @@ class FusedLibrariesTest(
         """.trimIndent())
     }
     private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2")
-    private val fusedLibraries = MinimalSubProject.fusedLibraries("com.example.fusedLib1").also {
+    private val fusedLibrary = MinimalSubProject.fusedLibrary("com.example.fusedLib1").also {
         if (includePublishing) {
             it.appendToBuild("""
                 apply plugin: 'maven-publish'
@@ -69,7 +68,7 @@ class FusedLibrariesTest(
                     MultiModuleTestProject.builder()
                         .subproject("androidLib1", androidLib1)
                         .subproject("androidLib2", androidLib2)
-                        .subproject("fusedLib1", fusedLibraries)
+                        .subproject("fusedLib1", fusedLibrary)
                         .build()
             ).create()
 

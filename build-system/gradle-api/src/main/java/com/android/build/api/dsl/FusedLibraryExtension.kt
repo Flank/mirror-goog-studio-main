@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.api
+package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
-import org.gradle.api.Plugin
-import org.gradle.api.Project
 
 @Incubating
-class FusedLibrariesPlugin: Plugin<Project> {
-    override fun apply(project: Project) {
-        project.apply(mapOf("plugin" to "com.android.internal.fused-libraries"))
-    }
+interface FusedLibraryExtension {
+
+    @get: Incubating
+    @set: Incubating
+    var namespace: String?
 }

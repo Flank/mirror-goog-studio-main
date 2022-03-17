@@ -28,7 +28,7 @@ import java.io.FileOutputStream
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 
-internal class FusedLibsMergeClassesTest {
+internal class FusedLibraryMergeClassesTest {
 
     @Rule
     @JvmField var temporaryFolder = TemporaryFolder()
@@ -39,7 +39,7 @@ internal class FusedLibsMergeClassesTest {
 
     @Test
     fun testNoConflict() {
-        testWithTask { jar1: File, jar2: File, task: FusedLibsMergeClasses ->
+        testWithTask { jar1: File, jar2: File, task: FusedLibraryMergeClasses ->
             createJar(jar1, "source1.class")
             createJar(jar2, "source2.class")
 
@@ -53,7 +53,7 @@ internal class FusedLibsMergeClassesTest {
 
     @Test(expected = DuplicateFileCopyingException::class)
     fun testConflicts() {
-        testWithTask { jar1: File, jar2: File, task: FusedLibsMergeClasses ->
+        testWithTask { jar1: File, jar2: File, task: FusedLibraryMergeClasses ->
             createJar(jar1, "source1.class")
             createJar(jar2, "source1.class")
 
@@ -61,9 +61,9 @@ internal class FusedLibsMergeClassesTest {
         }
     }
 
-    private fun testWithTask(action: (File, File, FusedLibsMergeClasses) -> Unit) {
+    private fun testWithTask(action: (File, File, FusedLibraryMergeClasses) -> Unit) {
         val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        val task = project.tasks.register("mergeClasses", FusedLibsMergeClasses::class.java).get()
+        val task = project.tasks.register("mergeClasses", FusedLibraryMergeClasses::class.java).get()
         val jar1 = File(temporaryFolder.newFolder("src1"), "source1.jar")
         val jar2 = File(temporaryFolder.newFolder("src2"), "source2.jar")
 

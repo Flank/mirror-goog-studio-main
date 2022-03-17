@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
+package com.android.build.gradle.internal.dsl
 
-import org.gradle.api.Incubating
+import com.android.build.api.dsl.FusedLibraryExtension
+import com.android.build.gradle.internal.services.DslServices
+import javax.inject.Inject
 
-@Incubating
-interface FusedLibrariesExtension {
+abstract class FusedLibraryExtensionImpl @Inject constructor(
+    val dslServices: DslServices,
+): FusedLibraryExtension{
 
-    @get: Incubating
-    @set: Incubating
-    var namespace: String?
+    abstract override var namespace: String?
 }

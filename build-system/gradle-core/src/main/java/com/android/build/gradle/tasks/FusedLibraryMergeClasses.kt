@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.fusedlibs.FusedLibsInternalArtifactType
-import com.android.build.gradle.internal.fusedlibs.FusedLibsVariantScope
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage
@@ -39,7 +39,7 @@ import java.util.jar.JarFile
  * merge classes.jar coming from included libraries in fused libraries  plugin.
  */
 @DisableCachingByDefault(because = "No calculation is made, merging classes. ")
-abstract class FusedLibsMergeClasses: DefaultTask() {
+abstract class FusedLibraryMergeClasses: DefaultTask() {
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
@@ -75,22 +75,22 @@ abstract class FusedLibsMergeClasses: DefaultTask() {
         }
     }
 
-    class CreationAction(val creationConfig: FusedLibsVariantScope) :
-        TaskCreationAction<FusedLibsMergeClasses>() {
+    class CreationAction(val creationConfig: FusedLibraryVariantScope) :
+        TaskCreationAction<FusedLibraryMergeClasses>() {
         override val name: String
             get() = "mergeClasses"
-        override val type: Class<FusedLibsMergeClasses>
-            get() = FusedLibsMergeClasses::class.java
+        override val type: Class<FusedLibraryMergeClasses>
+            get() = FusedLibraryMergeClasses::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<FusedLibsMergeClasses>) {
+        override fun handleProvider(taskProvider: TaskProvider<FusedLibraryMergeClasses>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                FusedLibsMergeClasses::outputDirectory
-            ).on(FusedLibsInternalArtifactType.MERGED_CLASSES)
+                FusedLibraryMergeClasses::outputDirectory
+            ).on(FusedLibraryInternalArtifactType.MERGED_CLASSES)
         }
 
-        override fun configure(task: FusedLibsMergeClasses) {
+        override fun configure(task: FusedLibraryMergeClasses) {
             val artifactView =
                 creationConfig
                     .incomingConfigurations

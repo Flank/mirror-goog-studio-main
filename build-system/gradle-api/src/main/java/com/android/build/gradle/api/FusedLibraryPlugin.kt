@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl
+package com.android.build.gradle.api
 
-import com.android.build.api.dsl.FusedLibrariesExtension
-import com.android.build.gradle.internal.services.DslServices
-import javax.inject.Inject
+import org.gradle.api.Incubating
+import org.gradle.api.Plugin
+import org.gradle.api.Project
 
-abstract class FusedLibrariesExtensionImpl @Inject constructor(
-    val dslServices: DslServices,
-): FusedLibrariesExtension{
-
-    abstract override var namespace: String?
+@Incubating
+class FusedLibraryPlugin: Plugin<Project> {
+    override fun apply(project: Project) {
+        project.apply(mapOf("plugin" to "com.android.internal.fused-library"))
+    }
 }

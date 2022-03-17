@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fusedlibs
+package com.android.build.gradle.internal.fusedlibrary
 
 import org.gradle.api.Action
 import org.gradle.api.Project

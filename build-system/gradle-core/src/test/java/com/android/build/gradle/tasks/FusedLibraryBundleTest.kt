@@ -18,19 +18,18 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.artifact.impl.SingleInitialProviderRequestImpl
-import com.android.build.gradle.internal.fusedlibs.FusedLibsVariantScope
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.testfixtures.ProjectBuilder
-import org.jetbrains.dokka.utilities.cast
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
 
-internal class FusedLibsBundleTest {
+internal class FusedLibraryBundleTest {
     @Rule
     @JvmField var temporaryFolder = TemporaryFolder()
 
@@ -40,25 +39,25 @@ internal class FusedLibsBundleTest {
 
     @Test
     fun testJarClasses() {
-        testCreationConfig<FusedLibsBundleClasses, FusedLibsBundleClasses.CreationAction>(
+        testCreationConfig<FusedLibraryBundleClasses, FusedLibraryBundleClasses.CreationAction>(
             "classes.jar"
         )
     }
 
     @Test
     fun testAarBundle() {
-        testCreationConfig<FusedLibsBundleAar, FusedLibsBundleAar.CreationAction>(
+        testCreationConfig<FusedLibraryBundleAar, FusedLibraryBundleAar.CreationAction>(
             "bundle.aar"
         )
     }
 
-    inline fun <reified T: FusedLibsBundle, reified U: FusedLibsBundle.CreationAction<T>> testCreationConfig(
+    inline fun <reified T: FusedLibraryBundle, reified U: FusedLibraryBundle.CreationAction<T>> testCreationConfig(
         archiveFileName: String,
     ) {
         val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         val taskProvider = project.tasks.register("bundle", T::class.java)
 
-        val variantScope = Mockito.mock(FusedLibsVariantScope::class.java)
+        val variantScope = Mockito.mock(FusedLibraryVariantScope::class.java)
         val artifacts = Mockito.mock(ArtifactsImpl::class.java)
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
 
@@ -68,10 +67,10 @@ internal class FusedLibsBundleTest {
         val request = Mockito.mock(SingleInitialProviderRequestImpl::class.java)
                 as SingleInitialProviderRequestImpl<T, RegularFile>
 
-        Mockito.`when`(artifacts.setInitialProvider(taskProvider, FusedLibsBundle::outputFile))
+        Mockito.`when`(artifacts.setInitialProvider(taskProvider, FusedLibraryBundle::outputFile))
                 .thenReturn(request)
 
-        val creationAction = U::class.java.getDeclaredConstructor(FusedLibsVariantScope::class.java)
+        val creationAction = U::class.java.getDeclaredConstructor(FusedLibraryVariantScope::class.java)
             .newInstance(variantScope)
         creationAction.handleProvider(taskProvider)
 

@@ -111,6 +111,7 @@ class AddJavaSourceTest: VariantApiBaseTest(TestType.Script) {
                         minSdkVersion(21)
                         targetSdkVersion(29)
                     }
+                    namespace = "com.example.addjavasource"
                 }
 
                 androidComponents {
@@ -254,6 +255,7 @@ where source files will be generated and added to the compilation task.
                         minSdkVersion(21)
                         targetSdkVersion(29)
                     }
+                    namespace = "com.example.addjavasource"
                 }
 
                 androidComponents {

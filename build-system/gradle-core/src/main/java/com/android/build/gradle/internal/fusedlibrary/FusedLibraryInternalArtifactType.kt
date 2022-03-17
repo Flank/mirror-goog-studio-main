@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fusedlibs
+package com.android.build.gradle.internal.fusedlibrary
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
@@ -24,12 +24,12 @@ import org.gradle.api.file.RegularFile
 
 @Suppress("ClassName")
 sealed class
-FusedLibsInternalArtifactType<T : FileSystemLocation>(
+FusedLibraryInternalArtifactType<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
 ) : Artifact.Single<T>(kind, category) {
 
-    object MERGED_CLASSES: FusedLibsInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
-    object JAR_CLASSES: FusedLibsInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
-    object BUNDLED_LIBS: FusedLibsInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object MERGED_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
+    object JAR_CLASSES: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object BUNDLED_Library: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
 }

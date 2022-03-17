@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fusedlibs
+package com.android.build.gradle.internal.fusedlibrary
 
-import com.android.build.api.attributes.BuildTypeAttr
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Usage
 
 /**
- * Scope object that contains all the configurations for the fused-libraries plugin.
+ * Scope object that contains all the configurations for the fused-library plugin.
  */
-class FusedLibsConfigurations {
+class FusedLibraryConfigurations {
 
     private val configurations= mutableListOf<Configuration>()
 

@@ -61,8 +61,8 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Gro
             androidComponents {
                 onVariants(selector().all(), { variant ->
                     project.tasks.register(variant.getName() + "GetAllClasses", GetAllClassesTask.class) {
-                        it.allClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE))
-                        it.allJarsWithClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS.INSTANCE))
+                        it.allClasses.set(variant.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_DIRS.INSTANCE))
+                        it.allJarsWithClasses.set(variant.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_JARS.INSTANCE))
 
                     }
                 })

@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fusedlibs
+package com.android.build.gradle.internal.fusedlibrary
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.dsl.FusedLibrariesExtension
+import com.android.build.api.dsl.FusedLibraryExtension
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.specs.Spec
 
-class FusedLibsVariantScope(
+class FusedLibraryVariantScope(
     project: Project,
-    extensionProvider: () -> FusedLibrariesExtension
+    extensionProvider: () -> FusedLibraryExtension
 ) {
     val layout: ProjectLayout = project.layout
     val artifacts= ArtifactsImpl(project, "single")
-    val incomingConfigurations = FusedLibsConfigurations()
-    val outgoingConfigurations = FusedLibsConfigurations()
+    val incomingConfigurations = FusedLibraryConfigurations()
+    val outgoingConfigurations = FusedLibraryConfigurations()
 
-    val extension: FusedLibrariesExtension by lazy {
+    val extension: FusedLibraryExtension by lazy {
         extensionProvider.invoke()
     }
 

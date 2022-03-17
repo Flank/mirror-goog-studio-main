@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.fusedlibs.FusedLibsInternalArtifactType
-import com.android.build.gradle.internal.fusedlibs.FusedLibsVariantScope
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -27,23 +27,23 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Task does not calculate anything, only creates a jar.")
-abstract class FusedLibsBundle: Jar() {
+abstract class FusedLibraryBundle: Jar() {
 
     // We have to explicitly repeat the output file as the artifacts API expects a
     // RegularFileProperty annotated with OutputFile so proper dependency can be expressed.
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
-    abstract class CreationAction<T: FusedLibsBundle>(
-            val creationConfig: FusedLibsVariantScope,
-            val artifactType: FusedLibsInternalArtifactType<RegularFile>
+    abstract class CreationAction<T: FusedLibraryBundle>(
+        val creationConfig: FusedLibraryVariantScope,
+        val artifactType: FusedLibraryInternalArtifactType<RegularFile>
     ) : TaskCreationAction<T>() {
 
         override fun handleProvider(taskProvider: TaskProvider<T>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
-                    FusedLibsBundle::outputFile
+                    FusedLibraryBundle::outputFile
             ).on(artifactType)
         }
 
@@ -57,46 +57,46 @@ abstract class FusedLibsBundle: Jar() {
 }
 
 @DisableCachingByDefault(because = "Task does not calculate anything, only creates a jar.")
-abstract class FusedLibsBundleAar: FusedLibsBundle() {
+abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
 
     class CreationAction(
-            creationConfig: FusedLibsVariantScope,
-    ) : FusedLibsBundle.CreationAction<FusedLibsBundleAar>(
+        creationConfig: FusedLibraryVariantScope,
+    ) : FusedLibraryBundle.CreationAction<FusedLibraryBundleAar>(
             creationConfig,
-            FusedLibsInternalArtifactType.JAR_CLASSES,
+            FusedLibraryInternalArtifactType.JAR_CLASSES,
     ) {
 
         override val name: String
             get() = "bundle"
-        override val type: Class<FusedLibsBundleAar>
-            get() = FusedLibsBundleAar::class.java
+        override val type: Class<FusedLibraryBundleAar>
+            get() = FusedLibraryBundleAar::class.java
 
-        override fun configure(task: FusedLibsBundleAar) {
+        override fun configure(task: FusedLibraryBundleAar) {
             super.configure(task)
             task.archiveFileName.set("bundle.aar")
-            task.from(creationConfig.artifacts.get(FusedLibsInternalArtifactType.MERGED_CLASSES))
+            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_CLASSES))
         }
     }
 }
 
 @DisableCachingByDefault(because = "Task does not calculate anything, only creates a jar.")
-abstract class FusedLibsBundleClasses: FusedLibsBundle() {
+abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
 
     class CreationAction(
-            creationConfig: FusedLibsVariantScope,
-    ): FusedLibsBundle.CreationAction<FusedLibsBundleClasses>(
+        creationConfig: FusedLibraryVariantScope,
+    ): FusedLibraryBundle.CreationAction<FusedLibraryBundleClasses>(
             creationConfig,
-            FusedLibsInternalArtifactType.BUNDLED_LIBS
+            FusedLibraryInternalArtifactType.BUNDLED_Library
     ) {
         override val name: String
             get() = "packageJar"
-        override val type: Class<FusedLibsBundleClasses>
-            get() = FusedLibsBundleClasses::class.java
+        override val type: Class<FusedLibraryBundleClasses>
+            get() = FusedLibraryBundleClasses::class.java
 
-        override fun configure(task: FusedLibsBundleClasses) {
+        override fun configure(task: FusedLibraryBundleClasses) {
             super.configure(task)
             task.archiveFileName.set("classes.jar")
-            task.from(creationConfig.artifacts.get(FusedLibsInternalArtifactType.JAR_CLASSES))
+            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.JAR_CLASSES))
         }
     }
 }

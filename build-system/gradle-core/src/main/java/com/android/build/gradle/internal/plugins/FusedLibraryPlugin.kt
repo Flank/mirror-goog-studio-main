@@ -17,19 +17,18 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.attributes.BuildTypeAttr
-import com.android.build.api.dsl.FusedLibrariesExtension
-import com.android.build.gradle.internal.fusedlibs.FusedLibsInternalArtifactType
-import com.android.build.gradle.internal.fusedlibs.SegregatingConstraintHandler
+import com.android.build.api.dsl.FusedLibraryExtension
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import com.android.build.gradle.internal.fusedlibrary.SegregatingConstraintHandler
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.dsl.FusedLibrariesExtensionImpl
-import com.android.build.gradle.internal.fusedlibs.FusedLibsVariantScope
+import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
-import com.android.build.gradle.tasks.FusedLibsBundle
-import com.android.build.gradle.tasks.FusedLibsBundleAar
-import com.android.build.gradle.tasks.FusedLibsBundleClasses
-import com.android.build.gradle.tasks.FusedLibsMergeClasses
+import com.android.build.gradle.tasks.FusedLibraryBundleAar
+import com.android.build.gradle.tasks.FusedLibraryBundleClasses
+import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -49,7 +48,7 @@ import org.gradle.internal.component.external.model.ModuleComponentArtifactIdent
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
-class FusedLibrariesPlugin @Inject constructor(
+class FusedLibraryPlugin @Inject constructor(
     private val softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
 ): AndroidPluginBaseServices(listenerRegistry), Plugin<Project> {
@@ -57,13 +56,13 @@ class FusedLibrariesPlugin @Inject constructor(
     // so far, there is only one variant.
     private val variantScope by lazy {
         withProject("variantScope") { project ->
-            FusedLibsVariantScope(
+            FusedLibraryVariantScope(
                 project
             ) { extension }
         }
     }
 
-    private val extension: FusedLibrariesExtension by lazy {
+    private val extension: FusedLibraryExtension by lazy {
         withProject("extension") { project ->
             instantiateExtension(project)
         }
@@ -76,7 +75,7 @@ class FusedLibrariesPlugin @Inject constructor(
         extension
     }
 
-    private fun instantiateExtension(project: Project): FusedLibrariesExtension {
+    private fun instantiateExtension(project: Project): FusedLibraryExtension {
 
         val sdkComponentsBuildService: Provider<SdkComponentsBuildService> =
             SdkComponentsBuildService.RegistrationAction(project, projectServices.projectOptions)
@@ -87,20 +86,20 @@ class FusedLibrariesPlugin @Inject constructor(
             sdkComponentsBuildService
         )
 
-        val fusedLibrariesExtensionImpl= dslServices.newDecoratedInstance(
-            FusedLibrariesExtensionImpl::class.java,
+        val fusedLibraryExtensionImpl= dslServices.newDecoratedInstance(
+            FusedLibraryExtensionImpl::class.java,
             dslServices,
         )
 
         abstract class Extension(
-            val publicExtensionImpl: FusedLibrariesExtensionImpl,
-        ): FusedLibrariesExtension by publicExtensionImpl
+            val publicExtensionImpl: FusedLibraryExtensionImpl,
+        ): FusedLibraryExtension by publicExtensionImpl
 
         return project.extensions.create(
-            FusedLibrariesExtension::class.java,
+            FusedLibraryExtension::class.java,
             "android",
             Extension::class.java,
-            fusedLibrariesExtensionImpl
+            fusedLibraryExtensionImpl
         )
 
     }
@@ -108,13 +107,13 @@ class FusedLibrariesPlugin @Inject constructor(
     override fun createTasks(project: Project) {
         TaskFactoryImpl(project.tasks).let { taskFactory ->
             listOf(
-                    FusedLibsMergeClasses.CreationAction::class.java,
-                    FusedLibsBundleClasses.CreationAction::class.java,
-                    FusedLibsBundleAar.CreationAction::class.java,
+                    FusedLibraryMergeClasses.CreationAction::class.java,
+                    FusedLibraryBundleClasses.CreationAction::class.java,
+                    FusedLibraryBundleAar.CreationAction::class.java,
             ).forEach { creationAction ->
                 taskFactory.register(
                     creationAction
-                        .getConstructor(FusedLibsVariantScope::class.java)
+                        .getConstructor(FusedLibraryVariantScope::class.java)
                         .newInstance(variantScope)
                 )
             }
@@ -123,7 +122,7 @@ class FusedLibrariesPlugin @Inject constructor(
         // create anchor tasks
 
         project.tasks.register("assemble") {
-            it.dependsOn(variantScope.artifacts.get(FusedLibsInternalArtifactType.BUNDLED_LIBS))
+            it.dependsOn(variantScope.artifacts.get(FusedLibraryInternalArtifactType.BUNDLED_Library))
         }
     }
 
@@ -134,7 +133,7 @@ class FusedLibrariesPlugin @Inject constructor(
         super.basePluginApply(project)
 
         // create an adhoc component, this will be used for publication
-        val adhocComponent = softwareComponentFactory.adhoc("fusedLibrariesComponent")
+        val adhocComponent = softwareComponentFactory.adhoc("fusedLibraryComponent")
         // add it to the list of components that this project declares
         project.components.add(adhocComponent)
 
@@ -229,7 +228,7 @@ class FusedLibrariesPlugin @Inject constructor(
         val bundleTaskProvider =
             variantScope
                 .artifacts
-                .getArtifactContainer(FusedLibsInternalArtifactType.BUNDLED_LIBS)
+                .getArtifactContainer(FusedLibraryInternalArtifactType.BUNDLED_Library)
                 .getTaskProviders()
                 .last()
 

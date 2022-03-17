@@ -676,10 +676,10 @@ com.android.build.gradle.api.BaseVariantOutput.getProcessManifestProvider: org.g
 com.android.build.gradle.api.BaseVariantOutput.getProcessResources: com.android.build.gradle.tasks.ProcessAndroidResources ()
 com.android.build.gradle.api.BaseVariantOutput.getProcessResourcesProvider: org.gradle.api.tasks.TaskProvider<com.android.build.gradle.tasks.ProcessAndroidResources> ()
 com.android.build.gradle.api.FeatureVariant implements com.android.build.gradle.api.ApkVariant, com.android.build.gradle.internal.api.TestedVariant
-com.android.build.gradle.api.FusedLibrariesPlugin implements org.gradle.api.Plugin
-com.android.build.gradle.api.FusedLibrariesPlugin.<init>: com.android.build.gradle.api.FusedLibrariesPlugin ()
-com.android.build.gradle.api.FusedLibrariesPlugin.apply: void (java.lang.Object)
-com.android.build.gradle.api.FusedLibrariesPlugin.apply: void (org.gradle.api.Project)
+com.android.build.gradle.api.FusedLibraryPlugin implements org.gradle.api.Plugin
+com.android.build.gradle.api.FusedLibraryPlugin.<init>: com.android.build.gradle.api.FusedLibraryPlugin ()
+com.android.build.gradle.api.FusedLibraryPlugin.apply: void (java.lang.Object)
+com.android.build.gradle.api.FusedLibraryPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.api.InstallableVariant
 com.android.build.gradle.api.InstallableVariant.getInstall: org.gradle.api.DefaultTask ()
 com.android.build.gradle.api.InstallableVariant.getInstallProvider: org.gradle.api.tasks.TaskProvider<org.gradle.api.Task> ()

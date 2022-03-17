@@ -1021,7 +1021,7 @@ package com.android.build.api.dsl {
     property @Deprecated public abstract int maxSnapshots;
   }
 
-  @org.gradle.api.Incubating public interface FusedLibrariesExtension {
+  @org.gradle.api.Incubating public interface FusedLibraryExtension {
     method @org.gradle.api.Incubating public String? getNamespace();
     method @org.gradle.api.Incubating public void setNamespace(String? namespace);
     property @org.gradle.api.Incubating public abstract String? namespace;
@@ -2578,8 +2578,8 @@ package com.android.build.gradle.api {
     method public void apply(org.gradle.api.Project project);
   }
 
-  @org.gradle.api.Incubating public final class FusedLibrariesPlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
-    ctor public FusedLibrariesPlugin();
+  @org.gradle.api.Incubating public final class FusedLibraryPlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
+    ctor public FusedLibraryPlugin();
     method public void apply(org.gradle.api.Project project);
   }
 
