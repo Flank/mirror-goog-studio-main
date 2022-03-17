@@ -102,6 +102,11 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             }
 
+            // Type parameter which resolves to Void?
+            if (element is UExpression && element.getExpressionType()?.canonicalText == "java.lang.Void") {
+                return
+            }
+
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
             if (usageInfo.anyCloser { it.qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE }) {

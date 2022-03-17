@@ -1796,4 +1796,45 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testCapitalVoid() {
+        // Regression test for issue 225204162
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.CheckResult;
+
+                public class VoidTest {
+                    public void test(Function<String, Void> callback) {
+                        callback.apply("");
+                    }
+
+                    public interface Function<T, R> {
+                        @CheckResult
+                        R apply(T var1);
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                interface Function<T, R> {
+                    @CheckResult
+                    fun apply(var1: T): R
+                }
+
+                fun test(callback: Function<String?, Void?>) {
+                    callback.apply("")
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
