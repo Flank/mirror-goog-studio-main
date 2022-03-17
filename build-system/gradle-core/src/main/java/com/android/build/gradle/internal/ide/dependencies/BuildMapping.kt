@@ -17,7 +17,6 @@
 @file:JvmName("BuildMappingUtils")
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.tools.r8.internal.it
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.component.BuildIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
