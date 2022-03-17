@@ -135,7 +135,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DuplicateIdDetector.CROSS_LAYOUT,
                 DuplicateIdDetector.WITHIN_LAYOUT,
                 DuplicateResourceDetector.ISSUE,
-                DuplicateResourceDetector.STRING_ESCAPING,
                 DuplicateResourceDetector.TYPE_MISMATCH,
                 EllipsizeMaxLinesDetector.ISSUE,
                 EmptySuperDetector.ISSUE,
@@ -394,6 +393,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 StorageDetector.ISSUE,
                 StringAuthLeakDetector.AUTH_LEAK,
                 StringCasingDetector.DUPLICATE_STRINGS,
+                StringEscapeDetector.STRING_ESCAPING,
                 StringFormatDetector.ARG_COUNT,
                 StringFormatDetector.ARG_TYPES,
                 StringFormatDetector.INVALID,
@@ -536,7 +536,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
         } else {
             var initialSize = 12
             when {
-                scope.contains(Scope.RESOURCE_FILE) -> initialSize += 116
+                scope.contains(Scope.RESOURCE_FILE) -> initialSize += 117
                 scope.contains(Scope.ALL_RESOURCE_FILES) -> initialSize += 12
             }
             when {
