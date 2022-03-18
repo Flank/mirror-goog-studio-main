@@ -363,8 +363,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // directory containing layout info files for data binding when merge-resources type == PACKAGE
     // see https://issuetracker.google.com/110412851
     object DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // the generated base classes artifacts from all dependencies
-    object DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // the data binding class log generated after compilation: InternalArtifactType<RegularFile>(FILE), Replaceable includes merged
     // class info file
     object DATA_BINDING_BASE_CLASS_LOG_ARTIFACT: InternalArtifactType<Directory>(DIRECTORY), Replaceable

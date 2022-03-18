@@ -150,7 +150,6 @@ import com.android.build.gradle.internal.tasks.UninstallTask
 import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments.Companion.createArguments
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
-import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
 import com.android.build.gradle.internal.tasks.databinding.KAPT_FIX_KOTLIN_VERSION
@@ -2399,7 +2398,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         if (!dataBindingEnabled && !viewBindingEnabled) {
             return
         }
-        taskFactory.register(DataBindingMergeBaseClassLogTask.CreationAction(creationConfig))
         taskFactory.register(
                 DataBindingMergeDependencyArtifactsTask.CreationAction(creationConfig))
         DataBindingBuilder.setDebugLogEnabled(logger.isDebugEnabled)

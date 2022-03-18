@@ -85,7 +85,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     // list of artifacts from dependencies
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val mergedArtifactsFromDependencies: DirectoryProperty
+    abstract val dependencyClassLogDirectories: ConfigurableFileCollection
 
     @get:InputFiles
     @get:Optional
@@ -201,7 +201,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 outOfDate = outOfDate,
                 removed = removed,
                 infoFolder = layoutInfoDir,
-                dependencyClassesFolder = mergedArtifactsFromDependencies.get().asFile,
+                dependencyClassesFolders = dependencyClassLogDirectories.files.toList(),
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
                 packageName = namespace.get(),
@@ -249,10 +249,14 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
 
             task.namespace.setDisallowChanges(creationConfig.namespace)
 
-            artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                task.mergedArtifactsFromDependencies
+            task.dependencyClassLogDirectories.fromDisallowChanges(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
+                    )
             )
+
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
             task.logOutFolder = creationConfig.paths.getIncrementalDir(task.name)
