@@ -63,7 +63,7 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
         creationConfig: FusedLibraryVariantScope,
     ) : FusedLibraryBundle.CreationAction<FusedLibraryBundleAar>(
             creationConfig,
-            FusedLibraryInternalArtifactType.JAR_CLASSES,
+            FusedLibraryInternalArtifactType.CLASSES_JAR,
     ) {
 
         override val name: String
@@ -74,7 +74,10 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
         override fun configure(task: FusedLibraryBundleAar) {
             super.configure(task)
             task.archiveFileName.set("bundle.aar")
-            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_CLASSES))
+            task.from(
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS)
+            )
         }
     }
 }
@@ -96,7 +99,7 @@ abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
         override fun configure(task: FusedLibraryBundleClasses) {
             super.configure(task)
             task.archiveFileName.set("classes.jar")
-            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.JAR_CLASSES))
+            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_JAR))
         }
     }
 }

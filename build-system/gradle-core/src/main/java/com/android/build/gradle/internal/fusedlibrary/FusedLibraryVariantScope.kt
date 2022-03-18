@@ -32,6 +32,7 @@ class FusedLibraryVariantScope(
     val artifacts= ArtifactsImpl(project, "single")
     val incomingConfigurations = FusedLibraryConfigurations()
     val outgoingConfigurations = FusedLibraryConfigurations()
+    val dependencies = FusedLibraryDependencies(incomingConfigurations)
 
     val extension: FusedLibraryExtension by lazy {
         extensionProvider.invoke()

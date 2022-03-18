@@ -625,7 +625,7 @@ class NamespaceRewriter(
          * parent is found, it will return it and the package it was found in. If the parent is not
          * found, this method will raise an error.
          */
-        fun findStyleableChildSymbol(name: String): Pair<Symbol.StyleableSymbol, String> {
+        internal fun findStyleableChildSymbol(name: String): Pair<Symbol.StyleableSymbol, String> {
             return findStyleableChild(name)
         }
 
@@ -717,7 +717,7 @@ class NamespaceRewriter(
         }
     }
 
-    private fun findStyleableChild(name: String): Pair<Symbol.StyleableSymbol, String> {
+    fun findStyleableChild(name: String): Pair<Symbol.StyleableSymbol, String> {
         val canonicalName = canonicalizeValueResourceName(name)
         for (table in symbolTables) {
             val maybeParent = table.maybeGetStyleableParentSymbolForChild(canonicalName)

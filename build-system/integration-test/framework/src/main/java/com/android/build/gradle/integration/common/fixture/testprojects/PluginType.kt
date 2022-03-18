@@ -84,6 +84,11 @@ enum class PluginType(
         isAndroid = true,
         useNewDsl = false
     ),
+    FUSED_LIBRARY(
+        id = "com.android.fused-library",
+        isAndroid = false,
+        useNewDsl = true,
+    ),
     JAVA_TEST_FIXTURES(
         id = "java-test-fixtures",
         useNewDsl = true

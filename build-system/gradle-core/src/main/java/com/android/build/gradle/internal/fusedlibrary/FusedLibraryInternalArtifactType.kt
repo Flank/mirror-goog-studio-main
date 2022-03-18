@@ -29,7 +29,11 @@ FusedLibraryInternalArtifactType<T : FileSystemLocation>(
     category: Category = Category.INTERMEDIATES,
 ) : Artifact.Single<T>(kind, category) {
 
+    // Directory of classes for use in the fused library.
+    object FINAL_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     object MERGED_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
-    object JAR_CLASSES: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object CLASSES_JAR: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
     object BUNDLED_Library: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    // R Class containing all Android resource symbols from libraries contained in a fused library.
+    object FUSED_R_CLASS : FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
 }

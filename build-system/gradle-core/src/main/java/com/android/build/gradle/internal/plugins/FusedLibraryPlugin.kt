@@ -18,17 +18,18 @@ package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.attributes.BuildTypeAttr
 import com.android.build.api.dsl.FusedLibraryExtension
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
-import com.android.build.gradle.internal.fusedlibrary.SegregatingConstraintHandler
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.fusedlibrary.SegregatingConstraintHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleAar
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
+import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -107,6 +108,7 @@ class FusedLibraryPlugin @Inject constructor(
     override fun createTasks(project: Project) {
         TaskFactoryImpl(project.tasks).let { taskFactory ->
             listOf(
+                    FusedLibraryClassesRewriteTask.CreateAction::class.java,
                     FusedLibraryMergeClasses.CreationAction::class.java,
                     FusedLibraryBundleClasses.CreationAction::class.java,
                     FusedLibraryBundleAar.CreationAction::class.java,

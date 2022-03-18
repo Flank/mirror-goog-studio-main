@@ -250,6 +250,11 @@ interface DependenciesBuilder {
     fun androidTestImplementation(dependency: Any)
 
     /**
+     * adds a dependency
+     */
+    fun include(dependency: Any)
+
+    /**
      * adds a dependency in the lintPublish scope.
      *
      * See [implementation] for details

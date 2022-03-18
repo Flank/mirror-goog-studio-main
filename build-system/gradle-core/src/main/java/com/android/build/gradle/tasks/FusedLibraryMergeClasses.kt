@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage
@@ -91,14 +92,12 @@ abstract class FusedLibraryMergeClasses: DefaultTask() {
         }
 
         override fun configure(task: FusedLibraryMergeClasses) {
-            val artifactView =
-                creationConfig
-                    .incomingConfigurations
-                    .getConfiguration(Usage.JAVA_RUNTIME)
-                    .incoming
-                    .artifactView{ view -> view.componentFilter(creationConfig.mergeSpec) }
-
-            task.incoming.setFrom(artifactView.files)
+            task.incoming.setFrom(
+                creationConfig.dependencies.getArtifactFileCollection(
+                    Usage.JAVA_RUNTIME,
+                    creationConfig.mergeSpec,
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR)
+            )
         }
     }
 }
