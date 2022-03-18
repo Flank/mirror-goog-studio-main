@@ -877,6 +877,10 @@ public class LocalMavenRepositoryGenerator {
         // Key: The associated Artifact's toString() representation.
         private final Map<String, DependencyNode> allNodes = new HashMap<>();
 
+        // Contains processed nodes, so that we process each node only once,
+        // in order to improve performance.
+        private final Set<DependencyNode> visitedNodes = new HashSet<>();
+
         public ImportDependencyVisitor(DependencyNode root, CustomMavenRepository repository) {
             // Gather all nodes in the dependency graph.
             PreorderNodeListGenerator generator = new PreorderNodeListGenerator();
@@ -890,6 +894,10 @@ public class LocalMavenRepositoryGenerator {
 
         @Override
         public boolean visitEnter(DependencyNode node) {
+            if (!visitedNodes.add(node)) {
+                return false;
+            }
+
             if (node.getArtifact() == null) return true;
             // Get the raw Pom model for the artifact. Note that the effective model
             // inlines the "scope=import" dependencies (which is also why the original
