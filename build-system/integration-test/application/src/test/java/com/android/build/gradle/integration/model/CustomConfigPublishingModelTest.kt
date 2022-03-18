@@ -51,6 +51,7 @@ class CustomConfigPublishingModelTest : ModelComparator() {
                     }
 
                     def customTask = tasks.register("customTask", Jar) {
+                        getArchiveBaseName().set("custom")
                     }
 
                     artifacts {
