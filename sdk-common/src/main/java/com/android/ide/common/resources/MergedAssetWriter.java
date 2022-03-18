@@ -28,12 +28,21 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import javax.inject.Inject;
 
 /** A {@link MergeWriter} for assets, using {@link AssetItem}. */
 public class MergedAssetWriter
         extends MergeWriter<AssetItem, MergedAssetWriter.AssetWorkParameters> {
+    private static final int MIN_JOBS = 3;
+    private static final int MAX_BUCKETS = 5;
+
+    private final Map<String, AssetItem> allJobs = new HashMap<String, AssetItem>();
 
     public MergedAssetWriter(@NonNull File rootFolder, @NonNull WorkerExecutorFacade facade) {
         super(rootFolder, facade);
@@ -41,62 +50,101 @@ public class MergedAssetWriter
 
     @Override
     public void addItem(@NonNull final AssetItem item) throws ConsumerException {
-        // Only write it if the state is TOUCHED.
         if (item.isTouched()) {
-            getExecutor()
-                    .submit(new AssetWorkAction(new AssetWorkParameters(item, getRootFolder())));
+            allJobs.put(item.getName(), item);
         }
     }
 
     public static class AssetWorkParameters implements Serializable {
-        public final AssetItem assetItem;
+        public final List<AssetItem> assetItemBucket;
         public final File rootFolder;
 
-        private AssetWorkParameters(@NonNull AssetItem assetItem, @NonNull File rootFolder) {
-            this.assetItem = assetItem;
+        private AssetWorkParameters(
+                @NonNull List<AssetItem> assetItemBucket, @NonNull File rootFolder) {
+            this.assetItemBucket = assetItemBucket;
             this.rootFolder = rootFolder;
         }
     }
 
     public static class AssetWorkAction implements WorkerExecutorFacade.WorkAction {
 
-        private final AssetItem item;
+        private final List<AssetItem> assetItemBucket;
         private final File rootFolder;
 
         @Inject
         public AssetWorkAction(AssetWorkParameters parameters) {
-            this.item = parameters.assetItem;
+            this.assetItemBucket = parameters.assetItemBucket;
             this.rootFolder = parameters.rootFolder;
         }
 
         @Override
         public void run() {
-            try {
-                AssetFile assetFile = Preconditions.checkNotNull(item.getSourceFile());
+            for (AssetItem item : assetItemBucket) {
+                try {
+                    AssetFile assetFile = Preconditions.checkNotNull(item.getSourceFile());
 
-                Path fromFile = assetFile.getFile().toPath();
+                    Path fromFile = assetFile.getFile().toPath();
 
-                // the out file is computed from the item key since that includes the
-                // relative folder.
-                Path toFile =
-                        new File(rootFolder, item.getKey().replace('/', File.separatorChar))
-                                .toPath();
+                    // the out file is computed from the item key since that includes the
+                    // relative folder.
+                    Path toFile =
+                            new File(rootFolder, item.getKey().replace('/', File.separatorChar))
+                                    .toPath();
 
-                Files.createDirectories(toFile.getParent());
+                    Files.createDirectories(toFile.getParent());
 
-                if (item.shouldBeUnGzipped()) {
-                    // When AAPT processed resources, it would uncompress gzipped files, as they will be
-                    // compressed in the APK anyway. They are renamed in AssetItem#create(File, File)
-                    try (GZIPInputStream gzipInputStream = new GZIPInputStream(
-                            new BufferedInputStream(Files.newInputStream(fromFile)))) {
-                        Files.copy(gzipInputStream, toFile, StandardCopyOption.REPLACE_EXISTING);
+                    if (item.shouldBeUnGzipped()) {
+                        // When AAPT processed resources, it would uncompress gzipped files, as they
+                        // will be compressed in the APK anyway. They are renamed in
+                        // AssetItem#create(File, File)
+                        try (GZIPInputStream gzipInputStream =
+                                new GZIPInputStream(
+                                        new BufferedInputStream(Files.newInputStream(fromFile)))) {
+                            Files.copy(
+                                    gzipInputStream, toFile, StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    } else {
+                        FileUtils.copyFile(fromFile, toFile);
                     }
-                } else {
-                    FileUtils.copyFile(fromFile, toFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+        }
+    }
+
+    private List<List<AssetItem>> createBuckets() {
+        List<List<AssetItem>> jobBuckets = new ArrayList<>();
+        // Only write it if the state is TOUCHED.
+        int totalJobs = allJobs.values().size();
+        if (totalJobs <= MIN_JOBS) { // One bucket is enough
+            jobBuckets.add(new ArrayList<>(allJobs.values()));
+        } else {
+            // Use max buckets if number of buckets is larger than max
+            int bucketCount = Math.min(totalJobs / MIN_JOBS, MAX_BUCKETS);
+
+            // Create buckets
+            for (int bucket = 0; bucket < bucketCount; bucket++) {
+                jobBuckets.add(new ArrayList<>());
+            }
+
+            // Distribute jobs between buckets using round-robin
+            Iterator<AssetItem> jobsIterator = allJobs.values().iterator();
+            int currBucket = 0;
+            while (jobsIterator.hasNext()) {
+                jobBuckets.get(currBucket).add(jobsIterator.next());
+                currBucket = ((currBucket + 1) % bucketCount);
+            }
+        }
+        return jobBuckets;
+    }
+
+    @Override
+    protected void postWriteAction() throws ConsumerException {
+        List<List<AssetItem>> jobBuckets = createBuckets();
+        for (List<AssetItem> bucket : jobBuckets) {
+            getExecutor()
+                    .submit(new AssetWorkAction(new AssetWorkParameters(bucket, getRootFolder())));
         }
     }
 
@@ -104,6 +152,8 @@ public class MergedAssetWriter
     public void removeItem(@NonNull AssetItem removedItem, @Nullable AssetItem replacedBy)
             throws ConsumerException {
         if (replacedBy == null) {
+            allJobs.remove(removedItem.getName());
+            // Delete if file was created previously
             File removedFile = new File(getRootFolder(), removedItem.getName());
             removedFile.delete();
         }
