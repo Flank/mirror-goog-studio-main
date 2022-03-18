@@ -178,7 +178,7 @@ class GradleManagedAndroidDeviceLauncher(
      * retrieve each id, checking against the emulators unique id to find the
      * correct serial.
      */
-    private fun findSerial(maxAttempts: Int = 10): String? {
+    private fun findSerial(maxAttempts: Int = 20): String? {
         // We may need to retry as the emulator may not have attached to the
         // adb server even though the emulator has booted.
         return retryWithExponentialBackOff(maxAttempts) { attempt ->
@@ -204,7 +204,7 @@ class GradleManagedAndroidDeviceLauncher(
     }
 
     private fun <T> retryWithExponentialBackOff(
-        maxAttempts: Int = 10,
+        maxAttempts: Int = 20,
         initialRetryDelayMillis: Long = 2000,
         retryBackOffBase: Double = 2.0,
         runnableFunc: (attempt: Int) -> T
