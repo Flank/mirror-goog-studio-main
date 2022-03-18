@@ -88,8 +88,7 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
     object ASSETS:
         MultipleArtifact<Directory>(DIRECTORY),
         Appendable,
-        Transformable,
-        Replaceable
+        Transformable
 
     /**
      * This artifact type is deprecated, [PROJECT_CLASSES_DIRS] should be used instead.

@@ -120,7 +120,7 @@ package com.android.build.api.artifact {
     field @Deprecated public static final com.android.build.api.artifact.MultipleArtifact.ALL_CLASSES_JARS INSTANCE;
   }
 
-  @org.gradle.api.Incubating public static final class MultipleArtifact.ASSETS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+  @org.gradle.api.Incubating public static final class MultipleArtifact.ASSETS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.MultipleArtifact.ASSETS INSTANCE;
   }
 
