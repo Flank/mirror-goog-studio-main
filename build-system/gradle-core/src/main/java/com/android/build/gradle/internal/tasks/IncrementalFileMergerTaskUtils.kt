@@ -25,6 +25,7 @@ import com.android.builder.files.KeyedFileCache
 import com.android.builder.files.IncrementalRelativeFileSets
 import com.android.builder.files.RelativeFile
 import com.android.builder.files.RelativeFiles
+import com.android.builder.files.SerializableInputChanges
 import com.android.builder.files.ZipCentralDirectory
 import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.builder.merge.LazyIncrementalFileMergerInput
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableSet
 import java.io.File
 import java.io.IOException
 import java.io.UncheckedIOException
+import java.util.Collections
 import java.util.HashSet
 
 
@@ -217,7 +219,7 @@ private fun computeFilesFromDir(dir: File): Set<RelativeFile> {
  */
 fun toInputs(
     inputMap: MutableMap<File, ScopeType>,
-    changedInputs: Map<File, FileStatus>?,
+    changes: SerializableInputChanges?,
     zipCache: KeyedFileCache,
     cacheUpdates: MutableList<Runnable>,
     full: Boolean,
@@ -226,16 +228,18 @@ fun toInputs(
     if (full) {
         cacheUpdates.add(IOExceptionRunnable.asRunnable { zipCache.clear() })
     }
+    val changedInputs = changes?.let { collectChanges(it) }
 
     val builder = ImmutableList.builder<IncrementalFileMergerInput>()
     for ((input, scope) in inputMap.entries) {
         val fileMergerInput: IncrementalFileMergerInput? = if (full) {
             toNonIncrementalInput(input, zipCache, cacheUpdates)
         } else {
-            changedInputs ?: throw RuntimeException(
-                "changedInputs must be specified for incremental merging."
-            )
-            toIncrementalInput(input, changedInputs, zipCache, cacheUpdates)
+            toIncrementalInput(
+                    input,
+                    changedInputs ?: throw IllegalArgumentException("changes must be specified for incremental merging."),
+                    zipCache,
+                    cacheUpdates)
         }
 
         fileMergerInput?.let {
@@ -248,3 +252,31 @@ fun toInputs(
     return builder.build()
 }
 
+/**
+ * Collect all the changes from the SerializableInputChanges
+ *
+ * When inputs are reordered with @Classpath, that leads to sequential 'add' and 'remove' change being
+ * reported. These can be re-combined in to changes as the cache is keyed by file path.
+ * See JavaResPackagingTest.testAppProjectWithReorderedDeps
+ *
+ * TODO(b/225872980): Unify with IncrementalChanges.classpathToRelativeFileSet
+ *                    Currently the IncrementalFileMerger goes through each input and attaches the changes to each input
+ *                    whereas with the new API, that is not necessary as the changes are already associated with each
+ *                    input.
+*/
+private fun collectChanges(changes: SerializableInputChanges): Map<File, FileStatus> {
+    val map = mutableMapOf<File, FileStatus>()
+    changes.changes.forEach { change ->
+        val currentState = map.get(change.file)
+        val changeState = change.fileStatus
+        val newState = when {
+
+            currentState == null -> changeState
+            currentState == FileStatus.NEW && changeState == FileStatus.REMOVED -> FileStatus.CHANGED
+            currentState == FileStatus.REMOVED && changeState == FileStatus.NEW -> FileStatus.CHANGED
+            else -> throw IllegalStateException("Unexpected combination of states $currentState, $changeState for file ${change.file}")
+        }
+        map.put(change.file, newState)
+    }
+    return Collections.unmodifiableMap(map)
+}

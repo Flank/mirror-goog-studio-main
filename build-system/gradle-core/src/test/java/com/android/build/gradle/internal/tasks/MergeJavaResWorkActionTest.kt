@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.builder.files.SerializableChange
+import com.android.builder.files.SerializableInputChanges
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.packaging.JarFlinger
 import com.android.builder.utils.agpReferenceDocsVersion
@@ -95,10 +97,7 @@ class MergeJavaResWorkActionTest {
                     override val cacheDir =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
                     override val changedInputs =
-                        FakeObjectFactory.factory.mapProperty(
-                            File::class.java,
-                            FileStatus::class.java
-                        )
+                            FakeObjectFactory.factory.property(SerializableInputChanges::class.java)
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val projectPath = FakeGradleProperty("projectName")
@@ -182,10 +181,7 @@ class MergeJavaResWorkActionTest {
                     override val cacheDir =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
                     override val changedInputs =
-                        FakeObjectFactory.factory.mapProperty(
-                            File::class.java,
-                            FileStatus::class.java
-                        )
+                        FakeObjectFactory.factory.property(SerializableInputChanges::class.java)
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java).also {
                             it.add(".no_compress")
@@ -251,10 +247,7 @@ class MergeJavaResWorkActionTest {
                     override val cacheDir =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
                     override val changedInputs =
-                        FakeObjectFactory.factory.mapProperty(
-                            File::class.java,
-                            FileStatus::class.java
-                        )
+                        FakeObjectFactory.factory.property(SerializableInputChanges::class.java)
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val projectPath = FakeGradleProperty("projectName")
@@ -307,11 +300,13 @@ class MergeJavaResWorkActionTest {
                     override val incremental = FakeGradleProperty(true)
                     override val cacheDir =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    val changes = SerializableInputChanges(
+                            roots = listOf(jarFile),
+                            changes = listOf(SerializableChange(jarFile, FileStatus.CHANGED, ""))
+                    )
                     override val changedInputs =
-                        FakeObjectFactory.factory.mapProperty(
-                            File::class.java,
-                            FileStatus::class.java
-                        ).also { it.put(jarFile, FileStatus.CHANGED) }
+                        FakeObjectFactory.factory.property(SerializableInputChanges::class.java)
+                                .also { it.set(changes) }
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val projectPath = FakeGradleProperty("projectName")
@@ -371,10 +366,7 @@ class MergeJavaResWorkActionTest {
                     override val cacheDir =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
                     override val changedInputs =
-                        FakeObjectFactory.factory.mapProperty(
-                            File::class.java,
-                            FileStatus::class.java
-                        )
+                        FakeObjectFactory.factory.property(SerializableInputChanges::class.java)
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val projectPath = FakeGradleProperty("projectName")
