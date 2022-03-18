@@ -17,7 +17,6 @@
 package com.android.build.gradle
 
 import com.android.AndroidProjectTypes
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.VariantFilter
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.variant.TestVariantInputModel
 import com.android.build.gradle.internal.variant.DimensionCombinator
 import com.android.build.gradle.internal.variant.VariantModelImpl
 import com.android.builder.core.ComponentTypeImpl
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SyncIssue
@@ -529,6 +527,9 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
 
                 val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
                 Mockito.`when`(component.variantDslInfo).thenReturn(variantDslInfo)
+                Mockito.`when`(component.productFlavorList).thenReturn(flavors.map {
+                    com.android.build.gradle.internal.core.ProductFlavor(it)
+                })
                 Mockito.`when`(variantDslInfo.productFlavorList).thenReturn(flavors)
             }
         }

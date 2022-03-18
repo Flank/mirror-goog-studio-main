@@ -578,7 +578,7 @@ class ModelBuilder<
                 createBasicArtifact(it, features)
             },
             buildType = variant.buildType,
-            productFlavors = variant.productFlavors.map { it.second },
+            productFlavors = variant.productFlavorList.map { it.name },
         )
     }
 

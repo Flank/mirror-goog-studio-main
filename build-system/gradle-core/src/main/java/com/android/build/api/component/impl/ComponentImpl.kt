@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
@@ -222,6 +223,10 @@ abstract class ComponentImpl(
 
     override val description: String
         get() = variantData.description
+
+    override val productFlavorList: List<ProductFlavor> = variantDslInfo.productFlavorList.map {
+        ProductFlavor(it)
+    }
 
     // Resource shrinker expects MergeResources task to have all the resources merged and with
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's

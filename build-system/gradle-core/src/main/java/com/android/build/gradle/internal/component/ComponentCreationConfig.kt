@@ -26,6 +26,7 @@ import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -66,6 +67,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val baseName: String
     val componentType: ComponentType
     val description: String
+    val productFlavorList: List<ProductFlavor>
 
     // ---------------------------------------------------------------------------------------------
     // NEEDED BY ALL COMPONENTS

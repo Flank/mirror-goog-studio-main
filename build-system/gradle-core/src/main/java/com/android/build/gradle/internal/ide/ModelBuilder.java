@@ -1120,8 +1120,8 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     private static List<String> getProductFlavorNames(@NonNull ComponentImpl component) {
-        return component.getProductFlavors().stream()
-                .map(kotlin.Pair::getSecond)
+        return component.getProductFlavorList().stream()
+                .map(com.android.build.gradle.internal.core.ProductFlavor::getName)
                 .collect(Collectors.toList());
     }
 

@@ -2581,8 +2581,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     if (buildType != null) {
                         assembleMap.put(buildType, assembleTask)
                     }
-                    for (flavor in creationConfig.productFlavors) {
-                        assembleMap.put(flavor.first, assembleTask)
+                    for (flavor in creationConfig.productFlavorList) {
+                        assembleMap.put(flavor.name, assembleTask)
                     }
 
                     // if 2+ flavor dimensions, then make an assemble for the flavor combo
@@ -2596,8 +2596,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         if (buildType != null) {
                             bundleMap.put(buildType, bundleTask)
                         }
-                        for (flavor in creationConfig.productFlavors) {
-                            bundleMap.put(flavor.first, bundleTask)
+                        for (flavor in creationConfig.productFlavorList) {
+                            bundleMap.put(flavor.name, bundleTask)
                         }
 
                         // if 2+ flavor dimensions, then make an assemble for the flavor combo
