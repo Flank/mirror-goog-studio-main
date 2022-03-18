@@ -134,6 +134,12 @@ com.android.dynamic-feature:com.android.dynamic-feature.gradle.plugin
   dependencies:
     com.android.tools.build:gradle ()
 
+com.android.fused-library:com.android.fused-library.gradle.plugin
+  pomName=com.android.tools.build.gradle
+  description=Gradle plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle ()
+
 com.android.library:com.android.library.gradle.plugin
   pomName=com.android.tools.build.gradle
   description=Gradle plug-in to build Android applications.

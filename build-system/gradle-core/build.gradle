@@ -111,6 +111,10 @@ gradlePlugin {
             id = "com.android.test"
             implementationClass = "com.android.build.gradle.TestPlugin"
         }
+        comAndroidFusedLibrary {
+            id = "com.android.fused-library"
+            implementationClass = "com.android.build.gradle.api.FusedLibraryPlugin"
+        }
     }
 }
 
