@@ -143,6 +143,7 @@ public class AvdManagerCliTest {
         mGPlayImage =
                 systemImageManager.getImageAt(
                         mSdkHandler.getLocalPackage(gPlayPath, progress).getLocation());
+        Files.createDirectories(sdkPath.resolve("skins").resolve("nexus_s"));
     }
 
     @Test
@@ -173,6 +174,30 @@ public class AvdManagerCliTest {
         assertEquals(new Storage(1536, Storage.Unit.MiB), Storage.getStorageFromString(config.get("hw.ramSize")));
         assertEquals(new Storage(512, Storage.Unit.MiB), Storage.getStorageFromString(config.get("sdcard.size")));
         assertEquals(new Storage(384, Storage.Unit.MiB), Storage.getStorageFromString(config.get("vm.heapSize")));
+    }
+
+    @Test
+    public void createAvd_withSkin() throws Exception {
+        mCli.run(
+                new String[] {
+                    "create", "avd",
+                    "--name", "testAvd",
+                    "-k", "system-images;android-25;google_apis;x86",
+                    "-d", "Nexus 6P",
+                    "--skin", "nexus_s"
+                });
+        mAvdManager.reloadAvds(mLogger);
+        AvdInfo info = mAvdManager.getAvd("testAvd", true);
+
+        Path avdConfigFile = info.getDataFolderPath().resolve("config.ini");
+        assertTrue(
+                "Expected config.ini in " + info.getDataFolderPath(), Files.exists(avdConfigFile));
+        Map<String, String> config =
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
+        assertEquals("nexus_s", config.get("skin.name"));
+        assertEquals(
+                InMemoryFileSystems.getPlatformSpecificPath("skins/nexus_s"),
+                config.get("skin.path"));
     }
 
     @Test

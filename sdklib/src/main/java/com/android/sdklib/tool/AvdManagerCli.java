@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -111,6 +112,7 @@ class AvdManagerCli extends CommandLineParser {
     private static final String KEY_COMPACT = "compact";
     private static final String KEY_EOL_NULL = "null";
     private static final String KEY_TAG = "tag";
+    private static final String KEY_SKIN = "skin";
     private static final String KEY_ABI = "abi";
     private static final String KEY_CLEAR_CACHE = "clear-cache";
     private static final String KEY_DEVICE = "device";
@@ -846,20 +848,30 @@ class AvdManagerCli extends CommandLineParser {
                 hardwareConfig.put(HardwareProperties.HW_SDCARD, HardwareProperties.BOOLEAN_YES);
             }
             updateUninitializedDynamicParameters(hardwareConfig);
-
+            String skinName = getParamSkin();
+            Path skinPath = null;
+            if (skinName != null) {
+                skinPath =
+                        mSdkHandler.getLocation().resolve(SdkConstants.FD_SKINS).resolve(skinName);
+                if (Files.notExists(skinPath)) {
+                    errorAndExit("Skin " + skinName + " not found at " + skinPath);
+                }
+            }
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
-                    AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
-                    avdName,
-                    img,
-                    null,
-                    null,
-                    getParamSdCard(),
-                    hardwareConfig,
-                    device == null ? null : device.getBootProps(),
-                    true,
-                    removePrevious,
-                    false,
-                    mSdkLog);
+            AvdInfo newAvdInfo =
+                    avdManager.createAvd(
+                            avdFolder,
+                            avdName,
+                            img,
+                            skinPath,
+                            skinName,
+                            getParamSdCard(),
+                            hardwareConfig,
+                            device == null ? null : device.getBootProps(),
+                            true,
+                            removePrevious,
+                            false,
+                            mSdkLog);
 
             if (newAvdInfo == null) {
                 errorAndExit("AVD not created.");
@@ -879,7 +891,6 @@ class AvdManagerCli extends CommandLineParser {
 
         map.put(EmulatedProperties.BACK_CAMERA_KEY, AvdCamera.EMULATED.getAsParameter());
         map.put(EmulatedProperties.CPU_CORES_KEY, String.valueOf(EmulatedProperties.RECOMMENDED_NUMBER_OF_CORES));
-        map.put(EmulatedProperties.CUSTOM_SKIN_FILE_KEY, "_no_skin");
         map.put(EmulatedProperties.DEVICE_FRAME_KEY, HardwareProperties.BOOLEAN_YES);
         map.put(EmulatedProperties.FRONT_CAMERA_KEY, AvdCamera.EMULATED.getAsParameter());
         map.put(EmulatedProperties.HAS_HARDWARE_KEYBOARD_KEY, HardwareProperties.BOOLEAN_YES);
@@ -1515,6 +1526,15 @@ class AvdManagerCli extends CommandLineParser {
                 VERB_CREATE, OBJECT_AVD, "d", KEY_DEVICE,
                 "The optional device definition to use. Can be a device index or id.",
                 null);
+        define(
+                Mode.STRING,
+                false,
+                VERB_CREATE,
+                OBJECT_AVD,
+                "",
+                KEY_SKIN,
+                "The optional name of a skin to use with this device.",
+                null);
 
         // --- delete avd ---
 
@@ -1602,6 +1622,11 @@ class AvdManagerCli extends CommandLineParser {
      */
     private String getParamTag() {
         return ((String) getValue(null, null, KEY_TAG));
+    }
+
+    /** Helper to retrieve the --skin value. */
+    private String getParamSkin() {
+        return ((String) getValue(null, null, KEY_SKIN));
     }
 
     /**
