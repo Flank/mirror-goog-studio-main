@@ -38,11 +38,12 @@ java_test(
     ]),
     data = [
     ],
+    jvm_flags = ["-Dtest.suite.jar=service_test.jar"],
     tags = [
         "no_mac",
         "no_windows",
     ],
-    test_class = "com.android.deploy.service.DeployServerTest",
+    test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":deploy.service",
         ":deploy-service-proto",
@@ -53,6 +54,7 @@ java_test(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/deployer:tools.deployer",
         "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
         "@maven//:org.mockito.mockito-core",
