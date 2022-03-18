@@ -1844,10 +1844,19 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         } else {
             File(requireNotNull(extension.testOptions.reportDir))
         }
+        val additionalOutputRootDir = creationConfig.paths.outputDir(
+            InternalArtifactType.MANAGED_DEVICE_ANDROID_TEST_ADDITIONAL_OUTPUT.getFolderName()
+        ).get().asFile
+        val coverageOutputRootDir = creationConfig.paths.outputDir(
+            InternalArtifactType.MANAGED_DEVICE_CODE_COVERAGE.getFolderName()
+        ).get().asFile
+
         val flavor: String? = testData.flavorName.orNull
         val flavorDir = if (flavor.isNullOrEmpty()) "" else "${BuilderConstants.FD_FLAVORS}/$flavor"
         val resultsDir = File(resultsRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
         val reportDir = File(reportRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
+        val additionalTestOutputDir = File(additionalOutputRootDir, flavorDir)
+        val coverageOutputDir = File(coverageOutputRootDir, flavorDir)
 
         val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
         for (managedDevice in managedDevices) {
@@ -1858,6 +1867,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     testData,
                     File(resultsDir, managedDevice.name),
                     File(reportDir, managedDevice.name),
+                    File(additionalTestOutputDir, managedDevice.name),
+                    File(coverageOutputDir, managedDevice.name),
                     testTaskSuffix
                 )
             )

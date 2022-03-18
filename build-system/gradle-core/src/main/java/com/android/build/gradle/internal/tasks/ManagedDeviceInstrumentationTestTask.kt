@@ -345,6 +345,8 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         private val testData: AbstractTestDataImpl,
         private val testResultOutputDir: File,
         private val testReportOutputDir: File,
+        private val additionalTestOutputDir: File,
+        private val coverageOutputDir: File,
         private val nameSuffix: String = "",
     ) : VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
@@ -360,7 +362,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 .setInitialProvider(
                     taskProvider,
                     ManagedDeviceInstrumentationTestTask::getCoverageDirectory)
-                .withName(BuilderConstants.MANAGED_DEVICE)
+                .atLocation(coverageOutputDir.absolutePath)
                 .on(InternalArtifactType.MANAGED_DEVICE_CODE_COVERAGE)
 
             val isAdditionalAndroidTestOutputEnabled = creationConfig
@@ -372,7 +374,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                     .setInitialProvider(
                         taskProvider,
                         ManagedDeviceInstrumentationTestTask::getAdditionalTestOutputDir)
-                    .withName(BuilderConstants.MANAGED_DEVICE)
+                    .atLocation(additionalTestOutputDir.absolutePath)
                     .on(InternalArtifactType.MANAGED_DEVICE_ANDROID_TEST_ADDITIONAL_OUTPUT)
             }
         }

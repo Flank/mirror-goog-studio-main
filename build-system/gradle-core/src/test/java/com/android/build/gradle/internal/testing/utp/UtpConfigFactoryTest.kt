@@ -347,7 +347,7 @@ class UtpConfigFactoryTest {
             testData = testData.copy(isTestCoverageEnabled = true)
         )
 
-        val outputOnHost = "mockCoverageOutputDir${File.separator}mockDeviceName${File.separator}"
+        val outputOnHost = "mockCoverageOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             instrumentationArgs = mapOf(
@@ -369,7 +369,7 @@ class UtpConfigFactoryTest {
             useOrchestrator = true
         )
 
-        val outputOnHost = "mockCoverageOutputDir${File.separator}mockDeviceName${File.separator}"
+        val outputOnHost = "mockCoverageOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             useOrchestrator = true,
@@ -393,7 +393,7 @@ class UtpConfigFactoryTest {
                 instrumentationRunnerArguments = mapOf("useTestStorageService" to "true"))
         )
 
-        val outputOnHost = "mockCoverageOutputDir${File.separator}mockDeviceName${File.separator}"
+        val outputOnHost = "mockCoverageOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             useTestStorageService = true,
@@ -417,7 +417,7 @@ class UtpConfigFactoryTest {
             testData = testData.copy(isTestCoverageEnabled = true)
         )
 
-        val outputOnHost = "mockCoverageOutputDir${File.separator}deviceName${File.separator}"
+        val outputOnHost = "mockCoverageOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             deviceId = ":app:deviceNameDebugAndroidTest",
@@ -501,7 +501,7 @@ class UtpConfigFactoryTest {
         )
 
         val onDeviceDir = "/sdcard/Android/media/com.example.application/additional_test_output"
-        val onHostDir = "additionalTestOutputDir${File.separator}mockDeviceName${File.separator}"
+        val onHostDir = "additionalTestOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             instrumentationArgs = mapOf(
@@ -551,7 +551,7 @@ class UtpConfigFactoryTest {
 
         // Setting up on device directory for additional test output is not supported on
         // API level 15 but the plugin can still copy files from TestStorage service.
-        val onHostDir = "additionalTestOutputDir${File.separator}mockDeviceName${File.separator}"
+        val onHostDir = "additionalTestOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             additionalTestOutputConfig = """
@@ -567,7 +567,7 @@ class UtpConfigFactoryTest {
         )
 
         val onDeviceDir = "/sdcard/Android/media/com.example.application/additional_test_output"
-        val onHostDir = "additionalTestOutputDir${File.separator}deviceName${File.separator}"
+        val onHostDir = "additionalTestOutputDir${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             deviceId = ":app:deviceNameDebugAndroidTest",

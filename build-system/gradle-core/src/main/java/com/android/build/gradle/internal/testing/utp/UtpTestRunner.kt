@@ -90,10 +90,10 @@ class UtpTestRunner @JvmOverloads constructor(
                     utpOutputDir,
                     utpTmpDir,
                     retentionConfig,
-                    coverageDir,
+                    File(coverageDir, deviceConnector.name),
                     useOrchestrator,
-                    if (additionalTestOutputEnabled) {
-                        additionalTestOutputDir
+                    if (additionalTestOutputEnabled && additionalTestOutputDir != null) {
+                        File(additionalTestOutputDir, deviceConnector.name)
                     } else {
                         null
                     },

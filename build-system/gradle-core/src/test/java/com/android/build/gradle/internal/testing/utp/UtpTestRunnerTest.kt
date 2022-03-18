@@ -67,7 +67,6 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockTestApk: File
     @Mock lateinit var mockHelperApk: File
     @Mock lateinit var mockDevice: DeviceConnector
-    @Mock lateinit var mockCoverageDir: File
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
@@ -143,7 +142,7 @@ class UtpTestRunnerTest {
             resultsDirectory,
             false,
             null,
-            mockCoverageDir,
+            temporaryFolderRule.newFolder("coverageDir"),
             mockLogger)
     }
 
