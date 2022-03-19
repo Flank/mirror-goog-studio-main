@@ -77,6 +77,22 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         return listOf(METHOD_BEGIN_WITH, METHOD_BEGIN_UNIQUE_WORK, METHOD_THEN, METHOD_COMBINE)
     }
 
+    private fun isEnqueueCall(call: UCallExpression): Boolean {
+        val methodName = getMethodName(call)
+        if (methodName == METHOD_ENQUEUE ||
+            methodName == METHOD_ENQUEUE_SYNC ||
+            methodName == METHOD_ENQUEUE_UNIQUE
+        ) {
+            // TODO: check that it's called on the WorkContinuation?
+            return true
+        } else if (methodName == METHOD_THEN || methodName == METHOD_COMBINE) {
+            // Implicitly enqueued by the then/combine methods on the WorkContinuation
+            return true
+        }
+
+        return false
+    }
+
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (!context.evaluator.isMemberInClass(method, CLASS_WORK_MANAGER) &&
             !context.evaluator.isMemberInClass(method, CLASS_WORK_CONTINUATION)
@@ -92,17 +108,9 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
 
         var enqueued = false
 
-        surrounding.accept(object : DataFlowAnalyzer(listOf(node)) {
+        val visitor = object : DataFlowAnalyzer(listOf(node)) {
             override fun receiver(call: UCallExpression) {
-                val methodName = getMethodName(call)
-                if (methodName == METHOD_ENQUEUE ||
-                    methodName == METHOD_ENQUEUE_SYNC ||
-                    methodName == METHOD_ENQUEUE_UNIQUE
-                ) {
-                    // TODO: check that it's called on the WorkContinuation?
-                    enqueued = true
-                } else if (methodName == METHOD_THEN || methodName == METHOD_COMBINE) {
-                    // Implicitly enqueued by the then/combine methods on the WorkContinuation
+                if (isEnqueueCall(call)) {
                     enqueued = true
                 }
             }
@@ -139,9 +147,10 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
                 }
                 return super.returnsSelf(call)
             }
-        })
+        }
+        surrounding.accept(visitor)
 
-        if (!enqueued) {
+        if (!enqueued && !(visitor.failedResolve && surrounding.anyCall(::isEnqueueCall))) {
             val name = (skipParenthesizedExprUp(skipParenthesizedExprUp(node.uastParent)?.uastParent) as? ULocalVariable)?.name
             val nameString = if (name != null) "`$name` " else ""
             context.report(

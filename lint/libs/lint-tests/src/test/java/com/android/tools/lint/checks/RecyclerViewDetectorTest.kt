@@ -441,6 +441,37 @@ class RecyclerViewDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testSurfaceTexture() {
+        // Regression test for b/224618492
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.graphics.SurfaceTexture
+
+                fun test(textureId: Int) {
+                    val surfaceTexture =
+                        SurfaceTexture(textureId).also {
+                            it.attachToGLContext(0)
+                            it.detachFromGLContext()
+                            it.release()
+                        }
+
+                    val surfaceTexture2 = SurfaceTexture(textureId)
+                    surfaceTexture2.setDefaultBufferSize(10, 10)
+                    surfaceTexture2.release()
+
+                    val surfaceTexture3 = SurfaceTexture(textureId).also{
+                        println(it.timestamp)
+                    }
+                    surfaceTexture3.release()
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     override fun getDetector(): Detector {
         return RecyclerViewDetector()
     }

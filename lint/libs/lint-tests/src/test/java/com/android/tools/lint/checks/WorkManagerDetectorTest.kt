@@ -310,6 +310,76 @@ class WorkManagerDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testUnresolvable() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.work.OneTimeWorkRequest
+                import androidx.work.WorkContinuation
+                import androidx.work.WorkManager
+
+                lateinit var workManager: WorkManager
+                lateinit var unrelated: WorkContinuation
+                lateinit var workRequest: OneTimeWorkRequest
+
+                fun test1a() {
+                    // Don't flag a enqueue call if there's an unresolvable reference *and* we have
+                    // a enqueue call (even if we're not certain which instance it's on)
+                    val job = workManager.beginWith(workRequest).unknown() // OK
+                    unrelated.enqueue()
+                }
+
+                fun test1b() {
+                    // Like 1a, but using assignment instead of declaration initialization
+                    val job: WorkContinuation
+                    job = workManager.beginWith(workRequest).unknown() // OK
+                    unrelated.enqueue()
+                }
+
+                fun test2() {
+                    // If there's an unresolvable reference, DO complain if there's *no* enqueue call anywhere
+                    workManager.beginWith(workRequest) // ERROR 1
+                }
+
+                fun test3a() {
+                    // If the unresolved call has nothing to do
+                    // with updating the toast instance (e.g. is not associated with an
+                    // assignment and has no further chained calls) don't revert to
+                    // non-instance checking
+                    val job = workManager.beginWith(workRequest) // ERROR 2
+                    job.unknown()
+                    unrelated.enqueue()
+                }
+
+                fun test3b() {
+                    // Like 3a, but here we're making calls on the result of the
+                    // unresolved call; those could be cleanup calls, so in that case
+                    // we're not confident enough
+                    val job = workManager.beginWith(workRequest) // OK
+                    job.unknown().something()
+                    unrelated.enqueue()
+                }
+
+                //private fun WorkContinuation.unknown(): WorkContinuation = error("not yet implemented")
+                //private fun WorkContinuation.something(): Unit = error("not yet implemented")
+                """
+            ).indented(),
+            *workManagerStubs
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:27: Warning: WorkContinuation not enqueued: did you forget to call enqueue()? [EnqueueWork]
+                workManager.beginWith(workRequest) // ERROR 1
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:35: Warning: WorkContinuation job not enqueued: did you forget to call enqueue()? [EnqueueWork]
+                val job = workManager.beginWith(workRequest) // ERROR 2
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
     private val workManagerStubs = arrayOf(
         // WorkManager stubs
         java(
@@ -317,8 +387,8 @@ class WorkManagerDetectorTest : AbstractCheckTest() {
             package androidx.work;
             @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
             public abstract class WorkManager {
-               public static WorkManager getInstance() { return null; }
-               public WorkContinuation beginWith(OneTimeWorkRequest...work) { return null; }
+                public static WorkManager getInstance() { return null; }
+                public WorkContinuation beginWith(OneTimeWorkRequest...work) { return null; }
                 public final WorkContinuation beginUniqueWork(
                         String uniqueWorkName,
                         ExistingWorkPolicy existingWorkPolicy,
