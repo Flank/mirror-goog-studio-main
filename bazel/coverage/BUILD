@@ -1073,5 +1073,6 @@ coverage_report(
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
+        "//tools/vendor/google/firebase:firebase_tests",
     ],
 )
