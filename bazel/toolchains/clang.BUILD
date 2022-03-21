@@ -1,6 +1,6 @@
-package(default_visibility = ["//visibility:public"])
-
 load("@//tools/base/bazel/toolchains:cc_toolchain_config.bzl", "CLANG_LATEST", "cc_toolchain_config")
+
+package(default_visibility = ["//visibility:public"])
 
 clang_latest_darwin = CLANG_LATEST["darwin"]
 
@@ -157,6 +157,9 @@ cc_toolchain_config(
         "-Wall",
         "-Wthread-safety",
         "-Wself-assign",
+        # Needed for Apple's non-conforming code
+        # (https://www.mail-archive.com/llvm-bugs@lists.llvm.org/msg49229.html)
+        "-Wno-elaborated-enum-base",
         "-fno-omit-frame-pointer",
     ],
     compiler = "compiler",
@@ -165,8 +168,7 @@ cc_toolchain_config(
     cpu = "darwin",
     cxx_builtin_include_directories = [
         clang_latest_darwin + "/include/c++/v1",
-        # TODO(b/213648391) update mac version
-        clang_latest_darwin + "/lib64/clang/9.0.4/include",
+        clang_latest_darwin + "/lib64/clang/14.0.0/include",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
         "/usr/include",
@@ -185,6 +187,9 @@ cc_toolchain_config(
         "-no-canonical-prefixes",
         "-undefined",
         "dynamic_lookup",
+        # Force using the old arguments when calling linker (/usr/bin/ld)
+        # Needed as BYOB uses old system (10.13) with old commandline tools (9.2)
+        "-mlinker-version=405",
     ],
     link_libs = [],  # ?
     opt_compile_flags = [
