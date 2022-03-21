@@ -53,7 +53,9 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.work.ChangeType
+import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 import java.io.File
 import java.io.Serializable
 import java.util.ArrayList
@@ -75,6 +77,7 @@ import javax.tools.Diagnostic
 abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     // where xml info files are
     @get:InputFiles
+    @get:Incremental
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val layoutInfoDirectory: DirectoryProperty
 
@@ -136,7 +139,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         private set
 
     @TaskAction
-    fun writeBaseClasses(inputs: IncrementalTaskInputs) {
+    fun writeBaseClasses(inputChanges: InputChanges) {
         // TODO extend NewIncrementalTask when moved to new API so that we can remove the manual call to recordTaskAction
 
         recordTaskAction(analyticsService.get()) {
@@ -144,7 +147,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             // Some files cannot be accessed even though they show up when directory listing is
             // invoked.
             // b/69652332
-            val args = buildInputArgs(inputs)
+            val args = buildInputArgs(inputChanges)
             CodeGenerator(
                 args,
                 sourceOutFolder.get().asFile,
@@ -168,29 +171,20 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         return listOf(localTable).plus(depSymbolTables)
     }
 
-    private fun buildInputArgs(inputs: IncrementalTaskInputs): LayoutInfoInput.Args {
+    private fun buildInputArgs(inputs: InputChanges): LayoutInfoInput.Args {
         val outOfDate = ArrayList<File>()
         val removed = ArrayList<File>()
         val layoutInfoDir = layoutInfoDirectory.get().asFile
 
         // if dependency added/removed a file, it is handled by the LayoutInfoInput class
         if (inputs.isIncremental) {
-            inputs.outOfDate { inputFileDetails ->
-                if (FileUtils.isFileInDirectory(
-                        inputFileDetails.file,
-                        layoutInfoDir
-                    ) && inputFileDetails.file.name.endsWith(".xml")
-                ) {
-                    outOfDate.add(inputFileDetails.file)
-                }
-            }
-            inputs.removed { inputFileDetails ->
-                if (FileUtils.isFileInDirectory(
-                        inputFileDetails.file,
-                        layoutInfoDir
-                    ) && inputFileDetails.file.name.endsWith(".xml")
-                ) {
-                    removed.add(inputFileDetails.file)
+            inputs.getFileChanges(layoutInfoDirectory).forEach { change ->
+                if (change.normalizedPath.endsWith(".xml")) {
+                    if (change.changeType == ChangeType.REMOVED) {
+                        removed.add(change.file)
+                    } else {
+                        outOfDate.add(change.file)
+                    }
                 }
             }
         } else {
