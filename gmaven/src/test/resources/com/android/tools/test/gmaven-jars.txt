@@ -2062,6 +2062,7 @@ com/android/tools/fakeadbserver/fakeadbserver
   com/android/fakeadbserver/
   com/android/fakeadbserver/devicecommandhandlers/
   com/android/fakeadbserver/devicecommandhandlers/ddmsHandlers/
+  com/android/fakeadbserver/execcommandhandlers/
   com/android/fakeadbserver/hostcommandhandlers/
   com/android/fakeadbserver/shellcommandhandlers/
   com/android/fakeadbserver/shellv2commandhandlers/

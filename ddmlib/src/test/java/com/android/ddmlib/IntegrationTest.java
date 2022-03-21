@@ -33,7 +33,7 @@ import com.android.ddmlib.logcat.LogCatReceiverTask;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.PortForwarder;
-import com.android.fakeadbserver.devicecommandhandlers.ExecCommandHandler;
+import com.android.fakeadbserver.execcommandhandlers.PingExecCommandHandler;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
@@ -128,9 +128,9 @@ public class IntegrationTest {
 
             assertNotNull("Device serial=" + SERIAL, device);
 
-            String cmd = ExecCommandHandler.PING_EXEC;
+            String cmd = PingExecCommandHandler.PING_EXEC;
             String[] parameters = new String[0];
-            String expectedResponse = ExecCommandHandler.PING_EXEC_OUTPUT;
+            String expectedResponse = PingExecCommandHandler.PING_EXEC_OUTPUT;
             try (SocketChannel channel = device.rawExec(cmd, parameters)) {
                 channel.configureBlocking(true);
                 byte[] bytes = new byte[expectedResponse.getBytes(Charsets.UTF_8).length];
