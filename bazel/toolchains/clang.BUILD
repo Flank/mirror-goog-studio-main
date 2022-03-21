@@ -23,7 +23,7 @@ cc_toolchain_suite(
 filegroup(
     name = "toolchain_deps",
     srcs =
-        glob([clang_latest + "/**/*" for clang_latest in CLANG_LATEST.values()] + ["studio-extra/**/*"]) + ["@//tools/base/bazel/toolchains:extra_files"],
+        glob([clang_latest + "/**/*" for clang_latest in CLANG_LATEST.values()] + ["studio-extra/**/*"]) + ["@//tools/base/bazel/toolchains/darwin:extra_files"],
 )
 
 filegroup(

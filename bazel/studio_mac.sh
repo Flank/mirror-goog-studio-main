@@ -32,6 +32,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
         test \
         ${config_options} \
         --invocation_id=${invocation_id} \
+        --host_platform=//tools/base/bazel/platforms:macpro10.13 \
         --build_tag_filters=-no_mac \
         --build_event_binary_file="${dist_dir}/bazel-${build_number}.bes" \
         --test_tag_filters=-no_mac,-no_test_mac,-ui_test,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate \

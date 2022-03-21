@@ -9,6 +9,8 @@ register_toolchains(
     "@native_toolchain//:cc-toolchain-x64_linux",
     "@native_toolchain//:cc-toolchain-darwin",
     "@native_toolchain//:cc-toolchain-x64_windows-clang-cl",
+    "//tools/base/bazel/toolchains/darwin:python_toolchain",
+    "//tools/base/bazel/toolchains/darwin:python_toolchain_10.13",
 )
 
 local_repository(
