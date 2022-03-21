@@ -82,17 +82,18 @@ fun File.readCompileCommandsJsonBin(normalizer: FileNormalizer): List<CompileCom
     }
     return entries
 }
-
 fun File.dumpCompileCommandsJsonBin(normalizer: FileNormalizer): String =
         readCompileCommandsJsonBin(normalizer)
                 .sortedBy { it.toString() }
-                .joinToString("\n\n") { (sourceFile: String, compiler: String, workingDir: String, flags: List<String>) ->
+                .joinToString("\n\n") { (sourceFile: String, compiler: String, workingDir: String, rawFlags: List<String>) ->
+                    val flags = rawFlags
+                        .filter { flag -> flag.contains("-target") || flag.contains("none-linux-android") }
                     """
-            sourceFile: $sourceFile
-            compiler:   $compiler
-            workingDir: $workingDir
-            flags:      $flags
-        """.trimIndent()
+                        sourceFile: $sourceFile
+                        compiler:   $compiler
+                        workingDir: $workingDir
+                        flags:      $flags
+                    """.trimIndent()
                 }
 
 /**
