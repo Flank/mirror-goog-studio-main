@@ -56,7 +56,6 @@ class BooleanOptionTest {
             BooleanOption.ENABLE_SDK_DOWNLOAD,
             BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES,
             BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS,
-            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
             BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
             BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS,
             BooleanOption.ENABLE_LEGACY_API,
@@ -97,11 +96,8 @@ class BooleanOptionTest {
                 BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION,
                 BooleanOption.USE_DEPENDENCY_CONSTRAINTS,
                 BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK,
-                BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
-                BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS,
                 BooleanOption.MINIMAL_KEEP_RULES,
                 BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES,
-                BooleanOption.ENABLE_DESUGAR,
                 BooleanOption.RUN_LINT_IN_PROCESS
         )
 
