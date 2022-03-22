@@ -16,6 +16,7 @@
 
 package com.android.build.api.dsl
 
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
@@ -84,4 +85,14 @@ interface SettingsExtension {
     var minSdk: Int?
 
     var minSdkPreview: String?
+
+
+    /** Set execution profiles and options for tools. */
+    val execution: Execution
+
+    /** Set execution profiles and options for tools. */
+    fun execution(action: Action<Execution>)
+
+    /** Set execution profiles and options for tools. */
+    fun execution(action: Execution.() -> Unit)
 }

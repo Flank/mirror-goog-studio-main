@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins
 import com.android.SdkConstants
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.ExecutionProfile
 import com.android.build.api.dsl.SettingsExtension
 import com.android.build.api.dsl.SingleVariant
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
@@ -41,6 +42,10 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.DEFAULT_EXECUTION_PROFILE
+import com.android.build.gradle.internal.core.ExecutionProfileOptions
+import com.android.build.gradle.internal.core.SettingsOptions
+import com.android.build.gradle.internal.core.ToolExecutionOptions
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.internal.crash.runAction
@@ -95,7 +100,7 @@ import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.internal.variant.VariantModelImpl
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.IssueReporter.Type
 import com.android.builder.model.v2.ide.ProjectType
@@ -209,7 +214,8 @@ abstract class BasePlugin<
                 bootClasspathConfig,
                 createCustomLintPublishConfig(project),
                 createCustomLintChecksConfig(project),
-                createAndroidJarConfig(project)
+                createAndroidJarConfig(project),
+                createSettingsOptions()
             )
         }
     }
@@ -782,15 +788,23 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         return false
     }
 
-    protected fun initExtensionFromSettings(extension: AndroidT) {
+    private val settingsExtension: SettingsExtension? by lazy(LazyThreadSafetyMode.NONE) {
         // Query for the settings extension via extra properties.
         // This is deposited here by the SettingsPlugin
-        val properties = project?.extensions?.extraProperties ?: return
-        if (properties.has("_android_settings")) {
-            val settings = properties.get("_android_settings") as? SettingsExtension
-            settings?.let {
-                extension.doInitExtensionFromSettings(it)
-            }
+        val properties = project?.extensions?.extraProperties
+        if (properties == null) {
+            null
+        } else if (properties.has("_android_settings")) {
+            properties.get("_android_settings") as? SettingsExtension
+        } else {
+            null
+        }
+    }
+
+    // Initialize the android extension with values from the android settings extension
+    protected fun initExtensionFromSettings(extension: AndroidT) {
+        settingsExtension?.let {
+            extension.doInitExtensionFromSettings(it)
         }
     }
 
@@ -814,6 +828,68 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         settings.minSdkPreview?.let { minSdkPreview ->
             this.defaultConfig.minSdkPreview = minSdkPreview
         }
+    }
+
+
+    // Create settings options, to be used in the global config,
+    // with values from the android settings extension
+    private fun createSettingsOptions(): SettingsOptions {
+        // resolve settings extension
+        val actualSettingsExtension = settingsExtension ?: run {
+            dslServices.logger.info("Using default execution profile")
+            return SettingsOptions(DEFAULT_EXECUTION_PROFILE)
+        }
+
+        // Map the profiles to make it easier to look them up
+        val executionProfiles = actualSettingsExtension.execution.profiles.associate { profile ->
+            profile.name to profile
+        }
+
+        val buildProfileOptions = { profile: ExecutionProfile ->
+            ExecutionProfileOptions(
+                name = profile.name,
+                r8Options = profile.r8.let { r8 ->
+                    ToolExecutionOptions(
+                        jvmArgs = r8.jvmOptions,
+                        runInSeparateProcess = r8.runInSeparateProcess
+                    )
+                }
+            )
+        }
+
+        // If the string option is set use that one instead
+        val actualProfileName =
+            dslServices.projectOptions[StringOption.EXECUTION_PROFILE_SELECTION] ?:
+            actualSettingsExtension.execution.defaultProfile
+        // Find the selected (or the only) profile
+        val executionProfile =
+            if (actualProfileName == null) {
+                if (executionProfiles.isEmpty()) { // No profiles declared, and none selected, return default
+                    dslServices.logger.info("Using default execution profile")
+                    DEFAULT_EXECUTION_PROFILE
+                } else if (executionProfiles.size == 1) { // if there is exactly one profile use that
+                    dslServices.logger.info("Using only execution profile '${executionProfiles.keys.first()}'")
+                    buildProfileOptions(executionProfiles.values.first())
+                } else { // no profile selected
+                    dslServices.issueReporter.reportError(Type.GENERIC, "Found ${executionProfiles.size} execution profiles ${executionProfiles.keys}, but no profile was selected.\n")
+                    null
+                }
+            } else {
+                if (!executionProfiles.containsKey(actualProfileName)) { // invalid profile selected
+                    dslServices.issueReporter.reportError(Type.GENERIC,"Selected profile '$actualProfileName' does not exist")
+                    null
+                } else {
+                    if (actualProfileName == dslServices.projectOptions[StringOption.EXECUTION_PROFILE_SELECTION]) {
+                        dslServices.logger.info("Using execution profile from android.settings.executionProfile '$actualProfileName'")
+                    } else {
+                        dslServices.logger.info("Using execution profile from dsl '$actualProfileName'")
+                    }
+
+                    buildProfileOptions(executionProfiles[actualProfileName]!!)
+                }
+            }
+
+        return SettingsOptions(executionProfile = executionProfile)
     }
 
     // Create the "special" configuration for test buddy APKs. It will be resolved by the test

@@ -30,6 +30,7 @@ import com.android.build.api.dsl.TestCoverage
 import com.android.build.api.dsl.TestOptions
 import com.android.build.api.transform.Transform
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.core.SettingsOptions
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -135,4 +136,7 @@ interface GlobalTaskCreationConfig: BootClasspathConfig {
     val jarCreatorType: JarCreatorType
 
     val apkCreatorType: ApkCreatorType
+
+    // Options from the settings plugin
+    val settingsOptions: SettingsOptions
 }

@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.core.ToolExecutionOptions
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -39,6 +40,7 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.MainDexListConfig
@@ -55,6 +57,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -72,6 +75,8 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
@@ -139,6 +144,9 @@ abstract class R8Task @Inject constructor(
     @get:Input
     lateinit var dexingType: DexingType
         private set
+
+    @get:Internal
+    abstract val executionOptions: Property<ToolExecutionOptions>
 
     @get:Optional
     @get:Classpath
@@ -325,6 +333,9 @@ abstract class R8Task @Inject constructor(
             task.dexingType = creationConfig.dexingType
             task.useFullR8.setDisallowChanges(creationConfig.services.projectOptions[BooleanOption.FULL_R8])
 
+            task.executionOptions.setDisallowChanges(
+                creationConfig.global.settingsOptions.executionProfile?.r8Options)
+
             if (!creationConfig.services.projectOptions[BooleanOption.R8_FAIL_ON_MISSING_CLASSES]) {
                 // Keep until AGP 8.0. It used to be necessary because of http://b/72683872.
                 proguardConfigurations.add("-ignorewarnings")
@@ -458,8 +469,7 @@ abstract class R8Task @Inject constructor(
                 |Current version is: ${getR8Version()}.
                 |""".trimMargin()
             )
-        workerExecutor.noIsolation().submit(R8Runnable::class.java) {
-            it.initializeFromAndroidVariantTask(this)
+        val workerAction = { it: R8Runnable.Params ->
             it.bootClasspath.from(bootClasspath.toList())
             it.minSdkVersion.set(minSdkVersion.get())
             it.debuggable.set(debuggable.get())
@@ -522,6 +532,15 @@ abstract class R8Task @Inject constructor(
             it.outputKeepRulesDir.set(projectOutputKeepRules.asFile.orNull)
             it.errorFormatMode.set(errorFormatMode.get())
         }
+        if (executionOptions.get().runInSeparateProcess) {
+            workerExecutor.processIsolation { spec ->
+                spec.forkOptions { forkOptions ->
+                    forkOptions.jvmArgs?.addAll(executionOptions.get().jvmArgs)
+                }
+            }.submit(R8Runnable::class.java, workerAction)
+        } else {
+            workerExecutor.noIsolation().submit(R8Runnable::class.java, workerAction)
+        }
     }
 
     companion object {
@@ -559,7 +578,7 @@ abstract class R8Task @Inject constructor(
             outputKeepRulesDir: File?,
             errorFormatMode: SyncOptions.ErrorFormatMode,
         ) {
-            val logger = LoggerWrapper.getLogger(R8ParallelBuildService::class.java)
+            val logger = LoggerWrapper.getLogger(R8Task::class.java)
 
             val r8OutputType: R8OutputType
             val outputFormat: Format
@@ -638,7 +657,7 @@ abstract class R8Task @Inject constructor(
                 featureDexDir?.toPath(),
                 featureJavaResourceOutputDir?.toPath(),
                 libConfiguration,
-                outputKeepRulesFile?.toPath()
+                outputKeepRulesFile?.toPath(),
             )
         }
 
@@ -653,9 +672,9 @@ abstract class R8Task @Inject constructor(
         }
     }
 
-    abstract class R8Runnable : ProfileAwareWorkAction<R8Runnable.Params>() {
+    abstract class R8Runnable : WorkAction<R8Runnable.Params> {
 
-        abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract class Params : WorkParameters {
             abstract val bootClasspath: ConfigurableFileCollection
             abstract val minSdkVersion: Property<Int>
             abstract val debuggable: Property<Boolean>
@@ -690,7 +709,7 @@ abstract class R8Task @Inject constructor(
             abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
         }
 
-        override fun run() {
+        override fun execute() {
             shrink(
                 parameters.bootClasspath.files.toList(),
                 parameters.minSdkVersion.get(),

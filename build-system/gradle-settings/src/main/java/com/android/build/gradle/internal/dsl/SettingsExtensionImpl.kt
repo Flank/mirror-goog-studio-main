@@ -16,9 +16,13 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.Execution
 import com.android.build.api.dsl.SettingsExtension
+import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
+import javax.inject.Inject
 
-internal open class SettingsExtensionImpl: SettingsExtension {
+internal open class SettingsExtensionImpl @Inject constructor(objectFactory: ObjectFactory): SettingsExtension {
 
     private var _compileSdk: Int? = null
     override var compileSdk: Int?
@@ -90,4 +94,13 @@ internal open class SettingsExtensionImpl: SettingsExtension {
             _minSdkPreview = value
             _minSdk = null
         }
+
+    override val execution: Execution = objectFactory.newInstance(ExecutionImpl::class.java, objectFactory)
+
+    override fun execution(action: Action<Execution>) {
+        action.execute(execution)
+    }
+    override fun execution(action: Execution.() -> Unit) {
+        action.invoke(execution)
+    }
 }

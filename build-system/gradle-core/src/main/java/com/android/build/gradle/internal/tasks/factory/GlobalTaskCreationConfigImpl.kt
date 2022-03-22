@@ -34,6 +34,7 @@ import com.android.build.api.dsl.TestOptions
 import com.android.build.api.transform.Transform
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.core.SettingsOptions
 import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
 import com.android.build.gradle.internal.instrumentation.ASM_API_VERSION_FOR_INSTRUMENTATION
@@ -68,7 +69,8 @@ class GlobalTaskCreationConfigImpl(
     bootClasspathConfig: BootClasspathConfigImpl,
     override val lintPublish: Configuration,
     override val lintChecks: Configuration,
-    private val androidJar: Configuration
+    private val androidJar: Configuration,
+    override val settingsOptions: SettingsOptions
 ) : GlobalTaskCreationConfig, BootClasspathConfig by bootClasspathConfig {
 
     companion object {

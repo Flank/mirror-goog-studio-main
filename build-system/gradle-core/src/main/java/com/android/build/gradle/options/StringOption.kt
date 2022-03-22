@@ -85,6 +85,9 @@ enum class StringOption(
     // if the flag is not set, the debuggable value will fallback to using the DSL 'debuggable'.
     PROFILING_MODE("android.profilingMode", ApiStage.Stable),
 
+    // Override for the default execution profile in the settings plugin.
+    EXECUTION_PROFILE_SELECTION("android.settings.executionProfile", ApiStage.Stable),
+
     /* -----------------
      * EXPERIMENTAL APIs
      */

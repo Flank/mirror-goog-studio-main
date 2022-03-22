@@ -20,14 +20,17 @@ import com.android.build.api.dsl.SettingsExtension
 import com.android.build.gradle.internal.dsl.SettingsExtensionImpl
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
+import org.gradle.api.model.ObjectFactory
+import javax.inject.Inject
 
-class SettingsPlugin: Plugin<Settings> {
+class SettingsPlugin @Inject constructor (private val objectFactory: ObjectFactory): Plugin<Settings> {
 
     override fun apply(settings: Settings) {
         val settingsExtension = settings.extensions.create(
             SettingsExtension::class.java,
             "android",
-            SettingsExtensionImpl::class.java
+            SettingsExtensionImpl::class.java,
+            objectFactory
         )
 
         // as Project objects cannot query for the Settings object (and its extensions), we

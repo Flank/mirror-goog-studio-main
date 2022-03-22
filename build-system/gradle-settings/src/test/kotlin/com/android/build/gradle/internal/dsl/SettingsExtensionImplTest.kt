@@ -18,10 +18,32 @@ package com.android.build.gradle.internal.dsl
 
 import com.google.common.truth.ComparableSubject
 import com.google.common.truth.Truth.assertWithMessage
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
 
 internal class SettingsExtensionImplTest {
-    private val settings = SettingsExtensionImpl()
+    @get: Rule
+    val temporaryFolder = TemporaryFolder()
+
+    @get:Rule
+    val mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
+
+    private val project: Project by lazy {
+        ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
+    }
+
+    private lateinit var settings: SettingsExtensionImpl
+
+    @Before
+    fun setup() {
+        settings = SettingsExtensionImpl(project.objects)
+    }
 
     @Test
     fun testDefaults() {
