@@ -133,14 +133,13 @@ def kotlin_test(
     )
 
 # Creates actions to generate the sources jar
-def _sources(ctx, srcs, source_jars, jar, java_toolchain, host_javabase):
+def _sources(ctx, srcs, source_jars, jar, java_toolchain):
     java_common.pack_sources(
         ctx.actions,
         output_source_jar = jar,
         sources = srcs,
         source_jars = source_jars,
         java_toolchain = java_toolchain,
-        host_javabase = host_javabase,
     )
 
 # Creates actions to generate a resources_jar from the given resources.
@@ -297,7 +296,6 @@ def _kotlin_library_impl(ctx):
         jars += [resources_jar]
 
     java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
-    host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase)
 
     # Java
     if java_srcs or source_jars:
@@ -310,8 +308,7 @@ def _kotlin_library_impl(ctx):
             deps = deps + kotlin_providers,
             javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
             java_toolchain = java_toolchain,
-            host_javabase = host_javabase,
-            plugins = [plugin[JavaInfo] for plugin in ctx.attr.plugins],
+            plugins = [plugin[JavaPluginInfo] for plugin in ctx.attr.plugins],
             # TODO(b/216385876) After updating to Bazel 5.0, use enable_compile_jar_action = use_ijar,
         )
 
@@ -337,7 +334,7 @@ def _kotlin_library_impl(ctx):
             allow_duplicates = True,
         )
 
-    _sources(ctx, java_srcs + kotlin_srcs, source_jars, ctx.outputs.source_jar, java_toolchain, host_javabase)
+    _sources(ctx, java_srcs + kotlin_srcs, source_jars, ctx.outputs.source_jar, java_toolchain)
 
     java_info = JavaInfo(
         output_jar = ctx.outputs.jar,
@@ -382,11 +379,10 @@ _kotlin_library = rule(
         "kotlin_use_ir": attr.bool(),
         "compress_resources": attr.bool(),
         "plugins": attr.label_list(
-            providers = [JavaInfo],
+            providers = [JavaPluginInfo],
         ),
         "stdlib": attr.label(),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
-        "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_bootclasspath": attr.label(
             # Use JDK 8 because AGP still needs to support it (b/166472930).
             default = Label("//prebuilts/studio/jdk:bootclasspath"),

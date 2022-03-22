@@ -47,7 +47,6 @@ build:datasize_aspect --output_groups=+data_size
 
 build --incompatible_strict_action_env # Ensures actions don't pick up env changes
 build --sandbox_tmpfs_path=/tmp
-build --javacopt="-g:source,lines,vars"  # Keep debug info
 # TODO (b/141269926): this generates a warning on windows when building for host,
 # but is required when building for android.
 build --copt=-fvisibility=hidden
@@ -58,11 +57,10 @@ build --define=grpc_no_ares=true
 # finds make in the ndk-build script (see b/72179674).
 build --test_env=SHELL
 
-# Use prebuilt JDK when doing local bazel build/test
-build --host_javabase=//prebuilts/studio/jdk:jdk11_runtime
-build --javabase=//prebuilts/studio/jdk:jdk11_runtime
-build --host_java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
-build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
+# Bazel will find the matching java toolchain registered in WORKSPACE.
+build --java_language_version=8
+build --java_runtime_version=jdk11
+build --tool_java_runtime_version=jdk11
 
 # Use prebuilt native toolchain
 build --crosstool_top=@native_toolchain//:toolchain
