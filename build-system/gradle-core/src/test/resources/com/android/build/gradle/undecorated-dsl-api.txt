@@ -541,6 +541,7 @@ com.android.build.gradle.internal.dsl.EmulatorSnapshots.setMaxSnapshots: void (i
 com.android.build.gradle.internal.dsl.EmulatorSnapshots.setMaxSnapshotsForTestFailures: void (int)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.api.dsl.ExternalNativeCmakeOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExperimentalProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getNdkBuild: com.android.build.api.dsl.ExternalNativeNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeNdkBuildOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.abiFilters: void (java.lang.String[])

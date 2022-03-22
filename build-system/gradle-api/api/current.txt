@@ -970,9 +970,11 @@ package com.android.build.api.dsl {
   @org.gradle.api.Incubating public interface ExternalNativeBuildOptions {
     method public void cmake(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions,kotlin.Unit> action);
     method public com.android.build.api.dsl.ExternalNativeCmakeOptions getCmake();
+    method @org.gradle.api.Incubating public java.util.Map<java.lang.String,java.lang.Object> getExperimentalProperties();
     method public com.android.build.api.dsl.ExternalNativeNdkBuildOptions getNdkBuild();
     method public void ndkBuild(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeNdkBuildOptions,kotlin.Unit> action);
     property public abstract com.android.build.api.dsl.ExternalNativeCmakeOptions cmake;
+    property @org.gradle.api.Incubating public abstract java.util.Map<java.lang.String,java.lang.Object> experimentalProperties;
     property public abstract com.android.build.api.dsl.ExternalNativeNdkBuildOptions ndkBuild;
   }
 

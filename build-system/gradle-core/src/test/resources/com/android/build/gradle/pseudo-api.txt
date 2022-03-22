@@ -1177,6 +1177,7 @@ com.android.build.gradle.internal.dsl.CoreBuildType.isShrinkResources: boolean (
 com.android.build.gradle.internal.dsl.CoreBuildType.isUseProguard: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions.getExternalNativeCmakeOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions ()
+com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions.getExternalNativeExperimentalProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions.getExternalNativeNdkBuildOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions.getAbiFilters: java.util.Set<java.lang.String> ()
@@ -1393,8 +1394,10 @@ com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.cmake: void (ko
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.cmake: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.api.dsl.ExternalNativeCmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExperimentalProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeCmakeOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeCmakeOptions: com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeExperimentalProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeNdkBuildOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeNdkBuildOptions: com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getNdkBuild: com.android.build.api.dsl.ExternalNativeNdkBuildOptions ()
