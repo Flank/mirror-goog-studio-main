@@ -17,6 +17,7 @@ package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
+import com.android.tools.deploy.interpreter.UnsupportedByteCodeException;
 import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
@@ -582,5 +583,19 @@ public class MethodBodyEvaluatorTest {
                 "Accessed parent field",
                 child.accessParentProtectedField(protectedFieldValue),
                 i.intValue());
+    }
+
+    @org.junit.Test
+    public void testIndyException() throws Exception {
+        byte[] classInput = buildClass(UsingIndy.class);
+        try {
+            MethodBodyEvaluator me =
+                    new MethodBodyEvaluator(classInput, "callMethodWithIndy", "()V");
+            me.evalStatic(new Object[] {});
+            Assert.fail("No exception thrown while encountering INDY opcode");
+        } catch (UnsupportedByteCodeException e) {
+            Assert.assertEquals("INDY is not supported", e.getMessage());
+            // Expected
+        }
     }
 }
