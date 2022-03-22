@@ -217,10 +217,10 @@ abstract class ComponentImpl(
         get() = variantDslInfo.componentType
 
     override val dirName: String
-        get() = variantDslInfo.dirName
+        get() = paths.dirName
 
     override val baseName: String
-        get() = variantDslInfo.baseName
+        get() = paths.baseName
 
     override val resourceConfigurations: ImmutableSet<String>
         get() = variantDslInfo.resourceConfigurations
@@ -381,14 +381,14 @@ abstract class ComponentImpl(
             createVersionNameProperty(),
             internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
             variantOutputConfiguration,
-            variantOutputConfiguration.baseName(variantDslInfo),
-            variantOutputConfiguration.fullName(variantDslInfo),
+            variantOutputConfiguration.baseName(this),
+            variantOutputConfiguration.fullName(this),
             internalServices.newPropertyBackingDeprecatedApi(
                 String::class.java,
                 outputFileName
-                    ?: variantDslInfo.getOutputFileName(
+                    ?: paths.getOutputFileName(
                         internalServices.projectInfo.getProjectBaseName(),
-                        variantOutputConfiguration.baseName(variantDslInfo)
+                        variantOutputConfiguration.baseName(this)
                     ),
             )
         ).also {
@@ -428,7 +428,8 @@ abstract class ComponentImpl(
     private fun getGeneratedResourcesDir(name: String): File {
         return FileUtils.join(
             paths.generatedDir().get().asFile,
-            listOf("res", name) + variantDslInfo.directorySegments)
+            listOf("res", name) + paths.directorySegments
+        )
     }
 
     // Precomputed file paths.

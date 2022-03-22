@@ -143,7 +143,7 @@ public class VariantScopeImpl implements VariantScope {
     private void configureNdk() {
         File objFolder =
                 pathHelper
-                        .intermediatesDir("ndk", variantDslInfo.getDirName(), "obj")
+                        .intermediatesDir("ndk", pathHelper.getDirName(), "obj")
                         .get()
                         .getAsFile();
 

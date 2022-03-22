@@ -17,25 +17,130 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.Artifact
+import com.android.build.api.dsl.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.ComponentType
+import com.android.utils.combineAsCamelCase
 import com.android.utils.toStrings
+import com.google.common.base.Joiner
+import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.Locale
 
 class VariantPathHelper(
     val buildDirectory: DirectoryProperty,
     private val variantDslInfo: VariantDslInfo,
     private val dslServices: DslServices
 ) {
+
+    /**
+     * Returns a unique directory name (can include multiple folders) for the variant, based on
+     * build type, flavor and test.
+     *
+     *
+     * This always uses forward slashes ('/') as separator on all platform.
+     *
+     * @return the directory name for the variant
+     */
+    val dirName: String by lazy {
+        Joiner.on('/').join(directorySegments)
+    }
+
+
+    /**
+     * Returns a unique directory name (can include multiple folders) for the variant, based on
+     * build type, flavor and test.
+     *
+     * @return the directory name for the variant
+     */
+    val directorySegments: Collection<String?> by lazy {
+        val builder =
+            ImmutableList.builder<String>()
+        if (variantDslInfo.componentType.isNestedComponent) {
+            builder.add(variantDslInfo.componentType.prefix)
+        }
+        if (variantDslInfo.productFlavorList.isNotEmpty()) {
+            builder.add(
+                combineAsCamelCase(
+                    variantDslInfo.productFlavorList, ProductFlavor::getName
+                )
+            )
+        }
+        builder.add((variantDslInfo as VariantDslInfoImpl).buildTypeObj.name)
+        builder.build()
+    }
+
+    /**
+     * Returns the expected output file name for the variant.
+     *
+     * @param archivesBaseName the project's archiveBaseName
+     * @param baseName the variant baseName
+     */
+    fun getOutputFileName(archivesBaseName: String, baseName: String): String {
+        // we only know if it is signed during configuration, if it's the base module.
+        // Otherwise, don't differentiate between signed and unsigned.
+        val suffix =
+            if (variantDslInfo.isSigningReady || !variantDslInfo.componentType.isBaseModule)
+                SdkConstants.DOT_ANDROID_PACKAGE
+            else "-unsigned.apk"
+        return "$archivesBaseName-$baseName$suffix"
+    }
+
+    /**
+     * Returns a full name that includes the given splits name.
+     *
+     * @param splitName the split name
+     * @return a unique name made up of the variant and split names.
+     */
+    fun computeFullNameWithSplits(splitName: String): String {
+        return VariantDslInfoBuilder.computeFullNameWithSplits(
+            variantDslInfo.componentIdentity,
+            variantDslInfo.componentType,
+            splitName
+        )
+    }
+
+    /**
+     * Returns the full, unique name of the variant, including BuildType, flavors and test, dash
+     * separated. (similar to full name but with dashes)
+     *
+     * @return the name of the variant
+     */
+    val baseName: String by lazy {
+        VariantDslInfoBuilder.computeBaseName(
+            variantDslInfo as VariantDslInfoImpl,
+            variantDslInfo.componentType
+        )
+    }
+
+    /**
+     * Returns a base name that includes the given splits name.
+     *
+     * @param splitName the split name
+     * @return a unique name made up of the variant and split names.
+     */
+    fun computeBaseNameWithSplits(splitName: String): String {
+        val sb = StringBuilder()
+        if (variantDslInfo.productFlavorList.isNotEmpty()) {
+            for (pf in variantDslInfo.productFlavorList) {
+                sb.append(pf.name).append('-')
+            }
+        }
+        sb.append(splitName).append('-')
+        sb.append((variantDslInfo as VariantDslInfoImpl).buildTypeObj.name)
+        if (variantDslInfo.componentType.isNestedComponent) {
+            sb.append('-').append(variantDslInfo.componentType.prefix)
+        }
+        return sb.toString()
+    }
 
     fun intermediatesDir(vararg subDirs: String): Provider<Directory> =
         getBuildSubDir(SdkConstants.FD_INTERMEDIATES, subDirs)
@@ -50,18 +155,18 @@ class VariantPathHelper(
         getBuildSubDir(BuilderConstants.FD_REPORTS, subDirs)
 
     val buildConfigSourceOutputDir: Provider<Directory>
-            by lazy { generatedDir("source", "buildConfig", variantDslInfo.dirName) }
+            by lazy { generatedDir("source", "buildConfig", dirName) }
 
     val renderscriptObjOutputDir: Provider<Directory>
             by lazy {
                 getBuildSubDir(
                     SdkConstants.FD_INTERMEDIATES,
-                    toStrings("rs", variantDslInfo.directorySegments, "obj").toTypedArray()
+                    toStrings("rs", directorySegments, "obj").toTypedArray()
                 )
             }
 
     val coverageReportDir: Provider<Directory>
-            by lazy { reportsDir("coverage", variantDslInfo.dirName) }
+            by lazy { reportsDir("coverage", dirName) }
 
     /**
      * Obtains the location where APKs should be placed.
@@ -83,7 +188,7 @@ class VariantPathHelper(
                     customBuild ->  deploymentApkLocation.get().asFile
                     else -> defaultApkLocation.get().asFile
                 }
-                File(baseDirectory, variantDslInfo.dirName)
+                File(baseDirectory, dirName)
             }
 
     /**
@@ -112,10 +217,10 @@ class VariantPathHelper(
             val componentType: ComponentType = variantDslInfo.componentType
             if (componentType.isTestComponent) {
                 if (componentType.isApk) { // ANDROID_TEST
-                    return intermediatesDir("manifest", variantDslInfo.dirName)
+                    return intermediatesDir("manifest", dirName)
                 }
             } else {
-                return intermediatesDir("manifests", "full", variantDslInfo.dirName)
+                return intermediatesDir("manifests", "full", dirName)
             }
             throw RuntimeException("getManifestOutputDirectory called for an unexpected variant.")
         }
@@ -130,7 +235,7 @@ class VariantPathHelper(
 
     fun getGeneratedResourcesDir(name: String): Provider<Directory> {
         val dirs: List<String> =
-            listOf("res", name) + variantDslInfo.directorySegments.filterNotNull()
+            listOf("res", name) + directorySegments.filterNotNull()
         return generatedDir(*dirs.toTypedArray())
     }
 
@@ -140,15 +245,5 @@ class VariantPathHelper(
             throw IllegalStateException("Directory should not contain '.'.")
         }
         return buildDirectory.dir("$childDir${subDirs.joinToString(separator = "/", prefix = "/")}")
-    }
-
-    /**
-     * An intermediate directory for this variant.
-     *
-     *
-     * Of the form build/intermediates/dirName/variant/
-     */
-    private fun intermediate(directoryName: String): File {
-        return intermediatesDir(directoryName, variantDslInfo.dirName).get().asFile
     }
 }
