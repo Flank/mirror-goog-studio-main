@@ -30,7 +30,6 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.core.InternalBaseVariant;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -151,18 +150,16 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     @NonNull
     public BuildType getBuildType() {
-        // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
-        final VariantDslInfoImpl variantDslInfo =
-                (VariantDslInfoImpl) component.getVariantDslInfo();
-        return readOnlyObjectProvider.getBuildType((BuildType) variantDslInfo.getBuildTypeObj());
+        return readOnlyObjectProvider.getBuildType(
+                (BuildType) component.getOldVariantApiLegacySupport().getBuildTypeObj());
     }
 
     @Override
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
         List<ProductFlavor> flavors =
-                component.getVariantDslInfo().getProductFlavorList().stream()
+                component.getOldVariantApiLegacySupport().getProductFlavorList().stream()
                         .map(it -> (ProductFlavor) it)
                         .collect(Collectors.toList());
         return new ImmutableFlavorList(flavors, readOnlyObjectProvider);
@@ -171,17 +168,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     @NonNull
     public MergedFlavor getMergedFlavor() {
-        // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
-        final VariantDslInfoImpl variantDslInfo =
-                (VariantDslInfoImpl) component.getVariantDslInfo();
-        return variantDslInfo.getMergedFlavor();
+        return component.getOldVariantApiLegacySupport().getMergedFlavor();
     }
 
     @NonNull
     @Override
     public JavaCompileOptions getJavaCompileOptions() {
-        return component.getVariantDslInfo().getJavaCompileOptions();
+        return component.getOldVariantApiLegacySupport().getJavaCompileOptions();
     }
 
     @NonNull

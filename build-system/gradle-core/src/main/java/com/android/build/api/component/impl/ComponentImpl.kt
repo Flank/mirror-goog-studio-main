@@ -45,9 +45,12 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
@@ -859,6 +862,11 @@ abstract class ComponentImpl(
         variantDslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
     }
+
+    override val modelV1LegacySupport =
+        ModelV1LegacySupportImpl(variantDslInfo as VariantDslInfoImpl)
+    override val oldVariantApiLegacySupport =
+        OldVariantApiLegacySupportImpl(variantDslInfo as VariantDslInfoImpl)
 
     companion object {
         // String to

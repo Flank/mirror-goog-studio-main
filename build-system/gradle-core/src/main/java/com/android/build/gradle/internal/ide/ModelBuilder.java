@@ -47,7 +47,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -719,9 +718,6 @@ public class ModelBuilder<Extension extends BaseExtension>
     private VariantImpl createVariant(@NonNull ComponentImpl component) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, component);
 
-        // Need access to the merged flavors for the model, so we cast.
-        VariantDslInfoImpl variantDslInfo = (VariantDslInfoImpl) component.getVariantDslInfo();
-
         File manifest = component.getVariantSources().getMainManifestIfExists();
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
@@ -803,7 +799,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 component.getBuildType(),
                 getProductFlavorNames(component),
                 new ProductFlavorImpl(
-                        variantDslInfo.getMergedFlavor(), variantDslInfo.getApplicationId()),
+                        component.getModelV1LegacySupport().getMergedFlavor(),
+                        component.getModelV1LegacySupport().getDslApplicationId()),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,

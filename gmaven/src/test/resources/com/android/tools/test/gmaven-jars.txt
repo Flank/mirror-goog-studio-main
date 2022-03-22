@@ -415,6 +415,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/attributes/
   com/android/build/gradle/internal/attribution/
   com/android/build/gradle/internal/component/
+  com/android/build/gradle/internal/component/legacy/
   com/android/build/gradle/internal/core/
   com/android/build/gradle/internal/coverage/
   com/android/build/gradle/internal/crash/

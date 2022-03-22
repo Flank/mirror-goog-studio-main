@@ -26,6 +26,8 @@ import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -210,9 +212,19 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val isWearAppUnbundled: Boolean?
 
+    // ---------------------------------------------------------------------------------------------
+    // LEGACY SUPPORT
+    // ---------------------------------------------------------------------------------------------
+
     // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
     // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
     // switches to the new variant API.
     @Deprecated("DO NOT USE, this is just for KAPT legacy support")
     fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
+
+    @Deprecated("DO NOT USE, this is just for model v1 legacy support")
+    val modelV1LegacySupport: ModelV1LegacySupport
+
+    @Deprecated("DO NOT USE, this is just for old variant API legacy support")
+    val oldVariantApiLegacySupport: OldVariantApiLegacySupport
 }
