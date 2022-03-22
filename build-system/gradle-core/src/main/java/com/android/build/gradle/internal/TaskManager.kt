@@ -1920,15 +1920,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 )
             )
             variant.taskContainer.coverageReportTask?.dependsOn(reportTask)
-            for (managedDevice in managedDevices) {
-                taskFactory.configure(
-                    managedDeviceAllVariantsTaskName(managedDevice)
-                ) { managedDeviceTests: Task ->
-                    managedDeviceTests.dependsOn(reportTask)
-                }
-            }
             // Run the report task after all tests are finished on all devices.
             deviceToProvider.values.forEach { managedDeviceTestTask ->
+                reportTask.dependsOn(managedDeviceTestTask)
                 reportTask.configure {
                     it.mustRunAfter(managedDeviceTestTask)
                 }

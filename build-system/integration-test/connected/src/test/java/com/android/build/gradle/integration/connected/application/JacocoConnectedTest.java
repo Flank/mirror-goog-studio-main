@@ -61,10 +61,10 @@ public class JacocoConnectedTest {
     @Test
     public void connectedCheck() throws Exception {
         project.executor().run("connectedCheck");
-        assertThat(project.file("build/reports/coverage/androidTest/debug/index.html")).exists();
+        assertThat(project.file("build/reports/coverage/androidTest/debug/connected/index.html")).exists();
         assertThat(
                         project.file(
-                                "build/reports/coverage/androidTest/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/connected/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 
@@ -77,7 +77,7 @@ public class JacocoConnectedTest {
 
         assertThat(
                         project.file(
-                                "build/reports/coverage/androidTest/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/connected/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 
@@ -163,7 +163,7 @@ public class JacocoConnectedTest {
         Truth.assertThat(files.size()).isAtLeast(2);
         assertThat(
                         project.file(
-                                "build/reports/coverage/androidTest/debug/com.example.helloworld/index.html"))
+                                "build/reports/coverage/androidTest/debug/connected/com.example.helloworld/index.html"))
                 .exists();
     }
 
@@ -182,7 +182,7 @@ public class JacocoConnectedTest {
         project.executor().run("connectedCheck");
         assertThat(
                         project.file(
-                                "build/reports/coverage/androidTest/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/connected/com.example.helloworld/HelloWorld.html"))
                 .exists();
         String expectedReportXml =
                 "<package name=\"com/example/helloworld\">"
@@ -225,7 +225,7 @@ public class JacocoConnectedTest {
                         + "<counter type=\"METHOD\" missed=\"0\" covered=\"2\"/>"
                         + "<counter type=\"CLASS\" missed=\"0\" covered=\"1\"/>"
                         + "</report>";
-        assertThat(project.file("build/reports/coverage/androidTest/debug/report.xml"))
+        assertThat(project.file("build/reports/coverage/androidTest/debug/connected/report.xml"))
                 .contains(expectedReportXml);
     }
 }
