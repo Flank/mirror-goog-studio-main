@@ -1387,6 +1387,7 @@ public final class SdkConstants {
     public static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
     public static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
     public static final String ATTR_ICON = "icon";
+    public static final String ATTR_RESOURCE = "resource";
     public static final String ATTR_ROUND_ICON = "roundIcon";
     public static final String ATTR_PACKAGE = "package";
     public static final String ATTR_CORE_APP = "coreApp";
