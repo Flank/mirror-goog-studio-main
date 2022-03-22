@@ -1750,7 +1750,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
 
         val managedDevices = getManagedDevices()
-        taskFactory.register(
+        val cleanTask = taskFactory.register(
                 ManagedDeviceCleanTask.CreationAction(
                     "cleanManagedDevices",
                     globalConfig,
@@ -1764,11 +1764,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
 
         for (device in managedDevices) {
-            taskFactory.register(
+            val setupTask = taskFactory.register(
                 ManagedDeviceSetupTask.CreationAction(
                     setupTaskName(device),
                     device,
                     globalConfig))
+            setupTask.configure {
+                it.mustRunAfter(cleanTask)
+            }
 
             val deviceAllVariantsTask = taskFactory.register(
                 managedDeviceAllVariantsTaskName(device)
