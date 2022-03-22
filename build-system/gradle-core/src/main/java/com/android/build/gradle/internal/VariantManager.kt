@@ -439,10 +439,12 @@ class VariantManager<
         )
 
         return VariantComponentInfo(
-                variantBuilder,
-                variantApiObject,
-                profileEnabledVariantBuilder,
-                variantApiOperationsRegistrar)
+            variantBuilder,
+            variantApiObject,
+            profileEnabledVariantBuilder,
+            variantApiOperationsRegistrar,
+            variantDslInfo
+        )
     }
 
     private fun createCompoundSourceSets(
@@ -496,9 +498,9 @@ class VariantManager<
             testFixtureMainVariantName = mainComponentInfo.variant.name
         )
 
-        variantDslInfoBuilder.productionVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
+        variantDslInfoBuilder.productionVariant = mainComponentInfo.variantDslInfo as VariantDslInfoImpl
 
-        val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
+        val productFlavorList = mainComponentInfo.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -680,10 +682,10 @@ class VariantManager<
                 extension = dslExtension,
                 hasDynamicFeatures = hasDynamicFeatures())
         variantDslInfoBuilder.productionVariant =
-                testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
+                testedComponentInfo.variantDslInfo as VariantDslInfoImpl
         variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
 
-        val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList
+        val productFlavorList = testedComponentInfo.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
