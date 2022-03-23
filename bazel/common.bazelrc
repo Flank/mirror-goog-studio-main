@@ -98,7 +98,6 @@ build:release --copt=-w
 
 ## Base RBE configuration
 build:_remote_base --bes_timeout=60s
-build:_remote_base --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
 build:_remote_base --project_id=908081808034
 build:_remote_base --google_default_credentials
 build:_remote_base --remote_cache=remotebuildexecution.googleapis.com
@@ -112,6 +111,7 @@ build:_remote_base --strategy=zipper=local
 
 ## Base config to upload build results to ResultStore.
 build:_resultstore --bes_backend=buildeventservice.googleapis.com
+build:_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,https://www.googleapis.com/auth/cloud-platform
 build:_resultstore --bes_results_url=https://source.cloud.google.com/results/invocations/
 
 ## Enables ResultStore, but does not use the remote cache.
@@ -122,10 +122,9 @@ build:resultstore --noremote_upload_local_results
 build:resultstore --noremote_accept_cached
 
 # Publish to the private BES backend.
-# TODO(b/158230441) Sponge support is still in progress and will not work for
-# non-CI (user) builds.
 build:sponge --bes_backend=buildeventservice-pa.googleapis.com
-build:sponge --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,https://www.googleapis.com/auth/cloud-platform
+build:sponge --bes_results_url=https://fusion2.corp.google.com/invocations/
+build:sponge --bes_header=X-Goog-User-Project=google.com:android-studio-alphasource
 
 # Enable go/antswatcher to process test results.
 # This config must be used with the sponge config as it relies on the same bes_backend.
