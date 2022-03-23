@@ -627,6 +627,30 @@ coverage_report(
     ],
 )
 
+# Coverage report for Visual Lint feature.
+coverage_report(
+    name = "visual-lint",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanel.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanelSplitter.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/LintIssueProvider.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/FixEntry.form",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/AccessibilityLintIntegrator.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/NlLayoutScanner.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/NlScannerLayoutParser.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/WarningLayer.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/visuallint",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationForm.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+    ],
+)
+
 # Coverage report for Dagger editor support.
 coverage_report(
     name = "dagger-editing",
