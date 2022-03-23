@@ -552,26 +552,29 @@ abstract class DataFlowAnalyzer(
                     }
                 }
             }
+        } else if (!node.isTernary) {
+            super.afterVisitIfExpression(node)
+            return
+        }
 
-            val thenExpression = node.thenExpression?.skipParenthesizedExprDown()
-            val elseExpression = node.elseExpression?.skipParenthesizedExprDown()
-            if (thenExpression != null && instances.contains(thenExpression)) {
-                instances.add(node)
-            } else if (elseExpression != null && instances.contains(elseExpression)) {
-                instances.add(node)
-            } else {
-                if (thenExpression is UBlockExpression) {
-                    thenExpression.expressions.lastOrNull()?.let {
-                        if (instances.contains(it)) {
-                            instances.add(node)
-                        }
+        val thenExpression = node.thenExpression?.skipParenthesizedExprDown()
+        val elseExpression = node.elseExpression?.skipParenthesizedExprDown()
+        if (thenExpression != null && instances.contains(thenExpression)) {
+            instances.add(node)
+        } else if (elseExpression != null && instances.contains(elseExpression)) {
+            instances.add(node)
+        } else {
+            if (thenExpression is UBlockExpression) {
+                thenExpression.expressions.lastOrNull()?.let {
+                    if (instances.contains(it)) {
+                        instances.add(node)
                     }
                 }
-                if (elseExpression is UBlockExpression) {
-                    elseExpression.expressions.lastOrNull()?.let {
-                        if (instances.contains(it)) {
-                            instances.add(node)
-                        }
+            }
+            if (elseExpression is UBlockExpression) {
+                elseExpression.expressions.lastOrNull()?.let {
+                    if (instances.contains(it)) {
+                        instances.add(node)
                     }
                 }
             }
