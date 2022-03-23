@@ -40,6 +40,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
+import java.nio.file.Path
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Provider
 
 internal class ListingFileRedirectTaskTest {
 
@@ -83,7 +86,44 @@ internal class ListingFileRedirectTaskTest {
             it.set(redirectFile)
         })
         task.taskAction()
+        // test main case with relative path between redirectFile and listingFile
         Truth.assertThat(redirectFile.readLines()[1]).isEqualTo("listingFile=../folder1/listingFile")
+    }
+
+    @Test
+    fun testDifferentRootTestCase() {
+        val spyTask = Mockito.spy(task)
+
+        val folder1 = temporaryFolder.newFolder("folder1")
+        val folder2 = temporaryFolder.newFolder("folder2")
+        val redirectFile = File(folder2, "redirectFile")
+        val spyRedirectFile = Mockito.spy(redirectFile)
+        val listingFile = File(folder1.path,"listingFile")
+
+        //need to mock file.parent.toPath.relativize for ListingFileRedirect.writeRedirect
+        val mockPath = Mockito.mock(Path::class.java)
+        val mockParent = Mockito.mock(File::class.java)
+        Mockito.`when`(spyRedirectFile.parentFile).thenReturn(mockParent)
+        Mockito.`when`(mockParent.toPath()).thenReturn(mockPath)
+        Mockito.`when`(mockPath.relativize(listingFile.toPath()))
+            .thenThrow(IllegalArgumentException("Different roots"))
+
+        //need to mock task.redirectFile.asFile.get()
+        val mockFileProperty = Mockito.mock(RegularFileProperty::class.java)
+        @Suppress("UNCHECKED_CAST")
+        val mockProvider = Mockito.mock(Provider::class.java) as Provider<File>
+        Mockito.`when`(spyTask.redirectFile).thenReturn(mockFileProperty)
+        Mockito.`when`(mockFileProperty.getAsFile()).thenReturn(mockProvider)
+        Mockito.`when`(mockProvider.get()).thenReturn(spyRedirectFile)
+
+        spyTask.listingFile.set(project.objects.fileProperty().also {
+            it.set(listingFile)
+        })
+
+        spyTask.taskAction()
+        // test edge case when redirectFile and listingFile has different roots
+        Truth.assertThat(redirectFile.readLines()[1])
+            .isEqualTo("listingFile=" + listingFile.absolutePath.replace("\\","/"))
     }
 
     @Test

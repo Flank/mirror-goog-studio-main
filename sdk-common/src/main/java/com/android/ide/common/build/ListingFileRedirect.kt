@@ -38,9 +38,14 @@ object ListingFileRedirect {
     const val REDIRECT_FILE_NAME = "redirect.txt"
 
     fun writeRedirect(listingFile: File, into: File) {
+        val path = try {
+                into.parentFile.toPath().relativize(listingFile.toPath()).toString()
+            } catch(ex: IllegalArgumentException) {
+                listingFile.canonicalPath
+            }
         PrintWriter(into).use {
             it.println(REDIRECT_MARKER)
-            it.println("${REDIRECT_PROPERTY_NAME}=${listingFile.relativeTo(into.parentFile).path.replace("\\", "/")}")
+            it.println("${REDIRECT_PROPERTY_NAME}=${path.replace("\\", "/")}")
         }
     }
 
@@ -50,11 +55,11 @@ object ListingFileRedirect {
             val fileLocator = Properties().also {
                 it.load(StringReader(fileContent))
             }
-            redirectFile.parentFile.resolve(
-                fileLocator.getProperty(
-                    REDIRECT_PROPERTY_NAME
-                )
-            )
+            val file = File(fileLocator.getProperty(REDIRECT_PROPERTY_NAME))
+            if(!file.isAbsolute())
+                redirectFile.parentFile.resolve(file)
+            else
+                file
         } else null
     }
 
