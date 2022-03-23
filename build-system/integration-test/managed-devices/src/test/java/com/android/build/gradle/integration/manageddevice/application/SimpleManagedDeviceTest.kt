@@ -76,5 +76,16 @@ class SimpleManagedDeviceTest {
         assertThat(File(reportDir, "com.example.android.kotlin.html")).exists()
         assertThat(
             File(reportDir, "com.example.android.kotlin.ExampleInstrumentedTest.html")).exists()
+
+        val mergedTestReportDir = FileUtils.join(
+            project.getSubproject("app").buildDir,
+            "reports",
+            "androidTests",
+            "managedDevice",
+            "allDevices")
+        assertThat(File(mergedTestReportDir, "index.html")).exists()
+        assertThat(File(mergedTestReportDir, "com.example.android.kotlin.html")).exists()
+        assertThat(
+            File(mergedTestReportDir, "com.example.android.kotlin.ExampleInstrumentedTest.html")).exists()
     }
 }

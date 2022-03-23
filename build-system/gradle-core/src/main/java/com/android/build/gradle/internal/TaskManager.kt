@@ -1889,7 +1889,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
                 creationConfig,
                 managedDevices.map { File(File(resultsDir, it.name), TEST_RESULT_PB_FILE_NAME) },
-                File(resultsDir, TEST_RESULT_PB_FILE_NAME)
+                File(resultsDir, TEST_RESULT_PB_FILE_NAME),
+                reportDir,
             )
         )
         for (managedDevice in managedDevices) {

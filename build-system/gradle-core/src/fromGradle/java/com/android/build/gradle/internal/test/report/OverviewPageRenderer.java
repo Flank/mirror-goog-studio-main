@@ -16,6 +16,9 @@
 package com.android.build.gradle.internal.test.report;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import kotlin.text.StringsKt;
 
 /**
@@ -110,14 +113,22 @@ class OverviewPageRenderer extends PageRenderer<AllTestResults> {
     }
 
     private void addToolFailuresTab() {
-        CharSequence stderr = getResults().getStandardError();
-        if (!StringsKt.isBlank(stderr)) {
-            addTab("Tool failures", new ErroringAction<SimpleHtmlWriter>() {
-                @Override
-                public void doExecute(SimpleHtmlWriter writer) throws IOException {
-                    codePanelRenderer.render(stderr.toString(), writer);
-                }
-            });
+        List<Map.Entry<String, StringBuilder>> standardErrorPerDevices =
+                getResults().getStandardErrorPerDevices().entrySet().stream()
+                        .filter(entry -> !StringsKt.isBlank(entry.getValue()))
+                        .collect(Collectors.toList());
+        if (!standardErrorPerDevices.isEmpty()) {
+            addTab(
+                    "Tool failures",
+                    new ErroringAction<SimpleHtmlWriter>() {
+                        @Override
+                        public void doExecute(SimpleHtmlWriter writer) throws IOException {
+                            for (Map.Entry<String, StringBuilder> entry : standardErrorPerDevices) {
+                                writer.startElement("h2").characters(entry.getKey()).endElement();
+                                codePanelRenderer.render(entry.getValue().toString(), writer);
+                            }
+                        }
+                    });
         }
     }
 }
