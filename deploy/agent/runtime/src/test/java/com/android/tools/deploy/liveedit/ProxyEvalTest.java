@@ -20,13 +20,7 @@ import static com.android.tools.deploy.liveedit.ProxyTestClasses.ModifyStatic;
 import static com.android.tools.deploy.liveedit.ProxyTestClasses.Pythagorean;
 import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
-import com.google.common.io.ByteStreams;
-import java.io.File;
 import java.util.HashMap;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,14 +35,24 @@ public class ProxyEvalTest {
     @BeforeClass
     public static void before() throws Exception {
         newClassBytes = new HashMap<>();
-        JarFile jar = new JarFile(new File(System.getProperty("proxy.new.classes")));
-        List<JarEntry> files =
-                jar.stream()
-                        .filter(entry -> entry.getName().endsWith(".class"))
-                        .collect(Collectors.toList());
-        for (JarEntry entry : files) {
-            newClassBytes.put(entry.getName(), ByteStreams.toByteArray(jar.getInputStream(entry)));
-        }
+        newClassBytes.put(
+                "com/android/tools/deploy/liveedit/ProxyTestClasses$Pythagorean",
+                buildClass(ProxyTestClasses2.Pythagorean.class));
+        newClassBytes.put(
+                "com/android/tools/deploy/liveedit/ProxyTestClasses$Driver",
+                buildClass(ProxyTestClasses2.Driver.class));
+        newClassBytes.put(
+                "com/android/tools/deploy/liveedit/ProxyTestClasses$Function2",
+                buildClass(ProxyTestClasses2.Function2.class));
+        newClassBytes.put(
+                "com/android/tools/deploy/liveedit/ProxyTestClasses$ModifyStatic",
+                buildClass(ProxyTestClasses2.ModifyStatic.class));
+        newClassBytes.put(
+                "com/android/tools/deploy/liveedit/ProxyTestClasses$AddedMethods",
+                buildClass(ProxyTestClasses2.AddedMethods.class));
+        newClassBytes.put(
+                "com/android/tools/deploy/liveedit/ProxyTestClasses$Function3",
+                buildClass(ProxyTestClasses2.Function3.class));
     }
 
     // Test proxy instance method invocations from LE and non-LE methods.
@@ -138,6 +142,6 @@ public class ProxyEvalTest {
     }
 
     private byte[] getNewClassData(String name) throws Exception {
-        return newClassBytes.get(name + ".class");
+        return newClassBytes.get(name);
     }
 }

@@ -15,7 +15,7 @@
  */
 package com.android.tools.deploy.liveedit;
 
-public class ProxyTestClasses {
+public class ProxyTestClasses2 {
 
     public static interface Function2<A, B, R> {
         R apply(A a, B b);
