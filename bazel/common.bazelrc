@@ -137,6 +137,7 @@ build:ants --bes_keywords=android-test-storage
 build:ants --build_metadata="test_definition_name=android_studio/bazel"
 build:ants --build_metadata=generate_test_uri=fusion
 build:ants --build_metadata=run_type=critical
+build:ants --build_metadata=parallel_test_results=true
 
 ## Base config for using the remote cache.
 ## This avoids building things which were already built by CI.
