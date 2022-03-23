@@ -17,7 +17,6 @@ package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
-import com.android.tools.deploy.interpreter.UnsupportedByteCodeException;
 import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
@@ -586,16 +585,32 @@ public class MethodBodyEvaluatorTest {
     }
 
     @org.junit.Test
-    public void testIndyException() throws Exception {
-        byte[] classInput = buildClass(UsingIndy.class);
+    public void testCheckCastNull() throws Exception {
+        byte[] classInput = buildClass(CheckCast.class);
+        CheckCast check = new CheckCast();
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "checkNull", "()V");
+        ev.eval(check, CheckCast.class.getTypeName(), new Object[] {});
+    }
+
+    @org.junit.Test
+    public void testCheckCastGood() throws Exception {
+        byte[] classInput = buildClass(CheckCast.class);
+        CheckCast check = new CheckCast();
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "checkGood", "()V");
+        ev.eval(check, CheckCast.class.getTypeName(), new Object[] {});
+    }
+
+    @org.junit.Test
+    public void testCheckCastBad() throws Exception {
+        byte[] classInput = buildClass(CheckCast.class);
+        CheckCast check = new CheckCast();
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "checkBad", "()V");
         try {
-            MethodBodyEvaluator me =
-                    new MethodBodyEvaluator(classInput, "callMethodWithIndy", "()V");
-            me.evalStatic(new Object[] {});
-            Assert.fail("No exception thrown while encountering INDY opcode");
-        } catch (UnsupportedByteCodeException e) {
-            Assert.assertEquals("INDY is not supported", e.getMessage());
-            // Expected
+            ev.eval(check, CheckCast.class.getTypeName(), new Object[] {});
+            Assert.fail("CheckCast should have thrown a ClassCastException");
+        } catch (ClassCastException e) {
+            return;
         }
+        Assert.fail("ClassCastException was not caught");
     }
 }

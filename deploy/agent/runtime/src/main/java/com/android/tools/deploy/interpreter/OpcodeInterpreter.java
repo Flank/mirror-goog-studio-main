@@ -177,7 +177,6 @@ import com.android.deploy.asm.tree.TypeInsnNode;
 import com.android.deploy.asm.tree.analysis.AnalyzerException;
 import com.android.deploy.asm.tree.analysis.Interpreter;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 class OpcodeInterpreter extends Interpreter<Value> {
@@ -418,7 +417,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case CHECKCAST:
                 {
                     Type targetType = Type.getObjectType(((TypeInsnNode) insn).desc);
-                    if (Objects.equals(value, Value.NULL_VALUE)) {
+                    if (value.obj() == null) {
                         return Value.NULL_VALUE;
                     }
                     if (eval.isInstanceOf(value, targetType)) {
@@ -430,7 +429,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
                                     value.obj().getClass().getCanonicalName(),
                                     targetType.getClassName());
                     Exception e = new ClassCastException(msg);
-                    throw new LeInterpretingException(e);
+                    throw new InterpreterException(e);
                 }
             case INSTANCEOF:
                 {
