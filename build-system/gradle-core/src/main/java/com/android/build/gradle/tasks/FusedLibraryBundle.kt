@@ -77,7 +77,8 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
             task.from(
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_MANIFEST),
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES),
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS)
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_RES)
             )
         }
     }

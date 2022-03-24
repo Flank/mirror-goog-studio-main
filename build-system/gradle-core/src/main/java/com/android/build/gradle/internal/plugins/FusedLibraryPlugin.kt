@@ -31,6 +31,7 @@ import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.android.build.gradle.tasks.FusedLibraryManifestMergerTask
+import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -111,6 +112,7 @@ class FusedLibraryPlugin @Inject constructor(
             listOf(
                     FusedLibraryClassesRewriteTask.CreateAction::class.java,
                     FusedLibraryManifestMergerTask.CreationAction::class.java,
+                    FusedLibraryMergeResourcesTask.CreationAction::class.java,
                     FusedLibraryMergeClasses.CreationAction::class.java,
                     FusedLibraryBundleClasses.CreationAction::class.java,
                     FusedLibraryBundleAar.CreationAction::class.java,
