@@ -336,4 +336,31 @@ class TypographyDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun test226120471() {
+        lint().files(
+            xml(
+                "res/values/strings.xml",
+                """
+                <resources>
+                    <string name="test">The fraction is 3 / 4 !</string>
+                </resources>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/values/strings.xml:2: Warning: Use fraction character ¾ (&#190;) instead of 3/4? [TypographyFractions]
+                <string name="test">The fraction is 3 / 4 !</string>
+                                    ~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for res/values/strings.xml line 2: Replace with ¾:
+            @@ -2 +2
+            -     <string name="test">The fraction is 3 / 4 !</string>
+            +     <string name="test">The fraction is ¾ !</string>
+            """
+        )
+    }
 }
