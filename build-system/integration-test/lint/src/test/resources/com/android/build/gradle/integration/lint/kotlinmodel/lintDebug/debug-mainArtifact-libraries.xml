@@ -1,7 +1,7 @@
 <libraries>
   <library
       name="${projectDir}@@:library::debug"
-      jars="${projectDir}/library/build/.transforms/<digest>/transformed/out/jars/classes.jar"
+      jars="${projectDir}/library/build/.transforms/<digest>/transformed/out/jars/classes.jar:${projectDir}/library/build/.transforms/<digest>/transformed/out/jars/libs/R.jar"
       resolved="lintKotlin:library:unspecified"
       folder="${projectDir}/library/build/.transforms/<digest>/transformed/out"
       manifest="AndroidManifest.xml"
