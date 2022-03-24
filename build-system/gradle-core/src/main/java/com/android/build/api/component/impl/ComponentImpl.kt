@@ -107,7 +107,7 @@ import java.util.concurrent.Callable
 abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
-    final override val variantDslInfo: VariantDslInfo,
+    protected val variantDslInfo: VariantDslInfo,
     final override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,

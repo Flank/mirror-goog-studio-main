@@ -20,7 +20,6 @@ import com.android.AndroidProjectTypes
 import com.android.build.api.variant.VariantFilter
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -524,13 +523,9 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 Mockito.`when`(component.componentType).thenReturn(componentType)
                 Mockito.`when`(component.buildType).thenReturn(variant.buildType)
                 Mockito.`when`(component.productFlavors).thenReturn(variant.productFlavors)
-
-                val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
-                Mockito.`when`(component.variantDslInfo).thenReturn(variantDslInfo)
                 Mockito.`when`(component.productFlavorList).thenReturn(flavors.map {
                     com.android.build.gradle.internal.core.ProductFlavor(it)
                 })
-                Mockito.`when`(variantDslInfo.productFlavorList).thenReturn(flavors)
             }
         }
 

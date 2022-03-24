@@ -23,7 +23,6 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
@@ -78,7 +77,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
     val buildFeatures = Mockito.mock(BuildFeatureValues::class.java)
-    val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
     val splits = Mockito.mock(Splits::class.java)
     val mergedNdkConfig = Mockito.mock(MergedNdkConfig::class.java)
     val projectInfo = Mockito.mock(ProjectInfo::class.java)
@@ -126,12 +124,9 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn("debug").`when`(variantImpl).name
     Mockito.doReturn(buildFeatures).`when`(variantImpl).buildFeatures
     Mockito.doReturn(false).`when`(buildFeatures).prefab
-    Mockito.doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
     Mockito.doReturn(minSdkVersion).`when`(variantImpl).minSdkVersion
     Mockito.doReturn(true).`when`(variantImpl).debuggable
-    Mockito.doReturn(externalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
     Mockito.doReturn(externalNativeCmakeOptions).`when`(externalNativeBuildOptions).externalNativeCmakeOptions
-    Mockito.doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig
     Mockito.doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters
     Mockito.doReturn(listOf<String>()).`when`(externalNativeCmakeOptions).arguments
     Mockito.doReturn(listOf<String>()).`when`(externalNativeCmakeOptions).cFlags

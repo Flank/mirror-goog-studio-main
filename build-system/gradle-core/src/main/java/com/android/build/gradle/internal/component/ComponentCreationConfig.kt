@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.ProductFlavor
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -114,7 +113,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     val buildFeatures: BuildFeatureValues
     val variantScope: VariantScope
-    val variantDslInfo: VariantDslInfo
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
     val sources: SourcesImpl

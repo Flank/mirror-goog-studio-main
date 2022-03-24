@@ -28,7 +28,6 @@ import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -66,7 +65,6 @@ class CompatibleScreensManifestTest {
     @get:Rule var temporaryFolder = TemporaryFolder()
 
     @Mock internal lateinit var scope: VariantScope
-    @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
     @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer
@@ -101,7 +99,6 @@ class CompatibleScreensManifestTest {
         MockitoAnnotations.initMocks(this)
         `when`(appVariant.name).thenReturn("fullVariantName")
         `when`(appVariant.baseName).thenReturn("baseName")
-        `when`(appVariant.variantDslInfo).thenReturn(variantDslInfo)
         `when`(appVariant.artifacts).thenReturn(artifacts)
         `when`(appVariant.taskContainer).thenReturn(taskContainer)
         `when`(appVariant.variantScope).thenReturn(scope)
@@ -113,8 +110,8 @@ class CompatibleScreensManifestTest {
 
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
-        `when`(variantDslInfo.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
-        `when`(variantDslInfo.componentIdentity).thenReturn(
+        `when`(appVariant.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
+        `when`(appVariant.componentIdentity).thenReturn(
             ComponentIdentityImpl(
                 "fullVariantName",
                 "flavorName",
