@@ -17,6 +17,7 @@ package com.android.fakeadbserver.shellv2commandhandlers
 
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
+import com.android.fakeadbserver.ShellV2Protocol
 import com.android.fakeadbserver.shellcommandhandlers.ShellHandler
 import java.io.ByteArrayOutputStream
 import java.lang.Integer.min

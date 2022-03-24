@@ -15,55 +15,30 @@
  */
 package com.android.fakeadbserver.devicecommandhandlers
 
+import com.android.fakeadbserver.AbbManager
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
-import com.android.fakeadbserver.shellv2commandhandlers.ShellV2Protocol
-import java.io.IOException
+import com.android.fakeadbserver.ShellProtocolServiceOutput
 import java.net.Socket
 
 class AbbCommandHandler : DeviceCommandHandler(COMMAND) {
-  companion object {
-    const val COMMAND = "abb"
-    const val SEPARATOR = "\u0000"
-  }
+    companion object {
 
-  override fun invoke(
-      fakeAdbServer: FakeAdbServer,
-      socket: Socket,
-      device: DeviceState,
-      args: String
-  ) {
-    try {
-        val protocol = ShellV2Protocol(socket)
-        protocol.writeOkay()
-
-        val response: String = when {
-            args.startsWith("package${SEPARATOR}install-create") -> installMultiple()
-            args.startsWith("package${SEPARATOR}install-commit") -> installCommit()
-            else -> ""
-        }
-
-      protocol.writeStdout(response.toByteArray())
-      protocol.writeExitCode(0)
-    } catch(ignored: IOException) {
+        const val COMMAND = "abb"
+        const val SEPARATOR = "\u0000"
     }
-  }
 
-  /**
-   * Handler for commands that look like:
-   *
-   *    adb abb package install-multiple -r -t -S 1234
-   */
-  private fun installMultiple(): String {
-    return "Success: created install session [1234]"
-  }
+    override fun invoke(
+        fakeAdbServer: FakeAdbServer,
+        socket: Socket,
+        device: DeviceState,
+        args: String
+    ) {
+        // Acknowledge "abb_exec" is supported
+        writeOkay(socket.getOutputStream())
 
-  /**
-   * handler for commands that look like:
-   *
-   *    adb abb package install-commit XXXXX
-   */
-  private fun installCommit(): String {
-    return "Success\n"
-  }
+        // Wrap stdin/stdout and execute abb command
+        val serviceOutput = ShellProtocolServiceOutput(socket)
+        AbbManager().processCommand(args, serviceOutput)
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.fakeadbserver.shellv2commandhandlers
+package com.android.fakeadbserver
 
 import com.google.common.base.Charsets
 import java.io.EOFException
@@ -25,7 +25,7 @@ import java.nio.ByteOrder
 
 private const val HEADER_SIZE = 5
 
-class ShellV2Protocol(socket: Socket) {
+class ShellV2Protocol(private val socket: Socket) {
 
     private val outputStream = socket.getOutputStream()
     private val inputStream = socket.getInputStream()
@@ -59,14 +59,23 @@ class ShellV2Protocol(socket: Socket) {
         writePacket(packet)
     }
 
+    fun writeStdout(text: String) {
+        writeStdout(text.toByteArray(Charsets.UTF_8))
+    }
+
     fun writeStderr(bytes: ByteArray) {
         val packet = Packet(PacketKind.STDERR, bytes)
         writePacket(packet)
     }
 
+    fun writeStderr(text: String) {
+        writeStderr(text.toByteArray(Charsets.UTF_8))
+    }
+
     fun writeExitCode(exitCode: Int) {
         val packet = Packet(PacketKind.EXIT_CODE, byteArrayOf(exitCode.toByte()))
         writePacket(packet)
+        socket.shutdownOrderly()
     }
 
     class Packet(val kind: PacketKind, val bytes: ByteArray)
@@ -110,4 +119,20 @@ class ShellV2Protocol(socket: Socket) {
         }
         return buffer
     }
+}
+
+private fun Socket.shutdownOrderly() {
+    shutdownOutput()
+
+    // TODO: See b/228517909, we read input stream until EOF is reached
+    // to ensure the all the data sent to the socket is received by the other side
+    // of the socket.
+    val bytes = ByteArray(16)
+    val inputStream = getInputStream()
+    while (inputStream.read(bytes, 0, bytes.size) >= 0) {
+        // Keep reading
+    }
+
+    // Close the socket
+    close()
 }

@@ -13,11 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.fakeadbserver;
+package com.android.fakeadbserver
 
-public class PackageManager {
-    public static final String BAD_FLAG = "-BAD_FLAG";
-    public static final String BAD_SESSION = "FAIL_ME_SESSION";
+class AbbManager {
 
-    // TODO: Add all package management app (create,write,commit,abandon) and list here.
+    fun processCommand(args: String, output: ServiceOutput) {
+        val parameters = args.split(("\u0000"))
+        val service = parameters[0]
+
+        if (service == "package") {
+            PackageManager().processPackageCommand(
+                parameters.slice(1 until parameters.size),
+                output
+            )
+            return
+        }
+
+        output.writeStderr("Error: Service '$service' is not supported")
+        output.writeExitCode(5)
+    }
 }

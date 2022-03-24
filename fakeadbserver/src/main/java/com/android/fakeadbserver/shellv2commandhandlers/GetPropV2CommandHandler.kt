@@ -17,6 +17,7 @@ package com.android.fakeadbserver.shellv2commandhandlers
 
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
+import com.android.fakeadbserver.ShellV2Protocol
 import com.google.common.base.Charsets
 
 /**
