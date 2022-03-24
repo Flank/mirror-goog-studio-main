@@ -25,8 +25,6 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.ExternalNdkBuildImpl
-import com.android.build.api.variant.HasAndroidTest
-import com.android.build.api.variant.HasTestFixtures
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
@@ -240,17 +238,25 @@ abstract class VariantImpl(
     override val nestedComponents: List<Component>
         get() = listOfNotNull(
             unitTest,
-            if (this is HasAndroidTest) {
-                androidTest
-            } else {
-                null
-            },
-            if (this is HasTestFixtures) {
-                testFixtures
-            } else {
-                null
-            }
+            (this as? HasAndroidTest)?.androidTest,
+            (this as? HasTestFixtures)?.testFixtures
         )
+
+    override fun nestedComponents(action: (Component) -> Unit) {
+        nestedComponents.forEach { action.invoke(it) }
+    }
+
+    override val allComponents: List<Component>
+        get() = listOfNotNull(
+            this,
+            unitTest,
+            (this as? HasAndroidTest)?.androidTest,
+            (this as? HasTestFixtures)?.testFixtures
+        )
+
+    override fun allComponents(action: (Component) -> Unit) {
+        allComponents.forEach { action.invoke(it) }
+    }
 
     override val ignoredLibraryKeepRules: Provider<Set<String>> =
             internalServices.setPropertyOf(

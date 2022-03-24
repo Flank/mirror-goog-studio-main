@@ -134,5 +134,68 @@ interface Variant : Component, HasAndroidResources {
      *  ```
      */
     @get:Incubating
-    val nestedComponents: List<com.android.build.api.variant.Component>
+    val nestedComponents: List<Component>
+
+    /**
+     * Performs the given [action] on this variant's [nestedComponents]
+     *
+     * Example:
+     *
+     * ```kotlin
+     *  androidComponents.onVariants(selector().withName("debug")) {
+     *      // performs the given action on the unitTests, androidTest, and testFixtures of the
+     *      // debug variant (if enabled).
+     *      nestedComponents { component ->
+     *          component.transformClassesWith(NestedComponentsClassVisitorFactory::class.java,
+     *                                         InstrumentationScope.Project) {}
+     *      }
+     *  }
+     *  ```
+     */
+    @Incubating
+    fun nestedComponents(action: (Component) -> Unit)
+
+    /**
+     * List containing this variant and all of its [nestedComponents]
+     *
+     * Example:
+     *
+     * ```kotlin
+     *  androidComponents.onVariants(selector().withName("debug")) {
+     *      // allComponents will contain the debug variant along with its unitTests, androidTests,
+     *      // and testFixtures (if enabled).
+     *      allComponents.forEach { component ->
+     *          component.runtimeConfiguration
+     *              .resolutionStrategy
+     *              .dependencySubstitution {
+     *                  substitute(project(":foo")).using(project(":bar"))
+     *              }
+     *      }
+     *  }
+     *  ```
+     */
+    @get:Incubating
+    val allComponents: List<Component>
+
+    /**
+     * Performs the given [action] on each [Component] in [allComponents]
+     *
+     * Example:
+     *
+     * ```kotlin
+     *  androidComponents.onVariants(selector().withName("debug")) {
+     *      // performs the specified dependencySubstitution on the runtimeConfiguration of the
+     *      // debug variant along with its unitTests, androidTests, and testFixtures (if enabled).
+     *      allComponents { component ->
+     *          component.runtimeConfiguration
+     *              .resolutionStrategy
+     *              .dependencySubstitution {
+     *                  substitute(project(":foo")).using(project(":bar"))
+     *              }
+     *      }
+     *  }
+     *  ```
+     */
+    @Incubating
+    fun allComponents(action: (Component) -> Unit)
 }

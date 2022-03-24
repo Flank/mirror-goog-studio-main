@@ -41,7 +41,7 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
                         }
                         """.trimIndent()
             }
-            addModule(":lib2") {
+            addModule(":lib1Sub") {
                 buildFile =
                     // language=kotlin
                     """
@@ -51,7 +51,63 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
                         }
 
                         android {
+                            ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.lib1Sub")}
+                        }
+                        """.trimIndent()
+            }
+            addModule(":testLib") {
+                buildFile =
+                        // language=kotlin
+                    """
+                        plugins {
+                                id("com.android.library")
+                                kotlin("android")
+                        }
+
+                        android {
+                            ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.testLib")}
+                        }
+                        """.trimIndent()
+            }
+            addModule(":testLibSub") {
+                buildFile =
+                        // language=kotlin
+                    """
+                        plugins {
+                                id("com.android.library")
+                                kotlin("android")
+                        }
+
+                        android {
+                            ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.testLibSub")}
+                        }
+                        """.trimIndent()
+            }
+            addModule(":lib2") {
+                buildFile =
+                        // language=kotlin
+                    """
+                        plugins {
+                                id("com.android.library")
+                                kotlin("android")
+                        }
+
+                        android {
                             ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.lib2")}
+                        }
+                        """.trimIndent()
+            }
+            addModule(":lib2Sub") {
+                buildFile =
+                        // language=kotlin
+                    """
+                        plugins {
+                                id("com.android.library")
+                                kotlin("android")
+                        }
+
+                        android {
+                            ${testingElements.addCommonAndroidBuildLogic("com.android.build.example.lib2Sub")}
                         }
                         """.trimIndent()
             }
@@ -70,36 +126,81 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
 
                         androidComponents {
                             onVariants(selector().withBuildType("release")) { variant ->
-                                // configure compile and runtime configurations with a single call.
-                                variant.configurations { configuration ->
-                                    configuration.resolutionStrategy.dependencySubstitution {
-                                        substitute(project(":lib1")).using(project(":lib2"))
+                                // allComponents() performs the action on the release variant and
+                                // all of its nested components.
+                                variant.allComponents { component ->
+                                    // configure compile and runtime configurations with a single
+                                    // call.
+                                    component.configurations { configuration ->
+                                        configuration.resolutionStrategy.dependencySubstitution {
+                                            substitute(project(":lib1")).using(project(":lib1Sub"))
+                                        }
                                     }
                                 }
-                                // must configure annotation processor configuration separately, if
-                                // necessary.
-                                variant.annotationProcessorConfiguration.resolutionStrategy.dependencySubstitution {
-                                    substitute(project(":lib1")).using(project(":lib2"))
+
+                                // nestedComponents() performs the action on the release variant's
+                                // nested components, but not on the release variant itself
+                                variant.nestedComponents { component ->
+                                    // configure compile and runtime configurations with a single
+                                    // call.
+                                    component.configurations { configuration ->
+                                        configuration.resolutionStrategy.dependencySubstitution {
+                                            substitute(project(":testLib")).using(project(":testLibSub"))
+                                        }
+                                        configuration.resolutionStrategy.dependencySubstitution {
+                                            substitute(project(":lib2")).using(project(":lib2Sub"))
+                                        }
+                                    }
                                 }
                             }
                         }
 
                         dependencies {
-                            api(project(":lib1"))
+                            implementation(project(":lib1"))
+                            implementation(project(":lib2"))
+                            testImplementation(project(":lib1"))
+                            testImplementation(project(":lib2"))
+                            testImplementation(project(":testLib"))
+                            androidTestImplementation(project(":lib1"))
+                            androidTestImplementation(project(":lib2"))
+                            androidTestImplementation(project(":testLib"))
                         }
                         """.trimIndent()
                 testingElements.addManifest(this)
             }
             tasksToInvoke.clear()
-            tasksToInvoke.add(":app:assemble")
+            tasksToInvoke.addAll(
+                listOf(
+                    ":app:assemble",
+                    ":app:testDebugUnitTest",
+                    ":app:testReleaseUnitTest",
+                    ":app:assembleAndroidTest"
+                )
+            )
         }
         check {
             assertNotNull(this)
             assertThat(output).contains("BUILD SUCCESSFUL")
+
+            // We expect compileDebugKotlin tasks to run for the libraries which are the original
+            // app dependencies because we don't do any dependency substitution for the app's debug
+            // variant
             assertThat(task(":lib1:compileDebugKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-            assertThat(task(":lib2:compileReleaseKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(task(":lib1Sub:compileDebugKotlin")).isNull()
+            assertThat(task(":testLib:compileDebugKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(task(":testLibSub:compileDebugKotlin")).isNull()
+            assertThat(task(":lib2:compileDebugKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(task(":lib2Sub:compileDebugKotlin")).isNull()
+
+            // We expect compileReleaseKotlin tasks to run for the substitute libraries. We also
+            // expect it to run for lib2 because lib2 was substituted with lib2Sub only for the
+            // nested components, not the app's release variant.
             assertThat(task(":lib1:compileReleaseKotlin")).isNull()
-            assertThat(task(":lib2:compileDebugKotlin")).isNull()
+            assertThat(task(":lib1Sub:compileReleaseKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(task(":testLib:compileReleaseKotlin")).isNull()
+            assertThat(task(":testLibSub:compileReleaseKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(task(":lib2:compileReleaseKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(task(":lib2Sub:compileReleaseKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         }
     }
 }
