@@ -80,7 +80,7 @@ class SigningPublishedArtifactsTest {
                     signing.password=Testing123
                     signing.secretKeyRingFile=./../secring.gpg
                 """.trimIndent())
-        }
+        } //https://github.com/gradle/gradle/issues/20275
     }.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
 
     @Before

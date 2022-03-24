@@ -292,7 +292,8 @@ public class SigningTest {
 
     @Test
     public void signingReportTask() throws Exception {
-        // SigningReportTask is not compatble
+        // SigningReportTask is not compatible
+        // https://github.com/gradle/gradle/issues/19959
         project.executor()
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("signingReport");

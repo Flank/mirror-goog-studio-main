@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.dsl;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -104,11 +103,7 @@ public class DslTest {
                         + "    }\n"
                         + "}\n");
         // no need to do a full build. Let's just run the tasks.
-        // org.gradle.api.tasks.diagnostics.TaskReportTask is not compatible with configuration
-        // caching
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("tasks");
+        project.executor().run("tasks");
     }
 
     @Test

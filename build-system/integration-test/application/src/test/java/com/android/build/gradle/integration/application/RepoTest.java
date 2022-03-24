@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
@@ -39,16 +38,14 @@ public class RepoTest {
             GradleTestProject.builder()
                     .withName("app")
                     .fromTestProject("repo/app")
-                    // maven-publish is incompatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    // Enable config caching because maven-publish is partially compatible with
+                    // config caching https://github.com/gradle/gradle/issues/13468
                     .create();
 
     @ClassRule
     public static GradleTestProject baseLibrary =
             GradleTestProject.builder()
                     .withName("baseLibrary")
-                    // maven-publish is incompatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("repo/baseLibrary")
                     .create();
 
@@ -56,8 +53,6 @@ public class RepoTest {
     public static GradleTestProject library =
             GradleTestProject.builder()
                     .withName("library")
-                    // maven-publish is incompatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("repo/library")
                     .create();
 
@@ -66,8 +61,6 @@ public class RepoTest {
             GradleTestProject.builder()
                     .withName("util")
                     .fromTestProject("repo/util")
-                    // maven-publish is incompatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @BeforeClass
