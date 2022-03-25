@@ -33,6 +33,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.internal.logging.ConsoleRenderer
 import org.gradle.work.DisableCachingByDefault
 
 /**
@@ -73,6 +74,10 @@ abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncreme
             inputTestResultProtos.mapNotNull(File::getParentFile).filter(File::exists).toList(),
             outputTestReportHtmlDir.get().asFile
         ).generateReport()
+
+        val reportUrl = ConsoleRenderer().asClickableFileUrl(
+            File(outputTestReportHtmlDir.get().asFile, "index.html"))
+        logger.lifecycle("Test execution completed. See the report at: $reportUrl")
     }
 
     class CreationAction(
