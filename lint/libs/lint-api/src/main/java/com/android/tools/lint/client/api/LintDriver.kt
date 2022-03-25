@@ -3424,7 +3424,7 @@ class LintDriver(
         if (names?.isNotEmpty() == true) {
             message += " (but can be with ${
             formatList(
-                names.map { "`@${it.substring(it.lastIndexOf('.') + 1)}`" }.toList(),
+                names.map { "`@$it`" }.toList(),
                 sort = false,
                 useConjunction = true
             )

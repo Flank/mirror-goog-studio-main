@@ -134,7 +134,7 @@ class SuppressLintTest {
             .run()
             .expect(
                 """
-                src/test.kt:3: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
+                src/test.kt:3: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @foo.bar.MyOwnAnnotation) [LintError]
                     forbidden()
                     ~~~~~~~~~~~
                 src/test.kt:3: Warning: Some error message here [_SecureIssue]
@@ -173,10 +173,10 @@ class SuppressLintTest {
             .run()
             .expect(
                 """
-                src/Test.java:3: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
+                src/Test.java:3: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @foo.bar.MyOwnAnnotation) [LintError]
                 @SuppressLint("_SecureIssue")
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test.kt:2: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
+                src/test.kt:2: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @foo.bar.MyOwnAnnotation) [LintError]
                 @SuppressLint("_SecureIssue")
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/Test.java:2: Warning: Some error message here [_SecureIssue]
@@ -301,7 +301,7 @@ class SuppressLintTest {
             .run()
             .expect(
                 """
-                baseline.xml: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
+                baseline.xml: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @foo.bar.MyOwnAnnotation) [LintError]
                 src/test.kt:2: Warning: Some error message here [_SecureIssue]
                     forbidden()
                     ~~~~~~~~~~~
