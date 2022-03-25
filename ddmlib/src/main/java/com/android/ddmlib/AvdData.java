@@ -13,16 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib
+package com.android.ddmlib;
+
+import com.android.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  * Avd data returned from [IDevice.getAvdData].
  */
-data class AvdData(
+public class AvdData {
+
+    @Nullable
+    private final String name;
+
+    @Nullable
+    private final String path;
+
+    public AvdData(@Nullable String name, @Nullable String path) {
+        this.name = name;
+        this.path = path;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, path);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AvdData)) {
+            return false;
+        }
+        AvdData other = (AvdData)obj;
+        return Objects.equals(name, other.name) &&
+               Objects.equals(path, other.path);
+    }
+
     /**
      * The name of the AVD or null if unavailable or this is a physical device.
      */
-    val name: String?,
+    @Nullable
+    public String getName() {
+        return name;
+    }
 
     /**
      * The path of the AVD or null if unavailable or this is a physical device.
@@ -30,5 +64,8 @@ data class AvdData(
      * The path is the absolute path to the virtual device in the file system. The path is operating
      * system dependent; it will have / name separators on Linux and \ separators on Windows.
      */
-    val path: String?
-)
+    @Nullable
+    public String getPath() {
+        return path;
+    }
+}
