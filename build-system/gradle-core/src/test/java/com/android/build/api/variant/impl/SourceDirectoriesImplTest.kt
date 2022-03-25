@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.VariantServices
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask
@@ -58,6 +59,11 @@ internal class SourceDirectoriesImplTest {
             project.objects.directoryProperty()
         )
 
+        val projectInfo = Mockito.mock(ProjectInfo::class.java)
+        Mockito.`when`(variantServices.projectInfo).thenReturn(projectInfo)
+        Mockito.`when`(projectInfo.projectDirectory).thenReturn(project.layout.projectDirectory)
+        Mockito.`when`(projectInfo.buildDirectory).thenReturn(project.layout.buildDirectory)
+
         Mockito.`when`(variantServices.newListPropertyForInternalUse(DirectoryEntry::class.java))
             .thenReturn(project.objects.listProperty(DirectoryEntry::class.java))
         Mockito.`when`(variantServices.newListPropertyForInternalUse(Directory::class.java))
@@ -67,9 +73,9 @@ internal class SourceDirectoriesImplTest {
 
     @Test
     fun testGetAll() {
-        val addedSourceFromTask = temporaryFolder.newFolder("added/from/task")
+        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
-        val testTarget = createTestTarget(addedSourceFromTask, addedSrcDir)
+        val testTarget = createTestTarget(addedSrcDir)
         val directories = testTarget.all.get()
         Truth.assertThat(directories).hasSize(2)
         Truth.assertThat(directories.map { it.asFile.absolutePath }).containsExactly(
@@ -84,9 +90,9 @@ internal class SourceDirectoriesImplTest {
             project.objects.fileTree(),
             project.objects.fileTree(),
         )
-        val addedSourceFromTask = temporaryFolder.newFolder("added/from/task")
+        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
-        val testTarget = createTestTarget(addedSourceFromTask, addedSrcDir)
+        val testTarget = createTestTarget(addedSrcDir)
         val fileTrees = testTarget.getAsFileTrees().get()
         Truth.assertThat(fileTrees).hasSize(2)
         Truth.assertThat(fileTrees.map { it.dir.absolutePath }).containsExactly(
@@ -97,9 +103,9 @@ internal class SourceDirectoriesImplTest {
 
     @Test
     fun testVariantSourcesForModel() {
-        val addedSourceFromTask = temporaryFolder.newFolder("added/from/task")
+        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
-        val testTarget = createTestTarget(addedSourceFromTask, addedSrcDir)
+        val testTarget = createTestTarget(addedSrcDir)
         val fileTrees = testTarget.variantSourcesForModel { true }
         Truth.assertThat(fileTrees).hasSize(2)
         Truth.assertThat(fileTrees.map { it.absolutePath }).containsExactly(
@@ -110,9 +116,9 @@ internal class SourceDirectoriesImplTest {
 
     @Test
     fun testVariantSourcesWithFilteringForModel() {
-        val addedSourceFromTask = temporaryFolder.newFolder("added/from/task")
+        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
-        val testTarget = createTestTarget(addedSourceFromTask, addedSrcDir)
+        val testTarget = createTestTarget(addedSrcDir)
         val fileTrees = testTarget.variantSourcesForModel { entry ->
             entry.isGenerated
         }
@@ -123,14 +129,12 @@ internal class SourceDirectoriesImplTest {
     }
 
     private fun createTestTarget(
-        addedSourceFromTask: File,
         addedSrcDir: File,
         patternFilterable: PatternFilterable? = null
     ): FlatSourceDirectoriesImpl {
 
         val testTarget = FlatSourceDirectoriesImpl(
             "_for_test",
-            project.layout.projectDirectory,
             variantServices,
             patternFilterable,
         )
@@ -139,12 +143,7 @@ internal class SourceDirectoriesImplTest {
             abstract val output: DirectoryProperty
         }
 
-        val taskProvider = project.tasks.register("srcAddingTask", AddingTask::class.java) { task ->
-            task.output.set(project.objects.directoryProperty().also {
-                it.set(addedSourceFromTask)
-            })
-        }
-
+        val taskProvider = project.tasks.register("srcAddingTask", AddingTask::class.java)
         testTarget.addGeneratedSourceDirectory(taskProvider, AddingTask::output)
 
         testTarget.addStaticSourceDirectory(

@@ -29,10 +29,9 @@ import org.gradle.api.tasks.util.PatternFilterable
  */
 class AssetSourceDirectoriesImpl(
     _name: String,
-    projectDirectory: Directory,
     val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?,
-) : LayeredSourceDirectoriesImpl(_name, projectDirectory, variantServices, variantDslFilters) {
+) : LayeredSourceDirectoriesImpl(_name, variantServices, variantDslFilters) {
 
     /**
      * Returns the dynamic list of [AssetSet] based on the current list of [DirectoryEntry]

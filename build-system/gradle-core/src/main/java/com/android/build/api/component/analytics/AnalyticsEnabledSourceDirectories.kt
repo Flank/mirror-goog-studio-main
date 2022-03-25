@@ -20,9 +20,8 @@ import com.android.build.api.variant.SourceDirectories
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Task
-import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import javax.inject.Inject
 
@@ -32,7 +31,7 @@ abstract class AnalyticsEnabledSourceDirectories @Inject constructor(
     val objectFactory: ObjectFactory,
 ): SourceDirectories  {
 
-    override fun <T : Task> addGeneratedSourceDirectory(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {
+    override fun <T : Task> addGeneratedSourceDirectory(taskProvider: TaskProvider<T>, wiredWith: (T) -> DirectoryProperty) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.SOURCES_DIRECTORIES_ADD_VALUE
         delegate.addGeneratedSourceDirectory(taskProvider, wiredWith)

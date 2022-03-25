@@ -27,10 +27,9 @@ import java.io.File
 
 open class LayeredSourceDirectoriesImpl(
     _name: String,
-    projectDirectory: Directory,
     private val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?
-): SourceDirectoriesImpl(_name, projectDirectory, variantDslFilters),
+): SourceDirectoriesImpl(_name, variantServices, variantDslFilters),
     SourceDirectories.Layered {
 
     // For compatibility with the old variant API, we must allow reading the content of this list

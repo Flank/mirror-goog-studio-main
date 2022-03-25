@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.VariantServices
 import com.google.common.truth.Truth
 import org.gradle.api.Project
@@ -56,6 +57,10 @@ internal class LayeredSourceDirectoriesImplTest {
             }
         }
 
+        val projectInfo = Mockito.mock(ProjectInfo::class.java)
+        Mockito.`when`(variantServices.projectInfo).thenReturn(projectInfo)
+        Mockito.`when`(projectInfo.projectDirectory).thenReturn(project.layout.projectDirectory)
+
         Mockito.`when`(variantServices.newListPropertyForInternalUse(DirectoryEntries::class.java))
             .thenReturn(project.objects.listProperty(DirectoryEntries::class.java))
         Mockito.`when`(variantServices.newListPropertyForInternalUse(Collection::class.java))
@@ -89,7 +94,6 @@ internal class LayeredSourceDirectoriesImplTest {
 
         val testTarget = LayeredSourceDirectoriesImpl(
             "_for_test",
-            project.layout.projectDirectory,
             variantServices,
             null,
         )

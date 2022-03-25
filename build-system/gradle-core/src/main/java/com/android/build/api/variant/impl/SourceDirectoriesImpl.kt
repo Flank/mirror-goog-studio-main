@@ -17,8 +17,10 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.SourceDirectories
+import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternFilterable
@@ -27,7 +29,7 @@ import java.io.File
 
 abstract class SourceDirectoriesImpl(
     private val _name: String,
-    private val projectDirectory: Directory,
+    private val variantServices: VariantServices,
     private val variantDslFilters: PatternFilterable?
 ): SourceDirectories {
 
@@ -43,9 +45,14 @@ abstract class SourceDirectoriesImpl(
         }
     }
 
-    override fun <T : Task> addGeneratedSourceDirectory(taskProvider: TaskProvider<T>, wiredWith: (T) -> Provider<Directory>) {12
+    override fun <T : Task> addGeneratedSourceDirectory(taskProvider: TaskProvider<T>, wiredWith: (T) -> DirectoryProperty) {
         val mappedValue: Provider<Directory> = taskProvider.flatMap {
             wiredWith(it)
+        }
+        taskProvider.configure { task ->
+            wiredWith.invoke(task).set(
+                variantServices.projectInfo.buildDirectory.dir("$name/${taskProvider.name}")
+            )
         }
         addSource(
             TaskProviderBasedDirectoryEntryImpl(
@@ -59,7 +66,7 @@ abstract class SourceDirectoriesImpl(
     override fun getName(): String = _name
 
     override fun addStaticSourceDirectory(srcDir: String) {
-        val directory = projectDirectory.dir(srcDir)
+        val directory = variantServices.projectInfo.projectDirectory.dir(srcDir)
         if (!directory.asFile.exists() || !directory.asFile.isDirectory) {
             throw IllegalArgumentException("$srcDir does not point to a directory")
         }

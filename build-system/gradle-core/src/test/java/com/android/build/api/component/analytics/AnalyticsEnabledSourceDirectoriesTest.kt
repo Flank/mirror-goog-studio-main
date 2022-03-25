@@ -23,6 +23,7 @@ import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
 import org.junit.Rule
@@ -51,7 +52,7 @@ class AnalyticsEnabledSourceDirectoriesTest {
     @Test
     fun testAdd() {
         abstract class CustomTask: Task {
-            abstract val output: Property<Directory>
+            abstract val output: DirectoryProperty
         }
         @Suppress("UNCHECKED_CAST")
         val taskProvider = Mockito.mock(TaskProvider::class.java) as TaskProvider<CustomTask>

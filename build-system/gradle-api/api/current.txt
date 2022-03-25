@@ -2372,7 +2372,7 @@ package com.android.build.api.variant {
   }
 
   @org.gradle.api.Incubating public interface SourceDirectories extends org.gradle.api.Named {
-    method public <TASK extends org.gradle.api.Task> void addGeneratedSourceDirectory(org.gradle.api.tasks.TaskProvider<TASK> taskProvider, kotlin.jvm.functions.Function1<? super TASK,? extends org.gradle.api.provider.Provider<org.gradle.api.file.Directory>> wiredWith);
+    method public <TASK extends org.gradle.api.Task> void addGeneratedSourceDirectory(org.gradle.api.tasks.TaskProvider<TASK> taskProvider, kotlin.jvm.functions.Function1<? super TASK,? extends org.gradle.api.file.DirectoryProperty> wiredWith);
     method public void addStaticSourceDirectory(String srcDir);
   }
 

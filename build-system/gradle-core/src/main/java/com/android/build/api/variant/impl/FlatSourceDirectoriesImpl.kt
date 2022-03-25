@@ -28,17 +28,15 @@ import java.io.File
  * A set of source directories for a specific [SourceType]
  *
  * @param _name name of the source directories, as returned by [SourceType.name]
- * @param projectDirectory the project's directory.
  * @param variantServices the variant's [VariantServices]
  * @param variantDslFilters filters set on the variant specific source directory in the DSL, may be null if
  * the is no variant specific source directory.
  */
 class FlatSourceDirectoriesImpl(
     private val _name: String,
-    private val projectDirectory: Directory,
     private val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?
-): SourceDirectoriesImpl(_name, projectDirectory, variantDslFilters),
+): SourceDirectoriesImpl(_name, variantServices, variantDslFilters),
     SourceDirectories.Flat {
 
     // For compatibility with the old variant API, we must allow reading the content of this list

@@ -27,10 +27,9 @@ import org.gradle.api.tasks.util.PatternFilterable
 
 class ResSourceDirectoriesImpl(
     _name: String,
-    projectDirectory: Directory,
     val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?,
-) : LayeredSourceDirectoriesImpl(_name, projectDirectory, variantServices, variantDslFilters) {
+) : LayeredSourceDirectoriesImpl(_name, variantServices, variantDslFilters) {
 
 
     /**

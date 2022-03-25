@@ -71,11 +71,9 @@ class AssetsTests: VariantApiBaseTest(
 
                     val assetCreationTask =
                         project.tasks.register<AssetCreatorTask>("create${'$'}{variant.name}Asset")
-                    variant.artifacts.use(assetCreationTask)
-                            .wiredWith(
-                                AssetCreatorTask::outputDirectory
-                            )
-                            .toAppendTo(MultipleArtifact.ASSETS)
+                    variant.sources.assets?.addGeneratedSourceDirectory(
+                            assetCreationTask,
+                            AssetCreatorTask::outputDirectory)
                 }
             }
                 """.trimIndent()

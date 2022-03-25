@@ -20,6 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.Named
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
@@ -48,7 +49,7 @@ interface SourceDirectories: Named {
      */
     fun <TASK: Task> addGeneratedSourceDirectory(
         taskProvider: TaskProvider<TASK>,
-        wiredWith: (TASK) -> Provider<Directory>
+        wiredWith: (TASK) -> DirectoryProperty
     )
 
     /**

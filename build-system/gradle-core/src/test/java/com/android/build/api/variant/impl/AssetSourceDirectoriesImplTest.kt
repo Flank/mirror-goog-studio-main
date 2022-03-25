@@ -67,7 +67,6 @@ internal class AssetSourceDirectoriesImplTest {
     fun asAssetSetEmptyTest() {
         val testTarget = AssetSourceDirectoriesImpl(
             "unit_test",
-            FakeGradleDirectory(File("/path/to/nowhere")),
             variantServices,
             null
         )
@@ -93,7 +92,6 @@ internal class AssetSourceDirectoriesImplTest {
 
         val testTarget = AssetSourceDirectoriesImpl(
             "unit_test",
-            FakeGradleDirectory(File("/path/to/nowhere")),
             variantServices,
             null
         )
