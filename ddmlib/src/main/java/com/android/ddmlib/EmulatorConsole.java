@@ -28,63 +28,73 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib
+package com.android.ddmlib;
 
-import com.google.common.annotations.VisibleForTesting
-import kotlin.jvm.Throws
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.google.common.annotations.VisibleForTesting;
 
-abstract class EmulatorConsole {
-  /** Disconnect the socket channel and remove self from emulator console cache.  */
-  abstract fun close()
+import java.util.HashMap;
+import java.util.Map;
 
-  /**
-   * Sends a KILL command to the emulator.
-   */
-  abstract fun kill()
+public abstract class EmulatorConsole {
 
-  /**
-   * The AVD name. If the command failed returns the error message after "KO: " or null.
-   */
-  abstract val avdName: String?
+    private static final Map<String, EmulatorConsole> sTestConsoles = new HashMap<>();
 
-  /**
-   * The absolute path to the virtual device in the file system. The path is operating
-   * system dependent; it will have / name separators on Linux and \ separators on Windows.
-   *
-   * @throws CommandFailedException If the subcommand failed or if the emulator's version is older
-   * than 30.0.18
-   */
-  abstract val avdPath: String
-      @Throws(CommandFailedException::class) get
 
-  abstract fun startEmulatorScreenRecording(args: String?): String?
-
-  abstract fun stopScreenRecording(): String?
-
-  companion object {
-    private val sTestConsoles: MutableMap<String, EmulatorConsole> = HashMap()
+    /** Disconnect the socket channel and remove self from emulator console cache. */
+    public abstract void close();
 
     /**
-     * Register a console instance corresponding to the given device to be used during testing.
-     * You must call [.clearConsolesForTest] at the end of your test.
+     * Sends a KILL command to the emulator.
+     */
+    public abstract void kill();
+
+    /**
+     * The AVD name. If the command failed returns the error message after "KO: " or null.
+     */
+    @Nullable
+    public abstract String getAvdName();
+
+    /**
+     * The absolute path to the virtual device in the file system. The path is operating system
+     * dependent; it will have / name separators on Linux and \ separators on Windows.
+     *
+     * @throws CommandFailedException If the subcommand failed or if the emulator's version is older
+     *                                than 30.0.18
+     */
+    @NonNull
+    public abstract String getAvdPath() throws CommandFailedException;
+
+    @Nullable
+    public abstract String startEmulatorScreenRecording(@Nullable String args);
+
+    @Nullable
+    public abstract String stopScreenRecording();
+
+    /**
+     * Register a console instance corresponding to the given device to be used during testing. You
+     * must call [.clearConsolesForTest] at the end of your test.
      */
     @VisibleForTesting
-    fun registerConsoleForTest(deviceSerial: String, console: EmulatorConsole) {
-      sTestConsoles[deviceSerial] = console
+    public static void registerConsoleForTest(String deviceSerial, EmulatorConsole console) {
+        sTestConsoles.put(deviceSerial, console);
     }
 
     /**
-     * This must be called at the end of any test where
-     * [.registerConsoleForTest] is called.
+     * This must be called at the end of any test where [.registerConsoleForTest] is called.
      */
     @VisibleForTesting
-    fun clearConsolesForTest() {
-      sTestConsoles.clear()
+    public static void clearConsolesForTest() {
+        sTestConsoles.clear();
     }
 
-    @JvmStatic
-    fun getConsole(d: IDevice): EmulatorConsole? {
-      return sTestConsoles[d.serialNumber] ?: EmulatorConsoleImpl.createConsole(d)
+    public static EmulatorConsole getConsole(IDevice d) {
+        EmulatorConsole result = sTestConsoles.get(d.getSerialNumber());
+        if (result == null) {
+            result = EmulatorConsoleImpl.createConsole(d);
+        }
+        return result;
     }
 
     /**
@@ -93,9 +103,7 @@ abstract class EmulatorConsole {
      * @param serialNumber the emulator's serial number
      * @return the integer port or `null` if it could not be determined
      */
-    @JvmStatic
-    fun getEmulatorPort(serialNumber: String?): Int? {
-      return EmulatorConsoleImpl.getEmulatorPortFromSerialNumber(serialNumber)
+    public static Integer getEmulatorPort(String serialNumber) {
+        return EmulatorConsoleImpl.getEmulatorPortFromSerialNumber(serialNumber);
     }
-  }
 }

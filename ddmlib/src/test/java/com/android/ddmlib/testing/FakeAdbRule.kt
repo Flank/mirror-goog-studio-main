@@ -148,9 +148,17 @@ class FakeAdbRule : ExternalResource() {
 }
 
 class FakeEmulatorConsole(
-    override val avdName: String,
-    override val avdPath: String
+    private val _avdName: String,
+    private val _avdPath: String
 ) : EmulatorConsole() {
+
+    override fun getAvdName(): String? {
+        return _avdName
+    }
+
+    override fun getAvdPath(): String {
+        return _avdPath
+    }
 
     override fun close() {}
 
