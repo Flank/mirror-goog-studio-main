@@ -22,7 +22,7 @@ readonly script_name="$(basename "$0")"
 # Invocation ID must be lower case in Upsalite URL
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-readonly config_options="--config=local --config=rcache"
+readonly config_options="--config=local --config=rcache --config=sponge --config=ants"
 
 # The BAZEL_* variable is configured on the Mac Host.
 export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
@@ -32,6 +32,8 @@ export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
         test \
         ${config_options} \
         --invocation_id=${invocation_id} \
+        --build_metadata=ab_target=studio-mac \
+        --build_metadata=ab_build_id=${build_number} \
         --host_platform=//tools/base/bazel/platforms:macpro10.13 \
         --build_tag_filters=-no_mac \
         --build_event_binary_file="${dist_dir}/bazel-${build_number}.bes" \
@@ -58,18 +60,7 @@ if [[ -d "${dist_dir}" ]]; then
   readonly bin_dir="$("${script_dir}"/bazel info --config=release bazel-bin)"
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skia/skiaparser.zip ${dist_dir}
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${dist_dir}
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
-
-  "${script_dir}/bazel" \
-    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
-    -- \
-    -bes "${dist_dir}/bazel-${build_number}.bes" \
-    -testlogs "${dist_dir}/logs/junit"
-
-  if [[ $? -ne 0 ]]; then
-    echo "Bazel logs-collector failed!"
-    exit 1
-  fi
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
