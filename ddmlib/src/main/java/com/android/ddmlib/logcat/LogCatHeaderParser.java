@@ -13,97 +13,113 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib.logcat
+package com.android.ddmlib.logcat;
 
-import com.android.ddmlib.IDevice
-import com.android.ddmlib.Log.LogLevel
-import com.android.ddmlib.Log.LogLevel.ASSERT
-import com.android.ddmlib.Log.LogLevel.WARN
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.concurrent.TimeUnit.MILLISECONDS
-import java.util.regex.Pattern
 
-private val EPOCH = Pattern.compile("(?<epoch>(?<epochSec>\\d+)\\.(?<epochMilli>\\d\\d\\d))")
+import com.android.annotations.Nullable;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.Log;
 
-private val DATE = Pattern.compile("(?<month>\\d\\d)-(?<day>\\d\\d)")
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-private val TIME =
-    Pattern.compile("(?<hour>\\d\\d):(?<min>\\d\\d):(?<sec>\\d\\d)\\.(?<milli>\\d\\d\\d)")
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-private val PID = Pattern.compile("(?<pid>\\d+)")
+public class LogCatHeaderParser {
 
-private val TID = Pattern.compile("(?<tid>\\w+)")
+    private static final Pattern EPOCH = Pattern.compile(
+            "(?<epoch>(?<epochSec>\\d+)\\.(?<epochMilli>\\d\\d\\d))");
 
-private val PRIORITY = Pattern.compile("(?<priority>[VDIWEAF])")
+    private static final Pattern DATE = Pattern.compile("(?<month>\\d\\d)-(?<day>\\d\\d)");
 
-private val TAG = Pattern.compile("(?<tag>.*?)")
+    private static final Pattern TIME =
+            Pattern.compile("(?<hour>\\d\\d):(?<min>\\d\\d):(?<sec>\\d\\d)\\.(?<milli>\\d\\d\\d)");
 
-private const val UNKNOWN_APP_NAME = "?"
+    private static final Pattern PID = Pattern.compile("(?<pid>\\d+)");
 
-/**
- * Pattern for "logcat -v long" ([ MM-DD HH:MM:SS.mmm PID:TID LEVEL/TAG ]) or "logcat -v long,epoch"
- * header ([ SSSSSSSSSS.mmm PID:TID LEVEL/TAG ]). Example:
- *
- * `[ 08-18 16:39:11.760  2977: 2988 D/PhoneInterfaceManager ]`
- *
- * `[ 1619728495.554  2977: 2988 D/PhoneInterfaceManager ]`
- */
-private val HEADER = Pattern.compile(
-    "^\\[ +(($DATE +$TIME)|($EPOCH)) +$PID: *$TID +$PRIORITY/$TAG +]$"
-)
+    private static final Pattern TID = Pattern.compile("(?<tid>\\w+)");
 
-class LogCatHeaderParser(
-    private val defaultYear: Int = ZonedDateTime.now().year,
-    private val defaultZoneId: ZoneId = ZoneId.systemDefault(),
-) {
+    private static final Pattern PRIORITY = Pattern.compile("(?<priority>[VDIWEAF])");
+
+    private static final Pattern TAG = Pattern.compile("(?<tag>.*?)");
+
+    private static final String UNKNOWN_APP_NAME = "?";
 
     /**
-     * Parse a header line into a [LogCatHeader] object, or `null` if the input line
-     * doesn't match the expected format.
+     * Pattern for "logcat -v long" ([ MM-DD HH:MM:SS.mmm PID:TID LEVEL/TAG ]) or "logcat -v
+     * long,epoch" header ([ SSSSSSSSSS.mmm PID:TID LEVEL/TAG ]). Example:
      *
-     * @param line   raw text that should be the header line from `logcat -v long` or
-     * `logcat -v long,epoch`.
-     * @param device device from which these log messages have been received
-     * @return a [LogCatHeader] which represents the passed in text or null if text is not a
-     * header.
+     * `[ 08-18 16:39:11.760  2977: 2988 D/PhoneInterfaceManager ]`
+     *
+     * `[ 1619728495.554  2977: 2988 D/PhoneInterfaceManager ]`
      */
-    fun parseHeader(line: String, device: IDevice?): LogCatHeader? {
-        val m = HEADER.matcher(line)
+    private static final Pattern HEADER = Pattern.compile(
+            String.format(
+                    "^\\[ +((%s +%s)|(%s)) +%s: *%s +%s/%s +]$",
+                    DATE, TIME, EPOCH, PID, TID, PRIORITY, TAG));
+
+    private final int defaultYear;
+
+    private final ZoneId defaultZoneId;
+
+    public LogCatHeaderParser() {
+        this(ZonedDateTime.now().getYear(), ZoneId.systemDefault());
+    }
+
+    public LogCatHeaderParser(int year, ZoneId id) {
+        this.defaultYear = year;
+        this.defaultZoneId = id;
+    }
+
+    /**
+     * Parse a header line into a [LogCatHeader] object, or `null` if the input line doesn't match
+     * the expected format.
+     *
+     * @param line   raw text that should be the header line from `logcat -v long` or `logcat -v
+     *               long,epoch`.
+     * @param device device from which these log messages have been received
+     * @return a [LogCatHeader] which represents the passed in text or null if text is not a header.
+     */
+    @Nullable
+    public LogCatHeader parseHeader(String line, @Nullable IDevice device) {
+        Matcher m = HEADER.matcher(line);
         if (!m.matches()) {
-            return null
+            return null;
         }
-        val epoch: String? = m.group("epoch")
-        val timestamp: Instant
+        String epoch = m.group("epoch");
+        Instant timestamp;
         if (epoch != null) {
             timestamp = Instant.ofEpochSecond(
-                parseEpochSeconds(m.group("epochSec")),
-                MILLISECONDS.toNanos(m.group("epochMilli").toLong())
-            )
-        } else {
-            timestamp = Instant.from(
-                ZonedDateTime.of(
-                    defaultYear,
-                    m.group("month").toInt(),
-                    m.group("day").toInt(),
-                    m.group("hour").toInt(),
-                    m.group("min").toInt(),
-                    m.group("sec").toInt(),
-                    MILLISECONDS.toNanos(m.group("milli").toLong()).toInt(),
-                    defaultZoneId
-                )
-            )
+                    parseEpochSeconds(m.group("epochSec")),
+                    MILLISECONDS.toNanos(Long.parseLong(m.group("epochMilli")))
+            );
         }
-        val pid = parsePid(m.group("pid"))
-        return LogCatHeader(
-            parsePriority(m.group("priority")),
-            pid,
-            parseThreadId(m.group("tid")),
-            getPackageName(device, pid),
-            m.group("tag"),
-            timestamp
-        )
+        else {
+            timestamp = Instant.from(
+                    ZonedDateTime.of(
+                            defaultYear,
+                            Integer.parseInt(m.group("month")),
+                            Integer.parseInt(m.group("day")),
+                            Integer.parseInt(m.group("hour")),
+                            Integer.parseInt(m.group("min")),
+                            Integer.parseInt(m.group("sec")),
+                            (int)MILLISECONDS.toNanos(Long.parseLong(m.group("milli"))),
+                            defaultZoneId
+                    )
+            );
+        }
+        int pid = parsePid(m.group("pid"));
+        return new LogCatHeader(
+                parsePriority(m.group("priority")),
+                pid,
+                parseThreadId(m.group("tid")),
+                getPackageName(device, pid),
+                m.group("tag"),
+                timestamp
+        );
     }
 
     /**
@@ -113,52 +129,58 @@ class LogCatHeaderParser(
      * `[          1517949446.554  2848: 2848 I/MainActivity ]`
      *
      * @return the log level corresponding to the priority. If the argument is not one of the
-     *     expected letters returns LogLevel.WARN.
+     * expected letters returns LogLevel.WARN.
      */
-    private fun parsePriority(string: String): LogLevel {
-        val priority = LogLevel.getByLetterString(string)
+    private Log.LogLevel parsePriority(String string) {
+        Log.LogLevel priority = Log.LogLevel.getByLetterString(string);
         if (priority != null) {
-            return priority
+            return priority;
         }
-        if (string != "F") {
-            return WARN
+        if (!string.equals("F")) {
+            return Log.LogLevel.WARN;
         }
-        return ASSERT
+        return Log.LogLevel.ASSERT;
     }
 
     // Some versions of logcat return hexadecimal thread IDs. Propagate them as decimal.
-    private fun parseThreadId(string: String): Int {
-        return try {
-            Integer.decode(string)
-        } catch (exception: NumberFormatException) {
-            -1
+    private int parseThreadId(String string) {
+        try {
+            return Integer.decode(string);
+        }
+        catch (NumberFormatException exception) {
+            return -1;
         }
     }
 
     // Pid has a pattern `\\d+` and might throw if there are too many digits
-    private fun parsePid(string: String): Int {
-        return try {
-            string.toInt()
-        } catch (exception: NumberFormatException) {
-            -1
+    private int parsePid(String string) {
+        try {
+            return Integer.parseInt(string);
+        }
+        catch (NumberFormatException exception) {
+            return -1;
         }
     }
 
     // Epoch seconds has a pattern of `\\d+` and might throw if there are too many digits
-    private fun parseEpochSeconds(string: String): Long {
-        return try {
-            string.toLong()
-        } catch (exception: NumberFormatException) {
-            0
+    private long parseEpochSeconds(String string) {
+        try {
+            return Long.parseLong(string);
+        }
+        catch (NumberFormatException exception) {
+            return 0;
         }
     }
 
-    private fun getPackageName(device: IDevice?, pid: Int): String {
-        val clientName = device?.getClientName(pid)
-        return if (clientName.isNullOrEmpty()) {
-            UNKNOWN_APP_NAME
-        } else {
-            clientName
+    private String getPackageName(IDevice device, int pid) {
+        if (device == null) {
+            return UNKNOWN_APP_NAME;
         }
+
+        String clientName = device.getClientName(pid);
+        if (clientName == null || clientName.isEmpty()) {
+            return UNKNOWN_APP_NAME;
+        }
+        return clientName;
     }
 }

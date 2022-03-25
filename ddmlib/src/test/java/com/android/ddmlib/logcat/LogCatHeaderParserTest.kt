@@ -18,7 +18,6 @@ package com.android.ddmlib.logcat
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.Log.LogLevel.INFO
 import com.google.common.truth.Truth.assertThat
-import junit.framework.TestCase
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

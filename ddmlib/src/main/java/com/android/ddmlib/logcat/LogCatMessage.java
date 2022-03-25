@@ -13,11 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib.logcat
+package com.android.ddmlib.logcat;
 
-data class LogCatMessage(val header: LogCatHeader, val message: String) {
+import com.android.annotations.NonNull;
 
-    override fun toString(): String {
-        return "$header: $message"
+import java.util.Objects;
+
+public class LogCatMessage {
+
+    @NonNull
+    private final LogCatHeader header;
+
+    @NonNull
+    private final String message;
+
+    public LogCatMessage(@NonNull LogCatHeader header, @NonNull String message) {
+        this.header = header;
+        this.message = message;
+    }
+
+    @NonNull
+    public LogCatHeader getHeader() {
+        return header;
+    }
+
+    @NonNull
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s: %s", header, message);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(header, message);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof LogCatMessage)) {
+            return false;
+        }
+        LogCatMessage other = (LogCatMessage)obj;
+        return Objects.equals(header, other.header) &&
+               Objects.equals(message, other.message);
     }
 }
