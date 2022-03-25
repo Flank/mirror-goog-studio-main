@@ -816,6 +816,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Logcat V2" tool window
+coverage_report(
+    name = "logcat",
+    srcpath_include = [
+        "tools/adt/idea/logcat/src/com/android/tools/idea/logcat",
+    ],
+    tests = [
+        "//tools/adt/idea/logcat:intellij.android.logcat.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -839,6 +850,7 @@ combine_report_definitions(
         "fullscreen-heapdump-ui",
         "gradle-managed-virtual-device",
         "layouteditor",
+        "logcat",
         "memory-recording-ui",
         "ml-model-binding",
         "modularize",
