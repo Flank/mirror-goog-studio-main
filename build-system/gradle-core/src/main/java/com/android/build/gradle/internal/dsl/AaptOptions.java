@@ -21,12 +21,14 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.options.BooleanOption;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
+import org.jetbrains.annotations.NotNull;
 
 /** DSL object for configuring aapt options. */
 public abstract class AaptOptions implements com.android.build.api.dsl.AaptOptions, com.android.build.api.dsl.AndroidResources {
@@ -53,11 +55,31 @@ public abstract class AaptOptions implements com.android.build.api.dsl.AaptOptio
     }
 
     @Override
-    public abstract void setIgnoreAssetsPattern(@Nullable String ignoreAssetsPattern);
+    public void setIgnoreAssetsPattern(@Nullable String ignoreAssetsPattern) {
+        Collection<String> ignoreAssetsPatterns = getIgnoreAssetsPatterns();
+        ignoreAssetsPatterns.clear();
+        if (ignoreAssetsPattern != null) {
+            ignoreAssetsPatterns.addAll(Splitter.on(':').splitToList(ignoreAssetsPattern));
+        }
+    }
 
     @Override
     @Nullable
-    public abstract String getIgnoreAssetsPattern();
+    public String getIgnoreAssetsPattern() {
+        Collection<String> ignoreAssetsPatterns = getIgnoreAssetsPatterns();
+        if (ignoreAssetsPatterns.isEmpty()) {
+            return null;
+        }
+        return Joiner.on(':').join(ignoreAssetsPatterns);
+    }
+
+    protected abstract List<String> getInternalIgnoreAssetsPatterns();
+
+    @NotNull
+    @Override
+    public Collection<String> getIgnoreAssetsPatterns() {
+        return getInternalIgnoreAssetsPatterns();
+    }
 
     public void setNoCompress(String noCompress) {
         setNoCompress(Collections.singletonList(noCompress));

@@ -273,7 +273,10 @@ internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavo
 
 internal class AndroidResourcesImpl : AndroidResources {
 
-    override var ignoreAssetsPattern: String? = null
+    override var ignoreAssetsPattern: String?
+        get() =     throw RuntimeException("Not yet implemented")
+        set(value) {    throw RuntimeException("Not yet implemented") }
+    override val ignoreAssetsPatterns: MutableCollection<String> = mutableListOf()
     override val noCompress: MutableCollection<String> = mutableListOf()
 
     override fun noCompress(noCompress: String) {
