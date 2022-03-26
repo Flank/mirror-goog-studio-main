@@ -43,6 +43,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
+const val KSP_PLUGIN_ID = "com.google.devtools.ksp"
 private val KOTLIN_MPP_PLUGIN_IDS = listOf("kotlin-multiplatform", "org.jetbrains.kotlin.multiplatform")
 
 private val irBackendByDefault = KotlinVersion(1, 5)
@@ -114,6 +115,9 @@ fun isKotlinAndroidPluginApplied(project: Project) =
 
 fun isKotlinKaptPluginApplied(project: Project) =
         project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
+
+fun isKspPluginApplied(project: Project) =
+    project.pluginManager.hasPlugin(KSP_PLUGIN_ID)
 
 fun getKotlinCompile(project: Project, creationConfig: ComponentCreationConfig): TaskProvider<Task> =
         project.tasks.named(creationConfig.computeTaskName("compile", "Kotlin"))
@@ -252,18 +256,19 @@ fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContaine
 }
 
 /**
- * Attempts to find the corresponding `kapt` configurations for the source sets of the given
- * variant. The returned list may be incomplete or empty if unsuccessful.
+ * Attempts to find the corresponding `kapt` or `ksp` configurations for the source sets of the
+ * given variant. The returned list may be incomplete or empty if unsuccessful.
  */
-fun findKaptConfigurationsForVariant(
+fun findKaptOrKspConfigurationsForVariant(
     project: Project,
-    creationConfig: ComponentCreationConfig
+    creationConfig: ComponentCreationConfig,
+    kaptOrKsp: String
 ): List<Configuration> {
     return creationConfig.variantSources.sortedSourceProviders.mapNotNull { sourceSet ->
-        val kaptConfigurationName = if (sourceSet.name != SourceSet.MAIN_SOURCE_SET_NAME)
-            "kapt".appendCapitalized(sourceSet.name)
+        val configurationName = if (sourceSet.name != SourceSet.MAIN_SOURCE_SET_NAME)
+            kaptOrKsp.appendCapitalized(sourceSet.name)
         else
-            "kapt"
-        project.configurations.findByName(kaptConfigurationName)
+            kaptOrKsp
+        project.configurations.findByName(configurationName)
     }
 }

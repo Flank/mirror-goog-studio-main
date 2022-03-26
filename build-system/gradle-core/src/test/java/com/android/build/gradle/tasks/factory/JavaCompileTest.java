@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks.factory;
 
+import static com.android.build.gradle.tasks.JavaCompileUtils.toProcessorInfo;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty;
@@ -25,6 +26,7 @@ import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.ProjectData;
 import com.android.build.gradle.internal.profile.TaskMetadata;
 import com.android.build.gradle.tasks.JavaCompileUtils;
+import com.android.build.gradle.tasks.ProcessorInfo;
 import com.android.builder.profile.NameAnonymizer;
 import com.android.builder.profile.NameAnonymizerSerializer;
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
@@ -68,12 +70,12 @@ public class JavaCompileTest {
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes(StandardCharsets.UTF_8));
 
-        Map<String, Boolean> annotationProcessors =
+        Map<String, ProcessorInfo> annotationProcessors =
                 JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile);
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                  annotationProcessors, projectPath, VARIANT_NAME, analyticsService);
 
-        Map<String, Boolean> processors = getProcessors();
+        Map<String, ProcessorInfo> processors = getProcessors();
         assertThat(processors).isEmpty();
     }
 
@@ -82,27 +84,31 @@ public class JavaCompileTest {
         File inputFile = temporaryFolder.newFile();
         Files.write(
                 inputFile.toPath(),
-                "{\"processor1\":false,\"processor2\":true}".getBytes(StandardCharsets.UTF_8));
+                "{\"processor1\":\"KSP_PROCESSOR\",\"processor2\":\"INCREMENTAL_AP\",\"processor3\":\"NON_INCREMENTAL_AP\"}"
+                        .getBytes(StandardCharsets.UTF_8));
 
-        Map<String, Boolean> annotationProcessors =
+        Map<String, ProcessorInfo> annotationProcessors =
                 JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile);
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                 annotationProcessors, projectPath, VARIANT_NAME, analyticsService);
 
-        Map<String, Boolean> processors = getProcessors();
-        assertThat(processors).containsEntry("processor1", false);
-        assertThat(processors).containsEntry("processor2", true);
+        Map<String, ProcessorInfo> processors = getProcessors();
+        assertThat(processors).containsEntry("processor1", ProcessorInfo.KSP_PROCESSOR);
+        assertThat(processors).containsEntry("processor2", ProcessorInfo.INCREMENTAL_AP);
+        assertThat(processors).containsEntry("processor3", ProcessorInfo.NON_INCREMENTAL_AP);
         assertThat(annotationProcessingIncremental()).isFalse();
 
         Files.write(
-                inputFile.toPath(), "{\"processor1\":true,\"processor2\":true}".getBytes("utf-8"));
+                inputFile.toPath(),
+                "{\"processor1\":\"KSP_PROCESSOR\",\"processor2\":\"INCREMENTAL_AP\",\"processor3\":\"INCREMENTAL_AP\"}"
+                        .getBytes(StandardCharsets.UTF_8));
         annotationProcessors = JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile);
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                 annotationProcessors, projectPath, VARIANT_NAME, analyticsService);
         assertThat(annotationProcessingIncremental()).isTrue();
     }
 
-    private Map<String, Boolean> getProcessors() {
+    private Map<String, ProcessorInfo> getProcessors() {
         GradleBuildVariant.Builder variant =
                 analyticsService.getVariantBuilder(projectPath, VARIANT_NAME);
 
@@ -114,7 +120,7 @@ public class JavaCompileTest {
                 .collect(
                         Collectors.toMap(
                                 AnnotationProcessorInfo::getSpec,
-                                AnnotationProcessorInfo::getIsIncremental));
+                                apInfo -> toProcessorInfo(apInfo)));
     }
 
     private Boolean annotationProcessingIncremental() {

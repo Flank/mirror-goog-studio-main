@@ -225,7 +225,7 @@ private fun JavaCompile.recordAnnotationProcessors(
         val annotationProcessors =
             readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
         val nonIncrementalAPs =
-            annotationProcessors.filter { it.value == java.lang.Boolean.FALSE }
+            annotationProcessors.filter { it.value == ProcessorInfo.NON_INCREMENTAL_AP }
         val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
 
         // Warn users about non-incremental annotation processors

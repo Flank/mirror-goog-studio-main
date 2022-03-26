@@ -99,6 +99,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/jarjarIntegrationLib",
     "//tools/base/build-system/integration-test:test-projects/jetifier",
     "//tools/base/build-system/integration-test:test-projects/kotlinApp",
+    "//tools/base/build-system/integration-test:test-projects/kotlinAppWithKsp",
     "//tools/base/build-system/integration-test:test-projects/kotlinWithEclipseSourceSet",
     "//tools/base/build-system/integration-test:test-projects/libDependency",
     "//tools/base/build-system/integration-test:test-projects/libMinify",

@@ -41,9 +41,6 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
@@ -58,6 +55,8 @@ const val ANNOTATION_PROCESSORS_INDICATOR_FILE =
     "META-INF/services/javax.annotation.processing.Processor"
 const val INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE =
     "META-INF/gradle/incremental.annotation.processors"
+const val KSP_PROCESSORS_INDICATOR_FILE =
+    "META-INF/services/com.google.devtools.ksp.processing.SymbolProcessorProvider"
 
 /** Whether incremental compilation is enabled or disabled by default. */
 const val DEFAULT_INCREMENTAL_COMPILATION = true
@@ -161,14 +160,13 @@ data class SerializableArtifact(
  * "com.example.processor.SampleProcessor". If the processors are auto-detected on the annotation
  * processor classpath, the format is "processor.jar (com.example.processor:processor:1.0)".
  *
- * @return the map from annotation processors to Boolean values indicating whether they are
- * incremental or not
+ * @return the map from annotation processors to [ProcessorInfo].
  */
 fun detectAnnotationProcessors(
     apOptionClassNames: List<String>,
     processorClasspath: Collection<SerializableArtifact>
-): Map<String, Boolean> {
-    val processors = mutableMapOf<String, Boolean>()
+): Map<String, ProcessorInfo> {
+    val processors = mutableMapOf<String, ProcessorInfo>()
 
     if (!apOptionClassNames.isEmpty()) {
         // If the processor names are specified, the Java compiler will run only those
@@ -176,13 +174,19 @@ fun detectAnnotationProcessors(
             // TODO Assume the annotation processors are non-incremental for now, we will improve
             // this later. We will also need to check if the processor names can be found on the
             // annotation processor or compile classpath.
-            processors[processor] = false
+            processors[processor] = ProcessorInfo.NON_INCREMENTAL_AP
         }
+
+        // KSP processors are always applied when there are in processor classpath.
+        val processorArtifacts = detectAnnotationProcessors(processorClasspath).filter {
+            it.value == ProcessorInfo.KSP_PROCESSOR
+        }
+
+        processors.putAll(processorArtifacts.mapKeys { it.key.displayName })
     } else {
         // If the processor names are not specified, the Java compiler will auto-detect them on the
         // annotation processor classpath.
-        val processorArtifacts = mutableMapOf<SerializableArtifact, Boolean>()
-        processorArtifacts.putAll(detectAnnotationProcessors(processorClasspath))
+        val processorArtifacts = detectAnnotationProcessors(processorClasspath)
 
         processors.putAll(processorArtifacts.mapKeys { it.key.displayName })
     }
@@ -194,33 +198,42 @@ fun detectAnnotationProcessors(
  * Detects all the annotation processors in the given [ArtifactCollection] and finds out whether
  * they are incremental or not.
  *
- * @return the map from annotation processors to Boolean values indicating whether they are
- * incremental or not
+ * @return the map from annotation processors to [ProcessorInfo]
  */
 fun detectAnnotationProcessors(
     artifacts: Collection<SerializableArtifact>
-): Map<SerializableArtifact, Boolean> {
+): Map<SerializableArtifact, ProcessorInfo> {
     // TODO We assume that an artifact has an annotation processor if it contains
     // ANNOTATION_PROCESSORS_INDICATOR_FILE, and the processor is incremental if it contains
     // INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE. We need to revisit this assumption as the
     // processors may register as incremental dynamically.
-    val processors = mutableMapOf<SerializableArtifact, Boolean>()
+    val processors = mutableMapOf<SerializableArtifact, ProcessorInfo>()
 
     for (artifact in artifacts) {
         val artifactFile = artifact.file
         if (artifactFile.isDirectory) {
             if (File(artifactFile, ANNOTATION_PROCESSORS_INDICATOR_FILE).exists()) {
-                processors[artifact] =
-                        File(artifactFile, INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE)
-                            .exists()
+                if (File(artifactFile, INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE).exists()) {
+                    processors[artifact] = ProcessorInfo.INCREMENTAL_AP
+                } else {
+                    processors[artifact] = ProcessorInfo.NON_INCREMENTAL_AP
+                }
+            }
+            if (File(artifactFile, KSP_PROCESSORS_INDICATOR_FILE).exists()) {
+                processors[artifact] = ProcessorInfo.KSP_PROCESSOR
             }
         } else if (artifactFile.isFile) {
             try {
                 JarFile(artifactFile).use { jarFile ->
                     if (jarFile.getJarEntry(ANNOTATION_PROCESSORS_INDICATOR_FILE) != null) {
-                        processors[artifact] = jarFile.getJarEntry(
-                            INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE
-                        ) != null
+                        if (jarFile.getJarEntry(INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE) != null) {
+                            processors[artifact] = ProcessorInfo.INCREMENTAL_AP
+                        } else {
+                            processors[artifact] = ProcessorInfo.NON_INCREMENTAL_AP
+                        }
+                    }
+                    if (jarFile.getJarEntry(KSP_PROCESSORS_INDICATOR_FILE) != null) {
+                        processors[artifact] = ProcessorInfo.KSP_PROCESSOR
                     }
                 }
             } catch (e: IOException) {
@@ -235,11 +248,11 @@ fun detectAnnotationProcessors(
 }
 
 /**
- * Writes the map from annotation processors to Boolean values indicating whether they are
- * incremental or not, to the given file in Json format.
+ * Writes the map from annotation processors to ProcessorInfo indicating whether they are
+ * incremental or not, and whether they are KSP processors or not, to the given file in Json format.
  */
 fun writeAnnotationProcessorsToJsonFile(
-    processors: Map<String, Boolean>, processorListFile: File
+    processors: Map<String, ProcessorInfo>, processorListFile: File
 ) {
     val gson = GsonBuilder().create()
     try {
@@ -251,20 +264,19 @@ fun writeAnnotationProcessorsToJsonFile(
 }
 
 /**
- * Returns the map from annotation processors to Boolean values indicating whether they are
- * incremental or not, from the given Json file.
+ * Returns the map from annotation processors to [ProcessorInfo], from the given Json file.
  *
  * NOTE: The format of the annotation processor names is currently not consistent. See
  * [detectAnnotationProcessors] where the processors are detected.
  */
 fun readAnnotationProcessorsFromJsonFile(
     processorListFile: File
-): Map<String, Boolean> {
+): Map<String, ProcessorInfo> {
     val gson = GsonBuilder().create()
     try {
         FileReader(processorListFile).use { reader ->
             return gson.fromJson(reader, object :
-                TypeToken<Map<String, Boolean>>() {
+                TypeToken<Map<String, ProcessorInfo>>() {
             }.type)
         }
     } catch (e: IOException) {
@@ -278,7 +290,7 @@ fun readAnnotationProcessorsFromJsonFile(
  * are incremental to see if the user can run annotation processing incrementally.
  */
 fun recordAnnotationProcessorsForAnalytics(
-    processors: Map<String, Boolean>,
+    processors: Map<String, ProcessorInfo>,
     projectPath: String,
     variantName: String,
     analyticService: AnalyticsService
@@ -287,10 +299,22 @@ fun recordAnnotationProcessorsForAnalytics(
     for (processor in processors.entries) {
         val builder = AnnotationProcessorInfo.newBuilder()
         builder.spec = processor.key
-        builder.isIncremental = processor.value
+        when (processor.value) {
+            ProcessorInfo.INCREMENTAL_AP -> {
+                builder.isIncremental = true
+            }
+            ProcessorInfo.NON_INCREMENTAL_AP -> {
+                builder.isIncremental = false
+            }
+            ProcessorInfo.KSP_PROCESSOR -> {
+                builder.isIncremental = false
+                builder.inclusionType = AnnotationProcessorInfo.InclusionType.KSP
+            }
+        }
         variant?.addAnnotationProcessors(builder)
     }
-    variant?.isAnnotationProcessingIncremental = !processors.values.contains(false)
+    variant?.isAnnotationProcessingIncremental =
+        !processors.values.contains(ProcessorInfo.NON_INCREMENTAL_AP)
 }
 
 private fun checkSdkCompatibility(compileSdkVersion: String, issueReporter: IssueReporter) {
@@ -307,4 +331,16 @@ private fun checkSdkCompatibility(compileSdkVersion: String, issueReporter: Issu
 
 class JdkImageInput(@get:Classpath val jdkImage: FileCollection) : CommandLineArgumentProvider {
     override fun asArguments() = listOf("--system", jdkImage.singleFile.resolve(JDK_IMAGE_OUTPUT_DIR).absolutePath)
+}
+
+enum class ProcessorInfo {
+    INCREMENTAL_AP,
+    NON_INCREMENTAL_AP,
+    KSP_PROCESSOR,
+}
+
+fun AnnotationProcessorInfo.toProcessorInfo(): ProcessorInfo = when {
+    inclusionType == AnnotationProcessorInfo.InclusionType.KSP -> ProcessorInfo.KSP_PROCESSOR
+    isIncremental -> ProcessorInfo.INCREMENTAL_AP
+    else -> ProcessorInfo.NON_INCREMENTAL_AP
 }

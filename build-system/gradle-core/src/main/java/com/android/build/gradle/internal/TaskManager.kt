@@ -175,6 +175,7 @@ import com.android.build.gradle.internal.utils.getKotlinCompile
 import com.android.build.gradle.internal.utils.getProjectKotlinPluginKotlinVersion
 import com.android.build.gradle.internal.utils.isKotlinKaptPluginApplied
 import com.android.build.gradle.internal.utils.isKotlinPluginApplied
+import com.android.build.gradle.internal.utils.isKspPluginApplied
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ApkVariantData
@@ -1398,7 +1399,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             creationConfig: ComponentCreationConfig
     ): TaskProvider<out JavaCompile> {
         val usingKapt = isKotlinKaptPluginApplied(project)
-        taskFactory.register(JavaPreCompileTask.CreationAction(creationConfig, usingKapt))
+        val usingKsp = isKspPluginApplied(project)
+        taskFactory.register(JavaPreCompileTask.CreationAction(creationConfig, usingKapt, usingKsp))
         val javacTask: TaskProvider<out JavaCompile> =
             taskFactory.register(JavaCompileCreationAction(creationConfig, usingKapt))
         postJavacCreation(creationConfig)

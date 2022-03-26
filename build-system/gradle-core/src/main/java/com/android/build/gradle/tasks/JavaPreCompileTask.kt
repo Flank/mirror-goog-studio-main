@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.findKaptConfigurationsForVariant
+import com.android.build.gradle.internal.utils.findKaptOrKspConfigurationsForVariant
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
@@ -39,6 +39,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 
@@ -47,10 +48,16 @@ import org.gradle.api.tasks.TaskProvider
 abstract class JavaPreCompileTask : NonIncrementalTask() {
 
     private lateinit var annotationProcessorArtifacts: ArtifactCollection
+    private var kspProcessorArtifacts: ArtifactCollection? = null
 
     @get:Classpath
     val annotationProcessorArtifactFiles: FileCollection
         get() = annotationProcessorArtifacts.artifactFiles
+
+    @get:Optional
+    @get:Classpath
+    val kspProcessorArtifactFiles: FileCollection?
+        get() = kspProcessorArtifacts?.artifactFiles
 
     @get:Input
     abstract val annotationProcessorClassNames: ListProperty<String>
@@ -60,7 +67,9 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
 
     public override fun doTaskAction() {
         val annotationProcessorArtifacts =
-            annotationProcessorArtifacts.artifacts.map { SerializableArtifact(it) }
+            annotationProcessorArtifacts.artifacts.map { SerializableArtifact(it) } +
+                    (kspProcessorArtifacts?.artifacts?.map { SerializableArtifact(it) }
+                        ?: emptyList())
 
         workerExecutor.noIsolation().submit(JavaPreCompileWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
@@ -70,7 +79,11 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: ComponentCreationConfig, private val usingKapt: Boolean) :
+    class CreationAction(
+        creationConfig: ComponentCreationConfig,
+        private val usingKapt: Boolean,
+        private val usingKsp: Boolean
+    ) :
         VariantTaskCreationAction<JavaPreCompileTask, ComponentCreationConfig>(creationConfig) {
 
         override val name: String
@@ -80,19 +93,32 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
             get() = JavaPreCompileTask::class.java
 
         // Create the configuration early to avoid issues with composite builds (e.g., bug 183952598)
-        private val kaptClasspath: Configuration? = if (usingKapt) {
+        private fun createKaptOrKspClassPath(kaptOrKsp: String): Configuration {
             val project = creationConfig.services.projectInfo.getProject()
-            val kaptConfigurations = findKaptConfigurationsForVariant(project, this.creationConfig)
+            val configurations = findKaptOrKspConfigurationsForVariant(
+                project,
+                this.creationConfig,
+                kaptOrKsp
+            )
             // This is a private detail, so we want to use a detached configuration, but it's not
             // possible because of https://github.com/gradle/gradle/issues/6881.
-            project.configurations
-                .create("_agp_internal_${name}_kaptClasspath")
-                .setExtendsFrom(kaptConfigurations)
+            return project.configurations
+                .create("_agp_internal_${name}_${kaptOrKsp}Classpath")
+                .setExtendsFrom(configurations)
                 .apply {
                     isVisible = false
                     isCanBeResolved = true
                     isCanBeConsumed = false
                 }
+        }
+
+        private val kaptClasspath: Configuration? = if (usingKapt) {
+            createKaptOrKspClassPath("kapt")
+        } else null
+
+        // Create the configuration early to avoid issues with composite builds (e.g., bug 183952598)
+        private val kspClasspath: Configuration? = if (usingKsp) {
+            createKaptOrKspClassPath("ksp")
         } else null
 
         override fun handleProvider(taskProvider: TaskProvider<JavaPreCompileTask>) {
@@ -124,6 +150,13 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
                         ArtifactType.JAR
                     )
             }
+
+            task.kspProcessorArtifacts = kspClasspath?.incoming
+                ?.artifactView { config: ArtifactView.ViewConfiguration ->
+                    config.attributes { it.attribute(ARTIFACT_TYPE, ArtifactType.JAR.type) }
+                }
+                ?.artifacts
+
             task.annotationProcessorClassNames.setDisallowChanges(
                 (creationConfig.javaCompilation.annotationProcessor as AnnotationProcessorImpl)
                     .finalListOfClassNames
