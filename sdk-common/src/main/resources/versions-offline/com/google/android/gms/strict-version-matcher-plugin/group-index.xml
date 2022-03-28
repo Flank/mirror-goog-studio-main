@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.google.android.gms.strict-version-matcher-plugin>
+  <com.google.android.gms.strict-version-matcher-plugin.gradle.plugin versions="1.2.2"/>
+</com.google.android.gms.strict-version-matcher-plugin>
+

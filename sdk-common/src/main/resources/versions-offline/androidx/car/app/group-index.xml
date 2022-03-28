@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <androidx.car.app>
-  <app versions="1.0.0,1.1.0-alpha01"/>
-  <app-automotive versions="1.1.0-alpha01"/>
-  <app-testing versions="1.1.0-alpha01"/>
+  <app versions="1.1.0,1.2.0-rc01"/>
+  <app-automotive versions="1.1.0,1.2.0-rc01"/>
+  <app-projected versions="1.1.0,1.2.0-rc01"/>
+  <app-testing versions="1.1.0,1.2.0-rc01"/>
 </androidx.car.app>
 

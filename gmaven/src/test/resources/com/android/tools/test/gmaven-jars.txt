@@ -2343,6 +2343,8 @@ com/android/tools/sdk-common
   versions-offline/androidx/compose/group-index.xml
   versions-offline/androidx/compose/material/
   versions-offline/androidx/compose/material/group-index.xml
+  versions-offline/androidx/compose/material3/
+  versions-offline/androidx/compose/material3/group-index.xml
   versions-offline/androidx/compose/runtime/
   versions-offline/androidx/compose/runtime/group-index.xml
   versions-offline/androidx/compose/ui/
@@ -2367,6 +2369,8 @@ com/android/tools/sdk-common
   versions-offline/androidx/datastore/group-index.xml
   versions-offline/androidx/documentfile/
   versions-offline/androidx/documentfile/group-index.xml
+  versions-offline/androidx/draganddrop/
+  versions-offline/androidx/draganddrop/group-index.xml
   versions-offline/androidx/drawerlayout/
   versions-offline/androidx/drawerlayout/group-index.xml
   versions-offline/androidx/dynamicanimation/
@@ -2385,6 +2389,8 @@ com/android/tools/sdk-common
   versions-offline/androidx/games/group-index.xml
   versions-offline/androidx/gaming/
   versions-offline/androidx/gaming/group-index.xml
+  versions-offline/androidx/glance/
+  versions-offline/androidx/glance/group-index.xml
   versions-offline/androidx/gridlayout/
   versions-offline/androidx/gridlayout/group-index.xml
   versions-offline/androidx/health/
@@ -2409,8 +2415,12 @@ com/android/tools/sdk-common
   versions-offline/androidx/media/group-index.xml
   versions-offline/androidx/media2/
   versions-offline/androidx/media2/group-index.xml
+  versions-offline/androidx/media3/
+  versions-offline/androidx/media3/group-index.xml
   versions-offline/androidx/mediarouter/
   versions-offline/androidx/mediarouter/group-index.xml
+  versions-offline/androidx/metrics/
+  versions-offline/androidx/metrics/group-index.xml
   versions-offline/androidx/multidex/
   versions-offline/androidx/multidex/group-index.xml
   versions-offline/androidx/navigation/
@@ -2495,6 +2505,8 @@ com/android/tools/sdk-common
   versions-offline/androidx/wear/group-index.xml
   versions-offline/androidx/wear/tiles/
   versions-offline/androidx/wear/tiles/group-index.xml
+  versions-offline/androidx/wear/watchface/
+  versions-offline/androidx/wear/watchface/group-index.xml
   versions-offline/androidx/webkit/
   versions-offline/androidx/webkit/group-index.xml
   versions-offline/androidx/window/
@@ -2511,6 +2523,11 @@ com/android/tools/sdk-common
   versions-offline/com/android/asset-pack/group-index.xml
   versions-offline/com/android/billingclient/
   versions-offline/com/android/billingclient/group-index.xml
+  versions-offline/com/android/car/
+  versions-offline/com/android/car/setupwizardlib/
+  versions-offline/com/android/car/setupwizardlib/group-index.xml
+  versions-offline/com/android/car/ui/
+  versions-offline/com/android/car/ui/group-index.xml
   versions-offline/com/android/databinding/
   versions-offline/com/android/databinding/group-index.xml
   versions-offline/com/android/dynamic-feature/
@@ -2627,6 +2644,8 @@ com/android/tools/sdk-common
   versions-offline/com/google/android/games/group-index.xml
   versions-offline/com/google/android/gms/
   versions-offline/com/google/android/gms/group-index.xml
+  versions-offline/com/google/android/gms/strict-version-matcher-plugin/
+  versions-offline/com/google/android/gms/strict-version-matcher-plugin/group-index.xml
   versions-offline/com/google/android/instantapps/
   versions-offline/com/google/android/instantapps/group-index.xml
   versions-offline/com/google/android/instantapps/thirdpartycompat/
@@ -2634,6 +2653,11 @@ com/android/tools/sdk-common
   versions-offline/com/google/android/libraries/
   versions-offline/com/google/android/libraries/car/
   versions-offline/com/google/android/libraries/car/group-index.xml
+  versions-offline/com/google/android/libraries/enterprise/
+  versions-offline/com/google/android/libraries/enterprise/amapi/
+  versions-offline/com/google/android/libraries/enterprise/amapi/group-index.xml
+  versions-offline/com/google/android/libraries/healthdata/
+  versions-offline/com/google/android/libraries/healthdata/group-index.xml
   versions-offline/com/google/android/libraries/maps/
   versions-offline/com/google/android/libraries/maps/group-index.xml
   versions-offline/com/google/android/libraries/mapsplatform/
@@ -2678,11 +2702,21 @@ com/android/tools/sdk-common
   versions-offline/com/google/fhir/
   versions-offline/com/google/fhir/group-index.xml
   versions-offline/com/google/firebase/
+  versions-offline/com/google/firebase/appdistribution/
+  versions-offline/com/google/firebase/appdistribution/group-index.xml
+  versions-offline/com/google/firebase/crashlytics/
+  versions-offline/com/google/firebase/crashlytics/group-index.xml
+  versions-offline/com/google/firebase/firebase-perf/
+  versions-offline/com/google/firebase/firebase-perf/group-index.xml
   versions-offline/com/google/firebase/group-index.xml
   versions-offline/com/google/gms/
+  versions-offline/com/google/gms/google-services/
+  versions-offline/com/google/gms/google-services/group-index.xml
   versions-offline/com/google/gms/group-index.xml
   versions-offline/com/google/jacquard/
   versions-offline/com/google/jacquard/group-index.xml
+  versions-offline/com/google/mediapipe/
+  versions-offline/com/google/mediapipe/group-index.xml
   versions-offline/com/google/mlkit/
   versions-offline/com/google/mlkit/group-index.xml
   versions-offline/com/google/oboe/

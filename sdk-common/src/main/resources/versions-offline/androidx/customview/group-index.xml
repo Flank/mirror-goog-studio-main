@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <androidx.customview>
-  <customview versions="1.1.0"/>
+  <customview versions="1.1.0,1.2.0-alpha01"/>
+  <customview-poolingcontainer versions="1.0.0-alpha01"/>
 </androidx.customview>
 

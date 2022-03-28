@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.google.mediapipe>
+  <facedetection versions="0.8.9-alpha-5"/>
+  <facemesh versions="0.8.9-alpha-5"/>
+  <hands versions="0.8.9-alpha-5"/>
+  <solution-core versions="0.8.9-alpha-5"/>
+</com.google.mediapipe>
+

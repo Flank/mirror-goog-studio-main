@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.android.car.ui>
+  <car-ui-lib versions="2.0.0"/>
+  <car-ui-lib-plugin-apis versions="1.0.1"/>
+</com.android.car.ui>
+
