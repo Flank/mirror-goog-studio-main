@@ -41,7 +41,6 @@ def main():
   if 'QA_ANDROID_SDK_ROOT' in os.environ:
     env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':
-    args.insert(0, '--watchfs')
     if not os.path.exists('/Library/Developer/CommandLineTools'):
       print('/Library/Developer/CommandLineTools does not exist. Please install it with '
             'xcode-select --install')
