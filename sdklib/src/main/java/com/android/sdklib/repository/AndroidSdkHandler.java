@@ -640,7 +640,9 @@ public final class AndroidSdkHandler {
         public static LocalSourceProvider createUserSourceProvider(@NonNull Path androidFolder) {
             return new LocalSourceProvider(
                     androidFolder.resolve(LOCAL_ADDONS_FILENAME),
-                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE));
+                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE),
+                    ImmutableList.of(
+                            SYS_IMG_MODULE, ADDON_MODULE, REPOSITORY_MODULE, COMMON_MODULE));
         }
 
         @NonNull
