@@ -125,8 +125,6 @@ class CacheabilityTest {
             TaskInfo(SKIPPED, "extract", "NativeSymbolTables", listOf("Release")),
             TaskInfo(SKIPPED, "merge", "NativeDebugMetadata", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "merge", "NativeLibs", listOf("Debug", "Release")),
-            TaskInfo(SKIPPED, "merge", "AssetsForUnitTest", listOf("Debug", "Release")),
-            TaskInfo(SKIPPED, "merge", "AssetsForUnitTest", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(SKIPPED, "process", "JavaRes",
                     listOf("Debug", "DebugUnitTest","Release", "ReleaseUnitTest")),
             TaskInfo(SKIPPED, "strip", "DebugSymbols", listOf("Debug", "Release"))

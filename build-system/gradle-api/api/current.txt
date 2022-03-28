@@ -120,10 +120,6 @@ package com.android.build.api.artifact {
     field @Deprecated public static final com.android.build.api.artifact.MultipleArtifact.ALL_CLASSES_JARS INSTANCE;
   }
 
-  @org.gradle.api.Incubating public static final class MultipleArtifact.ASSETS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable com.android.build.api.artifact.Artifact.Transformable {
-    field public static final com.android.build.api.artifact.MultipleArtifact.ASSETS INSTANCE;
-  }
-
   public static final class MultipleArtifact.MULTIDEX_KEEP_PROGUARD extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.MultipleArtifact.MULTIDEX_KEEP_PROGUARD INSTANCE;
   }
@@ -150,6 +146,10 @@ package com.android.build.api.artifact {
 
   public static final class SingleArtifact.APK extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.ContainsMany com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.SingleArtifact.APK INSTANCE;
+  }
+
+  @org.gradle.api.Incubating public static final class SingleArtifact.ASSETS extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+    field public static final com.android.build.api.artifact.SingleArtifact.ASSETS INSTANCE;
   }
 
   public static final class SingleArtifact.BUNDLE extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Transformable {

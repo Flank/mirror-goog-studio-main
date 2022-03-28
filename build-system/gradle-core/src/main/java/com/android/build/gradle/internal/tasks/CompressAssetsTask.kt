@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -26,7 +26,6 @@ import com.android.builder.packaging.PackagingUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.annotations.VisibleForTesting
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileType
@@ -67,15 +66,10 @@ import javax.inject.Inject
 @CacheableTask
 abstract class CompressAssetsTask: NewIncrementalTask() {
 
-    /**
-     * although this is wired to a ListProperty<Directory>, we cannot use that as an input when
-     * that input is incremental. The [InputChanges] APIs do not work well with ListProperty<>, so
-     * instead, we use a [FileCollection] which has full support for incremental task input.
-     */
     @get:Incremental
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputDirs: ConfigurableFileCollection
+    abstract val inputDirs: DirectoryProperty
 
     @get:Input
     abstract val noCompress: ListProperty<String>
@@ -124,7 +118,7 @@ abstract class CompressAssetsTask: NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.inputDirs.from(creationConfig.artifacts.getAll(MultipleArtifact.ASSETS))
+            task.inputDirs.set(creationConfig.artifacts.get(SingleArtifact.ASSETS))
             task.noCompress.setDisallowChanges(creationConfig.androidResources.noCompress)
             task.compressionLevel.setDisallowChanges(
                 if (creationConfig.debuggable) {

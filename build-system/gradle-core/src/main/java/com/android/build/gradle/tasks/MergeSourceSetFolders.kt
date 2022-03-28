@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.AssetSourceDirectoriesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -443,9 +443,10 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.use(taskProvider)
-                .wiredWith { it.outputDir }
-                .toAppendTo(MultipleArtifact.ASSETS)
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    MergeSourceSetFolders::outputDir
+            ).on(SingleArtifact.ASSETS)
         }
     }
 

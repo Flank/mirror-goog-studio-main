@@ -130,7 +130,6 @@ import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestR
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
-import com.android.build.gradle.internal.tasks.MergeAssetsForUnitTest
 import com.android.build.gradle.internal.tasks.MergeClassesTask
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
@@ -1453,9 +1452,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // process java resources
         createProcessJavaResTask(unitTestCreationConfig)
         if (includeAndroidResources) {
-            // merging task for assets in unit tests.
-            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig))
-
             if (testedVariant.componentType.isAar) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(unitTestCreationConfig)
@@ -1480,7 +1476,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .copy(PROCESSED_RES, testedVariant.artifacts)
                 unitTestCreationConfig
                         .artifacts
-                        .copy(MultipleArtifact.ASSETS, testedVariant.artifacts)
+                        .copy(SingleArtifact.ASSETS, testedVariant.artifacts)
                 taskFactory.register(PackageForUnitTest.CreationAction(unitTestCreationConfig))
             } else {
                 throw IllegalStateException(
@@ -1490,7 +1486,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 + project.path
                                 + " must be a library or an application to have unit tests.")
             }
-            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig.testedConfig))
             val generateTestConfig = taskFactory.register(
                     GenerateTestConfig.
                     CreationAction(unitTestCreationConfig))
