@@ -17,6 +17,7 @@ import com.android.aaptcompiler.OverlayableItem
 import com.android.aaptcompiler.Plural
 import com.android.aaptcompiler.RawString
 import com.android.aaptcompiler.Reference
+import com.android.aaptcompiler.ResourceCompilationException
 import com.android.aaptcompiler.ResourceFile
 import com.android.aaptcompiler.ResourceName
 import com.android.aaptcompiler.ResourceTable
@@ -37,7 +38,11 @@ import com.google.protobuf.ByteString
 
 internal fun serializePoolToPb(pool: StringPool, logger: ILogger?): Resources.StringPool {
   val buffer = BigBuffer(1024)
-  pool.flattenUtf8(buffer, logger)
+  try {
+      pool.flattenUtf8(buffer, logger)
+  } catch (e: Exception) {
+      throw ResourceCompilationException("Failed to flatten utf-8 string.", e)
+  }
 
   val builder = Resources.StringPool.newBuilder()
   builder.setData(ByteString.copyFrom(buffer.toBytes()))

@@ -531,6 +531,5 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(FileUtils.join(generatedPngs, "drawable-anydpi-v28", "icon.xml")
                 .readLines()).containsExactlyElementsIn(listOf("<vector>c</vector>"))
     }
-
 }
 
