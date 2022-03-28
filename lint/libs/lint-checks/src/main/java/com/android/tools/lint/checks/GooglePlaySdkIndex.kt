@@ -248,7 +248,7 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
     protected open fun generateShowUrl(url: String?): LintFix? {
         return if (url != null)
             // TODO(b/223240014): change to one that allows logging when the link is followed
-            LintFix.ShowUrl("View details in Google Play SDK index", null, url)
+            LintFix.ShowUrl("View details in Google Play SDK Index", null, url)
         else
             null
     }
