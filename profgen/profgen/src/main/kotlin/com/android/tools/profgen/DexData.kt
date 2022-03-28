@@ -18,7 +18,6 @@ package com.android.tools.profgen
 
 import java.io.File
 import java.io.InputStream
-import java.io.PrintStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
@@ -107,17 +106,7 @@ internal data class DexMethod(
 ) {
     val returnType: String get() = prototype.returnType
     val parameters: String = prototype.parameters.joinToString("")
-    fun print(os: PrintStream) = with(os) {
-        print(parent)
-        print("->")
-        print(name)
-        print('(')
-        print(parameters)
-        print(')')
-        print(returnType)
-    }
-
-    override fun toString(): String = buildString {
+    fun print(os: Appendable): Appendable = with(os) {
         append(parent)
         append("->")
         append(name)
@@ -126,6 +115,8 @@ internal data class DexMethod(
         append(')')
         append(returnType)
     }
+
+    override fun toString(): String = buildString { print(this) }
 }
 
 /**
@@ -196,10 +187,10 @@ internal data class MethodData(var flags: Int) {
     inline fun isFlagSet(flag: Int): Boolean {
         return flags and flag == flag
     }
-    fun print(os: PrintStream) = with(os) {
-        if (isFlagSet(MethodFlags.HOT)) print(HOT)
-        if (isFlagSet(MethodFlags.STARTUP)) print(STARTUP)
-        if (isFlagSet(MethodFlags.POST_STARTUP)) print(POST_STARTUP)
+    fun print(os: Appendable) = with(os) {
+        if (isFlagSet(MethodFlags.HOT)) append(HOT)
+        if (isFlagSet(MethodFlags.STARTUP)) append(STARTUP)
+        if (isFlagSet(MethodFlags.POST_STARTUP)) append(POST_STARTUP)
     }
 }
 
