@@ -80,7 +80,9 @@ fun createReplacements(project: GradleTestProject): Map<String, String> {
     return Collections.unmodifiableMap(mutableMapOf<String, String>().apply {
         put(project.location.projectDir.absolutePath, "${"$"}{projectDir}")
         put(project.location.testLocation.androidSdkHome.absolutePath, "${"$"}{androidSdkUserHome}")
-        put(project.androidSdkDir!!.absolutePath, "${"$"}{androidSdkDir}")
+        project.androidSdkDir?.let{
+            put(it.absolutePath, "${"$"}{androidSdkDir}")
+        }
         put(project.location.testLocation.gradleCacheDir.absolutePath, "${"$"}{gradleCacheDir}")
         put(project.location.testLocation.gradleUserHome.toAbsolutePath().toString(), "${"$"}{gradleUserHome}")
         put("android-${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}",

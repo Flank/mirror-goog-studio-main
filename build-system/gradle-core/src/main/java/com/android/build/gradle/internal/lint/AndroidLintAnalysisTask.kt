@@ -157,7 +157,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             arguments += "--fatalOnly"
         }
         arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
-        arguments += listOf("--sdk-home", androidSdkHome.get())
+        androidSdkHome.orNull?.let { arguments.add("--sdk-home", it) }
 
         arguments += "--lint-model"
         arguments += listOf(lintModelDirectory.get().asFile.absolutePath).asLintPaths()
@@ -313,12 +313,16 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
-        this.androidSdkHome.setDisallowChanges(
-            sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }
-                .map { it.asFile.absolutePath }
-        )
-        this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
+
         this.android.setDisallowChanges(isAndroid)
+        if(isAndroid) {
+            this.androidSdkHome.set(
+                sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }
+                    .map { it.asFile.absolutePath }
+            )
+        }
+        this.androidSdkHome.disallowChanges()
+        this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
 
         // Include Lint jars set via the environment variable ANDROID_LINT_JARS
         val globalLintJarsFromEnvVariable: Provider<List<String>> =
