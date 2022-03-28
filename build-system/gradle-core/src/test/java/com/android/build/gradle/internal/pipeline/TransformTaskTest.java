@@ -62,9 +62,21 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @SuppressWarnings("deprecation")
+@RunWith(Parameterized.class)
 public class TransformTaskTest extends TaskTestUtils {
+
+    @Parameterized.Parameters(name = "allowIncremental={0}")
+    public static Object[] getParameters() {
+        return new Object[] {true, false};
+    }
+
+    public TransformTaskTest(boolean allowIncremental) {
+        super(allowIncremental);
+    }
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -114,7 +126,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncrementalInputs()).isFalse();
@@ -185,7 +197,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -242,7 +254,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -313,7 +325,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -370,7 +382,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -440,7 +452,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -497,7 +509,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -567,7 +579,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with a non-incremental build.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
 
         // check that was passed to the transform.
         assertThat(t.isIncremental()).isFalse();
@@ -625,10 +637,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(jarFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().addedFile(jarFile).build());
 
         // check that was passed to the transform. Should be non-incremental since the
         // transform isn't.
@@ -693,10 +702,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(jarFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().addedFile(jarFile).build());
 
         // check that was passed to the transform. Should be non-incremental since the
         // transform isn't.
@@ -752,10 +758,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         File addedFile = new File(rootFolder, "added");
         FileUtils.createFile(addedFile, "addedContent");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().addedFile(addedFile).build());
 
         // check that was passed to the transform. Should be non-incremental since the
         // transform isn't.
@@ -821,10 +824,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // call the task with incremental data
 
         File addedFile = new File(rootFolder, "added");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().addedFile(addedFile).build());
 
         // check that was passed to the transform. Should be non-incremental since the
         // transform isn't.
@@ -892,14 +892,16 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .modifiedFile(changedFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedFile)
+                        .modifiedFile(changedFile)
+                        .build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         // and the jar input should be status ADDED
         Collection<TransformInput> inputs = t.getInputs();
@@ -913,7 +915,11 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            if (isAllowIncremental()) {
+                assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            } else {
+                assertThat(jarInput.getStatus()).isSameAs(Status.NOTCHANGED);
+            }
         }
     }
 
@@ -971,14 +977,12 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedJar)
-                .modifiedFile(changedJar)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder().incremental().addedFile(addedJar).modifiedFile(changedJar).build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         // and the jar input should be status ADDED
         Collection<TransformInput> inputs = t.getInputs();
@@ -992,7 +996,11 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            if (isAllowIncremental()) {
+                assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            } else {
+                assertThat(jarInput.getStatus()).isSameAs(Status.NOTCHANGED);
+            }
         }
     }
 
@@ -1080,17 +1088,19 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(2);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedJar)
-                .addedFile(enhancedAddedJar)
-                .modifiedFile(changedJar)
-                .modifiedFile(enhancedChangedJar)
-                .removedFile(enhancedRemovedJar)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedJar)
+                        .addedFile(enhancedAddedJar)
+                        .modifiedFile(changedJar)
+                        .modifiedFile(enhancedChangedJar)
+                        .removedFile(enhancedRemovedJar)
+                        .build());
 
         // check that was passed to the transform.
-        assertThat(classesTransform.isIncrementalInputs()).isTrue();
+        assertThat(classesTransform.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         // and the jar input should be status ADDED
         Collection<TransformInput> inputs = classesTransform.getInputs();
@@ -1104,7 +1114,11 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            if (isAllowIncremental()) {
+                assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            } else {
+                assertThat(jarInput.getStatus()).isSameAs(Status.NOTCHANGED);
+            }
         }
     }
 
@@ -1191,17 +1205,19 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(2);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedJar)
-                .addedFile(enhancedAddedJar)
-                .modifiedFile(changedJar)
-                .modifiedFile(enhancedChangedJar)
-                .removedFile(enhancedRemovedJar)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedJar)
+                        .addedFile(enhancedAddedJar)
+                        .modifiedFile(changedJar)
+                        .modifiedFile(enhancedChangedJar)
+                        .removedFile(enhancedRemovedJar)
+                        .build());
 
         // check that was passed to the transform.
-        assertThat(classesTransform.isIncrementalInputs()).isTrue();
+        assertThat(classesTransform.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         // and the jar input should be status ADDED
         Collection<TransformInput> inputs = classesTransform.getInputs();
@@ -1215,7 +1231,11 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            if (isAllowIncremental()) {
+                assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
+            } else {
+                assertThat(jarInput.getStatus()).isSameAs(Status.NOTCHANGED);
+            }
         }
     }
 
@@ -1256,15 +1276,17 @@ public class TransformTaskTest extends TaskTestUtils {
         File addedFile = new File(rootFolder, "added");
         File modifiedFile = new File(rootFolder, "modified");
         File removedFile = new File(rootFolder, "removed");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .modifiedFile(modifiedFile)
-                .removedFile(removedFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedFile)
+                        .modifiedFile(modifiedFile)
+                        .removedFile(removedFile)
+                        .build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         // don't test everything, the rest is tested in the tests above.
         Collection<TransformInput> inputs = t.getInputs();
@@ -1278,16 +1300,21 @@ public class TransformTaskTest extends TaskTestUtils {
         DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
         assertThat(singleDirectoryInput.getFile()).isEqualTo(rootFolder);
 
-        Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
-        assertThat(changedFiles).hasSize(3);
-        assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
-        assertThat(changedFiles).containsEntry(modifiedFile, Status.CHANGED);
-        assertThat(changedFiles).containsEntry(removedFile, Status.REMOVED);
+        if (isAllowIncremental()) {
+            Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
+            assertThat(changedFiles).hasSize(3);
+            assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
+            assertThat(changedFiles).containsEntry(modifiedFile, Status.CHANGED);
+            assertThat(changedFiles).containsEntry(removedFile, Status.REMOVED);
+        }
     }
 
     @Test
     public void incrementalFolderInputInIntermediateStream()
             throws TransformException, InterruptedException, IOException {
+        if (!isAllowIncremental()) {
+            return;
+        }
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
@@ -1333,12 +1360,14 @@ public class TransformTaskTest extends TaskTestUtils {
         File addedFile = new File(outputFolder, "added");
         File modifiedFile = new File(outputFolder, "modified");
         File removedFile = new File(outputFolder, "removed");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .modifiedFile(modifiedFile)
-                .removedFile(removedFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedFile)
+                        .modifiedFile(modifiedFile)
+                        .removedFile(removedFile)
+                        .build());
 
         // check that was passed to the transform.
         assertThat(t.isIncrementalInputs()).isTrue();
@@ -1365,6 +1394,9 @@ public class TransformTaskTest extends TaskTestUtils {
     @Test
     public void incrementalComplexTypesFolderInputInIntermediateStream()
             throws TransformException, InterruptedException, IOException {
+        if (!isAllowIncremental()) {
+            return;
+        }
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
@@ -1427,15 +1459,17 @@ public class TransformTaskTest extends TaskTestUtils {
         File enhancedAdded = new File(enhancedClassesOutput, "added");
         File enhancedModified = new File(enhancedClassesOutput, "modified");
 
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .addedFile(enhancedAdded)
-                .modifiedFile(modifiedFile)
-                .modifiedFile(enhancedModified)
-                .removedFile(removedFile)
-                .removedFile(enhancedRemoved)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedFile)
+                        .addedFile(enhancedAdded)
+                        .modifiedFile(modifiedFile)
+                        .modifiedFile(enhancedModified)
+                        .removedFile(removedFile)
+                        .removedFile(enhancedRemoved)
+                        .build());
 
         // check that was passed to the transform.
         assertThat(t.isIncrementalInputs()).isTrue();
@@ -1524,16 +1558,18 @@ public class TransformTaskTest extends TaskTestUtils {
         // incremental changes for this transform since it is not interested in that content type.
         File subProjectRemoved = new File(subProjectOutput, "removed");
 
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .modifiedFile(modifiedFile)
-                .removedFile(removedFile)
-                .removedFile(subProjectRemoved)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(addedFile)
+                        .modifiedFile(modifiedFile)
+                        .removedFile(removedFile)
+                        .removedFile(subProjectRemoved)
+                        .build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         // don't test everything, the rest is tested in the tests above.
         Collection<TransformInput> inputs = t.getInputs();
@@ -1547,12 +1583,14 @@ public class TransformTaskTest extends TaskTestUtils {
         DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
         assertThat(singleDirectoryInput.getFile()).isEqualTo(classesOutput);
 
-        // none of the entries specified in the "subProject" folder should be passed as events.
-        Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
-        assertThat(changedFiles).hasSize(3);
-        assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
-        assertThat(changedFiles).containsEntry(modifiedFile, Status.CHANGED);
-        assertThat(changedFiles).containsEntry(removedFile, Status.REMOVED);
+        if (isAllowIncremental()) {
+            // none of the entries specified in the "subProject" folder should be passed as events.
+            Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
+            assertThat(changedFiles).hasSize(3);
+            assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
+            assertThat(changedFiles).containsEntry(modifiedFile, Status.CHANGED);
+            assertThat(changedFiles).containsEntry(removedFile, Status.REMOVED);
+        }
     }
 
     @Test
@@ -1592,10 +1630,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // a previous version of the stream passed to the transform but it cannot be part of the
         // current stream definition since it's being deleted.
         File deletedJar = new File("deleted jar");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .removedFile(deletedJar)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().removedFile(deletedJar).build());
 
         // in this case we cannot know what types/scopes the missing jar is associated with
         // so we expect non-incremental mode.
@@ -1617,6 +1652,9 @@ public class TransformTaskTest extends TaskTestUtils {
     @Test
     public void deletedJarInputInIntermediateStream()
             throws TransformException, InterruptedException, IOException {
+        if (!isAllowIncremental()) {
+            return;
+        }
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
@@ -1665,10 +1703,8 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with incremental data
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .removedFile(deletedJarFile)
-                .build());
+        doTransform(
+                transformTask, inputBuilder().incremental().removedFile(deletedJarFile).build());
 
         // check that was passed to the transform.
         assertThat(t.isIncrementalInputs()).isTrue();
@@ -1731,10 +1767,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // call the task with incremental data
         File deletedFolder = new File("deleted");
         File removedFile = new File(deletedFolder, "removed");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .removedFile(removedFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().removedFile(removedFile).build());
 
         // in this case we cannot know what types/scopes the missing file/folder is associated with
         // so we expect non-incremental mode.
@@ -1756,6 +1789,9 @@ public class TransformTaskTest extends TaskTestUtils {
     @Test
     public void deletedFolderInputInIntermediateStream()
             throws TransformException, InterruptedException, IOException {
+        if (!isAllowIncremental()) {
+            return;
+        }
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
         IntermediateStream projectClass =
@@ -1803,11 +1839,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // call the task with incremental data
         File removedFile = new File(deletedOutputFolder, "removed");
         File removedFile2 = new File(deletedOutputFolder, "removed2");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .removedFile(removedFile)
-                .removedFile(removedFile2)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .removedFile(removedFile)
+                        .removedFile(removedFile2)
+                        .build());
 
         // check that was passed to the transform.
         assertThat(t.isIncrementalInputs()).isTrue();
@@ -1840,6 +1878,9 @@ public class TransformTaskTest extends TaskTestUtils {
     @Test
     public void incrementalTestComplexOriginalStreamOnly()
             throws TransformException, InterruptedException, IOException {
+        if (!isAllowIncremental()) {
+            return;
+        }
         // test with multiple scopes, both with multiple streams, and consumed and referenced scopes.
 
         File scope1Jar = temporaryFolder.newFile("jar file1");
@@ -1948,20 +1989,22 @@ public class TransformTaskTest extends TaskTestUtils {
         File removedFile2 = new File(scope2RootFolder, "removed");
         File addedFile3 = new File(scope3RootFolder, "added");
         File removedFile4 = new File(scope4RootFolder, "removed");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(scope1Jar)
-                .removedFile(scope2Jar)
-                .addedFile(scope3Jar)
-                .removedFile(scope4Jar)
-                .addedFile(addedFile1)
-                .addedFile(addedFile3)
-                .removedFile(removedFile2)
-                .removedFile(removedFile4)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(scope1Jar)
+                        .removedFile(scope2Jar)
+                        .addedFile(scope3Jar)
+                        .removedFile(scope4Jar)
+                        .addedFile(addedFile1)
+                        .addedFile(addedFile3)
+                        .removedFile(removedFile2)
+                        .removedFile(removedFile4)
+                        .build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
 
         Collection<TransformInput> inputs = t.getInputs();
         assertThat(inputs).hasSize(2);
@@ -2115,10 +2158,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // call the task with incremental data
         // including a normal, in stream changed file
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(secondaryFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().addedFile(secondaryFile).build());
 
         // check that was passed to the transform. Incremental should be off due
         // to secondary file
@@ -2176,11 +2216,9 @@ public class TransformTaskTest extends TaskTestUtils {
         // call the task with incremental data
         // including a normal, in stream changed file
         File addedFile = new File(rootFolder, "added");
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(addedFile)
-                .addedFile(secondaryFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder().incremental().addedFile(addedFile).addedFile(secondaryFile).build());
 
         // check that was passed to the transform. Incremental should be off due
         // to secondary file
@@ -2237,11 +2275,13 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // call the task with incremental data
         // including a normal, in stream changed file
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(jarFile)
-                .modifiedFile(secondaryFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(jarFile)
+                        .modifiedFile(secondaryFile)
+                        .build());
 
         // check that was passed to the transform. Incremental should be off due
         // to secondary file
@@ -2253,6 +2293,9 @@ public class TransformTaskTest extends TaskTestUtils {
     @Test
     public void secondaryFileModifiedWithIncrementalCapabilities()
             throws TransformException, InterruptedException, IOException {
+        if (!isAllowIncremental()) {
+            return;
+        }
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
         TransformStream projectClass =
@@ -2286,11 +2329,13 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(streams).hasSize(1);
 
         // call the task with incremental data including a normal, in stream changed file
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(jarFile)
-                .modifiedFile(secondaryFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder()
+                        .incremental()
+                        .addedFile(jarFile)
+                        .modifiedFile(secondaryFile)
+                        .build());
 
         // check that was passed to the transform. Incremental should be off due
         // to secondary file
@@ -2303,24 +2348,18 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(change.getSecondaryInput().getFile()).isEqualTo(secondaryFile);
 
         // now delete the file.
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .removedFile(secondaryFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().removedFile(secondaryFile).build());
 
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
         assertThat(t.getSecondaryInputs()).hasSize(1);
         change = Iterables.getOnlyElement(t.getSecondaryInputs());
         assertThat(change.getStatus()).isEqualTo(Status.REMOVED);
         assertThat(change.getSecondaryInput().getFile()).isEqualTo(secondaryFile);
 
         // and add it back..
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(secondaryFile)
-                .build());
+        doTransform(transformTask, inputBuilder().incremental().addedFile(secondaryFile).build());
 
-        assertThat(t.isIncrementalInputs()).isTrue();
+        assertThat(t.isIncrementalInputs()).isEqualTo(isAllowIncremental());
         assertThat(t.getSecondaryInputs()).hasSize(1);
         change = Iterables.getOnlyElement(t.getSecondaryInputs());
         assertThat(change.getStatus()).isEqualTo(Status.ADDED);
@@ -2364,11 +2403,9 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // call the task with incremental data
         // including a normal, in stream changed file
-        transformTask.transform(inputBuilder()
-                .incremental()
-                .addedFile(jarFile)
-                .removedFile(secondaryFile)
-                .build());
+        doTransform(
+                transformTask,
+                inputBuilder().incremental().addedFile(jarFile).removedFile(secondaryFile).build());
 
         // check that was passed to the transform. Incremental should be off due
         // to secondary file
@@ -2426,7 +2463,7 @@ public class TransformTaskTest extends TaskTestUtils {
                 String.format(
                         "Unexpected scopes found in folder '%s'. Required: PROJECT. Found: EXTERNAL_LIBRARIES, PROJECT",
                         rootFolder));
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
     }
 
     @Test
@@ -2487,7 +2524,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // run the transform. Afterwards, the old SubStream should be marked as not being present
         // in the __content__.json file.
-        transformTask.transform(inputBuilder().build());
+        doTransform(transformTask, inputBuilder().build());
         assertThat(subStreamFile).exists();
         subStreams = SubStream.loadSubStreams(transformOutputFolder);
         assertThat(subStreams)
@@ -2630,6 +2667,15 @@ public class TransformTaskTest extends TaskTestUtils {
                     }
                 }
             };
+        }
+    }
+
+    void doTransform(TransformTask task, IncrementalTaskInputs inputs)
+            throws TransformException, IOException, InterruptedException {
+        if (task instanceof IncrementalTransformTask) {
+            ((IncrementalTransformTask) task).transform(inputs);
+        } else if (task instanceof NonIncrementalTransformTask) {
+            ((NonIncrementalTransformTask) task).transform();
         }
     }
 }

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +36,14 @@ public class JarJarTest {
     @Test
     public void checkRepackagedGsonLibraryFormonodex() throws Exception {
         project.executeAndReturnModel("assembleDebug");
+        verifyApk();
+    }
+
+    @Test
+    public void checkNonIncrementalImplementation() throws Exception {
+        project.executor()
+                .with(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL, true)
+                .run("assembleDebug");
         verifyApk();
     }
 

@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.utils.FileUtils;
@@ -242,6 +243,12 @@ public class TransformManager extends FilterableStreamCollection {
                         configAction.configure(t);
                     }
                 };
+
+        boolean allowIncremental =
+                !creationConfig
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL);
         // create the task...
         return Optional.of(
                 taskFactory.register(
@@ -251,7 +258,8 @@ public class TransformManager extends FilterableStreamCollection {
                                 transform,
                                 inputStreams,
                                 referencedStreams,
-                                outputStream),
+                                outputStream,
+                                allowIncremental),
                         preConfigAction,
                         wrappedConfigAction,
                         providerCallback));

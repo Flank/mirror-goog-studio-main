@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.model.SyncIssue;
@@ -81,6 +82,8 @@ import org.mockito.Mockito;
  */
 public class TaskTestUtils {
 
+    private final boolean allowIncremental;
+
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -93,6 +96,10 @@ public class TaskTestUtils {
 
     protected Supplier<RuntimeException> syncIssueToException;
     protected Project project;
+
+    public TaskTestUtils(boolean allowIncremental) {
+        this.allowIncremental = allowIncremental;
+    }
 
     @Before
     public void setUp() throws IOException {
@@ -133,6 +140,10 @@ public class TaskTestUtils {
                             it.getParameters().getTaskMetadata().set(new HashMap());
                             it.getParameters().getRootProjectPath().set("/path");
                         });
+    }
+
+    public boolean isAllowIncremental() {
+        return allowIncremental;
     }
 
     protected StreamTester streamTester() {
@@ -307,18 +318,22 @@ public class TaskTestUtils {
     }
 
     @NonNull
-    private static VariantCreationConfig getCreationConfig() {
+    private VariantCreationConfig getCreationConfig() {
         GlobalTaskCreationConfig globalConfig = mock(GlobalTaskCreationConfig.class);
         TaskCreationServices taskCreationServices = mock(TaskCreationServices.class);
         ProjectInfo projectInfo = mock(ProjectInfo.class);
         when(taskCreationServices.getProjectInfo()).thenReturn(projectInfo);
         when(projectInfo.getBuildDir()).thenReturn(new File("build dir"));
+        ImmutableMap<String, Boolean> properties =
+                ImmutableMap.of(
+                        BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL.getPropertyName(),
+                        !allowIncremental);
         when(taskCreationServices.getProjectOptions())
                 .thenReturn(
                         new ProjectOptions(
                                 ImmutableMap.of(),
                                 new FakeProviderFactory(
-                                        FakeProviderFactory.getFactory(), ImmutableMap.of())));
+                                        FakeProviderFactory.getFactory(), properties)));
 
         VariantCreationConfig creationConfig = mock(VariantCreationConfig.class);
         when(creationConfig.getServices()).thenReturn(taskCreationServices);

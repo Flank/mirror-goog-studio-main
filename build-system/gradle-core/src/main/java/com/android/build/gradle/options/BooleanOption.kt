@@ -195,6 +195,12 @@ enum class BooleanOption(
         FeatureStage.Experimental,
     ),
 
+    LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL(
+            "android.experimental.legacyTransform.forceNonIncremental",
+            false,
+            FeatureStage.Experimental
+    ),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
