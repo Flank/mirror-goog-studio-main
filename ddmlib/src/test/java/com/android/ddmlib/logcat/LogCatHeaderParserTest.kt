@@ -175,6 +175,24 @@ class LogCatHeaderParserTest {
     }
 
     @Test
+    fun parseHeader_withCustomPackageNameResolver() {
+        assertThat(
+            logCatHeaderParser.parseHeader(
+                "[ $EPOCH_SEC.$EPOCH_MILLI $PID_APP:$TID ${INFO.priorityLetter}/$TAG ]"
+            ) { APP_NAME }
+        ).isEqualTo(
+            LogCatHeader(
+                INFO,
+                PID_APP,
+                TID,
+                APP_NAME,
+                TAG,
+                Instant.ofEpochSecond(EPOCH_SEC, MILLISECONDS.toNanos(EPOCH_MILLI))
+            )
+        )
+    }
+
+    @Test
     fun parseHeader_withInvalidPid() {
         assertThat(
             logCatHeaderParser.parseHeader(

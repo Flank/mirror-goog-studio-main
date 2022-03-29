@@ -15,18 +15,16 @@
  */
 package com.android.ddmlib.logcat;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.annotations.Nullable;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
-
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class LogCatHeaderParser {
 
@@ -85,6 +83,20 @@ public class LogCatHeaderParser {
      */
     @Nullable
     public LogCatHeader parseHeader(String line, @Nullable IDevice device) {
+        return parseHeader(line, pid -> getPackageName(device, pid));
+    }
+
+    /**
+     * Parse a header line into a [LogCatHeader] object, or `null` if the input line doesn't match
+     * the expected format.
+     *
+     * @param line raw text that should be the header line from `logcat -v long` or `logcat -v
+     *     long,epoch`.
+     * @param pidToPackageName resolves a pid to a package name
+     * @return a [LogCatHeader] which represents the passed in text or null if text is not a header.
+     */
+    @Nullable
+    public LogCatHeader parseHeader(String line, PidToPackageName pidToPackageName) {
         Matcher m = HEADER.matcher(line);
         if (!m.matches()) {
             return null;
@@ -116,10 +128,9 @@ public class LogCatHeaderParser {
                 parsePriority(m.group("priority")),
                 pid,
                 parseThreadId(m.group("tid")),
-                getPackageName(device, pid),
+                pidToPackageName.apply(pid),
                 m.group("tag"),
-                timestamp
-        );
+                timestamp);
     }
 
     /**
@@ -182,5 +193,11 @@ public class LogCatHeaderParser {
             return UNKNOWN_APP_NAME;
         }
         return clientName;
+    }
+
+    @FunctionalInterface
+    public interface PidToPackageName {
+
+        String apply(int pid);
     }
 }
