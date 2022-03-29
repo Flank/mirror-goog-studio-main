@@ -95,7 +95,7 @@ class PluginVersionCheckTest {
         )
 
         val model = project.modelV2().fetchModels()
-        model.container.getNonDeprecationIssues().isEmpty()
+        assertThat(model.container.getNonDeprecationIssues()).isEmpty()
 
         project.executor().run("generateDebugR2")
     }
@@ -103,5 +103,74 @@ class PluginVersionCheckTest {
     private fun ModelContainerV2.getNonDeprecationIssues(): List<SyncIssue> {
         val issueModel = this.singleProjectInfo.issues ?: throw RuntimeException("Failed to get issue model")
         return issueModel.syncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
+    }
+
+    @Test
+    fun testKotlinAndroidExtensionsTooOld() {
+        // Use an old version of the kotlin-android-extensions plugin, expect sync issues
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                buildscript {
+                    dependencies {
+                        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
+                    }
+                }
+                """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+            project.getSubproject("lib").buildFile,
+            """
+                apply plugin: 'kotlin-android'
+                apply plugin: 'kotlin-android-extensions'
+            """.trimIndent()
+        )
+
+        val model = project.modelV2().ignoreSyncIssues().fetchModels()
+        val syncIssues = model.container.getNonDeprecationIssues()
+        assertThat(syncIssues).hasSize(1)
+        val syncIssue = syncIssues.single()
+
+        assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD)
+        assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_ERROR)
+        val expected = "The Android Gradle plugin supports only kotlin-android-extensions Gradle " +
+                "plugin version 1.6.20 and higher.\n" +
+                "The following dependencies do not satisfy the required version:\n" +
+                "root project 'project' -> " +
+                "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
+        assertThat(syncIssue.message).isEqualTo(expected)
+
+        val failure = project.executor().expectFailure().run("assembleDebug")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(expected)
+        }
+    }
+
+    @Test
+    fun testKotlinAndroidExtensionsOk() {
+        // Use a sufficiently new version of the kotlin-android-extensions plugin, expect no sync
+        // issues
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                buildscript {
+                    dependencies {
+                        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.20"
+                    }
+                }
+                """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+            project.getSubproject("lib").buildFile,
+            """
+                apply plugin: 'kotlin-android'
+                apply plugin: 'kotlin-android-extensions'
+            """.trimIndent()
+        )
+
+        val model = project.modelV2().fetchModels()
+        assertThat(model.container.getNonDeprecationIssues()).isEmpty()
+
+        project.executor().run("assembleDebug")
     }
 }
