@@ -107,6 +107,7 @@ function run_bazel_test() {
 
   local build_tag_filters=-no_linux
   local test_tag_filters=-no_linux,-no_test_linux,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate,-very_flaky
+  local target_name="studio-linux"
 
   declare -a conditional_flags
   if [[ " ${ARGV[@]} " =~ " --detect_flakes " ]];
@@ -120,6 +121,9 @@ function run_bazel_test() {
   elif [[ " ${ARGV[@]} " =~ " --very_flaky " ]];
   then
     conditional_flags+=(--build_tests_only)
+    conditional_flags+=(--config=ants)
+    conditional_flags+=(--config=sponge)
+    target_name="studio-linux_very_flaky"
     test_tag_filters=-no_linux,-no_test_linux,very_flaky
   elif [[ $BUILD_TYPE == "POSTSUBMIT" ]]; then
     conditional_flags+=(--nocache_test_results)
@@ -157,6 +161,8 @@ function run_bazel_test() {
     --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
     --define=meta_android_build_number="${BUILD_NUMBER}" \
     --build_metadata=ANDROID_BUILD_ID="${BUILD_NUMBER}" \
+    --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+    --build_metadata=ab_target="${target_name}" \
     --test_tag_filters=${test_tag_filters} \
     --tool_tag=${SCRIPT_NAME} \
     --embed_label="${AS_BUILD_NUMBER}" \
