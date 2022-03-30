@@ -34,6 +34,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -248,9 +251,14 @@ class AndroidEval implements Eval {
         } catch (ClassNotFoundException
                 | IllegalAccessException
                 | IllegalArgumentException
-                | InstantiationException
-                | NoSuchMethodException e) {
+                | InstantiationException e) {
             throw new InterpreterException(e);
+        } catch (NoSuchMethodException e) {
+            // Make sure this method can be found
+            String owner = methodDesc.getOwnerInternalName();
+            String name = methodDesc.getName();
+            String desc = methodDesc.getDesc();
+            throw new IllegalStateException(methodNotFoundMsg(owner, name, desc));
         } catch (InvocationTargetException e) {
             Throw.sneaky(e.getCause());
         }
@@ -298,7 +306,7 @@ class AndroidEval implements Eval {
             Method method = methodLookup(owner, name, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
-                throw new IllegalStateException("Cannot find " + name + " in " + owner);
+                throw new IllegalStateException(methodNotFoundMsg(owner, name, description));
             }
 
             method.setAccessible(true);
@@ -330,8 +338,7 @@ class AndroidEval implements Eval {
             Method method = methodLookup(owner, methodName, parameterType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
-                throw new IllegalStateException(
-                        "Cannot find static " + methodName + " in " + owner);
+                throw new IllegalStateException(methodNotFoundMsg(owner, methodName, signature));
             }
 
             method.setAccessible(true);
@@ -530,5 +537,36 @@ class AndroidEval implements Eval {
             }
         }
         return method;
+    }
+
+    private String methodNotFoundMsg(String className, String method, String desc) {
+        List<Method> foundMethods;
+        try {
+            foundMethods = getAllDeclaredMethods(className);
+        } catch (ClassNotFoundException e) {
+            return "Cannot find class '" + className + "'";
+        }
+        String methodName = method + desc;
+        StringBuilder msg = new StringBuilder("Cannot find '" + methodName + "' in " + className);
+        msg.append("Found:\n");
+        for (Method m : foundMethods) {
+            msg.append("    '");
+            msg.append(m.getClass());
+            msg.append(".");
+            msg.append(m.getName());
+            msg.append(Arrays.toString(m.getParameterTypes()));
+            msg.append("\n");
+        }
+        return msg.toString();
+    }
+
+    private List<Method> getAllDeclaredMethods(String className) throws ClassNotFoundException {
+        List<Method> methods = new ArrayList<>();
+        Class curClass = forName(className.replace('/', '.'));
+        while (curClass != null) {
+            Collections.addAll(methods, curClass.getDeclaredMethods());
+            curClass = curClass.getSuperclass();
+        }
+        return methods;
     }
 }
