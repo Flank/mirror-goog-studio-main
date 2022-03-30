@@ -16,5 +16,6 @@
 package com.android.tools.deploy.interpreter;
 
 public class HoudiniConfiguration {
-    public static final boolean ENABLED = false;
+    public static final boolean ENABLED_DEFAULT_VALUE = false;
+    public static boolean ENABLED = ENABLED_DEFAULT_VALUE;
 }

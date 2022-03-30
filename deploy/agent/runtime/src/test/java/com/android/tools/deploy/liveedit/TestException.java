@@ -19,7 +19,9 @@ import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
 import com.android.tools.deploy.interpreter.HoudiniConfiguration;
 import java.lang.reflect.Method;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 
 public class TestException {
 
@@ -28,11 +30,19 @@ public class TestException {
     }
 
     // Temporary. Delete this and enabled all tests once we get out of Canary
-    private static final boolean ENABLED = HoudiniConfiguration.ENABLED;
+    @Before
+    public void setup() {
+        HoudiniConfiguration.ENABLED = true;
+    }
+
+    @After
+    public void tearDown() {
+        HoudiniConfiguration.ENABLED = HoudiniConfiguration.ENABLED_DEFAULT_VALUE;
+    }
 
     @org.junit.Test
     public void testExceptionFromAppAfterInterpreter() throws Exception {
-        if (!ENABLED) {
+        if (!HoudiniConfiguration.ENABLED) {
             return;
         }
         String className = "InvokeException";
@@ -80,7 +90,7 @@ public class TestException {
 
     @org.junit.Test
     public void testExceptionFromInterpreter() throws Exception {
-        if (!ENABLED) {
+        if (!HoudiniConfiguration.ENABLED) {
             return;
         }
         String className = "InvokeException";
@@ -122,7 +132,7 @@ public class TestException {
 
     @org.junit.Test
     public void testExceptionThrowAndCaughtInsideMethod() throws Exception {
-        if (!ENABLED) {
+        if (!HoudiniConfiguration.ENABLED) {
             return;
         }
         String className = "InvokeException";
@@ -158,7 +168,7 @@ public class TestException {
 
     @org.junit.Test
     public void testLiveEditStubsStructure() {
-        if (!ENABLED) {
+        if (!HoudiniConfiguration.ENABLED) {
             return;
         }
         Class clazz = LiveEditStubs.class;
