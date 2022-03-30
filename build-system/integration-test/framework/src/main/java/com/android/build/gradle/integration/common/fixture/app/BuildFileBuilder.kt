@@ -43,7 +43,6 @@ class BuildFileBuilder {
         if (useKotlin) {
             if (plugin?.contains("android") == true) {
                 contents.append("\n\napply plugin: 'kotlin-android'")
-                contents.append("\napply plugin: 'kotlin-android-extensions'")
                 contents.append("\napply plugin: 'kotlin-kapt'")
             } else {
                 contents.append("\n\napply plugin: 'kotlin'")
