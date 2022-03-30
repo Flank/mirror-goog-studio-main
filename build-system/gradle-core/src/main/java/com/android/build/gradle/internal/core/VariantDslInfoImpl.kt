@@ -40,8 +40,9 @@ import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
+import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.TestedComponentDslInfo
 import com.android.build.gradle.internal.cxx.configure.ninja
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -55,7 +56,6 @@ import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
-import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.Version
@@ -68,8 +68,6 @@ import com.android.builder.errors.IssueReporter
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ClassField
 import com.android.builder.model.VectorDrawablesOptions
-import com.android.utils.combineAsCamelCase
-import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -124,7 +122,7 @@ open class VariantDslInfoImpl internal constructor(
     private val inconsistentTestAppId: Boolean,
     @Deprecated("use extension") private val oldExtension: BaseExtension,
     private val extension: CommonExtension<*,*,*,*>
-): VariantDslInfo, DimensionCombination {
+): VariantDslInfo {
 
     private val dslNamespaceProvider: Provider<String>? = extension.getDslNamespace(componentType)?.let {
         services.provider { it }
@@ -155,7 +153,7 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @see ComponentType.isTestComponent
      */
-    override val testedVariant: VariantDslInfo?
+    override val testedVariant: TestedComponentDslInfo?
         get() = if (componentType.isTestComponent) { productionVariant } else null
 
     private val mergedNdkConfig = MergedNdkConfig()
@@ -316,7 +314,7 @@ open class VariantDslInfoImpl internal constructor(
                     ?: defaultConfig.testApplicationId
 
             return if (testAppIdFromFlavors == null) {
-                testedVariant?.applicationId?.map {
+                (testedVariant as? ApkProducingComponentDslInfo)?.applicationId?.map {
                     "$it.test"
                 } ?: namespace
             } else {
@@ -1173,6 +1171,11 @@ open class VariantDslInfoImpl internal constructor(
             )
             return mergedProperties
         }
+
+    // Only applicable for testFixtures
+    // TODO: Remove once we split up the implementations
+    override val testFixturesAndroidResourcesEnabled: Boolean
+        get() = productionVariant!!.testFixtures.androidResources
 
     companion object {
 
