@@ -19,6 +19,7 @@ package com.android.build.gradle
 import com.android.AndroidProjectTypes
 import com.android.build.api.variant.VariantFilter
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
@@ -486,7 +487,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         )
 
         // convert to mock VariantScope
-        val components = mutableListOf<VariantImpl>()
+        val components = mutableListOf<VariantCreationConfig>()
 
         val globalTaskCreationConfig = Mockito.mock(GlobalTaskCreationConfig::class.java)
         Mockito.`when`(globalTaskCreationConfig.services).thenReturn(dslServices)

@@ -16,12 +16,11 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantSelector
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import org.gradle.api.Action
 import java.util.concurrent.atomic.AtomicBoolean
@@ -71,18 +70,18 @@ open class OperationsRegistrar<Component: ComponentIdentity> {
 
 class VariantOperationsRegistrar<Component: ComponentIdentity> : OperationsRegistrar<Component>() {
 
-    fun executeOperations(userVisibleVariant: Component, internalVariant: ComponentImpl) {
+    fun executeOperations(userVisibleVariant: Component, internalVariant: ComponentCreationConfig) {
         super.executeOperations(userVisibleVariant)
         wireAllFinalizedBy(internalVariant)
     }
 
-    private fun wireAllFinalizedBy(variant: ComponentImpl) {
+    private fun wireAllFinalizedBy(variant: ComponentCreationConfig) {
         InternalArtifactType::class.sealedSubclasses.forEach { kClass ->
             handleFinalizedByForType(variant, kClass)
         }
     }
 
-    private fun handleFinalizedByForType(variant: ComponentImpl, type: KClass<out InternalArtifactType<*>>) {
+    private fun handleFinalizedByForType(variant: ComponentCreationConfig, type: KClass<out InternalArtifactType<*>>) {
         type.objectInstance?.let { artifact ->
             artifact.finalizingArtifact?.forEach { artifactFinalizedBy ->
                 val artifactContainer = when(artifactFinalizedBy) {

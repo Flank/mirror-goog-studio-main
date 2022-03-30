@@ -26,8 +26,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -37,6 +35,9 @@ import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.LibraryCreationConfig;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -100,9 +101,14 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     public LibraryTaskManager(
             @NonNull Project project,
-            @NonNull Collection<? extends ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
-            @NonNull Collection<? extends TestComponentImpl> testComponents,
-            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
+            @NonNull
+                    Collection<
+                                    ? extends
+                                            ComponentInfo<
+                                                    LibraryVariantBuilderImpl, LibraryVariantImpl>>
+                            variants,
+            @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
+            @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {
@@ -349,7 +355,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         createBundleTask(libraryVariant);
     }
 
-    private void createBundleTask(@NonNull VariantImpl variant) {
+    private void createBundleTask(@NonNull LibraryCreationConfig variant) {
         taskFactory.register(new BundleAar.LibraryCreationAction(variant));
 
         variant.getTaskContainer()
@@ -381,7 +387,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     }
 
     private void createComponent(
-            @NonNull VariantImpl variant,
+            @NonNull LibraryCreationConfig variant,
             @NonNull String componentName,
             boolean isClassifierRequired) {
         final VariantDependencies variantDependencies = variant.getVariantDependencies();

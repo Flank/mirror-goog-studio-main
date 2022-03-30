@@ -32,7 +32,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.Artifact;
 import com.android.build.api.artifact.ArtifactTransformationRequest;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
@@ -43,6 +42,9 @@ import com.android.build.api.variant.impl.VariantOutputListKt;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
+import com.android.build.gradle.internal.component.NestedComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.manifest.ManifestData;
@@ -1260,7 +1262,16 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getAssets()
                     .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
-            packageAndroidArtifact.setJniDebugBuild(creationConfig.isJniDebuggable());
+            boolean isJniDebuggable;
+            if (creationConfig instanceof NestedComponentCreationConfig) {
+                isJniDebuggable =
+                        ((NestedComponentCreationConfig) creationConfig)
+                                .getMainVariant()
+                                .isJniDebuggable();
+            } else {
+                isJniDebuggable = ((VariantCreationConfig) creationConfig).isJniDebuggable();
+            }
+            packageAndroidArtifact.setJniDebugBuild(isJniDebuggable);
             packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
@@ -1281,9 +1292,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
             packageAndroidArtifact.getBaseModuleMetadata().disallowChanges();
-            if (!creationConfig.getSupportedAbis().isEmpty()) {
+            Set<String> supportedAbis = creationConfig.getSupportedAbis();
+            if (!supportedAbis.isEmpty()) {
                 // If the build author has set the supported Abis that is respected
-                packageAndroidArtifact.getAbiFilters().set(creationConfig.getSupportedAbis());
+                packageAndroidArtifact.getAbiFilters().set(supportedAbis);
             } else {
                 // Otherwise, use the injected Abis if set.
                 packageAndroidArtifact
@@ -1321,9 +1333,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             // If we're in a dynamic feature, we use FEATURE_SIGNING_CONFIG_VERSIONS, published from
             // the base. Otherwise, we use the SIGNING_CONFIG_VERSIONS internal artifact.
             if (creationConfig.getComponentType().isDynamicFeature()
-                    || (creationConfig instanceof TestComponentImpl
-                            && creationConfig
-                                    .getTestedConfig()
+                    || (creationConfig instanceof TestComponentCreationConfig
+                            && ((TestComponentCreationConfig) creationConfig)
+                                    .getMainVariant()
                                     .getComponentType()
                                     .isDynamicFeature())) {
                 packageAndroidArtifact

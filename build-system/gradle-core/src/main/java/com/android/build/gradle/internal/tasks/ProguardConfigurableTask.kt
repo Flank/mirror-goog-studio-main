@@ -21,6 +21,7 @@ import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -166,7 +167,7 @@ abstract class ProguardConfigurableTask(
 
         private val includeFeaturesInScopes: Boolean = creationConfig.variantScope.consumesFeatureJars()
         protected val componentType: ComponentType = creationConfig.componentType
-        private val testedConfig = creationConfig.testedConfig
+        private val testedConfig = (creationConfig as? TestComponentCreationConfig)?.mainVariant
 
         // Override to make this true in proguard
         protected open val defaultObfuscate: Boolean = false

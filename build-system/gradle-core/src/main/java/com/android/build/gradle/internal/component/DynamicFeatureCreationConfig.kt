@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.component
 
 import org.gradle.api.provider.Provider
 
-interface DynamicFeatureCreationConfig: ApkCreationConfig {
+interface DynamicFeatureCreationConfig: VariantCreationConfig, ApkCreationConfig {
 
     val featureName: Provider<String>
     val resOffset: Provider<Int>

@@ -21,6 +21,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.dependency.BaseDexingTransform
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
 import com.android.build.gradle.internal.dexing.DexParameters
@@ -436,7 +437,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             }
 
             desugaringClasspathForArtifactTransforms = if (dexExternalLibsInArtifactTransform) {
-                val testedExternalLibs = creationConfig.onTestedConfig {
+                val testedExternalLibs = (creationConfig as? TestComponentCreationConfig)?.onTestedVariant {
                     it.variantDependencies.getArtifactCollection(
                         ConsumedConfigType.RUNTIME_CLASSPATH,
                         ArtifactScope.ALL,
@@ -447,7 +448,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 // Before b/115334911 was fixed, provided classpath did not contain the tested project.
                 // Because we do not want tested variant classes in the desugaring classpath for
                 // external libraries, we explicitly remove it.
-                val testedProject = this.creationConfig.onTestedConfig {
+                val testedProject = (creationConfig as? TestComponentCreationConfig)?.onTestedVariant {
                     val artifactType =
                         it.variantScope.publishingSpec.getSpec(
                             AndroidArtifacts.ArtifactType.CLASSES_JAR,

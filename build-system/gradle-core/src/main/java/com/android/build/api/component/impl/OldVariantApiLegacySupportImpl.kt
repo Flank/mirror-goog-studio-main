@@ -19,11 +19,19 @@ package com.android.build.api.component.impl
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.gradle.api.JavaCompileOptions
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 
 class OldVariantApiLegacySupportImpl(
+    private val component: ComponentCreationConfig,
     private val variantDslInfo: VariantDslInfoImpl
 ): OldVariantApiLegacySupport {
 
@@ -35,4 +43,59 @@ class OldVariantApiLegacySupportImpl(
         get() = variantDslInfo.mergedFlavor
     override val javaCompileOptions: JavaCompileOptions
         get() = variantDslInfo.javaCompileOptions
+
+    override fun getJavaClasspathArtifacts(
+        configType: AndroidArtifacts.ConsumedConfigType,
+        classesType: AndroidArtifacts.ArtifactType,
+        generatedBytecodeKey: Any?
+    ): ArtifactCollection {
+        val mainCollection =
+            component.variantDependencies.getArtifactCollection(
+                configType,
+                AndroidArtifacts.ArtifactScope.ALL,
+                classesType
+            )
+        val extraArtifact = component.services.provider {
+            component.variantData.getGeneratedBytecode(generatedBytecodeKey)
+        }
+        val combinedCollection = component.services.fileCollection(
+            mainCollection.artifactFiles, extraArtifact
+        )
+        val extraCollection = ArtifactCollectionWithExtraArtifact.makeExtraCollection(
+            mainCollection,
+            combinedCollection,
+            extraArtifact,
+            component.services.projectInfo.path
+        )
+
+        return (component as? TestComponentCreationConfig)?.onTestedVariant { testedVariant ->
+            // This is required because of http://b/150500779. Kotlin Gradle plugin relies on
+            // TestedComponentIdentifierImpl being present in the returned artifact collection, as
+            // artifacts with that identifier type are added to friend paths to kotlinc invocation.
+            // Because jar containing all classes of the main artifact is in the classpath when
+            // compiling test, we need to add TestedComponentIdentifierImpl artifact with that file.
+            // This is needed when compiling test variants that access internal members.
+            val internalArtifactType = testedVariant.variantScope.publishingSpec
+                .getSpec(classesType, configType.publishedTo)!!.outputType
+
+            @Suppress("USELESS_CAST") // Explicit cast needed here.
+            val testedAllClasses: Provider<FileCollection> =
+                component.services.provider {
+                    component.services.fileCollection(
+                        testedVariant.artifacts.get(internalArtifactType)
+                    ) as FileCollection
+                }
+            val combinedCollectionForTest = component.services.fileCollection(
+                combinedCollection, testedAllClasses, testedAllClasses
+            )
+
+            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
+                extraCollection,
+                combinedCollectionForTest,
+                testedAllClasses,
+                component.services.projectInfo.path,
+                null
+            )
+        } ?: extraCollection
+    }
 }

@@ -28,8 +28,8 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.DirectoryEntry
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
@@ -57,7 +57,7 @@ open class UnitTestImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    testedVariant: VariantImpl,
+    testedVariant: VariantCreationConfig,
     transformManager: TransformManager,
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -88,35 +88,35 @@ open class UnitTestImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.minSdkVersion
+        get() = mainVariant.minSdkVersion
 
     override val targetSdkVersion: AndroidVersion
-        get() = testedVariant.targetSdkVersion
+        get() = mainVariant.targetSdkVersion
 
     override val dslAndroidResources: AndroidResources
-        get() = variantDslInfo.androidResources
+        get() = variantDslInfo.testedVariant!!.androidResources
 
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 
     override val targetSdkVersionOverride: AndroidVersion?
-        get() = testedVariant.targetSdkVersionOverride
+        get() = mainVariant.targetSdkVersionOverride
 
     /**
      * Return the default runner as with unit tests, there is no dexing. However aapt2 requires
      * the instrumentation tag to be present in the merged manifest to process android resources.
      */
-    override val instrumentationRunner: Provider<out String>
+    override val instrumentationRunner: Provider<String>
         get() = services.provider { VariantDslInfoImpl.DEFAULT_TEST_RUNNER }
 
     override val testedApplicationId: Provider<String>
-        get() = testedConfig.applicationId
+        get() = mainVariant.applicationId
 
     override val debuggable: Boolean
-        get() = testedConfig.debuggable
+        get() = mainVariant.debuggable
 
     override val profileable: Boolean
-        get() = testedConfig.profileable
+        get() = mainVariant.profileable
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
@@ -146,4 +146,8 @@ open class UnitTestImpl @Inject constructor(
      * There is no build config fields for unit tests.
      */
     override val buildConfigEnabled: Boolean = false
+
+    // TODO: Remove
+    override val isUnitTestCoverageEnabled: Boolean
+        get() = variantDslInfo.isUnitTestCoverageEnabled
 }

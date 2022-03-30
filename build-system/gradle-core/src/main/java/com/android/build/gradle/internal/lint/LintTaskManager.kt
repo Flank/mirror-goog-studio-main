@@ -1,11 +1,11 @@
 package com.android.build.gradle.internal.lint
 
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.Lint
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
@@ -42,8 +42,8 @@ class LintTaskManager constructor(
     fun createLintTasks(
         componentType: ComponentType,
         variantModel: VariantModel,
-        variantPropertiesList: List<VariantImpl>,
-        testComponentPropertiesList: Collection<TestComponentImpl>
+        variantPropertiesList: List<VariantCreationConfig>,
+        testComponentPropertiesList: Collection<TestComponentCreationConfig>
     ) {
         if (componentType.isForTesting) {
             return // Don't  create lint tasks in test-only projects
@@ -184,8 +184,8 @@ class LintTaskManager constructor(
     }
 
     private fun attachTestsToVariants(
-        variantPropertiesList: List<VariantImpl>,
-        testComponentPropertiesList: Collection<TestComponentImpl>,
+        variantPropertiesList: List<VariantCreationConfig>,
+        testComponentPropertiesList: Collection<TestComponentCreationConfig>,
         ignoreTestFixturesSources: Boolean
     ): LinkedHashMap<String, VariantWithTests> {
         val variantsWithTests = LinkedHashMap<String, VariantWithTests>()
@@ -200,7 +200,7 @@ class LintTaskManager constructor(
             )
         }
         for (testComponent in testComponentPropertiesList) {
-            val key = testComponent.testedConfig.name
+            val key = testComponent.mainVariant.name
             val current = variantsWithTests[key]!!
             when (testComponent) {
                 is AndroidTestCreationConfig -> {

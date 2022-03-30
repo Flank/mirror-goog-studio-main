@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.signing
 
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
@@ -84,8 +84,8 @@ class SigningConfigDataProvider(
         fun create(creationConfig: ApkCreationConfig): SigningConfigDataProvider {
             val isInDynamicFeature =
                 creationConfig.componentType.isDynamicFeature
-                        || (creationConfig is TestComponentImpl
-                                && creationConfig.testedConfig.componentType.isDynamicFeature)
+                        || (creationConfig is TestComponentCreationConfig
+                                && creationConfig.mainVariant.componentType.isDynamicFeature)
 
             // We want to avoid writing the signing config information to disk to protect sensitive
             // data (see bug 137210434), so we'll attempt to get this information directly from

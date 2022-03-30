@@ -30,13 +30,14 @@ import com.android.build.api.variant.TestFixtures
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ResValueKeyImpl
-import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.internal.component.AarCreationConfig
-import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.PublishableCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
@@ -62,7 +63,7 @@ open class TestFixturesImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: TestFixturesVariantData,
-    val mainVariant: VariantImpl,
+    override val mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -81,7 +82,7 @@ open class TestFixturesImpl @Inject constructor(
     variantServices,
     taskCreationServices,
     global
-), TestFixtures, ComponentCreationConfig, AarCreationConfig {
+), TestFixtures, TestFixturesCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -97,8 +98,8 @@ open class TestFixturesImpl @Inject constructor(
         get() = mainVariant.minSdkVersion
     override val targetSdkVersion: AndroidVersion
         get() = mainVariant.targetSdkVersion
-    override val needsMainDexListForBundle: Boolean
-        get() = mainVariant.needsMainDexListForBundle
+    override val publishInfo: VariantPublishingInfo?
+        get() = (mainVariant as? PublishableCreationConfig)?.publishInfo
 
     override val aarMetadata: AarMetadata =
             internalServices.newInstance(AarMetadata::class.java).also {
@@ -159,5 +160,8 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val androidResourcesEnabled: Boolean =
-        variantDslInfo.testFixtures.androidResources
+        variantDslInfo.testFixturesAndroidResourcesEnabled
+
+    override val supportedAbis: Set<String>
+        get() = mainVariant.supportedAbis
 }

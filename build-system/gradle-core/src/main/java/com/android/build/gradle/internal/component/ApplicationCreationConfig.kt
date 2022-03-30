@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.gradle.internal.dsl.NdkOptions
-import org.gradle.api.provider.Property
 
-interface ApplicationCreationConfig: ApkCreationConfig, VariantCreationConfig {
+interface ApplicationCreationConfig: ApkCreationConfig, VariantCreationConfig, PublishableCreationConfig {
     val needAssetPackTasks: Boolean
     val nativeDebugSymbolLevel: NdkOptions.DebugSymbolLevel
+    val isWearAppUnbundled: Boolean?
 }

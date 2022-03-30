@@ -16,14 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.dsl.AbstractPublishing
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
@@ -50,8 +50,8 @@ import org.gradle.api.file.FileCollection
 class ApplicationTaskManager(
     project: Project,
     private val variants: Collection<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
-    testComponents: Collection<TestComponentImpl>,
-    testFixturesComponents: Collection<TestFixturesImpl>,
+    testComponents: Collection<TestComponentCreationConfig>,
+    testFixturesComponents: Collection<TestFixturesCreationConfig>,
     globalConfig: GlobalTaskCreationConfig,
     localConfig: TaskManagerConfig,
     extension: BaseExtension,

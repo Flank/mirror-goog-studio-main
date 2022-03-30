@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.test
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
-import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.tasks.databinding.DATA_BINDING_TRIGGER_CLASS
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
@@ -42,8 +41,7 @@ import java.util.zip.ZipFile
 abstract class AbstractTestDataImpl(
     @get:Input
     val namespace: Provider<String>,
-    creationConfig: TestCreationConfig,
-    instrumentedTestCreationConfig: InstrumentedTestCreationConfig,
+    creationConfig: InstrumentedTestCreationConfig,
     override val testApkDir: Provider<Directory>,
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -63,11 +61,11 @@ abstract class AbstractTestDataImpl(
 
     override val instrumentationTargetPackageId = creationConfig.testedApplicationId
 
-    override val instrumentationRunner = instrumentedTestCreationConfig.instrumentationRunner
+    override val instrumentationRunner = creationConfig.instrumentationRunner
 
     override val instrumentationRunnerArguments: Map<String, String> by lazy {
         ImmutableMap.builder<String, String>()
-            .putAll(instrumentedTestCreationConfig.instrumentationRunnerArguments)
+            .putAll(creationConfig.instrumentationRunnerArguments)
             .putAll(extraInstrumentationTestRunnerArgs)
             .build()
     }

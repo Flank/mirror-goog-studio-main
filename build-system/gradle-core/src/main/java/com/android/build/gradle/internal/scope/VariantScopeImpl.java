@@ -35,13 +35,13 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.dsl.CompileOptions;
 import com.android.build.api.variant.ComponentIdentity;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -93,7 +93,7 @@ public class VariantScopeImpl implements VariantScope {
 
     // Variant specific Data
     @NonNull private final ComponentIdentity componentIdentity;
-    @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final ComponentDslInfo dslInfo;
     @NonNull private final VariantPathHelper pathHelper;
     @NonNull private final ArtifactsImpl artifacts;
     @NonNull private final VariantDependencies variantDependencies;
@@ -104,7 +104,7 @@ public class VariantScopeImpl implements VariantScope {
 
     private final boolean hasDynamicFeatures;
 
-    @Nullable private final VariantImpl testedVariantProperties;
+    @Nullable private final VariantCreationConfig testedVariantProperties;
 
     // other
 
@@ -115,27 +115,26 @@ public class VariantScopeImpl implements VariantScope {
 
     public VariantScopeImpl(
             @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull ComponentDslInfo dslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,
             @NonNull BaseServices baseServices,
             @Nullable String compileSdkVersion,
             boolean hasDynamicFeatures,
-            @Nullable VariantImpl testedVariantProperties) {
+            @Nullable VariantCreationConfig testedVariantProperties) {
         this.componentIdentity = componentIdentity;
-        this.variantDslInfo = variantDslInfo;
+        this.dslInfo = dslInfo;
         this.variantDependencies = variantDependencies;
         this.pathHelper = pathHelper;
         this.artifacts = artifacts;
         this.baseServices = baseServices;
-        this.variantPublishingSpec =
-                PublishingSpecs.getVariantSpec(variantDslInfo.getComponentType());
+        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(dslInfo.getComponentType());
         this.compileSdkVersion = compileSdkVersion;
         this.hasDynamicFeatures = hasDynamicFeatures;
         this.testedVariantProperties = testedVariantProperties;
 
-        this.postProcessingOptions = variantDslInfo.getPostProcessingOptions();
+        this.postProcessingOptions = dslInfo.getPostProcessingOptions();
 
         configureNdk();
     }
@@ -217,26 +216,26 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean isCrunchPngs() {
         // If set for this build type, respect that.
-        Boolean buildTypeOverride = variantDslInfo.isCrunchPngs();
+        Boolean buildTypeOverride = dslInfo.isCrunchPngs();
         if (buildTypeOverride != null) {
             return buildTypeOverride;
         }
         // Otherwise, if set globally, respect that.
         Boolean globalOverride =
-                ((AaptOptions) variantDslInfo.getAndroidResources()).getCruncherEnabledOverride();
+                ((AaptOptions) dslInfo.getAndroidResources()).getCruncherEnabledOverride();
 
         if (globalOverride != null) {
             return globalOverride;
         }
         // If not overridden, use the default from the build type.
         //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
-        return variantDslInfo.isCrunchPngsDefault();
+        return dslInfo.isCrunchPngsDefault();
     }
 
     @Override
     public boolean consumesFeatureJars() {
-        return variantDslInfo.getComponentType().isBaseModule()
-                && variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        return dslInfo.getComponentType().isBaseModule()
+                && dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
                 && hasDynamicFeatures;
     }
 
@@ -244,8 +243,7 @@ public class VariantScopeImpl implements VariantScope {
     public boolean getNeedsJavaResStreams() {
         // We need to create original java resource stream only if we're in a library module with
         // custom transforms.
-        return variantDslInfo.getComponentType().isAar()
-                && !variantDslInfo.getTransforms().isEmpty();
+        return dslInfo.getComponentType().isAar() && !dslInfo.getTransforms().isEmpty();
     }
 
     @NonNull
@@ -258,7 +256,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public List<File> getConsumerProguardFilesForFeatures() {
         // We include proguardFiles if we're in a dynamic-feature module.
-        final boolean includeProguardFiles = variantDslInfo.getComponentType().isDynamicFeature();
+        final boolean includeProguardFiles = dslInfo.getComponentType().isDynamicFeature();
         final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
         if (includeProguardFiles) {
             consumerProguardFiles.addAll(gatherProguardFiles(ProguardFileType.EXPLICIT));
@@ -275,7 +273,7 @@ public class VariantScopeImpl implements VariantScope {
                         .getProject()
                         .getObjects()
                         .listProperty(RegularFile.class);
-        variantDslInfo.gatherProguardFiles(type, regularFiles);
+        dslInfo.gatherProguardFiles(type, regularFiles);
         return regularFiles.get().stream().map(RegularFile::getAsFile).collect(Collectors.toList());
     }
 
@@ -298,10 +296,10 @@ public class VariantScopeImpl implements VariantScope {
      *
      * <p>This value can be overridden by the OptionalBooleanOption.IDE_TEST_ONLY property.
      *
-     * @param variant {@link VariantImpl} for this variant scope.
+     * @param variant {@link VariantCreationConfig} for this variant scope.
      */
     @Override
-    public boolean isTestOnly(VariantImpl variant) {
+    public boolean isTestOnly(VariantCreationConfig variant) {
         ProjectOptions projectOptions = baseServices.getProjectOptions();
         Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
 
@@ -434,7 +432,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public Provider<RegularFile> getRJarForUnitTests() {
-        ComponentType componentType = variantDslInfo.getComponentType();
+        ComponentType componentType = dslInfo.getComponentType();
         checkNotNull(
                 testedVariantProperties,
                 "Variant type does not have a tested variant: " + componentType);

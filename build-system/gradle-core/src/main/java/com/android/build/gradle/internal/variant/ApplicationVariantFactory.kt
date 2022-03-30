@@ -30,7 +30,7 @@ import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -273,7 +273,7 @@ class ApplicationVariantFactory(
     }
 
     private fun checkSplitsConflicts(
-        component: ComponentCreationConfig,
+        component: ApplicationCreationConfig,
         abiFilters: Set<String?>,
         globalConfig: GlobalTaskCreationConfig,
     ) { // if we don't have any ABI splits, nothing is conflicting.
@@ -302,7 +302,7 @@ class ApplicationVariantFactory(
     }
 
     private fun restrictEnabledOutputs(
-        component: ComponentCreationConfig,
+        component: ApplicationCreationConfig,
         variantOutputs: VariantOutputList,
         globalConfig: GlobalTaskCreationConfig
     ) {

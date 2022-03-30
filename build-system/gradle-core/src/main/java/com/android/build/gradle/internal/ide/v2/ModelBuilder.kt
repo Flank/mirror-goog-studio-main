@@ -19,8 +19,6 @@ package com.android.build.gradle.internal.ide.v2
 import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.BuildType
@@ -28,21 +26,19 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.variant.AndroidTest
-import com.android.build.api.variant.Component
-import com.android.build.api.variant.HasAndroidTest
 import com.android.build.api.variant.HasTestFixtures
-import com.android.build.api.variant.UnitTest
+import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.TestVariantImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
-import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
@@ -201,7 +197,7 @@ class ModelBuilder<
         fun isNotEmpty(): Boolean = buildTypes.isNotEmpty() || flavors.isNotEmpty()
 
         companion object {
-            fun createFrom(components: Collection<Component>): DimensionInformation {
+            fun createFrom(components: Collection<ComponentCreationConfig>): DimensionInformation {
                 val buildTypes = mutableSetOf<String>()
                 val flavors = mutableSetOf<Pair<String, String>>()
 
@@ -244,11 +240,9 @@ class ModelBuilder<
         // Not doing this is confusing to users as they see folders marked as source that aren't
         // used by anything.
         val variantDimensionInfo = DimensionInformation.createFrom(variants)
-        val androidTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<AndroidTest>())
-        val unitTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<UnitTest>())
-        val testFixtures = DimensionInformation.createFrom(variants
-            .filterIsInstance<VariantImpl>()
-            .mapNotNull { it.testFixturesComponent })
+        val androidTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<AndroidTestCreationConfig>())
+        val unitTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<UnitTestCreationConfig>())
+        val testFixtures = DimensionInformation.createFrom(variants.mapNotNull { it.testFixturesComponent })
 
         // for now grab the first buildFeatureValues as they cannot be different.
         val buildFeatures = variantModel.buildFeatures
@@ -317,10 +311,7 @@ class ModelBuilder<
         }
 
         // gather variants
-        val variantList = variants
-            .filterIsInstance<VariantImpl>()
-            .map { createBasicVariant(it, buildFeatures)
-        }
+        val variantList = variants.map { createBasicVariant(it, buildFeatures) }
 
         return BasicAndroidProjectImpl(
             path = project.path,
@@ -340,7 +331,7 @@ class ModelBuilder<
     }
 
     private fun buildAndroidProjectModel(project: Project): AndroidProject {
-        val variants = variantModel.variants.filterIsInstance<VariantImpl>()
+        val variants = variantModel.variants
 
         // Keep track of the result of parsing each manifest for instant app value.
         // This prevents having to reparse the
@@ -353,7 +344,7 @@ class ModelBuilder<
         val variantList = variants.map {
             namespace = it.namespace.get()
             if (androidTestNamespace == null && it is HasAndroidTest) {
-                (it.androidTest as? TestComponentCreationConfig)?.let { androidTest ->
+                it.androidTest?.let { androidTest ->
                     // TODO(b/176931684) Use AndroidTest.namespace instead after we stop
                     //  supporting using applicationId to namespace the test component R class.
                     androidTestNamespace = androidTest.namespaceForR.get()
@@ -528,7 +519,6 @@ class ModelBuilder<
         // get the variant to return the dependencies for
         val variantName = parameter.variantName
         val variant = variantModel.variants
-            .filterIsInstance<VariantImpl>()
             .singleOrNull { it.name == variantName }
             ?: return null
 
@@ -562,7 +552,7 @@ class ModelBuilder<
     }
 
     private fun createBasicVariant(
-        variant: VariantImpl,
+        variant: VariantCreationConfig,
         features: BuildFeatureValues
     ): BasicVariantImpl {
         return BasicVariantImpl(
@@ -583,7 +573,7 @@ class ModelBuilder<
     }
 
     private fun createBasicArtifact(
-        component: ComponentImpl,
+        component: ComponentCreationConfig,
         features: BuildFeatureValues
     ): BasicArtifact {
         val sourceProviders = component.variantSources
@@ -597,7 +587,7 @@ class ModelBuilder<
     }
 
     private fun createVariant(
-        variant: VariantImpl,
+        variant: VariantCreationConfig,
         instantAppResultMap: MutableMap<File, Boolean>
     ): com.android.build.gradle.internal.ide.v2.VariantImpl {
         return VariantImpl(
@@ -625,7 +615,7 @@ class ModelBuilder<
         )
     }
 
-    private fun createAndroidArtifact(component: ComponentImpl): AndroidArtifactImpl {
+    private fun createAndroidArtifact(component: ComponentCreationConfig): AndroidArtifactImpl {
         val variantData = component.variantData
         // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer
@@ -726,7 +716,7 @@ class ModelBuilder<
         )
     }
 
-    private fun createJavaArtifact(component: ComponentImpl): JavaArtifact {
+    private fun createJavaArtifact(component: ComponentCreationConfig): JavaArtifact {
         val variantData = component.variantData
 
         // FIXME need to find a better way for this.
@@ -764,7 +754,7 @@ class ModelBuilder<
     }
 
     private fun createDependencies(
-        component: ComponentImpl,
+        component: ComponentCreationConfig,
         buildMapping: BuildMapping,
         libraryService: LibraryService,
     ): ArtifactDependencies {
@@ -814,7 +804,7 @@ class ModelBuilder<
     }
 
     private fun getBundleInfo(
-        component: ComponentImpl
+        component: ComponentCreationConfig
     ): BundleInfo? {
         if (!component.componentType.isBaseModule) {
             return null
@@ -839,7 +829,7 @@ class ModelBuilder<
 
     // FIXME this is coming from the v1 Model Builder and this needs to be rethought. b/160970116
     private fun inspectManifestForInstantTag(
-        component: ComponentImpl,
+        component: ComponentCreationConfig,
         instantAppResultMap: MutableMap<File, Boolean>
     ): Boolean {
         if (!component.componentType.isBaseModule && !component.componentType.isDynamicFeature) {
@@ -924,7 +914,7 @@ class ModelBuilder<
     }
 
     private fun getTestTargetVariant(
-        component: ComponentImpl
+        component: ComponentCreationConfig
     ): TestedTargetVariant? {
         if (extension is TestExtension) {
             val targetPath = extension.targetProjectPath ?: return null

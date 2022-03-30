@@ -20,6 +20,7 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
@@ -292,7 +293,8 @@ abstract class RenderscriptCompile : NdkTask() {
 
     class CreationAction(
         creationConfig: ConsumableCreationConfig,
-        val renderscript: Renderscript
+        private val renderscript: Renderscript,
+        private val ndkConfig: CoreNdkOptions
     ) : VariantTaskCreationAction<RenderscriptCompile, ConsumableCreationConfig>(
         creationConfig
     ) {
@@ -346,7 +348,7 @@ abstract class RenderscriptCompile : NdkTask() {
 
             task.objOutputDir = creationConfig.paths.renderscriptObjOutputDir
 
-            task.ndkConfig = creationConfig.ndkConfig
+            task.ndkConfig = ndkConfig
 
             task.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
             task.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)

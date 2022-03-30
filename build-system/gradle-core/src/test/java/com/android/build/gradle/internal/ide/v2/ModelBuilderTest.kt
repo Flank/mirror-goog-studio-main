@@ -17,18 +17,17 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.AndroidProjectTypes
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.ApplicationProductFlavor
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeLogger
@@ -184,8 +183,8 @@ class ModelBuilderTest {
         return modelClass.cast(buildAll(modelClass.name, project))
     }
 
-    private val variantList: MutableList<VariantImpl> = mutableListOf()
-    private val testComponentList: MutableList<TestComponentImpl> = mutableListOf()
+    private val variantList: MutableList<VariantCreationConfig> = mutableListOf()
+    private val testComponentList: MutableList<TestComponentCreationConfig> = mutableListOf()
 
     private val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     private val sdkComponentProvider = FakeGradleProvider(sdkComponents)

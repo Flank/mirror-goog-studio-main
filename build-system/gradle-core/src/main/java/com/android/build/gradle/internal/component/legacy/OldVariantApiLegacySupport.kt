@@ -20,10 +20,17 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import org.gradle.api.artifacts.ArtifactCollection
 
 interface OldVariantApiLegacySupport {
     val buildTypeObj: BuildType
     val productFlavorList: List<ProductFlavor>
     val mergedFlavor: MergedFlavor
     val javaCompileOptions: JavaCompileOptions
+    fun getJavaClasspathArtifacts(
+        configType: AndroidArtifacts.ConsumedConfigType,
+        classesType: AndroidArtifacts.ArtifactType,
+        generatedBytecodeKey: Any?
+    ): ArtifactCollection
 }

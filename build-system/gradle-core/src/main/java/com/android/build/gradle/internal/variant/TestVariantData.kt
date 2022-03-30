@@ -37,7 +37,6 @@ class TestVariantData(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    val testedVariantData: TestedVariantData,
     services: VariantServices,
     taskContainer: MutableTaskContainer
 ) : ApkVariantData(

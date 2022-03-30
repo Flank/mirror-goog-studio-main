@@ -17,11 +17,9 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestedExtension
@@ -43,11 +41,13 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.NestedComponentCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BuildType
@@ -78,7 +78,6 @@ import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.internal.variant.DimensionCombinator
 import com.android.build.gradle.internal.variant.TestFixturesVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.build.gradle.internal.variant.TestedVariantData
 import com.android.build.gradle.internal.variant.VariantComponentInfo
 import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.internal.variant.VariantInputModel
@@ -150,14 +149,14 @@ class VariantManager<
     /**
      * Returns a list of all nested components.
      */
-    val nestedComponents: MutableList<ComponentImpl> = Lists.newArrayList()
+    val nestedComponents: MutableList<NestedComponentCreationConfig> = Lists.newArrayList()
 
     /**
      * Returns a list of all test components.
      *
      * @see .createVariants
      */
-    val testComponents: MutableList<TestComponentImpl> =
+    val testComponents: MutableList<TestComponentCreationConfig> =
             Lists.newArrayList()
 
     /**
@@ -194,7 +193,7 @@ class VariantManager<
     }
 
     private fun getFlavorSelection(
-            variantDslInfo: VariantDslInfo): Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> {
+            variantDslInfo: ComponentDslInfo): Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> {
         val factory = project.objects
         return variantDslInfo.missingDimensionStrategies.entries.stream()
                 .collect(
@@ -266,13 +265,13 @@ class VariantManager<
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         componentType: ComponentType,
         globalConfig: GlobalVariantBuilderConfig,
-    ): VariantComponentInfo<CommonExtensionT, VariantBuilderT, VariantT>? {
+    ): VariantComponentInfo<VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
         val defaultConfig = variantInputModel.defaultConfigData
         val defaultConfigSourceProvider = defaultConfig.sourceSet
-        val variantDslInfoBuilder = getBuilder<CommonExtensionT>(
+        val variantDslInfoBuilder = getBuilder(
                 dimensionCombination,
                 componentType,
                 defaultConfig.defaultConfig,
@@ -431,7 +430,6 @@ class VariantManager<
             variantBuilder,
             variantApiObject,
             profileEnabledVariantBuilder,
-            variantApiOperationsRegistrar,
             variantDslInfo
         )
     }
@@ -464,7 +462,7 @@ class VariantManager<
         dimensionCombination: DimensionCombination,
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-        mainComponentInfo: VariantComponentInfo<CommonExtensionT, VariantBuilderT, VariantT>
+        mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>
     ): TestFixturesImpl {
         val testFixturesComponentType = ComponentTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
@@ -602,7 +600,7 @@ class VariantManager<
         val testFixturesBuildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
             dslExtension.buildFeatures,
             dslServices.projectOptions,
-            variantDslInfo.testFixtures.androidResources
+            variantDslInfo.testFixturesAndroidResourcesEnabled
         )
 
         val testFixturesComponent = variantFactory.createTestFixtures(
@@ -642,11 +640,11 @@ class VariantManager<
         dimensionCombination: DimensionCombination,
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-        testedComponentInfo: VariantComponentInfo<CommonExtensionT, VariantBuilderT, VariantT>,
+        testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
         componentType: ComponentType,
         testFixturesEnabled: Boolean,
         inconsistentTestAppId: Boolean
-    ): TestComponentImpl? {
+    ): TestComponentCreationConfig? {
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
@@ -787,7 +785,6 @@ class VariantManager<
                 variantSources,
                 pathHelper,
                 artifacts,
-                (testedComponentInfo.variant.variantData as TestedVariantData),
                 variantPropertiesApiServices,
                 taskContainer)
         val testBuildFeatureValues = variantFactory.createTestBuildFeatureValues(
@@ -950,7 +947,7 @@ class VariantManager<
                     )
                     unitTest?.let {
                         addTestComponent(it)
-                        variant.unitTest = it as UnitTest
+                        variant.unitTest = it as UnitTestImpl
                     }
                 }
 
@@ -1033,8 +1030,7 @@ class VariantManager<
         variants.add(variant)
     }
 
-    private fun addTestComponent(
-            testComponent: TestComponentImpl) {
+    private fun addTestComponent(testComponent: TestComponentCreationConfig) {
         nestedComponents.add(testComponent)
         testComponents.add(testComponent)
     }

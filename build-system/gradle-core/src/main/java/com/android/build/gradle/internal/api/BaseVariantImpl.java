@@ -680,10 +680,12 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public ArtifactCollection getCompileClasspathArtifacts(@Nullable Object generatorKey) {
-        return component.getJavaClasspathArtifacts(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                AndroidArtifacts.ArtifactType.CLASSES_JAR,
-                generatorKey);
+        return component
+                .getOldVariantApiLegacySupport()
+                .getJavaClasspathArtifacts(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
+                        generatorKey);
     }
 
     @Override

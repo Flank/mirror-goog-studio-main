@@ -84,4 +84,12 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
     val needsShrinkDesugarLibrary: Boolean
 
     val renderscript: Renderscript?
+
+    val renderscriptNdkModeEnabled: Boolean
+
+    val needsMainDexListForBundle: Boolean
+
+    val defaultGlslcArgs: List<String>
+
+    val scopedGlslcArgs: Map<String, List<String>>
 }

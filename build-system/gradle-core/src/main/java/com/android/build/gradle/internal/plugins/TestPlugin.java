@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.dsl.TestBuildFeatures;
 import com.android.build.api.dsl.TestBuildType;
@@ -38,6 +36,8 @@ import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -56,9 +56,7 @@ import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
-
 import java.util.Collection;
-import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -241,9 +239,11 @@ public class TestPlugin
     @Override
     protected TestApplicationTaskManager createTaskManager(
             @NonNull Project project,
-            @NonNull Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
-            @NonNull Collection<? extends TestComponentImpl> testComponents,
-            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
+            @NonNull
+                    Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            variants,
+            @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
+            @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {

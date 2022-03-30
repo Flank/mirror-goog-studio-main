@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
@@ -30,6 +29,7 @@ import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -90,7 +90,7 @@ public class AppPluginInternalTest {
         TestCase.assertNotNull(variantInputModel.getBuildTypes().get(BuilderConstants.RELEASE));
         TestCase.assertEquals(0, variantInputModel.getProductFlavors().size());
 
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
 
         VariantCheckers.checkDefaultVariants(components);
 
@@ -170,7 +170,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(3, plugin.getVariantInputModel().getBuildTypes().size());
 
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
 
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
@@ -184,7 +184,8 @@ public class AppPluginInternalTest {
             VariantCheckers.findComponent(components, variantName);
         }
 
-        ComponentImpl testVariant = VariantCheckers.findComponent(components, "stagingAndroidTest");
+        ComponentCreationConfig testVariant =
+                VariantCheckers.findComponent(components, "stagingAndroidTest");
         TestCase.assertEquals("staging", testVariant.getBuildType());
     }
     @Test
@@ -210,7 +211,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(2, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
 
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
@@ -267,7 +268,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(5, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
@@ -360,14 +361,14 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks(project);
 
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);
         map.put("androidTests", 2);
         TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
-        ComponentImpl variant;
+        ComponentCreationConfig variant;
         SigningConfigImpl signingConfig;
 
         variant = VariantCheckers.findComponent(components, "flavor1Debug");
@@ -468,8 +469,8 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks(project);
 
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
-        ComponentImpl variant;
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
+        ComponentCreationConfig variant;
         SigningConfigImpl signingConfig;
 
         variant = VariantCheckers.findComponent(components, "flavor1Staging");
@@ -592,7 +593,7 @@ public class AppPluginInternalTest {
     public void testAsmVersionIsTheLatest() throws IllegalAccessException {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks(project);
-        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentCreationConfig> components = getComponents(plugin.getVariantManager());
 
         VariantCheckers.checkDefaultVariants(components);
 
@@ -608,12 +609,12 @@ public class AppPluginInternalTest {
             }
         }
 
-        for (ComponentImpl component : components) {
+        for (ComponentCreationConfig component : components) {
             assertThat(component.getAsmApiVersion()).isEqualTo(latestAsmVersionEnum);
         }
     }
 
-    public static List<ComponentImpl> getComponents(
+    public static List<ComponentCreationConfig> getComponents(
             @NonNull
                     VariantManager<
                                     ApplicationExtension,
@@ -627,12 +628,14 @@ public class AppPluginInternalTest {
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
-        ImmutableList.Builder<ComponentImpl> builder =
-                ImmutableList.<ComponentImpl>builder().addAll(variants);
+        ImmutableList.Builder<ComponentCreationConfig> builder =
+                ImmutableList.<ComponentCreationConfig>builder().addAll(variants);
         variants.forEach(
                 it ->
                         it.getNestedComponents()
-                                .forEach(component -> builder.add((ComponentImpl) component)));
+                                .forEach(
+                                        component ->
+                                                builder.add((ComponentCreationConfig) component)));
         return builder.build();
     }
 }

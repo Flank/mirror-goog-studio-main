@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.coverage
 
 import com.android.Version
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -170,11 +169,11 @@ abstract class JacocoReportTask : NonIncrementalTask() {
                 task.outputReportDir.set(creationConfig.paths.coverageReportDir)
             }
             task.outputReportDir.disallowChanges()
-            task.reportName.setDisallowChanges(creationConfig.testedConfig.name)
+            task.reportName.setDisallowChanges(creationConfig.mainVariant.name)
             task.tabWidth.setDisallowChanges(4)
 
-            task.classFileCollection.setFrom(creationConfig.testedConfig.artifacts.getAllClasses())
-            task.javaSources.setDisallowChanges(creationConfig.testedConfig.sources.java.getAsFileTrees())
+            task.classFileCollection.setFrom(creationConfig.mainVariant.artifacts.getAllClasses())
+            task.javaSources.setDisallowChanges(creationConfig.mainVariant.sources.java.getAsFileTrees())
         }
     }
 
@@ -195,7 +194,7 @@ abstract class JacocoReportTask : NonIncrementalTask() {
     }
 
     class CreationActionConnectedTest(
-        testComponentProperties: TestComponentImpl,
+        testComponentProperties: TestComponentCreationConfig,
         override val jacocoAntConfiguration: Configuration
     ) : BaseCreationAction(
         testComponentProperties, jacocoAntConfiguration, BuilderConstants.CONNECTED) {
@@ -214,7 +213,7 @@ abstract class JacocoReportTask : NonIncrementalTask() {
     }
 
     class CreationActionManagedDeviceTest(
-        testComponentProperties: TestComponentImpl,
+        testComponentProperties: TestComponentCreationConfig,
         override val jacocoAntConfiguration: Configuration
     ) : BaseCreationAction(
         testComponentProperties, jacocoAntConfiguration, BuilderConstants.MANAGED_DEVICE) {

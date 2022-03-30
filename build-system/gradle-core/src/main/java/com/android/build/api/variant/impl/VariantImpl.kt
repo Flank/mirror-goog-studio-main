@@ -16,8 +16,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
@@ -29,7 +29,10 @@ import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -159,8 +162,8 @@ abstract class VariantImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    val testComponents = mutableMapOf<ComponentType, ComponentImpl>()
-    var testFixturesComponent: ComponentImpl? = null
+    override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
+    override var testFixturesComponent: TestFixturesCreationConfig? = null
 
     val externalExtensions: Map<Class<*>, Any>? by lazy {
         variantBuilder.getRegisteredExtensions()
@@ -188,10 +191,8 @@ abstract class VariantImpl(
             return _isMultiDexEnabled ?: (minSdkVersion.getFeatureLevel() >= 21)
         }
 
-    private val isBaseModule = variantDslInfo.componentType.isBaseModule
-
     override val needsMainDexListForBundle: Boolean
-        get() = isBaseModule
+        get() = variantDslInfo.componentType.isBaseModule
                 && global.hasDynamicFeatures
                 && dexingType.needsMainDexList
 
@@ -204,7 +205,7 @@ abstract class VariantImpl(
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?): T
 
-    override var unitTest: UnitTest? = null
+    override var unitTest: UnitTestImpl? = null
 
     /**
      * adds renderscript sources if present.
@@ -235,6 +236,9 @@ abstract class VariantImpl(
                     Any::class.java,
                     variantDslInfo.experimentalProperties)
 
+    override val externalNativeExperimentalProperties: Map<String, Any>
+        get() = variantDslInfo.externalNativeExperimentalProperties
+
     override val nestedComponents: List<Component>
         get() = listOfNotNull(
             unitTest,
@@ -256,4 +260,18 @@ abstract class VariantImpl(
                     variantDslInfo.ignoredLibraryKeepRules)
 
     override val ignoreAllLibraryKeepRules: Boolean = variantDslInfo.ignoreAllLibraryKeepRules
+
+    override val defaultGlslcArgs: List<String>
+        get() = variantDslInfo.defaultGlslcArgs
+    override val scopedGlslcArgs: Map<String, List<String>>
+        get() = variantDslInfo.scopedGlslcArgs
+
+    override val renderscriptNdkModeEnabled: Boolean
+        get() = variantDslInfo.renderscriptNdkModeEnabled
+    override val ndkConfig: MergedNdkConfig
+        get() = variantDslInfo.ndkConfig
+    override val isJniDebuggable: Boolean
+        get() = variantDslInfo.isJniDebuggable
+    override val supportedAbis: Set<String>
+        get() = variantDslInfo.supportedAbis
 }

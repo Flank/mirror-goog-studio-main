@@ -17,24 +17,22 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.SourcesImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
-import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -44,11 +42,13 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerAr
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
 import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -87,17 +87,18 @@ interface ComponentCreationConfig : ComponentIdentity {
     val allProjectClassesPostAsmInstrumentation: FileCollection
     val projectClassesAreInstrumented: Boolean
     val dependenciesClassesAreInstrumented: Boolean
+    val instrumentation: Instrumentation
     val debuggable: Boolean
     val profileable: Boolean
     val pseudoLocalesEnabled: Property<Boolean>
     val androidResourcesEnabled: Boolean
     val buildConfigEnabled: Boolean
     val manifestPlaceholders: MapProperty<String, String>
+    val supportedAbis: Set<String>
 
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion
     val targetSdkVersionOverride: AndroidVersion?
-    val externalNativeExperimentalProperties: Map<String, Any>
 
     // ---------------------------------------------------------------------------------------------
     // ---------------------------------------------------------------------------------------------
@@ -138,26 +139,8 @@ interface ComponentCreationConfig : ComponentIdentity {
     // INTERNAL HELPERS
     // ---------------------------------------------------------------------------------------------
 
-    fun computeTaskName(prefix: String, suffix: String = ""): String
-
-    /**
-     * Returns the tested variant. This is null for [VariantImpl] instances
-     *
-
-     * This declares is again, even though the public interfaces only have it via
-     * [TestComponentProperties]. This is to facilitate places where one cannot use
-     * [TestComponentImpl].
-     *
-     * see [onTestedConfig] for a utility function helping deal with nullability
-     */
-    val testedConfig: VariantCreationConfig?
-
-    /**
-     * Runs an action on the tested variant and return the results of the action.
-     *
-     * if there is no tested variant this does nothing and returns null.
-     */
-    fun <T> onTestedConfig(action: (VariantCreationConfig) -> T? ): T?
+    fun computeTaskName(prefix: String, suffix: String): String
+    fun computeTaskName(prefix: String): String
 
     // TODO : Remove BaseVariantData.
     val variantData: BaseVariantData
@@ -170,9 +153,6 @@ interface ComponentCreationConfig : ComponentIdentity {
         classesType: AndroidArtifacts.ArtifactType,
         generatedBytecodeKey: Any? = null
     ): FileCollection
-
-    val needsMainDexListForBundle: Boolean
-        get() = false
 
     fun useResourceShrinker(): Boolean
 
@@ -189,27 +169,24 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     // TODO: Figure out if we should be exposing any of the below
 
-    val isUnitTestCoverageEnabled: Boolean
-
     val isAndroidTestCoverageEnabled: Boolean
-
-    val publishInfo: VariantPublishingInfo?
-
-    val supportedAbis: Set<String>
 
     val vectorDrawables: VectorDrawablesOptions
 
-    val ndkConfig: MergedNdkConfig
+    fun getCompiledBuildConfig(): FileCollection
 
-    val renderscriptNdkModeEnabled: Boolean
+    fun getCompiledRClasses(configType: AndroidArtifacts.ConsumedConfigType): FileCollection
 
-    val isJniDebuggable: Boolean
+    fun getBuildConfigType() : BuildConfigType
 
-    val defaultGlslcArgs: List<String>
+    /**
+     * Returns the artifact for the compiled R class
+     *
+     * This can be null for unit tests without resource support.
+     */
+    fun getCompiledRClassArtifact(): Provider<RegularFile>?
 
-    val scopedGlslcArgs: Map<String, List<String>>
-
-    val isWearAppUnbundled: Boolean?
+    fun addDataBindingSources(sourceSets: MutableList<DirectoryEntry>)
 
     // ---------------------------------------------------------------------------------------------
     // LEGACY SUPPORT

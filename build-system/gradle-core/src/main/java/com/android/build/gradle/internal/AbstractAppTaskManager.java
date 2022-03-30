@@ -20,18 +20,17 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 import static com.android.build.gradle.internal.cxx.configure.CxxCreateGradleTasksKt.createCxxVariantBuildTask;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -70,14 +69,14 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
+                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantCreationConfig>
         extends TaskManager<VariantBuilderT, VariantT> {
 
     protected AbstractAppTaskManager(
             @NonNull Project project,
             @NonNull Collection<? extends ComponentInfo<VariantBuilderT, VariantT>> variants,
-            @NonNull Collection<? extends TestComponentImpl> testComponents,
-            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
+            @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
+            @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {
@@ -92,94 +91,90 @@ public abstract class AbstractAppTaskManager<
     }
 
     protected void createCommonTasks(@NonNull ComponentInfo<VariantBuilderT, VariantT> variant) {
-        VariantT appVariantProperties = variant.getVariant();
-        ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
+        ApkCreationConfig creationConfig = (ApkCreationConfig) variant.getVariant();
 
-        createAnchorTasks(appVariantProperties);
+        createAnchorTasks(creationConfig);
 
-        taskFactory.register(new ExtractDeepLinksTask.CreationAction(appVariantProperties));
+        taskFactory.register(new ExtractDeepLinksTask.CreationAction(creationConfig));
 
         // Create all current streams (dependencies mostly at this point)
-        createDependencyStreams(appVariantProperties);
+        createDependencyStreams(creationConfig);
 
         // Add a task to publish the applicationId.
         // TODO remove case once TaskManager's type param is based on BaseCreationConfig
-        createApplicationIdWriterTask(apkCreationConfig);
+        createApplicationIdWriterTask(creationConfig);
 
         // Add a task to check the manifest
-        taskFactory.register(new CheckManifest.CreationAction(appVariantProperties));
+        taskFactory.register(new CheckManifest.CreationAction(creationConfig));
 
         // Add a task to process the manifest(s)
-        createMergeApkManifestsTask(appVariantProperties);
+        createMergeApkManifestsTask(creationConfig);
 
         // Add a task to create the res values
-        createGenerateResValuesTask(appVariantProperties);
+        createGenerateResValuesTask(creationConfig);
 
         // Add a task to compile renderscript files.
-        createRenderscriptTask(appVariantProperties);
+        createRenderscriptTask(creationConfig);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTasks(appVariantProperties);
+        createMergeResourcesTasks(creationConfig);
 
         // Add tasks to compile shader
-        createShaderTask(appVariantProperties);
+        createShaderTask(creationConfig);
 
         // Add a task to merge the asset folders
-        createMergeAssetsTask(appVariantProperties);
+        createMergeAssetsTask(creationConfig);
 
-        taskFactory.register(new CompressAssetsTask.CreationAction(apkCreationConfig));
+        taskFactory.register(new CompressAssetsTask.CreationAction(creationConfig));
 
         // Add a task to create the BuildConfig class
-        createBuildConfigTask(appVariantProperties);
+        createBuildConfigTask(creationConfig);
 
         // Add a task to process the Android Resources and generate source files
-        createApkProcessResTask(appVariantProperties);
+        createApkProcessResTask(creationConfig);
 
         // Add a task to process the java resources
-        createProcessJavaResTask(appVariantProperties);
+        createProcessJavaResTask(creationConfig);
 
-        createAidlTask(appVariantProperties);
+        createAidlTask(creationConfig);
 
-        maybeExtractProfilerDependencies(apkCreationConfig);
+        maybeExtractProfilerDependencies(creationConfig);
 
         // Set up the C/C++ external native build task
         createCxxVariantBuildTask(
                 taskFactory, variant.getVariant(), project.getProviders(), project.getLayout());
 
         // Add a task to merge the jni libs folders
-        createMergeJniLibFoldersTasks(appVariantProperties);
+        createMergeJniLibFoldersTasks(creationConfig);
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(appVariantProperties);
+        createDataBindingTasksIfNecessary(creationConfig);
 
         // Add a task to auto-generate classes for ML model files.
-        createMlkitTask(appVariantProperties);
+        createMlkitTask(creationConfig);
 
         // Add a compile task
-        createCompileTask(appVariantProperties);
+        createCompileTask(creationConfig);
 
-        taskFactory.register(new StripDebugSymbolsTask.CreationAction(appVariantProperties));
-
-        taskFactory.register(
-                new ExtractNativeDebugMetadataTask.FullCreationAction(appVariantProperties));
-        taskFactory.register(
-                new ExtractNativeDebugMetadataTask.SymbolTableCreationAction(appVariantProperties));
-
-        createPackagingTask(apkCreationConfig);
+        taskFactory.register(new StripDebugSymbolsTask.CreationAction(variant.getVariant()));
 
         taskFactory.register(
-                new PackagedDependenciesWriterTask.CreationAction(appVariantProperties));
+                new ExtractNativeDebugMetadataTask.FullCreationAction(variant.getVariant()));
+        taskFactory.register(
+                new ExtractNativeDebugMetadataTask.SymbolTableCreationAction(variant.getVariant()));
 
-        taskFactory.register(new ApkZipPackagingTask.CreationAction(apkCreationConfig));
+        createPackagingTask(creationConfig);
+
+        taskFactory.register(new PackagedDependenciesWriterTask.CreationAction(creationConfig));
+
+        taskFactory.register(new ApkZipPackagingTask.CreationAction(creationConfig));
     }
 
-    private void createCompileTask(@NonNull VariantImpl variant) {
-        ApkCreationConfig apkCreationConfig = (ApkCreationConfig) variant;
-
-        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variant);
-        addJavacClassesStream(variant);
-        setJavaCompilerTask(javacTask, variant);
-        createPostCompilationTasks(apkCreationConfig);
+    private void createCompileTask(@NonNull ApkCreationConfig creationConfig) {
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(creationConfig);
+        addJavacClassesStream(creationConfig);
+        setJavaCompilerTask(javacTask, creationConfig);
+        createPostCompilationTasks(creationConfig);
     }
 
     @Override
@@ -211,12 +206,11 @@ public abstract class AbstractAppTaskManager<
                 task =
                         taskFactory.register(
                                 new TestPreBuildTask.CreationAction(
-                                        (TestComponentImpl) creationConfig));
+                                        (TestComponentCreationConfig) creationConfig));
                 if (useDependencyConstraints) {
                     task.configure(t -> t.setEnabled(false));
                 }
             } else {
-                //noinspection unchecked
                 task = taskFactory.register(AppPreBuildTask.getCreationAction(creationConfig));
                 ApkCreationConfig config = (ApkCreationConfig) creationConfig;
                 // Only record application ids for release artifacts
@@ -277,29 +271,31 @@ public abstract class AbstractAppTaskManager<
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
-        ((ComponentImpl) creationConfig).getVariantData().applicationIdTextResource =
+        creationConfig.getVariantData().applicationIdTextResource =
                 resources.fromFile(applicationIdWriterTask);
     }
 
-    private void createMergeResourcesTasks(@NonNull VariantImpl variant) {
+    private void createMergeResourcesTasks(@NonNull ApkCreationConfig creationConfig) {
         // The "big merge" of all resources, will merge and compile resources that will later
         // be used for linking.
         createMergeResourcesTask(
-                variant, true, Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
+                creationConfig,
+                true,
+                Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
-        ProjectOptions projectOptions = variant.getServices().getProjectOptions();
+        ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
         boolean nonTransitiveR = projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
-        boolean namespaced = variant.getGlobal().getNamespacedAndroidResources();
+        boolean namespaced = creationConfig.getGlobal().getNamespacedAndroidResources();
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)
-                && !variant.getComponentType().isForTesting()
+                && !creationConfig.getComponentType().isForTesting()
                 && !namespaced) {
             // The "small merge" of only the app's local resources (can be multiple source-sets, but
             // most of the time it's just one). This is used by the Process for generating the local
             // R-def.txt file containing a list of resources defined in this module.
             basicCreateMergeResourcesTask(
-                    variant,
+                    creationConfig,
                     MergeType.PACKAGE,
                     false,
                     false,

@@ -21,13 +21,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
-import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.Component;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
@@ -287,13 +288,13 @@ public class PluginDslTest {
         checker.checkTestedVariant("f2FbDebug", "f2FbDebugAndroidTest", variants, testVariants);
         checker.checkTestedVariant("f2FcDebug", "f2FcDebugAndroidTest", variants, testVariants);
 
-        Map<String, VariantImpl> componentMap = getComponentMap();
+        Map<String, VariantCreationConfig> componentMap = getComponentMap();
 
         for (String dim1 : ImmutableList.of("f1", "f2")) {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
                 String variantName =
                         StringHelper.combineAsCamelCase(ImmutableList.of(dim1, dim2, "debug"));
-                VariantImpl variant = componentMap.get(variantName);
+                VariantCreationConfig variant = componentMap.get(variantName);
                 assertThat(
                                 variant.getOldVariantApiLegacySupport()
                                         .getJavaCompileOptions()
@@ -537,8 +538,9 @@ public class PluginDslTest {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
         plugin.createAndroidTasks(project);
-        Map<String, VariantImpl> componentMap = getComponentMap();
-        Map.Entry<String, VariantImpl> vsentry = componentMap.entrySet().iterator().next();
+        Map<String, VariantCreationConfig> componentMap = getComponentMap();
+        Map.Entry<String, VariantCreationConfig> vsentry =
+                componentMap.entrySet().iterator().next();
         File mockableJarFile =
                 vsentry.getValue().getGlobal().getMockableJarArtifact().getSingleFile();
         assertThat(mockableJarFile).isNotNull();
@@ -708,7 +710,7 @@ public class PluginDslTest {
     }
 
     private void checkNestedComponents(
-            VariantImpl variant,
+            VariantCreationConfig variant,
             boolean unitTestsEnabled,
             boolean androidTestsEnabled,
             boolean testFixturesEnabled) {
@@ -722,23 +724,25 @@ public class PluginDslTest {
         if (testFixturesEnabled) {
             expected.add(variant.getName() + "TestFixtures");
         }
-        assertThat(Lists.transform(variant.getNestedComponents(), Component::getName))
+        assertThat(
+                        Lists.transform(
+                                ((VariantImpl) variant).getNestedComponents(), Component::getName))
                 .containsExactlyElementsIn(expected);
     }
 
     @Test
     public void testNestedComponents() {
         plugin.createAndroidTasks(project);
-        List<VariantImpl> variants =
+        List<VariantCreationConfig> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
         assertThat(variants.size()).isEqualTo(2);
 
-        VariantImpl debugVariant =
+        VariantCreationConfig debugVariant =
                 variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
-        VariantImpl releaseVariant =
+        VariantCreationConfig releaseVariant =
                 variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
 
         checkNestedComponents(debugVariant, true, true, false);
@@ -761,16 +765,16 @@ public class PluginDslTest {
                         + "\n");
 
         plugin.createAndroidTasks(project);
-        List<VariantImpl> variants =
+        List<VariantCreationConfig> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
         assertThat(variants.size()).isEqualTo(2);
 
-        VariantImpl debugVariant =
+        VariantCreationConfig debugVariant =
                 variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
-        VariantImpl releaseVariant =
+        VariantCreationConfig releaseVariant =
                 variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
 
         checkNestedComponents(debugVariant, true, true, true);
@@ -793,16 +797,16 @@ public class PluginDslTest {
                         + "\n");
 
         plugin.createAndroidTasks(project);
-        List<VariantImpl> variants =
+        List<VariantCreationConfig> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
         assertThat(variants.size()).isEqualTo(2);
 
-        VariantImpl debugVariant =
+        VariantCreationConfig debugVariant =
                 variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
-        VariantImpl releaseVariant =
+        VariantCreationConfig releaseVariant =
                 variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
 
         checkNestedComponents(debugVariant, true, true, false);
@@ -825,16 +829,16 @@ public class PluginDslTest {
                         + "\n");
 
         plugin.createAndroidTasks(project);
-        List<VariantImpl> variants =
+        List<VariantCreationConfig> variants =
                 plugin.getVariantManager().getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
         assertThat(variants.size()).isEqualTo(2);
 
-        VariantImpl debugVariant =
+        VariantCreationConfig debugVariant =
                 variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
-        VariantImpl releaseVariant =
+        VariantCreationConfig releaseVariant =
                 variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
 
         checkNestedComponents(debugVariant, true, false, false);
@@ -842,7 +846,7 @@ public class PluginDslTest {
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
-        Map<String, VariantImpl> componentMap = getComponentMap();
+        Map<String, VariantCreationConfig> componentMap = getComponentMap();
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
             String variantName = entry.getKey();
             Set<File> proguardFiles =
@@ -858,8 +862,8 @@ public class PluginDslTest {
         }
     }
 
-    public Map<String, VariantImpl> getComponentMap() {
-        Map<String, VariantImpl> result = new HashMap<>();
+    public Map<String, VariantCreationConfig> getComponentMap() {
+        Map<String, VariantCreationConfig> result = new HashMap<>();
         for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
                 plugin.getVariantManager().getMainComponents()) {
             result.put(variant.getVariant().getName(), variant.getVariant());
@@ -869,7 +873,8 @@ public class PluginDslTest {
 
     public Map<String, AndroidTestCreationConfig> getAndroidTestComponentMap() {
         Map<String, AndroidTestCreationConfig> result = new HashMap<>();
-        for (TestComponentImpl component : plugin.getVariantManager().getTestComponents()) {
+        for (TestComponentCreationConfig component :
+                plugin.getVariantManager().getTestComponents()) {
             if (component instanceof AndroidTestCreationConfig) {
                 result.put(component.getName(), (AndroidTestCreationConfig) component);
             }

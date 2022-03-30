@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SingleVariant
@@ -42,6 +40,8 @@ import com.android.build.gradle.internal.SdkLocator.sdkTestDirectory
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.internal.crash.runAction
 import com.android.build.gradle.internal.dependency.CONFIG_NAME_ANDROID_JDK_IMAGE
@@ -329,8 +329,8 @@ abstract class BasePlugin<
     protected abstract fun createTaskManager(
         project: Project,
         variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>,
-        testComponents: Collection<TestComponentImpl>,
-        testFixturesComponents: Collection<TestFixturesImpl>,
+        testComponents: Collection<TestComponentCreationConfig>,
+        testFixturesComponents: Collection<TestFixturesCreationConfig>,
         globalTaskCreationConfig: GlobalTaskCreationConfig,
         localConfig: TaskManagerConfig,
         extension: BaseExtension,

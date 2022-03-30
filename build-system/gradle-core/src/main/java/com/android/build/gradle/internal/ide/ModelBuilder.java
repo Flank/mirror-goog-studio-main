@@ -30,12 +30,8 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
-import com.android.build.api.variant.AndroidTest;
-import com.android.build.api.variant.Component;
-import com.android.build.api.variant.HasAndroidTest;
-import com.android.build.api.variant.UnitTest;
+import com.android.build.api.variant.impl.HasAndroidTest;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
@@ -44,9 +40,13 @@ import com.android.build.gradle.internal.DefaultConfigData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
-import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.NestedComponentCreationConfig;
+import com.android.build.gradle.internal.component.UnitTestCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -286,11 +286,12 @@ public class ModelBuilder<Extension extends BaseExtension>
             return !buildTypes.isEmpty() || !flavors.isEmpty();
         }
 
-        static DimensionInformation createFrom(Collection<? extends Component> components) {
+        static DimensionInformation createFrom(
+                Collection<? extends ComponentCreationConfig> components) {
             Set<String> buildTypes = new HashSet<>();
             Set<Pair<String, String>> flavors = new HashSet<>();
 
-            for (Component component : components) {
+            for (ComponentCreationConfig component : components) {
                 if (component.getBuildType() != null) {
                     buildTypes.add(component.getBuildType());
                 }
@@ -393,14 +394,14 @@ public class ModelBuilder<Extension extends BaseExtension>
         DimensionInformation androidTests =
                 DimensionInformation.createFrom(
                         variantModel.getTestComponents().stream()
-                                .filter(it -> it instanceof AndroidTest)
-                                .map(it -> (AndroidTest) it)
+                                .filter(it -> it instanceof AndroidTestCreationConfig)
+                                .map(it -> (AndroidTestCreationConfig) it)
                                 .collect(Collectors.toList()));
         DimensionInformation unitTests =
                 DimensionInformation.createFrom(
                         variantModel.getTestComponents().stream()
-                                .filter(it -> it instanceof UnitTest)
-                                .map(it -> (UnitTest) it)
+                                .filter(it -> it instanceof UnitTestCreationConfig)
+                                .map(it -> (UnitTestCreationConfig) it)
                                 .collect(Collectors.toList()));
 
         DefaultConfigData<DefaultConfig> defaultConfigData = variantInputs.getDefaultConfigData();
@@ -447,7 +448,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         String defaultVariant = variantModel.getDefaultVariant();
         String namespace = null;
         String androidTestNamespace = null;
-        for (ComponentImpl variant : variantModel.getVariants()) {
+        for (ComponentCreationConfig variant : variantModel.getVariants()) {
             variantNames.add(variant.getName());
             if (shouldBuildVariant) {
                 variants.add(createVariant(variant));
@@ -460,10 +461,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 // TODO(b/176931684) Use AndroidTest.namespace instead after we stop
                 //  supporting using applicationId to namespace the test component R class.
 
-                AndroidTest test = ((HasAndroidTest) variant).getAndroidTest();
-                if (test instanceof TestComponentCreationConfig) {
-                    androidTestNamespace =
-                            ((TestComponentCreationConfig) test).getNamespaceForR().get();
+                AndroidTestCreationConfig test = ((HasAndroidTest) variant).getAndroidTest();
+                if (test != null) {
+                    androidTestNamespace = test.getNamespaceForR().get();
                 }
             }
         }
@@ -522,7 +522,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantBuildOutputs);
     }
 
-    private VariantBuildInformation createBuildInformation(ComponentImpl component) {
+    private VariantBuildInformation createBuildInformation(ComponentCreationConfig component) {
         return new VariantBuildInformationImp(
                 component.getName(),
                 component.getTaskContainer().assembleTask.getName(),
@@ -593,7 +593,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         return regularFile != null ? regularFile.getAsFile().getAbsolutePath() : null;
     }
 
-    protected boolean inspectManifestForInstantTag(@NonNull ComponentImpl component) {
+    protected boolean inspectManifestForInstantTag(@NonNull ComponentCreationConfig component) {
         int projectType = variantModel.getProjectTypeV1();
         if (projectType != PROJECT_TYPE_APP && projectType != PROJECT_TYPE_DYNAMIC_FEATURE) {
             return false;
@@ -669,7 +669,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (ComponentImpl component : variantModel.getVariants()) {
+        for (ComponentCreationConfig component : variantModel.getVariants()) {
             if (component.getName().equals(variantName)) {
                 VariantImpl variant = createVariant(component);
                 if (shouldScheduleSourceGeneration) {
@@ -715,7 +715,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private VariantImpl createVariant(@NonNull ComponentImpl component) {
+    private VariantImpl createVariant(@NonNull ComponentCreationConfig component) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, component);
 
         File manifest = component.getVariantSources().getMainManifestIfExists();
@@ -762,12 +762,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                 libraryDependencyCache))
                         .collect(Collectors.toList());
 
-        if (component instanceof com.android.build.api.variant.impl.VariantImpl) {
-            com.android.build.api.variant.impl.VariantImpl variant =
-                    (com.android.build.api.variant.impl.VariantImpl) component;
+        if (component instanceof VariantCreationConfig) {
+            VariantCreationConfig variant = (VariantCreationConfig) component;
 
             for (ComponentType componentType : ComponentType.Companion.getTestComponents()) {
-                ComponentImpl testVariant = variant.getTestComponents().get(componentType);
+                ComponentCreationConfig testVariant =
+                        variant.getTestComponents().get(componentType);
                 if (testVariant != null) {
                     switch ((ComponentTypeImpl) componentType) {
                         case ANDROID_TEST:
@@ -809,7 +809,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 ImmutableList.of());
     }
 
-    private void checkProguardFiles(@NonNull ComponentImpl component) {
+    private void checkProguardFiles(@NonNull ComponentCreationConfig component) {
         // We check for default files unless it's a base module, which can include default files.
         boolean isBaseModule = component.getComponentType().isBaseModule();
         boolean isDynamicFeature = component.getComponentType().isDynamicFeature();
@@ -831,7 +831,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     private Collection<TestedTargetVariant> getTestTargetVariants(
-            @NonNull ComponentImpl component) {
+            @NonNull ComponentCreationConfig component) {
         if (extension instanceof TestAndroidConfig) {
             TestAndroidConfig testConfig = (TestAndroidConfig) extension;
 
@@ -865,7 +865,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private JavaArtifactImpl createUnitTestsJavaArtifact(
-            @NonNull ComponentType componentType, @NonNull ComponentImpl component) {
+            @NonNull ComponentType componentType, @NonNull ComponentCreationConfig component) {
         ArtifactsImpl artifacts = component.getArtifacts();
 
         SourceProviders sourceProviders = determineSourceProviders(component);
@@ -917,7 +917,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     /** Gather the dependency graph for the specified <code>variantScope</code>. */
     @NonNull
     private Pair<Dependencies, DependencyGraphs> getDependencies(
-            @NonNull ComponentImpl component,
+            @NonNull ComponentCreationConfig component,
             @NonNull ImmutableMap<String, String> buildMapping,
             int modelLevel,
             boolean modelWithFullDependency) {
@@ -970,7 +970,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private AndroidArtifact createAndroidArtifact(
-            @NonNull String name, @NonNull ComponentImpl component) {
+            @NonNull String name, @NonNull ComponentCreationConfig component) {
         com.android.build.api.variant.impl.SigningConfigImpl signingConfig = null;
         boolean isSigningReady = false;
         if (component instanceof ApkCreationConfig) {
@@ -1100,7 +1100,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
     }
 
-    private static SourceProviders determineSourceProviders(@NonNull ComponentImpl component) {
+    private static SourceProviders determineSourceProviders(
+            @NonNull ComponentCreationConfig component) {
         SourceProvider variantSourceProvider =
                 component.getVariantSources().getVariantSourceProvider();
         SourceProvider multiFlavorSourceProvider =
@@ -1116,7 +1117,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private static List<String> getProductFlavorNames(@NonNull ComponentImpl component) {
+    private static List<String> getProductFlavorNames(@NonNull ComponentCreationConfig component) {
         return component.getProductFlavorList().stream()
                 .map(com.android.build.gradle.internal.core.ProductFlavor::getName)
                 .collect(Collectors.toList());
@@ -1124,14 +1125,14 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     public static List<File> getGeneratedSourceFoldersForUnitTests(
-            @NonNull ComponentImpl component) {
+            @NonNull ComponentCreationConfig component) {
         return Streams.stream(getGeneratedSourceFoldersFileCollectionForUnitTests(component))
                 .collect(Collectors.toList());
     }
 
     @NonNull
     private static FileCollection getGeneratedSourceFoldersFileCollectionForUnitTests(
-            @NonNull ComponentImpl component) {
+            @NonNull ComponentCreationConfig component) {
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
         fileCollection.from(
                 component
@@ -1149,14 +1150,14 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    public static List<File> getGeneratedSourceFolders(@NonNull ComponentImpl component) {
+    public static List<File> getGeneratedSourceFolders(@NonNull ComponentCreationConfig component) {
         return Streams.stream(getGeneratedSourceFoldersFileCollection(component))
                 .collect(Collectors.toList());
     }
 
     @NonNull
     public static FileCollection getGeneratedSourceFoldersFileCollection(
-            @NonNull ComponentImpl component) {
+            @NonNull ComponentCreationConfig component) {
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
         ArtifactsImpl artifacts = component.getArtifacts();
         fileCollection.from(getGeneratedSourceFoldersFileCollectionForUnitTests(component));
@@ -1170,7 +1171,15 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
         // this is incorrect as it cannot get the final value, we should always add the folder
         // as a potential source origin and let the IDE deal with it.
-        boolean ndkMode = component.getRenderscriptNdkModeEnabled();
+        boolean ndkMode;
+        if (component instanceof NestedComponentCreationConfig) {
+            ndkMode =
+                    ((NestedComponentCreationConfig) component)
+                            .getMainVariant()
+                            .getRenderscriptNdkModeEnabled();
+        } else {
+            ndkMode = ((VariantCreationConfig) component).getRenderscriptNdkModeEnabled();
+        }
         if (!ndkMode) {
             Callable<Directory> renderscriptCallable =
                     () -> artifacts.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
@@ -1188,13 +1197,15 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    public static List<File> getGeneratedResourceFolders(@NonNull ComponentImpl component) {
+    public static List<File> getGeneratedResourceFolders(
+            @NonNull ComponentCreationConfig component) {
         return Streams.stream(getGeneratedResourceFoldersFileCollection(component))
                 .collect(Collectors.toList());
     }
+
     @NonNull
     public static FileCollection getGeneratedResourceFoldersFileCollection(
-            @NonNull ComponentImpl component) {
+            @NonNull ComponentCreationConfig component) {
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
         fileCollection.from(component.getVariantData().getExtraGeneratedResFolders());
         if (component.getBuildFeatures().getRenderScript()) {

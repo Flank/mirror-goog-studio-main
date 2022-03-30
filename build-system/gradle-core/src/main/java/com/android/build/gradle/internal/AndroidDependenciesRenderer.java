@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
@@ -69,7 +69,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         super.completeProject(project);
     }
 
-    public void startComponent(@NonNull ComponentImpl component) {
+    public void startComponent(@NonNull ComponentCreationConfig component) {
         if (hasConfigs) {
             getTextOutput().println();
         }
@@ -80,7 +80,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                 true);
     }
 
-    public void render(@NonNull ComponentImpl component) {
+    public void render(@NonNull ComponentCreationConfig component) {
         ImmutableMap<String, String> buildMapping =
                 BuildMappingUtils.computeBuildMapping(
                         component.getServices().getProjectInfo().getProject().getGradle());

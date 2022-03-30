@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
-import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
@@ -183,7 +183,7 @@ data class CxxConfigurationParameters(
  */
 fun tryCreateConfigurationParameters(
     projectOptions: ProjectOptions,
-    variant: VariantImpl
+    variant: VariantCreationConfig
 ): CxxConfigurationParameters? {
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
@@ -304,7 +304,10 @@ fun tryCreateConfigurationParameters(
         prefabPackageConfigurationList = prefabPackageConfigurationList,
         implicitBuildTargetSet = prefabTargets,
         variantName = variant.name,
-        nativeVariantConfig = createNativeBuildSystemVariantConfig(buildSystem, variant),
+        nativeVariantConfig = createNativeBuildSystemVariantConfig(
+            buildSystem,
+            variant as VariantImpl
+        ),
         outputOptions = outputOptions
     )
 }
@@ -316,7 +319,7 @@ fun tryCreateConfigurationParameters(
  *   ndkBuild in the same project.
  */
 private fun getProjectPath(
-    component: ComponentCreationConfig,
+    component: VariantCreationConfig,
     config: ExternalNativeBuild
 ): NativeProjectPath? {
     val externalProjectPaths = listOfNotNull(

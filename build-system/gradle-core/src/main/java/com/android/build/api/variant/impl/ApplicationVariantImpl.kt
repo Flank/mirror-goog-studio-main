@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.NdkOptions
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
@@ -137,6 +138,9 @@ open class ApplicationVariantImpl @Inject constructor(
             minSdkVersion.apiLevel
         )
     }
+
+    override val publishInfo: VariantPublishingInfo?
+        get() = variantDslInfo.publishInfo
 
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
@@ -256,6 +260,10 @@ open class ApplicationVariantImpl @Inject constructor(
         ),
         internalServices,
     )
+
     override val useJacocoTransformInstrumentation: Boolean
         get() = isAndroidTestCoverageEnabled
+
+    override val isWearAppUnbundled: Boolean?
+        get() = variantDslInfo.isWearAppUnbundled
 }

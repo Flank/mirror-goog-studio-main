@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,10 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.dsl.AndroidResources
-
-interface UnitTestCreationConfig: TestComponentCreationConfig {
+interface NestedComponentCreationConfig: ComponentCreationConfig {
 
     /**
-     * Access to the (locked) AndroidResources DSL.
-     * Unit test don't allow overriding these values via the Variant API but they still need access
-     * to the DSL-set values.
+     * Returns the main variant.
      */
-    val dslAndroidResources: AndroidResources
-
-    val isUnitTestCoverageEnabled: Boolean
+    val mainVariant: VariantCreationConfig
 }

@@ -28,10 +28,10 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -512,7 +512,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
             task.namespace.setDisallowChanges(
-                if (creationConfig is TestComponentCreationConfig) {
+                if (creationConfig is AndroidTestCreationConfig) {
                     // TODO(b/176931684) Use creationConfig.namespace instead after we stop
                     //  supporting using applicationId to namespace the test component R class.
                     creationConfig.namespaceForR

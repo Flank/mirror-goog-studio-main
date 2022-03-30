@@ -18,9 +18,10 @@ package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
@@ -37,7 +38,7 @@ import java.io.File
 
 class VariantPathHelper(
     val buildDirectory: DirectoryProperty,
-    private val variantDslInfo: VariantDslInfo,
+    private val dslInfo: ComponentDslInfo,
     private val dslServices: DslServices
 ) {
 
@@ -64,17 +65,17 @@ class VariantPathHelper(
     val directorySegments: Collection<String?> by lazy {
         val builder =
             ImmutableList.builder<String>()
-        if (variantDslInfo.componentType.isNestedComponent) {
-            builder.add(variantDslInfo.componentType.prefix)
+        if (dslInfo.componentType.isNestedComponent) {
+            builder.add(dslInfo.componentType.prefix)
         }
-        if (variantDslInfo.productFlavorList.isNotEmpty()) {
+        if (dslInfo.productFlavorList.isNotEmpty()) {
             builder.add(
                 combineAsCamelCase(
-                    variantDslInfo.productFlavorList, ProductFlavor::getName
+                    dslInfo.productFlavorList, ProductFlavor::getName
                 )
             )
         }
-        builder.add((variantDslInfo as VariantDslInfoImpl).buildTypeObj.name)
+        builder.add((dslInfo as VariantDslInfoImpl).buildTypeObj.name)
         builder.build()
     }
 
@@ -88,7 +89,8 @@ class VariantPathHelper(
         // we only know if it is signed during configuration, if it's the base module.
         // Otherwise, don't differentiate between signed and unsigned.
         val suffix =
-            if (variantDslInfo.isSigningReady || !variantDslInfo.componentType.isBaseModule)
+            if ((dslInfo as? ApkProducingComponentDslInfo)?.isSigningReady == true
+                || !dslInfo.componentType.isBaseModule)
                 SdkConstants.DOT_ANDROID_PACKAGE
             else "-unsigned.apk"
         return "$archivesBaseName-$baseName$suffix"
@@ -102,8 +104,8 @@ class VariantPathHelper(
      */
     fun computeFullNameWithSplits(splitName: String): String {
         return VariantDslInfoBuilder.computeFullNameWithSplits(
-            variantDslInfo.componentIdentity,
-            variantDslInfo.componentType,
+            dslInfo.componentIdentity,
+            dslInfo.componentType,
             splitName
         )
     }
@@ -116,8 +118,8 @@ class VariantPathHelper(
      */
     val baseName: String by lazy {
         VariantDslInfoBuilder.computeBaseName(
-            variantDslInfo as VariantDslInfoImpl,
-            variantDslInfo.componentType
+            dslInfo as VariantDslInfoImpl,
+            dslInfo.componentType
         )
     }
 
@@ -129,15 +131,15 @@ class VariantPathHelper(
      */
     fun computeBaseNameWithSplits(splitName: String): String {
         val sb = StringBuilder()
-        if (variantDslInfo.productFlavorList.isNotEmpty()) {
-            for (pf in variantDslInfo.productFlavorList) {
+        if (dslInfo.productFlavorList.isNotEmpty()) {
+            for (pf in dslInfo.productFlavorList) {
                 sb.append(pf.name).append('-')
             }
         }
         sb.append(splitName).append('-')
-        sb.append((variantDslInfo as VariantDslInfoImpl).buildTypeObj.name)
-        if (variantDslInfo.componentType.isNestedComponent) {
-            sb.append('-').append(variantDslInfo.componentType.prefix)
+        sb.append((dslInfo as VariantDslInfoImpl).buildTypeObj.name)
+        if (dslInfo.componentType.isNestedComponent) {
+            sb.append('-').append(dslInfo.componentType.prefix)
         }
         return sb.toString()
     }
@@ -214,7 +216,7 @@ class VariantPathHelper(
 
     val manifestOutputDirectory: Provider<Directory>
         get() {
-            val componentType: ComponentType = variantDslInfo.componentType
+            val componentType: ComponentType = dslInfo.componentType
             if (componentType.isTestComponent) {
                 if (componentType.isApk) { // ANDROID_TEST
                     return intermediatesDir("manifest", dirName)

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
@@ -74,7 +74,7 @@ class VariantDependencies internal constructor(
     val annotationProcessorConfiguration: Configuration,
     private val reverseMetadataValuesConfiguration: Configuration?,
     val wearAppConfiguration: Configuration?,
-    private val testedVariant: VariantImpl?,
+    private val testedVariant: VariantCreationConfig?,
     private val project: Project,
     private val projectOptions: ProjectOptions,
     isSelfInstrumenting: Boolean,

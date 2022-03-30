@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
@@ -61,7 +61,7 @@ class NativeModelBuilder(
     private val ideRefreshExternalNativeModel
         get() =
             projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)
-    private val scopes: List<ComponentImpl> by lazy {
+    private val scopes: List<ComponentCreationConfig> by lazy {
         (variantModel.variants + variantModel.testComponents)
             .filter { it.taskContainer.cxxConfigurationModel != null }
     }

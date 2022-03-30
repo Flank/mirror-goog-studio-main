@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.variant.impl.LibraryVariantImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Build
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.BuildGroup
@@ -67,7 +67,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import org.gradle.api.Project
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
@@ -78,7 +77,7 @@ import org.gradle.api.provider.ProviderFactory
  */
 fun createCxxVariantBuildTask(
     taskFactory: TaskFactory,
-    variant: VariantImpl,
+    variant: VariantCreationConfig,
     providers: ProviderFactory,
     layout: ProjectLayout) {
     val configuration = tryCreateConfigurationParameters(
@@ -109,7 +108,7 @@ fun createCxxVariantBuildTask(
 /**
  * Construct gradle tasks for C/C++ configuration and build.
  */
-fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTasks(
+fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantCreationConfig> createCxxTasks(
         androidLocationsProvider: AndroidLocationsProvider,
         sdkComponents: SdkComponentsBuildService,
         issueReporter: IssueReporter,

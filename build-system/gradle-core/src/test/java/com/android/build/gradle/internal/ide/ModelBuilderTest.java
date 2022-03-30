@@ -34,6 +34,7 @@ import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -205,7 +206,9 @@ public class ModelBuilderTest {
 
             testedVariant
                     .getTestComponents()
-                    .put(variantDslInfo.getComponentType(), unitTestComponent);
+                    .put(
+                            variantDslInfo.getComponentType(),
+                            (TestComponentCreationConfig) unitTestComponent);
 
             return unitTestComponent;
         }

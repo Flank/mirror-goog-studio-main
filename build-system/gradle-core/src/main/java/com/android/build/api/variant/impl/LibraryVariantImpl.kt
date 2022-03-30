@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
@@ -163,4 +164,7 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isAndroidTestCoverageEnabled
+
+    override val publishInfo: VariantPublishingInfo?
+        get() = variantDslInfo.publishInfo
 }

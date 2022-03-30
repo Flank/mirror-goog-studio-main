@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
@@ -64,9 +65,8 @@ class NamespacedResourcesTaskManager(
         taskFactory.register(LinkLibraryAndroidResourcesTask.CreationAction(creationConfig))
         // TODO: also generate a private R.jar holding private resources.
         taskFactory.register(GenerateNamespacedLibraryRFilesTask.CreationAction(creationConfig))
-        if (creationConfig.componentType.isTestComponent) {
-            val testedType = creationConfig.testedConfig?.componentType ?: throw RuntimeException("testedVariant is null")
-            if (testedType.isAar) {
+        if (creationConfig is TestComponentCreationConfig) {
+            if (creationConfig.mainVariant.componentType.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
                     packageOutputType = packageOutputType
                 )

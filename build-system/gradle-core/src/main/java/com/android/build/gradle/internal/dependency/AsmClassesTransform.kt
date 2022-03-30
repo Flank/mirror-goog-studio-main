@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -63,7 +62,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
         fun registerAsmTransformForComponent(
             projectName: String,
             dependencyHandler: DependencyHandler,
-            creationConfig: ComponentImpl
+            creationConfig: ComponentCreationConfig
         ) {
             if (creationConfig.dependenciesClassesAreInstrumented) {
                 dependencyHandler.registerTransform(AsmClassesTransform::class.java) { spec ->

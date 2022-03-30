@@ -20,12 +20,12 @@ package com.android.build.gradle.internal.lint
 import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.LintImpl
@@ -831,7 +831,7 @@ abstract class VariantInputs {
         this.checkDependencies.setDisallowChanges(checkDependencies)
         minifiedEnabled.setDisallowChanges(creationConfig.minifiedEnabled)
         mainArtifact.initialize(
-            creationConfig as ComponentImpl,
+            creationConfig,
             checkDependencies,
             addBaseModuleLintModel,
             warnIfProjectTreatedAsExternalDependency
@@ -841,7 +841,7 @@ abstract class VariantInputs {
             variantWithTests.unitTest?.let { unitTest ->
                 creationConfig.services.newInstance(JavaArtifactInput::class.java)
                     .initialize(
-                        unitTest as UnitTestImpl,
+                        unitTest,
                         checkDependencies = false,
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
@@ -855,7 +855,7 @@ abstract class VariantInputs {
             variantWithTests.androidTest?.let { androidTest ->
                 creationConfig.services.newInstance(AndroidArtifactInput::class.java)
                     .initialize(
-                        androidTest as ComponentImpl,
+                        androidTest,
                         checkDependencies = false,
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
@@ -1317,38 +1317,38 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     abstract val useSupportLibraryVectorDrawables: Property<Boolean>
 
     fun initialize(
-        componentImpl: ComponentImpl,
+        creationConfig: ComponentCreationConfig,
         checkDependencies: Boolean,
         addBaseModuleLintModel: Boolean,
         warnIfProjectTreatedAsExternalDependency: Boolean,
         includeClassesOutputDirectories: Boolean = true,
         includeGeneratedSourceFolders: Boolean = true
     ): AndroidArtifactInput {
-        applicationId.setDisallowChanges(componentImpl.applicationId)
+        applicationId.setDisallowChanges(creationConfig.applicationId)
         if (includeGeneratedSourceFolders) {
             generatedSourceFolders.from(
-                ModelBuilder.getGeneratedSourceFoldersFileCollection(componentImpl)
+                ModelBuilder.getGeneratedSourceFoldersFileCollection(creationConfig)
             )
         }
         generatedSourceFolders.disallowChanges()
         generatedResourceFolders.fromDisallowChanges(
-            ModelBuilder.getGeneratedResourceFoldersFileCollection(componentImpl)
+            ModelBuilder.getGeneratedResourceFoldersFileCollection(creationConfig)
         )
         shrinkable.setDisallowChanges(
-            componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
+            creationConfig is ConsumableCreationConfig && creationConfig.minifiedEnabled
         )
         useSupportLibraryVectorDrawables.setDisallowChanges(
-            componentImpl.vectorDrawables.useSupportLibrary ?: false
+            creationConfig.vectorDrawables.useSupportLibrary ?: false
         )
         if (includeClassesOutputDirectories) {
-            classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))
+            classesOutputDirectories.from(creationConfig.artifacts.get(InternalArtifactType.JAVAC))
 
             classesOutputDirectories.from(
-                componentImpl.variantData.allPreJavacGeneratedBytecode
+                creationConfig.variantData.allPreJavacGeneratedBytecode
             )
-            classesOutputDirectories.from(componentImpl.variantData.allPostJavacGeneratedBytecode)
+            classesOutputDirectories.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
             classesOutputDirectories.from(
-                componentImpl
+                creationConfig
                     .getCompiledRClasses(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
                     )
@@ -1358,20 +1358,20 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
         initializeProjectDependencyLintArtifacts(
             checkDependencies,
-            componentImpl.variantDependencies
+            creationConfig.variantDependencies
         )
         if (!checkDependencies) {
             if (addBaseModuleLintModel) {
-                initializeBaseModuleLintModel(componentImpl.variantDependencies)
+                initializeBaseModuleLintModel(creationConfig.variantDependencies)
             }
             projectRuntimeExplodedAars =
-                componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                creationConfig.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
             projectCompileExplodedAars =
-                componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                creationConfig.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
@@ -1380,11 +1380,11 @@ abstract class AndroidArtifactInput : ArtifactInput() {
 
         artifactCollectionsInputs.setDisallowChanges(
             ArtifactCollectionsInputsImpl(
-                variantDependencies = componentImpl.variantDependencies,
-                projectPath = componentImpl.services.projectInfo.path,
-                variantName = componentImpl.name,
+                variantDependencies = creationConfig.variantDependencies,
+                projectPath = creationConfig.services.projectInfo.path,
+                variantName = creationConfig.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-                buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
+                buildMapping = creationConfig.services.projectInfo.getProject().gradle.computeBuildMapping(),
             )
         )
         return this
@@ -1444,7 +1444,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
 abstract class JavaArtifactInput : ArtifactInput() {
 
     fun initialize(
-        unitTestImpl: UnitTestImpl,
+        creationConfig: UnitTestCreationConfig,
         checkDependencies: Boolean,
         addBaseModuleLintModel: Boolean,
         warnIfProjectTreatedAsExternalDependency: Boolean,
@@ -1452,14 +1452,14 @@ abstract class JavaArtifactInput : ArtifactInput() {
     ): JavaArtifactInput {
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(
-                unitTestImpl.artifacts.get(InternalArtifactType.JAVAC)
+                creationConfig.artifacts.get(InternalArtifactType.JAVAC)
             )
             classesOutputDirectories.from(
-                unitTestImpl.variantData.allPreJavacGeneratedBytecode
+                creationConfig.variantData.allPreJavacGeneratedBytecode
             )
-            classesOutputDirectories.from(unitTestImpl.variantData.allPostJavacGeneratedBytecode)
+            classesOutputDirectories.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
             classesOutputDirectories.from(
-                unitTestImpl
+                creationConfig
                     .getCompiledRClasses(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
                     )
@@ -1469,20 +1469,20 @@ abstract class JavaArtifactInput : ArtifactInput() {
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
         initializeProjectDependencyLintArtifacts(
             checkDependencies,
-            unitTestImpl.variantDependencies
+            creationConfig.variantDependencies
         )
         if (!checkDependencies) {
             if (addBaseModuleLintModel) {
-                initializeBaseModuleLintModel(unitTestImpl.variantDependencies)
+                initializeBaseModuleLintModel(creationConfig.variantDependencies)
             }
             projectRuntimeExplodedAars =
-                unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                creationConfig.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
             projectCompileExplodedAars =
-                unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                creationConfig.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
@@ -1490,11 +1490,11 @@ abstract class JavaArtifactInput : ArtifactInput() {
         }
         artifactCollectionsInputs.setDisallowChanges(
             ArtifactCollectionsInputsImpl(
-                variantDependencies = unitTestImpl.variantDependencies,
-                projectPath = unitTestImpl.services.projectInfo.path,
-                variantName = unitTestImpl.name,
+                variantDependencies = creationConfig.variantDependencies,
+                projectPath = creationConfig.services.projectInfo.path,
+                variantName = creationConfig.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-                buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
+                buildMapping = creationConfig.services.projectInfo.getProject().gradle.computeBuildMapping(),
             )
         )
         return this

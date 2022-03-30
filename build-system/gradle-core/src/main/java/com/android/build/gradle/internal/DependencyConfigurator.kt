@@ -19,11 +19,10 @@ package com.android.build.gradle.internal
 import com.android.build.api.attributes.AgpVersionAttr
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
@@ -607,10 +606,10 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>
+    fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantCreationConfig>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-        nestedComponents: List<ComponentImpl>
+        nestedComponents: List<ComponentCreationConfig>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
             variants.map { it.variant }.plus(nestedComponents)
@@ -622,7 +621,7 @@ class DependencyConfigurator(
             registerAsmTransformForComponent(
                 projectName,
                 dependencies,
-                component as ComponentImpl
+                component
             )
 
             registerRecalculateStackFramesTransformForComponent(

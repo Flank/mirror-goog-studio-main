@@ -36,10 +36,10 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -75,7 +74,7 @@ open class AndroidTestImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    testedVariant: VariantImpl,
+    mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -90,7 +89,7 @@ open class AndroidTestImpl @Inject constructor(
     artifacts,
     variantScope,
     variantData,
-    testedVariant,
+    mainVariant,
     transformManager,
     variantServices,
     taskCreationServices,
@@ -120,11 +119,13 @@ open class AndroidTestImpl @Inject constructor(
     override val profileable: Boolean
         get() = variantDslInfo.isProfileable
 
+    override val namespaceForR: Provider<String> = variantDslInfo.namespaceForR
+
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.minSdkVersion
+        get() = mainVariant.minSdkVersion
 
     override val targetSdkVersion: AndroidVersion
-        get() = testedVariant.targetSdkVersion
+        get() = mainVariant.targetSdkVersion
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
@@ -149,7 +150,7 @@ open class AndroidTestImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() {
             return when {
-                testedConfig.componentType.isAar -> false
+                mainVariant.componentType.isAar -> false
                 else -> variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
             }
         }
@@ -221,7 +222,7 @@ open class AndroidTestImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val targetSdkVersionOverride: AndroidVersion?
-        get() = testedVariant.targetSdkVersionOverride
+        get() = mainVariant.targetSdkVersionOverride
 
     // always false for this type
     override val embedsMicroApp: Boolean
@@ -232,12 +233,12 @@ open class AndroidTestImpl @Inject constructor(
         get() = true
 
     override val testedApplicationId: Provider<String>
-        get() = if (testedConfig.componentType.isAar) {
+        get() = if (mainVariant.componentType.isAar) {
             // if the tested variant is an AAR, the test is self contained and therefore
             // testedAppID == appId
             applicationId
         } else {
-            testedConfig.applicationId
+            mainVariant.applicationId
         }
 
     override val instrumentationRunnerArguments: Map<String, String>
@@ -247,7 +248,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = variantDslInfo.isAndroidTestCoverageEnabled
 
     override val renderscriptTargetApi: Int
-        get() = testedVariant.variantBuilder.renderscriptTargetApi
+        get() = mainVariant.renderscriptTargetApi
 
     /**
      * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk
@@ -258,15 +259,15 @@ open class AndroidTestImpl @Inject constructor(
     override val shouldPackageDesugarLibDex: Boolean
         get() = when {
             !isCoreLibraryDesugaringEnabled -> false
-            testedConfig.componentType.isAar -> true
-            else -> testedConfig.componentType.isBaseModule && needsShrinkDesugarLibrary
+            mainVariant.componentType.isAar -> true
+            else -> mainVariant.componentType.isBaseModule && needsShrinkDesugarLibrary
         }
 
     override val minSdkVersionForDexing: AndroidVersion =
-        testedVariant.minSdkVersionForDexing
+        mainVariant.minSdkVersionForDexing
 
     override val isMultiDexEnabled: Boolean =
-        testedVariant.isMultiDexEnabled
+        mainVariant.isMultiDexEnabled
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
@@ -276,6 +277,9 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dexingType: DexingType
         get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = false
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
@@ -304,6 +308,14 @@ open class AndroidTestImpl @Inject constructor(
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
 
+    override val renderscriptNdkModeEnabled: Boolean
+        get() = variantDslInfo.renderscriptNdkModeEnabled
+
+    override val defaultGlslcArgs: List<String>
+        get() = variantDslInfo.defaultGlslcArgs
+    override val scopedGlslcArgs: Map<String, List<String>>
+        get() = variantDslInfo.scopedGlslcArgs
+
     override val ignoredLibraryKeepRules: SetProperty<String>
         get() = internalServices.setPropertyOf(
                 String::class.java,
@@ -316,7 +328,7 @@ open class AndroidTestImpl @Inject constructor(
 
     // Only instrument library androidTests. In app modules, the main classes are instrumented.
     override val useJacocoTransformInstrumentation: Boolean
-        get() = isTestCoverageEnabled && testedConfig.componentType.isAar
+        get() = isTestCoverageEnabled && mainVariant.componentType.isAar
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

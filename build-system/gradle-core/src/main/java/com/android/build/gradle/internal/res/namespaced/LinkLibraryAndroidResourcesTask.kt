@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -172,7 +173,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             task.mergeOnly.setDisallowChanges(creationConfig.debuggable)
 
-            creationConfig.onTestedConfig {
+            (creationConfig as? TestComponentCreationConfig)?.onTestedVariant {
                 it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested
