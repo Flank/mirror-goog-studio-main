@@ -68,7 +68,7 @@ public class MethodBodyEvaluator {
         }
 
         Type[] argTypes = Type.getArgumentTypes(target.desc);
-        for (int i = 0, len = argTypes.length; i < len; i++) {
+        for (int i = 0; i < argTypes.length; i++) {
             Type type = argTypes[i];
             init.setLocal(localIndex, AndroidEval.makeValue(arguments[i], type));
 
