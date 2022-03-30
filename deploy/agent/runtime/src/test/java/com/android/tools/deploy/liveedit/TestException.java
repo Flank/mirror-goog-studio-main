@@ -17,6 +17,7 @@ package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.liveedit.Utils.buildClass;
 
+import com.android.tools.deploy.interpreter.HoudiniConfiguration;
 import java.lang.reflect.Method;
 import org.junit.Assert;
 
@@ -26,8 +27,14 @@ public class TestException {
         LiveEditStubs.init(TestException.class.getClassLoader());
     }
 
+    // Temporary. Delete this and enabled all tests once we get out of Canary
+    private static final boolean ENABLED = HoudiniConfiguration.ENABLED;
+
     @org.junit.Test
     public void testExceptionFromAppAfterInterpreter() throws Exception {
+        if (!ENABLED) {
+            return;
+        }
         String className = "InvokeException";
         String methodName = "throwFromAppAfterInterpreter";
         String methodDesc = "()V";
@@ -73,6 +80,9 @@ public class TestException {
 
     @org.junit.Test
     public void testExceptionFromInterpreter() throws Exception {
+        if (!ENABLED) {
+            return;
+        }
         String className = "InvokeException";
         String methodName = "throwFromInterpreter";
         String methodDesc = "()V";
@@ -112,6 +122,9 @@ public class TestException {
 
     @org.junit.Test
     public void testExceptionThrowAndCaughtInsideMethod() throws Exception {
+        if (!ENABLED) {
+            return;
+        }
         String className = "InvokeException";
         String methodName = "tryAndCatch";
         String methodDesc = "()Ljava/lang/StackTraceElement;";
@@ -145,6 +158,9 @@ public class TestException {
 
     @org.junit.Test
     public void testLiveEditStubsStructure() {
+        if (!ENABLED) {
+            return;
+        }
         Class clazz = LiveEditStubs.class;
         Method[] methods = clazz.getDeclaredMethods();
 
