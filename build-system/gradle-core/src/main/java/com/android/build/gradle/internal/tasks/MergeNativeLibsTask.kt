@@ -20,8 +20,8 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.BuildToolsExecutableInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions.Companion.compileGlob
@@ -400,7 +400,7 @@ fun getProjectNativeLibs(
     return nativeLibs
 }
 
-fun getSubProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection =
+fun getSubProjectNativeLibs(creationConfig: ComponentCreationConfig): FileCollection =
     creationConfig.variantDependencies.getArtifactFileCollection(
         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
         AndroidArtifacts.ArtifactScope.PROJECT,
@@ -410,7 +410,7 @@ fun getSubProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollecti
         file.walk().any { it.isFile }
     }
 
-fun getExternalNativeLibs(creationConfig: VariantCreationConfig): FileCollection =
+fun getExternalNativeLibs(creationConfig: ComponentCreationConfig): FileCollection =
     creationConfig.variantDependencies.getArtifactFileCollection(
         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
         AndroidArtifacts.ArtifactScope.EXTERNAL,

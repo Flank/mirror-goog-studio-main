@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -1055,7 +1056,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(MergeNativeLibsTask.CreationAction(creationConfig))
     }
 
-    fun createBuildConfigTask(creationConfig: VariantCreationConfig) {
+    fun createBuildConfigTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildConfigEnabled) {
             val generateBuildConfigTask =
                     taskFactory.register(GenerateBuildConfig.CreationAction(creationConfig))
@@ -1092,7 +1093,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createApkProcessResTask(creationConfig: VariantCreationConfig) {
+    fun createApkProcessResTask(creationConfig: ConsumableCreationConfig) {
         val componentType = creationConfig.componentType
         val packageOutputType: InternalArtifactType<Directory>? =
                 if (componentType.isApk && !componentType.isForTesting) FEATURE_RESOURCE_PKG else null
@@ -1336,7 +1337,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createAidlTask(creationConfig: VariantCreationConfig) {
+    fun createAidlTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildFeatures.aidl) {
             val taskContainer = creationConfig.taskContainer
             val aidlCompileTask = taskFactory.register(AidlCompile.CreationAction(creationConfig))
@@ -1344,7 +1345,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createShaderTask(creationConfig: VariantCreationConfig) {
+    fun createShaderTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildFeatures.shaders) {
             // merge the shader folders together using the proper priority.
             taskFactory.register(
@@ -1805,7 +1806,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      * used if the test config's name does not include a test suffix.
      */
     protected fun createTestDevicesForVariant(
-        creationConfig: VariantCreationConfig,
+        creationConfig: InstrumentedTestCreationConfig,
         testData: AbstractTestDataImpl,
         variant: VariantImpl?,
         variantName: String,
@@ -3204,7 +3205,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun configureTestData(
-            creationConfig: VariantCreationConfig, testData: AbstractTestDataImpl) {
+            creationConfig: TestCreationConfig, testData: AbstractTestDataImpl) {
         testData.animationsDisabled = creationConfig
                 .services
                 .provider(globalConfig.testOptions::animationsDisabled)
@@ -3216,7 +3217,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     private fun maybeCreateCheckDuplicateClassesTask(
-            creationConfig: VariantCreationConfig) {
+            creationConfig: ComponentCreationConfig) {
         if (creationConfig
                         .services
                         .projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {

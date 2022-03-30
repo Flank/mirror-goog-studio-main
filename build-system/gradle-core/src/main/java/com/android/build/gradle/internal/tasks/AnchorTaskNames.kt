@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 
 /**
  * Type safe access to anchor tasks naming facilities
@@ -27,7 +27,7 @@ object AnchorTaskNames {
      * Return the anchor task for the IDE to obtain all artifacts related to extracting APKs
      * from a bundle file.
      */
-    fun getExtractApksAnchorTaskName(componentImpl: ComponentImpl): String {
+    fun getExtractApksAnchorTaskName(componentImpl: ComponentCreationConfig): String {
         return componentImpl.computeTaskName("extractApksFor")
     }
 }

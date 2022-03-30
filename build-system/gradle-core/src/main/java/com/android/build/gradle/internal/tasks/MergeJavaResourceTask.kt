@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -195,8 +195,8 @@ abstract class MergeJavaResourceTask
     class CreationAction(
         @Suppress("DEPRECATION") // Legacy support (b/195153220)
         private val mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>,
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<MergeJavaResourceTask, VariantCreationConfig>(
+        creationConfig: ConsumableCreationConfig
+    ) : VariantTaskCreationAction<MergeJavaResourceTask, ConsumableCreationConfig>(
         creationConfig
     ) {
 
@@ -355,7 +355,7 @@ fun getProjectJavaRes(
 }
 
 private fun getExternalLibJavaRes(
-    creationConfig: VariantCreationConfig,
+    creationConfig: ComponentCreationConfig,
     @Suppress("DEPRECATION") // Legacy support (b/195153220)
     mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>
 ): FileCollection {

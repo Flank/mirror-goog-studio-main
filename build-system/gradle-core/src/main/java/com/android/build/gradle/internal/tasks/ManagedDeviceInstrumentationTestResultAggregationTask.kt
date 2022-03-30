@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.test.report.ReportType
@@ -81,13 +81,13 @@ abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncreme
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
+        creationConfig: InstrumentedTestCreationConfig,
         private val deviceTestResultFiles: List<File>,
         private val testResultOutputFile: File,
         private val testReportHtmlOutputDir: File,
     ) : VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestResultAggregationTask,
-            VariantCreationConfig>(creationConfig) {
+            InstrumentedTestCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("merge", "TestResultProtos")

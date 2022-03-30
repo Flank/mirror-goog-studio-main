@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Lint
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
@@ -96,7 +96,7 @@ abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DS
         FileUtils.copyFile(inputPath, toPath)
     }
 
-    class CreationAction(variant: VariantCreationConfig) : VariantTaskCreationAction<AndroidLintCopyReportTask, VariantCreationConfig>(variant) {
+    class CreationAction(variant: ComponentCreationConfig) : VariantTaskCreationAction<AndroidLintCopyReportTask, ComponentCreationConfig>(variant) {
         override val name: String = computeTaskName("copy", "AndroidLintReports")
         override val type: Class<AndroidLintCopyReportTask> get() = AndroidLintCopyReportTask::class.java
         override fun configure(task: AndroidLintCopyReportTask) {

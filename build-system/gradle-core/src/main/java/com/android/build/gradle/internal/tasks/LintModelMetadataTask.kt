@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.MAVEN_ARTIFACT_ID_PROPERTY
 import com.android.SdkConstants.MAVEN_GROUP_ID_PROPERTY
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -63,8 +63,8 @@ abstract class LintModelMetadataTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: ConsumableCreationConfig
-    ) : VariantTaskCreationAction<LintModelMetadataTask, ConsumableCreationConfig>(creationConfig) {
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<LintModelMetadataTask, ComponentCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("write", "LintModelMetadata")

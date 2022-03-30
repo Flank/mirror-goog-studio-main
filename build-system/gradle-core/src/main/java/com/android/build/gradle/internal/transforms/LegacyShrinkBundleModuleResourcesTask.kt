@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -179,8 +179,8 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<LegacyShrinkBundleModuleResourcesTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ConsumableCreationConfig) :
+        VariantTaskCreationAction<LegacyShrinkBundleModuleResourcesTask, ConsumableCreationConfig>(
             creationConfig
         ) {
 

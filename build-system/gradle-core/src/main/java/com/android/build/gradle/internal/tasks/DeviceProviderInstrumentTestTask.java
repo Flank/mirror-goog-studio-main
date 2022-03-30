@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.BuildToolsExecutableInput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
@@ -566,7 +567,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     public static class CreationAction
             extends VariantTaskCreationAction<
-                    DeviceProviderInstrumentTestTask, VariantCreationConfig> {
+                    DeviceProviderInstrumentTestTask, InstrumentedTestCreationConfig> {
 
         private static final String CONNECTED_DEVICE_PROVIDER = "connected";
 
@@ -582,14 +583,14 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         }
 
         public CreationAction(
-                @NonNull VariantCreationConfig creationConfig,
+                @NonNull InstrumentedTestCreationConfig creationConfig,
                 @NonNull AbstractTestDataImpl testData) {
             this(creationConfig, testData, null);
         }
 
         /** Creation action for AGP {@link ConnectedDeviceProvider} device providers. */
         public CreationAction(
-                @NonNull VariantCreationConfig creationConfig,
+                @NonNull InstrumentedTestCreationConfig creationConfig,
                 @NonNull AbstractTestDataImpl testData,
                 @Nullable Provider<List<String>> connectedCheckTargetSerials) {
             this(
@@ -603,7 +604,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         /** Creation action for custom (non-AGP) device providers. */
         public CreationAction(
-                @NonNull VariantCreationConfig creationConfig,
+                @NonNull InstrumentedTestCreationConfig creationConfig,
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull AbstractTestDataImpl testData,
                 @Nullable Provider<List<String>> connectedCheckTargetSerials) {
@@ -617,7 +618,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         }
 
         private CreationAction(
-                @NonNull VariantCreationConfig creationConfig,
+                @NonNull InstrumentedTestCreationConfig creationConfig,
                 @Nullable DeviceProvider deviceProvider,
                 @NonNull String deviceProviderName,
                 @NonNull Type type,

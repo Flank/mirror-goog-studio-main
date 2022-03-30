@@ -169,7 +169,7 @@ public abstract class AbstractAppTaskManager<
         taskFactory.register(
                 new PackagedDependenciesWriterTask.CreationAction(appVariantProperties));
 
-        taskFactory.register(new ApkZipPackagingTask.CreationAction(appVariantProperties));
+        taskFactory.register(new ApkZipPackagingTask.CreationAction(apkCreationConfig));
     }
 
     private void createCompileTask(@NonNull VariantImpl variant) {

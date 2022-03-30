@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.generators.BuildConfigData
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -198,8 +198,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- Config Action -----
 
-    internal class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<GenerateBuildConfig, VariantCreationConfig>(
+    internal class CreationAction(creationConfig: ConsumableCreationConfig) :
+        VariantTaskCreationAction<GenerateBuildConfig, ConsumableCreationConfig>(
             creationConfig
         ) {
 

@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 
 /**
  * A variant with its (optional) test components for consumption by lint.
@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.component.UnitTestCreationConfig
  * should not be analyzed.
  */
 class VariantWithTests(
-    val main: ConsumableCreationConfig,
+    val main: VariantCreationConfig,
     val androidTest: AndroidTestCreationConfig? = null,
     val unitTest: UnitTestCreationConfig? = null,
     val testFixtures: TestFixturesImpl? = null

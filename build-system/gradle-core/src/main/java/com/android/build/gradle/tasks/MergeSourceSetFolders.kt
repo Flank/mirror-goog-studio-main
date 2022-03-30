@@ -20,8 +20,8 @@ import com.android.build.api.variant.impl.AssetSourceDirectoriesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
@@ -470,7 +470,7 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
         }
     }
 
-    class MergeJniLibFoldersCreationAction(creationConfig: VariantCreationConfig) :
+    class MergeJniLibFoldersCreationAction(creationConfig: ConsumableCreationConfig) :
         CreationAction(creationConfig) {
 
         override val name: String
@@ -494,7 +494,7 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
         }
     }
 
-    class MergeShaderSourceFoldersCreationAction(creationConfig: VariantCreationConfig) :
+    class MergeShaderSourceFoldersCreationAction(creationConfig: ConsumableCreationConfig) :
         CreationAction(creationConfig) {
 
         override val name: String

@@ -28,7 +28,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
@@ -150,7 +150,7 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull T transform) {
         return addTransform(taskFactory, creationConfig, transform, null, null, null);
     }
@@ -174,7 +174,7 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull T transform,
             @Nullable PreConfigAction preConfigAction,
             @Nullable TaskConfigAction<TransformTask> configAction,
@@ -304,7 +304,7 @@ public class TransformManager extends FilterableStreamCollection {
     @Nullable
     private IntermediateStream findTransformStreams(
             @NonNull Transform transform,
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull List<TransformStream> inputStreams,
             @NonNull String taskName,
             @NonNull File buildDir) {

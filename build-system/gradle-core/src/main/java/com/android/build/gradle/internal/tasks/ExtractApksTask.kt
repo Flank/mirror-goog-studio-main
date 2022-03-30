@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -59,7 +59,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {
         const val namePrefix = "extractApksFromBundleFor"
-        fun getTaskName(componentImpl: ComponentImpl): String {
+        fun getTaskName(componentImpl: ComponentCreationConfig): String {
             return componentImpl.computeTaskName(namePrefix)
         }
     }

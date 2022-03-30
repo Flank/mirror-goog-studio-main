@@ -21,7 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -215,7 +215,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     /**
      * CreationAction for the lintVitalAnalyzeVariant task. Does not use the variant with tests
      */
-    class LintVitalCreationAction(variant: ConsumableCreationConfig) :
+    class LintVitalCreationAction(variant: VariantCreationConfig) :
         VariantCreationAction(VariantWithTests(
             variant,
             androidTest = null,

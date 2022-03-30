@@ -122,9 +122,6 @@ open class AndroidTestImpl @Inject constructor(
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.minSdkVersion
 
-    override val maxSdkVersion: Int?
-        get() = testedVariant.maxSdkVersion
-
     override val targetSdkVersion: AndroidVersion
         get() = testedVariant.targetSdkVersion
 
@@ -217,11 +214,6 @@ open class AndroidTestImpl @Inject constructor(
                 variantDslInfo.getResValues()
         )
     }
-
-    override val experimentalProperties: MapProperty<String, Any> = internalServices.mapPropertyOf(
-            String::class.java,
-            Any::class.java,
-            variantDslInfo.experimentalProperties)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
