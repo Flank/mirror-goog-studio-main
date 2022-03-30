@@ -67,6 +67,14 @@ public class MethodBodyEvaluator {
                     localIndex++, new ObjectValue(thisObject, Type.getObjectType(objectType)));
         }
 
+        Log.v(
+                "live.deploy",
+                "Interpreting: '"
+                        + method.getOwnerInternalName()
+                        + "."
+                        + target.name
+                        + target.desc);
+
         Type[] argTypes = Type.getArgumentTypes(target.desc);
         for (int i = 0; i < argTypes.length; i++) {
             Type type = argTypes[i];
