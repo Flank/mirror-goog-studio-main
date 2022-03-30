@@ -15,13 +15,10 @@ def main():
     sys.exit('Must run %s within a workspace.' % os.path.basename(sys.argv[0]))
   if sys.platform.startswith('linux'):
     platform = 'linux-x86_64'
-    jdk_subdir = 'linux'
   elif sys.platform == 'darwin':
     platform = 'darwin-x86_64'
-    jdk_subdir = os.path.join('mac', 'Contents', 'Home')
   elif sys.platform == 'win32':
     platform = 'windows-x86_64'
-    jdk_subdir = 'win64'
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
@@ -31,7 +28,6 @@ def main():
   command = bazel_command(args)
 
   env = {}
-  env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
   env['TERM'] = os.environ.get('TERM', '')
   env['MAVEN_FETCH'] = os.environ.get('MAVEN_FETCH', '')
   env['SHELL'] = os.environ.get('SHELL', '')

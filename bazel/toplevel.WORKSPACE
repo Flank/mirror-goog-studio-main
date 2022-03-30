@@ -16,9 +16,18 @@ register_toolchains(
     "//prebuilts/studio/jdk:jdk11_toolchain_java11_definition",
 )
 
+new_local_repository(
+    name = "studio_jdk",
+    path = "prebuilts/studio/jdk",
+    build_file = "prebuilts/studio/jdk/BUILD.studio_jdk",
+)
+
 local_repository(
     name = "blaze",
     path = "tools/vendor/google3/blaze",
+    repo_mapping = {
+     "@local_jdk": "@studio_jdk",
+    },
 )
 
 load("@blaze//:binds.bzl", "blaze_binds")
