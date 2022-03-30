@@ -126,24 +126,27 @@ class ConfigurationsTest : VariantApiBaseTest(TestType.Script, ScriptingLanguage
 
                         androidComponents {
                             onVariants(selector().withBuildType("release")) { variant ->
-                                // allComponents() performs the action on the release variant and
-                                // all of its nested components.
-                                variant.allComponents { component ->
-                                    // configure compile and runtime configurations with a single
-                                    // call.
-                                    component.configurations { configuration ->
+                                // components contains the variant and all of its nested components.
+                                variant.components.forEach { component ->
+                                    // configure compile and runtime configurations in the same way.
+                                    listOf(
+                                        component.compileConfiguration,
+                                        component.runtimeConfiguration
+                                    ).forEach { configuration ->
                                         configuration.resolutionStrategy.dependencySubstitution {
                                             substitute(project(":lib1")).using(project(":lib1Sub"))
                                         }
                                     }
                                 }
 
-                                // nestedComponents() performs the action on the release variant's
-                                // nested components, but not on the release variant itself
-                                variant.nestedComponents { component ->
-                                    // configure compile and runtime configurations with a single
-                                    // call.
-                                    component.configurations { configuration ->
+                                // nestedComponents contains the variant's nested components, but
+                                // not the release variant itself
+                                variant.nestedComponents.forEach { component ->
+                                    // configure compile and runtime configurations in the same way.
+                                    listOf(
+                                        component.compileConfiguration,
+                                        component.runtimeConfiguration
+                                    ).forEach { configuration ->
                                         configuration.resolutionStrategy.dependencySubstitution {
                                             substitute(project(":testLib")).using(project(":testLibSub"))
                                         }

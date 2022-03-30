@@ -242,21 +242,13 @@ abstract class VariantImpl(
             (this as? HasTestFixtures)?.testFixtures
         )
 
-    override fun nestedComponents(action: (Component) -> Unit) {
-        nestedComponents.forEach { action.invoke(it) }
-    }
-
-    override val allComponents: List<Component>
+    override val components: List<Component>
         get() = listOfNotNull(
             this,
             unitTest,
             (this as? HasAndroidTest)?.androidTest,
             (this as? HasTestFixtures)?.testFixtures
         )
-
-    override fun allComponents(action: (Component) -> Unit) {
-        allComponents.forEach { action.invoke(it) }
-    }
 
     override val ignoredLibraryKeepRules: Provider<Set<String>> =
             internalServices.setPropertyOf(

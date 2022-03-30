@@ -18,7 +18,6 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.Component
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
@@ -216,39 +215,17 @@ class AnalyticsEnabledVariantTest {
     }
 
     @Test
-    fun testNestedComponentsMethod() {
-        val block = { _ : Component -> }
-        proxy.nestedComponents(block)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessList.first().type)
-            .isEqualTo(VariantPropertiesMethodType.NESTED_COMPONENTS_VALUE)
-        Mockito.verify(delegate, Mockito.times(1)).nestedComponents(block)
-    }
-
-    @Test
     fun testAllComponents() {
-        Mockito.`when`(delegate.allComponents)
+        Mockito.`when`(delegate.components)
             .thenReturn(listOf(delegate, Mockito.mock(UnitTest::class.java)))
-        val allComponents = proxy.allComponents
+        val allComponents = proxy.components
         Truth.assertThat(allComponents).hasSize(2)
         Truth.assertThat(allComponents[0]).isInstanceOf(Variant::class.java)
         Truth.assertThat(allComponents[1]).isInstanceOf(UnitTest::class.java)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessList.first().type)
-            .isEqualTo(VariantPropertiesMethodType.ALL_COMPONENTS_VALUE)
-        Mockito.verify(delegate, Mockito.times(1)).allComponents
-    }
-
-    @Test
-    fun testAllComponentsMethod() {
-        val block = { _ : Component -> }
-        proxy.allComponents(block)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessList.first().type)
-            .isEqualTo(VariantPropertiesMethodType.ALL_COMPONENTS_VALUE)
-        Mockito.verify(delegate, Mockito.times(1)).allComponents(block)
+            .isEqualTo(VariantPropertiesMethodType.COMPONENTS_VALUE)
+        Mockito.verify(delegate, Mockito.times(1)).components
     }
 }

@@ -176,22 +176,10 @@ abstract class AnalyticsEnabledVariant (
             return delegate.nestedComponents
         }
 
-    override fun nestedComponents(action: (Component) -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.NESTED_COMPONENTS_VALUE
-        delegate.nestedComponents(action)
-    }
-
-    override val allComponents: List<Component>
+    override val components: List<Component>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.ALL_COMPONENTS_VALUE
-            return delegate.allComponents
+                VariantPropertiesMethodType.COMPONENTS_VALUE
+            return delegate.components
         }
-
-    override fun allComponents(action: (Component) -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ALL_COMPONENTS_VALUE
-        delegate.allComponents(action)
-    }
 }

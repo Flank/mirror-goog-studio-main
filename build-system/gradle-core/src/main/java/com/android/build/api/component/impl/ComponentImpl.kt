@@ -195,11 +195,6 @@ abstract class ComponentImpl(
     override val annotationProcessorConfiguration =
         variantDependencies.annotationProcessorConfiguration
 
-    override fun configurations(action: (Configuration) -> Unit) {
-        action.invoke(compileConfiguration)
-        action.invoke(runtimeConfiguration)
-    }
-
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
