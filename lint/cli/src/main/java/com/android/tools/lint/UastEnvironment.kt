@@ -129,7 +129,7 @@ interface UastEnvironment {
         fun create(
             config: Configuration,
         ): UastEnvironment {
-            return when(config) {
+            return when (config) {
                 is FirUastEnvironment.Configuration ->
                     FirUastEnvironment.create(config)
                 else ->
