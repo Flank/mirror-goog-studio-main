@@ -65,6 +65,13 @@ public class SdkVersionInfo {
     public static final int LOWEST_ACTIVE_API_WEAR = 23;
 
     /**
+     * The highest known API level for desktop. Note the tools at the
+     * downloadable system images for desktop to see if there are more recent
+     * versions.
+     */
+    public static final int HIGHEST_KNOWN_API_DESKTOP = 32;
+
+    /**
      * The highest known API level for Android TV. Note the tools at the
      * downloadable system images for TV to see if there are more recent
      * versions.

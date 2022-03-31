@@ -40,6 +40,9 @@ public class SystemImage implements ISystemImage {
     /** Tag to apply to system images for wearables. */
     public static final IdDisplay WEAR_TAG = IdDisplay.create("android-wear", "Wear OS");
 
+    /** Tag to apply to system images for Desktop. */
+    public static final IdDisplay DESKTOP_TAG = IdDisplay.create("android-desktop", "Desktop");
+
     /** Tag to apply to system images for Android TV. */
     public static final IdDisplay ANDROID_TV_TAG = IdDisplay.create("android-tv", "Android TV");
 
