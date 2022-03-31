@@ -38,29 +38,28 @@ public abstract class Source {
     // For more of these magical values, see zipinfo.c in unzip source code.
     // All these values are shifted left 16 bits because this is where they
     // are expected in the zip external attribute field.
-    private static final int TYPE_FREG = 0100000; // Regular File
-    private static final int TYPE_FLNK = 0120000; // Symbolic link
-    private static final int TYPE_FDIR = 0040000; // Directory
+    private static final int TYPE_FREG = 0100000 << 16; // Regular File
+    private static final int TYPE_FLNK = 0120000 << 16; // Symbolic link
+    private static final int TYPE_FDIR = 0040000 << 16; // Directory
 
-    private static final int UNX_IRUSR = 00400; /* Unix read    : owner */
-    private static final int UNX_IWUSR = 00200; /* Unix write   : owner */
-    private static final int UNX_IXUSR = 00100; /* Unix execute : owner */
-    private static final int UNX_IRGRP = 00040; /* Unix read    : group */
-    private static final int UNX_IWGRP = 00020; /* Unix write   : group */
-    private static final int UNX_IXGRP = 00010; /* Unix execute : group */
-    private static final int UNX_IROTH = 00004; /* Unix read    : other */
-    private static final int UNX_IWOTH = 00002; /* Unix write   : other */
-    private static final int UNX_IXOTH = 00001; /* Unix execute : other */
+    private static final int UNX_IRUSR = 00400 << 16; /* Unix read    : owner */
+    private static final int UNX_IWUSR = 00200 << 16; /* Unix write   : owner */
+    private static final int UNX_IXUSR = 00100 << 16; /* Unix execute : owner */
+    private static final int UNX_IRGRP = 00040 << 16; /* Unix read    : group */
+    private static final int UNX_IWGRP = 00020 << 16; /* Unix write   : group */
+    private static final int UNX_IXGRP = 00010 << 16; /* Unix execute : group */
+    private static final int UNX_IROTH = 00004 << 16; /* Unix read    : other */
+    private static final int UNX_IWOTH = 00002 << 16; /* Unix write   : other */
+    private static final int UNX_IXOTH = 00001 << 16; /* Unix execute : other */
     private static final int UNX_IRALL = UNX_IRUSR | UNX_IRGRP | UNX_IROTH;
     private static final int UNX_IWALL = UNX_IWUSR | UNX_IWGRP | UNX_IWOTH;
 
-    public static final int PERMISSION_USR_RW = (UNX_IRUSR | UNX_IWUSR) << 16;
-    public static final int PERMISSION_RW = (UNX_IRALL | UNX_IWALL) << 16;
-    public static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
-    public static final int PERMISSION_LINK = TYPE_FLNK << 16;
-    public static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
-    public static final int PERMISSION_DIR_DEFAULT =
-            (TYPE_FDIR << 16) | PERMISSION_EXEC | PERMISSION_RW;
+    public static final int PERMISSION_USR_RW = UNX_IRUSR | UNX_IWUSR;
+    public static final int PERMISSION_RW = UNX_IRALL | UNX_IWALL;
+    public static final int PERMISSION_EXEC = UNX_IXUSR | UNX_IXGRP | UNX_IXOTH;
+    public static final int PERMISSION_LINK = TYPE_FLNK;
+    public static final int PERMISSION_DEFAULT = TYPE_FREG | PERMISSION_RW;
+    public static final int PERMISSION_DIR_DEFAULT = TYPE_FDIR | PERMISSION_EXEC | PERMISSION_RW;
 
     protected int externalAttributes;
 
