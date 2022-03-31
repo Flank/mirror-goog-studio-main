@@ -11472,14 +11472,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "androidx.constraintlayout.constraintlayout-solver_2.0.4",
-    pom = "repository/androidx/constraintlayout/constraintlayout-solver/2.0.4/constraintlayout-solver-2.0.4.pom",
-    repo_root_path = "repository",
-    repo_path = "androidx/constraintlayout/constraintlayout-solver/2.0.4",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "androidx.constraintlayout.constraintlayout_1.1.3",
     pom = "repository/androidx/constraintlayout/constraintlayout/1.1.3/constraintlayout-1.1.3.pom",
     repo_root_path = "repository",
@@ -11499,19 +11491,6 @@ maven_artifact(
         "androidx.appcompat.appcompat_1.2.0",
         "androidx.core.core_1.3.1",
         "androidx.constraintlayout.constraintlayout-solver_2.0.1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "androidx.constraintlayout.constraintlayout_2.0.4",
-    pom = "repository/androidx/constraintlayout/constraintlayout/2.0.4/constraintlayout-2.0.4.pom",
-    repo_root_path = "repository",
-    repo_path = "androidx/constraintlayout/constraintlayout/2.0.4",
-    deps = [
-        "androidx.appcompat.appcompat_1.2.0",
-        "androidx.core.core_1.3.1",
-        "androidx.constraintlayout.constraintlayout-solver_2.0.4",
     ],
     visibility = ["//visibility:public"],
 )

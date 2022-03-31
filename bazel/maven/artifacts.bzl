@@ -188,7 +188,6 @@ DATA = [
     "androidx.compose.ui:ui-tooling:1.1.1",
     "androidx.compose.ui:ui-tooling:1.2.0-alpha05",
     "androidx.constraintlayout:constraintlayout:1.1.3",
-    "androidx.constraintlayout:constraintlayout:2.0.4",
     "androidx.constraintlayout:constraintlayout:2.1.3",
     "androidx.core:core:1.5.0-beta01",
     "androidx.core:core:1.5.0-rc02",
