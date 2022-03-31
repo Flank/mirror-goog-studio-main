@@ -33,7 +33,12 @@ public class ZipCreator {
         try (ZipArchive archive = new ZipArchive(dst)) {
             for (int i = 1; i < args.length; i++) {
                 Path src = Paths.get(args[i]);
-                BytesSource source = new BytesSource(src, src.getFileName().toString(), 0);
+                Source source;
+                if (args[i].endsWith("/")) {
+                    source = Sources.dir(src.toString());
+                } else {
+                    source = new BytesSource(src, src.getFileName().toString(), 0);
+                }
                 archive.add(source);
             }
         }
