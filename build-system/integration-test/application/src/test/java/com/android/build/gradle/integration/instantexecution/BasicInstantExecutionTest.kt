@@ -112,8 +112,7 @@ class BasicInstantExecutionTest {
     @Test
     fun testWithProjectIsolation() {
         executor()
-            .withArgument("-Dorg.gradle.unsafe.isolated-projects=true")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.PROJECT_ISOLATION)
             .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
             .run("assemble")
     }

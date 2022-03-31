@@ -30,7 +30,6 @@ class LintModelIntegrationTest {
     @get:Rule
     val project: GradleTestProject =
         GradleTestProject.builder()
-            .withConfigurationCacheMaxProblems(4)
             .fromTestProject("lintKotlin")
             .dontOutputLogOnFailure()
             .create()

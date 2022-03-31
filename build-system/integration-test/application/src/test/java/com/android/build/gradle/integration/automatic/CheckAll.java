@@ -83,7 +83,7 @@ public class CheckAll {
         if (CONFIG_CACHE_DISABLED.contains(projectName)) {
             this.project = builder.withConfigurationCaching(ConfigurationCaching.OFF).create();
         } else {
-            this.project = builder.withConfigurationCaching(ConfigurationCaching.WARN).create();
+            this.project = builder.withConfigurationCaching(ConfigurationCaching.ON).create();
         }
     }
 

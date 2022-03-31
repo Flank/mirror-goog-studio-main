@@ -40,7 +40,6 @@ public class LintCustomLocalAndPublishTest {
     @Rule public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("lintCustomLocalAndPublishRules")
-                    .withConfigurationCacheMaxProblems(2)
                     .create();
 
     @Test

@@ -35,7 +35,6 @@ class LintNoJavaClassesTest {
     val project: GradleTestProject =
         GradleTestProject.builder()
             .fromTestProject("lintNoJavaClasses")
-            .withConfigurationCacheMaxProblems(87)
             .create()
 
     @Test

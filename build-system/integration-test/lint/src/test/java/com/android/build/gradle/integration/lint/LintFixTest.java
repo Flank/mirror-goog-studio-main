@@ -38,7 +38,6 @@ public class LintFixTest {
     public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("lintKotlin")
-                    .withConfigurationCacheMaxProblems(66)
                     .create();
 
     @Test
