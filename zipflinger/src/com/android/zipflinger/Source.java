@@ -40,6 +40,7 @@ public abstract class Source {
     // are expected in the zip external attribute field.
     private static final int TYPE_FREG = 0100000; // Regular File
     private static final int TYPE_FLNK = 0120000; // Symbolic link
+    private static final int TYPE_FDIR = 0040000; // Directory
 
     private static final int UNX_IRUSR = 00400; /* Unix read    : owner */
     private static final int UNX_IWUSR = 00200; /* Unix write   : owner */
@@ -58,6 +59,8 @@ public abstract class Source {
     public static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
     public static final int PERMISSION_LINK = TYPE_FLNK << 16;
     public static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
+    public static final int PERMISSION_DIR_DEFAULT =
+            (TYPE_FDIR << 16) | PERMISSION_EXEC | PERMISSION_RW;
 
     protected int externalAttributes;
 
