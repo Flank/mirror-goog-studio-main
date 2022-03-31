@@ -229,6 +229,10 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             creationConfig
                     .artifacts
                     .setTaskInputToFinalProduct(SingleArtifact.MERGED_MANIFEST, task.mergedManifest)
+
+            // b/215776121
+            task.notCompatibleWithConfigurationCache(
+                "AnalyzeDependenciesTask not compatible with configuration caching.")
         }
 
         override fun handleProvider(

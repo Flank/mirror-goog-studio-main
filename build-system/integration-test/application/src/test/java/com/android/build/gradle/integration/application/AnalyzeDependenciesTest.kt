@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.application.testData.EnumClass
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -197,9 +196,6 @@ class AnalyzeDependenciesTest {
     val project = GradleTestProject.builder()
             .withAdditionalMavenRepo(mavenRepo)
             .fromTestApp(testApp)
-            // b/215776121
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            .withConfigurationCacheMaxProblems(11)
             .create()
 
     @Test

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.google.common.truth.Truth.assertThat
@@ -28,14 +27,11 @@ class ComposeHelloWorldTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
             .create()
 
     @Test
     fun appAndTestsBuildSuccessfully() {
-        val executor =
-                project.executor()
-                        .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
+        val executor = project.executor()
 
         val tasks = listOf("clean",  "assembleDebug", "assembleDebugAndroidTest")
         executor.run(tasks)
@@ -45,9 +41,7 @@ class ComposeHelloWorldTest {
 
     @Test
     fun testLiveLiterals() {
-        val executor =
-                project.executor()
-                        .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
+        val executor = project.executor()
 
         // Run compilation with live literals on
         TestFileUtils.appendToFile(project.getSubproject("app").buildFile,
