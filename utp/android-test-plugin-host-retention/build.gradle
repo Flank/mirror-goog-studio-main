@@ -44,7 +44,7 @@ dependencies {
     testImplementation libs.unified_test_platform_launcher
     testImplementation libs.mockito_core
     testImplementation libs.junit
-    testImplementation "io.grpc:grpc-testing:1.39.0"
+    testImplementation "io.grpc:grpc-testing:1.45.1"
 }
 
 sourceSets {

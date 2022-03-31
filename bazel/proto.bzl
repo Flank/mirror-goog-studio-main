@@ -10,8 +10,8 @@ proto_languages = struct(
     JAVA = 1,
 )
 
-PROTOC_VERSION = "3.17.2"
-PROTOC_GRPC_VERSION = "1.39.0"
+PROTOC_VERSION = "3.19.2"
+PROTOC_GRPC_VERSION = "1.45.1"
 
 ProtoPackageInfo = provider(fields = ["proto_src", "proto_path"])
 
