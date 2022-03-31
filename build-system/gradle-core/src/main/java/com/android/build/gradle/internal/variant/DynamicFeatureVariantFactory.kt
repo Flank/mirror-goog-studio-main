@@ -25,8 +25,8 @@ import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -43,14 +43,14 @@ import com.android.builder.core.ComponentTypeImpl
 
 internal class DynamicFeatureVariantFactory(
     projectServices: ProjectServices,
-) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
+) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantDslInfo, DynamicFeatureVariantImpl>(
     projectServices,
 ) {
 
     override fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: DynamicFeatureVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
     ): DynamicFeatureVariantBuilderImpl {
         return projectServices
@@ -68,7 +68,7 @@ internal class DynamicFeatureVariantFactory(
         variantBuilder: DynamicFeatureVariantBuilderImpl,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: DynamicFeatureVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

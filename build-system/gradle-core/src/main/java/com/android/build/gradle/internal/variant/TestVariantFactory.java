@@ -32,10 +32,12 @@ import com.android.build.api.variant.ComponentIdentity;
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo;
+import com.android.build.gradle.internal.core.dsl.TestProjectVariantDslInfo;
+import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -68,7 +70,8 @@ import org.jetbrains.annotations.NotNull;
 
 /** Customization of {@link AbstractAppVariantFactory} for test-only projects. */
 public class TestVariantFactory
-        extends AbstractAppVariantFactory<TestVariantBuilderImpl, TestVariantImpl> {
+        extends AbstractAppVariantFactory<
+                TestVariantBuilderImpl, TestProjectVariantDslInfo, TestVariantImpl> {
 
     public TestVariantFactory(@NonNull ProjectServices projectServices) {
         super(projectServices);
@@ -79,7 +82,7 @@ public class TestVariantFactory
     public TestVariantBuilderImpl createVariantBuilder(
             @NonNull GlobalVariantBuilderConfig globalVariantBuilderConfig,
             @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull TestProjectVariantDslInfo variantDslInfo,
             @NonNull VariantBuilderServices variantBuilderServices) {
         return projectServices
                 .getObjectFactory()
@@ -97,7 +100,7 @@ public class TestVariantFactory
             @NonNull TestVariantBuilderImpl variantBuilder,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull TestProjectVariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -182,14 +185,14 @@ public class TestVariantFactory
     public UnitTestImpl createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull UnitTestComponentDslInfo dslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariant,
+            @NonNull VariantCreationConfig testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
@@ -202,14 +205,14 @@ public class TestVariantFactory
     public AndroidTestImpl createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull AndroidTestComponentDslInfo dslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariant,
+            @NonNull VariantCreationConfig testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,

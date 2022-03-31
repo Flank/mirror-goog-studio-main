@@ -54,7 +54,7 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
     val projectDirectory = TemporaryFolder()
 
     private lateinit var project: Project
-    private lateinit var plugin: BasePlugin<*, *, *, *, *, *, *, *>
+    private lateinit var plugin: BasePlugin<*, *, *, *, *, *, *, *, *>
     private lateinit var android: BaseExtension
     private lateinit var configExtensionMap: Multimap<String, String>
 
@@ -150,7 +150,7 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
         android = project.extensions.getByType(pluginType.extensionClass) as BaseExtension
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
-        plugin = project.plugins.getPlugin(pluginType.pluginClass) as BasePlugin<*,*,*,*,*,*,*,*>
+        plugin = project.plugins.getPlugin(pluginType.pluginClass) as BasePlugin<*, *,*,*,*,*,*,*,*>
 
         // manually call the DSL to configure the project.
         android.flavorDimensions("api", "mode")

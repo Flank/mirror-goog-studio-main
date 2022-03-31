@@ -43,13 +43,13 @@ import com.android.build.gradle.internal.variant.VariantFactory;
  */
 public class ApiObjectFactory {
     @NonNull private final BaseExtension extension;
-    @NonNull private final VariantFactory<?, ?> variantFactory;
+    @NonNull private final VariantFactory<?, ?, ?> variantFactory;
 
     @NonNull
     private final ReadOnlyObjectProvider readOnlyObjectProvider = new ReadOnlyObjectProvider();
 
     public ApiObjectFactory(
-            @NonNull BaseExtension extension, @NonNull VariantFactory<?, ?> variantFactory) {
+            @NonNull BaseExtension extension, @NonNull VariantFactory<?, ?, ?> variantFactory) {
         this.extension = extension;
         this.variantFactory = variantFactory;
     }

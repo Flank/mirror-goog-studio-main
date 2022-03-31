@@ -33,9 +33,10 @@ open class ComponentInfo<
 
 class VariantComponentInfo<
         VariantBuilderT : VariantBuilderImpl,
+        VariantDslInfoT: VariantDslInfo,
         VariantT : VariantCreationConfig> (
     variantBuilder: VariantBuilderT,
     variant: VariantT,
     stats: GradleBuildVariant.Builder?,
-    val variantDslInfo: VariantDslInfo
+    val variantDslInfo: VariantDslInfoT
 ) : ComponentInfo<VariantBuilderT, VariantT>(variantBuilder, variant, stats)

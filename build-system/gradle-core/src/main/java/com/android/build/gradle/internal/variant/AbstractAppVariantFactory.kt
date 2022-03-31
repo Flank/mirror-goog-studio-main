@@ -19,11 +19,11 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.api.ApplicationVariantImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -43,15 +43,15 @@ import org.gradle.api.Project
  *
  * This can be an app project, or a test-only project, though the default behavior is app.
  */
-abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
+abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, VariantDslInfoT: VariantDslInfo, VariantT : VariantCreationConfig>(
     projectServices: ProjectServices,
-) : BaseVariantFactory<VariantBuilderT, VariantT>(
+) : BaseVariantFactory<VariantBuilderT, VariantDslInfoT, VariantT>(
     projectServices,
 ) {
 
     override fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfoT,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

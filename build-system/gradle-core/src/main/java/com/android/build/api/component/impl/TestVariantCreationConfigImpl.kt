@@ -16,10 +16,9 @@
 package com.android.build.api.component.impl
 
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.services.BaseServices
+import com.android.build.gradle.internal.core.dsl.TestProjectVariantDslInfo
 
 class TestVariantCreationConfigImpl(
     config: TestVariantCreationConfig,
-    variantDslInfo: VariantDslInfo,
-) : ApkCreationConfigImpl<TestVariantCreationConfig>(config, variantDslInfo)
+    dslInfo: TestProjectVariantDslInfo,
+) : ApkCreationConfigImpl<TestVariantCreationConfig>(config, dslInfo)

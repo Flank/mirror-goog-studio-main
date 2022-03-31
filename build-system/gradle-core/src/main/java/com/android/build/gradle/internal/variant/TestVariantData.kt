@@ -17,8 +17,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.TestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
@@ -32,7 +32,7 @@ import com.android.utils.appendCapitalized
  */
 class TestVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: TestComponentDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -41,7 +41,7 @@ class TestVariantData(
     taskContainer: MutableTaskContainer
 ) : ApkVariantData(
     componentIdentity,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -52,7 +52,7 @@ class TestVariantData(
 
     override val description: String
         get() {
-            val componentType = variantDslInfo.componentType
+            val componentType = dslInfo.componentType
 
             val prefix = if (componentType.isApk) {
                 "android (on device) tests"

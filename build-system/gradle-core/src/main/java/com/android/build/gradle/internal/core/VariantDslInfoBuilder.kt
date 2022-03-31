@@ -24,6 +24,7 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension
@@ -50,7 +51,7 @@ import org.gradle.api.file.DirectoryProperty
  *
  * Use [getBuilder] as an entry point.
  */
-class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> private constructor(
+class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>, DslInfoT: ComponentDslInfo> private constructor(
     private val dimensionCombination: DimensionCombination,
     val componentType: ComponentType,
     private val defaultConfig: DefaultConfig,
@@ -73,7 +74,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
          * Returns a new builder
          */
         @JvmStatic
-        fun <CommonExtensionT: CommonExtension<*, *, *, *>> getBuilder(
+        fun <CommonExtensionT: CommonExtension<*, *, *, *>, DslInfoT: ComponentDslInfo> getBuilder(
             dimensionCombination: DimensionCombination,
             componentType: ComponentType,
             defaultConfig: DefaultConfig,
@@ -89,7 +90,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             hasDynamicFeatures: Boolean,
             experimentalProperties: Map<String, Any> = mapOf(),
             testFixtureMainVariantName: String? = null
-        ): VariantDslInfoBuilder<CommonExtensionT> {
+        ): VariantDslInfoBuilder<CommonExtensionT, DslInfoT> {
             return VariantDslInfoBuilder(
                 dimensionCombination,
                 componentType,
@@ -293,7 +294,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     }
 
     /** Creates a variant configuration  */
-    fun createVariantDslInfo(buildDirectory: DirectoryProperty): VariantDslInfoImpl {
+    fun createVariantDslInfo(buildDirectory: DirectoryProperty): DslInfoT {
         val flavorList = flavors.map { it.first }
 
         val publishingInfo = if (extension is InternalLibraryExtension) {
@@ -341,7 +342,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             inconsistentTestAppId,
             oldExtension,
             extension
-        )
+        ) as DslInfoT
     }
 
     fun createVariantSources(): VariantSources {

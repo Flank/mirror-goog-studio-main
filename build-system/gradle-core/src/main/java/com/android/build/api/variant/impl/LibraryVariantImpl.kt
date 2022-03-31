@@ -31,8 +31,8 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.LibraryCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -51,10 +51,10 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class  LibraryVariantImpl @Inject constructor(
+open class LibraryVariantImpl @Inject constructor(
     override val variantBuilder: LibraryVariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: LibraryVariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -65,10 +65,10 @@ open class  LibraryVariantImpl @Inject constructor(
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     globalTaskCreationConfig: GlobalTaskCreationConfig,
-) : VariantImpl(
+) : VariantImpl<LibraryVariantDslInfo>(
     variantBuilder,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -88,7 +88,7 @@ open class  LibraryVariantImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.newProviderBackingDeprecatedApi(
             type = String::class.java,
-            value = variantDslInfo.namespace
+            value = dslInfo.namespace
         )
 
     override val instrumentation = InstrumentationImpl(
@@ -107,9 +107,9 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override val aarMetadata: AarMetadata =
         internalServices.newInstance(AarMetadata::class.java).also {
-            it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
+            it.minCompileSdk.set(dslInfo.aarMetadata.minCompileSdk ?: 1)
             it.minAgpVersion.set(
-                variantDslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
+                dslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
             )
         }
 
@@ -118,20 +118,18 @@ open class  LibraryVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val dslAndroidResources: AndroidResources
-        get() = variantDslInfo.androidResources
+        get() = dslInfo.androidResources
 
-    private val delegate by lazy { ConsumableCreationConfigImpl(
-        this,
-        variantDslInfo) }
+    private val delegate by lazy { ConsumableCreationConfigImpl(this, dslInfo) }
 
     override val dexingType: DexingType
         get() = delegate.dexingType
 
     override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
+        get() = dslInfo.isDebuggable
 
     override val profileable: Boolean
-        get() = variantDslInfo.isProfileable
+        get() = dslInfo.isProfileable
 
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
@@ -149,7 +147,7 @@ open class  LibraryVariantImpl @Inject constructor(
         }
 
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        get() = dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 
@@ -163,8 +161,8 @@ open class  LibraryVariantImpl @Inject constructor(
         get() = delegate.minSdkVersionForDexing
 
     override val packageJacocoRuntime: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = dslInfo.isAndroidTestCoverageEnabled
 
     override val publishInfo: VariantPublishingInfo?
-        get() = variantDslInfo.publishInfo
+        get() = dslInfo.publishInfo
 }

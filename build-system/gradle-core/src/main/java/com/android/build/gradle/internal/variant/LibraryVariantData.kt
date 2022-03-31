@@ -17,8 +17,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
@@ -32,7 +32,7 @@ import java.io.File
 /** Data about a variant that produce a Library bundle (.aar)  */
 class LibraryVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo,
+    variantDslInfo: LibraryVariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

@@ -33,8 +33,8 @@ import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.internal.component.PublishableCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
@@ -56,7 +56,7 @@ import javax.inject.Inject
 open class TestFixturesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    variantDslInfo: TestFixturesComponentDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -68,7 +68,7 @@ open class TestFixturesImpl @Inject constructor(
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig
-) : ComponentImpl(
+): ComponentImpl<TestFixturesComponentDslInfo>(
     componentIdentity,
     buildFeatureValues,
     variantDslInfo,
@@ -160,7 +160,7 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val androidResourcesEnabled: Boolean =
-        variantDslInfo.testFixturesAndroidResourcesEnabled
+        dslInfo.testFixturesAndroidResourcesEnabled
 
     override val supportedAbis: Set<String>
         get() = mainVariant.supportedAbis

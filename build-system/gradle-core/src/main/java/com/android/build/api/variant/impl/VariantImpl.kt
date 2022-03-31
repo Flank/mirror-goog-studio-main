@@ -34,8 +34,8 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOptions
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -57,10 +57,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
 
-abstract class VariantImpl(
+abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     open val variantBuilder: VariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: DslInfoT,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -71,10 +71,10 @@ abstract class VariantImpl(
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig
-) : ComponentImpl(
+) : ComponentImpl<DslInfoT>(
     variantBuilder,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -106,12 +106,12 @@ abstract class VariantImpl(
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,
-            variantDslInfo.getBuildConfigFields()
+            dslInfo.getBuildConfigFields()
         )
     }
 
     override val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
-        get() = variantDslInfo.getBuildConfigFields()
+        get() = dslInfo.getBuildConfigFields()
 
     // for compatibility with old variant API.
     fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
@@ -119,22 +119,22 @@ abstract class VariantImpl(
     }
 
     override val packaging: Packaging by lazy {
-        PackagingImpl(variantDslInfo.packaging, internalServices)
+        PackagingImpl(dslInfo.packaging, internalServices)
     }
 
 
     override val externalNativeBuild: ExternalNativeBuild? by lazy {
-        variantDslInfo.nativeBuildSystem?.let { nativeBuildType ->
+        dslInfo.nativeBuildSystem?.let { nativeBuildType ->
             when(nativeBuildType) {
                 NativeBuiltType.CMAKE ->
-                    variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
+                    dslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
                         ExternalCmakeImpl(
                                 it,
                                 variantServices
                         )
                     }
                 NativeBuiltType.NDK_BUILD ->
-                    variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
+                    dslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
                         ExternalNdkBuildImpl(
                                 it,
                                 variantServices
@@ -155,7 +155,7 @@ abstract class VariantImpl(
 
     override val proguardFiles: ListProperty<RegularFile> =
         variantServices.listPropertyOf(RegularFile::class.java) {
-            variantDslInfo.getProguardFiles(it)
+            dslInfo.getProguardFiles(it)
         }
 
     // ---------------------------------------------------------------------------------------------
@@ -176,23 +176,23 @@ abstract class VariantImpl(
         internalServices.mapPropertyOf(
             ResValue.Key::class.java,
             ResValue::class.java,
-            variantDslInfo.getResValues()
+            dslInfo.getResValues()
         )
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
     override val renderscriptTargetApi: Int
-        get() =  variantBuilder.renderscriptTargetApi
+        get() = variantBuilder.renderscriptTargetApi
 
-    private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
+    private var _isMultiDexEnabled: Boolean? = dslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean
         get() {
             return _isMultiDexEnabled ?: (minSdkVersion.getFeatureLevel() >= 21)
         }
 
     override val needsMainDexListForBundle: Boolean
-        get() = variantDslInfo.componentType.isBaseModule
+        get() = dslInfo.componentType.isBaseModule
                 && global.hasDynamicFeatures
                 && dexingType.needsMainDexList
 
@@ -228,16 +228,17 @@ abstract class VariantImpl(
     }
 
     override val pseudoLocalesEnabled: Property<Boolean> =
-        internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
+        internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, dslInfo.isPseudoLocalesEnabled)
 
     override val experimentalProperties: MapProperty<String, Any> =
             internalServices.mapPropertyOf(
-                    String::class.java,
-                    Any::class.java,
-                    variantDslInfo.experimentalProperties)
+                String::class.java,
+                Any::class.java,
+                dslInfo.experimentalProperties
+            )
 
     override val externalNativeExperimentalProperties: Map<String, Any>
-        get() = variantDslInfo.externalNativeExperimentalProperties
+        get() = dslInfo.externalNativeExperimentalProperties
 
     override val nestedComponents: List<Component>
         get() = listOfNotNull(
@@ -256,22 +257,23 @@ abstract class VariantImpl(
 
     override val ignoredLibraryKeepRules: Provider<Set<String>> =
             internalServices.setPropertyOf(
-                    String::class.java,
-                    variantDslInfo.ignoredLibraryKeepRules)
+                String::class.java,
+                dslInfo.ignoredLibraryKeepRules
+            )
 
-    override val ignoreAllLibraryKeepRules: Boolean = variantDslInfo.ignoreAllLibraryKeepRules
+    override val ignoreAllLibraryKeepRules: Boolean = dslInfo.ignoreAllLibraryKeepRules
 
     override val defaultGlslcArgs: List<String>
-        get() = variantDslInfo.defaultGlslcArgs
+        get() = dslInfo.defaultGlslcArgs
     override val scopedGlslcArgs: Map<String, List<String>>
-        get() = variantDslInfo.scopedGlslcArgs
+        get() = dslInfo.scopedGlslcArgs
 
     override val renderscriptNdkModeEnabled: Boolean
-        get() = variantDslInfo.renderscriptNdkModeEnabled
+        get() = dslInfo.renderscriptNdkModeEnabled
     override val ndkConfig: MergedNdkConfig
-        get() = variantDslInfo.ndkConfig
+        get() = dslInfo.ndkConfig
     override val isJniDebuggable: Boolean
-        get() = variantDslInfo.isJniDebuggable
+        get() = dslInfo.isJniDebuggable
     override val supportedAbis: Set<String>
-        get() = variantDslInfo.supportedAbis
+        get() = dslInfo.supportedAbis
 }

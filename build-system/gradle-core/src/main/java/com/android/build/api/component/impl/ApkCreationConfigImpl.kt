@@ -19,21 +19,21 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.sdklib.AndroidVersion.VersionCodes
 import kotlin.math.max
 
 open class ApkCreationConfigImpl<T: ApkCreationConfig>(
     config: T,
-    dslInfo: VariantDslInfo
+    override val dslInfo: ApkProducingComponentDslInfo
 ): ConsumableCreationConfigImpl<T>(config, dslInfo) {
 
     val isDebuggable: Boolean
-        get() = variantDslInfo.isDebuggable
+        get() = dslInfo.isDebuggable
 
     val isProfileable: Boolean
-        get() = variantDslInfo.isProfileable
+        get() = dslInfo.isProfileable
 
     override val needsShrinkDesugarLibrary: Boolean
         get() {
@@ -57,7 +57,7 @@ open class ApkCreationConfigImpl<T: ApkCreationConfig>(
      */
     override val minSdkVersionForDexing: AndroidVersion
         get() {
-            val targetDeployApiFromIDE = variantDslInfo.targetDeployApiFromIDE ?: 1
+            val targetDeployApiFromIDE = dslInfo.targetDeployApiFromIDE ?: 1
 
             val minForDexing = if (targetDeployApiFromIDE >= VersionCodes.N) {
                     max(24, config.minSdkVersion.getFeatureLevel())

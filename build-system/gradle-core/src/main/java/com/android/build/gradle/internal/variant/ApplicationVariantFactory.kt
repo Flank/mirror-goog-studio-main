@@ -31,8 +31,8 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -60,14 +60,14 @@ import java.util.function.Consumer
 
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
-) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
+) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantDslInfo, ApplicationVariantImpl>(
     projectServices,
 ) {
 
     override fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: ApplicationVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
     ): ApplicationVariantBuilderImpl {
 
@@ -86,7 +86,7 @@ class ApplicationVariantFactory(
         variantBuilder: ApplicationVariantBuilderImpl,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: ApplicationVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

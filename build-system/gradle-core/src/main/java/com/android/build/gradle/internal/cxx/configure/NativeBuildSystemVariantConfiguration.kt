@@ -34,7 +34,7 @@ data class NativeBuildSystemVariantConfig(
 // TODO(b/225137414): stop resolving variant properties
 fun createNativeBuildSystemVariantConfig(
     buildSystem: NativeBuildSystem,
-    variant: VariantImpl
+    variant: VariantImpl<*>
 ): NativeBuildSystemVariantConfig {
 
     /**

@@ -306,7 +306,7 @@ fun tryCreateConfigurationParameters(
         variantName = variant.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem,
-            variant as VariantImpl
+            variant as VariantImpl<*>
         ),
         outputOptions = outputOptions
     )

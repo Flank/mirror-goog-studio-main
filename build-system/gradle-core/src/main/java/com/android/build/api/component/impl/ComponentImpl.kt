@@ -45,9 +45,9 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.core.ProductFlavor
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.PublishableVariantDslInfo
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
@@ -96,10 +96,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 
-abstract class ComponentImpl(
+abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
-    protected val variantDslInfo: VariantDslInfo,
+    protected val dslInfo: DslInfoT,
     final override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
@@ -118,7 +118,7 @@ abstract class ComponentImpl(
     override val namespace: Provider<String> =
         internalServices.providerOf(
             type = String::class.java,
-            value = variantDslInfo.namespace
+            value = dslInfo.namespace
         )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
@@ -139,7 +139,7 @@ abstract class ComponentImpl(
 
     override val javaCompilation: JavaCompilation =
         JavaCompilationImpl(
-            variantDslInfo.javaCompileOptions,
+            dslInfo.javaCompileOptions,
             buildFeatures.dataBinding,
             internalServices)
 
@@ -201,7 +201,7 @@ abstract class ComponentImpl(
     override val taskContainer = variantData.taskContainer
 
     override val componentType: ComponentType
-        get() = variantDslInfo.componentType
+        get() = dslInfo.componentType
 
     override val dirName: String
         get() = paths.dirName
@@ -210,12 +210,12 @@ abstract class ComponentImpl(
         get() = paths.baseName
 
     override val resourceConfigurations: ImmutableSet<String>
-        get() = variantDslInfo.resourceConfigurations
+        get() = dslInfo.resourceConfigurations
 
     override val description: String
         get() = variantData.description
 
-    override val productFlavorList: List<ProductFlavor> = variantDslInfo.productFlavorList.map {
+    override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
         ProductFlavor(it)
     }
 
@@ -270,7 +270,7 @@ abstract class ComponentImpl(
                 (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
 
     override fun useResourceShrinker(): Boolean {
-        if (componentType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
+        if (componentType.isForTesting || !dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
             return false
         }
         val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
@@ -298,7 +298,7 @@ abstract class ComponentImpl(
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
             return false
         }
-        if (!variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
+        if (!dslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
             internalServices
                 .issueReporter
                 .reportError(
@@ -321,7 +321,7 @@ abstract class ComponentImpl(
         internalServices.mapPropertyOf(
             String::class.java,
             String::class.java,
-            variantDslInfo.manifestPlaceholders
+            dslInfo.manifestPlaceholders
         )
     }
 
@@ -447,7 +447,7 @@ abstract class ComponentImpl(
                     outputSpec.publishedConfigTypes.any { it.isPublicationConfig }
 
                 if (isPublicationConfigs) {
-                    val components = (variantDslInfo as PublishableVariantDslInfo).publishInfo!!.components
+                    val components = (dslInfo as PublishableVariantDslInfo).publishInfo!!.components
                     for(component in components) {
                         variantScope
                             .publishIntermediateArtifact(
@@ -544,7 +544,7 @@ abstract class ComponentImpl(
                 }
             }
         } else {
-            val componentType = variantDslInfo.componentType
+            val componentType = dslInfo.componentType
 
             if (this !is TestComponentCreationConfig) {
                 // TODO(b/138780301): Also use it in android tests.
@@ -594,7 +594,7 @@ abstract class ComponentImpl(
         return if (global.namespacedAndroidResources) {
             artifacts.get(COMPILE_R_CLASS_JAR)
         } else {
-            val componentType = variantDslInfo.componentType
+            val componentType = dslInfo.componentType
 
             if (this !is TestComponentCreationConfig) {
                 // TODO(b/138780301): Also use it in android tests.
@@ -646,10 +646,10 @@ abstract class ComponentImpl(
     }
 
     private fun getCompiledManifest(): FileCollection {
-        val manifestClassRequired = variantDslInfo.componentType.requiresManifest &&
+        val manifestClassRequired = dslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
-        val isTest = variantDslInfo.componentType.isForTesting
-        val isAar = variantDslInfo.componentType.isAar
+        val isTest = dslInfo.componentType.isForTesting
+        val isAar = dslInfo.componentType.isAar
         return if (manifestClassRequired && !isAar && !isTest) {
             internalServices.fileCollection(artifacts.get(COMPILE_MANIFEST_JAR))
         } else {
@@ -688,7 +688,7 @@ abstract class ComponentImpl(
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
             // TODO(b/224758957): This is wrong we need to check the final build config fields from
             //  the variant API
-            && variantDslInfo.getBuildConfigFields().none()
+            && dslInfo.getBuildConfigFields().none()
         ) {
             BuildConfigType.JAR
         } else {
@@ -736,22 +736,22 @@ abstract class ComponentImpl(
         get() = false
 
     override val isAndroidTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = dslInfo.isAndroidTestCoverageEnabled
 
     override val vectorDrawables: VectorDrawablesOptions
-        get() = variantDslInfo.vectorDrawables
+        get() = dslInfo.vectorDrawables
 
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
-        variantDslInfo.javaCompileOptions.annotationProcessorOptions
+        dslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
     }
 
     override val modelV1LegacySupport =
-        ModelV1LegacySupportImpl(variantDslInfo as VariantDslInfoImpl)
+        ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)
     override val oldVariantApiLegacySupport by lazy {
         OldVariantApiLegacySupportImpl(
             this,
-            variantDslInfo as VariantDslInfoImpl
+            dslInfo as VariantDslInfoImpl
         )
     }
 

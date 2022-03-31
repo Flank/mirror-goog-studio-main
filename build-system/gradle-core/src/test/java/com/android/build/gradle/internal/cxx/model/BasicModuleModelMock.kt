@@ -140,7 +140,7 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val variantImpl: VariantImpl = mock(
+    val variantImpl: VariantImpl<*> = mock(
         VariantImpl::class.java,
         throwUnmocked
     )

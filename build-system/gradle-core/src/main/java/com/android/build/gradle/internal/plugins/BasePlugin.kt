@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.internal.crash.runAction
 import com.android.build.gradle.internal.dependency.CONFIG_NAME_ANDROID_JDK_IMAGE
@@ -141,7 +142,8 @@ abstract class BasePlugin<
                                 in VariantBuilderT,
                                 in VariantT>,
                 VariantBuilderT: VariantBuilderImpl,
-                VariantT: VariantImpl>(
+                VariantDslInfoT: VariantDslInfo,
+                VariantT: VariantImpl<in VariantDslInfoT>>(
     val registry: ToolingModelBuilderRegistry,
     val componentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry
@@ -222,7 +224,7 @@ abstract class BasePlugin<
 
 
     @get:VisibleForTesting
-    val variantManager: VariantManager<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT> by lazy {
+    val variantManager: VariantManager<AndroidT, AndroidComponentsT, VariantBuilderT, VariantDslInfoT, VariantT> by lazy {
         withProject("variantManager") { project ->
             @Suppress("DEPRECATION", "UNCHECKED_CAST")
             VariantManager(
@@ -297,7 +299,7 @@ abstract class BasePlugin<
         extensionData.bootClasspathConfig
     }
 
-    private val variantFactory: VariantFactory<VariantBuilderT, VariantT> by lazy {
+    private val variantFactory: VariantFactory<VariantBuilderT, VariantDslInfoT, VariantT> by lazy {
         createVariantFactory(projectServices)
     }
 
@@ -324,7 +326,7 @@ abstract class BasePlugin<
 
     protected abstract fun createVariantFactory(
         projectServices: ProjectServices
-    ): VariantFactory<VariantBuilderT, VariantT>
+    ): VariantFactory<VariantBuilderT, VariantDslInfoT, VariantT>
 
     protected abstract fun createTaskManager(
         project: Project,

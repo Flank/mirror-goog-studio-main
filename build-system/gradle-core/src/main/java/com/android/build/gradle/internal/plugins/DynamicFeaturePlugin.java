@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension;
@@ -73,6 +74,7 @@ public class DynamicFeaturePlugin
                 com.android.build.api.dsl.DynamicFeatureExtension,
                 DynamicFeatureAndroidComponentsExtension,
                 DynamicFeatureVariantBuilderImpl,
+                DynamicFeatureVariantDslInfo,
                 DynamicFeatureVariantImpl> {
     @Inject
     public DynamicFeaturePlugin(

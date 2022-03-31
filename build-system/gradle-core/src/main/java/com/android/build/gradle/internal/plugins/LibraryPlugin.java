@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
@@ -72,6 +73,7 @@ public class LibraryPlugin
                 LibraryExtension,
                 LibraryAndroidComponentsExtension,
                 LibraryVariantBuilderImpl,
+                LibraryVariantDslInfo,
                 LibraryVariantImpl> {
 
     @Inject

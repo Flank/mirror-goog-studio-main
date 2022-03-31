@@ -33,8 +33,8 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -61,7 +61,7 @@ import javax.inject.Inject
 open class DynamicFeatureVariantImpl @Inject constructor(
     override val variantBuilder: DynamicFeatureVariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: DynamicFeatureVariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -72,10 +72,10 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     globalTaskCreationConfig: GlobalTaskCreationConfig,
-) : VariantImpl(
+) : VariantImpl<DynamicFeatureVariantDslInfo>(
     variantBuilder,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -89,7 +89,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 ), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest, HasTestFixtures {
 
     init {
-        variantDslInfo.multiDexKeepProguard?.let {
+        dslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                 .addInitialProvider(null, internalServices.toRegularFileProvider(it))
         }
@@ -97,7 +97,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     private val delegate by lazy { ApkCreationConfigImpl(
         this,
-        variantDslInfo) }
+        dslInfo) }
 
     /*
      * Providers of data coming from the base modules. These are loaded just once and finalized.
@@ -113,15 +113,15 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(variantDslInfo.androidResources, internalServices)
+        initializeAaptOptionsFromDsl(dslInfo.androidResources, internalServices)
     }
 
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        get() = dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            variantDslInfo.packaging,
+            dslInfo.packaging,
             internalServices,
             minSdkVersion.apiLevel
         )
@@ -187,19 +187,19 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val signingConfigImpl: SigningConfigImpl? = null
 
     override val useJacocoTransformInstrumentation: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = dslInfo.isAndroidTestCoverageEnabled
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, only present for old variant API.
     // ---------------------------------------------------------------------------------------------
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        variantDslInfo.signingConfig
+        dslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.
     // ---------------------------------------------------------------------------------------------
 
-    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
+    override val multiDexKeepFile = dslInfo.multiDexKeepFile
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

@@ -24,6 +24,7 @@ import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.build.event.BuildEventsListenerRegistry
@@ -46,12 +47,13 @@ abstract class AbstractAppPlugin<
                 in VariantBuilderT,
                 in VariantT>,
         VariantBuilderT : VariantBuilderImpl,
-        VariantT : VariantImpl>
+        VariantDslInfoT: VariantDslInfo,
+        VariantT : VariantImpl<VariantDslInfoT>>
 @Inject constructor(
         registry: ToolingModelBuilderRegistry?,
         componentFactory: SoftwareComponentFactory?,
         listenerRegistry: BuildEventsListenerRegistry?
-) : BasePlugin<BuildFeaturesT, BuildTypeT, DefaultConfigT, ProductFlavorT, AndroidT, AndroidComponentsT, VariantBuilderT, VariantT>(
+) : BasePlugin<BuildFeaturesT, BuildTypeT, DefaultConfigT, ProductFlavorT, AndroidT, AndroidComponentsT, VariantBuilderT, VariantDslInfoT, VariantT>(
         registry!!,
         componentFactory!!,
         listenerRegistry!!

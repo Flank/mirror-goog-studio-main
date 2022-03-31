@@ -25,11 +25,11 @@ import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.SigningConfigImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -620,10 +620,11 @@ public class AppPluginInternalTest {
                                     ApplicationExtension,
                                     ?,
                                     ApplicationVariantBuilderImpl,
+                                    ApplicationVariantDslInfo,
                                     ApplicationVariantImpl>
                             variantManager) {
 
-        List<VariantImpl> variants =
+        List<ApplicationVariantImpl> variants =
                 variantManager.getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());

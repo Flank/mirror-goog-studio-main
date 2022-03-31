@@ -26,8 +26,8 @@ import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -54,14 +54,14 @@ import org.gradle.api.Project
 
 class LibraryVariantFactory(
     projectServices: ProjectServices,
-) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl>(
+) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantDslInfo, LibraryVariantImpl>(
     projectServices,
 ) {
 
     override fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: LibraryVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
     ): LibraryVariantBuilderImpl {
         return projectServices
@@ -78,7 +78,7 @@ class LibraryVariantFactory(
         variantBuilder: LibraryVariantBuilderImpl,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: LibraryVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -160,7 +160,7 @@ class LibraryVariantFactory(
 
     override fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: LibraryVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

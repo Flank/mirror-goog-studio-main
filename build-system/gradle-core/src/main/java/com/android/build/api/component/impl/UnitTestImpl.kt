@@ -30,9 +30,9 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -50,7 +50,7 @@ import javax.inject.Inject
 open class UnitTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: UnitTestComponentDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -62,10 +62,10 @@ open class UnitTestImpl @Inject constructor(
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig
-) : TestComponentImpl(
+) : TestComponentImpl<UnitTestComponentDslInfo>(
     componentIdentity,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -94,10 +94,10 @@ open class UnitTestImpl @Inject constructor(
         get() = mainVariant.targetSdkVersion
 
     override val dslAndroidResources: AndroidResources
-        get() = variantDslInfo.testedVariant!!.androidResources
+        get() = dslInfo.testedVariant!!.androidResources
 
     override val applicationId: Provider<String> =
-        internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
+        internalServices.providerOf(String::class.java, dslInfo.applicationId)
 
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride
@@ -121,7 +121,7 @@ open class UnitTestImpl @Inject constructor(
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isUnitTestCoverageEnabled
+        get() = dslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
         sourceSets: MutableList<DirectoryEntry>
@@ -149,5 +149,5 @@ open class UnitTestImpl @Inject constructor(
 
     // TODO: Remove
     override val isUnitTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isUnitTestCoverageEnabled
+        get() = dslInfo.isUnitTestCoverageEnabled
 }

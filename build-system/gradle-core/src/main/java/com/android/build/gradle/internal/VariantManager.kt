@@ -43,11 +43,17 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
 import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.TestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BuildType
@@ -111,14 +117,15 @@ class VariantManager<
                 out VariantBuilder,
                 out Variant>,
         VariantBuilderT : VariantBuilderImpl,
-        VariantT : VariantImpl>(
+        VariantDslInfoT: VariantDslInfo,
+        VariantT : VariantCreationConfig>(
     private val project: Project,
     private val dslServices: DslServices,
     @Deprecated("Use dslExtension")  private val oldExtension: BaseExtension,
     private val dslExtension: CommonExtensionT,
     private val androidComponentsExtension: AndroidComponentsT,
     val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<CommonExtensionT, VariantBuilder, Variant>,
-    private val variantFactory: VariantFactory<VariantBuilderT, VariantT>,
+    private val variantFactory: VariantFactory<VariantBuilderT, VariantDslInfoT, VariantT>,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     val globalTaskCreationConfig: GlobalTaskCreationConfig,
     private val projectServices: ProjectServices
@@ -265,13 +272,13 @@ class VariantManager<
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         componentType: ComponentType,
         globalConfig: GlobalVariantBuilderConfig,
-    ): VariantComponentInfo<VariantBuilderT, VariantT>? {
+    ): VariantComponentInfo<VariantBuilderT, VariantDslInfoT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
         val defaultConfig = variantInputModel.defaultConfigData
         val defaultConfigSourceProvider = defaultConfig.sourceSet
-        val variantDslInfoBuilder = getBuilder(
+        val variantDslInfoBuilder = getBuilder<CommonExtensionT, VariantDslInfoT>(
                 dimensionCombination,
                 componentType,
                 defaultConfig.defaultConfig,
@@ -434,9 +441,9 @@ class VariantManager<
         )
     }
 
-    private fun createCompoundSourceSets(
+    private fun<DslInfoT: ComponentDslInfo> createCompoundSourceSets(
             productFlavorList: List<ProductFlavorData<ProductFlavor>>,
-            variantDslInfoBuilder: VariantDslInfoBuilder<CommonExtensionT>) {
+            variantDslInfoBuilder: VariantDslInfoBuilder<CommonExtensionT, DslInfoT>) {
         val componentType = variantDslInfoBuilder.componentType
         if (productFlavorList.isNotEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             val variantSourceSet = variantInputModel
@@ -462,11 +469,11 @@ class VariantManager<
         dimensionCombination: DimensionCombination,
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-        mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>
+        mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantDslInfoT, VariantT>
     ): TestFixturesImpl {
         val testFixturesComponentType = ComponentTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
-        val variantDslInfoBuilder = getBuilder(
+        val variantDslInfoBuilder = getBuilder<CommonExtensionT, TestFixturesComponentDslInfo>(
             dimensionCombination,
             testFixturesComponentType,
             variantInputModel.defaultConfigData.defaultConfig,
@@ -636,11 +643,11 @@ class VariantManager<
     }
 
     /** Create a TestVariantData for the specified testedVariantData.  */
-    fun createTestComponents(
+    fun<TestDslInfoT: TestComponentDslInfo> createTestComponents(
         dimensionCombination: DimensionCombination,
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-        testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
+        testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantDslInfoT, VariantT>,
         componentType: ComponentType,
         testFixturesEnabled: Boolean,
         inconsistentTestAppId: Boolean
@@ -652,7 +659,7 @@ class VariantManager<
         // but it's never the case on defaultConfigData
         // The constructor does a runtime check on the instances so we should be safe.
         val testSourceSet = variantInputModel.defaultConfigData.getTestSourceSet(componentType)
-        val variantDslInfoBuilder = getBuilder(
+        val variantDslInfoBuilder = getBuilder<CommonExtensionT, TestDslInfoT> (
                 dimensionCombination,
                 componentType,
                 variantInputModel.defaultConfigData.defaultConfig,
@@ -795,7 +802,7 @@ class VariantManager<
             val androidTest = variantFactory.createAndroidTest(
                 variantDslInfo.componentIdentity,
                 testBuildFeatureValues,
-                variantDslInfo,
+                variantDslInfo as AndroidTestComponentDslInfo,
                 variantDependencies,
                 variantSources,
                 pathHelper,
@@ -814,7 +821,7 @@ class VariantManager<
             val unitTest = variantFactory.createUnitTest(
                 variantDslInfo.componentIdentity,
                 testBuildFeatureValues,
-                variantDslInfo,
+                variantDslInfo as UnitTestComponentDslInfo,
                 variantDependencies,
                 variantSources,
                 pathHelper,
@@ -922,7 +929,7 @@ class VariantManager<
 
                 if (variantFactory.componentType.hasTestComponents) {
                     if (buildTypeData == testBuildTypeData) {
-                        val androidTest = createTestComponents(
+                        val androidTest = createTestComponents<AndroidTestComponentDslInfo>(
                                 dimensionCombination,
                                 buildTypeData,
                                 productFlavorDataList,
@@ -936,7 +943,7 @@ class VariantManager<
                             (variant as HasAndroidTest).androidTest = it as AndroidTestImpl
                         }
                     }
-                    val unitTest = createTestComponents(
+                    val unitTest = createTestComponents<UnitTestComponentDslInfo>(
                         dimensionCombination,
                         buildTypeData,
                         productFlavorDataList,
@@ -953,7 +960,7 @@ class VariantManager<
 
                 // Now that unitTest and/or androidTest have been created and added to the main
                 // user visible variant object, we can run the onVariants() actions
-                val userVisibleVariant = (variant as VariantImpl)
+                val userVisibleVariant = (variant as VariantImpl<*>)
                     .createUserVisibleVariantObject<Variant>(projectServices,
                         variantApiOperationsRegistrar,
                         variantInfo.stats)

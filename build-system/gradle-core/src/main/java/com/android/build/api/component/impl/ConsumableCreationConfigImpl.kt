@@ -19,7 +19,8 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.dexing.DexingType
@@ -46,13 +47,15 @@ import com.android.builder.errors.IssueReporter
  * @param variantDslInfo variant configuration coming from the DSL.
  */
 open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
-        val config: T,
-        val variantDslInfo: VariantDslInfo) {
+    protected val config: T,
+    protected open val dslInfo: ConsumableComponentDslInfo
+) {
 
     val dexingType: DexingType
-        get() = variantDslInfo.dexingType ?: if (config.isMultiDexEnabled) {
+        get() = (dslInfo as? DynamicFeatureVariantDslInfo)?.dexingType ?:
+        if (config.isMultiDexEnabled) {
             if (config.minSdkVersion.getFeatureLevel() >= 21 ||
-                variantDslInfo.targetDeployApiFromIDE?.let { it >= 21 } == true
+                dslInfo.targetDeployApiFromIDE?.let { it >= 21 } == true
             ) {
                 // if minSdkVersion is 21+ or we are deploying to 21+ device, use native multidex
                 DexingType.NATIVE_MULTIDEX
@@ -64,14 +67,14 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
     open fun getNeedsMergedJavaResStream(): Boolean {
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
-        return (variantDslInfo.componentType.isAar
-                || variantDslInfo.transforms.isNotEmpty()
+        return (dslInfo.componentType.isAar
+                || dslInfo.transforms.isNotEmpty()
                 || config.minifiedEnabled)
     }
 
     open fun getJava8LangSupportType(): VariantScope.Java8LangSupport {
         // in order of precedence
-        return if (!variantDslInfo.compileOptions.targetCompatibility.isJava8Compatible) {
+        return if (!dslInfo.compileOptions.targetCompatibility.isJava8Compatible) {
             VariantScope.Java8LangSupport.UNUSED
         } else if (config.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
             VariantScope.Java8LangSupport.RETROLAMBDA
@@ -96,7 +99,7 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
      * @param creationConfig
      */
     fun isCoreLibraryDesugaringEnabled(creationConfig: ConsumableCreationConfig): Boolean {
-        val libDesugarEnabled = variantDslInfo.compileOptions.isCoreLibraryDesugaringEnabled
+        val libDesugarEnabled = dslInfo.compileOptions.isCoreLibraryDesugaringEnabled
         val multidexEnabled = creationConfig.isMultiDexEnabled
         val langSupportType: VariantScope.Java8LangSupport = getJava8LangSupportType()
         val langDesugarEnabled = langSupportType == VariantScope.Java8LangSupport.D8 || langSupportType == VariantScope.Java8LangSupport.R8
@@ -125,10 +128,10 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
     fun renderscript(internalServices: VariantServices): Renderscript? {
         return if (config.buildFeatures.renderScript) {
             internalServices.newInstance(Renderscript::class.java).also {
-                it.supportModeEnabled.set(variantDslInfo.renderscriptSupportModeEnabled)
-                it.supportModeBlasEnabled.set(variantDslInfo.renderscriptSupportModeBlasEnabled)
-                it.ndkModeEnabled.set(variantDslInfo.renderscriptNdkModeEnabled)
-                it.optimLevel.set(variantDslInfo.renderscriptOptimLevel)
+                it.supportModeEnabled.set(dslInfo.renderscriptSupportModeEnabled)
+                it.supportModeBlasEnabled.set(dslInfo.renderscriptSupportModeBlasEnabled)
+                it.ndkModeEnabled.set(dslInfo.renderscriptNdkModeEnabled)
+                it.optimLevel.set(dslInfo.renderscriptOptimLevel)
             }
         } else null
     }

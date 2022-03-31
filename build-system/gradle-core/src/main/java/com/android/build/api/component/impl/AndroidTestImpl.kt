@@ -40,8 +40,8 @@ import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -67,7 +67,7 @@ import javax.inject.Inject
 open class AndroidTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: AndroidTestComponentDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -79,10 +79,10 @@ open class AndroidTestImpl @Inject constructor(
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig,
-) : TestComponentImpl(
+) : TestComponentImpl<AndroidTestComponentDslInfo>(
     componentIdentity,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -97,7 +97,7 @@ open class AndroidTestImpl @Inject constructor(
 ), AndroidTest, AndroidTestCreationConfig {
 
     init {
-        variantDslInfo.multiDexKeepProguard?.let {
+        dslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                 .addInitialProvider(null, internalServices.toRegularFileProvider(it))
         }
@@ -105,7 +105,7 @@ open class AndroidTestImpl @Inject constructor(
 
     private val delegate by lazy {
         AndroidTestCreationConfigImpl(
-            this, variantDslInfo
+            this, dslInfo
         )
     }
 
@@ -114,12 +114,12 @@ open class AndroidTestImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
+        get() = dslInfo.isDebuggable
 
     override val profileable: Boolean
-        get() = variantDslInfo.isProfileable
+        get() = dslInfo.isProfileable
 
-    override val namespaceForR: Provider<String> = variantDslInfo.namespaceForR
+    override val namespaceForR: Provider<String> = dslInfo.namespaceForR
 
     override val minSdkVersion: AndroidVersion
         get() = mainVariant.minSdkVersion
@@ -129,19 +129,19 @@ open class AndroidTestImpl @Inject constructor(
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
-        variantDslInfo.applicationId
+        dslInfo.applicationId
     )
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
-                variantDslInfo.androidResources,
-                variantServices
+            dslInfo.testedVariant!!.androidResources,
+            variantServices
         )
     }
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            variantDslInfo.packaging,
+            dslInfo.testedVariant!!.packaging,
             variantServices,
             minSdkVersion.apiLevel
         )
@@ -151,41 +151,41 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             return when {
                 mainVariant.componentType.isAar -> false
-                else -> variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+                else -> dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
             }
         }
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(
             String::class.java,
-            variantDslInfo.getInstrumentationRunner(dexingType)
+            dslInfo.getInstrumentationRunner(dexingType)
         )
 
     override val handleProfiling: Property<Boolean> =
-        internalServices.propertyOf(Boolean::class.java, variantDslInfo.handleProfiling)
+        internalServices.propertyOf(Boolean::class.java, dslInfo.handleProfiling)
 
     override val functionalTest: Property<Boolean> =
-        internalServices.propertyOf(Boolean::class.java, variantDslInfo.functionalTest)
+        internalServices.propertyOf(Boolean::class.java, dslInfo.functionalTest)
 
     override val testLabel: Property<String?> =
-        internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
+        internalServices.nullablePropertyOf(String::class.java, dslInfo.testLabel)
 
     override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,
-            variantDslInfo.getBuildConfigFields()
+            dslInfo.getBuildConfigFields()
         )
     }
 
     override val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
-        get() = variantDslInfo.getBuildConfigFields()
+        get() = dslInfo.getBuildConfigFields()
 
     override val signingConfig: SigningConfig?
         get() = signingConfigImpl
 
     override val signingConfigImpl: SigningConfigImpl? by lazy {
-        variantDslInfo.signingConfig?.let {
+        dslInfo.signingConfig?.let {
             SigningConfigImpl(
                 it,
                 variantServices,
@@ -202,7 +202,7 @@ open class AndroidTestImpl @Inject constructor(
     override val proguardFiles: ListProperty<RegularFile> by lazy {
         variantServices.listPropertyOf(
             RegularFile::class.java) {
-            variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+            dslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
         }
     }
 
@@ -213,7 +213,7 @@ open class AndroidTestImpl @Inject constructor(
         internalServices.mapPropertyOf(
                 ResValue.Key::class.java,
                 ResValue::class.java,
-                variantDslInfo.getResValues()
+            dslInfo.getResValues()
         )
     }
 
@@ -242,10 +242,10 @@ open class AndroidTestImpl @Inject constructor(
         }
 
     override val instrumentationRunnerArguments: Map<String, String>
-        get() = variantDslInfo.instrumentationRunnerArguments
+        get() = dslInfo.instrumentationRunnerArguments
 
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
+        get() = dslInfo.isAndroidTestCoverageEnabled
 
     override val renderscriptTargetApi: Int
         get() = mainVariant.renderscriptTargetApi
@@ -306,24 +306,24 @@ open class AndroidTestImpl @Inject constructor(
     override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        variantDslInfo.signingConfig
+        dslInfo.signingConfig
 
     override val renderscriptNdkModeEnabled: Boolean
-        get() = variantDslInfo.renderscriptNdkModeEnabled
+        get() = dslInfo.renderscriptNdkModeEnabled
 
     override val defaultGlslcArgs: List<String>
-        get() = variantDslInfo.defaultGlslcArgs
+        get() = dslInfo.defaultGlslcArgs
     override val scopedGlslcArgs: Map<String, List<String>>
-        get() = variantDslInfo.scopedGlslcArgs
+        get() = dslInfo.scopedGlslcArgs
 
     override val ignoredLibraryKeepRules: SetProperty<String>
         get() = internalServices.setPropertyOf(
-                String::class.java,
-                variantDslInfo.ignoredLibraryKeepRules
+            String::class.java,
+            dslInfo.ignoredLibraryKeepRules
         )
 
     override val ignoreAllLibraryKeepRules: Boolean
-        get() = variantDslInfo.ignoreAllLibraryKeepRules
+        get() = dslInfo.ignoreAllLibraryKeepRules
 
 
     // Only instrument library androidTests. In app modules, the main classes are instrumented.
@@ -334,6 +334,6 @@ open class AndroidTestImpl @Inject constructor(
     // DO NOT USE, Deprecated DSL APIs.
     // ---------------------------------------------------------------------------------------------
 
-    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
+    override val multiDexKeepFile = dslInfo.multiDexKeepFile
 }
 

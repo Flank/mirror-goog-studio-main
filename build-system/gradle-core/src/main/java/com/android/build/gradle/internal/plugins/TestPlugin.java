@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.core.dsl.TestProjectVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -68,14 +69,15 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'test' projects. */
 public class TestPlugin
         extends BasePlugin<
-                    TestBuildFeatures,
-                    TestBuildType,
-                    TestDefaultConfig,
-                    TestProductFlavor,
-                    com.android.build.api.dsl.TestExtension,
-                    TestAndroidComponentsExtension,
-                    TestVariantBuilderImpl,
-                    TestVariantImpl> {
+                TestBuildFeatures,
+                TestBuildType,
+                TestDefaultConfig,
+                TestProductFlavor,
+                com.android.build.api.dsl.TestExtension,
+                TestAndroidComponentsExtension,
+                TestVariantBuilderImpl,
+                TestProjectVariantDslInfo,
+                TestVariantImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry,
