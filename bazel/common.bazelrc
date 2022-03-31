@@ -127,6 +127,7 @@ build:resultstore --noremote_accept_cached
 build:sponge --bes_backend=buildeventservice-pa.googleapis.com
 build:sponge --bes_results_url=https://fusion2.corp.google.com/invocations/
 build:sponge --bes_header=X-Goog-User-Project=google.com:android-studio-alphasource
+build:sponge --workspace_status_command="python3 tools/base/bazel/workspace.py"
 
 # Enable go/antswatcher to process test results.
 # This config must be used with the sponge config as it relies on the same bes_backend.
