@@ -82,7 +82,7 @@ public class InstallerUtil {
      * @param in The (zipped) input stream.
      * @param out The directory into which to expand the files. Must exist.
      * @param expectedSize Compressed size of the stream.
-     * @param progress Currently only used for logging.
+     * @param progress A {@link ProgressIndicator}, to show unzip progress and facilitate logging.
      * @throws IOException If we're unable to read or write.
      */
     public static void unzip(
