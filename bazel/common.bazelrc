@@ -1,7 +1,3 @@
-import %workspace%/tools/base/bazel/platform_specific.bazelrc
-# User-specific .bazelrc
-try-import %workspace%/user.bazelrc
-
 # Enables the use of native symlinks in worker sandboxes,
 # required for dynamic scheduling. This has no effect on non-windows platforms.
 startup --windows_enable_symlinks
