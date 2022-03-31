@@ -11,5 +11,14 @@
     <orderEntry type="library" name="studio-sdk" level="project" />
     <orderEntry type="library" name="studio-plugin-Kotlin" level="project" />
     <orderEntry type="module" module-name="android.sdktools.lint-api" exported="" />
+    <orderEntry type="module-library">
+      <library name="liblint-checks-proto">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../../bazel-bin/tools/base/lint/liblint-checks-proto.lib.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
