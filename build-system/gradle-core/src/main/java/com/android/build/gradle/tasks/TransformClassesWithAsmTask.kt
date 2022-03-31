@@ -20,7 +20,6 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JSON
 import com.android.build.api.artifact.MultipleArtifact
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig

@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import javax.inject.Inject;
@@ -49,7 +49,7 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     @Inject
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
-            @NonNull ComponentImpl component,
+            @NonNull ComponentCreationConfig component,
             @NonNull VariantServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {

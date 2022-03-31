@@ -181,6 +181,10 @@ open class AndroidTestImpl @Inject constructor(
     override val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
         get() = dslInfo.getBuildConfigFields()
 
+    override fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
+        buildConfigFields.put(key, BuildConfigField(type, value, comment))
+    }
+
     override val signingConfig: SigningConfig?
         get() = signingConfigImpl
 

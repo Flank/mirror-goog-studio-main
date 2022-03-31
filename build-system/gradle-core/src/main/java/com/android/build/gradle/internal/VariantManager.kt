@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
 import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
@@ -163,7 +164,7 @@ class VariantManager<
     /**
      * Returns a list of all test fixtures components.
      */
-    val testFixturesComponents: MutableList<TestFixturesImpl> = Lists.newArrayList()
+    val testFixturesComponents: MutableList<TestFixturesCreationConfig> = Lists.newArrayList()
 
     val buildFeatureValues: BuildFeatureValues
         get() = _buildFeatureValues
@@ -464,7 +465,7 @@ class VariantManager<
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantDslInfoT, VariantT>
-    ): TestFixturesImpl {
+    ): TestFixturesCreationConfig {
         val testFixturesComponentType = ComponentTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
         val variantDslInfoBuilder = getBuilder<CommonExtensionT, TestFixturesComponentDslInfo>(
@@ -918,7 +919,7 @@ class VariantManager<
                         variantInfo
                     )
                     addTestFixturesComponent(testFixtures)
-                    (variant as HasTestFixtures).testFixtures = testFixtures
+                    (variant as HasTestFixtures).testFixtures = testFixtures as TestFixturesImpl
                 }
 
                 if (variantFactory.componentType.hasTestComponents) {
@@ -1036,8 +1037,7 @@ class VariantManager<
         testComponents.add(testComponent)
     }
 
-    private fun addTestFixturesComponent(
-        testFixturesComponent: TestFixturesImpl) {
+    private fun addTestFixturesComponent(testFixturesComponent: TestFixturesCreationConfig) {
         nestedComponents.add(testFixturesComponent)
         testFixturesComponents.add(testFixturesComponent)
     }

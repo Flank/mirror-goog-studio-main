@@ -19,9 +19,11 @@ package com.android.build.gradle.internal.component.legacy
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.gradle.api.JavaCompileOptions
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.FileCollection
 
 interface OldVariantApiLegacySupport {
     val buildTypeObj: BuildType
@@ -33,4 +35,6 @@ interface OldVariantApiLegacySupport {
         classesType: AndroidArtifacts.ArtifactType,
         generatedBytecodeKey: Any?
     ): ArtifactCollection
+    // TODO : b/214316660
+    fun getAllRawAndroidResources(component: ComponentCreationConfig): FileCollection
 }

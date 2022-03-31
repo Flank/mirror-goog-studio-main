@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.testing.api.TestServer;
@@ -95,12 +95,12 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
     /** Configuration Action for a TestServerTask. */
     public static class TestServerTaskCreationAction
-            extends VariantTaskCreationAction<TestServerTask, AndroidTestImpl> {
+            extends VariantTaskCreationAction<TestServerTask, AndroidTestCreationConfig> {
         private final TestServer testServer;
         private final boolean hasFlavors;
 
         public TestServerTaskCreationAction(
-                @NonNull AndroidTestImpl androidTestProperties, TestServer testServer) {
+                @NonNull AndroidTestCreationConfig androidTestProperties, TestServer testServer) {
             super(androidTestProperties);
             this.testServer = testServer;
             this.hasFlavors = !androidTestProperties.getProductFlavors().isEmpty();

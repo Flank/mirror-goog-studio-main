@@ -16,9 +16,6 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.TestFixturesImpl
-import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DataBinding
@@ -27,7 +24,10 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
@@ -101,7 +101,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig
-    ): TestFixturesImpl
+    ): TestFixturesCreationConfig
 
     fun createUnitTest(
         componentIdentity: ComponentIdentity,
@@ -118,7 +118,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-    ): UnitTestImpl
+    ): UnitTestCreationConfig
 
     fun createAndroidTest(
         componentIdentity: ComponentIdentity,
@@ -135,7 +135,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-    ): AndroidTestImpl
+    ): AndroidTestCreationConfig
 
     fun createVariantData(
         componentIdentity: ComponentIdentity,

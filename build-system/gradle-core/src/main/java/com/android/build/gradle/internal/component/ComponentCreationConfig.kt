@@ -17,12 +17,17 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.SourcesImpl
@@ -38,6 +43,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -47,6 +53,8 @@ import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
 import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableSet
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -185,6 +193,8 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     fun getBuildConfigType() : BuildConfigType
 
+    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
+
     /**
      * Returns the artifact for the compiled R class
      *
@@ -196,6 +206,12 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
     fun publishBuildArtifacts()
+
+    fun <T: Component> createUserVisibleVariantObject(
+        projectServices: ProjectServices,
+        operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
+        stats: GradleBuildVariant.Builder?
+    ): T
 
     // ---------------------------------------------------------------------------------------------
     // LEGACY SUPPORT

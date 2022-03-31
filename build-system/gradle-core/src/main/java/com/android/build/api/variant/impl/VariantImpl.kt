@@ -18,8 +18,6 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
-import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Component
@@ -28,7 +26,6 @@ import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -42,14 +39,12 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -114,7 +109,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = dslInfo.getBuildConfigFields()
 
     // for compatibility with old variant API.
-    fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
+    override fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
         buildConfigFields.put(key, BuildConfigField(type, value, comment))
     }
 
@@ -199,11 +194,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     // TODO: Move down to lower type and remove from VariantScope.
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = variantScope.isCoreLibraryDesugaringEnabled(this)
-
-    abstract override fun <T : Component> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
-            stats: GradleBuildVariant.Builder?): T
 
     override var unitTest: UnitTestImpl? = null
 

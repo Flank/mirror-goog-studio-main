@@ -31,7 +31,10 @@ import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.component.UnitTestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo;
@@ -80,7 +83,7 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public TestFixturesImpl createTestFixtures(
+    public TestFixturesCreationConfig createTestFixtures(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull TestFixturesComponentDslInfo dslInfo,
@@ -128,7 +131,7 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public UnitTestImpl createUnitTest(
+    public UnitTestCreationConfig createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull UnitTestComponentDslInfo dslInfo,
@@ -171,7 +174,7 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public AndroidTestImpl createAndroidTest(
+    public AndroidTestCreationConfig createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull AndroidTestComponentDslInfo dslInfo,

@@ -19,16 +19,17 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.ComponentUtils;
 import com.android.build.api.variant.ResValue;
 import com.android.build.api.variant.impl.ConfigurableFileTreeBasedDirectoryEntryImpl;
 import com.android.build.api.variant.impl.ResValueKeyImpl;
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -86,7 +87,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public static final String USE_PROPERTIES_DEPRECATION_URL =
             "https://d.android.com/r/tools/use-properties";
 
-    @NonNull protected final ComponentImpl component;
+    @NonNull protected final ComponentCreationConfig component;
     @NonNull protected final VariantServices services;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
@@ -94,7 +95,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull protected final NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
-            @NonNull ComponentImpl component,
+            @NonNull ComponentCreationConfig component,
             @NonNull VariantServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
@@ -235,7 +236,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                             IssueReporter.Type.GENERIC,
                             new RuntimeException(
                                     "Access to applicationId via deprecated Variant API requires compatibility mode.\n"
-                                            + ComponentImpl.Companion.getENABLE_LEGACY_API()));
+                                            + ComponentUtils.getENABLE_LEGACY_API()));
             // return default value during sync
             return "";
         }
@@ -691,8 +692,8 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public void buildConfigField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
-        if (component instanceof VariantImpl) {
-            ((VariantImpl) component)
+        if (component instanceof ConsumableCreationConfig) {
+            ((ConsumableCreationConfig) component)
                     .addBuildConfigField(type, name, value, "Field from the variant API");
         } else {
             throw new RuntimeException(
@@ -704,10 +705,12 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     @Override
     public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
-        if (component instanceof VariantImpl) {
-            ((VariantImpl) component).getResValues().put(
-                    new ResValueKeyImpl(type, name),
-                    new ResValue(value,  "Value from the variant"));
+        if (component instanceof ConsumableCreationConfig) {
+            ((ConsumableCreationConfig) component)
+                    .getResValues()
+                    .put(
+                            new ResValueKeyImpl(type, name),
+                            new ResValue(value, "Value from the variant"));
         } else {
             throw new RuntimeException(
                     "Variant "
@@ -747,7 +750,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public FileCollection getAllRawAndroidResources() {
-        return component.getAllRawAndroidResources$gradle_core();
+        return component.getOldVariantApiLegacySupport().getAllRawAndroidResources(component);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.android.build.gradle.internal.lint
 
-import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
@@ -195,7 +194,7 @@ class LintTaskManager constructor(
                 testFixtures = if (ignoreTestFixturesSources) {
                     null
                 } else {
-                    variant.testFixturesComponent as TestFixturesImpl?
+                    variant.testFixturesComponent
                 }
             )
         }

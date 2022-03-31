@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
 import com.android.Version
-import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.BuildType
@@ -28,7 +27,6 @@ import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.HasTestFixtures
 import com.android.build.api.variant.impl.HasAndroidTest
-import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -434,7 +432,6 @@ class ModelBuilder<
     private fun buildAndroidDslModel(project: Project): AndroidDsl {
 
         val variantInputs = variantModel.inputs
-        val variants = variantModel.variants
 
         // for now grab the first buildFeatureValues as they cannot be different.
         val buildFeatures = variantModel.buildFeatures
@@ -631,7 +628,7 @@ class ModelBuilder<
         }
 
         val testInfo: TestInfo? = when(component) {
-            is TestVariantImpl, is AndroidTestImpl -> {
+            is TestVariantCreationConfig, is AndroidTestCreationConfig -> {
                 val runtimeApks: Collection<File> = project
                     .configurations
                     .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION)?.files

@@ -30,7 +30,6 @@ import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHE
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.Installation;
 import com.android.build.api.dsl.TestOptions;
 import com.android.build.gradle.internal.BuildToolsExecutableInput;
@@ -873,14 +872,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             task.getClasses().from(creationConfig.getArtifacts().getAllClasses());
             task.getClasses().disallowChanges();
-            task.getBuildConfigClasses()
-                    .from(((ComponentImpl) creationConfig).getCompiledBuildConfig());
+            task.getBuildConfigClasses().from(creationConfig.getCompiledBuildConfig());
             task.getBuildConfigClasses().disallowChanges();
             task.getRClasses()
                     .from(
-                            ((ComponentImpl) creationConfig)
-                                    .getCompiledRClasses(
-                                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH));
+                            creationConfig.getCompiledRClasses(
+                                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH));
             task.getRClasses().disallowChanges();
         }
     }

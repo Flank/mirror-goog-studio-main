@@ -22,8 +22,6 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -688,10 +686,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                                 variantDependencies.runtimeClasspath.name,
                                 multiDexInstrumentationDep)
             }
-            createAndroidTestVariantTasks(testVariant as AndroidTestImpl)
+            createAndroidTestVariantTasks(testVariant as AndroidTestCreationConfig)
         } else {
             // UNIT_TEST
-            createUnitTestVariantTasks(testVariant as UnitTestImpl)
+            createUnitTestVariantTasks(testVariant as UnitTestCreationConfig)
         }
     }
 
@@ -1549,7 +1547,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     /** Creates the tasks to build android tests.  */
-    private fun createAndroidTestVariantTasks(androidTestProperties: AndroidTestImpl) {
+    private fun createAndroidTestVariantTasks(androidTestProperties: AndroidTestCreationConfig) {
         createAnchorTasks(androidTestProperties)
 
         // Create all current streams (dependencies mostly at this point)
@@ -1943,7 +1941,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
     }
 
-    private fun createConnectedTestForVariant(androidTestProperties: AndroidTestImpl) {
+    private fun createConnectedTestForVariant(androidTestProperties: AndroidTestCreationConfig) {
         val testedVariant = androidTestProperties.mainVariant
         val isLibrary = testedVariant.componentType.isAar
         val testData: AbstractTestDataImpl = if (testedVariant.componentType.isDynamicFeature) {

@@ -18,8 +18,6 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -27,8 +25,6 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
@@ -65,7 +61,6 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
@@ -81,12 +76,9 @@ import com.android.builder.model.VectorDrawablesOptions
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -475,40 +467,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    // Deprecated, DO NOT USE, this will be removed once we can remove the old variant API.
-    // TODO : b/214316660
-    internal val allRawAndroidResources: FileCollection by lazy {
-        val allRes: ConfigurableFileCollection = services.fileCollection()
-
-        allRes.from(
-            variantDependencies
-                .getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.ANDROID_RES
-                )
-                .artifactFiles
-        )
-
-        allRes.from(
-            services.fileCollection(
-                variantData.extraGeneratedResFolders
-            ).builtBy(listOfNotNull(variantData.extraGeneratedResFolders.builtBy))
-        )
-
-        taskContainer.generateApkDataTask?.let {
-            allRes.from(artifacts.get(MICRO_APK_RES))
-        }
-
-        allRes.from(sources.res.getVariantSources().map { allRes ->
-            allRes.map { directoryEntries ->
-                directoryEntries.directoryEntries
-                    .map { it.asFiles(services::directoryProperty) }
-            }
-        })
-        allRes
-    }
-
     /**
      * adds databinding sources to the list of sources.
      */
@@ -655,7 +613,10 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: ImmutableList<String>) {
+    override fun handleMissingDimensionStrategy(
+        dimension: String,
+        alternatedValues: List<String>
+    ) {
 
         // First, setup the requested value, which isn't the actual requested value, but
         // the variant name, modified
@@ -697,12 +658,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
-
-    abstract fun <T: Component> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
-            stats: GradleBuildVariant.Builder?
-    ): T
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
         return if (dependenciesClassesAreInstrumented) {
@@ -751,12 +706,5 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             this,
             dslInfo as VariantDslInfoImpl
         )
-    }
-
-    companion object {
-        // String to
-        final val ENABLE_LEGACY_API: String =
-            "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'\n" +
-                    "Using this deprecated API may still fail, depending on usage of the new Variant API, like computing applicationId via a task output."
     }
 }

@@ -16,69 +16,40 @@
 
 package com.android.build.gradle.internal.ide;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.impl.AndroidTestImpl;
-import com.android.build.api.component.impl.ComponentIdentityImpl;
-import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.UnitTestImpl;
-import com.android.build.api.variant.ComponentIdentity;
-import com.android.build.api.variant.DependenciesInfo;
-import com.android.build.api.variant.impl.ApplicationVariantImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.fixtures.ProjectFactory;
-import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
-import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.internal.services.ProjectServices;
-import com.android.build.gradle.internal.services.TaskCreationServices;
-import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
-import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.ComponentType;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.gradle.api.Project;
-import org.gradle.internal.impldep.com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for the {@link com.android.build.gradle.internal.ide.ModelBuilder} */
@@ -86,13 +57,12 @@ public class ModelBuilderTest {
 
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
-    @Mock ArtifactsImpl artifacts;
     @Mock GlobalTaskCreationConfig globalConfig;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private List<VariantImpl> variantList = Lists.newArrayList();
-    private List<TestComponentImpl> testComponentList = Lists.newArrayList();
+    private final List<VariantCreationConfig> variantList = Lists.newArrayList();
+    private final List<TestComponentCreationConfig> testComponentList = Lists.newArrayList();
 
     Project project;
     ModelBuilder<?> modelBuilder;
@@ -153,110 +123,5 @@ public class ModelBuilderTest {
         modelBuilder.buildAll("com.android.builder.model.ProjectSyncIssues", project);
         // And then trying to report anything after fetching the sync issues model should throw.
         syncIssueReporter.reportWarning(IssueReporter.Type.GENERIC, "Should Fail");
-    }
-
-    private <ComponentT extends ComponentImpl> ComponentT createComponentProperties(
-            @NonNull String variantName,
-            @NonNull String dirName,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull Class<ComponentT> componentClass,
-            @Nullable VariantImpl testedVariant) {
-        // prepare the objects required for the constructor
-        final ComponentType type = variantDslInfo.getComponentType();
-        VariantServices variantServices = FakeServices.createVariantPropertiesApiServices();
-        TaskCreationServices taskCreationServices = FakeServices.createTaskCreationServices();
-
-        ComponentIdentity componentIdentity =
-                new ComponentIdentityImpl(variantName, "flavorName", "debug", ImmutableList.of());
-
-        when(variantDslInfo.getComponentIdentity()).thenReturn(componentIdentity);
-
-        VariantDependencies variantDependencies = Mockito.mock(VariantDependencies.class);
-        VariantSources variantSources = Mockito.mock(VariantSources.class);
-
-        VariantPathHelper paths = Mockito.mock(VariantPathHelper.class);
-        when(paths.getApkLocation()).thenReturn(new File(apkLocation, dirName));
-
-        VariantScope variantScope = Mockito.mock(VariantScope.class);
-        when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
-
-        BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
-        when(variantData.getTaskContainer()).thenReturn(new MutableTaskContainer());
-
-        if (componentClass.equals(UnitTestImpl.class)
-                || componentClass.equals(AndroidTestImpl.class)) {
-            assertThat(testedVariant).named("tested variant").isNotNull();
-            ComponentT unitTestComponent =
-                    variantServices.newInstance(
-                            componentClass,
-                            componentIdentity,
-                            Mockito.mock(BuildFeatureValues.class),
-                            variantDslInfo,
-                            variantDependencies,
-                            variantSources,
-                            paths,
-                            artifacts,
-                            variantScope,
-                            variantData,
-                            testedVariant,
-                            Mockito.mock(TransformManager.class),
-                            variantServices,
-                            taskCreationServices,
-                            globalConfig);
-
-            testedVariant
-                    .getTestComponents()
-                    .put(
-                            variantDslInfo.getComponentType(),
-                            (TestComponentCreationConfig) unitTestComponent);
-
-            return unitTestComponent;
-        }
-
-        assertThat(testedVariant).named("tested variant").isNull();
-
-        if (componentClass.equals(ApplicationVariantImpl.class)) {
-            DependenciesInfo dependenciesInfo = Mockito.mock(DependenciesInfo.class);
-
-            return variantServices.newInstance(
-                    componentClass,
-                    componentIdentity,
-                    Mockito.mock(BuildFeatureValues.class),
-                    variantDslInfo,
-                    variantDependencies,
-                    variantSources,
-                    paths,
-                    artifacts,
-                    variantScope,
-                    variantData,
-                    dependenciesInfo,
-                    Mockito.mock(TransformManager.class),
-                    variantServices,
-                    taskCreationServices,
-                    globalConfig);
-        }
-
-        return variantServices.newInstance(
-                componentClass,
-                componentIdentity,
-                Mockito.mock(BuildFeatureValues.class),
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                variantScope,
-                variantData,
-                Mockito.mock(TransformManager.class),
-                variantServices,
-                taskCreationServices,
-                globalConfig);
-    }
-
-    private static File createApk(File variantOutputFolder, String fileName) throws IOException {
-        File apkOutput = new File(variantOutputFolder, fileName);
-        Files.createParentDirs(apkOutput);
-        Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
-        return apkOutput;
     }
 }

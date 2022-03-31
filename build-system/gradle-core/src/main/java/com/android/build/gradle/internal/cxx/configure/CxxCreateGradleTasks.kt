@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.variant.ComponentBuilder
-import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Build
@@ -171,7 +171,7 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         val variant = variantMap.getValue(configuration.variant.variantName)
                         val configureTask = taskFactory.register(name)
                         // Add prefab configure task
-                        if (variant is LibraryVariantImpl &&
+                        if (variant is LibraryCreationConfig &&
                             variant.buildFeatures.prefabPublishing) {
                             createPrefabConfigurePackageTask(
                                 taskFactory,
@@ -213,7 +213,7 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         taskFactory.named("clean").dependsOn(cleanTask)
 
                         // Add prefab package task
-                        if (variant is LibraryVariantImpl &&
+                        if (variant is LibraryCreationConfig &&
                             variant.buildFeatures.prefabPublishing) {
                             createPrefabPackageTask(
                                 taskFactory,
@@ -237,7 +237,7 @@ private fun createPrefabConfigurePackageTask(
     taskFactory: TaskFactory,
     configurationModel: CxxConfigurationModel,
     configureTask: TaskProvider<Task>,
-    libraryVariant: LibraryVariantImpl) {
+    libraryVariant: LibraryCreationConfig) {
     val modules = libraryVariant.prefabPackageConfigurationData()
     if (modules.isNotEmpty()) {
         val configurePackageTask = taskFactory.register(
@@ -257,7 +257,7 @@ private fun createPrefabPackageTask(
     taskFactory: TaskFactory,
     configurationModel: CxxConfigurationModel,
     buildTask: TaskProvider<out ExternalNativeBuildTask>,
-    libraryVariant: LibraryVariantImpl) {
+    libraryVariant: LibraryCreationConfig) {
     val modules = libraryVariant.prefabPackageConfigurationData()
     if (modules.isNotEmpty()) {
         val packageTask = taskFactory.register(
