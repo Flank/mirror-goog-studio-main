@@ -6,7 +6,7 @@ as/one:1:আপোনালৈ {0} টা বাৰ্তা আহিছে;আ
 asa/one:1:|other:2~16:
 ast/one:1:{0} día|other:2~16:{0} díes
 az/one:1:Alış-veriş katınızda {0} X var. Almaq istəyirsiniz?|other:2~16:Alış-veriş kartınızda {0} X var. Almaq istəyirsiniz?
-be/few:2~4:з {0} кніг за {0} дні|many:5~19:з {0} кніг за {0} дзён|one:1:з {0} кнігі за {0} дзень
+be/few:2~4:з {0} кніг за {0} дні|many:5~19:з {0} кніг за {0} дзён|one:1:з {0} кнігі за {0} дзень|other:1.1~1.7:з {0} кнігі за {0} дня
 bem/one:1:|other:2~16:
 bez/one:1:|other:2~16:
 bg/one:1:{0} ден|other:2~16:{0} дена
@@ -21,7 +21,7 @@ ce/one:1:|other:2~16:
 cgg/one:1:|other:2~16:
 chr/one:1:{0} ᎢᎦ|other:2~16:{0} ᏏᎢᎦ
 ckb/one:1:|other:2~16:
-cs/few:2~4:{0} dny|one:1:{0} den|other:5~19:{0} dní
+cs/few:2~4:{0} dny|many:10.0:{0} dne|one:1:{0} den|other:5~19:{0} dní
 cy/few:3:{0} chi, {0} cath|many:6:{0} chi, {0} chath|one:1:{0} ci, {0} gath|two:2:{0} gi, {0} gath|zero:0:{0} cŵn, {0} cathod|other:4:{0} ci, {0} cath
 da/one:1:{0} dag|other:2~16:{0} dage
 de/one:1:{0} Tag|other:2~16:{0} Tage
@@ -47,7 +47,7 @@ gd/few:3~10:{0} brògan|one:1:{0} bhròg|two:2:{0} bhròig|other:20~34:{0} bròg
 gl/one:1:{0} día|other:2~16:{0} días
 gsw/one:1:|other:2~16:
 gu/one:1:{0} કિલોગ્રામ|other:2~17:{0} કિલોગ્રામ્સ
-gv/few:20:{0} thunnag/muc/ooyl|one:1:{0} thunnag/vuc/ooyl|two:2:{0} hunnag/vuc/ooyl|other:3~10:{0} thunnagyn/mucyn/ooylyn
+gv/few:20:{0} thunnag/muc/ooyl|many:10.0:{0} dy hunnagyn/dy vucyn/dy ooylyn|one:1:{0} thunnag/vuc/ooyl|two:2:{0} hunnag/vuc/ooyl|other:3~10:{0} thunnagyn/mucyn/ooylyn
 ha/one:1:rana {0}|other:2~16:ranaku {0}
 haw/one:1:|other:2~16:
 hi/one:1:{0} घंटा|other:2~17:{0} घंटे
@@ -86,7 +86,7 @@ lg/one:1:|other:2~16:
 lkt/other:100:{0}?
 ln/one:1:|other:2~17:
 lo/other:100:{0} ມື້
-lt/few:2~9:{0} obuoliai|one:1:{0} obuolys|other:10~20:{0} obuolių
+lt/few:2~9:{0} obuoliai|many:1.1~1.7:{0} obuolio|one:1:{0} obuolys|other:10~20:{0} obuolių
 lv/one:1:{0} diennakts|zero:0:{0} diennakšu|other:2~9:{0} diennaktis
 mas/one:1:|other:2~16:
 mg/one:1:|other:2~17:
@@ -111,14 +111,14 @@ om/one:1:|other:2~16:
 or/one:1:{0} ଦିନ|other:2~16:{0} ଦିନଗୁଡ଼ିକ
 os/one:1:|other:2~16:
 pa/one:1:{0} ਘੰਟਾ|other:2~17:{0} ਘੰਟੇ
-pl/few:2~4:{0} miesiące|many:5~19:{0} miesięcy|one:1:{0} miesiąc
+pl/few:2~4:{0} miesiące|many:5~19:{0} miesięcy|one:1:{0} miesiąc|other:10.0:{0} miesiąca
 prg/one:1:{0} day|zero:0:|other:2~9:{0} days
 ps/one:1:{0} ورځ|other:2~16:{0} ورځې
 pt/one:1:|other:2~17:
 rm/one:1:{0} di|other:2~16:{0} dis
 ro/few:2~16:{0} zile|one:1:{0} zi|other:20~35:{0} de zile
 rof/one:1:|other:2~16:
-ru/few:2~4:из {0} книг за {0} дня|many:5~19:из {0} книг за {0} дней|one:1:из {0} книги за {0} день
+ru/few:2~4:из {0} книг за {0} дня|many:5~19:из {0} книг за {0} дней|one:1:из {0} книги за {0} день|other:10.0:из {0} книги за {0} дня
 rwk/one:1:|other:2~16:
 sah/other:100:
 saq/one:1:|other:2~16:
@@ -129,7 +129,7 @@ ses/other:100:
 sg/other:100:
 shi/few:2~10:|one:1:|other:11~26:
 si/one:1:{0} පොතක් ඇත. එය කියවීමි.|other:2~17:පොත් {0}ක් ඇත. ඒවා කියවීමි.
-sk/few:2~4:{0} dni|one:1:{0} deň|other:5~19:{0} dní
+sk/few:2~4:{0} dni|many:10.0:{0} dňa|one:1:{0} deň|other:5~19:{0} dní
 sl/few:3:{0} dnevi|one:1:{0} dan|two:2:{0} dneva|other:5~19:{0} dni
 smn/one:1:|two:2:|other:3~17:
 sn/one:1:|other:2~16:
@@ -148,7 +148,7 @@ to/other:100:Ngaahi ʻaho ʻe {0}
 tr/one:1:Sepetinizde {0} X var. Bunu almak istiyor musunuz?|other:2~16:Sepetinizde {0} X var. Bunları almak istiyor musunuz?
 tzm/one:1:|other:2~10:
 ug/one:1:{0} كىتاب|other:2~16:{0} بېلىق كۆردۈم ۋە ئۇنى يەۋەتتىم.
-uk/few:2~4:{0} дні|many:5~19:{0} днів|one:1:{0} день
+uk/few:2~4:{0} дні|many:5~19:{0} днів|one:1:{0} день|other:10.0:{0} дня
 ur/one:1:|other:2~16:
 uz/one:1:|other:2~16:
 vi/other:100:
