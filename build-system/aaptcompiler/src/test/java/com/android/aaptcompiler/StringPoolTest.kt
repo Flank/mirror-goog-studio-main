@@ -6,6 +6,7 @@ import com.google.common.truth.Truth
 import org.junit.Ignore
 import org.junit.Test
 import java.nio.ByteBuffer
+import kotlin.test.assertFailsWith
 
 class StringPoolTest {
 
@@ -167,7 +168,7 @@ class StringPoolTest {
 
     val buffer = BigBuffer(1028)
 
-    Truth.assertThat(pool.flattenUtf8(buffer, null)).isTrue()
+    pool.flattenUtf8(buffer, null)
     Truth.assertThat(buffer.size).isEqualTo(28)
 
     val test = ResStringPool.get(ByteBuffer.wrap(buffer.toBytes()), buffer.size)
@@ -181,7 +182,7 @@ class StringPoolTest {
 
     val buffer = BigBuffer(1028)
 
-    Truth.assertThat(pool.flattenUtf16(buffer, null)).isTrue()
+    pool.flattenUtf16(buffer, null)
     // header size (28) + string array (4) + string length (2) + string itself (2) +
     // null terminator (2) + padding (2)
     Truth.assertThat(buffer.size).isEqualTo(40)
@@ -212,8 +213,8 @@ class StringPoolTest {
     val utf8Buffer = BigBuffer(1024)
     val utf16Buffer = BigBuffer(1024)
 
-    Truth.assertThat(pool.flattenUtf8(utf8Buffer, null)).isEqualTo(true)
-    Truth.assertThat(pool.flattenUtf16(utf16Buffer, null)).isEqualTo(true)
+    pool.flattenUtf8(utf8Buffer, null)
+    pool.flattenUtf16(utf16Buffer, null)
 
     // Test both buffers.
     val utf8Test = ResStringPool.get(ByteBuffer.wrap(utf8Buffer.toBytes()), utf8Buffer.size)
@@ -263,25 +264,46 @@ class StringPoolTest {
     Truth.assertThat(utf16Style[1].lastChar).isEqualTo(3)
   }
 
+    @Test
+    fun testMaxEncodingLengthUTF8() {
+      val pool1 = StringPool()
+      pool1.makeRef("Why, hello!")
+      var utf8Buffer = BigBuffer(1024)
+      pool1.flattenUtf8(utf8Buffer, null)
+      val utf8Test = ResStringPool.get(ByteBuffer.wrap(utf8Buffer.toBytes()), utf8Buffer.size)
+
+      Truth.assertThat(utf8Test.strings).hasSize(1)
+      Truth.assertThat(utf8Test.strings[0]).isEqualTo("Why, hello!")
+
+      val pool2 = StringPool()
+      val superLongString = String(CharArray(33000) {'a'})
+
+      pool2.makeRef("This fits1")
+      pool2.makeRef(superLongString)
+      pool2.makeRef("This fits2")
+
+      utf8Buffer = BigBuffer(1024)
+      val utf8Exception = assertFailsWith<Exception> {
+          pool2.flattenUtf8(utf8Buffer, null)
+      }
+      Truth.assertThat(utf8Exception.message).contains(
+          "String of size 33000 bytes is too large to encode using UTF-8 (32767 bytes).")
+    }
+
   @Test
-  fun testMaxEncodingLength() {
+  fun testMaxEncodingLengthUTF16() {
     val pool1 = StringPool()
 
     pool1.makeRef("Why, hello!")
 
-    var utf8Buffer = BigBuffer(1024)
     var utf16Buffer = BigBuffer(1024)
 
-    Truth.assertThat(pool1.flattenUtf8(utf8Buffer, null)).isTrue()
-    Truth.assertThat(pool1.flattenUtf16(utf16Buffer, null)).isTrue()
+    pool1.flattenUtf16(utf16Buffer, null)
 
-    var utf8Test = ResStringPool.get(ByteBuffer.wrap(utf8Buffer.toBytes()), utf8Buffer.size)
     var utf16Test = ResStringPool.get(ByteBuffer.wrap(utf16Buffer.toBytes()), utf16Buffer.size)
 
-    Truth.assertThat(utf8Test.strings).hasSize(1)
     Truth.assertThat(utf16Test.strings).hasSize(1)
 
-    Truth.assertThat(utf8Test.strings[0]).isEqualTo("Why, hello!")
     Truth.assertThat(utf16Test.strings[0]).isEqualTo("Why, hello!")
 
     val pool2 = StringPool()
@@ -291,25 +313,13 @@ class StringPoolTest {
     pool2.makeRef(superLongString)
     pool2.makeRef("This fits2")
 
-    utf8Buffer = BigBuffer(1024)
     utf16Buffer = BigBuffer(1024)
-
-    Truth.assertThat(pool2.flattenUtf8(utf8Buffer, null)).isFalse()
-    Truth.assertThat(pool2.flattenUtf16(utf16Buffer, null)).isTrue()
-
-    utf8Test = ResStringPool.get(ByteBuffer.wrap(utf8Buffer.toBytes()), utf8Buffer.size)
+    pool2.flattenUtf16(utf16Buffer, null)
     utf16Test = ResStringPool.get(ByteBuffer.wrap(utf16Buffer.toBytes()), utf16Buffer.size)
 
-    Truth.assertThat(utf8Test.strings).hasSize(3)
     Truth.assertThat(utf16Test.strings).hasSize(3)
-
-    Truth.assertThat(utf8Test.strings[0]).isEqualTo("This fits1")
     Truth.assertThat(utf16Test.strings[0]).isEqualTo("This fits1")
-
-    Truth.assertThat(utf8Test.strings[1]).isEqualTo("STRING_TOO_LARGE")
     Truth.assertThat(utf16Test.strings[1]).isEqualTo(superLongString)
-
-    Truth.assertThat(utf8Test.strings[2]).isEqualTo("This fits2")
     Truth.assertThat(utf16Test.strings[2]).isEqualTo("This fits2")
   }
 

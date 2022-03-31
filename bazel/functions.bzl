@@ -20,4 +20,4 @@ def label_workspace_path(label):
 
 # Converts a relative path to be relative to the execroot.
 def workspace_path(path):
-    return label_workspace_path(Label("//" + path, relative_to_caller_repository = True))
+    return label_workspace_path(Label("//" + path))

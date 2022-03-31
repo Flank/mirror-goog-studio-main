@@ -117,7 +117,7 @@ abstract class ProcessManifestForMetadataFeatureTask : NonIncrementalTask() {
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.bundleManifest
             )
-            task.dynamicFeature.set(creationConfig.variantType.isDynamicFeature)
+            task.dynamicFeature.set(creationConfig.componentType.isDynamicFeature)
         }
     }
 }

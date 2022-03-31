@@ -177,7 +177,6 @@ import com.android.deploy.asm.tree.TypeInsnNode;
 import com.android.deploy.asm.tree.analysis.AnalyzerException;
 import com.android.deploy.asm.tree.analysis.Interpreter;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 class OpcodeInterpreter extends Interpreter<Value> {
@@ -418,7 +417,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case CHECKCAST:
                 {
                     Type targetType = Type.getObjectType(((TypeInsnNode) insn).desc);
-                    if (Objects.equals(value, Value.NULL_VALUE)) {
+                    if (value.obj() == null) {
                         return Value.NULL_VALUE;
                     }
                     if (eval.isInstanceOf(value, targetType)) {
@@ -430,7 +429,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
                                     value.obj().getClass().getCanonicalName(),
                                     targetType.getClassName());
                     Exception e = new ClassCastException(msg);
-                    throw new LeInterpretingException(e);
+                    throw new InterpreterException(e);
                 }
             case INSTANCEOF:
                 {
@@ -676,6 +675,12 @@ class OpcodeInterpreter extends Interpreter<Value> {
         }
     }
 
+    private MethodDescription prepareCall(AbstractInsnNode insn) {
+        MethodDescription method = new MethodDescription((MethodInsnNode) insn);
+        looper.setExitPoint(method);
+        return method;
+    }
+
     @Override
     public Value naryOperation(AbstractInsnNode insn, List<? extends Value> values) {
         if (insn.getOpcode() == MULTIANEWARRAY) {
@@ -684,17 +689,20 @@ class OpcodeInterpreter extends Interpreter<Value> {
             return eval.newMultiDimensionalArray(Type.getType(node.desc), args);
         }
 
-        MethodDescription method = new MethodDescription((MethodInsnNode) insn);
-        looper.setExitPoint(method);
+        MethodDescription method;
         switch (insn.getOpcode()) {
             case INVOKESPECIAL:
+                method = prepareCall(insn);
                 return eval.invokeSpecial(values.get(0), method, values.subList(1, values.size()));
             case INVOKEVIRTUAL:
+                method = prepareCall(insn);
                 return eval.invokeMethod(values.get(0), method, values.subList(1, values.size()));
             case INVOKEINTERFACE:
+                method = prepareCall(insn);
                 return eval.invokeInterface(
                         values.get(0), method, values.subList(1, values.size()));
             case INVOKESTATIC:
+                method = prepareCall(insn);
                 return eval.invokeStaticMethod(method, values);
             case INVOKEDYNAMIC:
                 throw new UnsupportedByteCodeException("INDY is not supported");
@@ -743,12 +751,6 @@ class OpcodeInterpreter extends Interpreter<Value> {
                 return value.obj() != null;
             default:
                 throw new UnsupportedByteCodeException("Unknown opcode: " + opcode);
-        }
-    };
-
-    private static class UnsupportedByteCodeException extends RuntimeException {
-        UnsupportedByteCodeException(@NonNull String msg) {
-            super(msg);
         }
     };
 

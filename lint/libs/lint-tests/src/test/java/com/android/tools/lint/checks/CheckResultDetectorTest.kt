@@ -1796,4 +1796,83 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testCapitalVoid() {
+        // Regression test for issue 225204162
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.CheckResult;
+
+                public class VoidTest {
+                    public void test(Function<String, Void> callback) {
+                        callback.apply("");
+                    }
+
+                    public interface Function<T, R> {
+                        @CheckResult
+                        R apply(T var1);
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                interface Function<T, R> {
+                    @CheckResult
+                    fun apply(var1: T): R
+                }
+
+                fun test(callback: Function<String?, Void?>) {
+                    callback.apply("")
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testInheritance() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import javax.annotation.CheckReturnValue;
+                import androidx.annotation.CheckResult
+
+                @CheckReturnValue
+                interface MyInterface {
+                    @CheckResult fun method1(): String
+                    fun method2(): String
+                }
+
+                class MyClass : MyInterface {
+                    override fun method1(): String = TODO()
+                    override fun method2(): String = TODO()
+                }
+
+                fun test(myClass: MyClass) {
+                    myClass.method1() // WARN - annotation on method
+                    myClass.method2() // OK - inherited annotation from outer context
+                }
+                """
+            ).indented(),
+            javaxCheckReturnValueSource,
+            SUPPORT_ANNOTATIONS_JAR
+        ).allowDuplicates().run().expect(
+            """
+            src/test/pkg/MyInterface.kt:18: Warning: The result of method1 is not used [CheckResult]
+                myClass.method1() // WARN - annotation on method
+                ~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
 }

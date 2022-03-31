@@ -627,6 +627,30 @@ coverage_report(
     ],
 )
 
+# Coverage report for Visual Lint feature.
+coverage_report(
+    name = "visual-lint",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanel.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanelSplitter.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/LintIssueProvider.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/FixEntry.form",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/AccessibilityLintIntegrator.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/NlLayoutScanner.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/NlScannerLayoutParser.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/WarningLayer.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/visuallint",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationForm.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+    ],
+)
+
 # Coverage report for Dagger editor support.
 coverage_report(
     name = "dagger-editing",
@@ -792,6 +816,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Logcat V2" tool window
+coverage_report(
+    name = "logcat",
+    srcpath_include = [
+        "tools/adt/idea/logcat/src/com/android/tools/idea/logcat",
+    ],
+    tests = [
+        "//tools/adt/idea/logcat:intellij.android.logcat.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -815,6 +850,7 @@ combine_report_definitions(
         "fullscreen-heapdump-ui",
         "gradle-managed-virtual-device",
         "layouteditor",
+        "logcat",
         "memory-recording-ui",
         "ml-model-binding",
         "modularize",
@@ -867,8 +903,7 @@ coverage_report(
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
-        # TODO(b/182573662) too flaky for coverage
-        #"//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/backgroundtask/model:app-inspection.inspectors.backgroundtask.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/backgroundtask/view:app-inspection.inspectors.backgroundtask.view.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
@@ -1038,5 +1073,6 @@ coverage_report(
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
+        "//tools/vendor/google/firebase:firebase_tests",
     ],
 )

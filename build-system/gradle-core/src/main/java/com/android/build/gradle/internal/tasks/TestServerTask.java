@@ -103,7 +103,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
                 @NonNull AndroidTestImpl androidTestProperties, TestServer testServer) {
             super(androidTestProperties);
             this.testServer = testServer;
-            this.hasFlavors = androidTestProperties.getVariantDslInfo().hasFlavors();
+            this.hasFlavors = !androidTestProperties.getProductFlavors().isEmpty();
         }
 
         @NonNull

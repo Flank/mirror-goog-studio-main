@@ -21,64 +21,121 @@ import com.android.tools.lint.detector.api.Detector
 class ExtraTextDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = ExtraTextDetector()
 
-    fun testBroken() {
+    fun testDocumentationExample() {
+        lint().files(
+            manifest(
+                """
+                <manifest
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.adservices.api">
+
+                    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+                    <application>
+                        android:label="Android AdServices"
+                        android:forceQueryable="true"
+                        android:directBootAware="true">
+                    </application>
+                    `
+                </manifest>
+                """
+            ).indented(),
+            xml(
+                "res/drawable/icon.xml",
+                """
+                <shape>>
+                  <item></item>>
+                </shape>
+                """
+            ).indented(),
+            xml(
+                "res/values/strings.xml",
+                """
+                <resources>
+                    <string name="test">Test</string> <!-- Text is allowed in value resource files -->
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/xml/myfile.xml",
+                """
+                <foo>
+                    Test <!-- Text is allowed in xml and raw folder files -->
+                </foo>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            AndroidManifest.xml:7: Error: Unexpected text found in manifest file: "android:label="Android AdServices" android:forceQueryable="true" android:directBootAware="true">" [ExtraText]
+                    android:label="Android AdServices"
+                    ^
+            res/drawable/icon.xml:1: Warning: Unexpected text found in drawable file: ">" [ExtraText]
+            <shape>>
+                   ~
+            1 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testBrokenLayout() {
         val expected =
             """
-res/layout/broken.xml:6: Warning: Unexpected text found in layout file: "ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_heigh..." [ExtraText]
-    <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-    ^
-0 errors, 1 warnings
-"""
+            res/layout/broken.xml:5: Error: Unexpected text found in layout file: "ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_heigh..." [ExtraText]
+                ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
 
         lint().files(
             xml(
                 "res/layout/broken.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
-    <Button android:text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-    <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
-    ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
-    <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-    <Button android:id="@+android:id/summary" android:contentDescription="@string/label" />
-</LinearLayout>"""
-            )
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+                    <Button android:text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                    <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                    ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                    <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                    <Button android:id="@+android:id/summary" android:contentDescription="@string/label" />
+                </LinearLayout>
+                """
+            ).indented()
         ).run().expect(expected)
     }
 
     fun testManifest() {
         val expected =
             """
-AndroidManifest.xml:8: Warning: Unexpected text found in layout file: "permission android:name="com.android.vending.BILLING"
-        android:label="@string/perm_billing_la..." [ExtraText]
-        android:description="@string/perm_billing_desc"
-    ^
-0 errors, 1 warnings
-"""
+            AndroidManifest.xml:6: Error: Unexpected text found in manifest file: "permission android:name="com.android.vending.BILLING" android:label="@string/perm_billing_label" and..." [ExtraText]
+                permission android:name="com.android.vending.BILLING"
+                ^
+            1 errors, 0 warnings
+            """
 
         lint().files(
             manifest(
-                """<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools">
-    <uses-feature android:name="android.software.leanback"/>
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                          xmlns:tools="http://schemas.android.com/tools">
+                    <uses-feature android:name="android.software.leanback"/>
 
-    permission android:name="com.android.vending.BILLING"
-        android:label="@string/perm_billing_label"
-        android:description="@string/perm_billing_desc"
-        android:permissionGroup="android.permission-group.NETWORK"
-        android:protectionLevel="normal" />
+                    permission android:name="com.android.vending.BILLING"
+                        android:label="@string/perm_billing_label"
+                        android:description="@string/perm_billing_desc"
+                        android:permissionGroup="android.permission-group.NETWORK"
+                        android:protectionLevel="normal" />
 
-    <application android:banner="@drawable/banner">
-        <activity>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-"""
-            )
+                    <application android:banner="@drawable/banner">
+                        <activity>
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN"/>
+                                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
+                """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -86,11 +143,13 @@ AndroidManifest.xml:8: Warning: Unexpected text found in layout file: "permissio
         lint().files(
             xml(
                 "res/values/strings.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="foo">Foo</string>
-</resources>"""
-            )
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <resources>
+                    <string name="foo">Foo</string>
+                </resources>
+                """
+            ).indented()
         ).run().expectClean()
     }
 }

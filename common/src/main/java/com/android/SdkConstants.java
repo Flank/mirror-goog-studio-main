@@ -982,6 +982,8 @@ public final class SdkConstants {
 
     public static final String ATTR_COMPOSABLE_NAME = "composableName";
 
+    public static final String PACKAGE_COMPOSE_ANIMATION = "androidx.compose.animation.core";
+
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
      * and 'mksdcard' for all other platforms.

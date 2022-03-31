@@ -2705,6 +2705,34 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun test225936245() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.animation.Animator;
+                import android.animation.ValueAnimator;
+
+                @SuppressWarnings({"SameParameterValue", "UnnecessaryLocalVariable"})
+                public class AnimationTester {
+
+                    private static Animator createVideoViewAlphaAnimator(boolean testBool) {
+                        ValueAnimator alphaAnimator = testBool
+                                ? ValueAnimator.ofFloat(0.0f, 0.5f)
+                                : ValueAnimator.ofFloat(0.1f, 1.0f);
+                        return alphaAnimator;
+                    }
+
+                    public static void doAnims() {
+                        createVideoViewAlphaAnimator(true).start();
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

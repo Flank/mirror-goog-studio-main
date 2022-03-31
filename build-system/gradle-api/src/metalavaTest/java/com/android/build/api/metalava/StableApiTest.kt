@@ -42,7 +42,7 @@ class StableApiTest {
                     Either:
                       * revert the api change
                       * or apply the below changes by running the updateApi task:
-                            gradle :base:build-system:gradle-api:updateApi
+                            gradle :base:gradle-api:updateApi
 
                     """.trimIndent() +
                         TestUtils.getDiff(expected.toTypedArray(), actual.toTypedArray())

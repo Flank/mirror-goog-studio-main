@@ -22,7 +22,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 
-public class BackPorterEval extends AndroidEval {
+public class BackPorterEval extends Fix226201991Eval {
 
     private static final String BP_PKG_NAME = "com/android/tools/deploy/liveedit/backported";
     private static final HashMap<String, MethodDescription> backported = new HashMap<>();

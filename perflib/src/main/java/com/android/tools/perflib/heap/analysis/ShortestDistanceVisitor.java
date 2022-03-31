@@ -22,6 +22,8 @@ import com.android.tools.perflib.heap.NonRecursiveVisitor;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+import kotlin.sequences.SequencesKt;
+
 public class ShortestDistanceVisitor extends NonRecursiveVisitor {
     private PriorityQueue<Instance> mPriorityQueue = new PriorityQueue<Instance>(1024,
             new Comparator<Instance>() {
@@ -38,7 +40,7 @@ public class ShortestDistanceVisitor extends NonRecursiveVisitor {
         if (mVisitDistance < child.getDistanceToGcRoot() &&
                 (parent == null ||
                         child.getSoftReverseReferences() == null ||
-                        !child.getSoftReverseReferences().contains(parent) ||
+                        !SequencesKt.contains(child.getSoftReverseReferences(), parent) ||
                         child.isSoftReference())) {
             child.setDistanceToGcRoot(mVisitDistance);
             mPriorityQueue.add(child);

@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentType
+import com.android.builder.core.ComponentTypeImpl
 
 /**
  * Abstract Class responsible for handling the DSL containers of flavors/build types and processing
@@ -51,9 +51,9 @@ abstract class AbstractVariantInputManager<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         SigningConfigT : com.android.build.api.dsl.ApkSigningConfig>(
-            private val dslServices: DslServices,
-            private val variantType: VariantType,
-            override val sourceSetManager: SourceSetManager
+    private val dslServices: DslServices,
+    private val componentType: ComponentType,
+    override val sourceSetManager: SourceSetManager
         ) : VariantInputModel<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>,
     DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT> {
 
@@ -80,7 +80,7 @@ abstract class AbstractVariantInputManager<
 
         // FIXME update when we have the newer interfaces for BuildTypes.
         if (buildType is BuildType) {
-            if (variantType.isDynamicFeature) {
+            if (componentType.isDynamicFeature) {
                 // initialize it without the signingConfig for dynamic-features.
                 buildType.init()
             } else {
@@ -94,27 +94,27 @@ abstract class AbstractVariantInputManager<
         // tested. this is because we cannot delay creation without breaking compatibility.
         // So for now we create more than we need and we'll migrate to a better way later.
         // FIXME b/149489432
-        val androidTestSourceSet = if (variantType.hasTestComponents) {
+        val androidTestSourceSet = if (componentType.hasTestComponents) {
             sourceSetManager.setUpTestSourceSet(
                 computeSourceSetName(
-                    buildType.name, VariantTypeImpl.ANDROID_TEST
+                    buildType.name, ComponentTypeImpl.ANDROID_TEST
                 )
             ) as DefaultAndroidSourceSet
         } else null
 
-        val unitTestSourceSet = if (variantType.hasTestComponents) {
+        val unitTestSourceSet = if (componentType.hasTestComponents) {
             sourceSetManager.setUpTestSourceSet(
                 computeSourceSetName(
-                    buildType.name, VariantTypeImpl.UNIT_TEST
+                    buildType.name, ComponentTypeImpl.UNIT_TEST
                 )
             ) as DefaultAndroidSourceSet
         } else null
 
         val testFixturesSourceSet =
-            if (variantType.hasTestComponents) {
+            if (componentType.hasTestComponents) {
                 sourceSetManager.setUpSourceSet(
                     computeSourceSetName(
-                        buildType.name, VariantTypeImpl.TEST_FIXTURES
+                        buildType.name, ComponentTypeImpl.TEST_FIXTURES
                     )
                 ) as DefaultAndroidSourceSet
             } else null
@@ -145,20 +145,20 @@ abstract class AbstractVariantInputManager<
         var testFixturesSourceSet: DefaultAndroidSourceSet? = null
         var androidTestSourceSet: DefaultAndroidSourceSet? = null
         var unitTestSourceSet: DefaultAndroidSourceSet? = null
-        if (variantType.hasTestComponents) {
+        if (componentType.hasTestComponents) {
             androidTestSourceSet = sourceSetManager.setUpTestSourceSet(
                 computeSourceSetName(
-                    productFlavor.name, VariantTypeImpl.ANDROID_TEST
+                    productFlavor.name, ComponentTypeImpl.ANDROID_TEST
                 )
             ) as DefaultAndroidSourceSet
             unitTestSourceSet = sourceSetManager.setUpTestSourceSet(
                 computeSourceSetName(
-                    productFlavor.name, VariantTypeImpl.UNIT_TEST
+                    productFlavor.name, ComponentTypeImpl.UNIT_TEST
                 )
             ) as DefaultAndroidSourceSet
             testFixturesSourceSet = sourceSetManager.setUpSourceSet(
                 computeSourceSetName(
-                    productFlavor.name, VariantTypeImpl.TEST_FIXTURES
+                    productFlavor.name, ComponentTypeImpl.TEST_FIXTURES
                 )
             ) as DefaultAndroidSourceSet
         }
@@ -178,12 +178,12 @@ abstract class AbstractVariantInputManager<
             checkPrefix(
                 name,
                 displayName,
-                VariantType.ANDROID_TEST_PREFIX
+                ComponentType.ANDROID_TEST_PREFIX
             )
             checkPrefix(
                 name,
                 displayName,
-                VariantType.UNIT_TEST_PREFIX
+                ComponentType.UNIT_TEST_PREFIX
             )
             if (BuilderConstants.LINT == name) {
                 throw RuntimeException(

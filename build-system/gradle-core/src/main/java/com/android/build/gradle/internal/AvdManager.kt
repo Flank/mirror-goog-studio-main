@@ -23,6 +23,7 @@ import com.android.sdklib.PathFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
 import com.android.sdklib.internal.avd.AvdInfo
+import com.android.sdklib.internal.avd.AvdInfo.AvdStatus
 import com.android.sdklib.internal.avd.EmulatedProperties
 import com.android.sdklib.internal.avd.GpuMode
 import com.android.sdklib.internal.avd.HardwareProperties
@@ -86,9 +87,16 @@ class AvdManager(
             avdManager.reloadAvds(logger)
             val info = avdManager.getAvd(deviceName, false)
             info?.let {
-                logger.info("Device: $deviceName already exists. AVD creation skipped.")
-                // already generated the avd
-                return@write info.configFile.toFile()
+                if (info.status == AvdStatus.OK) {
+                    logger.info("Device: $deviceName already exists. AVD creation skipped.")
+                    return@write info.configFile.toFile()
+                }
+                // avd exists but is invalid, remove before we recreate.
+                logger.warning(
+                    "$deviceName needs to be recreated because it is invalid " +
+                            "(AvdStatus = ${info.status})"
+                )
+                deleteAvds(listOf(deviceName))
             }
 
             val newInfo = createAvd(imageProvider, imageHash, deviceName, hardwareProfile)

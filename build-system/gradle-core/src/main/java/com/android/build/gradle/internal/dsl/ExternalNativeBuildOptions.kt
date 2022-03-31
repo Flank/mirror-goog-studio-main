@@ -26,6 +26,7 @@ open class ExternalNativeBuildOptions :
     com.android.build.api.dsl.ExternalNativeBuildOptions {
     final override val ndkBuild: ExternalNativeNdkBuildOptions
     final override val cmake: ExternalNativeCmakeOptions
+    final override val experimentalProperties: MutableMap<String, Any> = mutableMapOf()
 
     @VisibleForTesting
     constructor() {
@@ -42,11 +43,15 @@ open class ExternalNativeBuildOptions :
     fun _initWith(that: ExternalNativeBuildOptions) {
         ndkBuild._initWith(that.externalNativeNdkBuildOptions)
         cmake._initWith(that.externalNativeCmakeOptions)
+        experimentalProperties.putAll(that.externalNativeExperimentalProperties)
     }
 
     override fun getExternalNativeNdkBuildOptions(): ExternalNativeNdkBuildOptions? = ndkBuild
 
     override fun getExternalNativeCmakeOptions(): ExternalNativeCmakeOptions? = cmake
+
+    override fun getExternalNativeExperimentalProperties(): MutableMap<String, Any> =
+        experimentalProperties
 
     fun ndkBuild(action: Action<ExternalNativeNdkBuildOptions>) {
         action.execute(ndkBuild)

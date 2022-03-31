@@ -9,11 +9,25 @@ register_toolchains(
     "@native_toolchain//:cc-toolchain-x64_linux",
     "@native_toolchain//:cc-toolchain-darwin",
     "@native_toolchain//:cc-toolchain-x64_windows-clang-cl",
+    "//tools/base/bazel/toolchains/darwin:python_toolchain",
+    "//tools/base/bazel/toolchains/darwin:python_toolchain_10.13",
+    "//prebuilts/studio/jdk:runtime_toolchain_definition",
+    "//prebuilts/studio/jdk:jdk11_toolchain_java8_definition",
+    "//prebuilts/studio/jdk:jdk11_toolchain_java11_definition",
+)
+
+new_local_repository(
+    name = "studio_jdk",
+    path = "prebuilts/studio/jdk",
+    build_file = "prebuilts/studio/jdk/BUILD.studio_jdk",
 )
 
 local_repository(
     name = "blaze",
     path = "tools/vendor/google3/blaze",
+    repo_mapping = {
+     "@local_jdk": "@studio_jdk",
+    },
 )
 
 load("@blaze//:binds.bzl", "blaze_binds")

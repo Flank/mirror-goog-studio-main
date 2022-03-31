@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
@@ -100,7 +100,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource.get().asFile,
                 resourceOutputApk = resourceApUnderscoreDirectory.get().file("res.apk").asFile,
-                variantType = VariantTypeImpl.LIBRARY,
+                componentType = ComponentTypeImpl.LIBRARY,
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2.registerAaptService()

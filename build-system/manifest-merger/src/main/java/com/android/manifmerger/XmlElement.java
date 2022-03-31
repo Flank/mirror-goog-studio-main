@@ -812,16 +812,16 @@ public class XmlElement extends OrphanXmlElement {
                 // extra ones.
                 @NonNull
                 List<String> extraChildrenNames = Lists.transform(actualChildren, NODE_TO_NAME);
-                extraChildrenNames.removeAll(Lists.transform(expectedChildren, NODE_TO_NAME));
+                Lists.transform(expectedChildren, NODE_TO_NAME).forEach(extraChildrenNames::remove);
                 return Optional.of(
                         String.format(
                                 "%1$s: Number of children do not match up: "
                                         + "expected %2$d versus %3$d at %4$s, extra elements found : %5$s",
                                 getId(),
                                 expectedChildrenSize,
-                                actualChildren.size(),
+                                actualChildrenSize,
                                 otherNode.printPosition(),
-                                Joiner.on(",").join(expectedChildren)));
+                                Joiner.on(",").join(extraChildrenNames)));
             }
         }
         for (Node expectedChild : expectedChildren) {

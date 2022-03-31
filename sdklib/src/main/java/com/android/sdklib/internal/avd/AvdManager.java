@@ -930,7 +930,7 @@ public class AvdManager {
             configValues.put(AVD_INI_PLAYSTORE_ENABLED, Boolean.toString(deviceHasPlayStore && systemImage.hasPlayStore()));
             configValues.put(AVD_INI_ARC, Boolean.toString(SystemImage.CHROMEOS_TAG.equals(tag)));
 
-            createAvdSkin(skinFolder == null ? null : skinFolder, skinName, configValues, log);
+            createAvdSkin(skinFolder, skinName, configValues, log);
             createAvdSdCard(sdcard, editExisting, configValues, avdFolder, log);
 
             if (hardwareConfig == null) {
@@ -991,7 +991,6 @@ public class AvdManager {
                 }
             }
         }
-
         return null;
     }
 

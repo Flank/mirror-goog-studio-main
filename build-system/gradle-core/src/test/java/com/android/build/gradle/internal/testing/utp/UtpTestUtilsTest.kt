@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkAction
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkParameters
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.argThat
 import com.android.testutils.MockitoKt.eq
@@ -329,7 +329,7 @@ class UtpTestUtilsTest {
             ImmutableMap.of(),
             FakeProviderFactory(FakeProviderFactory.factory, mapOf()))
 
-        assertThat(shouldEnableUtp(projectOptions, testOptions = null, variantType = null)).isTrue()
+        assertThat(shouldEnableUtp(projectOptions, testOptions = null, componentType = null)).isTrue()
     }
 
     @Test
@@ -337,10 +337,10 @@ class UtpTestUtilsTest {
         val projectOptions = ProjectOptions(
             ImmutableMap.of(),
             FakeProviderFactory(FakeProviderFactory.factory, mapOf()))
-        val variantType = mock<VariantType>()
-        `when`(variantType.isDynamicFeature).thenReturn(true)
+        val componentType = mock<ComponentType>()
+        `when`(componentType.isDynamicFeature).thenReturn(true)
 
-        assertThat(shouldEnableUtp(projectOptions, testOptions = null, variantType)).isFalse()
+        assertThat(shouldEnableUtp(projectOptions, testOptions = null, componentType)).isFalse()
     }
 
     @Test

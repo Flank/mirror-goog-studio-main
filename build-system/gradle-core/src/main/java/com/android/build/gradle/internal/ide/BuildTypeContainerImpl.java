@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SourceProvider;
@@ -64,21 +64,21 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
 
         if (includeAndroidTest) {
             DefaultAndroidSourceSet sourceSet =
-                    buildTypeData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST);
+                    buildTypeData.getTestSourceSet(ComponentTypeImpl.ANDROID_TEST);
             if (sourceSet != null) {
                 clonedContainers.add(
                         SourceProviderContainerImpl.create(
-                                VariantTypeImpl.ANDROID_TEST.getArtifactName(), sourceSet));
+                                ComponentTypeImpl.ANDROID_TEST.getArtifactName(), sourceSet));
             }
         }
 
         if (includeUnitTest) {
             DefaultAndroidSourceSet sourceSet =
-                    buildTypeData.getTestSourceSet(VariantTypeImpl.UNIT_TEST);
+                    buildTypeData.getTestSourceSet(ComponentTypeImpl.UNIT_TEST);
             if (sourceSet != null) {
                 clonedContainers.add(
                         SourceProviderContainerImpl.create(
-                                VariantTypeImpl.UNIT_TEST.getArtifactName(), sourceSet));
+                                ComponentTypeImpl.UNIT_TEST.getArtifactName(), sourceSet));
             }
         }
 

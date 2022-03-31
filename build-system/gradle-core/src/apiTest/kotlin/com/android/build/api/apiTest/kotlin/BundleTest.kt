@@ -83,6 +83,7 @@ class BundleTest: VariantApiBaseTest(TestType.Script) {
                     minSdkVersion(21)
                     versionCode = 1
                 }
+                namespace = "com.example.addjavasource"
             }
 
             androidComponents {

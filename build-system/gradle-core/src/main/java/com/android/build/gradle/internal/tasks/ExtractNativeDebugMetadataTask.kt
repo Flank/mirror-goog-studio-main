@@ -72,9 +72,10 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDir: DirectoryProperty
 
-    // The stripped native libs are an input to this task because we only want to keep the native
-    // debug metadata files which actually contain native debug metadata; we delete native debug
-    // metadata files that are the same size as the corresponding stripped native libraries.
+    // The stripped native libs are an input to this task because we only want native debug metadata
+    // files which actually contain native debug metadata; we don't create a native debug metadata
+    // file when the corresponding input file is the same as the stripped native lib (indicating
+    // it was already stripped or had some other issue when stripping).
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val strippedNativeLibs: DirectoryProperty
@@ -227,6 +228,20 @@ abstract class ExtractNativeDebugMetadataWorkAction :
             if (!inputFile.name.endsWith(SdkConstants.DOT_NATIVE_LIBS, ignoreCase = true)) {
                 continue
             }
+            // We skip the input file if it is the same length as the stripped file because we
+            // don't expect to be able to extract native debug metadata in that case.
+            val strippedNativeLib =
+                File(
+                    strippedNativeLibs,
+                    inputDir.toPath().relativize(inputFile.toPath()).toString()
+                )
+            if (inputFile.length() == strippedNativeLib.length()) {
+                logger.info(
+                    "Unable to extract native debug metadata from ${inputFile.absolutePath} " +
+                            "because the native debug metadata has already been stripped."
+                )
+                continue
+            }
             val outputFile: File
             val objcopyArgs: List<String>
             when (parameters.debugSymbolLevel.get()) {
@@ -254,12 +269,9 @@ abstract class ExtractNativeDebugMetadataWorkAction :
                 )
                 continue
             }
-            val strippedNativeLib =
-                File(strippedNativeLibs, "lib/${inputFile.parentFile.name}/${inputFile.name}")
             allRequests.add(
                 ExtractNativeDebugMetadataRunnable.SingleRequest(
                     inputFile,
-                    strippedNativeLib,
                     outputFile,
                     objcopyExecutable,
                     objcopyArgs
@@ -297,7 +309,6 @@ abstract class ExtractNativeDebugMetadataRunnable : ProfileAwareWorkAction<Extra
         parameters.requests.get().forEach {
             processSingle(
                 it.inputFile,
-                it.strippedFile,
                 it.outputFile,
                 it.objcopyExecutable,
                 it.objcopyArgs,
@@ -307,7 +318,6 @@ abstract class ExtractNativeDebugMetadataRunnable : ProfileAwareWorkAction<Extra
 
     private fun processSingle(
         inputFile: File,
-        strippedFile: File,
         outputFile: File,
         objcopyExecutable: File,
         objcopyArgs: List<String>,
@@ -335,20 +345,10 @@ abstract class ExtractNativeDebugMetadataRunnable : ProfileAwareWorkAction<Extra
                         "because of non-zero exit value from objcopy."
             )
         }
-        // We delete a native debug metadata file that is the same size as the corresponding
-        // stripped native library, because it doesn't contain any extra information.
-        if (outputFile.length() == strippedFile.length()) {
-            logger.info(
-                "Unable to extract native debug metadata from ${inputFile.absolutePath} " +
-                        "because the native debug metadata has already been stripped."
-            )
-            FileUtils.deleteIfExists(outputFile)
-        }
     }
 
     data class SingleRequest(
         val inputFile: File,
-        val strippedFile: File,
         val outputFile: File,
         val objcopyExecutable: File,
         val objcopyArgs: List<String>

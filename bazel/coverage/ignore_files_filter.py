@@ -25,7 +25,6 @@ def main():
       'tools/studio',
       'tools/swing-testing',
       'tools/vendor/adt_infra_internal',
-      'tools/vendor/google/firebase',
       'tools/vendor/google/real-world-integration-test',
       'tools/vendor/google/url-assistant',
       'tools/vendor/intellij',

@@ -48,7 +48,7 @@ public class LiveEditContext {
     }
 
     public LiveEditClass addClass(String internalName, byte[] bytecode, boolean isProxyClass) {
-        LiveEditClass clazz = new LiveEditClass(this, internalName, bytecode, isProxyClass);
+        LiveEditClass clazz = new LiveEditClass(this, bytecode, isProxyClass);
         classes.put(internalName, clazz);
         return clazz;
     }

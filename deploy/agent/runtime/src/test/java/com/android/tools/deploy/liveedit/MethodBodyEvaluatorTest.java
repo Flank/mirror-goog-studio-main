@@ -583,4 +583,34 @@ public class MethodBodyEvaluatorTest {
                 child.accessParentProtectedField(protectedFieldValue),
                 i.intValue());
     }
+
+    @org.junit.Test
+    public void testCheckCastNull() throws Exception {
+        byte[] classInput = buildClass(CheckCast.class);
+        CheckCast check = new CheckCast();
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "checkNull", "()V");
+        ev.eval(check, CheckCast.class.getTypeName(), new Object[] {});
+    }
+
+    @org.junit.Test
+    public void testCheckCastGood() throws Exception {
+        byte[] classInput = buildClass(CheckCast.class);
+        CheckCast check = new CheckCast();
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "checkGood", "()V");
+        ev.eval(check, CheckCast.class.getTypeName(), new Object[] {});
+    }
+
+    @org.junit.Test
+    public void testCheckCastBad() throws Exception {
+        byte[] classInput = buildClass(CheckCast.class);
+        CheckCast check = new CheckCast();
+        MethodBodyEvaluator ev = new MethodBodyEvaluator(classInput, "checkBad", "()V");
+        try {
+            ev.eval(check, CheckCast.class.getTypeName(), new Object[] {});
+            Assert.fail("CheckCast should have thrown a ClassCastException");
+        } catch (ClassCastException e) {
+            return;
+        }
+        Assert.fail("ClassCastException was not caught");
+    }
 }

@@ -106,7 +106,8 @@ message AgentConfig {
     bool track_global_jni_refs = 2;
     // Path to the app dir: usually /data/app/
     string app_dir = 3;
-    // The allocation sampling rate to use when starting a profiling session.
+    // Default sampling rate for the first live allocation tracking per the
+    // agent's lifetime.
     MemoryAllocSamplingData sampling_rate = 4;
   }
   CommonConfig common = 1;

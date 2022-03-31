@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationOrigin
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
@@ -90,6 +91,16 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         }
 
+        // @CheckReturnValue, unlike @CheckResult, can be applied not just on methods,
+        // but on classes and packages too, implying a "default" for all non-void methods.
+        // However, in this case we don't want to also make it apply for all *subtypes*.
+        // So for an annotation specified on a specific method, we'll apply it to overrides
+        // as well, but for "outer" annotations, we'll only apply them within the inner context,
+        // not in subclasses.
+        if (annotationInfo.origin != AnnotationOrigin.METHOD && annotationInfo.isInherited()) {
+            return
+        }
+
         if (isExpressionValueUnused(element)) {
             if (context.evaluator.isSuspend(method)) {
                 // For coroutines the suspend methods return context rather than the intended return type,
@@ -100,6 +111,11 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (bound == PsiType.VOID || bound.canonicalText == "kotlin.Unit") {
                     return
                 }
+            }
+
+            // Type parameter which resolves to Void?
+            if (element is UExpression && element.getExpressionType()?.canonicalText == "java.lang.Void") {
+                return
             }
 
             // If this CheckResult annotation is from a class, check to see

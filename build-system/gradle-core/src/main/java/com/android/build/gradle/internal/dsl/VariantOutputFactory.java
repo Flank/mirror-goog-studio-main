@@ -25,7 +25,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.services.BaseServices;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -37,7 +37,7 @@ public class VariantOutputFactory {
     @NonNull private final Class<? extends BaseVariantOutput> targetClass;
     @NonNull private final BaseServices services;
     @Nullable private final BaseVariantImpl deprecatedVariantPublicApi;
-    @NonNull private VariantType variantType;
+    @NonNull private ComponentType componentType;
     @NonNull private final TaskContainer taskContainer;
     @NonNull private final BaseExtension extension;
 
@@ -46,19 +46,20 @@ public class VariantOutputFactory {
             @NonNull BaseServices services,
             @NonNull BaseExtension extension,
             @Nullable BaseVariantImpl deprecatedVariantPublicApi,
-            @NonNull VariantType variantType,
+            @NonNull ComponentType componentType,
             @NonNull TaskContainer taskContainer) {
         this.targetClass = targetClass;
         this.services = services;
         this.deprecatedVariantPublicApi = deprecatedVariantPublicApi;
-        this.variantType = variantType;
+        this.componentType = componentType;
         this.taskContainer = taskContainer;
         this.extension = extension;
     }
 
     public VariantOutput create(VariantOutputImpl variantApi) {
         BaseVariantOutput variantOutput =
-                services.newInstance(targetClass, taskContainer, services, variantApi, variantType);
+                services.newInstance(
+                        targetClass, taskContainer, services, variantApi, componentType);
         extension.getBuildOutputs().add(variantOutput);
         if (deprecatedVariantPublicApi != null) {
             deprecatedVariantPublicApi.addOutputs(ImmutableList.of(variantOutput));

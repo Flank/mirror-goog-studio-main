@@ -22,11 +22,18 @@ _git = [
         "path": "external/freetype",
     },
     {
+        # TODO(b/202336345): remove when skia build rules are ready.
+        "name": "prebuilt_skia",
+        "path": "prebuilts/tools/common/skia",
+    },
+    {
         "name": "skia_repo",
+        # TODO(b/202336345): remove build_file when skia build rules are ready.
         "build_file": "tools/base/dynamic-layout-inspector/external/skia.BUILD",
         "path": "external/skia",
     },
     {
+        # TODO(b/202336345): remove when skia build rules are ready.
         # files in tools/base that need to be referenced by the skia_repo BUILD
         "name": "skia_extra",
         "path": "tools/base/dynamic-layout-inspector/external/skia-extra",

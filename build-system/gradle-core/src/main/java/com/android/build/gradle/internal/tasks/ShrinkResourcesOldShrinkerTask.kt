@@ -217,7 +217,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             // When R8 produces dex files, this task analyzes them. If R8 produces
             // class files, this task will analyze those. That is why both types are specified.
             task.classes.from(
-                    if (creationConfig.variantType.isAar) {
+                    if (creationConfig.componentType.isAar) {
                         creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
                     } else {
                         artifacts.getAll(InternalMultipleArtifactType.DEX)

@@ -674,6 +674,7 @@ message LiveEditResponse {
     OK = 1;
     ERROR = 2;
     INSTRUMENTATION_FAILED = 3;
+    LAMBDA_DEX_LOAD_FAILED = 4;
   }
 
   Status status = 1;

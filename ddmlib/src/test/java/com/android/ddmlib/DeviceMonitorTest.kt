@@ -115,22 +115,20 @@ class DeviceMonitorTest {
     ) : EmulatorConsole() {
         val latch = CountDownLatch(1)
 
-        override val avdName: String?
-          get() {
-              latch.await()
-              return actualAvdName
-          }
+        override fun getAvdName(): String? {
+            latch.await()
+            return actualAvdName
+        }
 
-        override val avdPath: String
-            get() {
-                latch.await()
-                if (actualAvdPath != null) {
-                    return actualAvdPath
-                }
-                else {
-                    throw CommandFailedException()
-                }
+        override fun getAvdPath(): String {
+            latch.await()
+            if (actualAvdPath != null) {
+                return actualAvdPath
             }
+            else {
+                throw CommandFailedException()
+            }
+        }
 
         override fun close() {}
 

@@ -169,10 +169,10 @@ class MinimalSubProject private constructor(
             )
         }
 
-        fun fusedLibraries(namespace: String): MinimalSubProject {
+        fun fusedLibrary(namespace: String): MinimalSubProject {
             return MinimalSubProject(
                 path = null,
-                plugin = "com.android.fused-libraries",
+                plugin = "com.android.fused-library",
                 addCompileAndSdkVersionToBuildFile = false,
                 addVersionCodeToBuildFile = false,
                 addManifestFile = false,

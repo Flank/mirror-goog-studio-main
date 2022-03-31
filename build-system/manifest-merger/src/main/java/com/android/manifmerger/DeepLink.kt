@@ -16,7 +16,6 @@
 
 package com.android.manifmerger
 
-import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFilePosition
 import com.google.common.collect.ImmutableList
 import java.lang.Exception
@@ -37,7 +36,6 @@ import java.util.regex.Pattern
  *                              navigation xml file.
  * @property isAutoVerify true if the <deepLink> element has an android:autoVerify="true" attribute.
  */
-@VisibleForTesting
 data class DeepLink(
         val schemes: List<String>,
         val host: String?,
@@ -75,7 +73,7 @@ data class DeepLink(
      *
      * 1. use of ".*" or "{placeholder}" wildcards in the URI path and query.
      *
-     * 2. use of "${applicationId}" in the URI host and path.
+     * 2. use of manifest placeholders, e.g. "${applicationId}", in the URI host, path, and scheme.
      *
      * 3. use of ".*" wildcard at the beginning of the URI host.
      *
@@ -84,7 +82,6 @@ data class DeepLink(
      * @property port the uri's port or `-1` if uri contains no port.
      * @property path the uri's path
      */
-    @VisibleForTesting
     data class DeepLinkUri(
             val schemes: List<String>,
             val host: String?,
@@ -95,12 +92,15 @@ data class DeepLink(
         companion object {
 
             private val DEFAULT_SCHEMES = ImmutableList.of("http", "https")
-            private val APPLICATION_ID_PLACEHOLDER =
-                    "\${" + PlaceholderHandler.APPLICATION_ID + "}"
-            // PATH_WILDCARD looks for pairs of braces with anything except other braces in between
-            private val PATH_WILDCARD = Regex("\\{[^{}]*}")
-            private val WILDCARD = ".*"
-            private val HOST_WILDCARD = "*"
+            private const val DOLLAR_SIGN = "$"
+            private const val OPEN_BRACKET = "{"
+            private const val CLOSE_BRACKET = "}"
+            private val MANIFEST_PLACEHOLDER = Regex("\\$\\{[^{}]*}")
+            // PATH_WILDCARD looks for pairs of braces, not preceded by a $, with anything except
+            // other braces in between
+            private val PATH_WILDCARD = Regex("(?<!\\$)\\{[^{}]*}")
+            private const val WILDCARD = ".*"
+            private const val HOST_WILDCARD = "*"
 
             /** factory method to generate DeepLinkUri from uri String */
             fun fromUri(uri: String): DeepLinkUri {
@@ -108,56 +108,84 @@ data class DeepLink(
                 // chooseEncoder() calls below cannot share any character input(s), or there could
                 // be inaccurate decoding. Use completely new char1 and char2 characters if adding a
                 // new Encoder in the future.
-                val applicationIdEncoder = chooseEncoder(uri, 'a', 'b')
-                val pathWildcardEncoder = chooseEncoder(uri, 'c', 'd')
-                val wildcardEncoder = chooseEncoder(uri, 'e', 'f')
-                // Must call uri.replace() with APPLICATION_ID_PLACEHOLDER before PATH_WILDCARD.
+                val dollarSignEncoder = chooseEncoder(uri, 'a', 'b')
+                val openBracketEncoder = chooseEncoder(uri, 'c', 'd')
+                val closeBracketEncoder = chooseEncoder(uri, 'e', 'f')
+                val wildcardEncoder = chooseEncoder(uri, 'g', 'h')
                 // If encodedUri doesn't contain regex "^[^/]*:/" (which would indicate it contains
                 // a scheme) or start with "/" (which would indicate it's just a path), then we want
                 // the first part of the uri to be interpreted as the host, but java.net.URI will
                 // interpret it as the scheme, unless we prepend it with "//", so we do.
                 val encodedUri =
-                        uri.replace(APPLICATION_ID_PLACEHOLDER, applicationIdEncoder)
-                                .replace(PATH_WILDCARD, pathWildcardEncoder)
-                                .replace(WILDCARD, wildcardEncoder)
-                                .let {
-                                    if (!Pattern.compile("^[^/]*:/").matcher(it).find()
-                                            && !it.startsWith("/")) {
-                                        "//" + it
-                                    } else {
-                                        it
-                                    }
-                                }
+                    uri.replace(DOLLAR_SIGN, dollarSignEncoder)
+                        .replace(OPEN_BRACKET, openBracketEncoder)
+                        .replace(CLOSE_BRACKET, closeBracketEncoder)
+                        .replace(WILDCARD, wildcardEncoder)
+                        .let {
+                            if (!Pattern.compile("^[^/]*:/").matcher(it).find()
+                                    && !it.startsWith("/")) {
+                                "//" + it
+                            } else {
+                                it
+                            }
+                        }
 
                 // Attempt to construct URI after encoding all non-compliant characters.
                 // If still not compliant, will throw URISyntaxException.
                 val compliantUri = URI(encodedUri)
 
+                // Also make sure we can construct a URI using the stricter MANIFEST_PLACEHOLDER and
+                // PATH_WILDCARD substitutions because when we encode $, {, and } separately, as we
+                // do for encodedUri above, we don't get the desired URISyntaxException for cases of
+                // hanging or nested brackets.
+                // We can use an arbitrary encoder string (dollarSignEncoder) because we don't need
+                // to decode it later.
+                URI(
+                    uri.replace(MANIFEST_PLACEHOLDER, dollarSignEncoder)
+                        .replace(PATH_WILDCARD, dollarSignEncoder)
+                        .replace(WILDCARD, dollarSignEncoder)
+                        .let {
+                            if (!Pattern.compile("^[^/]*:/").matcher(it).find()
+                                && !it.startsWith("/")) {
+                                "//" + it
+                            } else {
+                                it
+                            }
+                        }
+                )
+
                 // determine schemes
-                val compliantScheme = compliantUri.scheme
+                val decodedScheme =
+                    compliantUri.scheme
+                        ?.replace(dollarSignEncoder, DOLLAR_SIGN)
+                        ?.replace(openBracketEncoder, OPEN_BRACKET)
+                        ?.replace(closeBracketEncoder, CLOSE_BRACKET)
                 val schemes = when {
-                    compliantScheme == null -> DEFAULT_SCHEMES
-                    applicationIdEncoder in compliantScheme ||
-                            pathWildcardEncoder in compliantScheme ||
-                            wildcardEncoder in compliantScheme ->
+                    decodedScheme == null -> DEFAULT_SCHEMES
+                    PATH_WILDCARD.containsMatchIn(decodedScheme) ||
+                            wildcardEncoder in decodedScheme ->
                         throw DeepLinkException(
                             "Improper use of wildcards and/or placeholders in deeplink URI scheme")
-                    else -> ImmutableList.of(compliantScheme)
+                    else -> ImmutableList.of(decodedScheme)
                 }
 
                 // determine host
-                val host: String? =
-                        compliantUri.host?.replace(applicationIdEncoder, APPLICATION_ID_PLACEHOLDER)
-                                ?.let {
-                                    if (it.startsWith(wildcardEncoder)) {
-                                        HOST_WILDCARD + it.substring(wildcardEncoder.length)
-                                    } else {
-                                        it
-                                    }
-                                }
+                val decodedHost =
+                    compliantUri.host
+                        ?.replace(dollarSignEncoder, DOLLAR_SIGN)
+                        ?.replace(openBracketEncoder, OPEN_BRACKET)
+                        ?.replace(closeBracketEncoder, CLOSE_BRACKET)
+                val host =
+                    decodedHost?.let {
+                        if (it.startsWith(wildcardEncoder)) {
+                            HOST_WILDCARD + it.substring(wildcardEncoder.length)
+                        } else {
+                            it
+                        }
+                    }
                 // throw exception if host contains an illegal wildcard encoder
-                if (host?.contains(pathWildcardEncoder) == true
-                        || host?.contains(wildcardEncoder) == true) {
+                if (host != null
+                    && (PATH_WILDCARD.containsMatchIn(host) || host.contains(wildcardEncoder))) {
                     throw DeepLinkException(
                             "Improper use of wildcards and/or placeholders in deeplink URI host")
                 }
@@ -167,15 +195,23 @@ data class DeepLink(
                     if (compliantUri.path?.isEmpty() != false) {
                         "/"
                     } else {
-                        compliantUri.path.replace(applicationIdEncoder, APPLICATION_ID_PLACEHOLDER)
-                                .replace(pathWildcardEncoder, WILDCARD)
-                                .replace(wildcardEncoder, WILDCARD)
-                                .let {
-                                    if (it.startsWith("/")) it else "/" + it
-                                }
+                        compliantUri.path
+                            .replace(dollarSignEncoder, DOLLAR_SIGN)
+                            .replace(openBracketEncoder, OPEN_BRACKET)
+                            .replace(closeBracketEncoder, CLOSE_BRACKET)
+                            .replace(PATH_WILDCARD, WILDCARD)
+                            .replace(wildcardEncoder, WILDCARD)
+                            .let {
+                                if (it.startsWith("/")) it else "/" + it
+                            }
                     }
 
-                val query = compliantUri.query?.replace(pathWildcardEncoder, WILDCARD)
+                val query =
+                    compliantUri.query
+                        ?.replace(dollarSignEncoder, DOLLAR_SIGN)
+                        ?.replace(openBracketEncoder, OPEN_BRACKET)
+                        ?.replace(closeBracketEncoder, CLOSE_BRACKET)
+                        ?.replace(PATH_WILDCARD, WILDCARD)
 
                 return DeepLinkUri(schemes, host, compliantUri.port, path, query)
             }
@@ -200,7 +236,6 @@ data class DeepLink(
              * repeated char1's followed by a single char2 that's not present in the original
              * uri string.
              */
-            @VisibleForTesting
             fun chooseEncoder(uri: String, char1: Char, char2: Char): String {
                 if (char1 == char2) {
                     throw IllegalArgumentException("char1 and char2 must be different")

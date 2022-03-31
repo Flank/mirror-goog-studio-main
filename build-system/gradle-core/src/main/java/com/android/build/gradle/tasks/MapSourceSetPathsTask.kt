@@ -8,7 +8,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
-import com.android.tools.r8.internal.it
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -187,7 +186,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             task.localResources.setDisallowChanges(
                 creationConfig.sources.res.getLocalSourcesAsFileCollection()
             )
-            if (creationConfig.variantDslInfo.vectorDrawables.useSupportLibrary == false) {
+            if (creationConfig.vectorDrawables.useSupportLibrary == false) {
                 task.generatedPngsOutputDir.setDisallowChanges(
                     (creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES)
                             as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
@@ -59,8 +58,6 @@ public class TransformApiTest {
         wholeProject
                 .getSubproject("plugin")
                 .executor()
-                // uploadArchives is not compatible
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .withFailOnWarning(false)
                 .run("publish");
 

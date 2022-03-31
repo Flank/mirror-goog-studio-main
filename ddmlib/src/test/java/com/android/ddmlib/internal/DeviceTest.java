@@ -66,6 +66,7 @@ public class DeviceTest extends TestCase {
                 .andStubReturn(
                         new AndroidVersion(
                                 AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
+        EasyMock.expect(mMockDevice.supportsFeature(IDevice.Feature.ABB_EXEC)).andStubReturn(true);
         EasyMock.expectLastCall();
         EasyMock.replay(mMockDevice);
         SplitApkInstaller.create(mMockDevice, apks, true, installOptions);
@@ -88,6 +89,7 @@ public class DeviceTest extends TestCase {
                 .andStubReturn(
                         new AndroidVersion(
                                 AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
+        EasyMock.expect(mMockDevice.supportsFeature(IDevice.Feature.ABB_EXEC)).andStubReturn(true);
         EasyMock.expectLastCall();
         EasyMock.replay(mMockDevice);
         RemoteSplitApkInstaller.create(mMockDevice, remoteApkPaths, true, installOptions);

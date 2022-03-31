@@ -61,7 +61,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
     abstract val applicationId: Property<String>
 
     @get:Input
-    abstract val variantType: Property<String>
+    abstract val componentType: Property<String>
 
     @get:Input
     lateinit var screenSizes: Set<String>
@@ -178,8 +178,8 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             task.screenSizes = screenSizes
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
-            task.variantType.set(creationConfig.variantType.toString())
-            task.variantType.disallowChanges()
+            task.componentType.set(creationConfig.componentType.toString())
+            task.componentType.disallowChanges()
 
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
             task.variantOutputs.disallowChanges()

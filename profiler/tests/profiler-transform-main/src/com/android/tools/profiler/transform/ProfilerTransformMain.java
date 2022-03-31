@@ -57,7 +57,7 @@ public class ProfilerTransformMain {
         try {
             JarInputStream inputStream = new JarInputStream(new FileInputStream(inputJar));
             JarOutputStream outputStream =
-                new JarOutputStream(new FileOutputStream(outputJar), inputStream.getManifest());
+                new JarOutputStream(new FileOutputStream(outputJar));
             String propertiesFile = "/tools/base/profiler/tests/profiler-transform-main/profiler.properties";
             System.setProperty(
                     "android.profiler.properties",

@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -174,7 +174,7 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
         @Override
         public String getName() {
             return (taskKind == TaskKind.CONNECTED ? CONNECTED : DEVICE)
-                    + VariantType.ANDROID_TEST_SUFFIX;
+                    + ComponentType.ANDROID_TEST_SUFFIX;
         }
 
         @NonNull

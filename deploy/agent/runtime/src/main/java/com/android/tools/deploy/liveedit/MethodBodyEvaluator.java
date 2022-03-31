@@ -38,28 +38,19 @@ public class MethodBodyEvaluator {
     public MethodBodyEvaluator(byte[] classData, String methodName, String methodDesc) {
         this(
                 new LiveEditContext(MethodBodyEvaluator.class.getClassLoader()),
-                classData,
+                new Interpretable(classData),
                 methodName,
                 methodDesc);
     }
 
     public MethodBodyEvaluator(
-            LiveEditContext context, byte[] classData, String methodName, String methodDesc) {
-        MethodNodeFinder finder = new MethodNodeFinder(classData, methodName, methodDesc);
-        this.context = context;
-        this.method =
+            LiveEditContext context, Interpretable clazz, String methodName, String methodDesc) {
+        MethodNode methodNode = clazz.getMethod(methodName, methodDesc);
+        InterpretedMethod method =
                 new InterpretedMethod(
-                        finder.getTarget(),
-                        finder.getFilename(),
-                        finder.getName(),
-                        finder.getOwnerInternalName());
-        if (method.getTarget() == null) {
-            String msg = String.format("Cannot find target '%s' in:\n", methodName + methodDesc);
-            for (String method : finder.getVisited()) {
-                msg += "  -> " + method + "\n";
-            }
-            throw new IllegalStateException(msg);
-        }
+                        methodNode, clazz.getFilename(), methodName, clazz.getInternalName());
+        this.context = context;
+        this.method = method;
     }
 
     public Object evalStatic(Object[] arguments) {
@@ -76,8 +67,16 @@ public class MethodBodyEvaluator {
                     localIndex++, new ObjectValue(thisObject, Type.getObjectType(objectType)));
         }
 
+        Log.v(
+                "live.deploy",
+                "Interpreting: '"
+                        + method.getOwnerInternalName()
+                        + "."
+                        + target.name
+                        + target.desc);
+
         Type[] argTypes = Type.getArgumentTypes(target.desc);
-        for (int i = 0, len = argTypes.length; i < len; i++) {
+        for (int i = 0; i < argTypes.length; i++) {
             Type type = argTypes[i];
             init.setLocal(localIndex, AndroidEval.makeValue(arguments[i], type));
 

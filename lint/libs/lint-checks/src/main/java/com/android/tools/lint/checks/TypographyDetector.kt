@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -236,35 +237,35 @@ class TypographyDetector : ResourceXmlDetector() {
                             FRACTIONS,
                             element,
                             context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BD', "&#189;", "1/2"),
-                            fix().replace().text("1/2").with("½").build()
+                            getFractionFix(1, 2, "½")
                         )
                     top == "1" && bottom == "4" ->
                         context.report(
                             FRACTIONS,
                             element,
                             context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BC', "&#188;", "1/4"),
-                            fix().replace().text("1/4").with("¼").build()
+                            getFractionFix(1, 4, "¼")
                         )
                     top == "3" && bottom == "4" ->
                         context.report(
                             FRACTIONS,
                             element,
                             context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BE', "&#190;", "3/4"),
-                            fix().replace().text("3/4").with("¾").build()
+                            getFractionFix(3, 4, "¾")
                         )
                     top == "1" && bottom == "3" ->
                         context.report(
                             FRACTIONS,
                             element,
                             context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u2153', "&#8531;", "1/3"),
-                            fix().replace().text("1/3").with("\u2153").build()
+                            getFractionFix(1, 3, "\u2153")
                         )
                     top == "2" && bottom == "3" ->
                         context.report(
                             FRACTIONS,
                             element,
                             context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u2154', "&#8532;", "2/3"),
-                            fix().replace().text("2/3").with("\u2154").build()
+                            getFractionFix(2, 3, "\u2154")
                         )
                 }
             }
@@ -281,6 +282,10 @@ class TypographyDetector : ResourceXmlDetector() {
                 // are probably not very common within Android app strings.
             }
         }
+    }
+
+    private fun getFractionFix(numerator: Int, denominator: Int, replacement: String): LintFix {
+        return fix().replace().pattern("$numerator\\s*/\\s*$denominator").with(replacement).build()
     }
 
     companion object {

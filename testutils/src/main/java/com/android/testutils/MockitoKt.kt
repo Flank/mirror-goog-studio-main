@@ -63,6 +63,11 @@ object MockitoKt {
   inline fun <reified T> InvocationOnMock.getTypedArgument(i: Int): T = getArgument(i, T::class.java)
 
   /**
+   * Convenience wrapper around [ArgumentCaptor] that allows the type to be inferred.
+   */
+  inline fun <reified T> argumentCaptor(): ArgumentCaptor<T> = ArgumentCaptor.forClass(T::class.java)
+
+  /**
    * Wrapper around [Mockito.eq] that doesn't return null.
    * If used with Kotlin functions that do not accept nullable types it causes a "must not be null" exception.
    *

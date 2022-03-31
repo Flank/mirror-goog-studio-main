@@ -52,7 +52,9 @@ public class TransformInModuleWithKotlinTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    // Legacy transforms are incompatible with config caching and will be deprecated.
+                    // Legacy transforms are incompatible with config caching and will be
+                    // deprecated.
+                    // b/226434049
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("transformInModuleWithKotlin")
                     .create();

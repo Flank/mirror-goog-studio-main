@@ -17,20 +17,12 @@
 package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
-import com.android.build.api.variant.impl.DirectoryEntries
-import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
-import com.android.build.api.variant.impl.SourceAndOverlayDirectoriesImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.utils.immutableMapBuilder
-import com.android.builder.core.BuilderConstants
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.SourceProvider
-import com.android.ide.common.rendering.api.ResourceNamespace
-import com.android.ide.common.resources.AssetSet
-import com.android.ide.common.resources.ResourceSet
 import com.google.common.collect.Lists
-import org.gradle.api.file.DirectoryProperty
 import java.io.File
 import java.util.function.Function
 
@@ -39,7 +31,7 @@ import java.util.function.Function
  */
 class VariantSources internal constructor(
     val fullName: String,
-    val variantType: VariantType,
+    val componentType: ComponentType,
     private val defaultSourceProvider: SourceProvider,
     private val buildTypeSourceProvider: SourceProvider? = null,
     /** The list of product flavors. Items earlier in the list override later items.  */

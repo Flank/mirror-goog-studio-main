@@ -1133,21 +1133,30 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             classType: PsiClassType,
             interfaceType: PsiClassType
         ) {
-            val apiDatabase = apiDatabase ?: return
             if (classType == interfaceType) {
                 return
             }
             val evaluator = context.evaluator
             val classTypeInternal = evaluator.getQualifiedName(classType)
             val interfaceTypeInternal = evaluator.getQualifiedName(interfaceType)
-            if (interfaceTypeInternal == null || classTypeInternal == null) {
+            checkCast(node, classTypeInternal, interfaceTypeInternal, implicit = false)
+        }
+
+        private fun checkCast(
+            node: UElement,
+            classType: String?,
+            interfaceType: String?,
+            implicit: Boolean
+        ) {
+            if (interfaceType == null || classType == null) {
                 return
             }
-            if (equivalentName(interfaceTypeInternal, "java/lang/Object")) {
+            if (equivalentName(interfaceType, "java/lang/Object")) {
                 return
             }
 
-            val api = apiDatabase.getValidCastVersion(classTypeInternal, interfaceTypeInternal)
+            val apiDatabase = apiDatabase ?: return
+            val api = apiDatabase.getValidCastVersion(classType, interfaceType)
             if (api == -1) {
                 return
             }
@@ -1171,7 +1180,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             if (condition is UBinaryExpressionWithType) {
                                 val type = condition.type
                                 // Explicitly checked with surrounding instanceof check
-                                if (type == interfaceType) {
+                                if (type is PsiClassType && context.evaluator.getQualifiedName(type) == interfaceType) {
                                     return
                                 }
                             }
@@ -1183,7 +1192,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 val condition = case.skipParenthesizedExprDown()
                                 if (condition is UBinaryExpressionWithType) {
                                     val type = condition.type
-                                    if (type == interfaceType) {
+                                    if (type is PsiClassType && context.evaluator.getQualifiedName(type) == interfaceType) {
                                         return
                                     }
                                 }
@@ -1197,18 +1206,19 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 curr = curr.uastParent ?: break
             }
 
+            val castType = if (implicit) "Implicit cast" else "Cast"
             val location = context.getLocation(node)
             val message: String
-            val to = interfaceType.className
-            val from = classType.className
-            message = if (interfaceTypeInternal == classTypeInternal) {
-                "Cast to `$to` requires API level $api (current min is %1\$d)"
+            val to = interfaceType.substringAfterLast('.')
+            val from = classType.substringAfterLast('.')
+            message = if (interfaceType == classType) {
+                "$castType to `$to` requires API level $api (current min is %1\$d)"
             } else {
-                "Cast from `$from` to `$to` requires API level $api (current min is %1\$d)"
+                "$castType from `$from` to `$to` requires API level $api (current min is %1\$d)"
             }
 
             report(
-                UNSUPPORTED, node, location, message, apiLevelFix(api), classTypeInternal,
+                UNSUPPORTED, node, location, message, apiLevelFix(api), classType,
                 requires = api, min = minSdk
             )
         }
@@ -1515,15 +1525,25 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val owner = evaluator.getQualifiedName(containingClass)
                 ?: return // Couldn't resolve type
 
-            // Support library: we can do compile time resolution
-            if (startsWithEquivalentPrefix(owner, "android/support/")) {
-                return
-            }
+            val name = getInternalMethodName(method)
+
             if (!apiDatabase.containsClass(owner)) {
+                // Not a method in the API database, but it could be an extension method
+                // decorating one of the SDK methods (e.g. "fun AutoCloseable.use(...)"),
+                // so check for that. For now, we've just hardcoded this to the Kotlin
+                // stdlib "use" method, but ideally we'll handle additional
+                if (name == "use" && (owner == KOTLIN_CLOSEABLE_EXT || owner == KOTLIN_AUTO_CLOSEABLE_EXT)) {
+                    val receiverType = call.receiverType as? PsiClassType ?: return
+                    val receiverTypeFqn = context.evaluator.getQualifiedName(receiverType)
+                    checkCast(
+                        call.methodIdentifier ?: call, receiverTypeFqn,
+                        if (owner == KOTLIN_CLOSEABLE_EXT) "java.io.Closeable" else "java.lang.AutoCloseable", implicit = true
+                    )
+                }
+
                 return
             }
 
-            val name = getInternalMethodName(method)
             val desc = evaluator.getMethodDescription(
                 method,
                 includeName = false,
@@ -2346,6 +2366,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
         private const val ROBO_ELECTRIC_CONFIG_ANNOTATION = "org.robolectric.annotation.Config"
         private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
+
+        private const val KOTLIN_CLOSEABLE_EXT = "kotlin.io.CloseableKt"
+        private const val KOTLIN_AUTO_CLOSEABLE_EXT = "kotlin.jdk7.AutoCloseableKt"
 
         private val JAVA_IMPLEMENTATION = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
 

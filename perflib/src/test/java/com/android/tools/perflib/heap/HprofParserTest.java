@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import junit.framework.TestCase;
+import kotlin.sequences.SequencesKt;
 
 public class HprofParserTest extends TestCase {
     private static final String TEST_MAP =
@@ -213,7 +214,7 @@ public class HprofParserTest extends TestCase {
         assertEquals(1, firstGet.size());
         assertEquals(firstGet.size(), secondGet.size());
         Instance child = mSnapshot.findInstance(2);
-        assertEquals(1, child.getHardReverseReferences().size());
+        assertEquals(1, SequencesKt.count(child.getHardReverseReferences()));
     }
 
     public void testResolveReferences() {

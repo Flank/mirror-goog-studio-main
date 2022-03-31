@@ -175,7 +175,7 @@ interface AndroidComponentsExtension<
      * the expected directories will be interpreted as a flat namespace.
      *
      * Therefore, any [org.gradle.api.Task] that needs access to the entire list of source folders
-     * can just use the [Sources.extras]'s [SourceDirectories.all] method for that source type.
+     * can just use the [Sources.extras]'s [Flat.all] method for that source type.
      *
      * However, If you need to have overriding priorities between the expected directories and
      * therefore require a merging activity, you can still use this API but you will need to

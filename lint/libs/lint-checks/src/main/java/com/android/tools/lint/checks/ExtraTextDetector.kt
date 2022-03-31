@@ -17,11 +17,13 @@
 package com.android.tools.lint.checks
 
 import com.android.resources.ResourceFolderType
+import com.android.resources.ResourceFolderType.RAW
+import com.android.resources.ResourceFolderType.VALUES
+import com.android.resources.ResourceFolderType.XML
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -43,12 +45,13 @@ class ExtraTextDetector : ResourceXmlDetector() {
             id = "ExtraText",
             briefDescription = "Extraneous text in resource files",
             explanation = """
-            Layout resource files should only contain elements and attributes. Any XML text content found \
+            Non-value resource files should only contain elements and attributes. Any XML text content found \
             in the file is likely accidental (and potentially dangerous if the text resembles XML and the \
-            developer believes the text to be functional)""",
+            developer believes the text to be functional).
+            """,
             category = Category.CORRECTNESS,
             priority = 3,
-            severity = Severity.WARNING,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 ExtraTextDetector::class.java,
                 Scope.MANIFEST_AND_RESOURCE_SCOPE,
@@ -58,72 +61,52 @@ class ExtraTextDetector : ResourceXmlDetector() {
         )
     }
 
-    private var foundText: Boolean = false
-
-    override fun appliesTo(folderType: ResourceFolderType): Boolean =
-        folderType == ResourceFolderType.LAYOUT ||
-            folderType == ResourceFolderType.MENU ||
-            folderType == ResourceFolderType.ANIM ||
-            folderType == ResourceFolderType.ANIMATOR ||
-            folderType == ResourceFolderType.DRAWABLE ||
-            folderType == ResourceFolderType.COLOR ||
-            folderType == ResourceFolderType.NAVIGATION
+    override fun appliesTo(folderType: ResourceFolderType): Boolean = folderType != VALUES && folderType != XML && folderType != RAW
 
     override fun visitDocument(context: XmlContext, document: Document) {
-        foundText = false
+        warnings = 0
+        errors = 0
         visitNode(context, document)
     }
 
+    private var warnings = 0
+    private var errors = 0
+
     private fun visitNode(context: XmlContext, node: Node) {
+        if (errors > 0) {
+            // We only report at most one error per file
+            return
+        }
+
         val nodeType = node.nodeType
-        if (nodeType == Node.TEXT_NODE && !foundText) {
+        if (nodeType == Node.TEXT_NODE) {
             val text = node.nodeValue
             var i = 0
             val n = text.length
             while (i < n) {
                 val c = text[i]
                 if (!Character.isWhitespace(c)) {
-                    var snippet = text.trim { it <= ' ' }
+                    var snippet = text.trim().replace('\n', ' ').replace(Regex("\\s+"), " ")
                     val maxLength = 100
                     if (snippet.length > maxLength) {
                         snippet = snippet.substring(0, maxLength) + "..."
                     }
-                    var location = context.getLocation(node)
-                    if (i > 0) {
-                        // Adjust the error position to point to the beginning of
-                        // the text rather than the beginning of the text node
-                        // (which is often the newline at the end of the previous
-                        // line and the indentation)
-                        var start = location.start
-                        if (start != null) {
-                            var line = start.line
-                            var column = start.column
-                            var offset = start.offset
+                    val location = context.getLocation(node)
+                    val warnOnly = text.none { it.isJavaIdentifierPart() }
+                    if (!warnOnly || warnings == 0) {
+                        val type = context.resourceFolderType?.getName() ?: "manifest"
+                        val incident = Incident(ISSUE, node, location, "Unexpected text found in $type file: \"$snippet\"")
 
-                            for (j in 0 until i) {
-                                offset++
-
-                                if (text[j] == '\n') {
-                                    if (line != -1) {
-                                        line++
-                                    }
-                                    if (column != -1) {
-                                        column = 0
-                                    }
-                                } else if (column != -1) {
-                                    column++
-                                }
-                            }
-
-                            start = DefaultPosition(line, column, offset)
-                            location = Location.create(context.file, start, location.end)
+                        // If the string only contains punctuation, only flag as a warning
+                        if (warnOnly) {
+                            incident.overrideSeverity(Severity.WARNING)
+                            warnings++
+                        } else {
+                            errors++
                         }
+
+                        context.report(incident)
                     }
-                    context.report(
-                        ISSUE, node, location,
-                        "Unexpected text found in layout file: \"$snippet\""
-                    )
-                    foundText = true
                     break
                 }
                 i++

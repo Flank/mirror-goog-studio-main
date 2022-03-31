@@ -90,6 +90,9 @@ expected result : "Got an APK...." message.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 if (it.isDebug) {
+                    it.variantApiAccess.artifactAccessList.forEach { artifactAccess ->
+                        println(artifactAccess.type)
+                    }
                     Truth.assertThat(it.variantApiAccess.artifactAccessList).hasSize(1)
                     val artifactAccess = it.variantApiAccess.artifactAccessList[0]
                     Truth.assertThat(artifactAccess.type).isEqualTo(

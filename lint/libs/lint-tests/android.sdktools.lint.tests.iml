@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/codehaus/groovy/groovy/3.0.9/groovy-3.0.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy/3.0.9/groovy-3.0.9.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -31,14 +31,5 @@
     <orderEntry type="module" module-name="android.sdktools.common.testfixtures" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.lint-checks" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="studio-sdk" level="project" />
-    <orderEntry type="module-library">
-      <library name="liblint-checks-proto">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../bazel-bin/tools/base/lint/liblint-checks-proto.lib.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
   </component>
 </module>

@@ -15,13 +15,24 @@
  */
 package com.android.ddmlib;
 
-import com.android.ddmlib.internal.DeviceTest;
+import static com.android.ddmlib.IntegrationTest.getPathToAdb;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
+
+import com.android.annotations.NonNull;
+import com.android.fakeadbserver.DeviceState;
+import com.android.fakeadbserver.FakeAdbServer;
+import com.android.fakeadbserver.PackageManager;
 import com.android.sdklib.AndroidVersion;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import junit.framework.TestSuite;
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,201 +40,244 @@ import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link RemoteSplitApkInstaller}. */
 @RunWith(JUnit4.class)
-public class RemoteSplitApkInstallerTest extends TestCase {
+public class RemoteSplitApkInstallerTest extends TestSuite {
 
-    private IDevice mMockIDevice;
-    private List<String> mRemoteApkPaths;
-    private List<String> mInstallOptions;
-    private Long mTimeout;
-    private TimeUnit mTimeUnit;
+    private List<String> remoteApkPaths =
+            Arrays.asList("/data/local/tmp/foo.apk", "/data/local/tmp/foo.dm");
+    private List<String> installOptions = Arrays.asList("-d");
+    private Long timeout = 1800L;
+    private TimeUnit timeUnit = TimeUnit.SECONDS;
 
-    @Override
+    public static final String SERIAL = "test_device_001";
+    public static final String MANUFACTURER = "Google";
+    public static final String MODEL = "Nexus Silver";
+    public static final String RELEASE = "8.0";
+    private FakeAdbServer myServer;
+
     @Before
-    public void setUp() throws Exception {
-        mMockIDevice = DeviceTest.createMockDevice();
-        mRemoteApkPaths = new ArrayList<String>();
-        mRemoteApkPaths.add("/data/local/tmp/foo.apk");
-        mRemoteApkPaths.add("/data/local/tmp/foo.dm");
-        mInstallOptions = new ArrayList<String>();
-        mInstallOptions.add("-d");
-        mTimeout = new Long(1800);
-        mTimeUnit = TimeUnit.SECONDS;
+    public void setUp() throws IOException {
+        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
+        builder.installDefaultCommandHandlers();
+        myServer = builder.build();
+        // Start server execution.
+        myServer.start();
+        // Test that we obtain 1 device via the ddmlib APIs
+        AndroidDebugBridge.enableFakeAdbServerMode(myServer.getPort());
+        AndroidDebugBridge.initIfNeeded(false);
+        AndroidDebugBridge bridge =
+                AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+        assertNotNull("Debug bridge", bridge);
     }
 
-    @Test
-    public void testInstall() throws Exception {
-        DeviceTest.injectShellResponse(
-                mMockIDevice, "Success: created install session [2082011841]\r\n");
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
-        installer.install(mTimeout, mTimeUnit);
-    }
-
-    @Test
-    public void testInstallWriteFailure() throws Exception {
-        DeviceTest.injectShellResponse(
-                mMockIDevice, "Success: created install session [2082011841]\r\n");
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        DeviceTest.injectShellResponse(mMockIDevice, "Failure [INSTALL_FAILED_INVALID_APK]\r\n");
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
+    @After
+    public void tearDown() {
         try {
-            installer.install(mTimeout, mTimeUnit);
-            fail("InstallException expected");
-        } catch (InstallException e) {
-            //expected
+            // mServer can be null if the FakeAdbTestRule is not being used as a rule but instead
+            // as a helper class to setup Adb. This is sometimes done when test want to control the
+            // timing of when an adb server is started / stopped
+            if (myServer != null) {
+                myServer.stop();
+                myServer.awaitServerTermination(1000, TimeUnit.MILLISECONDS);
+            }
+            AndroidDebugBridge.terminate();
+        } catch (InterruptedException ex) {
+            // disregard
         }
     }
 
+    public IDevice connectDevice(int apiLevel) throws Throwable {
+
+        CountDownLatch deviceLatch = new CountDownLatch(1);
+        AndroidDebugBridge.IDeviceChangeListener deviceListener =
+                new AndroidDebugBridge.IDeviceChangeListener() {
+                    @Override
+                    public void deviceConnected(@NonNull IDevice device) {
+                        deviceLatch.countDown();
+                    }
+
+                    @Override
+                    public void deviceDisconnected(@NonNull IDevice device) {}
+
+                    @Override
+                    public void deviceChanged(@NonNull IDevice device, int changeMask) {}
+                };
+        AndroidDebugBridge.addDeviceChangeListener(deviceListener);
+        DeviceState state =
+                myServer.connectDevice(
+                                SERIAL,
+                                MANUFACTURER,
+                                MODEL,
+                                RELEASE,
+                                Integer.toString(apiLevel),
+                                DeviceState.HostConnectionType.USB)
+                        .get();
+        assertThat(deviceLatch.await(5000, TimeUnit.MILLISECONDS)).isTrue();
+        AndroidDebugBridge.removeDeviceChangeListener(deviceListener);
+        state.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
+
+        IDevice device = AndroidDebugBridge.getBridge().getDevices()[0];
+        device.getProperty("foo");
+        long waitUntil = System.currentTimeMillis() + 2000;
+        while (!device.arePropertiesSet()) {
+            if (System.currentTimeMillis() > waitUntil) {
+                throw new IllegalStateException("Unable to retrieve device propeties");
+            }
+        }
+
+        return device;
+    }
+
     @Test
-    public void testCreateWithApiLevelException() throws Exception {
-        EasyMock.expect(mMockIDevice.getVersion())
-                .andStubReturn(
-                        new AndroidVersion(
-                                AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel() - 1));
-        EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
+    public void testInstall() throws Throwable {
+        IDevice device = connectDevice(30);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        installer.install(timeout, timeUnit);
+    }
+
+    @Test
+    public void testCreateWithApiLevelException() throws Throwable {
+        int unsupportedAPI = AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel() - 1;
+
         try {
-            RemoteSplitApkInstaller.create(mMockIDevice, mRemoteApkPaths, true, mInstallOptions);
-            fail("IllegalArgumentException expected");
+            IDevice device = connectDevice(unsupportedAPI);
+            RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+            Assert.fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
     }
 
     @Test
-    public void testCreateWithArgumentException() throws Exception {
-        EasyMock.expect(mMockIDevice.getVersion())
-                .andStubReturn(
-                        new AndroidVersion(
-                                AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
-        EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
+    public void testCreateWithArgumentException() throws Throwable {
         try {
-            RemoteSplitApkInstaller.create(
-                    mMockIDevice, new ArrayList<String>(), true, mInstallOptions);
-            fail("IllegalArgumentException expected");
+            IDevice device = connectDevice(30);
+            RemoteSplitApkInstaller installer =
+                    RemoteSplitApkInstaller.create(device, Arrays.asList(), false, installOptions);
+            Assert.fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
     }
 
     @Test
-    public void testCreateMultiInstallSession() throws Exception {
-        DeviceTest.injectShellResponse(
-                mMockIDevice, "Success: created install session [2082011841]\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
-        assertEquals(
-                "2082011841", installer.createMultiInstallSession("-r -d", mTimeout, mTimeUnit));
+    public void testCreateMultiInstallSession() throws Throwable {
+        IDevice device = connectDevice(30);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertEquals(
+                "1234", installer.createMultiInstallSession("-r -d", timeout, timeUnit));
     }
 
     @Test
-    public void testCreateMultiInstallSessionNoSessionId() throws Exception {
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
+    public void testCreateMultiInstallSessionNoSessionId() throws Throwable {
+        IDevice device = connectDevice(24);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
         try {
-            installer.createMultiInstallSession("-d", mTimeout, mTimeUnit);
-            fail("InstallException expected");
+            installer.createMultiInstallSession(PackageManager.BAD_FLAG, timeout, timeUnit);
+            Assert.fail("InstallException expected");
         } catch (InstallException e) {
             //expected
         }
     }
 
     @Test
-    public void testWriteRemoteApk() throws Exception {
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
-        assertTrue(installer.writeRemoteApk("123456", mRemoteApkPaths.get(0), mTimeout, mTimeUnit));
+    public void testWriteRemoteApk() throws Throwable {
+        IDevice device = connectDevice(30);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertTrue(
+                installer.writeRemoteApk("123456", remoteApkPaths.get(0), timeout, timeUnit));
     }
 
     @Test
-    public void testWriteRemoteApkFailure() throws Exception {
-        DeviceTest.injectShellResponse(mMockIDevice, "Failure [INSTALL_FAILED_INVALID_APK]\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
-        assertFalse(
-                installer.writeRemoteApk("123456", mRemoteApkPaths.get(0), mTimeout, mTimeUnit));
+    public void testWriteRemoteApkFailure() throws Throwable {
+        IDevice device = connectDevice(30);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertFalse(
+                installer.writeRemoteApk(
+                        PackageManager.BAD_SESSION, remoteApkPaths.get(0), timeout, timeUnit));
     }
 
     @Test
-    public void testInstallCommit() throws Exception {
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
-        installer.installCommit("123456", mTimeout, mTimeUnit);
+    public void testInstallCommit() throws Throwable {
+        IDevice device = connectDevice(24);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        installer.installCommit("12345", timeout, timeUnit);
     }
 
     @Test
-    public void testInstallCommitFailure() throws Exception {
-        DeviceTest.injectShellResponse(mMockIDevice, "Failure [INSTALL_FAILED_INVALID_APK]\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
+    public void testInstallCommitFailure() throws Throwable {
+        IDevice device = connectDevice(30);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
         try {
-            installer.installCommit("123456", mTimeout, mTimeUnit);
-            fail("InstallException expected");
+            installer.installCommit(PackageManager.BAD_SESSION, timeout, timeUnit);
+            Assert.fail("InstallException expected");
         } catch (InstallException e) {
             //expected
         }
     }
 
     @Test
-    public void testInstallAbandon() throws Exception {
-        DeviceTest.injectShellResponse(mMockIDevice, "Success\r\n");
-        RemoteSplitApkInstaller installer = createInstaller();
-        installer.installAbandon("123456", mTimeout, mTimeUnit);
+    public void testInstallAbandon() throws Throwable {
+        IDevice device = connectDevice(24);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        installer.installAbandon("12345", timeout, timeUnit);
     }
 
     @Test
-    public void testGetOptions() throws Exception {
-        RemoteSplitApkInstaller installer = createInstaller();
-        assertEquals("-r -d", SplitApkInstallerBase.getOptions(true, mInstallOptions));
-        assertEquals("-d", SplitApkInstallerBase.getOptions(false, mInstallOptions));
-        assertEquals("-r", SplitApkInstallerBase.getOptions(true, new ArrayList<String>()));
-        assertEquals("", SplitApkInstallerBase.getOptions(false, new ArrayList<String>()));
-        assertEquals(
-                "-r -d", SplitApkInstallerBase.getOptions(true, false, "123", mInstallOptions));
-        assertEquals(
+    public void testGetOptions() throws Throwable {
+        IDevice device = connectDevice(24);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertEquals("-r -d", SplitApkInstallerBase.getOptions(true, installOptions));
+        Assert.assertEquals("-d", SplitApkInstallerBase.getOptions(false, installOptions));
+        Assert.assertEquals("-r", SplitApkInstallerBase.getOptions(true, new ArrayList<String>()));
+        Assert.assertEquals("", SplitApkInstallerBase.getOptions(false, new ArrayList<String>()));
+        Assert.assertEquals(
+                "-r -d", SplitApkInstallerBase.getOptions(true, false, "123", installOptions));
+        Assert.assertEquals(
                 "-r -p 123 -d",
-                SplitApkInstallerBase.getOptions(true, true, "123", mInstallOptions));
-        mInstallOptions.add("-x");
-        assertEquals("-r -d -x", SplitApkInstallerBase.getOptions(true, mInstallOptions));
-        assertEquals(
+                SplitApkInstallerBase.getOptions(true, true, "123", installOptions));
+
+        List<String> extraOptions = new ArrayList<>(installOptions);
+        extraOptions.add("-x");
+        Assert.assertEquals("-r -d -x", SplitApkInstallerBase.getOptions(true, extraOptions));
+        Assert.assertEquals(
                 "-r -p 123 -d -x",
-                SplitApkInstallerBase.getOptions(true, true, "123", mInstallOptions));
+                SplitApkInstallerBase.getOptions(true, true, "123", extraOptions));
     }
 
     @Test
-    public void testGetInstallOldPrefix() throws Exception {
-        EasyMock.expect(mMockIDevice.getVersion())
-                .andStubReturn(
-                        new AndroidVersion(AndroidVersion.BINDER_CMD_AVAILABLE.getApiLevel() - 1));
-        EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
+    public void testGetInstallPmPrefix() throws Throwable {
+        IDevice device = connectDevice(23);
         RemoteSplitApkInstaller installer =
-                RemoteSplitApkInstaller.create(
-                        mMockIDevice, mRemoteApkPaths, true, mInstallOptions);
-        assertEquals("pm", installer.getPrefix());
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertEquals(AdbHelper.AdbService.SHELL, installer.getService());
+        Assert.assertEquals("pm", installer.getPrefix());
     }
 
     @Test
-    public void testGetInstalPrefix() throws Exception {
-        EasyMock.expect(mMockIDevice.getVersion())
-                .andStubReturn(
-                        new AndroidVersion(AndroidVersion.BINDER_CMD_AVAILABLE.getApiLevel()));
-        EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
+    public void testGetInstallCmdPrefix() throws Throwable {
+        IDevice device = connectDevice(24);
         RemoteSplitApkInstaller installer =
-                RemoteSplitApkInstaller.create(
-                        mMockIDevice, mRemoteApkPaths, true, mInstallOptions);
-        assertEquals("cmd package", installer.getPrefix());
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertEquals(AdbHelper.AdbService.SHELL, installer.getService());
+        Assert.assertEquals("cmd package", installer.getPrefix());
     }
 
-    private RemoteSplitApkInstaller createInstaller() {
-        EasyMock.expect(mMockIDevice.getVersion())
-                .andStubReturn(
-                        new AndroidVersion(
-                                AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
-        EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
-        return RemoteSplitApkInstaller.create(mMockIDevice, mRemoteApkPaths, true, mInstallOptions);
+    @Test
+    public void testGetInstallAbbExecPrefix() throws Throwable {
+        IDevice device = connectDevice(30);
+        RemoteSplitApkInstaller installer =
+                RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
+        Assert.assertEquals(AdbHelper.AdbService.ABB_EXEC, installer.getService());
+        Assert.assertEquals("package", installer.getPrefix());
     }
+
 }

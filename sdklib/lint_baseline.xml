@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 7.2.0-dev">
+<issues format="5" by="lint 7.3.0-dev">
 
     <issue
         id="DefaultLocale"
@@ -46,7 +46,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalDirInfo.java"
-            line="191"/>
+            line="190"/>
     </issue>
 
     <issue
@@ -54,7 +54,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalDirInfo.java"
-            line="193"/>
+            line="192"/>
     </issue>
 
     <issue
@@ -62,7 +62,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalPlatformPkgInfo.java"
-            line="96"/>
+            line="94"/>
     </issue>
 
     <issue
@@ -70,7 +70,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalPlatformPkgInfo.java"
-            line="101"/>
+            line="99"/>
     </issue>
 
     <issue
@@ -158,7 +158,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/devices/Storage.java"
-            line="243"/>
+            line="244"/>
     </issue>
 
     <issue
@@ -166,15 +166,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/devices/Storage.java"
-            line="268"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Storage.java"
-            line="279"/>
+            line="280"/>
     </issue>
 
     <issue
@@ -198,7 +190,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/LegacyLocalRepoLoader.java"
-            line="86"/>
+            line="85"/>
     </issue>
 
     <issue
@@ -206,7 +198,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalDirInfo.java"
-            line="227"/>
+            line="226"/>
     </issue>
 
     <issue
@@ -214,7 +206,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalDirInfo.java"
-            line="229"/>
+            line="228"/>
     </issue>
 
     <issue
@@ -222,7 +214,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalDirInfo.java"
-            line="273"/>
+            line="272"/>
     </issue>
 
     <issue
@@ -230,7 +222,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalDirInfo.java"
-            line="275"/>
+            line="274"/>
     </issue>
 
     <issue

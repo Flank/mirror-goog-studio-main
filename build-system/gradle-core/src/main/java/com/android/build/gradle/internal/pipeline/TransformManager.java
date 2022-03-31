@@ -329,7 +329,7 @@ public class TransformManager extends FilterableStreamCollection {
                                 SdkConstants.FD_INTERMEDIATES,
                                 FD_TRANSFORMS,
                                 transform.getName(),
-                                creationConfig.getVariantDslInfo().getDirectorySegments()));
+                                creationConfig.getPaths().getDirectorySegments()));
 
         // create the output
         IntermediateStream outputStream =

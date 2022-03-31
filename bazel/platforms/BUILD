@@ -44,10 +44,31 @@ platform(
     ),
 )
 
+constraint_setting(
+    name = "macos_version",
+)
+
+constraint_value(
+    name = "macos_latest",
+    constraint_setting = ":macos_version",
+)
+
 platform(
     name = "macos",
     constraint_values = [
         "@platforms//cpu:x86_64",
         "@platforms//os:macos",
+        ":macos_latest",
     ],
+)
+
+constraint_value(
+    name = "macos_10.13",
+    constraint_setting = ":macos_version",
+)
+
+platform(
+    name = "macpro10.13",
+    constraint_values = [":macos_10.13"],
+    parents = [":macos"],
 )

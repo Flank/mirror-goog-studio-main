@@ -144,8 +144,6 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 
   void willRestore() override;
 
-  void onMarkCTM(const char*) override;
-
   void didConcat44(const SkM44& matrix) override;
 
   void didSetM44(const SkM44& matrix) override;

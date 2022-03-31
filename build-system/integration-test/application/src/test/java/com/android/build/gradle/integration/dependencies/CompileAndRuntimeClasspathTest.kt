@@ -65,8 +65,10 @@ class CompileAndRuntimeClasspathTest {
         )
 
         // DependencyReportTask is not compatible with configuration caching
+        // See (https://github.com/gradle/gradle/issues/17470)
         val result =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+                .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=2")
                 .run("dependencies")
         result.stdout.use {
             ScannerSubject.assertThat(it).contains(

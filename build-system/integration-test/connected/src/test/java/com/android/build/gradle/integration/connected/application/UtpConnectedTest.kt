@@ -48,7 +48,7 @@ class UtpConnectedTest {
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
         const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
         const val AGGREGATED_TEST_RESULT_PB = "build/outputs/androidTest-results/connected/test-result.pb"
-        const val TEST_COV_XML = "build/reports/coverage/androidTest/debug/report.xml"
+        const val TEST_COV_XML = "build/reports/coverage/androidTest/debug/connected/report.xml"
         const val ENABLE_UTP_TEST_REPORT_PROPERTY = "com.android.tools.utp.GradleAndroidProjectResolverExtension.enable"
         const val TEST_ADDITIONAL_OUTPUT = "build/outputs/connected_android_test_additional_output/debugAndroidTest/connected/emulator-5554 - 10"
     }

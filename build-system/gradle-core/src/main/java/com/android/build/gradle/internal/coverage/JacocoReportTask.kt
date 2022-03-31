@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.core.BuilderConstants
 import com.android.utils.usLocaleCapitalize
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
@@ -143,7 +144,8 @@ abstract class JacocoReportTask : NonIncrementalTask() {
 
     abstract class BaseCreationAction(
         testComponentProperties: TestComponentCreationConfig,
-    protected open val jacocoAntConfiguration: Configuration? = null
+        protected open val jacocoAntConfiguration: Configuration? = null,
+        private val coverageReportSubDirName: String = "",
     ) : VariantTaskCreationAction<JacocoReportTask, TestComponentCreationConfig>
     (testComponentProperties) {
 
@@ -160,7 +162,13 @@ abstract class JacocoReportTask : NonIncrementalTask() {
         override fun configure(task: JacocoReportTask) {
             super.configure(task)
             task.jacocoClasspath.setFrom(jacocoAntConfiguration)
-            task.outputReportDir.set(creationConfig.paths.coverageReportDir)
+            if (coverageReportSubDirName.isNotBlank()) {
+                task.outputReportDir.set(creationConfig.paths.coverageReportDir.map {
+                    it.dir(coverageReportSubDirName)
+                })
+            } else {
+                task.outputReportDir.set(creationConfig.paths.coverageReportDir)
+            }
             task.outputReportDir.disallowChanges()
             task.reportName.setDisallowChanges(creationConfig.testedConfig.name)
             task.tabWidth.setDisallowChanges(4)
@@ -189,7 +197,8 @@ abstract class JacocoReportTask : NonIncrementalTask() {
     class CreationActionConnectedTest(
         testComponentProperties: TestComponentImpl,
         override val jacocoAntConfiguration: Configuration
-    ) : BaseCreationAction(testComponentProperties, jacocoAntConfiguration) {
+    ) : BaseCreationAction(
+        testComponentProperties, jacocoAntConfiguration, BuilderConstants.CONNECTED) {
 
         override fun configure(task: JacocoReportTask) {
             super.configure(task)
@@ -207,7 +216,8 @@ abstract class JacocoReportTask : NonIncrementalTask() {
     class CreationActionManagedDeviceTest(
         testComponentProperties: TestComponentImpl,
         override val jacocoAntConfiguration: Configuration
-    ) : BaseCreationAction(testComponentProperties, jacocoAntConfiguration) {
+    ) : BaseCreationAction(
+        testComponentProperties, jacocoAntConfiguration, BuilderConstants.MANAGED_DEVICE) {
 
         override val name: String
             get() = computeTaskName("createManagedDevice", "CoverageReport")

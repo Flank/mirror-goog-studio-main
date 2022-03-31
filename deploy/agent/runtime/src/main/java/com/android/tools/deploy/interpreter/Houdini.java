@@ -48,6 +48,9 @@ class Houdini {
     }
 
     public static Throwable clean(Throwable t) {
+        if (!HoudiniConfiguration.ENABLED) {
+            return t;
+        }
         ensureStack();
         if (frames.get().size() == 0) {
             return t;

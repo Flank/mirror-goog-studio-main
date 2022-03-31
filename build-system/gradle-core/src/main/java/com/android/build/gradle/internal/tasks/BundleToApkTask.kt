@@ -113,6 +113,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
                     keyPassword = parameters.keyPassword.orNull
                 )
                 .setLocalTestingMode(parameters.enableLocalTesting.get())
+		.setEnableApkSerializerWithoutBundleRecompression(true)
 
             command.build().execute()
         }

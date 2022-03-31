@@ -16,6 +16,8 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.gradle.internal.scope.ProjectInfo
+import com.android.build.gradle.internal.services.VariantServices
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -29,7 +31,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
-import java.io.IOException
 
 internal class AbstractSourceDirectoriesImplTest {
 
@@ -56,7 +57,7 @@ internal class AbstractSourceDirectoriesImplTest {
     fun testAddSrcDir() {
         val testTarget = createTestTarget()
         val addedSource = temporaryFolder.newFolder("somewhere/safe")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
 
@@ -71,7 +72,7 @@ internal class AbstractSourceDirectoriesImplTest {
     fun testAddIllegalSrcDir() {
         val testTarget = createTestTarget()
         val addedSource = File(temporaryFolder.root, "somewhere/not/existing")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
     }
@@ -80,7 +81,7 @@ internal class AbstractSourceDirectoriesImplTest {
     fun testAddIllegalFileAsSrcDir() {
         val testTarget = createTestTarget()
         val addedSource = temporaryFolder.newFile("new_file")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
     }
@@ -92,15 +93,11 @@ internal class AbstractSourceDirectoriesImplTest {
             abstract val output: DirectoryProperty
         }
 
-        val addedSource = temporaryFolder.newFolder("added/from/task")
-        val taskProvider = project.tasks.register("srcAddingTask", AddingTask::class.java) { task ->
-            task.output.set(project.objects.directoryProperty().also {
-                it.set(addedSource)
-            })
-        }
+        val addedSource = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
+        val taskProvider = project.tasks.register("srcAddingTask", AddingTask::class.java)
 
         val testTarget = createTestTarget()
-        testTarget.add(taskProvider, AddingTask::output)
+        testTarget.addGeneratedSourceDirectory(taskProvider, AddingTask::output)
         Truth.assertThat(listOfSources.size).isEqualTo(1)
         val directoryProperty = listOfSources.single().asFiles { project.objects.directoryProperty() }
         Truth.assertThat(directoryProperty.get().asFile.absolutePath).isEqualTo(
@@ -115,7 +112,7 @@ internal class AbstractSourceDirectoriesImplTest {
         Mockito.`when`(pattern.excludes).thenReturn(setOf("*.bak"))
         val testTarget = createTestTarget(pattern)
         val addedSource = temporaryFolder.newFolder("somewhere/safe")
-        testTarget.addSrcDir(
+        testTarget.addStaticSourceDirectory(
             addedSource.absolutePath
         )
 
@@ -126,10 +123,16 @@ internal class AbstractSourceDirectoriesImplTest {
         Truth.assertThat(filter?.excludes).containsExactly("*.bak")
     }
 
-    private fun createTestTarget(patternFilterable: PatternFilterable? = null) =
-        object: AbstractSourceDirectoriesImpl(
+    private fun createTestTarget(patternFilterable: PatternFilterable? = null): SourceDirectoriesImpl {
+        val variantServices = Mockito.mock(VariantServices::class.java)
+        val projectInfo = Mockito.mock(ProjectInfo::class.java)
+        Mockito.`when`(variantServices.projectInfo).thenReturn(projectInfo)
+        Mockito.`when`(projectInfo.projectDirectory).thenReturn(project.layout.projectDirectory)
+        Mockito.`when`(projectInfo.buildDirectory).thenReturn(project.layout.buildDirectory)
+
+        return object : SourceDirectoriesImpl(
             "_for_test",
-            project.layout.projectDirectory,
+            variantServices,
             patternFilterable
         ) {
             override fun addSource(directoryEntry: DirectoryEntry) {
@@ -139,4 +142,5 @@ internal class AbstractSourceDirectoriesImplTest {
             override fun variantSourcesForModel(filter: (DirectoryEntry) -> Boolean): List<File> =
                 emptyList()
         }
+    }
 }

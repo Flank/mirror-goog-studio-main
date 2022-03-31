@@ -77,8 +77,6 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
 
     @Test
     fun testNativeDebugSymbolsOutput() {
-        // TODO(169266007) Re-enable after 169266007 is fixed
-        Assume.assumeTrue(debugSymbolLevel != FULL)
         // add native libs to app and feature modules
         listOf("app", "feature1", "feature2").forEach {
             val subProject = project.getSubproject(":$it")

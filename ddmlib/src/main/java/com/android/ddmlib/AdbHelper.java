@@ -116,8 +116,7 @@ public final class AdbHelper {
             adbChan.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
             setDevice(adbChan, device);
 
-            String serviceName = service.name().toLowerCase(Locale.US);
-            byte[] request = formAdbRequest(serviceName + ":" + command);
+            byte[] request = formAdbRequest(service, command);
             write(adbChan, request);
 
             AdbResponse resp = readAdbResponse(adbChan, false);
@@ -125,7 +124,7 @@ public final class AdbHelper {
                 Log.e(
                         "ddms",
                         "ADB rejected "
-                                + serviceName
+                                + service.name().toLowerCase(Locale.US)
                                 + "command ("
                                 + command
                                 + "): "
@@ -291,6 +290,43 @@ public final class AdbHelper {
         request.put(header);
         request.put(payload);
         return request.array();
+    }
+
+    /**
+     * For legacy reason, this method expect space separated cmd parameters, regardless of the
+     * service requested.
+     *
+     * @param service
+     * @param cmd Command parts must be SPACE separated.
+     * @return Wire encoding of
+     */
+    static byte[] formAdbRequest(AdbService service, String cmd) {
+        String[] args = cmd.split(" ");
+        return formAdbRequest(service, args);
+    }
+
+    /**
+     * See #formAdbRequest(String). Factor-in ADB service, such as ABB_EXEC, which may warrant
+     * different separator.
+     */
+    static byte[] formAdbRequest(AdbService service, String[] cmd) {
+        String serviceName = service.name().toLowerCase(Locale.US);
+        String request;
+        switch (service) {
+            case SHELL:
+            case EXEC:
+                String execParams = String.join(" ", cmd);
+                request = String.format("%s:%s", serviceName, execParams);
+                break;
+            case ABB_EXEC:
+                String abbParams = String.join("\u0000", cmd);
+                request = String.format("%s:%s", serviceName, abbParams);
+                break;
+            default:
+                String msg = String.format("Invalid AdbService value (%s)", service.name());
+                throw new IllegalArgumentException(msg);
+        }
+        return formAdbRequest(request);
     }
 
     /**
@@ -606,11 +642,7 @@ public final class AdbHelper {
             // talk to a specific device
             setDevice(adbChan, device);
 
-            byte[] request =
-                    formAdbRequest(
-                            adbService.name().toLowerCase(Locale.US)
-                                    + ":"
-                                    + command); //$NON-NLS-1$
+            byte[] request = formAdbRequest(adbService, command);
             write(adbChan, request);
 
             long timeOutForResp =
@@ -1359,5 +1391,9 @@ public final class AdbHelper {
                 adbChan.close();
             }
         }
+    }
+
+    public static void setAbbExecAllowed(boolean allowed) {
+        SplitApkInstallerBase.setAbbExecAllowed(allowed);
     }
 }

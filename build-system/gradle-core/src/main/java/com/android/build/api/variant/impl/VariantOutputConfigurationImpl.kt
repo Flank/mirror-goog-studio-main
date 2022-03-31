@@ -19,7 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration.OutputType
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.utils.appendCamelCase
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
@@ -50,14 +50,14 @@ data class VariantOutputConfigurationImpl(
             : FilterConfiguration? = filters.firstOrNull { it.filterType == type }
 }
 
-fun VariantOutputConfiguration.baseName(variantDslInfo: VariantDslInfo): String =
+fun VariantOutputConfiguration.baseName(component: ComponentCreationConfig): String =
         when(this.outputType) {
-            OutputType.SINGLE -> variantDslInfo.baseName
-            OutputType.UNIVERSAL -> variantDslInfo.computeBaseNameWithSplits(
+            OutputType.SINGLE -> component.baseName
+            OutputType.UNIVERSAL -> component.paths.computeBaseNameWithSplits(
                 OutputType.UNIVERSAL.name.toLowerCase(Locale.US)
             )
             OutputType.ONE_OF_MANY ->
-                variantDslInfo.computeBaseNameWithSplits(this.filters.getFilterName())
+                component.paths.computeBaseNameWithSplits(this.filters.getFilterName())
         }
 
 
@@ -71,16 +71,16 @@ fun VariantOutputConfiguration.dirName(): String {
     }
 }
 
-fun VariantOutputConfiguration.fullName(variantDslInfo: VariantDslInfo): String {
+fun VariantOutputConfiguration.fullName(component: ComponentCreationConfig): String {
     return when (this.outputType) {
         OutputType.UNIVERSAL ->
-            variantDslInfo.computeFullNameWithSplits(
+            component.paths.computeFullNameWithSplits(
                 OutputType.UNIVERSAL.name.toLowerCase(Locale.US))
         OutputType.SINGLE ->
-            variantDslInfo.componentIdentity.name
+            component.name
         OutputType.ONE_OF_MANY -> {
             val filterName = filters.getFilterName()
-            return variantDslInfo.computeFullNameWithSplits(filterName)
+            return component.paths.computeFullNameWithSplits(filterName)
         }
         else -> throw RuntimeException("Unhandled OutputType $this")
     }

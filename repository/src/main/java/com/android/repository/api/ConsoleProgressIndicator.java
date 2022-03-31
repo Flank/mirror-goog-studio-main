@@ -24,6 +24,9 @@ import java.util.Locale;
 
 /**
  * A simple {@link ProgressIndicator} that prints log messages to {@code stdout} and {@code stderr}.
+ *
+ * Progress rendering is done by emitting spaces followed by a carriage return, that way text can be
+ * re-rendered on the same line. For more information, see https://stackoverflow.com/a/852802.
  */
 public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
 
@@ -102,10 +105,17 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
         if (line.length() > MAX_WIDTH) {
             line.delete(MAX_WIDTH, line.length());
         } else {
-            line.append(SPACES.substring(0, MAX_WIDTH - line.length()));
+            line.append(SPACES, 0, MAX_WIDTH - line.length());
         }
 
         line.append("\r");
+
+        // If the progress is at maximum, then append a newline so that future calls to logMessage
+        // won't overlap with this output.
+        if (getFraction() >= 1) {
+            line.append(System.lineSeparator());
+        }
+
         String result = line.toString();
         if (!result.equals(mLast)) {
             mOut.print(result);
@@ -115,7 +125,12 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
     }
 
     private void logMessage(@NonNull String s, @Nullable Throwable e, @NonNull PrintStream stream) {
-        if (mProgress > 0) {
+        // Overwrite the entire progress bar with blanks so that we can re-render it on a visibly
+        // lower line at the end of this function when we call printStatusLine.
+        //
+        // There is no need to blank this out when the progress is full since we would have already
+        // printed a newline character.
+        if (mProgress > 0 && mProgress < 1) {
             mOut.print(SPACES);
             mOut.print("\r");
             mLast = null;
@@ -124,7 +139,9 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
         if (e != null) {
             e.printStackTrace();
         }
-        if (mProgress > 0) {
+
+        // Re-render the progress bar after having blanked it out.
+        if (mProgress > 0 && mProgress < 1) {
             printStatusLine(false);
         }
     }

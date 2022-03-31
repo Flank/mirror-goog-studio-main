@@ -82,17 +82,18 @@ fun File.readCompileCommandsJsonBin(normalizer: FileNormalizer): List<CompileCom
     }
     return entries
 }
-
 fun File.dumpCompileCommandsJsonBin(normalizer: FileNormalizer): String =
         readCompileCommandsJsonBin(normalizer)
                 .sortedBy { it.toString() }
-                .joinToString("\n\n") { (sourceFile: String, compiler: String, workingDir: String, flags: List<String>) ->
+                .joinToString("\n\n") { (sourceFile: String, compiler: String, workingDir: String, rawFlags: List<String>) ->
+                    val flags = rawFlags
+                        .filter { flag -> flag.contains("-target") || flag.contains("none-linux-android") }
                     """
-            sourceFile: $sourceFile
-            compiler:   $compiler
-            workingDir: $workingDir
-            flags:      $flags
-        """.trimIndent()
+                        sourceFile: $sourceFile
+                        compiler:   $compiler
+                        workingDir: $workingDir
+                        flags:      $flags
+                    """.trimIndent()
                 }
 
 /**
@@ -104,6 +105,13 @@ fun GradleTestProject.goldenBuildProducts() : String {
     val projectFolder = recoverExistingCxxAbiModels().first().variant.module.project.rootBuildGradleFolder
     return projectFolder.walk()
             .filter { file -> file.extension in listOf("so", "o", "a") }
+            // We're walking the intermediate output directory rather than the installation
+            // directory (AGP doesn't use CMake's install task), so the directory may also contain
+            // some files that aren't part of the library output. For some versions of CMake this
+            // directory includes files used for compiler identification that we will wrongly
+            // identify as our own outputs. Filter those out of the files to compare to the expected
+            // outputs.
+            .filterNot { file -> file.path.contains("CompilerId") }
             .map { fetchResult.normalizer.normalize(it) }
             .map { hashToKey(it) }
             .sorted()

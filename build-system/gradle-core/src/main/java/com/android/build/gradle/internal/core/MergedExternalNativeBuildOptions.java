@@ -21,6 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Implementation of CoreExternalNativeBuildOptions used to merge multiple configs together. */
 public class MergedExternalNativeBuildOptions
@@ -32,16 +34,20 @@ public class MergedExternalNativeBuildOptions
     @NonNull
     private final MergedExternalNativeCmakeOptions cmake = new MergedExternalNativeCmakeOptions();
 
+    @NonNull private final Map<String, Object> experimentalProperties = new HashMap<>();
+
     @Override
     public void reset() {
         ndkBuild.reset();
         cmake.reset();
+        experimentalProperties.clear();
     }
 
     @Override
     public void append(@NonNull CoreExternalNativeBuildOptions options) {
         ndkBuild.append(options.getExternalNativeNdkBuildOptions());
         cmake.append(options.getExternalNativeCmakeOptions());
+        experimentalProperties.putAll(options.getExternalNativeExperimentalProperties());
     }
 
     @Nullable
@@ -54,5 +60,10 @@ public class MergedExternalNativeBuildOptions
     @Override
     public CoreExternalNativeCmakeOptions getExternalNativeCmakeOptions() {
         return cmake;
+    }
+
+    @Override
+    public Map<String, Object> getExternalNativeExperimentalProperties() {
+        return experimentalProperties;
     }
 }

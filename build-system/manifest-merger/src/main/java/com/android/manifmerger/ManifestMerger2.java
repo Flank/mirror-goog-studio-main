@@ -16,6 +16,12 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
+import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -38,14 +44,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,12 +59,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_SPLIT;
-import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * merges android manifest files, idempotent.
@@ -1037,7 +1036,7 @@ public class ManifestMerger2 {
                             mModel,
                             rewriteNamespaces);
         } catch (Exception e) {
-            throw new MergeFailureException(e);
+            throw new MergeFailureException("Error parsing " + xmlFile.getAbsolutePath(), e);
         }
 
         MergingReport.Builder builder =
@@ -1246,7 +1245,8 @@ public class ManifestMerger2 {
                                             + "' used in: "
                                             + Joiner.on(", ").join(offendingTargets)
                                             + ".";
-                            // We know that there is at least one because of the filter check.
+                            // We know that there is at least one because of the
+                            // filter check.
                             LoadedManifestInfo info = e.getValue().stream().findFirst().get();
                             // Report only once per error, since the error message contain the path
                             // to all manifests with the repeated namespace.
@@ -2040,6 +2040,10 @@ public class ManifestMerger2 {
 
     // a wrapper exception to all sorts of failure exceptions that can be thrown during merging.
     public static class MergeFailureException extends Exception {
+
+        protected MergeFailureException(String msg, Exception cause) {
+            super(msg, cause);
+        }
 
         protected MergeFailureException(Exception cause) {
             super(cause);

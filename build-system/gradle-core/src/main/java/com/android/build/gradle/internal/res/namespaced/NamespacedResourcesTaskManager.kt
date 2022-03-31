@@ -64,8 +64,8 @@ class NamespacedResourcesTaskManager(
         taskFactory.register(LinkLibraryAndroidResourcesTask.CreationAction(creationConfig))
         // TODO: also generate a private R.jar holding private resources.
         taskFactory.register(GenerateNamespacedLibraryRFilesTask.CreationAction(creationConfig))
-        if (creationConfig.variantType.isTestComponent) {
-            val testedType = creationConfig.testedConfig?.variantType ?: throw RuntimeException("testedVariant is null")
+        if (creationConfig.componentType.isTestComponent) {
+            val testedType = creationConfig.testedConfig?.componentType ?: throw RuntimeException("testedVariant is null")
             if (testedType.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
                     packageOutputType = packageOutputType
@@ -77,7 +77,7 @@ class NamespacedResourcesTaskManager(
                     useAaptToGenerateLegacyMultidexMainDexProguardRules = false
                 )
             }
-        } else if (creationConfig.variantType.isApk) {
+        } else if (creationConfig.componentType.isApk) {
             createNamespacedAppProcessTask(
                 packageOutputType = packageOutputType,
                 baseName = baseName,

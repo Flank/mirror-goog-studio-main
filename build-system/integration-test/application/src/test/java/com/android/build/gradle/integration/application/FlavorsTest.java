@@ -18,9 +18,9 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.AndroidProjectTypes;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -31,7 +31,7 @@ import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantHelper;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
@@ -81,7 +81,7 @@ public class FlavorsTest {
         new SourceProviderHelper(
                         model.getName(),
                         projectDir,
-                        VariantType.ANDROID_TEST_PREFIX,
+                        ComponentType.ANDROID_TEST_PREFIX,
                         testSourceProviderContainer.getSourceProvider())
                 .test();
 

@@ -310,6 +310,24 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
+    /** r2->r1. Request both r1 and r2. [r1, r2] should be returned. */
+    public void testRequestDependency() {
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
+        r2.setDependencies(ImmutableList.of(new FakeDependency("r1")));
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
+        List<RemotePackage> result =
+                InstallerUtil.computeRequiredPackages(
+                        request,
+                        new RepositoryPackages(ImmutableList.of(), ImmutableList.of(r1, r2)),
+                        progress);
+        assertEquals(ImmutableList.of(r1, r2), result);
+
+        progress.assertNoErrorsOrWarnings();
+    }
+
     /** {r1, r2}->r3. Request both r1 and r2. R3 is installed, so only r1 and r2 are returned. */
     public void testMultiRequestSatisfied() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
@@ -354,7 +372,7 @@ public class InstallerUtilTest extends TestCase {
                                 ImmutableList.of(r1, r2, r3)), progress);
 
         assertTrue(result.get(0).equals(r3) || result.get(1).equals(r3));
-        assertTrue(result.get(0).equals(r1) || result.get(1).equals(r1));
+        assertTrue(result.contains(r1));
         assertTrue(result.get(1).equals(r2) || result.get(2).equals(r2));
 
         progress.assertNoErrorsOrWarnings();

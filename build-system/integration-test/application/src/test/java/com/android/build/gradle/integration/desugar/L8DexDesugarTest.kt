@@ -23,14 +23,10 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.options.IntegerOption
-import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.AndroidArchive.checkValidClassName
 import com.android.testutils.apk.Dex
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
-import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -88,11 +84,7 @@ class L8DexDesugarTest {
     fun testNativeMultiDexWithoutKeepRuleBundle() {
         normalSetUp()
         project.executor().run("bundleDebug")
-        val outputModels = project.model().fetchContainer(AppBundleProjectBuildOutput::class.java)
-        val outputAppModel = outputModels.rootBuildModelMap[":"] ?: fail("Failed to get app model")
-        val bundleFile = outputAppModel.getOutputByName("debug").bundleFile
-        assertThat(bundleFile).exists()
-        Zip(bundleFile).use {
+        project.getBundle(GradleTestProject.ApkType.DEBUG).use {
             val dex1 = Dex(it.getEntry("base/dex/classes.dex")!!)
             val dex2 = Dex(it.getEntry("base/dex/classes2.dex")!!)
             val desugarLibDex: Dex =

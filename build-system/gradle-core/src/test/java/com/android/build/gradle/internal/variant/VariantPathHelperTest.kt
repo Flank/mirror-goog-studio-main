@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.internal.variant
 
+import com.android.build.api.dsl.BuildType
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
+import com.android.builder.core.ComponentTypeImpl
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -30,6 +33,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.junit.MockitoJUnit
@@ -48,7 +52,7 @@ internal class VariantPathHelperTest {
     }
 
     @Mock
-    lateinit var variantDslInfo: VariantDslInfo
+    lateinit var variantDslInfo: VariantDslInfoImpl
 
     @Mock
     lateinit var dslServices: DslServices
@@ -59,7 +63,11 @@ internal class VariantPathHelperTest {
     @Before
     fun setup() {
         `when`(dslServices.projectOptions).thenReturn(projectOptions)
-        `when`(variantDslInfo.dirName).thenReturn("apk_location")
+        `when`(variantDslInfo.componentType).thenReturn(ComponentTypeImpl.LIBRARY)
+        `when`(variantDslInfo.productFlavorList).thenReturn(emptyList())
+        val buildType = Mockito.mock(BuildType::class.java)
+        `when`(buildType.name).thenReturn("apk_location")
+        `when`(variantDslInfo.buildTypeObj).thenReturn(buildType)
     }
 
     @Test

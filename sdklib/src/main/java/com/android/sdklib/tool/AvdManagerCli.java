@@ -60,6 +60,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -111,6 +114,7 @@ class AvdManagerCli extends CommandLineParser {
     private static final String KEY_COMPACT = "compact";
     private static final String KEY_EOL_NULL = "null";
     private static final String KEY_TAG = "tag";
+    private static final String KEY_SKIN = "skin";
     private static final String KEY_ABI = "abi";
     private static final String KEY_CLEAR_CACHE = "clear-cache";
     private static final String KEY_DEVICE = "device";
@@ -240,7 +244,9 @@ class AvdManagerCli extends CommandLineParser {
 
             @Override
             public void info(@NonNull String msgFormat, Object... args) {
-                System.out.printf(msgFormat, args);
+                if (!cli.get().isSilent()) {
+                    System.out.printf(msgFormat, args);
+                }
             }
 
             @Override
@@ -650,16 +656,28 @@ class AvdManagerCli extends CommandLineParser {
           .collect(Collectors.joining("\n"));
     }
 
-    /**
-     * Creates a new AVD. This is a text based creation with command line prompt.
-     */
-    private void createAvd() {
-        ProgressIndicator progress = new ConsoleProgressIndicator() {
+    /** Creates a {@code ProgressIndicator} that takes verbosity preferences into account. */
+    private ProgressIndicator createProgressIndicator() {
+        PrintStream out = System.out;
+        PrintStream err = System.err;
+        if (isSilent()) {
+            // Prevent the progress indicator from printing anything when the user wants a silent
+            // run.
+            OutputStream nullStream = new NullOutputStream();
+            out = new PrintStream(nullStream);
+        }
+
+        return new ConsoleProgressIndicator(out, err) {
             @Override
             public void logVerbose(@NonNull String s) {
                 // don't log verbose messages
             }
         };
+    }
+
+    /** Creates a new AVD. This is a text based creation with command line prompt. */
+    private void createAvd() {
+        ProgressIndicator progress = createProgressIndicator();
         String packagePath = getParamPkgPath();
         if (packagePath == null) {
             errorAndExit(
@@ -846,20 +864,30 @@ class AvdManagerCli extends CommandLineParser {
                 hardwareConfig.put(HardwareProperties.HW_SDCARD, HardwareProperties.BOOLEAN_YES);
             }
             updateUninitializedDynamicParameters(hardwareConfig);
-
+            String skinName = getParamSkin();
+            Path skinPath = null;
+            if (skinName != null) {
+                skinPath =
+                        mSdkHandler.getLocation().resolve(SdkConstants.FD_SKINS).resolve(skinName);
+                if (Files.notExists(skinPath)) {
+                    errorAndExit("Skin " + skinName + " not found at " + skinPath);
+                }
+            }
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
-                    AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
-                    avdName,
-                    img,
-                    null,
-                    null,
-                    getParamSdCard(),
-                    hardwareConfig,
-                    device == null ? null : device.getBootProps(),
-                    true,
-                    removePrevious,
-                    false,
-                    mSdkLog);
+            AvdInfo newAvdInfo =
+                    avdManager.createAvd(
+                            avdFolder,
+                            avdName,
+                            img,
+                            skinPath,
+                            skinName,
+                            getParamSdCard(),
+                            hardwareConfig,
+                            device == null ? null : device.getBootProps(),
+                            true,
+                            removePrevious,
+                            false,
+                            mSdkLog);
 
             if (newAvdInfo == null) {
                 errorAndExit("AVD not created.");
@@ -879,7 +907,6 @@ class AvdManagerCli extends CommandLineParser {
 
         map.put(EmulatedProperties.BACK_CAMERA_KEY, AvdCamera.EMULATED.getAsParameter());
         map.put(EmulatedProperties.CPU_CORES_KEY, String.valueOf(EmulatedProperties.RECOMMENDED_NUMBER_OF_CORES));
-        map.put(EmulatedProperties.CUSTOM_SKIN_FILE_KEY, "_no_skin");
         map.put(EmulatedProperties.DEVICE_FRAME_KEY, HardwareProperties.BOOLEAN_YES);
         map.put(EmulatedProperties.FRONT_CAMERA_KEY, AvdCamera.EMULATED.getAsParameter());
         map.put(EmulatedProperties.HAS_HARDWARE_KEYBOARD_KEY, HardwareProperties.BOOLEAN_YES);
@@ -1067,12 +1094,14 @@ class AvdManagerCli extends CommandLineParser {
     @NonNull
     private Map<String, String> promptForHardware() throws IOException {
         byte[] readLineBuffer = new byte[256];
-        String result;
         String defaultAnswer = "no";
+        String result = defaultAnswer;
 
         mSdkLog.info("Do you wish to create a custom hardware profile? [%s] ", defaultAnswer);
 
-        result = readLine(readLineBuffer).trim();
+        if (!isSilent()) {
+            result = readLine(readLineBuffer).trim();
+        }
         // handle default:
         if (result.isEmpty()) {
             result = defaultAnswer;
@@ -1418,6 +1447,20 @@ class AvdManagerCli extends CommandLineParser {
         throw new RuntimeException();
     }
 
+    /**
+     * Discards all writes. This class can be replaced by OutputStream.nullOutputStream when we
+     * switch to Java 11. There are technically slightly different semantics (e.g. the Java-11
+     * version throws an exception when you write to a closed stream), but those shouldn't impact
+     * AvdManager.
+     */
+    private static class NullOutputStream extends OutputStream {
+        @Override
+        public void write(int b) throws IOException {}
+
+        @Override
+        public void write(byte b[], int off, int len) throws IOException {}
+    }
+
     @VisibleForTesting
     AvdManagerCli(
             ILogger logger,
@@ -1515,6 +1558,15 @@ class AvdManagerCli extends CommandLineParser {
                 VERB_CREATE, OBJECT_AVD, "d", KEY_DEVICE,
                 "The optional device definition to use. Can be a device index or id.",
                 null);
+        define(
+                Mode.STRING,
+                false,
+                VERB_CREATE,
+                OBJECT_AVD,
+                "",
+                KEY_SKIN,
+                "The optional name of a skin to use with this device.",
+                null);
 
         // --- delete avd ---
 
@@ -1602,6 +1654,11 @@ class AvdManagerCli extends CommandLineParser {
      */
     private String getParamTag() {
         return ((String) getValue(null, null, KEY_TAG));
+    }
+
+    /** Helper to retrieve the --skin value. */
+    private String getParamSkin() {
+        return ((String) getValue(null, null, KEY_SKIN));
     }
 
     /**

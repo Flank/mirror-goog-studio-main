@@ -364,61 +364,6 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
-    public void testInvalidXml() {
-
-        // Regression test for https://code.google.com/p/android/issues/detail?id=224150
-        // 224150: Flag apostrophes escaping in XML string resources
-        String expected =
-                ""
-                        + "res/values/strings.xml:3: Error: Apostrophe not preceded by \\ [StringEscaping]\n"
-                        + "<string name=\"some_string\">'ERROR'</string>\n"
-                        + "                           ^\n"
-                        + "res/values/strings.xml:5: Error: Apostrophe not preceded by \\ [StringEscaping]\n"
-                        + "<string name=\"some_string3\">What's New</string>\n"
-                        + "                                ^\n"
-                        + "res/values/strings.xml:12: Error: Bad character in \\u unicode escape sequence [StringEscaping]\n"
-                        + "<string name=\"some_string10\">Unicode\\u12.</string>\n"
-                        + "                                        ^\n"
-                        + "3 errors, 0 warnings\n";
-        //noinspection all // Sample code
-        lint().files(
-                        xml(
-                                "res/values/strings.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<resources>\n"
-                                        + "<string name=\"some_string\">'ERROR'</string>\n"
-                                        + "<string name=\"some_string2\">\"'OK'\"</string>\n"
-                                        + "<string name=\"some_string3\">What's New</string>\n"
-                                        + "<string name=\"some_string4\">Unfinished\\</string>\n"
-                                        + "<string name=\"some_string5\">Unicode\\u</string>\n"
-                                        + "<string name=\"some_string6\">Unicode\\u1</string>\n"
-                                        + "<string name=\"some_string7\">Unicode\\u12</string>\n"
-                                        + "<string name=\"some_string8\">Unicode\\u123</string>\n"
-                                        + "<string name=\"some_string9\">Unicode\\u1234</string>\n"
-                                        + "<string name=\"some_string10\">Unicode\\u12.</string>\n"
-                                        + "<string name=\"news\">  \"  What's New \"    </string>\n"
-                                        // Regression test for
-                                        //  https://issuetracker.google.com/129985008
-                                        + "<string name=\"space_slash\"> \\</string>\n"
-                                        + "<string name=\"space_slash2\">  \\</string>\n"
-                                        + "<string name=\"space_slash3\">   \\</string>\n"
-                                        + "</resources>\n"
-                                        + "\n"))
-                .run()
-                .expect(expected)
-                .expectFixDiffs(
-                        ""
-                                + "Fix for res/values/strings.xml line 2: Escape Apostrophe:\n"
-                                + "@@ -3 +3\n"
-                                + "- <string name=\"some_string\">'ERROR'</string>\n"
-                                + "+ <string name=\"some_string\">\\'ERROR'</string>\n"
-                                + "Fix for res/values/strings.xml line 4: Escape Apostrophe:\n"
-                                + "@@ -5 +5\n"
-                                + "- <string name=\"some_string3\">What's New</string>\n"
-                                + "+ <string name=\"some_string3\">What\\'s New</string>\n");
-    }
-
     @SuppressWarnings("all") // Sample code
     private TestFile customattr =
             xml(

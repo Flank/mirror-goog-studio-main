@@ -113,12 +113,6 @@ abstract class AnalyticsEnabledComponent(
             return delegate.annotationProcessorConfiguration
         }
 
-    override fun configurations(action: (Configuration) -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.CONFIGURATIONS_VALUE
-        delegate.configurations(action)
-    }
-
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
         scope: InstrumentationScope,

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import java.io.File
 
 /**
@@ -73,7 +73,7 @@ data class CoreExternalNativeNinjaOptions(
 /**
  * Planned as field in  com.android.build.api.dsl.ExternalNativeBuild
  */
-val VariantDslInfo.ninja : Ninja get() = experimentalProperties.ninja
+val ComponentCreationConfig.ninja : Ninja get() = externalNativeExperimentalProperties.ninja
 
 val Map<String, Any>.ninja : Ninja get() = Ninja(
     path = propertyAsFile("ninja.path"),
@@ -84,12 +84,12 @@ val Map<String, Any>.ninja : Ninja get() = Ninja(
 /**
  * Planned as field in com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
  */
-val VariantDslInfo.externalNativeNinjaOptions get() = CoreExternalNativeNinjaOptions(
-    abiFilters = experimentalProperties.propertyAsSet("ninja.abiFilters"),
-    arguments = experimentalProperties.propertyAsList("ninja.arguments"),
-    cFlags = experimentalProperties.propertyAsList("ninja.cFlags"),
-    cppFlags = experimentalProperties.propertyAsList("ninja.cppFlags"),
-    targets = experimentalProperties.propertyAsSet("ninja.targets"),
+val ComponentCreationConfig.externalNativeNinjaOptions get() = CoreExternalNativeNinjaOptions(
+    abiFilters = externalNativeExperimentalProperties.propertyAsSet("ninja.abiFilters"),
+    arguments = externalNativeExperimentalProperties.propertyAsList("ninja.arguments"),
+    cFlags = externalNativeExperimentalProperties.propertyAsList("ninja.cFlags"),
+    cppFlags = externalNativeExperimentalProperties.propertyAsList("ninja.cppFlags"),
+    targets = externalNativeExperimentalProperties.propertyAsSet("ninja.targets"),
 )
 
 /**

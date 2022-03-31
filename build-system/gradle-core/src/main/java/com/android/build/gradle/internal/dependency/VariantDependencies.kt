@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.google.common.base.MoreObjects
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
@@ -64,7 +64,7 @@ interface ResolutionResultProvider {
  */
 class VariantDependencies internal constructor(
     private val variantName: String,
-    private val variantType: VariantType,
+    private val componentType: ComponentType,
     val compileClasspath: Configuration,
     val runtimeClasspath: Configuration,
     private val sourceSetRuntimeConfigurations: Collection<Configuration>,
@@ -81,10 +81,10 @@ class VariantDependencies internal constructor(
 ): ResolutionResultProvider {
 
     // Never exclude artifacts for self-instrumenting, test-only modules.
-    private val avoidExcludingArtifacts = variantType.isSeparateTestProject && isSelfInstrumenting
+    private val avoidExcludingArtifacts = componentType.isSeparateTestProject && isSelfInstrumenting
 
     init {
-        check(!variantType.isTestComponent || testedVariant != null) {
+        check(!componentType.isTestComponent || testedVariant != null) {
             "testedVariantDependencies null for test component"
         }
     }
@@ -164,7 +164,7 @@ class VariantDependencies internal constructor(
             )
         }
 
-        if (!configType.needsTestedComponents() || !variantType.isTestComponent) {
+        if (!configType.needsTestedComponents() || !componentType.isTestComponent) {
             return artifacts
         }
 
@@ -178,7 +178,7 @@ class VariantDependencies internal constructor(
         // and dynamic features, we need to remove artifacts that are already packaged in the tested
         // variant. Also, we remove artifacts already packaged in base/features that the tested
         // feature depends on.
-        if (!variantType.isApk) {
+        if (!componentType.isApk) {
             // Don't filter unit tests.
             return artifacts
         }
@@ -188,7 +188,7 @@ class VariantDependencies internal constructor(
             return artifacts
         }
 
-        if (testedVariant.variantType.isAar) {
+        if (testedVariant.componentType.isAar) {
             // Don't filter test APKs for library projects, as there is no tested APK.
             return artifacts
         }
@@ -197,7 +197,7 @@ class VariantDependencies internal constructor(
             return artifacts
         }
 
-        if (testedVariant.variantType.isDynamicFeature) {
+        if (testedVariant.componentType.isDynamicFeature) {
             // If we're in an androidTest for a dynamic feature we need to filter out artifacts from
             // the base and dynamic features this dynamic feature depends on.
             val excludedDirectories = testedVariant
@@ -225,7 +225,7 @@ class VariantDependencies internal constructor(
     private fun isArtifactTypeExcluded(artifactType: AndroidArtifacts.ArtifactType): Boolean {
         return when {
             avoidExcludingArtifacts -> false
-            variantType.isDynamicFeature ->
+            componentType.isDynamicFeature ->
                 artifactType != PACKAGED_DEPENDENCIES
                         && artifactType != APKS_FROM_BUNDLE
                         && artifactType != FEATURE_DEX
@@ -233,7 +233,7 @@ class VariantDependencies internal constructor(
                         && artifactType != FEATURE_SHRUNK_JAVA_RES
                         && artifactType != LINT_MODEL
                         && artifactType != BASE_MODULE_LINT_MODEL
-            variantType.isSeparateTestProject ->
+            componentType.isSeparateTestProject ->
                 isArtifactTypeSubtractedForInstrumentationTests(artifactType)
             else -> false
         }

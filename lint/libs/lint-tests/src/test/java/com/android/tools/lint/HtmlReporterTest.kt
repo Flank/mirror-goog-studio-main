@@ -25,6 +25,7 @@ import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.LogDetector
 import com.android.tools.lint.checks.ManifestDetector
+import com.android.tools.lint.checks.SdCardDetector
 import com.android.tools.lint.checks.infrastructure.TestFiles.image
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
@@ -63,7 +64,13 @@ class HtmlReporterTest {
                     // registry with an example vendor to test output of vendor info
                     // (which we normally omit for built-in checks).
                     // This also tests that it's listed in the "included additional" section.
-                    HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
+                    val testVendor = createTestVendor()
+                    HardcodedValuesDetector.ISSUE.vendor = testVendor
+                    // Also include a *disabled* extra issue, to make sure we don't
+                    // include these in the extra list (and that we *do* include
+                    // them in the disabled list.)
+                    SdCardDetector.ISSUE.vendor = testVendor
+                    SdCardDetector.ISSUE.setEnabledByDefault(false)
 
                     return super.createDriver(registry, request)
                 }
@@ -159,6 +166,7 @@ class HtmlReporterTest {
             .issues(
                 ManifestDetector.USES_SDK,
                 HardcodedValuesDetector.ISSUE,
+                SdCardDetector.ISSUE,
                 IconDetector.DUPLICATES_NAMES,
                 // Not reported, but for the disabled-list
                 ManifestDetector.MOCK_LOCATION,
@@ -174,6 +182,8 @@ class HtmlReporterTest {
             .run()
             .expectHtml(expected, transformer)
         HardcodedValuesDetector.ISSUE.vendor = BuiltinIssueRegistry().vendor
+        SdCardDetector.ISSUE.vendor = BuiltinIssueRegistry().vendor
+        SdCardDetector.ISSUE.setEnabledByDefault(true)
     }
 
     @Test
@@ -266,7 +276,7 @@ document.getElementById(id).style.display = 'none';
 <a href="#UnknownNullness">UnknownNullness</a>: Unknown nullness</td></tr>
 <tr><td></td><td class="categoryColumn"><a href="#ExtraIssues">Included Additional Checks (1)</a>
 </td></tr>
-<tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (1)</a>
+<tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (2)</a>
 </td></tr>
 </table>
 <br/>              </div>
@@ -596,6 +606,18 @@ To fix this, create a new manifest file in the debug folder and move the <code>&
 <br/></div>
 </div>
 </div>
+<div class="issue">
+<div class="id">SdCardPath<div class="issueSeparator"></div>
+</div>
+<div class="metadata">Disabled By: Default<br/>
+<div class="explanation">
+Your code should not reference the <code>/sdcard</code> path directly; instead use <code>Environment.getExternalStorageDirectory().getPath()</code>.<br/>
+<br/>
+Similarly, do not reference the <code>/data/data/</code> path directly; it can vary in multi-user scenarios. Instead, use <code>Context.getFilesDir().getPath()</code>.<br/><div class="moreinfo">More info: <a href="https://developer.android.com/training/data-storage#filesExternal">https://developer.android.com/training/data-storage#filesExternal</a>
+</div><br/>
+<br/></div>
+</div>
+</div>
 </div>
               </div>
               <div class="mdl-card__actions mdl-card--border">
@@ -784,7 +806,7 @@ document.getElementById(id).style.display = 'none';
 <a href="#UnknownNullness">UnknownNullness</a>: Unknown nullness</td></tr>
 <tr><td></td><td class="categoryColumn"><a href="#ExtraIssues">Included Additional Checks (1)</a>
 </td></tr>
-<tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (1)</a>
+<tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (2)</a>
 </td></tr>
 </table>
 <br/>              </div>
@@ -1100,6 +1122,18 @@ Using a mock location provider (by requiring the permission <code>android.permis
 <br/>
 To fix this, create a new manifest file in the debug folder and move the <code>&lt;uses-permission></code> element there. A typical path to a debug manifest override file in a Gradle project is src/debug/AndroidManifest.xml.<br/>Note: This issue has an associated quickfix operation in Android Studio and IntelliJ IDEA.<br>
 <br/>
+<br/></div>
+</div>
+</div>
+<div class="issue">
+<div class="id">SdCardPath<div class="issueSeparator"></div>
+</div>
+<div class="metadata">Disabled By: Default<br/>
+<div class="explanation">
+Your code should not reference the <code>/sdcard</code> path directly; instead use <code>Environment.getExternalStorageDirectory().getPath()</code>.<br/>
+<br/>
+Similarly, do not reference the <code>/data/data/</code> path directly; it can vary in multi-user scenarios. Instead, use <code>Context.getFilesDir().getPath()</code>.<br/><div class="moreinfo">More info: <a href="https://developer.android.com/training/data-storage#filesExternal">https://developer.android.com/training/data-storage#filesExternal</a>
+</div><br/>
 <br/></div>
 </div>
 </div>

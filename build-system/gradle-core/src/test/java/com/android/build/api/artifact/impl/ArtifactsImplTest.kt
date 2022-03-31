@@ -18,6 +18,7 @@ package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_APPENDABLE_DIRECTORIES
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_APPENDABLE_FILES
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_DIRECTORIES
@@ -51,6 +52,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -119,8 +122,8 @@ class ArtifactsImplTest {
         // now get it.
         Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
             FileUtils.join(
-                Artifact.Category.INTERMEDIATES.name.toLowerCase(),
-                TEST_FILE.name().toLowerCase(),
+                Artifact.Category.INTERMEDIATES.name.lowercase(Locale.getDefault()),
+                TEST_FILE.getFolderName(),
                 "debug",
                 "out"))
     }
@@ -144,8 +147,8 @@ class ArtifactsImplTest {
         // now get it.
         Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
             FileUtils.join(
-                Artifact.Category.INTERMEDIATES.name.toLowerCase(),
-                TEST_DIRECTORY.name().toLowerCase(),
+                Artifact.Category.INTERMEDIATES.name.lowercase(Locale.getDefault()),
+                TEST_DIRECTORY.getFolderName(),
                 "debug"))
     }
 
@@ -1136,5 +1139,89 @@ class ArtifactsImplTest {
             .endsWith(
                 FileUtils.join("test_file", "debug", DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS)
             )
+    }
+
+    abstract class AgpFileTask: DefaultTask() {
+        @get:OutputFile abstract val outputFile: RegularFileProperty
+    }
+
+    private fun <U> `test deprecated artifacts are rerouted correctly`(
+        artifactToRegister: U,
+        artifactToQuery: U
+    ) where U: MultipleArtifact<RegularFile>, U: Artifact.Appendable {
+
+        val agpTaskProvider = project.tasks.register("agpTaskProvider", AgpFileTask::class.java)
+        artifacts.use(agpTaskProvider)
+            .wiredWith(AgpFileTask::outputFile)
+            .toAppendTo(artifactToRegister)
+
+        // now check that the appended file is visible from the query artifact type
+        val allJars = artifacts.getAll(artifactToQuery).get()
+        Truth.assertThat(allJars.size).isEqualTo(1)
+        Truth.assertThat(allJars[0].asFile.absolutePath)
+            .endsWith(
+                "build/intermediates/${artifactToRegister.getFolderName()}/debug/agpTaskProvider"
+                    .replace('/', File.separatorChar)
+            )
+    }
+
+    @Test
+    fun `test ALL_CLASSES_JARS deprecated artifact are rerouted correctly`() {
+        @Suppress("DEPRECATION")
+        `test deprecated artifacts are rerouted correctly`(
+            MultipleArtifact.ALL_CLASSES_JARS,
+            MultipleArtifact.PROJECT_CLASSES_JARS
+        )
+    }
+
+    @Test
+    fun `test PROJECT_CLASSES_JARS artifact are rerouted correctly`() {
+        @Suppress("DEPRECATION")
+        `test deprecated artifacts are rerouted correctly`(
+            MultipleArtifact.PROJECT_CLASSES_JARS,
+            MultipleArtifact.ALL_CLASSES_JARS
+        )
+    }
+
+    abstract class AgpDirectoryTask: DefaultTask() {
+        @get:OutputFile abstract val outputFolder: DirectoryProperty
+    }
+
+    private fun <U> `test directory deprecated artifacts are rerouted correctly`(
+        artifactToRegister: U,
+        artifactToQuery: U
+    ) where U: MultipleArtifact<Directory>, U: Artifact.Appendable {
+
+        val agpTaskProvider = project.tasks.register("agpTaskProvider", AgpDirectoryTask::class.java)
+        artifacts.use(agpTaskProvider)
+            .wiredWith(AgpDirectoryTask::outputFolder)
+            .toAppendTo(artifactToRegister)
+
+        // now check that the appended file is visible from the query artifact type
+        val allJars = artifacts.getAll(artifactToQuery).get()
+        Truth.assertThat(allJars.size).isEqualTo(1)
+        Truth.assertThat(allJars[0].asFile.absolutePath)
+            .endsWith(
+                "build/intermediates/${artifactToRegister.getFolderName()}/debug/agpTaskProvider"
+                    .replace('/', File.separatorChar)
+            )
+    }
+
+    @Test
+    fun `test ALL_CLASSES_DIRS deprecated artifact are rerouted correctly`() {
+        @Suppress("DEPRECATION")
+        `test directory deprecated artifacts are rerouted correctly`(
+            MultipleArtifact.ALL_CLASSES_DIRS,
+            MultipleArtifact.PROJECT_CLASSES_DIRS
+        )
+    }
+
+    @Test
+    fun `test PROJECT_CLASSES_DIRS artifact are rerouted correctly`() {
+        @Suppress("DEPRECATION")
+        `test directory deprecated artifacts are rerouted correctly`(
+            MultipleArtifact.PROJECT_CLASSES_DIRS,
+            MultipleArtifact.ALL_CLASSES_DIRS
+        )
     }
 }

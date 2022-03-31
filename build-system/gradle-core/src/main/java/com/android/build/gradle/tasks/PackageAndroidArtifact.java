@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.manifest.ManifestData;
 import com.android.build.gradle.internal.manifest.ManifestDataKt;
@@ -1160,8 +1159,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull final TaskT packageAndroidArtifact) {
             super.configure(packageAndroidArtifact);
 
-            VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
-
             packageAndroidArtifact
                     .getMinSdkVersion()
                     .set(
@@ -1263,7 +1260,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getAssets()
                     .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
-            packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
+            packageAndroidArtifact.setJniDebugBuild(creationConfig.isJniDebuggable());
             packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
@@ -1274,7 +1271,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     creationConfig.getGlobal().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
-            if (creationConfig.getVariantType().isDynamicFeature()) {
+            if (creationConfig.getComponentType().isDynamicFeature()) {
                 packageAndroidArtifact
                         .getBaseModuleMetadata()
                         .from(
@@ -1284,9 +1281,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
             packageAndroidArtifact.getBaseModuleMetadata().disallowChanges();
-            if (!variantDslInfo.getSupportedAbis().isEmpty()) {
+            if (!creationConfig.getSupportedAbis().isEmpty()) {
                 // If the build author has set the supported Abis that is respected
-                packageAndroidArtifact.getAbiFilters().set(variantDslInfo.getSupportedAbis());
+                packageAndroidArtifact.getAbiFilters().set(creationConfig.getSupportedAbis());
             } else {
                 // Otherwise, use the injected Abis if set.
                 packageAndroidArtifact
@@ -1309,7 +1306,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact.getCreatedBy().set(creationConfig.getGlobal().getCreatedBy());
 
-            if (creationConfig.getVariantType().isBaseModule()
+            if (creationConfig.getComponentType().isBaseModule()
                     && creationConfig
                             .getServices()
                             .getProjectOptions()
@@ -1323,9 +1320,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             // If we're in a dynamic feature, we use FEATURE_SIGNING_CONFIG_VERSIONS, published from
             // the base. Otherwise, we use the SIGNING_CONFIG_VERSIONS internal artifact.
-            if (creationConfig.getVariantType().isDynamicFeature()
+            if (creationConfig.getComponentType().isDynamicFeature()
                     || (creationConfig instanceof TestComponentImpl
-                        && creationConfig.getTestedConfig().getVariantType().isDynamicFeature())) {
+                            && creationConfig
+                                    .getTestedConfig()
+                                    .getComponentType()
+                                    .isDynamicFeature())) {
                 packageAndroidArtifact
                         .getSigningConfigVersions()
                         .from(
@@ -1415,7 +1415,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @Nullable
         public static FileCollection getFeatureDexFolder(
                 @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
-            if (!creationConfig.getVariantType().isDynamicFeature()) {
+            if (!creationConfig.getComponentType().isDynamicFeature()) {
                 return null;
             }
             return creationConfig
@@ -1430,7 +1430,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @Nullable
         public FileCollection getFeatureJavaResources(
                 @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
-            if (!creationConfig.getVariantType().isDynamicFeature()) {
+            if (!creationConfig.getComponentType().isDynamicFeature()) {
                 return null;
             }
             return creationConfig

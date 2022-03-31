@@ -139,7 +139,7 @@ public interface BaseVariant {
      * Returns a list of FileCollection representing the source folders.
      *
      * <p>You can replace calls to this method by using {@link Component#getSources()}, then use the
-     * {@link Sources#getJava()} and then {@link SourceDirectories#getAll()}.
+     * {@link Sources#getJava()} and then {@link SourceDirectories.Flat#getAll()}.
      *
      * @param folderType the type of folder to return.
      * @return a list of folder + dependency as file collections.

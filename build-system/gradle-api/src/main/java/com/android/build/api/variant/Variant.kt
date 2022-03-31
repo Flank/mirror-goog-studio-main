@@ -134,5 +134,27 @@ interface Variant : Component, HasAndroidResources {
      *  ```
      */
     @get:Incubating
-    val nestedComponents: List<com.android.build.api.variant.Component>
+    val nestedComponents: List<Component>
+
+    /**
+     * List containing this variant and all of its [nestedComponents]
+     *
+     * Example:
+     *
+     * ```kotlin
+     *  androidComponents.onVariants(selector().withName("debug")) {
+     *      // components contains the debug variant along with its unitTests, androidTests, and
+     *      // testFixtures (if enabled).
+     *      components.forEach { component ->
+     *          component.runtimeConfiguration
+     *              .resolutionStrategy
+     *              .dependencySubstitution {
+     *                  substitute(project(":foo")).using(project(":bar"))
+     *              }
+     *      }
+     *  }
+     *  ```
+     */
+    @get:Incubating
+    val components: List<Component>
 }

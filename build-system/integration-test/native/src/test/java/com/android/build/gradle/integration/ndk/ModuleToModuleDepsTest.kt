@@ -58,6 +58,8 @@ class ModuleToModuleDepsTest(
     private val libUsesPrefabPublish = libUsesPrefabPublishTag == ""
     private val appStl = appStlTag.substringAfter(":")
     private val libStl = libStlTag.substringAfter(":")
+    private val effectiveAppStl = effectiveStl(appStl, appBuildSystem)
+    private val effectiveLibStl = effectiveStl(libStl, libBuildSystem)
     private val config = "$appBuildSystem:$appStl $libBuildSystem:$libStl:$libExtension"
 
     sealed class BuildSystemConfig {
@@ -281,21 +283,19 @@ class ModuleToModuleDepsTest(
      */
     private fun expectGradleConfigureError() : Boolean {
         if (expectSingleStlViolationError()) return true
+        if (!prefabConfiguredCorrectly) return true
 
-        // If app side doesn't set android.buildFeatures.prefab=true then we
-        // expect a build failure indicating that 'lib' can't be found.
-        if (!appUsesPrefab || !libUsesPrefabPublish) {
-            if (appBuildSystem == NdkBuild) {
-                // Error when this test was written:
-                //   Are you sure your NDK_MODULE_PATH variable is properly defined
+        if (expectNdkBuildProducesNoLibrary()) {
+            if (effectiveAppStl == "c++_static" && effectiveLibStl == "c++_shared") {
+                // In this situation AGP will have generated an incorrect abi.json that identifies
+                // the library as a shared library rather than a static library. These
+                // configurations should be compatible but will not be because of the
+                // misidentification.
                 return true
             }
-            // Error when this test was written:
-            //   Add the installation prefix of "lib" to CMAKE_PREFIX_PATH
-            return true
         }
 
-        // ndk-build can't consume consume configuration-only packages until a future NDK
+        // ndk-build can't consume configuration-only packages until a future NDK
         // update and corresponding prefab update.
         if (appBuildSystem == NdkBuild) {
             // Error when this test was written:
@@ -305,6 +305,21 @@ class ModuleToModuleDepsTest(
 
         return false
     }
+
+    /**
+     * Returns true if the project has configured prefab correctly.
+     *
+     * At the time of writing, the following errors will be emitted when building the app if prefab
+     * is not configured correctly, either because the app was not configured to consume prefab
+     * packages or because the library was not configured to produce them.
+     *
+     * ndk-build:
+     * Are you sure your NDK_MODULE_PATH variable is properly defined
+     *
+     * CMake:
+     * Add the installation prefix of "lib" to CMAKE_PREFIX_PATH
+     */
+    private val prefabConfiguredCorrectly = appUsesPrefab && libUsesPrefabPublish
 
     /**
      * Returns true if this configuration is expected to fail at build time.
@@ -321,36 +336,38 @@ class ModuleToModuleDepsTest(
         return false
     }
 
-    /**
-     * These configurations produce
-     *      [CXX1210] Library is a shared library with a statically linked STL and cannot be used
-     *      with any library using the STL
-     */
-    private fun expectErrorCXX1211() : Boolean {
-        if (config == "cmake3.18.1: cmake3.10.2::.so") return true
-        if (config == "cmake3.10.2: cmake3.18.1::.so") return true
-        if (config == "cmake3.10.2: cmake3.10.2:c++_static:.so") return true
-        if (config == "cmake3.10.2:c++_static cmake3.10.2::.so") return true
-        return false
+    private fun effectiveStl(stl: String, buildSystem: BuildSystemConfig): String {
+        if (stl != "") {
+            return stl
+        }
+
+        return when (buildSystem) {
+            NdkBuild -> ""
+            else -> "c++_static"
+        }
     }
 
     /**
      * These configurations produce
-     *      [CXX1211] User is using a static STL but library requires a shared STL
+     *      [CXX1211] Library is a shared library with a statically linked STL and cannot be used
+     *      with any library using the STL
      */
-    private fun expectErrorCXX1212() : Boolean {
-        if (config == "cmake3.18.1: ndk-build:c++_shared:.a") return true
-        if (config == "cmake3.10.2:c++_static ndk-build:c++_shared:.so") return true
-        return false
-    }
+    private fun expectErrorCXX1211() =
+        libExtension == ".so" && effectiveLibStl == "c++_static" && effectiveAppStl.isNotEmpty()
+
+    /**
+     * These configurations produce
+     *      [CXX1212] User is using a static STL but library requires a shared STL
+     */
+    private fun expectErrorCXX1212() =
+        libExtension == ".so" && effectiveAppStl == "c++_static" && effectiveLibStl == "c++_shared"
 
     /**
      * When ndk-build is configure to produce .a but has shared STL it will silently produce
      * no .a file.
      */
-    private fun expectNdkBuildProducesNoLibrary() : Boolean {
-        return (libBuildSystem == NdkBuild && libStl == "c++_shared" && libExtension == ".a")
-    }
+    private fun expectNdkBuildProducesNoLibrary() =
+        libBuildSystem == NdkBuild && effectiveLibStl == "c++_shared" && libExtension == ".a"
 
     @Test
     fun `app configure`() {
@@ -406,6 +423,7 @@ class ModuleToModuleDepsTest(
 
     @Test
     fun `check single STL violation CXX1211`() {
+        Assume.assumeTrue(prefabConfiguredCorrectly)
         Assume.assumeTrue(expectErrorCXX1211()) // Only run the CXX1211 cases
         val executor = project.executor()
         executor.expectFailure()
@@ -420,6 +438,7 @@ class ModuleToModuleDepsTest(
 
     @Test
     fun `check single STL violation CXX1212`() {
+        Assume.assumeTrue(prefabConfiguredCorrectly)
         Assume.assumeTrue(expectErrorCXX1212()) // Only run the CXX1212 cases
         val executor = project.executor()
         executor.expectFailure()

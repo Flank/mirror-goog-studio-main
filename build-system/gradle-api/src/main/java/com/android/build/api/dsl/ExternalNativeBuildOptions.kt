@@ -90,4 +90,10 @@ interface ExternalNativeBuildOptions {
      * [android.externalNativeBuild.cmake.path][Cmake.path].
      */
     fun cmake(action: ExternalNativeCmakeOptions.() -> Unit)
+
+    /**
+     * Additional per-variant experimental properties for C and C++.
+     */
+    @get:Incubating
+    val experimentalProperties: MutableMap<String, Any>
 }

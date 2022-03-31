@@ -359,9 +359,9 @@ public class InstallerUtil {
         Map<String, UpdatablePackage> consolidatedPackages = packages.getConsolidatedPkgs();
 
         Set<String> seen = Sets.newHashSet();
-        Multimap<String, Dependency> allDependencies = HashMultimap.create();
-        Set<RemotePackage> roots = Sets.newHashSet();
+        Set<RemotePackage> roots = Sets.newLinkedHashSet();
         Queue<RemotePackage> current = Lists.newLinkedList();
+        // Gather the requested packages that we actually need to download.
         for (RemotePackage request : requests) {
             UpdatablePackage updatable = consolidatedPackages.get(request.getPath());
             if (updatable == null) {
@@ -376,6 +376,12 @@ public class InstallerUtil {
             }
         }
 
+        // Sorting will be done by Kahn's algorithm. First we need to build the list of "edges"
+        // (dependencies).
+        // Only the destination of each edge is important, so those are kept here, in a map
+        // from destination path to destination dependency details (note both the key and value
+        // refer to the same package).
+        Multimap<String, Dependency> allDependencies = HashMultimap.create();
         while (!current.isEmpty()) {
             RemotePackage currentPackage = current.remove();
 
@@ -403,8 +409,12 @@ public class InstallerUtil {
                         requiredMinRevision.compareTo(localDependency.getVersion()) <= 0)) {
                     continue;
                 }
+                // At this point the dependency is actually going to be counted.
+                allDependencies.put(dependencyPath, d);
+                // If the package is depended upon, it shouldn't be considered an independent root.
+                roots.remove(updatableDependency.getRemote());
+
                 if (seen.contains(dependencyPath)) {
-                    allDependencies.put(dependencyPath, d);
                     continue;
                 }
                 seen.add(dependencyPath);
@@ -419,15 +429,14 @@ public class InstallerUtil {
                 }
 
                 requiredPackages.add(remoteDependency);
-                allDependencies.put(dependencyPath, d);
                 current.add(remoteDependency);
-                // We had a dependency on it, so it can't be a root.
-                roots.remove(remoteDependency);
             }
         }
 
         List<RemotePackage> result = Lists.newArrayList();
 
+        // Now proceed with the bulk of the algorithm, traversing the graph and removing
+        // dependencies, and adding to the output when there is only one left.
         while (!roots.isEmpty()) {
             RemotePackage root = roots.iterator().next();
             roots.remove(root);
@@ -448,6 +457,8 @@ public class InstallerUtil {
             }
         }
 
+        // This will happen if the graph isn't a dag. This shouldn't happen unless we make a mistake
+        // with the published sdk repo.
         if (result.size() != requiredPackages.size()) {
             logger.logInfo("Failed to sort dependencies, returning partially-sorted list.");
             for (RemotePackage p : result) {
@@ -466,7 +477,7 @@ public class InstallerUtil {
      */
     public static boolean checkValidPath(
             @NonNull Path path, @NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
-        String check = path.normalize().toString() + File.separator;
+        String check = path.normalize() + File.separator;
 
         for (LocalPackage p : manager.getPackages().getLocalPackages().values()) {
             String existing = p.getLocation().normalize() + File.separator;

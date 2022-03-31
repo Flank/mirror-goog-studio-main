@@ -17,7 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.SdkConstants
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
@@ -210,7 +210,7 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
                 resourceDirs = ImmutableList.of(),
                 resourceOutputApk = outputFile,
                 options = AaptOptions(),
-                variantType = VariantTypeImpl.BASE_APK
+                componentType = ComponentTypeImpl.BASE_APK
             )
             daemon.link(request, logger)
         }

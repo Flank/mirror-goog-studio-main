@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.utils.IssueSubject
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Test

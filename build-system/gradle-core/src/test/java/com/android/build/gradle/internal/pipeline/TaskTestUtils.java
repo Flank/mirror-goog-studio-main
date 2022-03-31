@@ -26,7 +26,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
@@ -38,8 +37,9 @@ import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
+import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.NameAnonymizer;
 import com.android.builder.profile.NameAnonymizerSerializer;
@@ -326,17 +326,17 @@ public class TaskTestUtils {
         when(creationConfig.getName()).thenReturn("theVariantName");
         when(creationConfig.getFlavorName()).thenReturn("theFlavorName");
         when(creationConfig.getBuildType()).thenReturn("debug");
-        when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(creationConfig.getComponentType()).thenReturn(ComponentTypeImpl.BASE_APK);
 
         VariantScope scope = mock(VariantScope.class);
         when(creationConfig.getVariantScope()).thenReturn(scope);
         when(creationConfig.computeTaskName(Mockito.anyString(), Mockito.eq("")))
                 .thenReturn(TASK_NAME);
 
-        VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
-        when(creationConfig.getVariantDslInfo()).thenReturn(variantDslInfo);
+        VariantPathHelper paths = mock(VariantPathHelper.class);
+        when(creationConfig.getPaths()).thenReturn(paths);
         when(creationConfig.getDirName()).thenReturn("config dir name");
-        when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(creationConfig.getComponentType()).thenReturn(ComponentTypeImpl.BASE_APK);
         when(creationConfig.getDebuggable()).thenReturn(true);
         return creationConfig;
     }

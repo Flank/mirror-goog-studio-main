@@ -213,4 +213,19 @@ class AnalyticsEnabledVariantTest {
         Mockito.verify(delegate, Mockito.times(1))
             .nestedComponents
     }
+
+    @Test
+    fun testAllComponents() {
+        Mockito.`when`(delegate.components)
+            .thenReturn(listOf(delegate, Mockito.mock(UnitTest::class.java)))
+        val allComponents = proxy.components
+        Truth.assertThat(allComponents).hasSize(2)
+        Truth.assertThat(allComponents[0]).isInstanceOf(Variant::class.java)
+        Truth.assertThat(allComponents[1]).isInstanceOf(UnitTest::class.java)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessList.first().type)
+            .isEqualTo(VariantPropertiesMethodType.COMPONENTS_VALUE)
+        Mockito.verify(delegate, Mockito.times(1)).components
+    }
 }

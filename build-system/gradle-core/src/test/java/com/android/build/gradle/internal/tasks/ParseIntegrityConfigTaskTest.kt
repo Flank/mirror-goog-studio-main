@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
 import com.android.bundle.AppIntegrityConfigOuterClass.EmulatorCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.InstallerCheck
@@ -200,14 +200,14 @@ class ParseIntegrityConfigTaskTest {
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantCreationConfig {
         val componentProperties = Mockito.mock(VariantCreationConfig::class.java)
-        val variantType = Mockito.mock(VariantType::class.java)
+        val componentType = Mockito.mock(ComponentType::class.java)
         val globalConfig = Mockito.mock(GlobalTaskCreationConfig::class.java)
         val variantScope = Mockito.mock(VariantScope::class.java)
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
 
         Mockito.`when`(componentProperties.services).thenReturn(taskCreationServices)
-        Mockito.`when`(componentProperties.variantType).thenReturn(variantType)
+        Mockito.`when`(componentProperties.componentType).thenReturn(componentType)
         Mockito.`when`(componentProperties.name).thenReturn("variant")
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(componentProperties.global).thenReturn(globalConfig)

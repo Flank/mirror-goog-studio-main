@@ -129,6 +129,7 @@ kotlin_test(
         "@maven//:com.android.tools.build.aapt2-proto",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:com.google.truth.truth",
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:nl.jqno.equalsverifier.equalsverifier",

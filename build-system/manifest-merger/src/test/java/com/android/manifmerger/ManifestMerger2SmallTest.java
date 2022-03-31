@@ -2767,6 +2767,31 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testWrongManifestError() throws Exception {
+        String manifestWithBug =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "    <uses-sdk android=\"31\" >\n" // uses-sdk tag is not closed
+                        + "</manifest>";
+        File appFile = TestUtils.inputAsFile("testWrongManifestError", manifestWithBug);
+        assertTrue(appFile.exists());
+
+        try {
+
+            ManifestMerger2.newMerger(appFile, new MockLog(), ManifestMerger2.MergeType.APPLICATION)
+                    .withFeatures(Feature.DISABLE_MINSDKLIBRARY_CHECK)
+                    .merge();
+            fail("Merge operation must fail with exception");
+        } catch (ManifestMerger2.MergeFailureException e) {
+            assertThat(e.getMessage()).startsWith("Error parsing");
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+        }
+    }
+
+    @Test
     public void testDisableMinSdkLibraryFlag() throws Exception {
         String appInput =
                 ""

@@ -17,7 +17,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.DefaultSourcesProvider
-import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.api.AndroidSourceDirectorySet
@@ -47,10 +46,9 @@ class SourcesImpl(
     private val variantSourceSet: DefaultAndroidSourceSet?,
 ): Sources {
 
-    override val java: SourceDirectoriesImpl =
-        SourceDirectoriesImpl(
+    override val java: FlatSourceDirectoriesImpl =
+        FlatSourceDirectoriesImpl(
             SourceType.JAVA.name,
-            projectDirectory,
             variantServices,
             variantSourceSet?.java?.filter
         ).also { sourceDirectoriesImpl ->
@@ -61,10 +59,9 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.java)
         }
 
-    override val kotlin: SourceDirectoriesImpl =
-        SourceDirectoriesImpl(
+    override val kotlin: FlatSourceDirectoriesImpl =
+        FlatSourceDirectoriesImpl(
             SourceType.KOTLIN.name,
-            projectDirectory,
             variantServices,
             null,
         ).also { sourceDirectoriesImpl ->
@@ -80,7 +77,6 @@ class SourcesImpl(
     override val res: ResSourceDirectoriesImpl =
         ResSourceDirectoriesImpl(
             SourceType.RES.name,
-            projectDirectory,
             variantServices,
             variantSourceSet?.res?.filter
         ).also { sourceDirectoriesImpl ->
@@ -92,10 +88,9 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.res)
         }
 
-    override val assets: AssetSourceDirectoriesImpl
-        get() = AssetSourceDirectoriesImpl(
+    override val assets: AssetSourceDirectoriesImpl =
+        AssetSourceDirectoriesImpl(
             SourceType.ASSETS.name,
-            projectDirectory,
             variantServices,
             variantSourceSet?.assets?.filter
         ).also { sourceDirectoriesImpl ->
@@ -108,10 +103,9 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.assets)
         }
 
-    override val jniLibs: AssetSourceDirectoriesImpl
-        get() = AssetSourceDirectoriesImpl(
+    override val jniLibs: AssetSourceDirectoriesImpl =
+        AssetSourceDirectoriesImpl(
             SourceType.JNI_LIBS.name,
-            projectDirectory,
             variantServices,
             variantSourceSet?.jniLibs?.filter
         ).also { sourceDirectoriesImpl ->
@@ -124,11 +118,10 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.jniLibs)
         }
 
-    override val shaders: AssetSourceDirectoriesImpl?
-        get() = defaultSourceProvider.shaders?.let { listOfDirectoryEntries ->
+    override val shaders: AssetSourceDirectoriesImpl? =
+        defaultSourceProvider.shaders?.let { listOfDirectoryEntries ->
             AssetSourceDirectoriesImpl(
                 SourceType.SHADERS.name,
-                projectDirectory,
                 variantServices,
                 variantSourceSet?.shaders?.filter
             ).also { sourceDirectoriesImpl ->
@@ -142,10 +135,9 @@ class SourcesImpl(
             }
         }
 
-    override val mlModels: AssetSourceDirectoriesImpl
-        get() = AssetSourceDirectoriesImpl(
+    override val mlModels: AssetSourceDirectoriesImpl =
+        AssetSourceDirectoriesImpl(
             SourceType.ML_MODELS.name,
-            projectDirectory,
             variantServices,
             variantSourceSet?.mlModels?.filter
         ).also { sourceDirectoriesImpl ->
@@ -157,11 +149,10 @@ class SourcesImpl(
             resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.mlModels)
         }
 
-    override val aidl: SourceDirectories?
-        get() = defaultSourceProvider.aidl?.let { defaultAidlDirectories ->
-            SourceDirectoriesImpl(
+    override val aidl: SourceDirectories.Flat? by lazy {
+        defaultSourceProvider.aidl?.let { defaultAidlDirectories ->
+            FlatSourceDirectoriesImpl(
                 SourceType.AIDL.name,
-                projectDirectory,
                 variantServices,
                 variantSourceSet?.aidl?.filter
             ).also { sourceDirectoriesImpl ->
@@ -169,12 +160,12 @@ class SourcesImpl(
                 resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.aidl)
             }
         }
+    }
 
-    override val renderscript: SourceDirectories?
-        get() = defaultSourceProvider.renderscript?.let { defaultRenderscriptDirectories ->
-            SourceDirectoriesImpl(
+    override val renderscript: SourceDirectories.Flat? by lazy {
+        defaultSourceProvider.renderscript?.let { defaultRenderscriptDirectories ->
+            FlatSourceDirectoriesImpl(
                 SourceType.RENDERSCRIPT.name,
-                projectDirectory,
                 variantServices,
                 variantSourceSet?.renderscript?.filter
             ).also { sourceDirectoriesImpl ->
@@ -182,10 +173,11 @@ class SourcesImpl(
                 resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.renderscript)
             }
         }
+    }
 
-    internal val extras: NamedDomainObjectContainer<SourceDirectoriesImpl> by lazy {
+    internal val extras: NamedDomainObjectContainer<FlatSourceDirectoriesImpl> by lazy {
         variantServices.domainObjectContainer(
-            SourceDirectoriesImpl::class.java,
+            FlatSourceDirectoriesImpl::class.java,
             SourceProviderFactory(
                 variantServices,
                 projectDirectory,
@@ -193,17 +185,16 @@ class SourcesImpl(
         )
     }
 
-    override fun getByName(name: String): SourceDirectories = extras.maybeCreate(name)
+    override fun getByName(name: String): SourceDirectories.Flat = extras.maybeCreate(name)
 
     class SourceProviderFactory(
         private val variantServices: VariantServices,
         private val projectDirectory: Directory,
-    ): NamedDomainObjectFactory<SourceDirectoriesImpl> {
+    ): NamedDomainObjectFactory<FlatSourceDirectoriesImpl> {
 
-        override fun create(name: String): SourceDirectoriesImpl =
-            SourceDirectoriesImpl(
+        override fun create(name: String): FlatSourceDirectoriesImpl =
+            FlatSourceDirectoriesImpl(
                 _name = name,
-                projectDirectory = projectDirectory,
                 variantServices = variantServices,
                 variantDslFilters = null
             )
@@ -217,7 +208,7 @@ class SourcesImpl(
      * AGP as they should all use this [SourcesImpl] from now on.
      */
     private fun resetVariantSourceSet(
-        target: AbstractSourceDirectoriesImpl,
+        target: SourceDirectoriesImpl,
         sourceSet: AndroidSourceDirectorySet?,
     ) {
         if (sourceSet != null) {

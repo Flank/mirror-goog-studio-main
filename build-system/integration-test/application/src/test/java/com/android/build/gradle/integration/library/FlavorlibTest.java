@@ -69,6 +69,7 @@ public class FlavorlibTest {
     @Test
     public void report() throws Exception {
         project.executor()
+                // https://github.com/gradle/gradle/issues/19959
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("androidDependencies", "signingReport");
     }

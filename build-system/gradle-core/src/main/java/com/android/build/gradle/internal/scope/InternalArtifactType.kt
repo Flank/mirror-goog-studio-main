@@ -161,6 +161,8 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // The android test results proto merged test results from all devices.
     object MANAGED_DEVICE_ANDROID_TEST_MERGED_RESULTS_PROTO: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS)
+    // The android test results report HTML whose data are merged from all devices.
+    object MANAGED_DEVICE_ANDROID_TEST_MERGED_RESULTS_REPORT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
 
     // Additional test output data from the connected task
     object CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
@@ -363,8 +365,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // directory containing layout info files for data binding when merge-resources type == PACKAGE
     // see https://issuetracker.google.com/110412851
     object DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // the generated base classes artifacts from all dependencies
-    object DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // the data binding class log generated after compilation: InternalArtifactType<RegularFile>(FILE), Replaceable includes merged
     // class info file
     object DATA_BINDING_BASE_CLASS_LOG_ARTIFACT: InternalArtifactType<Directory>(DIRECTORY), Replaceable

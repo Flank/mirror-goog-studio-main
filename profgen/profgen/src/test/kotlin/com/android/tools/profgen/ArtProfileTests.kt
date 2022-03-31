@@ -225,6 +225,30 @@ class ArtProfileTests {
         assertEquals("base.apk!classes2.dex", profileKey("base.apk!classes2.dex", "", "!"))
     }
 
+    @Test
+    fun testDumpProfiles() {
+        val obf = ObfuscationMap(testData("mapping.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
+        val apk = Apk(testData("app-release.apk"))
+        val prof = ArtProfile(hrp, obf, apk)
+        val output = ByteArrayOutputStream()
+        output.use {
+            // Save profile to P format
+            prof.save(it, ArtProfileSerializer.V0_1_0_P)
+        }
+        val input = output.toByteArray().inputStream()
+        val builder = StringBuilder()
+        input.use {
+            val deserialized = ArtProfile(it)!!
+            dumpProfile(builder, deserialized, apk, obf)
+        }
+        val hrf = builder.toString()
+        println("--- Output Human readable profile ---")
+        println(hrf)
+        println("-------------------------------------")
+        assert(hrf.isNotEmpty())
+    }
+
     private fun assertSerializationIntegrity(
             prof: ArtProfile,
             serializer: ArtProfileSerializer,

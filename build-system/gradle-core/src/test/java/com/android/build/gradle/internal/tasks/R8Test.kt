@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
-import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -25,7 +23,7 @@ import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.ClassWithDesugarApi
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.R8OutputType
 import com.android.testutils.TestClassesGenerator
@@ -42,8 +40,6 @@ import com.android.zipflinger.ZipArchive
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.RegularFile
-import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkerExecutor
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
@@ -701,16 +697,16 @@ class R8Test(val r8OutputType: R8OutputType) {
 
         r8Keep?.let { proguardConfigurations.add("-keep $it") }
 
-        val variantType =
+        val componentType =
             if (r8OutputType == R8OutputType.DEX)
-                VariantTypeImpl.BASE_APK
+                ComponentTypeImpl.BASE_APK
             else
-                VariantTypeImpl.LIBRARY
+                ComponentTypeImpl.LIBRARY
 
 
 
         val output: File =
-            if (variantType.isAar) {
+            if (componentType.isAar) {
                 outputDir.resolve("main.jar").toFile()
             } else {
                 outputDir.resolve("main").toFile()
@@ -722,7 +718,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             isDebuggable = true,
             enableDesugaring =
                 java8Support == VariantScope.Java8LangSupport.R8
-                    && !variantType.isAar,
+                    && !componentType.isAar,
             disableTreeShaking = disableTreeShaking,
             disableMinification = disableMinification,
             mainDexListFiles = listOf(),
@@ -730,7 +726,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             inputProguardMapping = null,
             proguardConfigurationFiles = proguardRulesFiles,
             proguardConfigurations = proguardConfigurations,
-            isAar = variantType.isAar,
+            isAar = componentType.isAar,
             errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
             dexingType = DexingType.NATIVE_MULTIDEX,
             useFullR8 = useFullR8,

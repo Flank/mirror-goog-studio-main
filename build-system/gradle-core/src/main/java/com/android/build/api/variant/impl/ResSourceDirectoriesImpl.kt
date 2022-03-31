@@ -27,10 +27,9 @@ import org.gradle.api.tasks.util.PatternFilterable
 
 class ResSourceDirectoriesImpl(
     _name: String,
-    projectDirectory: Directory,
     val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?,
-) : SourceAndOverlayDirectoriesImpl(_name, projectDirectory, variantServices, variantDslFilters) {
+) : LayeredSourceDirectoriesImpl(_name, variantServices, variantDslFilters) {
 
 
     /**
@@ -44,7 +43,7 @@ class ResSourceDirectoriesImpl(
      * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
      * @return a list ResourceSet.
      */
-    fun getResourceSets(
+    fun getAscendingOrderResourceSets(
         validateEnabled: Boolean,
         aaptEnv: String?
     ): Provider<List<ResourceSet>> {

@@ -18,6 +18,7 @@ package com.android.sdklib.devices;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -265,7 +266,7 @@ public class Storage {
         }
 
         double sizeInReasonableUnits = getPreciseSizeAsUnit(reasonableUnit);
-        String format = String.format("%%.%df %%s", precision);
+        String format = String.format(Locale.ENGLISH, "%%.%df %%s", precision);
         return String.format(format, sizeInReasonableUnits, reasonableUnit.getDisplayValue());
     }
 

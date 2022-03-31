@@ -86,7 +86,7 @@ abstract class CheckManifest : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.manifestRequired = creationConfig.variantType.requiresManifest
+            task.manifestRequired = creationConfig.componentType.requiresManifest
             task.manifestFile = task.project.provider {
                 creationConfig.variantSources.mainManifestFilePath
             }

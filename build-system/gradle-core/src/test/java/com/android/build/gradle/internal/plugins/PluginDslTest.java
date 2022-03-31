@@ -21,12 +21,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.Component;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.TestVariant;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
@@ -292,9 +293,10 @@ public class PluginDslTest {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
                 String variantName =
                         StringHelper.combineAsCamelCase(ImmutableList.of(dim1, dim2, "debug"));
-                VariantDslInfo variant = componentMap.get(variantName).getVariantDslInfo();
+                VariantImpl variant = componentMap.get(variantName);
                 assertThat(
-                                variant.getJavaCompileOptions()
+                                variant.getOldVariantApiLegacySupport()
+                                        .getJavaCompileOptions()
                                         .getAnnotationProcessorOptions()
                                         .getClassNames())
                         .containsExactly(dim2, dim1)
@@ -574,7 +576,7 @@ public class PluginDslTest {
     }
 
     @Test
-    public void testInstrumentationRunnerArguments_merging() throws Exception {
+    public void testInstrumentationRunnerArguments_merging() {
 
         Eval.me(
                 "project",
@@ -606,7 +608,7 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks(project);
 
-        Map<String, VariantImpl> componentMap = getComponentMap();
+        Map<String, AndroidTestCreationConfig> componentMap = getAndroidTestComponentMap();
 
         Map<String, Map<String, String>> expected =
                 ImmutableMap.of(
@@ -623,8 +625,7 @@ public class PluginDslTest {
                 (variant, args) ->
                         assertThat(
                                         componentMap
-                                                .get(variant)
-                                                .getVariantDslInfo()
+                                                .get(variant + "AndroidTest")
                                                 .getInstrumentationRunnerArguments())
                                 .containsExactlyEntriesIn(args));
     }
@@ -862,6 +863,16 @@ public class PluginDslTest {
         for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
                 plugin.getVariantManager().getMainComponents()) {
             result.put(variant.getVariant().getName(), variant.getVariant());
+        }
+        return result;
+    }
+
+    public Map<String, AndroidTestCreationConfig> getAndroidTestComponentMap() {
+        Map<String, AndroidTestCreationConfig> result = new HashMap<>();
+        for (TestComponentImpl component : plugin.getVariantManager().getTestComponents()) {
+            if (component instanceof AndroidTestCreationConfig) {
+                result.put(component.getName(), (AndroidTestCreationConfig) component);
+            }
         }
         return result;
     }

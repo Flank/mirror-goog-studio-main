@@ -41,7 +41,7 @@ import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.sync.TestModuleVariantModelTask;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
 import org.gradle.api.Project;
@@ -119,7 +119,7 @@ public class TestApplicationTaskManager
                             @NonNull
                             @Override
                             public String getName() {
-                                return super.getName() + VariantType.ANDROID_TEST_SUFFIX;
+                                return super.getName() + ComponentType.ANDROID_TEST_SUFFIX;
                             }
                         });
 
@@ -130,7 +130,7 @@ public class TestApplicationTaskManager
                 testData,
                 null,
                 testVariantProperties.getName(),
-                VariantType.ANDROID_TEST_SUFFIX);
+                ComponentType.ANDROID_TEST_SUFFIX);
     }
 
     @Override

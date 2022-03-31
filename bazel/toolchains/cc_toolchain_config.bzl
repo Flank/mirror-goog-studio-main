@@ -24,7 +24,7 @@ load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 
 CLANG_LATEST = {
     # TODO(b/213648391): update mac version
-    "darwin": "host/darwin-x86/clang-r353983e",
+    "darwin": "host/darwin-x86/clang-r437112",
     "x64_windows": "host/windows-x86/clang-r437112",
     "k8": "host/linux-x86/clang-r437112",
 }

@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.ComponentType;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
@@ -58,7 +58,7 @@ public class SourceSetsTask extends ProjectBasedReportTask {
             renderDirectorySet(
                     "Kotlin sources", (AndroidSourceDirectorySet) sourceSet.getKotlin(), project);
 
-            if (!sourceSet.getName().startsWith(VariantType.UNIT_TEST_PREFIX)) {
+            if (!sourceSet.getName().startsWith(ComponentType.UNIT_TEST_PREFIX)) {
                 renderKeyValue(
                         "Manifest file: ",
                         project.getRootProject()

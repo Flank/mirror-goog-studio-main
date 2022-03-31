@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
 import com.android.utils.capitalizeAndAppend
 
@@ -52,13 +52,13 @@ class ApplicationVariantData(
     taskContainer
 ), TestedVariantData {
 
-    private val testVariants: MutableMap<VariantType, TestVariantData> = mutableMapOf()
+    private val testVariants: MutableMap<ComponentType, TestVariantData> = mutableMapOf()
 
-    override fun setTestVariantData(testVariantData: TestVariantData, type: VariantType) {
+    override fun setTestVariantData(testVariantData: TestVariantData, type: ComponentType) {
         testVariants[type] = testVariantData
     }
 
-    override fun getTestVariantData(type: VariantType): TestVariantData? {
+    override fun getTestVariantData(type: ComponentType): TestVariantData? {
         return testVariants[type]
     }
 

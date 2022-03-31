@@ -32,6 +32,7 @@ public class ExternalNativeBuildOptionsTest {
                     // ignore these getters since they're called by kotlin property access
                     original.getCmake();
                     original.getNdkBuild();
+                    original.getExperimentalProperties();
                 });
     }
 

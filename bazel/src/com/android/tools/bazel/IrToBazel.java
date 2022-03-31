@@ -23,14 +23,13 @@ import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.FileGroup;
 import com.android.tools.bazel.model.ImlModule;
-import com.android.tools.bazel.model.JvmImport;
 import com.android.tools.bazel.model.JavaLibrary;
+import com.android.tools.bazel.model.JvmImport;
 import com.android.tools.bazel.model.Package;
 import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -193,6 +192,13 @@ public class IrToBazel {
                         for (File file : library.getFiles()) {
                             String relJar = workspace.relativize(file.toPath()).toString();
                             Package jarPkg = bazel.findPackage(relJar);
+                            if (jarPkg == null) {
+                                throw new IllegalStateException(
+                                        "Cannot find package for jar: "
+                                                + file
+                                                + "\nFrom library: "
+                                                + library.getName());
+                            }
                             String relToPkg =
                                     jarPkg.getPackageDir()
                                             .toPath()

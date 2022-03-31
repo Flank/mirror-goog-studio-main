@@ -109,7 +109,7 @@ class AvdSnapshotHandler(
         try {
             GrabProcessOutput.grabProcessOutput(
                 process,
-                GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
+                GrabProcessOutput.Wait.WAIT_FOR_READERS,
                 object : GrabProcessOutput.IProcessOutput {
                     override fun out(line: String?) {
                         line ?: return
@@ -186,7 +186,7 @@ class AvdSnapshotHandler(
         val bootCompleted = AtomicBoolean(false)
         try {
             Thread {
-                lateinit var emulatorSerial: String
+                var emulatorSerial: String? = null
                 while(process.isAlive) {
                     try {
                         emulatorSerial = findDeviceSerialWithId(adbExecutable, deviceId)
@@ -195,6 +195,11 @@ class AvdSnapshotHandler(
                         logger.verbose("Waiting for $avdName to be attached to adb.")
                     }
                     Thread.sleep(5000)
+                }
+                if (emulatorSerial == null) {
+                    // It is possible for the emulator process to return unexpectly
+                    // and the emulatorSerial to not be set.
+                    return@Thread
                 }
                 logger.verbose("$avdName is attached to adb ($emulatorSerial).")
 
@@ -325,7 +330,7 @@ class AvdSnapshotHandler(
 
         GrabProcessOutput.grabProcessOutput(
             getPropProcess,
-            GrabProcessOutput.Wait.WAIT_FOR_PROCESS,
+            GrabProcessOutput.Wait.WAIT_FOR_READERS,
             object : GrabProcessOutput.IProcessOutput {
                 override fun out(line: String?) {
                     line ?: return

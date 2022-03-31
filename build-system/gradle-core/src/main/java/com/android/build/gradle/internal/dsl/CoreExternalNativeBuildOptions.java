@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.Nullable;
+import java.util.Map;
 
 /**
  * Base interface for external native build per-variant info.
@@ -27,4 +28,6 @@ public interface CoreExternalNativeBuildOptions {
 
     @Nullable
     CoreExternalNativeCmakeOptions getExternalNativeCmakeOptions();
+
+    Map<String, Object> getExternalNativeExperimentalProperties();
 }

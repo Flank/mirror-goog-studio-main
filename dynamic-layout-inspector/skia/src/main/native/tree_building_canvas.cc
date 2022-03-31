@@ -15,10 +15,10 @@
  */
 #include "tree_building_canvas.h"
 
-#include <SkClipOp.h>
-#include <SkImageInfo.h>
 #include <memory>
 #include <stack>
+#include "SkClipOp.h"
+#include "SkImageInfo.h"
 
 #include "SkImage.h"
 #include "SkRRect.h"
@@ -73,10 +73,6 @@ void TreeBuildingCanvas::willRestore() {
 #ifdef TREEBUILDINGCANVAS_DEBUG
   real_canvas->getTotalMatrix().dump();
 #endif
-}
-
-void TreeBuildingCanvas::onMarkCTM(const char* name) {
-  real_canvas->markCTM(name);
 }
 
 void TreeBuildingCanvas::didConcat44(const SkM44& matrix) {

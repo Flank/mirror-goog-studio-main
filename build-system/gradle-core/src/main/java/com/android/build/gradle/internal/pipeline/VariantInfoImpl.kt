@@ -31,10 +31,10 @@ data class VariantInfoImpl(
 
     constructor(creationConfig: VariantCreationConfig) :
             this(
-                _isTest = creationConfig.variantType.isForTesting,
+                _isTest = creationConfig.componentType.isForTesting,
                 _variantName = creationConfig.name,
                 _buildTypeName = creationConfig.buildType,
-                _flavorNames = creationConfig.productFlavors.map { it.second }.toImmutableList(),
+                _flavorNames = creationConfig.productFlavorList.map { it.name }.toImmutableList(),
                 _isDebuggable = creationConfig.debuggable
             )
 

@@ -16,44 +16,61 @@
 
 package com.android.tools.deploy.liveedit;
 
-import static java.lang.reflect.Proxy.newProxyInstance;
-
-import com.android.deploy.asm.ClassReader;
+import com.android.deploy.asm.Type;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 class LiveEditClass {
     // The context this class is defined in.
     private final LiveEditContext context;
+    private Interpretable bytecode;
 
-    private final String className;
-    private final boolean isProxyClass;
+    // Proxy class that can be instantiated to represent an instance of the class defined by the
+    // bytecode.
+    private Class<?> proxyClass;
 
-    private byte[] bytecode;
-    private String[] proxyInterfaces;
-
-    // Whether or not <clinit> has been interpreted and run for this class.
+    // Whether or not <clinit> has been interpreted and run for this class. Only meaningful if
+    // proxyClass is non-null.
     private boolean isInitialized;
+
+    // Static fields of this class. Only populated and used if proxyClass is non-null.
     private final HashMap<String, Object> staticFields;
+
+    // Memoized reflected data so we can avoid repeated iteration over class methods/fields. Only
+    // populated and used if proxyClass is non-null.
+    private final HashSet<Type> castableTypes;
+    private final HashMap<String, Field> superReflectedFields;
+    private final HashMap<String, Method> superReflectedMethods;
 
     // Named method descriptors of methods that have been live edited.
     private final HashSet<String> liveEditedMethods;
 
-    public LiveEditClass(
-            LiveEditContext context, String className, byte[] bytecode, boolean isProxyClass) {
+    public LiveEditClass(LiveEditContext context, byte[] bytecode, boolean isProxyClass) {
         this.context = context;
-        this.className = className;
-        this.isProxyClass = isProxyClass;
         this.staticFields = new HashMap<>();
+        this.castableTypes = new HashSet<>();
+        this.superReflectedFields = new HashMap<>();
+        this.superReflectedMethods = new HashMap<>();
         this.liveEditedMethods = new HashSet<>();
-        updateBytecode(bytecode);
+        updateBytecode(bytecode, isProxyClass);
     }
 
-    public void updateBytecode(byte[] newBytecode) {
-        bytecode = newBytecode;
+    public void updateBytecode(byte[] newBytecode, boolean isProxyClass) {
+        bytecode = new Interpretable(newBytecode);
         if (isProxyClass) {
-            ClassReader reader = new ClassReader(bytecode);
-            proxyInterfaces = reader.getInterfaces();
+            try {
+                // Initializes proxyClass, castableTypes, superReflectedFields, and
+                // superReflectedMethods.
+                setUpProxyClass();
+            } catch (Exception e) {
+                throw new LiveEditException("Could not set up proxy class", e);
+            }
+
             isInitialized = false;
             staticFields.clear();
         }
@@ -68,39 +85,54 @@ class LiveEditClass {
     }
 
     public boolean isProxyClass() {
-        return isProxyClass;
+        return proxyClass != null;
     }
 
-    public Object invokeMethod(
+    public boolean declaresMethod(String methodName, String methodDesc) {
+        return bytecode.getMethod(methodName, methodDesc) != null;
+    }
+
+    public Method getSuperMethod(String methodName, String methodDesc) {
+        return superReflectedMethods.get(methodName + methodDesc);
+    }
+
+    public Field getSuperField(String fieldName) {
+        return superReflectedFields.get(fieldName);
+    }
+
+    public boolean isInstanceOf(Type type) {
+        return castableTypes.contains(type);
+    }
+
+    public ClassLoader getClassLoader() {
+        return context.getClassLoader();
+    }
+
+    // Invoke the specified method with the specified receiver and arguments. The method must be
+    // declared in the bytecode for this class; methods of superclasses will not be resolved.
+    public Object invokeDeclaredMethod(
             String methodName, String methodDesc, Object thisObject, Object[] arguments) {
         MethodBodyEvaluator evaluator =
                 new MethodBodyEvaluator(context, bytecode, methodName, methodDesc);
-        return evaluator.eval(thisObject, className, arguments);
+        return evaluator.eval(thisObject, bytecode.getInternalName(), arguments);
     }
 
-    // Returns a new proxy instance of the class that implements all the proxied class' interfaces.
-    // Can only be called if the LiveEditClass instance is a proxiable class.
+    // Returns a new proxy instance that implements all the proxied class' interfaces. Can only be
+    // called if the LiveEditClass represents a proxiable class.
     public Object getProxy() {
-        if (!isProxyClass) {
+        if (proxyClass == null) {
             throw new LiveEditException(
                     "Cannot create a proxy object for a non-proxy LiveEdit class");
         }
-        Class<?>[] interfaceClasses = new Class<?>[proxyInterfaces.length + 1];
-        interfaceClasses[0] = ProxyClass.class;
-        try {
-            for (int i = 1; i < interfaceClasses.length; ++i) {
-                interfaceClasses[i] =
-                        Class.forName(
-                                proxyInterfaces[i - 1].replace('/', '.'),
-                                true,
-                                context.getClassLoader());
-            }
-        } catch (ClassNotFoundException cnfe) {
-            throw new LiveEditException("Could not find interface class for proxy", cnfe);
-        }
 
-        ProxyClassHandler handler = new ProxyClassHandler(context, className);
-        return newProxyInstance(context.getClassLoader(), interfaceClasses, handler);
+        ProxyClassHandler handler = new ProxyClassHandler(this, bytecode.getDefaultFieldValues());
+        try {
+            return proxyClass
+                    .getConstructor(new Class<?>[] {InvocationHandler.class})
+                    .newInstance(new Object[] {handler});
+        } catch (Exception e) {
+            throw new LiveEditException("Could not create proxy object", e);
+        }
     }
 
     public synchronized Object getStaticField(String fieldName) {
@@ -114,12 +146,72 @@ class LiveEditClass {
     }
 
     private synchronized void ensureClinit() {
-        if (!isProxyClass) {
+        if (proxyClass == null) {
             throw new LiveEditException("Cannot invoke <clinit> for non-proxy LiveEdit class");
         }
         if (!isInitialized) {
             isInitialized = true; // Must set this first to prevent infinite loops.
-            invokeMethod("<clinit>", "()V", null, new Object[0]);
+            invokeDeclaredMethod("<clinit>", "()V", null, new Object[0]);
         }
+    }
+
+    private void setUpProxyClass() throws ClassNotFoundException, SecurityException {
+        castableTypes.clear();
+        superReflectedFields.clear();
+        superReflectedMethods.clear();
+
+        HashSet<Class<?>> interfaceClasses = new HashSet<>();
+        interfaceClasses.add(ProxyClass.class);
+
+        LinkedList<Class<?>> queue = new LinkedList<>();
+        queue.add(classForName(bytecode.getSuperName()));
+        for (String proxyInterface : bytecode.getInterfaces()) {
+            queue.add(classForName(proxyInterface));
+        }
+
+        // Make sure to add the proxied class itself as a castable type.
+        castableTypes.add(Type.getObjectType(bytecode.getInternalName()));
+
+        // Traverse the inheritance hierarchy of the class, keeping track of interfaces, methods,
+        // and fields.
+        while (queue.size() > 0) {
+            Class<?> clz = queue.remove();
+
+            if (clz.isInterface()) {
+                interfaceClasses.add(clz);
+            }
+
+            for (Field field : clz.getDeclaredFields()) {
+                field.setAccessible(true);
+                superReflectedFields.put(field.getName(), field);
+            }
+
+            for (Method method : clz.getDeclaredMethods()) {
+                method.setAccessible(true);
+                String key = method.getName() + Type.getMethodDescriptor(method);
+                superReflectedMethods.put(key, method);
+            }
+
+            castableTypes.add(Type.getType(clz));
+
+            Class<?> superclass = clz.getSuperclass();
+            if (superclass != null) {
+                queue.add(superclass);
+            }
+            Class<?>[] interfaces = clz.getInterfaces();
+            for (Class<?> inter : interfaces) {
+                if (!interfaceClasses.contains(inter)) {
+                    queue.add(inter);
+                }
+            }
+        }
+        proxyClass =
+                Proxy.getProxyClass(
+                        context.getClassLoader(),
+                        interfaceClasses.stream().toArray(Class<?>[]::new));
+    }
+
+    private Class<?> classForName(String internalName) throws ClassNotFoundException {
+        return Class.forName(internalName.replace('/', '.'), true, context.getClassLoader());
     }
 }

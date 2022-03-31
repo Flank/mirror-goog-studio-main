@@ -226,7 +226,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             super.configure(task);
 
             task.variantName = creationConfig.getBaseName();
-            task.supportedAbis = creationConfig.getVariantDslInfo().getSupportedAbis();
+            task.supportedAbis = creationConfig.getSupportedAbis();
             task.minSdkVersion =
                     VariantApiExtensionsKt.toSharedAndroidVersion(
                             creationConfig.getMinSdkVersion());

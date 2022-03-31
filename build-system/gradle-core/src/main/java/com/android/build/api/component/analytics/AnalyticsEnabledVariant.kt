@@ -175,4 +175,11 @@ abstract class AnalyticsEnabledVariant (
                 VariantPropertiesMethodType.NESTED_COMPONENTS_VALUE
             return delegate.nestedComponents
         }
+
+    override val components: List<Component>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.COMPONENTS_VALUE
+            return delegate.components
+        }
 }

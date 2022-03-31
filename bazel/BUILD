@@ -11,7 +11,7 @@ java_library(
     name = "utils",
     srcs = glob(["src/com/android/tools/utils/*.java"]),
     visibility = ["//tools/base/bazel/sdk:__pkg__"],
-    deps = ["@io_bazel_rules_kotlin//src/main/protobuf:worker_protocol_java_proto"],
+    deps = ["@bazel_tools//src/main/protobuf:worker_protocol_java_proto"],
 )
 
 config_setting(
@@ -336,6 +336,7 @@ java_jarjar(
         "@maven//:io.grpc.grpc-context",
         "@maven//:io.grpc.grpc-core",
         "@maven//:io.grpc.grpc-netty",
+        "@maven//:io.grpc.grpc-netty-shaded",
         "@maven//:io.grpc.grpc-okhttp",
         "@maven//:io.grpc.grpc-protobuf",
         "@maven//:io.grpc.grpc-protobuf-lite",
@@ -352,6 +353,7 @@ java_jarjar(
         "@maven//:io.netty.netty-transport",
         "@maven//:io.opencensus.opencensus-api",
         "@maven//:io.opencensus.opencensus-contrib-grpc-metrics",
+        "@maven//:io.perfmark.perfmark-api",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],

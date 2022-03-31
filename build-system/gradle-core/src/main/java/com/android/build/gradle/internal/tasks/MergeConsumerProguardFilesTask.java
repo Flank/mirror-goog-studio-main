@@ -117,8 +117,8 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
         public void configure(
                 @NonNull MergeConsumerProguardFilesTask task) {
             super.configure(task);
-            task.isBaseModule = creationConfig.getVariantType().isBaseModule();
-            task.isDynamicFeature = creationConfig.getVariantType().isDynamicFeature();
+            task.isBaseModule = creationConfig.getComponentType().isBaseModule();
+            task.isDynamicFeature = creationConfig.getComponentType().isDynamicFeature();
 
             task.getConsumerProguardFiles()
                     .from(creationConfig.getVariantScope().getConsumerProguardFilesForFeatures());

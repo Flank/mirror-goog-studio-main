@@ -474,6 +474,7 @@ fun createGradleTestProject(name: String, heapSize: String = "2048M"): GradleTes
                 """.trimIndent()
             )
 
+    // Add lintPublish dependency from lib to javalib as a regression test for Issue 224967104
     return GradleTestProject.builder()
         .withName(name)
         .fromTestApp(
@@ -485,6 +486,7 @@ fun createGradleTestProject(name: String, heapSize: String = "2048M"): GradleTes
                 .dependency(feature, app)
                 .dependency(app, lib)
                 .dependency(app, javaLib)
+                .dependency("lintPublish", lib, javaLib)
                 .build()
         )
         .withHeap(heapSize)

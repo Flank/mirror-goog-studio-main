@@ -83,7 +83,7 @@
       < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
       > :|:library|org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:library:unspecified:
          - type               = PROJECT
-         - artifact           = {PROJECT}/library/build/libs/library.jar{!}
+         - artifact           = {PROJECT}/library/build/libs/custom.jar{!}
          > projectInfo:
             - buildId        = ":"
             - projectPath    = ":library"

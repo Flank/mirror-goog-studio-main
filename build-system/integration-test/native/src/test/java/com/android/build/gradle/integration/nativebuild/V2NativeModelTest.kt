@@ -156,17 +156,17 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -fno-limit-debug-info, -fPIC]
+                flags:      [--target=i686-none-linux-android16]
 
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -fno-limit-debug-info, -fPIE]
+                flags:      [--target=i686-none-linux-android16]
 
                 sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -fno-limit-debug-info, -fPIC]
+                flags:      [--target=i686-none-linux-android16]
                 """.trimIndent()
         )
     }

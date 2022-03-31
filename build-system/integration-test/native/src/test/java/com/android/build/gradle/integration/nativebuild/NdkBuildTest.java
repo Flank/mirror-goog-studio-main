@@ -212,7 +212,7 @@ public class NdkBuildTest {
                             "sourceFile: {PROJECT}/src/main/jni/hello-jni.c{F}\n"
                                     + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}\n"
                                     + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, aarch64-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fpic, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/jni, -DANDROID, -Wformat, -Werror=format-security]");
+                                    + "flags:      [-target, aarch64-none-linux-android21]");
         } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             assertThat(
                             dumpCompileCommandsJsonBin(
@@ -221,7 +221,7 @@ public class NdkBuildTest {
                             "sourceFile: {PROJECT}/src/main/jni/hello-jni.c{F}\n"
                                     + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n"
                                     + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, aarch64-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {ANDROID_NDK}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fpic, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/jni, -DANDROID, -Wformat, -Werror=format-security]");
+                                    + "flags:      [-target, aarch64-none-linux-android21]");
         }
         File soFolder = getSoFolderFor(project, Abi.ARM64_V8A);
         assertThat(readAsFileIndex(debugX86Abi.getSymbolFolderIndexFile()))
@@ -385,5 +385,14 @@ public class NdkBuildTest {
         TruthHelper.assertThat(result.getTaskStates()).doesNotContainKey(":preBuild");
         TruthHelper.assertThat(result.getTask(":externalNativeBuildCleanRelease")).didWork();
         TruthHelper.assertThat(result.getTask(":externalNativeBuildCleanDebug")).didWork();
+    }
+
+    /** Regression test for http://b/159411906. */
+    @Test
+    public void testConfigureTasksDependencies() throws IOException, InterruptedException {
+        GradleBuildResult result = project.executor().run("configureNdkBuildDebug[arm64-v8a]");
+        TruthHelper.assertThat(result.getTask(":preDebugBuild")).wasUpToDate();
+        result = project.executor().run("configureNdkBuildRelease[arm64-v8a]");
+        TruthHelper.assertThat(result.getTask(":preReleaseBuild")).wasUpToDate();
     }
 }

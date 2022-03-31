@@ -247,7 +247,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val applicationId: Property<String>
 
     @get:Input
-    abstract val variantType: Property<String?>
+    abstract val componentType: Property<String?>
 
     @get:Optional
     @get:Input
@@ -305,8 +305,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             taskName: String
         ) {
             super.preConfigure(taskName)
-            val variantType = creationConfig.variantType
-            Preconditions.checkState(!variantType.isTestComponent)
+            val componentType = creationConfig.componentType
+            Preconditions.checkState(!componentType.isTestComponent)
             val artifacts = creationConfig.artifacts
             artifacts.republish(
                 InternalArtifactType.PACKAGED_MANIFESTS,
@@ -351,7 +351,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         ) {
             super.configure(task)
             val variantSources = creationConfig.variantSources
-            val variantType = creationConfig.variantType
+            val componentType = creationConfig.componentType
             // This includes the dependent libraries.
             task.manifests = creationConfig
                 .variantDependencies
@@ -371,8 +371,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
             task.applicationId.set(creationConfig.applicationId)
             task.applicationId.disallowChanges()
-            task.variantType.set(creationConfig.variantType.toString())
-            task.variantType.disallowChanges()
+            task.componentType.set(creationConfig.componentType.toString())
+            task.componentType.disallowChanges()
             task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
             task.targetSdkVersion
                 .setDisallowChanges(
@@ -393,7 +393,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 creationConfig.outputs.getMainSplit()
             )
             // set optional inputs per module type
-            if (variantType.isBaseModule) {
+            if (componentType.isBaseModule) {
                 task.featureManifests = creationConfig
                     .variantDependencies
                     .getArtifactCollection(
@@ -401,7 +401,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST
                     )
-            } else if (variantType.isDynamicFeature) {
+            } else if (componentType.isDynamicFeature) {
                 val dfCreationConfig =
                     creationConfig as DynamicFeatureCreationConfig
                 task.featureName.setDisallowChanges(dfCreationConfig.featureName)
@@ -440,7 +440,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.manifestOverlays.setDisallowChanges(
                 task.project.provider(variantSources::manifestOverlays)
             )
-            task.isFeatureSplitVariantType = creationConfig.variantType.isDynamicFeature
+            task.isFeatureSplitVariantType = creationConfig.componentType.isDynamicFeature
             task.buildTypeName = creationConfig.buildType
             task.projectBuildFile.set(task.project.buildFile)
             task.projectBuildFile.disallowChanges()
@@ -500,8 +500,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         ): EnumSet<Invoker.Feature> {
             val features: MutableList<Invoker.Feature> =
                 ArrayList()
-            val variantType = creationConfig.variantType
-            if (variantType.isDynamicFeature) {
+            val componentType = creationConfig.componentType
+            if (componentType.isDynamicFeature) {
                 features.add(Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
             }
             if (creationConfig.testOnlyApk) {

@@ -78,6 +78,7 @@ import com.android.tools.lint.checks.SdkIntDetector
 import com.android.tools.lint.checks.SecurityDetector
 import com.android.tools.lint.checks.ServiceCastDetector
 import com.android.tools.lint.checks.SignatureOrSystemDetector
+import com.android.tools.lint.checks.StringEscapeDetector
 import com.android.tools.lint.checks.SyntheticAccessorDetector
 import com.android.tools.lint.checks.TextFieldDetector
 import com.android.tools.lint.checks.TextViewDetector
@@ -94,8 +95,8 @@ import com.android.tools.lint.checks.Utf8Detector
 import com.android.tools.lint.checks.VectorPathDetector
 import com.android.tools.lint.checks.ViewTypeDetector
 import com.android.tools.lint.checks.WakelockDetector
-import com.android.tools.lint.checks.WatchFaceForAndroidXDetector
 import com.android.tools.lint.checks.WatchFaceEditorDetector
+import com.android.tools.lint.checks.WatchFaceForAndroidXDetector
 import com.android.tools.lint.checks.WearStandaloneAppDetector
 import com.android.tools.lint.checks.WrongCallDetector
 import com.android.tools.lint.checks.WrongCaseDetector
@@ -434,7 +435,6 @@ abstract class Reporter protected constructor(
                     CleanupDetector.SHARED_PREF,
                     CommentDetector.STOP_SHIP,
                     DataBindingDetector.ESCAPE_XML,
-                    DuplicateResourceDetector.STRING_ESCAPING,
                     DuplicateResourceDetector.TYPE_MISMATCH,
                     EllipsizeMaxLinesDetector.ISSUE,
                     ExportedFlagDetector.ISSUE,
@@ -512,6 +512,7 @@ abstract class Reporter protected constructor(
                     ServiceCastDetector.WIFI_MANAGER,
                     ServiceCastDetector.WIFI_MANAGER_UNCERTAIN,
                     SignatureOrSystemDetector.ISSUE,
+                    StringEscapeDetector.STRING_ESCAPING,
                     SyntheticAccessorDetector.ISSUE,
                     TextFieldDetector.ISSUE,
                     TextViewDetector.SELECTABLE,

@@ -44,7 +44,7 @@ public final class LiveEditStubs {
         if (clazz == null) {
             context.addClass(internalName, bytecode, isProxyClass);
         } else {
-            clazz.updateBytecode(bytecode);
+            clazz.updateBytecode(bytecode, isProxyClass);
         }
     }
 
@@ -85,7 +85,7 @@ public final class LiveEditStubs {
         }
 
         return context.getClass(internalClassName)
-                .invokeMethod(methodName, methodDesc, thisObject, arguments);
+                .invokeDeclaredMethod(methodName, methodDesc, thisObject, arguments);
     }
 
     public static Object stubL(

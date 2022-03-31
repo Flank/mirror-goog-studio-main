@@ -396,10 +396,10 @@ abstract class DexMergingTask : NewIncrementalTask() {
                                 creationConfig.artifacts.get(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
 
-                        val variantType = creationConfig.variantType
-                        if (variantType.isApk) {
+                        val componentType = creationConfig.componentType
+                        if (componentType.isApk) {
                             creationConfig.onTestedConfig {
-                                if (dexingUsingArtifactTransforms && it.variantType.isAar) {
+                                if (dexingUsingArtifactTransforms && it.componentType.isAar) {
                                     // If dexing using artifact transforms, library production code will
                                     // be dex'ed in a task, so we need to fetch the output directly.
                                     // Otherwise, it will be in the dex'ed in the dex builder transform.

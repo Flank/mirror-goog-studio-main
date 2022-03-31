@@ -25,6 +25,8 @@ cc_binary(
         "instrumenter.h",
         "live_edit.cc",
         "live_edit.h",
+        "live_edit_dex.cc",
+        "live_edit_dex.h",
         "live_literal.cc",
         "live_literal.h",
         "native_callbacks.cc",
@@ -84,6 +86,7 @@ cc_library(
 cc_library(
     name = "runtime_header",
     hdrs = [
+        ":live_edit.dex.cc",
         ":runtime.jar.cc",
     ],
 )
@@ -100,6 +103,23 @@ genrule(
     cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=runtime_jar" +
           " -output=$(location runtime.jar.cc)" +
           " $(location //tools/base/deploy/agent/runtime:runtime)",
+    tools = [
+        "//tools/base/bazel:bin2c",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+genrule(
+    name = "live_edit_header_generator",
+    srcs = [
+        "//tools/base/deploy/agent/runtime:live_edit.dex",
+    ],
+    outs = [
+        "live_edit.dex.cc",
+    ],
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=live_edit_dex" +
+          " -output=$(location live_edit.dex.cc)" +
+          " $(location //tools/base/deploy/agent/runtime:live_edit.dex)",
     tools = [
         "//tools/base/bazel:bin2c",
     ],

@@ -18,6 +18,13 @@ lint check authors, see the API Guide.
   `DeprecatedSinceApi`     | Calling deprecated SDK backport methods
   `ReturnThis`             | Not returning “this” from @ReturnThis methods
   `KotlinNullnessAnnotation`| Using nullability annotations in Kotlin
+  `MissingInflatedId`      | ID not found in inflated resource
+
+* The Android Gradle plugin now supports having missing baseline files
+  instead of empty baseline files. Add the experimental flag
+  `android.experimental.lint.missingBaselineIsEmptyBaseline=true` in
+  `gradle.properties`, and then run the new task `updateLintBaseline`
+  to create or update baselines.
 
 **7.2**
 

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestUtils
@@ -33,8 +32,7 @@ class Java11CompositeBuildTest {
     val project =
             GradleTestProject.builder()
                     .fromTestProject("simpleCompositeBuild")
-                    .withDependencyChecker(false) // composites are not yet supported
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withDependencyChecker(false)
                     .create()
 
     @Test

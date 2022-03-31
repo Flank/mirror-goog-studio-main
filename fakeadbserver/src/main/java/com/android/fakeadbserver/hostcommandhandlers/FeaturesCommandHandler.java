@@ -21,17 +21,19 @@ import com.android.annotations.Nullable;
 import com.android.fakeadbserver.CommandHandler;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
-import java.io.IOException;
 import java.net.Socket;
 
 /** host:features returns list of features. */
+// TODO: Refactor this class. Split in two. One for Device features and one fore Host features.
 public class FeaturesCommandHandler extends HostCommandHandler {
 
     @NonNull public static final String COMMAND = "features";
     @NonNull public static final String HOST_COMMAND = "host-features";
 
     @NonNull
-    public static final String sFeatures = "push_sync,fixed_push_mkdir,shell_v2,apex,stat_v2,abb,abb_exec";
+    public static final String COMMON_FEATURES = "push_sync,fixed_push_mkdir,shell_v2,apex,stat_v2";
+
+    private static final String DEVICE_30_FEATURES = "abb,abb_exec";
 
     @Override
     public boolean invoke(
@@ -40,9 +42,21 @@ public class FeaturesCommandHandler extends HostCommandHandler {
             @Nullable DeviceState device,
             @NonNull String args) {
         try {
+
+            String features = COMMON_FEATURES;
+
+            // This is a host-features request
+            if (device == null) {
+                features += "," + DEVICE_30_FEATURES;
+            } else {
+                // This is a device features request
+                if (Integer.parseInt(device.getBuildVersionSdk()) >= 30) {
+                    features += "," + DEVICE_30_FEATURES;
+                }
+            }
             CommandHandler.writeOkayResponse(
-                    responseSocket.getOutputStream(), sFeatures); // Send ok and list of features.
-        } catch (IOException ignored) {
+                    responseSocket.getOutputStream(), features); // Send ok and list of features.
+        } catch (Exception ignored) {
         }
 
         return false;

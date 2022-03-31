@@ -26,24 +26,31 @@ import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
+import com.android.build.gradle.internal.core.MergedNdkConfig
+import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
+import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
@@ -60,8 +67,9 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     val dirName: String
     val baseName: String
-    val variantType: VariantType
+    val componentType: ComponentType
     val description: String
+    val productFlavorList: List<ProductFlavor>
 
     // ---------------------------------------------------------------------------------------------
     // NEEDED BY ALL COMPONENTS
@@ -84,10 +92,12 @@ interface ComponentCreationConfig : ComponentIdentity {
     val pseudoLocalesEnabled: Property<Boolean>
     val androidResourcesEnabled: Boolean
     val buildConfigEnabled: Boolean
+    val manifestPlaceholders: MapProperty<String, String>
 
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion
     val targetSdkVersionOverride: AndroidVersion?
+    val externalNativeExperimentalProperties: Map<String, Any>
 
     // ---------------------------------------------------------------------------------------------
     // ---------------------------------------------------------------------------------------------
@@ -103,7 +113,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     val buildFeatures: BuildFeatureValues
     val variantScope: VariantScope
-    val variantDslInfo: VariantDslInfo
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
     val sources: SourcesImpl
@@ -174,4 +183,47 @@ interface ComponentCreationConfig : ComponentIdentity {
     val packageJacocoRuntime: Boolean
 
     val javaCompilation: JavaCompilation
+
+    // ---------------------------------------------------------------------------------------------
+    // VARIANT DSL INFO REPLACEMENTS
+    // ---------------------------------------------------------------------------------------------
+    // TODO: Figure out if we should be exposing any of the below
+
+    val isUnitTestCoverageEnabled: Boolean
+
+    val isAndroidTestCoverageEnabled: Boolean
+
+    val publishInfo: VariantPublishingInfo?
+
+    val supportedAbis: Set<String>
+
+    val vectorDrawables: VectorDrawablesOptions
+
+    val ndkConfig: MergedNdkConfig
+
+    val renderscriptNdkModeEnabled: Boolean
+
+    val isJniDebuggable: Boolean
+
+    val defaultGlslcArgs: List<String>
+
+    val scopedGlslcArgs: Map<String, List<String>>
+
+    val isWearAppUnbundled: Boolean?
+
+    // ---------------------------------------------------------------------------------------------
+    // LEGACY SUPPORT
+    // ---------------------------------------------------------------------------------------------
+
+    // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
+    // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
+    // switches to the new variant API.
+    @Deprecated("DO NOT USE, this is just for KAPT legacy support")
+    fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
+
+    @Deprecated("DO NOT USE, this is just for model v1 legacy support")
+    val modelV1LegacySupport: ModelV1LegacySupport
+
+    @Deprecated("DO NOT USE, this is just for old variant API legacy support")
+    val oldVariantApiLegacySupport: OldVariantApiLegacySupport
 }

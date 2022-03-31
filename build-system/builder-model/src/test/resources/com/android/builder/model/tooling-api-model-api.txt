@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-49d794a0216fe2e2d47be5150c80e3b3e387f2da97b912ae742ac422d08f9dd2
+cdea82a2b2078fe3da1c9854e219cf17161be882e4c749b5beb9feb793309281
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -514,6 +514,7 @@ com.android.builder.model.v2.dsl.BuildType.isDebuggable: boolean ()
 com.android.builder.model.v2.dsl.BuildType.isEmbedMicroApp: boolean ()
 com.android.builder.model.v2.dsl.BuildType.isJniDebuggable: boolean ()
 com.android.builder.model.v2.dsl.BuildType.isMinifyEnabled: boolean ()
+com.android.builder.model.v2.dsl.BuildType.isProfileable: boolean ()
 com.android.builder.model.v2.dsl.BuildType.isPseudoLocalesEnabled: boolean ()
 com.android.builder.model.v2.dsl.BuildType.isRenderscriptDebuggable: boolean ()
 com.android.builder.model.v2.dsl.BuildType.isTestCoverageEnabled: boolean ()

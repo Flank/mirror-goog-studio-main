@@ -40,7 +40,6 @@ class DependencyCheckerTest {
 
     @Test
     fun checkFailureAndWarning() {
-        // org.gradle.api.tasks.diagnostics.TaskReportTask is incompatible
         val failure =
             app.executor()
                 .expectFailure().run("tasks")

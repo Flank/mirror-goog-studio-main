@@ -16,31 +16,96 @@
 package com.android.tools.deploy.liveedit;
 
 import com.android.deploy.asm.Type;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 
-final class ProxyClassHandler implements InvocationHandler {
-    private final LiveEditContext context;
-    private final String className;
+// Handler class bound to an instance of a proxy class, responsible for resolving field access and
+// method invocations. Holds the instance fields of the proxy object.
+//
+// Must be public; accessed cross-classloader from LiveEditSuspendLambda and
+// LiveEditRestrictedSuspendLambda.
+public final class ProxyClassHandler implements InvocationHandler {
+    private final LiveEditClass clazz;
     private final HashMap<String, Object> fields;
 
-    ProxyClassHandler(LiveEditContext context, String className) {
-        this.context = context;
-        this.className = className;
+    // Instance of the superclass for handling super method and field access.
+    private Object superInstance;
+
+    ProxyClassHandler(LiveEditClass clazz, Map<String, Object> defaultFieldValues) {
+        this.clazz = clazz;
         this.fields = new HashMap<>();
+        fields.putAll(defaultFieldValues);
+    }
+
+    void initSuperClass(String superInternalName, Object[] args, Object proxy) {
+        try {
+            Class<?> factory =
+                    Class.forName(
+                            "com.android.tools.deploy.liveedit.LambdaFactory",
+                            true,
+                            clazz.getClassLoader());
+            superInstance =
+                    factory.getDeclaredMethod("create", String.class, args.getClass(), Object.class)
+                            .invoke(null, superInternalName, args, proxy);
+        } catch (Exception e) {
+            throw new LiveEditException("Could not instantiate superclass", e);
+        }
     }
 
     void setField(String name, Object value) {
-        fields.put(name, value);
+        if (fields.containsKey(name)) {
+            fields.put(name, value);
+            return;
+        }
+        Field superField = clazz.getSuperField(name);
+        if (superField != null) {
+            try {
+                superField.set(superInstance, value);
+                return;
+            } catch (Exception e) {
+                throw new LiveEditException("Could not access field", e);
+            }
+        }
+        throw new LiveEditException("No such field '" + name + "' found in class");
     }
 
     Object getField(String name) {
-        return fields.get(name);
+        if (fields.containsKey(name)) {
+            return fields.get(name);
+        }
+        Field superField = clazz.getSuperField(name);
+        if (superField != null) {
+            try {
+                return superField.get(superInstance);
+            } catch (Exception e) {
+                throw new LiveEditException("Could not access field", e);
+            }
+        }
+        throw new LiveEditException("No such field '" + name + "' found in class");
     }
 
-    Object invokeMethod(Object instance, String name, String desc, Object[] args) {
-        return context.getClass(className).invokeMethod(name, desc, instance, args);
+    // Must be public; invoked cross-classloader from LiveEditSuspendLambda and
+    // LiveEditRestrictedSuspendLambda.
+    public Object invokeMethod(Object instance, String name, String desc, Object[] args) {
+        if (clazz.declaresMethod(name, desc)) {
+            return clazz.invokeDeclaredMethod(name, desc, instance, args);
+        }
+        Method superMethod = clazz.getSuperMethod(name, desc);
+        if (superMethod != null) {
+            try {
+                return superMethod.invoke(superInstance, args);
+            } catch (Exception e) {
+                throw new LiveEditException("Could not invoke method '" + name + desc + "'", e);
+            }
+        }
+        throw new LiveEditException("No such method '" + name + desc + "' found in class");
+    }
+
+    boolean isInstanceOf(Type type) {
+        return clazz.isInstanceOf(type);
     }
 
     /**

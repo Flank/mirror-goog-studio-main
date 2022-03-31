@@ -20,7 +20,7 @@ import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.dsl.Lint
-import com.android.build.api.variant.impl.AbstractSourceDirectoriesImpl
+import com.android.build.api.variant.impl.SourceDirectoriesImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -117,6 +117,7 @@ internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFla
 internal fun DslBuildType.convert(features: BuildFeatureValues) = BuildTypeImpl(
     name = name,
     isDebuggable = isDebuggable,
+    isProfileable = isProfileable,
     isTestCoverageEnabled = isTestCoverageEnabled,
     isPseudoLocalesEnabled = isPseudoLocalesEnabled,
     isJniDebuggable = isJniDebuggable,
@@ -223,7 +224,7 @@ internal fun DefaultAndroidSourceSet.convert(
     customDirectories = customDirectories,
 )
 
-private fun variantSourcesForModel(sourceDirectories: AbstractSourceDirectoriesImpl) =
+private fun variantSourcesForModel(sourceDirectories: SourceDirectoriesImpl) =
     sourceDirectories.variantSourcesForModel { it.shouldBeAddedToIdeModel }
 
 internal fun AndroidResources.convert() = AaptOptionsImpl(

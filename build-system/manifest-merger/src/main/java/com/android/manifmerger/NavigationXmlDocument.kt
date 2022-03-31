@@ -17,7 +17,6 @@
 package com.android.manifmerger
 
 import com.android.SdkConstants
-import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFile
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.manifmerger.DeepLink.DeepLinkException
@@ -45,7 +44,12 @@ class NavigationXmlDocument private constructor(
     constructor(sourceFile: SourceFile, rootElement: Element) :
             this(sourceFile, rootElement, null)
 
-    fun convertToData() = NavigationXmlDocumentData(name!!, navigationXmlIds, deepLinks)
+    fun convertToData(manifestPlaceHolders: Map<String, String>) =
+        NavigationXmlDocumentData(
+            name!!,
+            navigationXmlIds,
+            performPlaceholderSubstitution(deepLinks, manifestPlaceHolders)
+        )
 
     /**
      * The list of navigation xml IDs found in this document, including duplicates.
@@ -154,4 +158,29 @@ class NavigationXmlDocument private constructor(
 
     /** An exception during the evaluation of a [NavigationXmlDocument].  */
     class NavigationXmlDocumentException(s: String) : RuntimeException(s)
+}
+
+private fun performPlaceholderSubstitution(
+    deepLinks: List<DeepLink>,
+    manifestPlaceHolders: Map<String, String>
+): List<DeepLink> {
+    return deepLinks.map { deepLink ->
+        DeepLink(
+            deepLink.schemes.map { it.performPlaceholderSubstitution(manifestPlaceHolders) },
+            deepLink.host?.performPlaceholderSubstitution(manifestPlaceHolders),
+            deepLink.port,
+            deepLink.path.performPlaceholderSubstitution(manifestPlaceHolders),
+            deepLink.query,
+            deepLink.sourceFilePosition,
+            deepLink.isAutoVerify
+        )
+    }
+}
+
+private fun String.performPlaceholderSubstitution(manifestPlaceHolders: Map<String, String>): String {
+    var result = this
+    manifestPlaceHolders.forEach {
+        result = result.replace("\${${it.key}}", it.value)
+    }
+    return result
 }

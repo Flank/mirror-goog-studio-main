@@ -1044,4 +1044,13 @@ apply plugin: 'com.android.application'
             }
         }
     }
+
+    // See b/207403732
+    @Test
+    fun `ensure configure* tasks have dependency on preBuild`() {
+        project.execute("configure${mode.taskNameTag}Debug[x86_64]")
+        assertThat(project.buildResult.getTask(":preDebugBuild")).wasUpToDate()
+        project.execute("configure${mode.taskNameTag}RelWithDebInfo[x86_64]")
+        assertThat(project.buildResult.getTask(":preReleaseBuild")).wasUpToDate()
+    }
 }

@@ -12,7 +12,7 @@
       <dependency>
         <groupId>com.google.example</groupId>
         <artifactId>v</artifactId>
-        <version>1</version>
+        <version>${project.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

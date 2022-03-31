@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.ToolsRevisionUtils
-import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import org.gradle.api.file.DirectoryProperty
@@ -80,7 +80,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
                 manifestFile = manifestFile,
                 options = AaptOptions(),
                 resourceOutputApk = File(File(linkedManifestsDirectory.get().asFile, assetPackName), "${assetPackName}.ap_"),
-                variantType = VariantTypeImpl.BASE_APK,
+                componentType = ComponentTypeImpl.BASE_APK,
                 //debuggable = false,
                 // Bundletool assumes this field will be filled in for the module, even though it won't be used for the asset pack.
                 packageId = 0xFF

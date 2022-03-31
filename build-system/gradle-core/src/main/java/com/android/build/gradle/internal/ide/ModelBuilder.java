@@ -47,8 +47,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -71,7 +69,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.ProjectInfo;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.AnchorTaskNames;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -84,10 +81,10 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.compiling.BuildConfigType;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.ComponentType;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
-import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.AaptOptions;
@@ -346,11 +343,12 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<ArtifactMetaData> artifactMetaDataList = Lists.newArrayList(
                 extraModelInfo.getExtraArtifacts());
 
-        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-            artifactMetaDataList.add(new ArtifactMetaDataImpl(
-                    variantType.getArtifactName(),
-                    true /*isTest*/,
-                    variantType.getArtifactType()));
+        for (ComponentType componentType : ComponentType.Companion.getTestComponents()) {
+            artifactMetaDataList.add(
+                    new ArtifactMetaDataImpl(
+                            componentType.getArtifactName(),
+                            true /*isTest*/,
+                            componentType.getArtifactType()));
         }
 
         LintOptions lintOptions = ConvertersKt.convertLintOptions(extension.getLintOptions());
@@ -720,16 +718,13 @@ public class ModelBuilder<Extension extends BaseExtension>
     private VariantImpl createVariant(@NonNull ComponentImpl component) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, component);
 
-        // Need access to the merged flavors for the model, so we cast.
-        VariantDslInfoImpl variantDslInfo = (VariantDslInfoImpl) component.getVariantDslInfo();
-
         File manifest = component.getVariantSources().getMainManifestIfExists();
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
                     new DefaultManifestParser(
                             manifest,
                             () -> true,
-                            component.getVariantType().getRequiresManifest(),
+                            component.getComponentType().getRequiresManifest(),
                             variantModel.getSyncIssueReporter());
             try {
                 validateMinSdkVersion(attributeSupplier);
@@ -771,22 +766,23 @@ public class ModelBuilder<Extension extends BaseExtension>
             com.android.build.api.variant.impl.VariantImpl variant =
                     (com.android.build.api.variant.impl.VariantImpl) component;
 
-            for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                ComponentImpl testVariant = variant.getTestComponents().get(variantType);
+            for (ComponentType componentType : ComponentType.Companion.getTestComponents()) {
+                ComponentImpl testVariant = variant.getTestComponents().get(componentType);
                 if (testVariant != null) {
-                    switch ((VariantTypeImpl) variantType) {
+                    switch ((ComponentTypeImpl) componentType) {
                         case ANDROID_TEST:
                             extraAndroidArtifacts.add(
                                     createAndroidArtifact(
-                                            variantType.getArtifactName(), testVariant));
+                                            componentType.getArtifactName(), testVariant));
                             break;
                         case UNIT_TEST:
                             clonedExtraJavaArtifacts.add(
-                                    createUnitTestsJavaArtifact(variantType, testVariant));
+                                    createUnitTestsJavaArtifact(componentType, testVariant));
                             break;
                         default:
                             throw new IllegalArgumentException(
-                                    "Unsupported test variant type ${variantType}.");
+                                    String.format(
+                                            "Unsupported test variant type %s.", componentType));
                     }
                 }
             }
@@ -803,7 +799,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 component.getBuildType(),
                 getProductFlavorNames(component),
                 new ProductFlavorImpl(
-                        variantDslInfo.getMergedFlavor(), variantDslInfo.getApplicationId()),
+                        component.getModelV1LegacySupport().getMergedFlavor(),
+                        component.getModelV1LegacySupport().getDslApplicationId()),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,
@@ -814,8 +811,8 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private void checkProguardFiles(@NonNull ComponentImpl component) {
         // We check for default files unless it's a base module, which can include default files.
-        boolean isBaseModule = component.getVariantType().isBaseModule();
-        boolean isDynamicFeature = component.getVariantType().isDynamicFeature();
+        boolean isBaseModule = component.getComponentType().isBaseModule();
+        boolean isDynamicFeature = component.getComponentType().isDynamicFeature();
 
         if (!isBaseModule) {
             List<File> consumerProguardFiles =
@@ -868,7 +865,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private JavaArtifactImpl createUnitTestsJavaArtifact(
-            @NonNull VariantType variantType, @NonNull ComponentImpl component) {
+            @NonNull ComponentType componentType, @NonNull ComponentImpl component) {
         ArtifactsImpl artifacts = component.getArtifacts();
 
         SourceProviders sourceProviders = determineSourceProviders(component);
@@ -902,7 +899,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantModel.getMockableJarArtifact().getFiles().stream().findFirst().orElse(null);
 
         return new JavaArtifactImpl(
-                variantType.getArtifactName(),
+                componentType.getArtifactName(),
                 component.getTaskContainer().getAssembleTask().getName(),
                 component.getTaskContainer().getCompileTask().getName(),
                 Sets.newHashSet(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
@@ -974,9 +971,6 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull ComponentImpl component) {
-        VariantScope variantScope = component.getVariantScope();
-        VariantDslInfo variantDslInfo = component.getVariantDslInfo();
-
         com.android.build.api.variant.impl.SigningConfigImpl signingConfig = null;
         boolean isSigningReady = false;
         if (component instanceof ApkCreationConfig) {
@@ -1011,7 +1005,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
 
-        if (component.getVariantType().isTestComponent() || component instanceof TestVariantImpl) {
+        if (component.getComponentType().isTestComponent()
+                || component instanceof TestVariantImpl) {
             Configuration testHelpers =
                     project.getConfigurations()
                             .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
@@ -1062,7 +1057,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 additionalRuntimeApks,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
-                variantDslInfo.getSupportedAbis(),
+                component.getSupportedAbis(),
                 instantRun,
                 testOptions,
                 taskContainer.getConnectedTestTask() == null
@@ -1122,8 +1117,8 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     private static List<String> getProductFlavorNames(@NonNull ComponentImpl component) {
-        return component.getProductFlavors().stream()
-                .map(kotlin.Pair::getSecond)
+        return component.getProductFlavorList().stream()
+                .map(com.android.build.gradle.internal.core.ProductFlavor::getName)
                 .collect(Collectors.toList());
     }
 
@@ -1175,7 +1170,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
         // this is incorrect as it cannot get the final value, we should always add the folder
         // as a potential source origin and let the IDE deal with it.
-        boolean ndkMode = component.getVariantDslInfo().getRenderscriptNdkModeEnabled();
+        boolean ndkMode = component.getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Callable<Directory> renderscriptCallable =
                     () -> artifacts.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();

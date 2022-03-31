@@ -53,6 +53,10 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
         dependencies.add("androidTestImplementation" to dependency)
     }
 
+    override fun include(dependency: Any) {
+        dependencies.add("include" to dependency)
+    }
+
     override fun lintPublish(dependency: Any) {
         dependencies.add("lintPublish" to dependency)
     }

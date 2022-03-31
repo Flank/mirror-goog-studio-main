@@ -121,7 +121,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeClassesTask::outputFile
-            ).withName(if (creationConfig.variantType.isBaseModule) {
+            ).withName(if (creationConfig.componentType.isBaseModule) {
                 "base.jar"
             } else {
                 TaskManager.getFeatureFileName(creationConfig.services.projectInfo.path, DOT_JAR)

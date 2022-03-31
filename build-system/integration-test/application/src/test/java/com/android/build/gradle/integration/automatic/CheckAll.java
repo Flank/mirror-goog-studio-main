@@ -19,8 +19,9 @@ package com.android.build.gradle.integration.automatic;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.testutils.AssumeUtil;
@@ -78,11 +79,12 @@ public class CheckAll {
     @Rule public GradleTestProject project;
 
     public CheckAll(String projectName) {
-        this.project =
-                GradleTestProject.builder()
-                        .fromTestProject(projectName)
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                        .create();
+        GradleTestProjectBuilder builder = GradleTestProject.builder().fromTestProject(projectName);
+        if (CONFIG_CACHE_DISABLED.contains(projectName)) {
+            this.project = builder.withConfigurationCaching(ConfigurationCaching.OFF).create();
+        } else {
+            this.project = builder.withConfigurationCaching(ConfigurationCaching.WARN).create();
+        }
     }
 
     @Test
@@ -98,6 +100,10 @@ public class CheckAll {
     private static boolean canAssemble(@NonNull GradleTestProject project) {
         return !BROKEN_ALWAYS_ASSEMBLE.contains(project.getName());
     }
+
+    // https://github.com/gradle/gradle/issues/19765
+    private static final ImmutableSet<String> CONFIG_CACHE_DISABLED =
+            ImmutableSet.of("transformInModuleWithKotlin");
 
     private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE =
             ImmutableSet.of(

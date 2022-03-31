@@ -47,7 +47,6 @@ build:datasize_aspect --output_groups=+data_size
 
 build --incompatible_strict_action_env # Ensures actions don't pick up env changes
 build --sandbox_tmpfs_path=/tmp
-build --javacopt="-g:source,lines,vars"  # Keep debug info
 # TODO (b/141269926): this generates a warning on windows when building for host,
 # but is required when building for android.
 build --copt=-fvisibility=hidden
@@ -58,11 +57,10 @@ build --define=grpc_no_ares=true
 # finds make in the ndk-build script (see b/72179674).
 build --test_env=SHELL
 
-# Use prebuilt JDK when doing local bazel build/test
-build --host_javabase=//prebuilts/studio/jdk:jdk11_runtime
-build --javabase=//prebuilts/studio/jdk:jdk11_runtime
-build --host_java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
-build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
+# Bazel will find the matching java toolchain registered in WORKSPACE.
+build --java_language_version=8
+build --java_runtime_version=jdk11
+build --tool_java_runtime_version=jdk11
 
 # Use prebuilt native toolchain
 build --crosstool_top=@native_toolchain//:toolchain
@@ -100,7 +98,6 @@ build:release --copt=-w
 
 ## Base RBE configuration
 build:_remote_base --bes_timeout=60s
-build:_remote_base --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
 build:_remote_base --project_id=908081808034
 build:_remote_base --google_default_credentials
 build:_remote_base --remote_cache=remotebuildexecution.googleapis.com
@@ -114,6 +111,7 @@ build:_remote_base --strategy=zipper=local
 
 ## Base config to upload build results to ResultStore.
 build:_resultstore --bes_backend=buildeventservice.googleapis.com
+build:_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,https://www.googleapis.com/auth/cloud-platform
 build:_resultstore --bes_results_url=https://source.cloud.google.com/results/invocations/
 
 ## Enables ResultStore, but does not use the remote cache.
@@ -124,10 +122,9 @@ build:resultstore --noremote_upload_local_results
 build:resultstore --noremote_accept_cached
 
 # Publish to the private BES backend.
-# TODO(b/158230441) Sponge support is still in progress and will not work for
-# non-CI (user) builds.
 build:sponge --bes_backend=buildeventservice-pa.googleapis.com
-build:sponge --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,https://www.googleapis.com/auth/cloud-platform
+build:sponge --bes_results_url=https://fusion2.corp.google.com/invocations/
+build:sponge --bes_header=X-Goog-User-Project=google.com:android-studio-alphasource
 
 # Enable go/antswatcher to process test results.
 # This config must be used with the sponge config as it relies on the same bes_backend.
@@ -137,6 +134,7 @@ build:ants --bes_keywords=android-test-storage
 build:ants --build_metadata="test_definition_name=android_studio/bazel"
 build:ants --build_metadata=generate_test_uri=fusion
 build:ants --build_metadata=run_type=critical
+build:ants --build_metadata=parallel_test_results=true
 
 ## Base config for using the remote cache.
 ## This avoids building things which were already built by CI.

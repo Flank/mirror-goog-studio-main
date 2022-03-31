@@ -254,7 +254,7 @@ class DataBindingCompilerArguments constructor(
                 exportClassListOutFile = artifacts.get(DATA_BINDING_EXPORT_CLASS_LIST),
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
-                isTestVariant = creationConfig.variantType.isTestComponent,
+                isTestVariant = creationConfig.componentType.isTestComponent,
                 isEnabledForTests = creationConfig.global.dataBinding.isEnabledForTests,
                 isEnableV2 = true,
                 isNonTransitiveR = isNonTransitiveR,
@@ -274,10 +274,10 @@ class DataBindingCompilerArguments constructor(
                 it
             } ?: creationConfig
 
-            return if (component.variantType.isAar) {
+            return if (component.componentType.isAar) {
                 CompilerArguments.Type.LIBRARY
             } else {
-                if (component.variantType.isBaseModule) {
+                if (component.componentType.isBaseModule) {
                     CompilerArguments.Type.APPLICATION
                 } else {
                     CompilerArguments.Type.FEATURE
@@ -291,7 +291,7 @@ class DataBindingCompilerArguments constructor(
          */
         @JvmStatic
         fun getLayoutInfoArtifactType(creationConfig: ComponentCreationConfig): InternalArtifactType<Directory> {
-            return if (creationConfig.variantType.isAar) {
+            return if (creationConfig.componentType.isAar) {
                 DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
             } else {
                 DATA_BINDING_LAYOUT_INFO_TYPE_MERGE

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.databinding
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
@@ -81,15 +80,15 @@ class DataBindingKtxTest(
             "android.useAndroidX=${useAndroidX}"
         )
 
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        val syncIssues = model.onlyModelSyncIssues
-        val syncIssue = syncIssues.find { syncIssue -> syncIssue.message.contains("addKtx") }
+        val model = project.modelV2().ignoreSyncIssues().fetchModels()
+        val issueModel = model.container.getProject(":").issues ?: throw RuntimeException("Failed to get issues from model")
+        val issue = issueModel.syncIssues.find { it.message.contains("addKtx")}
 
         if (useKotlin && useAndroidX) {
-            assertNull(syncIssue)
+            assertNull(issue)
         } else {
-            assertThat(syncIssue!!.severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
-            assertThat(syncIssue.message).isEqualTo(ERROR_MESSAGE)
+            assertThat(issue!!.severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
+            assertThat(issue.message).isEqualTo(ERROR_MESSAGE)
         }
     }
 }

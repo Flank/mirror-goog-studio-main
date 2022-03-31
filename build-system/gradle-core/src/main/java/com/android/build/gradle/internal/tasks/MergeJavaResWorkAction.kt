@@ -19,6 +19,7 @@ import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.builder.files.KeyedFileCache
+import com.android.builder.files.SerializableInputChanges
 import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
@@ -97,7 +98,7 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
         abstract val incrementalStateFile: RegularFileProperty
         abstract val incremental: Property<Boolean>
         abstract val cacheDir: DirectoryProperty
-        abstract val changedInputs: MapProperty<File, FileStatus>
+        abstract val changedInputs: Property<SerializableInputChanges>
         abstract val noCompress: ListProperty<String>
         abstract val excludes: SetProperty<String>
         abstract val pickFirsts: SetProperty<String>

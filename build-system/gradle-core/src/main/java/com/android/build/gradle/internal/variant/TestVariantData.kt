@@ -53,9 +53,9 @@ class TestVariantData(
 
     override val description: String
         get() {
-            val variantType = variantDslInfo.variantType
+            val componentType = variantDslInfo.componentType
 
-            val prefix = if (variantType.isApk) {
+            val prefix = if (componentType.isApk) {
                 "android (on device) tests"
             } else {
                 "unit tests"

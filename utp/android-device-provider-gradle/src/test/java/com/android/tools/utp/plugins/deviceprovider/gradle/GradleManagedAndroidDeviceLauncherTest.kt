@@ -357,7 +357,7 @@ class GradleManagedAndroidDeviceLauncherTest {
 
         verify(mockLogger).info(argThat<Supplier<String>> {
             it.get().contains("""
-                Finding a test device myapp_myDeviceAndroidDebugTest (attempt 1 of 10).
+                Finding a test device myapp_myDeviceAndroidDebugTest (attempt 1 of 20).
                 Found 2 devices:
                 myapp_myDeviceAndroidVariantTest(emulator-5554)
                 myapp_myDeviceAndroidDebugTest(emulator-5556)

@@ -32,8 +32,6 @@ public class ProfileCapturerTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(app)
-                    // TaskReportTask from Gradle is not compatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .enableProfileOutput()
                     .create();
 
@@ -94,7 +92,8 @@ public class ProfileCapturerTest {
 
         assertThat(profiles).hasSize(2);
         for (GradleBuildProfile profile : profiles) {
-            assertThat(profile.getBuildTime()).isGreaterThan(0L);
+            // the build time for config cached run is zero.
+            assertThat(profile.getBuildTime()).isAtLeast(0L);
             assertThat(profile.getSpanCount()).isGreaterThan(0);
         }
     }

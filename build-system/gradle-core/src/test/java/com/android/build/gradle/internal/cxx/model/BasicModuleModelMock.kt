@@ -22,7 +22,6 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
@@ -220,11 +219,6 @@ open class BasicModuleModelMock {
         Gradle::class.java
     )
 
-    val variantDslInfo = mock(
-        VariantDslInfo::class.java,
-        throwUnmocked
-    )
-
     val configurationParameters by lazy {
         tryCreateConfigurationParameters(
             projectOptions,
@@ -308,9 +302,9 @@ open class BasicModuleModelMock {
         doReturn(prefabFileCollection).`when`(prefabArtifactCollection).artifactFiles
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
 
-        doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(variantExternalNativeBuild).`when`(this.variantImpl).externalNativeBuild
-        doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig
+        doReturn(mergedNdkConfig).`when`(this.variantImpl).ndkConfig
+        doReturn(variantExperimentalProperties).`when`(this.variantImpl).externalNativeExperimentalProperties
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
@@ -391,8 +385,6 @@ open class BasicModuleModelMock {
         doReturn(ndkHandler).`when`(globalConfig).versionedNdkHandler
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
         doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
-        doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
-        doReturn(variantExperimentalProperties).`when`(variantDslInfo).experimentalProperties
         doReturn(true).`when`(variantImpl).debuggable
 
         val ndkInfo = NdkR19Info(ndkFolder)

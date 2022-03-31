@@ -822,7 +822,7 @@ abstract class MergeResources : NewIncrementalTask() {
                 .use(taskProvider)
                 .wiredWith { obj: MergeResources -> obj.incrementalFolder }
                 .toCreate(MERGED_RES_INCREMENTAL_FOLDER)
-            val vectorDrawablesOptions = creationConfig.variantDslInfo.vectorDrawables
+            val vectorDrawablesOptions = creationConfig.vectorDrawables
             val disableVectorDrawables = (!processVectorDrawables
                     || vectorDrawablesOptions.generatedDensities == null)
             if (!disableVectorDrawables) {
@@ -849,7 +849,7 @@ abstract class MergeResources : NewIncrementalTask() {
                         .provider { creationConfig.minSdkVersion.apiLevel })
             task.processResources = processResources
             task.crunchPng = variantScope.isCrunchPngs
-            val vectorDrawablesOptions = creationConfig.variantDslInfo.vectorDrawables
+            val vectorDrawablesOptions = creationConfig.vectorDrawables
             task.generatedDensities = vectorDrawablesOptions.generatedDensities
             if (task.generatedDensities == null) {
                 task.generatedDensities = emptySet()

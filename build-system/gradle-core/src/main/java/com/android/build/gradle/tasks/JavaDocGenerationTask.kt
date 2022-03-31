@@ -49,7 +49,6 @@ import org.jetbrains.dokka.jdk
 import org.jetbrains.dokka.kotlinStdlib
 import org.jetbrains.dokka.toJsonString
 import java.net.URLClassLoader
-import java.util.concurrent.Callable
 import java.util.function.BiConsumer
 
 /**

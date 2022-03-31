@@ -16,7 +16,6 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.SourceAndOverlayDirectories
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -30,108 +29,108 @@ open class AnalyticsEnabledSources @Inject constructor(
     val objectFactory: ObjectFactory
 ): Sources by delegate {
 
-    override val java: SourceDirectories
+    override val java: SourceDirectories.Flat
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_JAVA_ACCESS_VALUE
             return objectFactory.newInstance(
-                AnalyticsEnabledSourceDirectories::class.java,
+                AnalyticsEnabledFlat::class.java,
                 delegate.java,
                 stats,
                 objectFactory)
         }
 
-    override val kotlin: SourceDirectories
+    override val kotlin: SourceDirectories.Flat
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_KOTLIN_ACCESS_VALUE
             return objectFactory.newInstance(
-                AnalyticsEnabledSourceDirectories::class.java,
+                AnalyticsEnabledFlat::class.java,
                 delegate.kotlin,
                 stats,
                 objectFactory)
         }
 
-    override val res: SourceAndOverlayDirectories
+    override val res: SourceDirectories.Layered
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_RES_ACCESS_VALUE
             return objectFactory.newInstance(
-                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                AnalyticsEnabledLayered::class.java,
                 delegate.res,
                 stats,
                 objectFactory)
         }
 
-    override val assets: SourceAndOverlayDirectories
+    override val assets: SourceDirectories.Layered
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_ASSETS_ACCESS_VALUE
             return objectFactory.newInstance(
-                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                AnalyticsEnabledLayered::class.java,
                 delegate.assets,
                 stats,
                 objectFactory)
         }
 
-    override val jniLibs: SourceAndOverlayDirectories
+    override val jniLibs: SourceDirectories.Layered
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_JNI_ACCESS_VALUE
             return objectFactory.newInstance(
-                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                AnalyticsEnabledLayered::class.java,
                 delegate.jniLibs,
                 stats,
                 objectFactory)
         }
 
-    override val shaders: SourceAndOverlayDirectories?
+    override val shaders: SourceDirectories.Layered?
         get() =
             delegate.shaders?.let {
                 stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.SOURCES_SHADERS_ACCESS_VALUE
                 objectFactory.newInstance(
-                    AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                    AnalyticsEnabledLayered::class.java,
                     it,
                     stats,
                     objectFactory)
             }
 
-    override val mlModels: SourceAndOverlayDirectories
+    override val mlModels: SourceDirectories.Layered
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_ML_MODELS_ACCESS_VALUE
             return objectFactory.newInstance(
-                AnalyticsEnabledSourceAndOverlayDirectories::class.java,
+                AnalyticsEnabledLayered::class.java,
                 delegate.mlModels,
                 stats,
                 objectFactory)
         }
 
-    override val aidl: SourceDirectories?
+    override val aidl: SourceDirectories.Flat?
         get() = delegate.aidl?.let{
                 stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.SOURCES_AIDL_ACCESS_VALUE
                 objectFactory.newInstance(
-                    AnalyticsEnabledSourceDirectories::class.java,
+                    AnalyticsEnabledFlat::class.java,
                     it,
                     stats,
                     objectFactory
                 )
             }
 
-    override val renderscript: SourceDirectories?
+    override val renderscript: SourceDirectories.Flat?
         get() = delegate.renderscript?.let {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SOURCES_RENDERSCRIPT_ACCESS_VALUE
             objectFactory.newInstance(
-                AnalyticsEnabledSourceDirectories::class.java,
+                AnalyticsEnabledFlat::class.java,
                 it,
                 stats,
                 objectFactory)
         }
 
-    override fun getByName(name: String): SourceDirectories {
+    override fun getByName(name: String): SourceDirectories.Flat {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.SOURCES_EXTRAS_ACCESS_VALUE
         return delegate.getByName(name)

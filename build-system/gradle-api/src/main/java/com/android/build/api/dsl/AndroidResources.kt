@@ -23,9 +23,16 @@ interface AndroidResources {
     /**
      * Pattern describing assets to be ignored.
      *
-     * See `aapt --help`
+     * This is [ignoreAssetsPatterns] joined by ':'.
      */
     var ignoreAssetsPattern: String?
+
+    /**
+     * Patterns describing assets to be ignored.
+     *
+     * If empty, defaults to `["!.svn", "!.git", "!.ds_store", "!*.scc", ".*", "<dir>_*", "!CVS", "!thumbs.db", "!picasa.ini", "!*~"]`
+     */
+    val ignoreAssetsPatterns: MutableCollection<String>
 
     /**
      * Extensions of files that will not be stored compressed in the APK. Adding an empty

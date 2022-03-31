@@ -488,11 +488,11 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             task.excludes.setDisallowChanges(creationConfig.instrumentation.excludes)
 
             task.inputClassesDir.from(
-                creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS)
+                creationConfig.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_DIRS)
             )
 
             task.inputJarsWithIdentity.inputJars.from(
-                creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS)
+                creationConfig.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_JARS)
             )
 
             task.bootClasspath.from(creationConfig.global.bootClasspath)
@@ -505,7 +505,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                         if (creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
-                            && creationConfig.variantDslInfo.isAndroidTestCoverageEnabled
+                            && creationConfig.isAndroidTestCoverageEnabled
                         ) {
                             AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
                         } else {

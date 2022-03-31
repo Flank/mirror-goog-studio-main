@@ -161,6 +161,16 @@ public class DeployerRunnerTest {
         Mockito.verifyNoMoreInteractions(service);
     }
 
+    // Some command use EXEC cmd while others use abb_exec. This is an utility function to generate
+    // both types of commands based on the device version
+    private static final String cmd(String format, FakeDevice device) {
+        if (device.getApi() >= 30) {
+            return String.format(format, "abb_exec");
+        } else {
+            return String.format(format, "cmd");
+        }
+    }
+
     @Test
     public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
@@ -300,9 +310,13 @@ public class DeployerRunnerTest {
                     "/system/bin/run-as com.example.helloworld id -u",
                     String.format(
                             "/system/bin/cmd package %s com.example.helloworld", packageCommand),
-                    "cmd package install-create -r -t -S ${size:com.example.helloworld}",
-                    "cmd package install-write -S ${size:com.example.helloworld} 1 0_sample -",
-                    "cmd package install-commit 1",
+                    cmd(
+                            "%s package install-create -r -t -S ${size:com.example.helloworld}",
+                            device),
+                    cmd(
+                            "%s package install-write -S ${size:com.example.helloworld} 1 0_sample -",
+                            device),
+                    cmd("%s package install-commit 1", device),
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION",
                     "/system/bin/run-as com.example.helloworld cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
                             + Sites.appCodeCache("com.example.helloworld")
@@ -1045,11 +1059,19 @@ public class DeployerRunnerTest {
                         "id -u",
                         String.format(
                                 "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                        "cmd package install-create -r -t -S ${size:com.example.simpleapp}",
-                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
-                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
-                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_02.apk} 2 2_split_ -",
-                        "cmd package install-commit 2",
+                        cmd(
+                                "%s package install-create -r -t -S ${size:com.example.simpleapp}",
+                                device),
+                        cmd(
+                                "%s package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                                device),
+                        cmd(
+                                "%s package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                                device),
+                        cmd(
+                                "%s package install-write -S ${size:com.example.simpleapp:split_split_02.apk} 2 2_split_ -",
+                                device),
+                        cmd("%s package install-commit 2", device),
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION",
                         "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
                                 + Sites.appCodeCache("com.example.simpleapp")
@@ -1179,10 +1201,16 @@ public class DeployerRunnerTest {
                         "id -u",
                         String.format(
                                 "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                        "cmd package install-create -r -t -S ${size:com.example.simpleapp}",
-                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
-                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
-                        "cmd package install-commit 2",
+                        cmd(
+                                "%s package install-create -r -t -S ${size:com.example.simpleapp}",
+                                device),
+                        cmd(
+                                "%s package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                                device),
+                        cmd(
+                                "%s package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                                device),
+                        cmd("%s package install-commit 2", device),
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION",
                         "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
                                 + Sites.appCodeCache("com.example.simpleapp")

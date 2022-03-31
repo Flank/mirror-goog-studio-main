@@ -284,6 +284,8 @@ class ManagedDeviceInstrumentationTestTaskTest {
                 // Parameters for config class.
                 val resultsDir = temporaryFolderRule.newFolder("resultsDir")
                 val reportsDir = temporaryFolderRule.newFolder("reportsDir")
+                val additionalTestOutputDir = temporaryFolderRule.newFolder("additionalTestOutputDir")
+                val coverageOutputDir = temporaryFolderRule.newFolder("coverageOutputDir")
                 val device = ManagedVirtualDevice("someNameHere").also {
                     it.device = "Pixel 2"
                     it.apiLevel = 27
@@ -306,6 +308,8 @@ class ManagedDeviceInstrumentationTestTaskTest {
                     testData,
                     resultsDir,
                     reportsDir,
+                    additionalTestOutputDir,
+                    coverageOutputDir,
                     ""
                 )
 

@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.variant
 
-import com.android.builder.core.VariantType
+import com.android.builder.core.ComponentType
 
 /**
  * A tested variant
@@ -23,8 +23,8 @@ import com.android.builder.core.VariantType
 interface TestedVariantData {
     fun setTestVariantData(
         testVariantData: TestVariantData,
-        type: VariantType
+        type: ComponentType
     )
 
-    fun getTestVariantData(type: VariantType): TestVariantData?
+    fun getTestVariantData(type: ComponentType): TestVariantData?
 }

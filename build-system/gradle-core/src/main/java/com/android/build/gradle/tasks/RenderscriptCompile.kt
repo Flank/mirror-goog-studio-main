@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_GENERATED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
@@ -331,9 +330,6 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.configure(task)
 
-            val variantDslInfo = creationConfig.variantDslInfo
-            val variantSources = creationConfig.variantSources
-
             task.targetApi.setDisallowChanges(creationConfig.renderscriptTargetApi)
 
             task.supportMode.setDisallowChanges(renderscript.supportModeEnabled)
@@ -350,14 +346,14 @@ abstract class RenderscriptCompile : NdkTask() {
 
             task.objOutputDir = creationConfig.paths.renderscriptObjOutputDir
 
-            task.ndkConfig = variantDslInfo.ndkConfig
+            task.ndkConfig = creationConfig.ndkConfig
 
             task.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
             task.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            if (creationConfig.variantType.isTestComponent) {
+            if (creationConfig.componentType.isTestComponent) {
                 task.dependsOn(creationConfig.taskContainer.processManifestTask!!)
             }
         }
