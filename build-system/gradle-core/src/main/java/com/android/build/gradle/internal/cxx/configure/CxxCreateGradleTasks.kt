@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.api.component.impl.ComponentBuilderImpl
+import com.android.build.api.variant.ComponentBuilder
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -108,7 +108,7 @@ fun createCxxVariantBuildTask(
 /**
  * Construct gradle tasks for C/C++ configuration and build.
  */
-fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantCreationConfig> createCxxTasks(
+fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> createCxxTasks(
         androidLocationsProvider: AndroidLocationsProvider,
         sdkComponents: SdkComponentsBuildService,
         issueReporter: IssueReporter,

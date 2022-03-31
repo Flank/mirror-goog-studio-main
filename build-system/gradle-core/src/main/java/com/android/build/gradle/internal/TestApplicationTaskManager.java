@@ -20,8 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.variant.impl.TestVariantBuilderImpl;
-import com.android.build.api.variant.impl.TestVariantImpl;
+import com.android.build.api.variant.TestVariantBuilder;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
@@ -57,12 +56,15 @@ import org.jetbrains.annotations.NotNull;
  * application.
  */
 public class TestApplicationTaskManager
-        extends AbstractAppTaskManager<TestVariantBuilderImpl, TestVariantImpl> {
+        extends AbstractAppTaskManager<TestVariantBuilder, TestVariantCreationConfig> {
 
     public TestApplicationTaskManager(
             @NonNull Project project,
             @NonNull
-                    Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                    Collection<
+                                    ? extends
+                                            ComponentInfo<
+                                                    TestVariantBuilder, TestVariantCreationConfig>>
                             variants,
             @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
             @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
@@ -81,10 +83,10 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NotNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo) {
+            @NotNull ComponentInfo<TestVariantBuilder, TestVariantCreationConfig> variantInfo) {
         createCommonTasks(variantInfo);
 
-        TestVariantImpl testVariantProperties = variantInfo.getVariant();
+        TestVariantCreationConfig testVariantProperties = variantInfo.getVariant();
 
         Provider<Directory> testingApk =
                 testVariantProperties.getArtifacts().get(SingleArtifact.APK.INSTANCE);

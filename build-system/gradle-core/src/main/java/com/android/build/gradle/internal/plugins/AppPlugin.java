@@ -29,13 +29,12 @@ import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension;
 import com.android.build.api.variant.ApplicationVariant;
 import com.android.build.api.variant.ApplicationVariantBuilder;
-import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
-import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo;
@@ -77,9 +76,10 @@ public class AppPlugin
                 ApplicationProductFlavor,
                 com.android.build.api.dsl.ApplicationExtension,
                 ApplicationAndroidComponentsExtension,
-                ApplicationVariantBuilderImpl,
+                ApplicationVariantBuilder,
                 ApplicationVariantDslInfo,
-                ApplicationVariantImpl> {
+                ApplicationCreationConfig,
+                ApplicationVariant> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry,
@@ -204,8 +204,8 @@ public class AppPlugin
             @NonNull
                     VariantApiOperationsRegistrar<
                                     ApplicationExtension,
-                                    ApplicationVariantBuilderImpl,
-                                    ApplicationVariantImpl>
+                                    ApplicationVariantBuilder,
+                                    ApplicationVariant>
                             variantApiOperationsRegistrar,
             @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
@@ -241,14 +241,14 @@ public class AppPlugin
 
     @NonNull
     @Override
-    protected TaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl> createTaskManager(
+    protected TaskManager<ApplicationVariantBuilder, ApplicationCreationConfig> createTaskManager(
             @NonNull Project project,
             @NonNull
                     Collection<
                                     ? extends
                                             ComponentInfo<
-                                                    ApplicationVariantBuilderImpl,
-                                                    ApplicationVariantImpl>>
+                                                    ApplicationVariantBuilder,
+                                                    ApplicationCreationConfig>>
                             variants,
             @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
             @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,

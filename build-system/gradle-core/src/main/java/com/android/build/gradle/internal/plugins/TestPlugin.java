@@ -29,8 +29,6 @@ import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.TestAndroidComponentsExtension;
 import com.android.build.api.variant.TestVariant;
 import com.android.build.api.variant.TestVariantBuilder;
-import com.android.build.api.variant.impl.TestVariantBuilderImpl;
-import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -38,6 +36,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.component.TestVariantCreationConfig;
 import com.android.build.gradle.internal.core.dsl.TestProjectVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -75,9 +74,10 @@ public class TestPlugin
                 TestProductFlavor,
                 com.android.build.api.dsl.TestExtension,
                 TestAndroidComponentsExtension,
-                TestVariantBuilderImpl,
+                TestVariantBuilder,
                 TestProjectVariantDslInfo,
-                TestVariantImpl> {
+                TestVariantCreationConfig,
+                TestVariant> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry,
@@ -196,8 +196,8 @@ public class TestPlugin
             @NonNull
                     VariantApiOperationsRegistrar<
                                     com.android.build.api.dsl.TestExtension,
-                                    TestVariantBuilderImpl,
-                                    TestVariantImpl>
+                                    TestVariantBuilder,
+                                    TestVariant>
                             variantApiOperationsRegistrar,
             @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
@@ -242,7 +242,10 @@ public class TestPlugin
     protected TestApplicationTaskManager createTaskManager(
             @NonNull Project project,
             @NonNull
-                    Collection<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                    Collection<
+                                    ? extends
+                                            ComponentInfo<
+                                                    TestVariantBuilder, TestVariantCreationConfig>>
                             variants,
             @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
             @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,

@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
-import com.android.build.api.variant.impl.ApplicationVariantImpl
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.dsl.AbstractPublishing
@@ -49,13 +49,13 @@ import org.gradle.api.file.FileCollection
 
 class ApplicationTaskManager(
     project: Project,
-    private val variants: Collection<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
+    private val variants: Collection<ComponentInfo<ApplicationVariantBuilder, ApplicationCreationConfig>>,
     testComponents: Collection<TestComponentCreationConfig>,
     testFixturesComponents: Collection<TestFixturesCreationConfig>,
     globalConfig: GlobalTaskCreationConfig,
     localConfig: TaskManagerConfig,
     extension: BaseExtension,
-) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
+) : AbstractAppTaskManager<ApplicationVariantBuilder, ApplicationCreationConfig>(
     project,
     variants,
     testComponents,
@@ -78,7 +78,7 @@ class ApplicationTaskManager(
     }
 
     override fun doCreateTasksForVariant(
-        variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>
+        variantInfo: ComponentInfo<ApplicationVariantBuilder, ApplicationCreationConfig>
     ) {
         createCommonTasks(variantInfo)
 
@@ -138,7 +138,7 @@ class ApplicationTaskManager(
     }
 
     /** Configure variantData to generate embedded wear application.  */
-    private fun handleMicroApp(appVariant: ApplicationVariantImpl) {
+    private fun handleMicroApp(appVariant: ApplicationCreationConfig) {
         val componentType = appVariant.componentType
         if (componentType.isBaseModule) {
             val unbundledWearApp: Boolean? = appVariant.isWearAppUnbundled
@@ -184,7 +184,7 @@ class ApplicationTaskManager(
      * if null this will trigger the unbundled mode.
      */
     private fun createGenerateMicroApkDataTask(
-        appVariant: ApplicationVariantImpl,
+        appVariant: ApplicationCreationConfig,
         config: FileCollection? = null
     ) {
         val generateMicroApkTask =
@@ -197,7 +197,7 @@ class ApplicationTaskManager(
         )
     }
 
-    private fun createAssetPackTasks(appVariant: ApplicationVariantImpl) {
+    private fun createAssetPackTasks(appVariant: ApplicationCreationConfig) {
         val assetPackFilesConfiguration =
             project.configurations.maybeCreate("assetPackFiles")
         val assetPackManifestConfiguration =
@@ -236,7 +236,7 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun createDynamicBundleTask(variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>) {
+    private fun createDynamicBundleTask(variantInfo: ComponentInfo<ApplicationVariantBuilder, ApplicationCreationConfig>) {
         val variant = variantInfo.variant
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
@@ -302,7 +302,7 @@ class ApplicationTaskManager(
     }
 
     private fun createSoftwareComponent(
-        appVariant: ApplicationVariantImpl,
+        appVariant: ApplicationCreationConfig,
         componentName: String,
         publication: PublishedConfigType
     ) {

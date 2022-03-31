@@ -20,10 +20,9 @@ import com.android.SdkConstants
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.AssetPackBundleExtension
-import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.MetadataRecord
 import com.android.build.api.variant.impl.getFeatureLevel
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -47,7 +46,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -512,8 +510,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(private val componentProperties: ApplicationVariantImpl) :
-        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantImpl>(
+    class CreationAction(private val componentProperties: ApplicationCreationConfig) :
+        VariantTaskCreationAction<PackageBundleTask, ApplicationCreationConfig>(
             componentProperties
         ) {
 

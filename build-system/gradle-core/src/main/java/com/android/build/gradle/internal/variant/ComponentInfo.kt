@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.impl.ComponentBuilderImpl
-import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.ComponentBuilder
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 open class ComponentInfo<
-        ComponentBuilderT : ComponentBuilderImpl,
+        ComponentBuilderT : ComponentBuilder,
         ComponentT : ComponentCreationConfig>(
     val variantBuilder: ComponentBuilderT,
     val variant: ComponentT,
@@ -32,7 +32,7 @@ open class ComponentInfo<
 )
 
 class VariantComponentInfo<
-        VariantBuilderT : VariantBuilderImpl,
+        VariantBuilderT : VariantBuilder,
         VariantDslInfoT: VariantDslInfo,
         VariantT : VariantCreationConfig> (
     variantBuilder: VariantBuilderT,

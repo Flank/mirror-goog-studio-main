@@ -240,7 +240,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val externalNativeExperimentalProperties: Map<String, Any>
         get() = dslInfo.externalNativeExperimentalProperties
 
-    override val nestedComponents: List<Component>
+    override val nestedComponents: List<ComponentImpl<*>>
         get() = listOfNotNull(
             unitTest,
             (this as? HasAndroidTest)?.androidTest,

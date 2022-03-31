@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
-import com.android.build.api.variant.impl.ApplicationVariantImpl
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -99,7 +99,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         }
 
         fun getNativeDebugMetadataFiles(
-            variant: ApplicationVariantImpl
+            variant: ApplicationCreationConfig
         ): FileCollection {
             val nativeDebugMetadataDirs = variant.services.fileCollection()
             when (variant.nativeDebugSymbolLevel) {
@@ -140,8 +140,8 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         private val patternSet = PatternSet().include("**/*$DOT_DBG").include("**/*$DOT_SYM")
     }
 
-    class CreationAction(componentProperties: ApplicationVariantImpl) :
-        VariantTaskCreationAction<MergeNativeDebugMetadataTask, ApplicationVariantImpl>(
+    class CreationAction(componentProperties: ApplicationCreationConfig) :
+        VariantTaskCreationAction<MergeNativeDebugMetadataTask, ApplicationCreationConfig>(
             componentProperties
         ) {
         override val name: String

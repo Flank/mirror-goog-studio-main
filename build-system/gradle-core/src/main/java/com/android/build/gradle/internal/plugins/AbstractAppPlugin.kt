@@ -22,8 +22,9 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.component.SoftwareComponentFactory
@@ -46,14 +47,15 @@ abstract class AbstractAppPlugin<
                 in AndroidT,
                 in VariantBuilderT,
                 in VariantT>,
-        VariantBuilderT : VariantBuilderImpl,
+        VariantBuilderT : VariantBuilder,
         VariantDslInfoT: VariantDslInfo,
-        VariantT : VariantImpl<VariantDslInfoT>>
+        CreationConfigT: VariantCreationConfig,
+        VariantT : Variant>
 @Inject constructor(
         registry: ToolingModelBuilderRegistry?,
         componentFactory: SoftwareComponentFactory?,
         listenerRegistry: BuildEventsListenerRegistry?
-) : BasePlugin<BuildFeaturesT, BuildTypeT, DefaultConfigT, ProductFlavorT, AndroidT, AndroidComponentsT, VariantBuilderT, VariantDslInfoT, VariantT>(
+) : BasePlugin<BuildFeaturesT, BuildTypeT, DefaultConfigT, ProductFlavorT, AndroidT, AndroidComponentsT, VariantBuilderT, VariantDslInfoT, CreationConfigT, VariantT>(
         registry!!,
         componentFactory!!,
         listenerRegistry!!

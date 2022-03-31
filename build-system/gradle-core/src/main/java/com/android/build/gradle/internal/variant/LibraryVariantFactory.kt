@@ -21,11 +21,13 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -54,7 +56,7 @@ import org.gradle.api.Project
 
 class LibraryVariantFactory(
     projectServices: ProjectServices,
-) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantDslInfo, LibraryVariantImpl>(
+) : BaseVariantFactory<LibraryVariantBuilder, LibraryVariantDslInfo, LibraryCreationConfig>(
     projectServices,
 ) {
 
@@ -63,7 +65,7 @@ class LibraryVariantFactory(
         componentIdentity: ComponentIdentity,
         variantDslInfo: LibraryVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
-    ): LibraryVariantBuilderImpl {
+    ): LibraryVariantBuilder {
         return projectServices
                 .objectFactory
                 .newInstance(
@@ -75,7 +77,7 @@ class LibraryVariantFactory(
     }
 
     override fun createVariant(
-        variantBuilder: LibraryVariantBuilderImpl,
+        variantBuilder: LibraryVariantBuilder,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
         variantDslInfo: LibraryVariantDslInfo,
@@ -89,7 +91,7 @@ class LibraryVariantFactory(
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-        ): LibraryVariantImpl {
+        ): LibraryCreationConfig {
         val libVariant = projectServices
                 .objectFactory
                 .newInstance(

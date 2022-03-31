@@ -38,7 +38,7 @@ data class VariantOutputImpl(
     override val enabled: Property<Boolean>,
 
     @get:Internal
-    val variantOutputConfiguration: VariantOutputConfigurationImpl,
+    val variantOutputConfiguration: VariantOutputConfiguration,
 
     // private APG APIs.
     @get:Input
@@ -57,7 +57,7 @@ data class VariantOutputImpl(
         val versionCode: Int?,
         @get:Input
         val versionName: String?,
-        @get:Input
+        @get:Nested
         val variantOutputConfiguration: VariantOutputConfigurationImpl,
         @get:Input
         val baseName: String,
@@ -86,7 +86,7 @@ data class VariantOutputImpl(
     fun toSerializedForm() = SerializedForm(
         versionCode = versionCode.orNull,
         versionName = versionName.orNull,
-        variantOutputConfiguration = variantOutputConfiguration,
+        variantOutputConfiguration = variantOutputConfiguration as VariantOutputConfigurationImpl,
         fullName = fullName,
         baseName = baseName,
         outputFileName = outputFileName.get())
@@ -100,5 +100,5 @@ data class VariantOutputImpl(
 
     @get:Nested
     override val filters: Collection<FilterConfigurationImpl>
-        get() = variantOutputConfiguration.filters
+        get() = (variantOutputConfiguration as VariantOutputConfigurationImpl).filters
 }

@@ -25,7 +25,7 @@ import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.ComponentIdentity;
-import com.android.build.api.variant.impl.VariantBuilderImpl;
+import com.android.build.api.variant.VariantBuilder;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -62,7 +62,7 @@ import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
 public abstract class BaseVariantFactory<
-                VariantBuilderT extends VariantBuilderImpl,
+                VariantBuilderT extends VariantBuilder,
                 VariantDslInfoT extends VariantDslInfo,
                 VariantT extends VariantCreationConfig>
         implements VariantFactory<VariantBuilderT, VariantDslInfoT, VariantT> {

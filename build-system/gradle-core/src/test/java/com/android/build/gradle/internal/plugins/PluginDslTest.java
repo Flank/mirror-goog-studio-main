@@ -21,12 +21,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
+import com.android.build.api.variant.ApplicationVariantBuilder;
 import com.android.build.api.variant.Component;
-import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
-import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -864,7 +864,7 @@ public class PluginDslTest {
 
     public Map<String, VariantCreationConfig> getComponentMap() {
         Map<String, VariantCreationConfig> result = new HashMap<>();
-        for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
+        for (ComponentInfo<ApplicationVariantBuilder, ApplicationCreationConfig> variant :
                 plugin.getVariantManager().getMainComponents()) {
             result.put(variant.getVariant().getName(), variant.getVariant());
         }

@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
-import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
+import com.android.build.api.variant.DynamicFeatureVariantBuilder
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
@@ -34,13 +34,13 @@ import org.gradle.api.Project
 
 internal class DynamicFeatureTaskManager(
     project: Project,
-    variants: Collection<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
+    variants: Collection<ComponentInfo<DynamicFeatureVariantBuilder, DynamicFeatureCreationConfig>>,
     testComponents: Collection<TestComponentCreationConfig>,
     testFixturesComponents: Collection<TestFixturesCreationConfig>,
     globalConfig: GlobalTaskCreationConfig,
     localConfig: TaskManagerConfig,
     extension: BaseExtension,
-) : AbstractAppTaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
+) : AbstractAppTaskManager<DynamicFeatureVariantBuilder, DynamicFeatureCreationConfig>(
     project,
     variants,
     testComponents,
@@ -51,7 +51,7 @@ internal class DynamicFeatureTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-            variantInfo: ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
+            variantInfo: ComponentInfo<DynamicFeatureVariantBuilder, DynamicFeatureCreationConfig>
     ) {
         createCommonTasks(variantInfo)
 
@@ -74,7 +74,7 @@ internal class DynamicFeatureTaskManager(
 
     }
 
-    private fun createDynamicBundleTask(variantProperties: DynamicFeatureVariantImpl) {
+    private fun createDynamicBundleTask(variantProperties: DynamicFeatureCreationConfig) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.

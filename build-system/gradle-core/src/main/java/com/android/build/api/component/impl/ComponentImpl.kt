@@ -29,12 +29,12 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
-import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
@@ -331,30 +331,28 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     private val variantOutputs = mutableListOf<VariantOutputImpl>()
 
-    // FIXME make internal
-    fun addVariantOutput(
-            variantOutputConfiguration: VariantOutputConfigurationImpl,
-            outputFileName: String? = null
-    ): VariantOutputImpl {
-
-        return VariantOutputImpl(
-            createVersionCodeProperty(),
-            createVersionNameProperty(),
-            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
-            variantOutputConfiguration,
-            variantOutputConfiguration.baseName(this),
-            variantOutputConfiguration.fullName(this),
-            internalServices.newPropertyBackingDeprecatedApi(
-                String::class.java,
-                outputFileName
-                    ?: paths.getOutputFileName(
-                        internalServices.projectInfo.getProjectBaseName(),
-                        variantOutputConfiguration.baseName(this)
-                    ),
+    override fun addVariantOutput(
+        variantOutputConfiguration: VariantOutputConfiguration,
+        outputFileName: String?
+    ) {
+        variantOutputs.add(
+            VariantOutputImpl(
+                createVersionCodeProperty(),
+                createVersionNameProperty(),
+                internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
+                variantOutputConfiguration,
+                variantOutputConfiguration.baseName(this),
+                variantOutputConfiguration.fullName(this),
+                internalServices.newPropertyBackingDeprecatedApi(
+                    String::class.java,
+                    outputFileName
+                        ?: paths.getOutputFileName(
+                            internalServices.projectInfo.getProjectBaseName(),
+                            variantOutputConfiguration.baseName(this)
+                        ),
+                )
             )
-        ).also {
-            variantOutputs.add(it)
-        }
+        )
     }
 
     // default impl for variants that don't actually have versionName
@@ -429,7 +427,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             PACKAGED_MANIFESTS
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
-    open fun publishBuildArtifacts() {
+    override fun publishBuildArtifacts() {
         for (outputSpec in variantScope.publishingSpec.outputs) {
             val buildArtifactType = outputSpec.outputType
             // Gradle only support publishing single file.  Therefore, unless Gradle starts

@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DataBinding
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
@@ -60,7 +61,7 @@ import java.util.function.Consumer
 
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
-) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantDslInfo, ApplicationVariantImpl>(
+) : AbstractAppVariantFactory<ApplicationVariantBuilder, ApplicationVariantDslInfo, ApplicationCreationConfig>(
     projectServices,
 ) {
 
@@ -83,7 +84,7 @@ class ApplicationVariantFactory(
     }
 
     override fun createVariant(
-        variantBuilder: ApplicationVariantBuilderImpl,
+        variantBuilder: ApplicationVariantBuilder,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
         variantDslInfo: ApplicationVariantDslInfo,
@@ -97,7 +98,7 @@ class ApplicationVariantFactory(
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-        ): ApplicationVariantImpl {
+        ): ApplicationCreationConfig {
         val appVariant = projectServices
             .objectFactory
             .newInstance(
@@ -172,7 +173,7 @@ class ApplicationVariantFactory(
         get() = ComponentTypeImpl.BASE_APK
 
     private fun computeOutputs(
-        appVariant: ApplicationVariantImpl,
+        appVariant: ApplicationCreationConfig,
         variant: ApplicationVariantData,
         globalConfig: GlobalTaskCreationConfig,
     ) {

@@ -23,6 +23,7 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -164,6 +165,11 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val javaCompilation: JavaCompilation
 
+    fun addVariantOutput(
+        variantOutputConfiguration: VariantOutputConfiguration,
+        outputFileName: String? = null
+    )
+
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
     // ---------------------------------------------------------------------------------------------
@@ -187,6 +193,9 @@ interface ComponentCreationConfig : ComponentIdentity {
     fun getCompiledRClassArtifact(): Provider<RegularFile>?
 
     fun addDataBindingSources(sourceSets: MutableList<DirectoryEntry>)
+
+    /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
+    fun publishBuildArtifacts()
 
     // ---------------------------------------------------------------------------------------------
     // LEGACY SUPPORT

@@ -37,6 +37,7 @@ import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImplKt;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.api.variant.impl.VariantOutputListKt;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -945,10 +946,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
      */
     private static Set<String> getAcceptedAbis(@NonNull SplitterParams params) {
         FilterConfiguration splitAbiFilter =
-                params.getVariantOutput()
-                        .get()
-                        .getVariantOutputConfiguration()
-                        .getFilter(FilterConfiguration.FilterType.ABI);
+                VariantOutputConfigurationImplKt.getFilter(
+                        params.getVariantOutput().get().getVariantOutputConfiguration(),
+                        FilterConfiguration.FilterType.ABI);
         final Set<String> acceptedAbis =
                 splitAbiFilter != null
                         ? ImmutableSet.of(splitAbiFilter.getIdentifier())

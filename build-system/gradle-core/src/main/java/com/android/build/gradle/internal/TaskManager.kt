@@ -27,7 +27,7 @@ import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
-import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
@@ -271,7 +271,7 @@ import org.gradle.testing.jacoco.plugins.JacocoPlugin
  * @param testComponents these are all the test components
  * @param extension the extension
  */
-abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantCreationConfig>(
+abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantCreationConfig>(
     @JvmField protected val project: Project,
     private val variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>,
     private val testComponents: Collection<TestComponentCreationConfig>,

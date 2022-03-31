@@ -26,12 +26,11 @@ import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.variant.DynamicFeatureVariant;
 import com.android.build.api.variant.DynamicFeatureVariantBuilder;
-import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
-import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo;
@@ -73,9 +72,10 @@ public class DynamicFeaturePlugin
                 com.android.build.api.dsl.DynamicFeatureProductFlavor,
                 com.android.build.api.dsl.DynamicFeatureExtension,
                 DynamicFeatureAndroidComponentsExtension,
-                DynamicFeatureVariantBuilderImpl,
+                DynamicFeatureVariantBuilder,
                 DynamicFeatureVariantDslInfo,
-                DynamicFeatureVariantImpl> {
+                DynamicFeatureCreationConfig,
+                DynamicFeatureVariant> {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry,
@@ -212,8 +212,8 @@ public class DynamicFeaturePlugin
             @NonNull
                     VariantApiOperationsRegistrar<
                                     com.android.build.api.dsl.DynamicFeatureExtension,
-                                    DynamicFeatureVariantBuilderImpl,
-                                    DynamicFeatureVariantImpl>
+                                    DynamicFeatureVariantBuilder,
+                                    DynamicFeatureVariant>
                             variantApiOperationsRegistrar,
             @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
@@ -248,15 +248,15 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
-    protected TaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
+    protected TaskManager<DynamicFeatureVariantBuilder, DynamicFeatureCreationConfig>
             createTaskManager(
                     @NonNull Project project,
                     @NonNull
                             Collection<
                                             ? extends
                                                     ComponentInfo<
-                                                            DynamicFeatureVariantBuilderImpl,
-                                                            DynamicFeatureVariantImpl>>
+                                                            DynamicFeatureVariantBuilder,
+                                                            DynamicFeatureCreationConfig>>
                                     variants,
                     @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
                     @NonNull

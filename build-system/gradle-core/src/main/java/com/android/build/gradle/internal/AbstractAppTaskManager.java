@@ -22,7 +22,7 @@ import static com.android.build.gradle.internal.cxx.configure.CxxCreateGradleTas
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.variant.impl.VariantBuilderImpl;
+import com.android.build.api.variant.VariantBuilder;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
@@ -69,7 +69,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantCreationConfig>
+                VariantBuilderT extends VariantBuilder, VariantT extends VariantCreationConfig>
         extends TaskManager<VariantBuilderT, VariantT> {
 
     protected AbstractAppTaskManager(

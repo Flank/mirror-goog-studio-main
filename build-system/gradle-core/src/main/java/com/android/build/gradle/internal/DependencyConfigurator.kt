@@ -19,7 +19,7 @@ package com.android.build.gradle.internal
 import com.android.build.api.attributes.AgpVersionAttr
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -606,7 +606,7 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantCreationConfig>
+    fun <VariantBuilderT : VariantBuilder, VariantT : VariantCreationConfig>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
         nestedComponents: List<ComponentCreationConfig>

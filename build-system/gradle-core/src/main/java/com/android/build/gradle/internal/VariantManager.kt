@@ -24,7 +24,6 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasTestFixturesBuilder
 import com.android.build.api.variant.TestFixtures
@@ -35,7 +34,7 @@ import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfigImpl
 import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.HasTestFixtures
-import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.impl.InternalVariantBuilder
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
@@ -112,18 +111,13 @@ import java.util.stream.Collectors
 @Suppress("UnstableApiUsage")
 class VariantManager<
         CommonExtensionT: CommonExtension<*, *, *, *>,
-        AndroidComponentsT: AndroidComponentsExtension<
-                out CommonExtension<*, *, *, *>,
-                out VariantBuilder,
-                out Variant>,
-        VariantBuilderT : VariantBuilderImpl,
+        VariantBuilderT : VariantBuilder,
         VariantDslInfoT: VariantDslInfo,
         VariantT : VariantCreationConfig>(
     private val project: Project,
     private val dslServices: DslServices,
     @Deprecated("Use dslExtension")  private val oldExtension: BaseExtension,
     private val dslExtension: CommonExtensionT,
-    private val androidComponentsExtension: AndroidComponentsT,
     val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<CommonExtensionT, VariantBuilder, Variant>,
     private val variantFactory: VariantFactory<VariantBuilderT, VariantDslInfoT, VariantT>,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
@@ -322,7 +316,7 @@ class VariantManager<
                 project.path, variantBuilder.name)
 
         val userVisibleVariantBuilder =
-            variantBuilder.createUserVisibleVariantObject<VariantBuilder>(
+            (variantBuilder as InternalVariantBuilder).createUserVisibleVariantObject<VariantBuilder>(
                         projectServices,
                         profileEnabledVariantBuilder,
                 )

@@ -21,10 +21,12 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.DynamicFeatureVariantBuilder
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -43,7 +45,7 @@ import com.android.builder.core.ComponentTypeImpl
 
 internal class DynamicFeatureVariantFactory(
     projectServices: ProjectServices,
-) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantDslInfo, DynamicFeatureVariantImpl>(
+) : AbstractAppVariantFactory<DynamicFeatureVariantBuilder, DynamicFeatureVariantDslInfo, DynamicFeatureCreationConfig>(
     projectServices,
 ) {
 
@@ -52,7 +54,7 @@ internal class DynamicFeatureVariantFactory(
         componentIdentity: ComponentIdentity,
         variantDslInfo: DynamicFeatureVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
-    ): DynamicFeatureVariantBuilderImpl {
+    ): DynamicFeatureVariantBuilder {
         return projectServices
             .objectFactory
             .newInstance(
@@ -65,7 +67,7 @@ internal class DynamicFeatureVariantFactory(
     }
 
     override fun createVariant(
-        variantBuilder: DynamicFeatureVariantBuilderImpl,
+        variantBuilder: DynamicFeatureVariantBuilder,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
         variantDslInfo: DynamicFeatureVariantDslInfo,
@@ -79,7 +81,7 @@ internal class DynamicFeatureVariantFactory(
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-        ): DynamicFeatureVariantImpl {
+        ): DynamicFeatureCreationConfig {
         val variantProperties = projectServices
             .objectFactory
             .newInstance(

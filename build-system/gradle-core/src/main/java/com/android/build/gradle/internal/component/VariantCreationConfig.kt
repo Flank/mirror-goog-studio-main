@@ -36,6 +36,8 @@ interface VariantCreationConfig: ConsumableCreationConfig {
 
     val testComponents: MutableMap<ComponentType, TestComponentCreationConfig>
 
+    val nestedComponents: List<ComponentCreationConfig>
+
     var unitTest: UnitTestImpl?
 
     var testFixturesComponent: TestFixturesCreationConfig?

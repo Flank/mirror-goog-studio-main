@@ -26,13 +26,12 @@ import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.LibraryAndroidComponentsExtension;
 import com.android.build.api.variant.LibraryVariant;
 import com.android.build.api.variant.LibraryVariantBuilder;
-import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
-import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.LibraryCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo;
@@ -72,9 +71,10 @@ public class LibraryPlugin
                 com.android.build.api.dsl.LibraryProductFlavor,
                 LibraryExtension,
                 LibraryAndroidComponentsExtension,
-                LibraryVariantBuilderImpl,
+                LibraryVariantBuilder,
                 LibraryVariantDslInfo,
-                LibraryVariantImpl> {
+                LibraryCreationConfig,
+                LibraryVariant> {
 
     @Inject
     public LibraryPlugin(
@@ -186,7 +186,7 @@ public class LibraryPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                    LibraryExtension, LibraryVariantBuilderImpl, LibraryVariantImpl>
+                                    LibraryExtension, LibraryVariantBuilder, LibraryVariant>
                             variantApiOperationsRegistrar,
             @NonNull BootClasspathConfig bootClasspathConfig) {
 
@@ -244,13 +244,13 @@ public class LibraryPlugin
 
     @NonNull
     @Override
-    protected TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> createTaskManager(
+    protected TaskManager<LibraryVariantBuilder, LibraryCreationConfig> createTaskManager(
             @NonNull Project project,
             @NonNull
                     Collection<
                                     ? extends
                                             ComponentInfo<
-                                                    LibraryVariantBuilderImpl, LibraryVariantImpl>>
+                                                    LibraryVariantBuilder, LibraryCreationConfig>>
                             variants,
             @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
             @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,

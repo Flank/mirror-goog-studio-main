@@ -22,12 +22,13 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.api.dsl.ApplicationExtension;
-import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
+import com.android.build.api.variant.ApplicationVariantBuilder;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.SigningConfigImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -618,25 +619,19 @@ public class AppPluginInternalTest {
             @NonNull
                     VariantManager<
                                     ApplicationExtension,
-                                    ?,
-                                    ApplicationVariantBuilderImpl,
+                                    ApplicationVariantBuilder,
                                     ApplicationVariantDslInfo,
-                                    ApplicationVariantImpl>
+                                    ApplicationCreationConfig>
                             variantManager) {
 
-        List<ApplicationVariantImpl> variants =
+        List<ApplicationCreationConfig> variants =
                 variantManager.getMainComponents().stream()
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
         ImmutableList.Builder<ComponentCreationConfig> builder =
                 ImmutableList.<ComponentCreationConfig>builder().addAll(variants);
-        variants.forEach(
-                it ->
-                        it.getNestedComponents()
-                                .forEach(
-                                        component ->
-                                                builder.add((ComponentCreationConfig) component)));
+        variants.forEach(it -> it.getNestedComponents().forEach(builder::add));
         return builder.build();
     }
 }
