@@ -36,10 +36,12 @@ open class BasePlugin: Plugin<Project> {
     /**
      * Returns the Android extension.
      *
-     * @deprecated Directely call project.extensions.getByName("android") instead.
+     * @deprecated Directly call project.extensions.getByName("android") instead. This will be removed in 8.0
      */
-    @Deprecated("Use project.extensions.getByName(\"android\")")
+    @Deprecated("Use project.extensions.getByName(\"android\"). This method will be removed in 8.0")
     fun getExtension(): BaseExtension {
+        // TODO(227795139)
+        project.logger.warn("Calls to BasePlugin.getExtension() are deprecated and will be removed in AGP 8.0")
         return project.extensions.getByName("android") as BaseExtension
     }
 }
