@@ -29,7 +29,6 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -95,15 +94,11 @@ class AvdManagerTest {
 
     @Test
     fun noDevicesFromEmptyFolder() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         assertThat(manager.allAvds()).hasSize(0)
     }
 
     @Test
     fun addSingleDevice() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -117,8 +112,6 @@ class AvdManagerTest {
 
     @Test
     fun addMultipleDevices() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -144,8 +137,6 @@ class AvdManagerTest {
 
     @Test
     fun addSameDeviceDoesNotDuplicate() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -164,8 +155,6 @@ class AvdManagerTest {
 
     @Test
     fun testDeleteDevices() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -189,9 +178,6 @@ class AvdManagerTest {
 
     @Test
     fun testSnapshotCreation() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-
         `when`(snapshotHandler.getEmulatorExecutable(versionedSdkLoader.emulatorDirectoryProvider))
             .thenReturn(FileOpUtils.toFile(emulatorFolder.resolve("emulator")))
         `when`(
@@ -225,9 +211,6 @@ class AvdManagerTest {
 
     @Test
     fun testSnapshotSkippedIfValid() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-
         `when`(snapshotHandler.getEmulatorExecutable(versionedSdkLoader.emulatorDirectoryProvider))
             .thenReturn(FileOpUtils.toFile(emulatorFolder.resolve("emulator")))
         `when`(
