@@ -60,9 +60,7 @@ class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator:
     ): SingleArtifactContainer<T> {
 
         return singleStorage.getOrPut(artifactType) {
-            SingleArtifactContainer {
-                SinglePropertyAdapter(propertyAllocator(objects))
-            }
+            SingleArtifactContainer { SinglePropertyAdapter(propertyAllocator(objects)) }
         }
     }
 

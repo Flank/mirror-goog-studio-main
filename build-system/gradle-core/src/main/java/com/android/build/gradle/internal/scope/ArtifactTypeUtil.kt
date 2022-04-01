@@ -23,9 +23,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
-import org.gradle.api.specs.Spec
 import java.io.File
 import java.util.Locale
 
@@ -39,24 +37,39 @@ import java.util.Locale
 fun Artifact<*>.getOutputDir(parentDir: File)=
     FileUtils.join(parentDir, category.name.toLowerCase(Locale.US), getFolderName())
 
+fun Artifact<*>.getIntermediateOutputDir(parentDir: File): File =
+    FileUtils.join(parentDir, Artifact.Category.INTERMEDIATES.name.toLowerCase(Locale.US), getFolderName())
+
 /**
  * Returns a [File] representing the artifact type location (could be a directory or regular file).
  *
  * @param buildDirectory the parent build folder
  * @param identifier the unique scoping identifier
  * @param taskName the task name to append to the path, or null if not necessary
- *
+ * @param forceFilename to overwrite default fileName
  * @return a [File] that can be safely use as task output.
  */
 fun Artifact<*>.getOutputPath(
     buildDirectory: DirectoryProperty,
     variantIdentifier: String,
-    vararg paths: String) = FileUtils.join(
+    vararg paths: String,
+    forceFilename:String = "") = FileUtils.join(
         getOutputDir(buildDirectory.get().asFile),
         variantIdentifier,
         *paths,
-        getFileSystemLocationName()
+        if(forceFilename.isNullOrEmpty()) getFileSystemLocationName() else forceFilename
     )
+
+fun Artifact<*>.getIntermediateOutputPath(
+    buildDirectory: DirectoryProperty,
+    variantIdentifier: String,
+    vararg paths: String,
+    forceFilename:String = "") = FileUtils.join(
+    getIntermediateOutputDir(buildDirectory.get().asFile),
+    variantIdentifier,
+    *paths,
+    if(forceFilename.isNullOrEmpty()) getFileSystemLocationName() else forceFilename
+)
 
 /**
  * Converts a [FileCollection] to a [Provider] of a [List] of [RegularFile], filtering other types

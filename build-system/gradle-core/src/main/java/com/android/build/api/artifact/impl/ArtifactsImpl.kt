@@ -26,21 +26,23 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.scope.getIntermediateOutputPath
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.Collections
-
+import  org.gradle.api.model.ObjectFactory
 /**
  * Implementation of the [Artifacts] Variant API interface.
  *
@@ -56,7 +58,7 @@ class ArtifactsImpl(
 ): Artifacts {
 
     private val storageProvider = StorageProviderImpl()
-    private val objects= project.objects
+    val objects: ObjectFactory = project.objects
     internal val buildDirectory = project.layout.buildDirectory
     private val outstandingRequests = Collections.synchronizedList(ArrayList<ArtifactOperationRequest>())
 
@@ -99,10 +101,41 @@ class ArtifactsImpl(
 
     /**
      * Returns a [File] representing the artifact type location (could be a directory or regular
-     * file).
+     * file). forceFilename is to overwrite default fileName
      */
-    internal fun <T: FileSystemLocation> getOutputPath(type: Artifact<T>, vararg paths: String)=
-        type.getOutputPath(buildDirectory, identifier, *paths)
+    internal fun <T: FileSystemLocation> getOutputPath(type: Artifact<T>, vararg paths: String, forceFilename:String = "")=
+        type.getOutputPath(buildDirectory, identifier, *paths, forceFilename = forceFilename)
+
+    private fun <T: FileSystemLocation> getIntermediateOutputPath(type: Artifact<T>, vararg paths: String, forceFilename:String = "")=
+        type.getIntermediateOutputPath(buildDirectory, identifier, *paths, forceFilename = forceFilename)
+
+    fun calculateOutputPath(type: Single<*>, taskProvider: Task): File {
+        with(getArtifactContainer(type)) {
+            val fileName = calculateFileName(type)
+            return if (getFinalProvider() == null || taskProvider.name == getFinalProvider()?.name) {
+                val finalName = finalFilename?.orNull ?: fileName
+                if (buildOutputLocation?.isPresent == true)
+                    //final transformer with
+                    FileUtils.join(buildOutputLocation!!.get().asFile, finalName)
+                else
+                    getOutputPath(type, forceFilename = finalName)
+            } else getIntermediateOutputPath(
+                type,
+                taskProvider.name,
+                forceFilename = fileName
+            )
+        }
+    }
+
+    fun calculateFileName(type:Single<*>):String {
+        if(type.kind is ArtifactKind.FILE){
+            return if(!type.getFileSystemLocationName().isNullOrEmpty())
+                type.getFileSystemLocationName()
+            else
+                DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
+        }
+        return ""
+    }
 
     /**
      * Returns the [ArtifactContainer] for the passed [type]. The instance may be allocated as part
@@ -114,7 +147,6 @@ class ArtifactsImpl(
     internal fun <FILE_TYPE : FileSystemLocation> getArtifactContainer(
         type: Single<FILE_TYPE>
     ): SingleArtifactContainer<FILE_TYPE> {
-
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)
     }
 
@@ -146,7 +178,7 @@ class ArtifactsImpl(
 
     /**
      * Sets the Android Gradle Plugin producer. Although conceptually the AGP producers are first
-     * to process/consume artifacts, we want to register them last after all custom code has had
+     * to process/consume artifacts, we want to register them last after all custom cod`e has had
      * opportunities to transform or replace it.
      *
      * Therefore, we cannot rely on the usual append/replace pattern but instead use this API to
@@ -163,6 +195,17 @@ class ArtifactsImpl(
             where FILE_TYPE : FileSystemLocation,
                   TASK: Task
             = SingleInitialProviderRequestImpl(this, taskProvider, property)
+
+    @JvmName("setInitialProvider")
+    internal fun <FILE_TYPE, TASK> setInitialProvider(
+        taskProvider: TaskProvider<TASK>,
+        property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
+        customProvider: ((TASK) -> Provider<FILE_TYPE>)
+    ): SingleInitialProviderRequestImpl<TASK, FILE_TYPE>
+            where FILE_TYPE : FileSystemLocation,
+                  TASK: Task
+            = SingleInitialProviderRequestImpl(this, taskProvider, property, customProvider)
+
 
     /**
      * Adds an Android Gradle Plugin producer.
@@ -287,14 +330,24 @@ class ArtifactsImpl(
     }
 }
 
-
+/**
+ * Function fromProperty returns an output property, so we can set path to output file.
+ * Function fromProvider returns output provider that gradle uses to connect tasks together.
+ * In most cases fromProperty is fromProvider, but sometimes (as for BundleAar/AbstractArchiveTask)
+ * task has a provider declared as @Output. Gradle requires us to use the same provider that marked
+ * as @Output to connect tasks. In this case we need separate mapped property to set output path for.
+ */
 internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
     private val artifactsImpl: ArtifactsImpl,
     private val taskProvider: TaskProvider<TASK>,
-    private val from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+    private val fromProperty: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
+    private val fromProvider: ((TASK) -> Provider<FILE_TYPE>) = fromProperty
 ) {
-    var fileName: String? = null
-    private var buildOutputLocation: String? = null
+
+    private var fileName: Property<String> = artifactsImpl.objects.property(String::class.java)
+    private var buildOutputLocation: DirectoryProperty = artifactsImpl.objects.directoryProperty()
+
+    private var absoluteOutputLocation: String? =  null
     private var buildOutputLocationResolver: ((TASK) -> Provider<Directory>)? = null
 
     /**
@@ -304,7 +357,21 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
      * @param location a directory absolute path
      */
     fun atLocation(location: String?): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
-        buildOutputLocation = location
+        absoluteOutputLocation = location
+        return this
+    }
+
+    fun withBuildOutput(
+        finalLocation: Provider<Directory>
+    ): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
+        buildOutputLocation.set(finalLocation)
+        return this
+    }
+
+    fun withBuildOutput(
+        finalLocation: File
+    ): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
+        buildOutputLocation.set(finalLocation)
         return this
     }
 
@@ -320,39 +387,41 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
         return this
     }
 
+    fun withName(nameProperty: Property<String>): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
+        fileName.set(nameProperty)
+        return this
+    }
+
     fun withName(name: String): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
-        fileName = name
+        fileName.set(name)
         return this
     }
 
     fun on(type: Single<FILE_TYPE>) {
-
         val artifactContainer = artifactsImpl.getArtifactContainer(type)
+        // Regular-file artifacts require a file name (see bug 151076862)
+        fileName.convention(artifactsImpl.calculateFileName(type))
+        artifactContainer.initOutputs(
+            fileName,
+            buildOutputLocation)
+
         taskProvider.configure {
-            // Regular-file artifacts require a file name (see bug 151076862)
-            if (type.kind is ArtifactKind.FILE
-                && fileName.isNullOrEmpty()
-                && type.getFileSystemLocationName().isNullOrEmpty()) {
-                fileName = DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
-            }
+            val fileNameOrEmpty = fileName.get().orEmpty()
             val outputAbsolutePath = when {
-                buildOutputLocation != null -> {
-                    File(buildOutputLocation, fileName.orEmpty())
-                }
+                absoluteOutputLocation != null ->
+                    File(absoluteOutputLocation, fileNameOrEmpty)
                 buildOutputLocationResolver != null -> {
                     val resolver = buildOutputLocationResolver!!
-                    File(resolver.invoke(it).get().asFile, fileName.orEmpty())
+                    File(resolver.invoke(it).get().asFile,fileNameOrEmpty)
                 }
-                else -> {
-                    artifactsImpl.getOutputPath(type,
-                        if (artifactContainer.hasCustomProviders()) taskProvider.name else "",
-                        fileName.orEmpty())
-                }
+                else -> artifactsImpl.calculateOutputPath(type, it)
             }
             // since the taskProvider will execute, resolve its output path.
-            from(it).set(outputAbsolutePath)
+            fromProperty(it).set(outputAbsolutePath)
         }
-        artifactContainer.setInitialProvider(taskProvider, taskProvider.flatMap { from(it) })
+        artifactContainer.setInitialProvider(
+            taskProvider, taskProvider.flatMap { fromProvider(it) }
+        )
     }
 }
 

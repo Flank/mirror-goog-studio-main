@@ -19,7 +19,6 @@ package com.android.build.api.artifact.impl
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.Artifact.Multiple
 import com.android.build.api.artifact.Artifact.Single
-import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.CombiningOperationRequest
@@ -40,6 +39,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 class OutOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
@@ -294,19 +294,11 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toTransf
               ArtifactTypeT : Artifact.Transformable {
     val artifactContainer = artifacts.getArtifactContainer(type)
     val currentProvider =  artifactContainer.transform(taskProvider, taskProvider.flatMap { into(it) })
-    val fileName = if (type.kind is ArtifactKind.FILE
-        && type.getFileSystemLocationName().isNullOrEmpty()) {
-        DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
-    } else ""
-    taskProvider.configure {
+    taskProvider.configure { it ->
         from(it).set(currentProvider)
         // since the task will now execute, resolve its output path.
-        into(it).set(
-            artifacts.getOutputPath(type,
-                taskProvider.name,
-                fileName
-            )
-        )
+        val outputAbsolutePath:File = artifacts.calculateOutputPath(type, it)
+        into(it).set(outputAbsolutePath)
     }
 }
 

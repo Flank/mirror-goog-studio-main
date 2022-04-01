@@ -18,7 +18,9 @@ package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.Artifact
 import com.google.common.annotations.VisibleForTesting
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.util.concurrent.atomic.AtomicBoolean
@@ -52,8 +54,10 @@ internal abstract class ArtifactContainer<T, U>(private val allocator: () -> U) 
     // annotation attribute.
     protected val currentTaskProviders = mutableListOf<TaskProvider<*>>()
 
+    // task provider to detect final one in chain of transformers
+    private var finalTaskProvider:TaskProvider<*>? = null
 
-    //abstract fun setInitialProvider(taskProvider: TaskProvider<*>, with: Provider<T>)
+    fun getFinalProvider() = finalTaskProvider
 
     /**
      * If another [org.gradle.api.Task] is replacing the initial providers through the
@@ -103,6 +107,7 @@ internal abstract class ArtifactContainer<T, U>(private val allocator: () -> U) 
         current.set(with)
         currentTaskProviders.clear()
         currentTaskProviders.add(taskProvider)
+        finalTaskProvider = taskProvider
         final.from(current)
         return oldCurrent.get()
     }
@@ -151,6 +156,15 @@ internal class SingleArtifactContainer<T: FileSystemLocation>(
     init {
         current.from(agpProducer)
         final.from(current)
+    }
+
+    var finalFilename: Property<String>? = null
+    var buildOutputLocation: Property<Directory>? = null
+
+    fun initOutputs(finalFilenameProperty: Property<String>,
+        buildOutputDirectory: Property<Directory>){
+        finalFilename = finalFilenameProperty
+        buildOutputLocation = buildOutputDirectory
     }
 
     /**

@@ -81,6 +81,8 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
             fun taskAction() {
                 val versionCode = "artifactTransformed = true"
                 println("artifactPresent = " + initialArtifact.isPresent)
+                println("initialArtifact = " + initialArtifact.get().asFile)
+                println("updatedArtifact = " + updatedArtifact.get().asFile)
                 updatedArtifact.get().asFile.writeText(versionCode)
             }
         }
@@ -117,6 +119,13 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
         withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
         check {
             assertNotNull(this)
+            Truth.assertThat(output).containsMatch(
+                "initialArtifact = .+?/module/build/intermediates/(bundle/debug/signDebugBundle|aar/debug/bundleDebugAar)/out"
+            )
+            Truth.assertThat(output).containsMatch(
+                "updatedArtifact = .+?/module/build/outputs/(aar|bundle/debug)/module-debug.(aar|aab)"
+            )
+
             Truth.assertThat(output).contains("artifactPresent = true")
             Truth.assertThat(output).contains("artifactTransformed = true")
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")

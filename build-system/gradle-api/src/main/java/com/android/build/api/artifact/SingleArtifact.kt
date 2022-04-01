@@ -84,7 +84,7 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      * The final AAR file as it would be published.
      */
     object AAR:
-        SingleArtifact<RegularFile>(FILE),
+        SingleArtifact<RegularFile>(FILE, Category.OUTPUTS),
         Transformable
 
     /**
