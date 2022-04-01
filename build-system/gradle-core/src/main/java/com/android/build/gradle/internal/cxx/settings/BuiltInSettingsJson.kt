@@ -64,6 +64,8 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_STL_TYPE
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.utils.FileUtils.join
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.provider.ProviderFactory
 
 const val TRADITIONAL_CONFIGURATION_NAME = "traditional-android-studio-cmake-environment"
 
@@ -248,7 +250,10 @@ fun CxxAbiModel.getSettingsFromCommandLine(arguments: List<CommandLineArgument>)
 /**
  * Gather CMake settings from different locations.
  */
-fun CxxAbiModel.gatherSettingsFromAllLocations() : Settings {
+fun CxxAbiModel.gatherSettingsFromAllLocations(
+    providers: ProviderFactory,
+    layout: ProjectLayout
+) : Settings {
     val settings = mutableListOf<Settings>()
 
     when(variant.module.buildSystem) {
@@ -256,7 +261,7 @@ fun CxxAbiModel.gatherSettingsFromAllLocations() : Settings {
             // Load the user's CMakeSettings.json if there is one.
             val userSettings = join(variant.module.makeFile.parentFile, "CMakeSettings.json")
             if (userSettings.isFile) {
-                settings += createSettingsFromJsonFile(userSettings)
+                settings += createSettingsFromJsonFile(userSettings, providers, layout)
             }
             // TODO this needs to include environment variables as well.
             // Add the synthetic traditional environment.

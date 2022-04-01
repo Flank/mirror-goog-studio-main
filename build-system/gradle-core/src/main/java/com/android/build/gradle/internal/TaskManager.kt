@@ -351,7 +351,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             globalConfig.services.issueReporter,
             taskFactory,
             globalConfig.services.projectOptions,
-            variants
+            variants,
+            project.providers,
+            project.layout
         )
     }
 

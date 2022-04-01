@@ -143,7 +143,8 @@ public abstract class AbstractAppTaskManager<
         maybeExtractProfilerDependencies(apkCreationConfig);
 
         // Set up the C/C++ external native build task
-        createCxxVariantBuildTask(taskFactory, variant.getVariant());
+        createCxxVariantBuildTask(
+                taskFactory, variant.getVariant(), project.getProviders(), project.getLayout());
 
         // Add a task to merge the jni libs folders
         createMergeJniLibFoldersTasks(appVariantProperties);

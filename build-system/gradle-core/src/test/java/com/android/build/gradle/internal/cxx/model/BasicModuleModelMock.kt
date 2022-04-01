@@ -68,6 +68,11 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import java.io.File
 import java.util.Locale
+import org.gradle.api.file.FileContents
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.file.RegularFile
+import org.mockito.ArgumentMatchers
+import java.util.concurrent.Callable
 
 /**
  * Set up up a mock for constructing [CxxModuleModel]. It takes a lot of plumbing so this can
@@ -219,6 +224,12 @@ open class BasicModuleModelMock {
         Gradle::class.java
     )
 
+    val providers = mock(org.gradle.api.provider.ProviderFactory::class.java, throwUnmocked)
+
+    val layout = mock(ProjectLayout::class.java, throwUnmocked)
+
+    val fileContents = mock(FileContents::class.java, throwUnmocked)
+
     val configurationParameters by lazy {
         tryCreateConfigurationParameters(
             projectOptions,
@@ -309,6 +320,13 @@ open class BasicModuleModelMock {
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
         doReturn(":$appName").`when`(project).path
+
+        val fileProvider = FakeGradleProvider(File::class.java)
+        doReturn(fileProvider).`when`(providers).provider(ArgumentMatchers.any(Callable::class.java))
+        val regularFileProvider = FakeGradleProvider(mock(RegularFile::class.java))
+        doReturn(regularFileProvider).`when`(layout).file(ArgumentMatchers.any())
+        doReturn(fileContents).`when`(providers).fileContents(regularFileProvider)
+
         return appFolder
     }
 

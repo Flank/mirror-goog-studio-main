@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
@@ -52,9 +51,6 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
       .fromTestApp(
         HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
       )
-      // TODO(159233213) Turn to ON when release configuration is cacheable
-      // TODO(159998570) Figure out flakiness before turning to WARN or ON
-      .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 

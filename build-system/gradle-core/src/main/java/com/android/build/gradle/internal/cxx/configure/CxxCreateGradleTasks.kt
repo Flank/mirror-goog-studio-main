@@ -67,7 +67,10 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import org.gradle.api.Project
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 
 /**
  * Create just the externalNativeBuild per-variant task.
@@ -75,7 +78,9 @@ import org.gradle.api.provider.Provider
  */
 fun createCxxVariantBuildTask(
     taskFactory: TaskFactory,
-    variant: VariantImpl) {
+    variant: VariantImpl,
+    providers: ProviderFactory,
+    layout: ProjectLayout) {
     val configuration = tryCreateConfigurationParameters(
         variant.services.projectOptions,
         variant) ?: return
@@ -86,7 +91,10 @@ fun createCxxVariantBuildTask(
     val configurationModel  = createInitialCxxModel(
         sdkComponentsBuildService.get(),
         androidLocationBuildService.get(),
-        listOf(configuration)).toConfigurationModel()
+        listOf(configuration),
+        providers,
+        layout
+    ).toConfigurationModel()
     variant.taskContainer.cxxConfigurationModel = configurationModel
     variant.taskContainer.externalNativeBuildTask =
         taskFactory.register(
@@ -107,7 +115,9 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
         issueReporter: IssueReporter,
         taskFactory: TaskFactory,
         projectOptions: ProjectOptions,
-        variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>) {
+        variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>,
+        providers: ProviderFactory,
+        layout: ProjectLayout) {
     if (variants.isEmpty()) return
     IssueReporterLoggingEnvironment(
         issueReporter,
@@ -124,7 +134,10 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
             val abis = time("create-initial-cxx-model") {
                 createInitialCxxModel(sdkComponents,
                         androidLocationsProvider,
-                        configurationParameters)
+                        configurationParameters,
+                        providers,
+                        layout
+                )
             }
             val taskModel = createFoldedCxxTaskDependencyModel(abis)
 
@@ -320,7 +333,9 @@ fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskD
 fun createInitialCxxModel(
     sdkComponents: SdkComponentsBuildService,
     androidLocationsProvider: AndroidLocationsProvider,
-    configurationParameters: List<CxxConfigurationParameters>
+    configurationParameters: List<CxxConfigurationParameters>,
+    providers: ProviderFactory,
+    layout: ProjectLayout
 ) : List<CxxAbiModel> {
     return configurationParameters.flatMap { parameters ->
         val module = time("create-module-model") {
@@ -332,7 +347,7 @@ fun createInitialCxxModel(
         Abi.getDefaultValues().map { abi ->
             time("create-$abi-model") {
                 createCxxAbiModel(sdkComponents, parameters, variant, abi)
-                        .calculateConfigurationArguments()
+                        .calculateConfigurationArguments(providers, layout)
             }
         }
     }

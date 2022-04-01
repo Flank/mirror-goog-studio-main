@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.settings.Macro
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.utils.FileUtils.join
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
@@ -93,6 +94,7 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                     "buildRoot": "project-build-root/${Macro.NDK_ABI.ref}"
                 } ]
             }""".trimIndent())
+        doReturn(FakeGradleProvider(cmakeSettingsJson.readText())).`when`(fileContents).asText
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")

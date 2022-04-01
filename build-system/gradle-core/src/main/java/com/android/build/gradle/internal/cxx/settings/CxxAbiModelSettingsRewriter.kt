@@ -63,6 +63,8 @@ import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Lists
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.provider.ProviderFactory
 import java.io.File
 import kotlin.reflect.KProperty1
 
@@ -79,8 +81,11 @@ import kotlin.reflect.KProperty1
  * The purpose of this separation is to allow file outputs to depend on configuration hash but
  * also for the rest of the paths to contribute to the hash itself.
  */
-fun CxxAbiModel.calculateConfigurationArguments() : CxxAbiModel {
-    return calculateConfigurationArgumentsExceptHash()
+fun CxxAbiModel.calculateConfigurationArguments(
+    providers: ProviderFactory,
+    layout: ProjectLayout
+) : CxxAbiModel {
+    return calculateConfigurationArgumentsExceptHash(providers, layout)
             .supportNdkR14AndEarlier()
             .calculateConfigurationHash()
             .expandConfigurationHashMacros()
@@ -97,8 +102,11 @@ fun CxxAbiModel.calculateConfigurationArguments() : CxxAbiModel {
  *
  * We need to update [CxxVariantModel::optimizationTag] with that value.
  */
-private fun CxxAbiModel.calculateConfigurationArgumentsExceptHash() : CxxAbiModel {
-    val rewriteConfig = getAbiRewriteConfiguration()
+private fun CxxAbiModel.calculateConfigurationArgumentsExceptHash(
+    providers: ProviderFactory,
+    layout: ProjectLayout
+) : CxxAbiModel {
+    val rewriteConfig = getAbiRewriteConfiguration(providers, layout)
     val argsAdded = copy(
             cmake = cmake?.copy(buildCommandArgs = rewriteConfig.buildCommandArgs),
             configurationArguments = rewriteConfig.configurationArgs
@@ -186,8 +194,11 @@ private fun CxxAbiModel.expandConfigurationHashMacros() = rewrite { _, value ->
  * expanding macros in different fields.
  */
 @VisibleForTesting
-fun CxxAbiModel.getAbiRewriteConfiguration() : RewriteConfiguration {
-    val allSettings = gatherSettingsFromAllLocations()
+fun CxxAbiModel.getAbiRewriteConfiguration(
+    providers: ProviderFactory,
+    layout: ProjectLayout
+) : RewriteConfiguration {
+    val allSettings = gatherSettingsFromAllLocations(providers, layout)
 
    val configuration =
             allSettings.getConfiguration(TRADITIONAL_CONFIGURATION_NAME)!!
