@@ -24,7 +24,7 @@ fi
 readonly SCRIPT_DIR="$(dirname "$0")"
 readonly SCRIPT_NAME="$(basename "$0")"
 
-readonly CONFIG_OPTIONS="--config=dynamic --config=datasize_aspect"
+readonly CONFIG_OPTIONS="--config=dynamic --config=datasize_aspect --config=sponge"
 
 ####################################
 # Copies bazel artifacts to an output directory named 'artifacts'.
@@ -122,7 +122,6 @@ function run_bazel_test() {
   then
     conditional_flags+=(--build_tests_only)
     conditional_flags+=(--config=ants)
-    conditional_flags+=(--config=sponge)
     target_name="studio-linux_very_flaky"
     test_tag_filters=-no_linux,-no_test_linux,very_flaky
   elif [[ $BUILD_TYPE == "POSTSUBMIT" ]]; then
@@ -135,7 +134,7 @@ function run_bazel_test() {
 
   if [[ -d "${DIST_DIR}" ]]; then
     # Generate a simple html page that redirects to the test results page.
-    echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${DIST_DIR}"/upsalite_test_results.html
+    echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${DIST_DIR}"/upsalite_test_results.html
   fi
 
   # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
