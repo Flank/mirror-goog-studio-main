@@ -69,7 +69,7 @@
             <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
-            <d:api-level>31</d:api-level>
+            <d:api-level>33</d:api-level>
             <d:live-wallpaper-support>true</d:live-wallpaper-support>
             <d:bluetooth-profiles> </d:bluetooth-profiles>
             <d:gl-version>3.2</d:gl-version>
