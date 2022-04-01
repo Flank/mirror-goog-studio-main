@@ -26,6 +26,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers
@@ -39,6 +40,7 @@ import org.mockito.MockitoAnnotations
 class StorageProviderImplTest {
 
     @Mock lateinit var objects: ObjectFactory
+    @Mock lateinit var stringProperty: Property<String>
     @Mock lateinit var fileProperty: RegularFileProperty
     @Mock lateinit var filesProperty: ListProperty<RegularFile>
     @Mock lateinit var directoryProperty: DirectoryProperty
@@ -64,14 +66,21 @@ class StorageProviderImplTest {
 
     @Test
     fun singleFileAllocationTest() {
+        addInitMocks()
         `when`(objects.fileProperty()).thenReturn(fileProperty)
         val storage = StorageProviderImpl().getStorage(ArtifactKind.FILE)
         val artifact = storage.getArtifact(objects, SingleTestTypes.SINGLE_FILE)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
     }
 
+    private fun addInitMocks(){
+        `when`(objects.property(String::class.java)).thenReturn(stringProperty)
+        `when`(objects.directoryProperty()).thenReturn(directoryProperty)
+    }
+
     @Test
     fun singleDirectoryAllocationTest() {
+        addInitMocks()
         `when`(objects.directoryProperty()).thenReturn(directoryProperty)
         val storage = StorageProviderImpl().getStorage(ArtifactKind.DIRECTORY)
         val artifact = storage.getArtifact(objects, SingleTestTypes.SINGLE_DIRECTORY)
