@@ -38,10 +38,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 
 @RunWith(JUnit4::class)
 class AvdManagerTest {
@@ -256,6 +256,25 @@ class AvdManagerTest {
                 any(File::class.java),
                 anyString(),
                 any(ILogger::class.java))
+    }
+
+    @Test
+    fun synchronizationLockFileIsCleanedUpAfterUse() {
+        manager.createAvd(
+            FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
+            "system-images;android-29;default;x86",
+            "device1",
+            "Pixel 2")
+
+        val allAvds = manager.allAvds()
+        assertThat(allAvds).hasSize(1)
+        assertThat(allAvds.first()).isEqualTo("device1")
+
+        assertThat(avdFolder.toFile().list()).isNotEmpty()
+
+        manager.deleteAvds(allAvds)
+
+        assertThat(avdFolder.toFile().list()).isEmpty()
     }
 
     private fun setupVersionedSdkLoader(): SdkComponentsBuildService.VersionedSdkLoader =
