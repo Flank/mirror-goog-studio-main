@@ -502,7 +502,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, Libra
     }
 
     private void createCompileLibraryResourcesTask(@NonNull LibraryCreationConfig variant) {
-        if (variant.isPrecompileDependenciesResourcesEnabled()) {
+        if (variant.getAndroidResourcesCreationConfig() != null
+                && variant.getAndroidResourcesCreationConfig()
+                        .isPrecompileDependenciesResourcesEnabled()) {
             taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variant));
         }
     }

@@ -438,7 +438,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         createProcessJavaResTask(testFixturesComponent)
 
         // android resources tasks
-        if (testFixturesComponent.androidResourcesEnabled) {
+        if (testFixturesComponent.buildFeatures.androidResources) {
             taskFactory.register(ExtractDeepLinksTask.CreationAction(testFixturesComponent))
             taskFactory.register(ExtractDeepLinksTask.AarCreationAction(testFixturesComponent))
 
@@ -638,7 +638,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
     @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
-        if (!component.androidResourcesEnabled) {
+        if (!component.buildFeatures.androidResources) {
             return
         }
         val compileRClass: FileCollection = project.files(
@@ -961,9 +961,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             creationConfig: ComponentCreationConfig,
             processResources: Boolean,
             flags: Set<MergeResources.Flag>) {
+        if (!creationConfig.buildFeatures.androidResources &&
+            creationConfig !is AndroidTestCreationConfig) {
+            return
+        }
         val alsoOutputNotCompiledResources = (creationConfig.componentType.isApk
                 && !creationConfig.componentType.isForTesting
-                && creationConfig.useResourceShrinker())
+                && creationConfig.androidResourcesCreationConfig!!.useResourceShrinker)
         val includeDependencies = true
         basicCreateMergeResourcesTask(
                 creationConfig,
@@ -1133,6 +1137,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             packageOutputType: Single<Directory>?,
             mergeType: MergeType,
             baseName: String) {
+        if (!creationConfig.buildFeatures.androidResources &&
+            creationConfig !is AndroidTestCreationConfig) {
+            return
+        }
         val scope = creationConfig.variantScope
         val variantData = creationConfig.variantData
         variantData.calculateFilters(creationConfig.global.splits)
@@ -1523,7 +1531,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         testConfigInputs.packageNameOfFinalRClass)
             }
         } else {
-            if (testedVariant.componentType.isAar && testedVariant.androidResourcesEnabled) {
+            if (testedVariant.componentType.isAar && testedVariant.buildFeatures.androidResources) {
                 // With compile classpath R classes, we need to generate a dummy R class for unit
                 // tests
                 // See https://issuetracker.google.com/143762955 for more context.
@@ -2459,7 +2467,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 PackageApplication.CreationAction(
                         creationConfig,
                         creationConfig.paths.apkLocation,
-                        creationConfig.useResourceShrinker(),
                         manifests,
                         manifestType),
                 null,
@@ -2729,7 +2736,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // proguard can shrink an empty library project, as the R class is always kept and
         // then removed by library jar transforms.
         val addCompileRClass = (this is LibraryTaskManager
-                && creationConfig.androidResourcesEnabled)
+                && creationConfig.buildFeatures.androidResources)
         val task: TaskProvider<out Task> =
                 createR8Task(creationConfig, isTestApplication, addCompileRClass)
         if (creationConfig.variantScope.postprocessingFeatures != null) {
@@ -2819,7 +2826,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      */
     private fun maybeCreateResourcesShrinkerTasks(
             creationConfig: ConsumableCreationConfig) {
-        if (!creationConfig.useResourceShrinker()) {
+        if (creationConfig.androidResourcesCreationConfig?.useResourceShrinker != true) {
             return
         }
         if (creationConfig.componentType.isDynamicFeature) {

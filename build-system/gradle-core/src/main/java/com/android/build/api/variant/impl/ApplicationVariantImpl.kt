@@ -21,6 +21,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVari
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.component.impl.getAndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -115,7 +116,7 @@ open class ApplicationVariantImpl @Inject constructor(
     }
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(dslInfo.androidResources, internalServices)
+        getAndroidResources()
     }
 
     override val signingConfigImpl: SigningConfigImpl? by lazy {

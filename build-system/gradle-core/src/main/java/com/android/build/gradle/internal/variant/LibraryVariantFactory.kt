@@ -37,10 +37,12 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.scope.AndroidTestBuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
+import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -149,15 +151,32 @@ class LibraryVariantFactory(
         }
     }
 
-    override fun createTestBuildFeatureValues(
-            buildFeatures: BuildFeatures,
-            dataBinding: DataBinding,
-            projectOptions: ProjectOptions): BuildFeatureValues {
-        return BuildFeatureValuesImpl(
-                buildFeatures,
-                projectOptions,
-                null,  /* dataBindingOverride */
-                false /* mlModelBindingOverride */)
+    override fun createUnitTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBinding: DataBinding,
+        projectOptions: ProjectOptions,
+        includeAndroidResources: Boolean
+    ): BuildFeatureValues {
+        return UnitTestBuildFeaturesValuesImpl(
+            buildFeatures,
+            projectOptions,
+            dataBindingOverride = null,
+            mlModelBindingOverride = false,
+            includeAndroidResources = includeAndroidResources
+        )
+    }
+
+    override fun createAndroidTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBinding: DataBinding,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        return AndroidTestBuildFeatureValuesImpl(
+            buildFeatures,
+            projectOptions,
+            dataBindingOverride = null,
+            mlModelBindingOverride = false
+        )
     }
 
     override fun createVariantData(

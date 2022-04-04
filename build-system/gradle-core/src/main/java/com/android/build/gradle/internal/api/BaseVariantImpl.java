@@ -706,11 +706,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
         if (component instanceof ConsumableCreationConfig) {
-            ((ConsumableCreationConfig) component)
-                    .getResValues()
-                    .put(
-                            new ResValueKeyImpl(type, name),
-                            new ResValue(value, "Value from the variant"));
+            if (component.getResValuesCreationConfig() != null) {
+                component
+                        .getResValuesCreationConfig()
+                        .getResValues()
+                        .put(
+                                new ResValueKeyImpl(type, name),
+                                new ResValue(value, "Value from the variant"));
+            }
         } else {
             throw new RuntimeException(
                     "Variant "

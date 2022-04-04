@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getLeasingAapt2
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -203,6 +205,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         creationConfig: ComponentCreationConfig
     ) : VariantTaskCreationAction<VerifyLibraryResourcesTask, ComponentCreationConfig>(
         creationConfig
+    ), AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(
+        creationConfig
     ) {
 
         override val name: String
@@ -239,7 +243,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
-            if (creationConfig.isPrecompileDependenciesResourcesEnabled) {
+            if (androidResourcesCreationConfig.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources.fromDisallowChanges(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

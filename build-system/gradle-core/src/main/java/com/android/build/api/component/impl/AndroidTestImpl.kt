@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
+import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -36,10 +37,10 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
-import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -133,10 +134,11 @@ open class AndroidTestImpl @Inject constructor(
     )
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(
-            dslInfo.testedVariant!!.androidResources,
-            variantServices
-        )
+        getAndroidResources()
+    }
+
+    override val pseudoLocalesEnabled: Property<Boolean> by lazy {
+        androidResourcesCreationConfig.pseudoLocalesEnabled
     }
 
     override val packaging: ApkPackaging by lazy {
@@ -214,16 +216,31 @@ open class AndroidTestImpl @Inject constructor(
             ResValueKeyImpl(type, name)
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
-        internalServices.mapPropertyOf(
-                ResValue.Key::class.java,
-                ResValue::class.java,
-            dslInfo.getResValues()
-        )
+        resValuesCreationConfig?.resValues
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "resValues",
+                apiName = "resValues",
+                value = internalServices.mapPropertyOf(
+                    ResValue.Key::class.java,
+                    ResValue::class.java,
+                    dslInfo.getResValues()
+                )
+            )
     }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
+
+    // Even if android resources is disabled in a library project, we still need to merge and link
+    // external resources to create the test apk.
+    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig by lazy {
+        AndroidResourcesCreationConfigImpl(
+            this,
+            dslInfo,
+            internalServices,
+        )
+    }
 
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride

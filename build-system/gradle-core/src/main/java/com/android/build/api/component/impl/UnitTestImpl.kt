@@ -19,7 +19,7 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
-import com.android.build.api.dsl.AndroidResources
+import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
@@ -30,6 +30,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
@@ -93,9 +94,6 @@ open class UnitTestImpl @Inject constructor(
     override val targetSdkVersion: AndroidVersion
         get() = mainVariant.targetSdkVersion
 
-    override val dslAndroidResources: AndroidResources
-        get() = dslInfo.testedVariant!!.androidResources
-
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, dslInfo.applicationId)
 
@@ -126,6 +124,21 @@ open class UnitTestImpl @Inject constructor(
     override fun addDataBindingSources(
         sourceSets: MutableList<DirectoryEntry>
     ) {}
+
+    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig? by lazy {
+        // in case of unit tests, we add the R jar even if android resources are
+        // disabled (includeAndroidResources) as we want to be able to compile against
+        // the values inside.
+        if (buildFeatures.androidResources || mainVariant.buildFeatures.androidResources) {
+            AndroidResourcesCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices,
+            )
+        } else {
+            null
+        }
+    }
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,

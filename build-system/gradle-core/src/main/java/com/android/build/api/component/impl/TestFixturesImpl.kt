@@ -145,27 +145,35 @@ open class TestFixturesImpl @Inject constructor(
     }
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
-        internalServices.mapPropertyOf(
-            ResValue.Key::class.java,
-            ResValue::class.java,
-            variantDslInfo.getResValues()
-        )
+        resValuesCreationConfig?.resValues
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "resValues",
+                apiName = "resValues",
+                value = internalServices.mapPropertyOf(
+                    ResValue.Key::class.java,
+                    ResValue::class.java,
+                    dslInfo.getResValues()
+                )
+            )
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
-    override val pseudoLocalesEnabled: Property<Boolean> =
-        internalServices.newPropertyBackingDeprecatedApi(
-            Boolean::class.java,
-            variantDslInfo.isPseudoLocalesEnabled
-        )
+    override val pseudoLocalesEnabled: Property<Boolean>  by lazy {
+        androidResourcesCreationConfig?.pseudoLocalesEnabled
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "androidResources",
+                apiName = "pseudoLocalesEnabled",
+                value = internalServices.newPropertyBackingDeprecatedApi(
+                    Boolean::class.java,
+                    dslInfo.isPseudoLocalesEnabled
+                )
+            )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
-
-    override val androidResourcesEnabled: Boolean =
-        dslInfo.testFixturesAndroidResourcesEnabled
 
     override val supportedAbis: Set<String>
         get() = mainVariant.supportedAbis

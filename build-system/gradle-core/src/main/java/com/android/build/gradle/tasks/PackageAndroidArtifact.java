@@ -1142,16 +1142,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             extends VariantTaskCreationAction<TaskT, ApkCreationConfig> {
 
         @NonNull protected final Provider<Directory> manifests;
-        protected boolean useResourceShrinker;
         @NonNull private final Artifact<Directory> manifestType;
 
         public CreationAction(
                 @NonNull ApkCreationConfig creationConfig,
-                boolean useResourceShrinker,
                 @NonNull Provider<Directory> manifests,
                 @NonNull Artifact<Directory> manifestType) {
             super(creationConfig);
-            this.useResourceShrinker = useResourceShrinker;
             this.manifests = manifests;
             this.manifestType = manifestType;
         }
@@ -1183,9 +1180,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
 
-            packageAndroidArtifact
-                    .getAaptOptionsNoCompress()
-                    .set(creationConfig.getAndroidResources().getNoCompress());
+            if (creationConfig.getAndroidResourcesCreationConfig() != null) {
+                packageAndroidArtifact
+                        .getAaptOptionsNoCompress()
+                        .set(
+                                creationConfig
+                                        .getAndroidResourcesCreationConfig()
+                                        .getAndroidResources()
+                                        .getNoCompress());
+            } else {
+                packageAndroidArtifact.getAaptOptionsNoCompress().set(Collections.emptySet());
+            }
             packageAndroidArtifact.getAaptOptionsNoCompress().disallowChanges();
 
             packageAndroidArtifact

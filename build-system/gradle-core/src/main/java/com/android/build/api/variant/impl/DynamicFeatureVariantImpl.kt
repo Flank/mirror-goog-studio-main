@@ -22,6 +22,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureV
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.component.impl.getAndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -50,7 +51,6 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -113,7 +113,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(dslInfo.androidResources, internalServices)
+        getAndroidResources()
     }
 
     override val minifiedEnabled: Boolean

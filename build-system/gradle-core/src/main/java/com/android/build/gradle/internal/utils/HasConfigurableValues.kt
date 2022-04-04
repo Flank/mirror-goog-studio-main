@@ -48,7 +48,7 @@ fun <T> ListProperty<T>.setDisallowChanges(value: Iterable<T>?) {
     disallowChanges()
 }
 
-fun <K, V> MapProperty<K, V>.setDisallowChanges(map: Provider<Map<K,V>>?) {
+fun <K, V> MapProperty<K, V>.setDisallowChanges(map: Provider<Map<K,V>>) {
     set(map)
     disallowChanges()
 }
@@ -65,5 +65,25 @@ fun <T> SetProperty<T>.setDisallowChanges(value: Provider<out Iterable<T>>) {
 
 fun <T> SetProperty<T>.setDisallowChanges(value: Iterable<T>?) {
     set(value)
+    disallowChanges()
+}
+
+fun <T> ListProperty<T>.setDisallowChanges(
+    value: Provider<out Iterable<T>>?,
+    handleNullable: ListProperty<T>.() -> Unit
+) {
+    value?.let {
+        set(value)
+    } ?: handleNullable()
+    disallowChanges()
+}
+
+fun <K, V> MapProperty<K, V>.setDisallowChanges(
+    map: Provider<Map<K,V>>?,
+    handleNullable: MapProperty<K, V>.() -> Unit
+) {
+    map?.let {
+        set(map)
+    } ?: handleNullable()
     disallowChanges()
 }

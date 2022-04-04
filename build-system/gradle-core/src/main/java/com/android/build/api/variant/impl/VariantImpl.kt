@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.component.impl.warnAboutAccessingVariantApiValueForDisabledFeature
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Component
@@ -168,11 +169,16 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = variantBuilder.mutableTargetSdk?.sanitize()
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
-        internalServices.mapPropertyOf(
-            ResValue.Key::class.java,
-            ResValue::class.java,
-            dslInfo.getResValues()
-        )
+        resValuesCreationConfig?.resValues
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "resValues",
+                apiName = "resValues",
+                value = internalServices.mapPropertyOf(
+                    ResValue.Key::class.java,
+                    ResValue::class.java,
+                    dslInfo.getResValues()
+                )
+            )
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
@@ -217,8 +223,17 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         }
     }
 
-    override val pseudoLocalesEnabled: Property<Boolean> =
-        internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, dslInfo.isPseudoLocalesEnabled)
+    override val pseudoLocalesEnabled: Property<Boolean> by lazy {
+        androidResourcesCreationConfig?.pseudoLocalesEnabled
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "androidResources",
+                apiName = "pseudoLocalesEnabled",
+                value = internalServices.newPropertyBackingDeprecatedApi(
+                    Boolean::class.java,
+                    dslInfo.isPseudoLocalesEnabled
+                )
+            )
+    }
 
     override val experimentalProperties: MapProperty<String, Any> =
             internalServices.mapPropertyOf(

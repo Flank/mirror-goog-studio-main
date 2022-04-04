@@ -874,10 +874,15 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.getClasses().disallowChanges();
             task.getBuildConfigClasses().from(creationConfig.getCompiledBuildConfig());
             task.getBuildConfigClasses().disallowChanges();
-            task.getRClasses()
-                    .from(
-                            creationConfig.getCompiledRClasses(
-                                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH));
+            if (creationConfig.getAndroidResourcesCreationConfig() != null) {
+                task.getRClasses()
+                        .from(
+                                creationConfig
+                                        .getAndroidResourcesCreationConfig()
+                                        .getCompiledRClasses(
+                                                AndroidArtifacts.ConsumedConfigType
+                                                        .RUNTIME_CLASSPATH));
+            }
             task.getRClasses().disallowChanges();
         }
     }

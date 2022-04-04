@@ -889,9 +889,13 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         // The separately compile R class, if applicable.
         if (!extension.getAaptOptions().getNamespaced()
-                && component.getBuildFeatures().getAndroidResources()) {
+                && component.getAndroidResourcesCreationConfig() != null) {
             additionalTestClasses.add(
-                    component.getVariantScope().getRJarForUnitTests().get().getAsFile());
+                    component
+                            .getAndroidResourcesCreationConfig()
+                            .getCompiledRClassArtifact()
+                            .get()
+                            .getAsFile());
         }
 
         // No files are possible if the SDK was not configured properly.
@@ -997,10 +1001,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                 component.getVariantData().getAllPreJavacGeneratedBytecode().getFiles());
         additionalClasses.addAll(
                 component.getVariantData().getAllPostJavacGeneratedBytecode().getFiles());
-        additionalClasses.addAll(
-                component
-                        .getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH)
-                        .getFiles());
+        if (component.getAndroidResourcesCreationConfig() != null) {
+            additionalClasses.addAll(
+                    component
+                            .getAndroidResourcesCreationConfig()
+                            .getCompiledRClasses(
+                                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH)
+                            .getFiles());
+        }
 
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
@@ -1212,7 +1220,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             fileCollection.from(component.getArtifacts()
                     .get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES.INSTANCE));
         }
-        if (component.getAndroidResourcesEnabled()) {
+        if (component.getBuildFeatures().getAndroidResources()) {
             if (component
                     .getArtifacts()
                     .get(InternalArtifactType.GENERATED_RES.INSTANCE)

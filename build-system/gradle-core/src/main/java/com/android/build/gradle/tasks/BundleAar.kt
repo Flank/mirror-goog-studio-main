@@ -129,7 +129,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.isReproducibleFileOrder = true
             task.isPreserveFileTimestamps = false
 
-            if (buildFeatures.dataBinding && creationConfig.androidResourcesEnabled) {
+            if (buildFeatures.dataBinding && buildFeatures.androidResources) {
                 task.from(
                     task.project.provider {
                         creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_ARTIFACT) },
@@ -161,7 +161,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
                 task.from(artifacts.get(InternalArtifactType.RES_STATIC_LIBRARY))
             }
-            if (creationConfig.androidResourcesEnabled) {
+            if (buildFeatures.androidResources) {
                 task.from(artifacts.get(InternalArtifactType.PUBLIC_RES))
                 task.from(artifacts.get(InternalArtifactType.NAVIGATION_JSON_FOR_AAR))
             }
@@ -260,7 +260,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.entryCompression = ZipEntryCompression.STORED
 
             // Need R.jar in case a consuming module uses import alias for R class (Issue 188871862)
-            if (creationConfig.androidResourcesEnabled) {
+            if (creationConfig.buildFeatures.androidResources) {
                 task.from(
                     creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR),
                     prependToCopyPath(SdkConstants.LIBS_FOLDER)
@@ -303,7 +303,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.entryCompression = ZipEntryCompression.STORED
 
             // Need R.jar in case a consuming module uses import alias for R class (Issue 188871862)
-            if (creationConfig.androidResourcesEnabled) {
+            if (creationConfig.buildFeatures.androidResources) {
                 task.from(
                     creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR),
                     prependToCopyPath(SdkConstants.LIBS_FOLDER)

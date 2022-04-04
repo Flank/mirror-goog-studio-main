@@ -19,11 +19,12 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.internal.packaging.ApkFlinger
 import com.android.builder.packaging.PackagingUtils
@@ -149,6 +150,8 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
     class CreationAction(creationConfig: UnitTestCreationConfig) :
         VariantTaskCreationAction<PackageForUnitTest, UnitTestCreationConfig>(
             creationConfig
+        ), AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(
+            creationConfig
         ) {
 
         override val name = computeTaskName("package", "ForUnitTest")
@@ -172,7 +175,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             val artifacts = creationConfig.artifacts
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
             task.mergedAssetsDirectory.setDisallowChanges(artifacts.get(SingleArtifact.ASSETS))
-            task.noCompress.setDisallowChanges(creationConfig.dslAndroidResources.noCompress)
+            task.noCompress.setDisallowChanges(androidResourcesCreationConfig.androidResources.noCompress)
         }
     }
 }

@@ -5,12 +5,13 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.DefaultFilePropertyFactory
@@ -118,8 +119,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
     internal class CreateAction(
         creationConfig: ComponentCreationConfig,
         val includeDependencies: Boolean
-    ) :
-        VariantTaskCreationAction<MapSourceSetPathsTask, ComponentCreationConfig>(creationConfig) {
+    ) : VariantTaskCreationAction<MapSourceSetPathsTask, ComponentCreationConfig>(creationConfig),
+        AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(
+            creationConfig
+        ) {
 
         override val name: String = computeTaskName("map", "SourceSetPaths")
 
@@ -186,7 +189,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             task.localResources.setDisallowChanges(
                 creationConfig.sources.res.getLocalSourcesAsFileCollection()
             )
-            if (creationConfig.vectorDrawables.useSupportLibrary == false) {
+            if (androidResourcesCreationConfig.vectorDrawables.useSupportLibrary == false) {
                 task.generatedPngsOutputDir.setDisallowChanges(
                     (creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES)
                             as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {

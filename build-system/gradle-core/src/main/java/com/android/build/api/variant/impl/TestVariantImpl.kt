@@ -20,6 +20,7 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
+import com.android.build.api.component.impl.getAndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -107,7 +108,7 @@ open class TestVariantImpl @Inject constructor(
         internalServices.propertyOf(String::class.java, dslInfo.applicationId)
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(dslInfo.androidResources, internalServices)
+        getAndroidResources()
     }
 
     // TODO: We should keep this (for the manifest) but just fix the test runner to get the

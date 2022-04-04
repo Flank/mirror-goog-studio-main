@@ -21,7 +21,6 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.Renderscript
-import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.dexing.DexingType
 import org.gradle.api.file.RegularFile
@@ -42,8 +41,6 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
 
     @Deprecated("DO NOT USE, use buildConfigFields map property, this is for compatibility with old variant API.")
     fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?)
-
-    val resValues: MapProperty<ResValue.Key, ResValue>
 
     val packaging: Packaging
 

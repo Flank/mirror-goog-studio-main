@@ -32,6 +32,9 @@ import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
+import com.android.build.gradle.internal.component.features.AssetsCreationConfig
+import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.ProductFlavor
@@ -51,16 +54,11 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
-import com.android.builder.model.VectorDrawablesOptions
-import com.google.common.collect.ImmutableSet
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
 /**
@@ -87,8 +85,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // needed by resource compilation/link
     val applicationId: Provider<String>
     val namespace: Provider<String>
-    val resourceConfigurations: ImmutableSet<String>
-    val isPrecompileDependenciesResourcesEnabled: Boolean
     val asmApiVersion: Int
     val asmFramesComputationMode: FramesComputationMode
     val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
@@ -99,8 +95,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val instrumentation: Instrumentation
     val debuggable: Boolean
     val profileable: Boolean
-    val pseudoLocalesEnabled: Property<Boolean>
-    val androidResourcesEnabled: Boolean
     val buildConfigEnabled: Boolean
     val manifestPlaceholders: MapProperty<String, String>
     val supportedAbis: Set<String>
@@ -110,7 +104,12 @@ interface ComponentCreationConfig : ComponentIdentity {
     val targetSdkVersionOverride: AndroidVersion?
 
     // ---------------------------------------------------------------------------------------------
+    // OPTIONAL FEATURES
     // ---------------------------------------------------------------------------------------------
+
+    val assetsCreationConfig: AssetsCreationConfig?
+    val androidResourcesCreationConfig: AndroidResourcesCreationConfig?
+    val resValuesCreationConfig: ResValuesCreationConfig?
 
     // TODO figure out whether these properties are needed by all
     // TODO : remove as it is now in Variant.
@@ -163,8 +162,6 @@ interface ComponentCreationConfig : ComponentIdentity {
         generatedBytecodeKey: Any? = null
     ): FileCollection
 
-    fun useResourceShrinker(): Boolean
-
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
 
     fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
@@ -185,22 +182,11 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val isAndroidTestCoverageEnabled: Boolean
 
-    val vectorDrawables: VectorDrawablesOptions
-
     fun getCompiledBuildConfig(): FileCollection
-
-    fun getCompiledRClasses(configType: AndroidArtifacts.ConsumedConfigType): FileCollection
 
     fun getBuildConfigType() : BuildConfigType
 
     fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
-
-    /**
-     * Returns the artifact for the compiled R class
-     *
-     * This can be null for unit tests without resource support.
-     */
-    fun getCompiledRClassArtifact(): Provider<RegularFile>?
 
     fun addDataBindingSources(sourceSets: MutableList<DirectoryEntry>)
 

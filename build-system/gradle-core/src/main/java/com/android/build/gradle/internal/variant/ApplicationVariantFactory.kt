@@ -36,9 +36,11 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.AndroidTestBuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
+import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -149,7 +151,29 @@ class ApplicationVariantFactory(
         )
     }
 
-    override fun createTestBuildFeatureValues(
+    override fun createUnitTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBinding: DataBinding,
+        projectOptions: ProjectOptions,
+        includeAndroidResources: Boolean
+    ): BuildFeatureValues {
+        buildFeatures as? ApplicationBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
+
+        return UnitTestBuildFeaturesValuesImpl(
+            buildFeatures,
+            projectOptions,
+            dataBindingOverride = if (!dataBinding.isEnabledForTests) {
+                false
+            } else {
+                null // means whatever is default.
+            },
+            mlModelBindingOverride = false,
+            includeAndroidResources = includeAndroidResources
+        )
+    }
+
+    override fun createAndroidTestBuildFeatureValues(
         buildFeatures: BuildFeatures,
         dataBinding: DataBinding,
         projectOptions: ProjectOptions
@@ -157,7 +181,7 @@ class ApplicationVariantFactory(
         buildFeatures as? ApplicationBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
 
-        return BuildFeatureValuesImpl(
+        return AndroidTestBuildFeatureValuesImpl(
             buildFeatures,
             projectOptions,
             dataBindingOverride = if (!dataBinding.isEnabledForTests) {

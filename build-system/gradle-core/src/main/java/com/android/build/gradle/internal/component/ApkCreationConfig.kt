@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.impl.BundleConfigImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
@@ -26,8 +25,6 @@ import java.io.File
  * Interface for properties common to all variant generating APKs
  */
 interface ApkCreationConfig: ConsumableCreationConfig {
-
-    val androidResources: AndroidResources
 
     val embedsMicroApp: Boolean
 

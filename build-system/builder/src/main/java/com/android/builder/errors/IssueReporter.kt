@@ -84,6 +84,7 @@ abstract class IssueReporter {
         AGP_USED_JAVA_VERSION_TOO_LOW(SyncIssue.TYPE_AGP_USED_JAVA_VERSION_TOO_LOW),
         COMPILE_SDK_VERSION_TOO_HIGH(SyncIssue.TYPE_COMPILE_SDK_VERSION_TOO_HIGH),
         COMPILE_SDK_VERSION_TOO_LOW(SyncIssue.TYPE_COMPILE_SDK_VERSION_TOO_LOW),
+        ACCESSING_DISABLED_FEATURE_VARIANT_API(SyncIssue.TYPE_ACCESSING_DISABLED_FEATURE_VARIANT_API),
     }
 
     protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)

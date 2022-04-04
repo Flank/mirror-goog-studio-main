@@ -498,8 +498,11 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
             task.classes.disallowChanges()
             task.buildConfigClasses.from(creationConfig.getCompiledBuildConfig())
             task.buildConfigClasses.disallowChanges()
-            task.rClasses.from(creationConfig.getCompiledRClasses(
-                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH))
+            creationConfig.androidResourcesCreationConfig?.let {
+                task.rClasses.from(
+                    it.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH)
+                )
+            }
             task.rClasses.disallowChanges()
         }
     }

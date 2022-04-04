@@ -396,6 +396,7 @@ com/android/tools/build/gradle
   com/android/build/api/component/
   com/android/build/api/component/analytics/
   com/android/build/api/component/impl/
+  com/android/build/api/component/impl/features/
   com/android/build/api/extension/
   com/android/build/api/extension/impl/
   com/android/build/api/variant/
@@ -415,6 +416,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/attributes/
   com/android/build/gradle/internal/attribution/
   com/android/build/gradle/internal/component/
+  com/android/build/gradle/internal/component/features/
   com/android/build/gradle/internal/component/legacy/
   com/android/build/gradle/internal/core/
   com/android/build/gradle/internal/core/dsl/
@@ -483,6 +485,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/tasks/
   com/android/build/gradle/internal/tasks/databinding/
   com/android/build/gradle/internal/tasks/factory/
+  com/android/build/gradle/internal/tasks/factory/features/
   com/android/build/gradle/internal/tasks/featuresplit/
   com/android/build/gradle/internal/tasks/integrity_config_schema.xsd
   com/android/build/gradle/internal/tasks/manifest/

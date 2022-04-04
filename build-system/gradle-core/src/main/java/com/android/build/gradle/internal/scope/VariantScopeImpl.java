@@ -214,25 +214,6 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     @Override
-    public boolean isCrunchPngs() {
-        // If set for this build type, respect that.
-        Boolean buildTypeOverride = dslInfo.isCrunchPngs();
-        if (buildTypeOverride != null) {
-            return buildTypeOverride;
-        }
-        // Otherwise, if set globally, respect that.
-        Boolean globalOverride =
-                ((AaptOptions) dslInfo.getAndroidResources()).getCruncherEnabledOverride();
-
-        if (globalOverride != null) {
-            return globalOverride;
-        }
-        // If not overridden, use the default from the build type.
-        //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
-        return dslInfo.isCrunchPngsDefault();
-    }
-
-    @Override
     public boolean consumesFeatureJars() {
         return dslInfo.getComponentType().isBaseModule()
                 && dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
@@ -427,28 +408,6 @@ public class VariantScopeImpl implements VariantScope {
                 variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR);
 
         return ProvidedClasspath.getProvidedClasspath(compile, runtime);
-    }
-
-    @NonNull
-    @Override
-    public Provider<RegularFile> getRJarForUnitTests() {
-        ComponentType componentType = dslInfo.getComponentType();
-        checkNotNull(
-                testedVariantProperties,
-                "Variant type does not have a tested variant: " + componentType);
-        checkState(
-                componentType == UNIT_TEST, "Expected unit test type but found: " + componentType);
-
-        if (testedVariantProperties.getComponentType().isAar()) {
-            return artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-        } else {
-            checkState(
-                    testedVariantProperties.getComponentType().isApk(),
-                    "Expected APK type but found: " + testedVariantProperties.getComponentType());
-            return testedVariantProperties
-                    .getArtifacts()
-                    .get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-        }
     }
 
     @Override

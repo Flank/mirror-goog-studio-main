@@ -18,10 +18,8 @@ package com.android.build.gradle.tasks
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.AssetSourceDirectoriesImpl
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
@@ -29,7 +27,9 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.features.AssetsTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AssetsTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
@@ -375,7 +375,9 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
     open class MergeAssetBaseCreationAction(
         creationConfig: ComponentCreationConfig,
         private val includeDependencies: Boolean
-    ) : CreationAction(creationConfig) {
+    ) : CreationAction(creationConfig), AssetsTaskCreationAction by AssetsTaskCreationActionImpl(
+        creationConfig
+    ) {
 
         override val name: String
             get() = computeTaskName("merge", "Assets")
@@ -403,21 +405,9 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
                 task.mlModelsOutputDir
             )
 
-            when (creationConfig) {
-                is ApkCreationConfig -> {
-                    task.ignoreAssetsPatterns.set(creationConfig.androidResources.ignoreAssetsPatterns)
-                }
-                is LibraryCreationConfig -> {
-                    // support ignoring asset patterns in library modules via DSL
-                    creationConfig.dslAndroidResources.ignoreAssetsPattern?.let {
-                        task.ignoreAssetsPatterns.set(it.split(':'))
-                    }
-                }
-                else -> {
-                    // do nothing, property locked below
-                }
-            }
-            task.ignoreAssetsPatterns.disallowChanges()
+            task.ignoreAssetsPatterns.setDisallowChanges(
+                assetsCreationConfig.androidResources.ignoreAssetsPatterns
+            )
 
             if (includeDependencies) {
                 task.libraryCollection = creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)
