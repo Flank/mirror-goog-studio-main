@@ -250,13 +250,7 @@ public class ZipArchive implements Archive {
             return;
         }
 
-        if (policy == Zip64.Policy.FORBID) {
-            String message =
-                    String.format(
-                            "Zip64 required but forbidden (#entries=%d, cd=%s)",
-                            numEntries, cdLocation);
-            throw new IllegalStateException(message);
-        }
+        Zip64.checkFooterPolicy(policy, numEntries, cdLocation);
 
         Zip64Eocd eocd = new Zip64Eocd(numEntries, cdLocation);
         Location eocdLocation = eocd.write(writer);
@@ -328,29 +322,7 @@ public class ZipArchive implements Archive {
         CentralDirectoryRecord cdRecord = new CentralDirectoryRecord(source, loc, payloadLocation);
         cd.add(source.getName(), cdRecord);
 
-        checkPolicy(source, loc, payloadLocation);
-    }
-
-    private void checkPolicy(
-            @NonNull Source source, @NonNull Location cdloc, @NonNull Location payloadLoc) {
-        if (policy == Zip64.Policy.ALLOW) {
-            return;
-        }
-
-        if (source.getUncompressedSize() >= Zip64.LONG_MAGIC
-                || source.getCompressedSize() >= Zip64.LONG_MAGIC
-                || cdloc.first >= Zip64.LONG_MAGIC
-                || payloadLoc.first >= Zip64.LONG_MAGIC) {
-            String message =
-                    String.format(
-                            "Zip64 forbidden but required in entry %s size=%d, csize=%d, cdloc=%s, loc=%s",
-                            source.getName(),
-                            source.getUncompressedSize(),
-                            source.getCompressedSize(),
-                            cdloc,
-                            payloadLoc);
-            throw new IllegalStateException(message);
-        }
+        Zip64.checkEntryPolicy(policy, source, loc, payloadLocation);
     }
 
     private void validateName(@NonNull Source source) {

@@ -16,6 +16,8 @@
 
 package com.android.zipflinger;
 
+import com.android.annotations.NonNull;
+
 public class Zip64 {
     static final short EXTRA_ID = 0x0001;
 
@@ -25,10 +27,81 @@ public class Zip64 {
 
     static final short VERSION_NEEDED = 0x2D;
 
-    public static boolean needZip64Footer(long numEntries, Location cdLocation) {
+    public static boolean needZip64Footer(long numEntries, @NonNull Location cdLocation) {
         return numEntries > Ints.USHRT_MAX
                 || cdLocation.first > Ints.UINT_MAX
                 || cdLocation.size() > Ints.UINT_MAX;
+    }
+
+    static void checkFooterPolicy(
+            @NonNull Policy policy, long numEntries, @NonNull Location cdLocation) {
+        if (policy == Policy.ALLOW) {
+            return;
+        }
+
+        if (numEntries > Ints.USHRT_MAX) {
+            String msg =
+                    String.format("Too many zip entries %d (MAX=%d)", numEntries, Ints.USHRT_MAX);
+            throw new IllegalStateException(msg);
+        }
+
+        if (cdLocation.first > Ints.UINT_MAX) {
+            String msg =
+                    String.format(
+                            "Zip32 cannot place Central directory at offset %d (MAX=%d)",
+                            cdLocation.first, Ints.UINT_MAX);
+            throw new IllegalStateException(msg);
+        }
+
+        if (cdLocation.size() > Ints.UINT_MAX) {
+            String msg =
+                    String.format(
+                            "Zip32 cannot write Central Directory of size %d (MAX=%d)",
+                            cdLocation.size(), Ints.UINT_MAX);
+            throw new IllegalStateException(msg);
+        }
+    }
+
+    static void checkEntryPolicy(
+            @NonNull Policy policy,
+            @NonNull Source source,
+            @NonNull Location cdloc,
+            @NonNull Location payloadLoc) {
+        if (policy == Zip64.Policy.ALLOW) {
+            return;
+        }
+
+        if (source.getUncompressedSize() > Zip64.LONG_MAGIC) {
+            String msg =
+                    String.format(
+                            "Zip32 cannot handle entry '%s' compressed size %d (MAX=%d)",
+                            source.getName(), source.getUncompressedSize(), LONG_MAGIC);
+            throw new IllegalStateException(msg);
+        }
+
+        if (source.getCompressedSize() > Zip64.LONG_MAGIC) {
+            String msg =
+                    String.format(
+                            "Zip32 cannot handle entry '%s' size %d (MAX=%d)",
+                            source.getName(), source.getCompressedSize(), LONG_MAGIC);
+            throw new IllegalStateException(msg);
+        }
+
+        if (cdloc.first > Zip64.LONG_MAGIC) {
+            String msg =
+                    String.format(
+                            "Zip32 cannot place CD entry '%s' payload at %d (MAX=%d)",
+                            source.getName(), cdloc.first, LONG_MAGIC);
+            throw new IllegalStateException(msg);
+        }
+
+        if (payloadLoc.first > Zip64.LONG_MAGIC) {
+            String msg =
+                    String.format(
+                            "Zip32 cannot place entry '%s' payload at %d (MAX=%d)",
+                            source.getName(), payloadLoc.first, LONG_MAGIC);
+            throw new IllegalStateException(msg);
+        }
     }
 
     public enum Policy {
