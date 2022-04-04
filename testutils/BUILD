@@ -37,6 +37,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/adt/idea/.idea/libraries:kotlin-test[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
         "//tools/base/common:studio.android.sdktools.common[module, test]",
