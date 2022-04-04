@@ -43,6 +43,7 @@ kotlin_test(
     ]),
     friends = [
         "//tools/base/adblib:adblib",
+        ":adblib.tools",
         "//tools/base/adblib:adblib.tests.testlib",
     ],
     jvm_flags = ["-Dtest.suite.jar=adblib.tools.tests.jar"],

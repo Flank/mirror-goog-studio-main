@@ -198,7 +198,7 @@ public class RemoteSplitApkInstallerTest extends TestSuite {
                 RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
         Assert.assertFalse(
                 installer.writeRemoteApk(
-                        PackageManager.BAD_SESSION, remoteApkPaths.get(0), timeout, timeUnit));
+                        PackageManager.FAIL_ME_SESSION, remoteApkPaths.get(0), timeout, timeUnit));
     }
 
     @Test
@@ -215,7 +215,7 @@ public class RemoteSplitApkInstallerTest extends TestSuite {
         RemoteSplitApkInstaller installer =
                 RemoteSplitApkInstaller.create(device, remoteApkPaths, false, installOptions);
         try {
-            installer.installCommit(PackageManager.BAD_SESSION, timeout, timeUnit);
+            installer.installCommit(PackageManager.FAIL_ME_SESSION, timeout, timeUnit);
             Assert.fail("InstallException expected");
         } catch (InstallException e) {
             //expected

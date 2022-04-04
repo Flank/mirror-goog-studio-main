@@ -20,7 +20,18 @@ class PackageManager {
     companion object {
 
         const val BAD_FLAG = "-BAD_FLAG"
-        const val BAD_SESSION = "FAIL_ME_SESSION"
+
+        const val FAIL_ME_SESSION = "FAIL_ME_SESSION"
+
+        const val FAIL_ME_SESSION_TEST_ONLY = "FAIL_ME_TEST_ONLY"
+
+        const val SESSION_TEST_ONLY_CODE = "INSTALL_FAILED_TEST_ONLY"
+        const val SESSION_TEST_ONLY_MSG = "installPackageLI"
+
+        val BAD_SESSIONS : Map<String, String> = mapOf(
+            FAIL_ME_SESSION to "Failure [REQUESTED_FAILURE_VIA_SESSION]",
+            FAIL_ME_SESSION_TEST_ONLY to "Failure [$SESSION_TEST_ONLY_CODE: $SESSION_TEST_ONLY_MSG]",
+        )
     }
 
     fun processPackageCommand(args: List<String>, serviceOutput: ServiceOutput) {
@@ -37,6 +48,7 @@ class PackageManager {
                 if (args.contains(PackageManager.BAD_FLAG)) {
                     serviceOutput.writeStderr("Error: (requested to fail via flag))")
                     serviceOutput.writeExitCode(1)
+                    return;
                 } else {
                     serviceOutput.writeStdout("Success: created install session [1234]")
                     serviceOutput.writeExitCode(0)
@@ -48,8 +60,9 @@ class PackageManager {
             }
 
             cmd.startsWith("install-commit") -> {
-                if (args.contains(PackageManager.BAD_SESSION)) {
-                    serviceOutput.writeStderr("Error: (request with FAIL_ME session)")
+                val sessionID = args[1]
+                if (BAD_SESSIONS.containsKey(sessionID)) {
+                    BAD_SESSIONS.get(sessionID)?.let { serviceOutput.writeStderr(it) }
                     serviceOutput.writeExitCode(1)
                 } else {
                     commit(args.drop(1), serviceOutput)
@@ -88,8 +101,8 @@ class PackageManager {
 
         if (parameters.last() != "-") {
             val sessionID = parameters[1]
-            if (sessionID == PackageManager.BAD_SESSION) {
-                serviceOutput.writeStderr("Error: (request with FAIL_ME session)")
+            if (BAD_SESSIONS.containsKey(sessionID)) {
+                BAD_SESSIONS.get(sessionID)?.let { serviceOutput.writeStderr(it) }
                 serviceOutput.writeExitCode(1)
                 return
             }

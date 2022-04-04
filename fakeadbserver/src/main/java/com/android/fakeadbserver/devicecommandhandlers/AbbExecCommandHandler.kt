@@ -24,7 +24,18 @@ import java.net.Socket
 class AbbExecCommandHandler : DeviceCommandHandler("abb_exec") {
 
     override fun invoke(server: FakeAdbServer, socket: Socket, device: DeviceState, args: String) {
-        // Acknowledge "abb_exec" is supported
+
+        // Acknowledge only if "abb_exec" is supported
+        // TODO: Even though it is equivalent to use API level to check for abb_exec the answer
+        //       should come from the list of features contained in [deviceState].
+        try {
+            if (device.buildVersionSdk.toInt() < 30) {
+                writeFail(socket.getOutputStream())
+                return
+            }
+        } catch (_: Throwable) {
+        }
+
         writeOkay(socket.getOutputStream())
 
         // Wrap stdin/stdout and execute abb command
