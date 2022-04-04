@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.parseCmakeFileApiReply
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
@@ -24,12 +23,12 @@ import com.android.build.gradle.internal.cxx.model.clientQueryFolder
 import com.android.build.gradle.internal.cxx.model.clientReplyFolder
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
-import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.ifLogNativeConfigureToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
+import com.android.build.gradle.internal.cxx.model.createNinjaCommand
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils.join
@@ -71,18 +70,13 @@ internal class CmakeQueryMetadataGenerator(
           .execute(ops::exec)
 
         // Build expected metadata
-        val buildTargetsCommand = CmakeUtils.getBuildTargetsCommand(
-            abi.variant.module.cmake!!.cmakeExe!!,
-            abi.cxxBuildFolder,
-            abi.getBuildCommandArguments()
-        )
         parseCmakeFileApiReply(
             replyFolder = abi.clientReplyFolder,
             additionalFiles = abi.additionalProjectFilesIndexFile,
             androidGradleBuildJsonFile = abi.jsonFile,
             compileCommandsJsonFile = abi.compileCommandsJsonFile,
             compileCommandsJsonBinFile = abi.compileCommandsJsonBinFile,
-            buildTargetsCommand = buildTargetsCommand
+            createNinjaCommand = { arg -> abi.createNinjaCommand(arg) }
         )
     }
 

@@ -106,6 +106,7 @@ class ModuleToModuleDepsTest(
                 android.externalNativeBuild.ndkBuild.path="Android.mk"
                 android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$stl")
                 """.trimIndent()
+            else -> error("$appBuildSystem")
         }
 
         project.getSubproject(":app").buildFile.appendText(
@@ -142,6 +143,7 @@ class ModuleToModuleDepsTest(
                 android.externalNativeBuild.ndkBuild.path="Android.mk"
                 android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$stl")
                 """.trimIndent()
+            else -> error("$appBuildSystem")
         }
 
         project.getSubproject(":lib").buildFile.appendText(

@@ -62,8 +62,9 @@ fun createCxxVariantModel(
                 cmakeSettingsConfiguration = "android-gradle-plugin-predetermined-name",
                 isDebuggableEnabled = isDebuggable,
                 validAbiList = validAbiList,
-                prefabClassPathFileCollection = configurationParameters.prefabClassPath,
-                prefabPackageDirectoryListFileCollection = configurationParameters.prefabPackageDirectoryList,
+                prefabClassPaths = configurationParameters.prefabClassPath,
+                prefabPackages = configurationParameters.prefabPackageDirectoryList,
+                prefabPackageConfigurations = configurationParameters.prefabPackageConfigurationList,
                 stlType = determineUsedStl(arguments).argumentName,
                 verboseMakefile = null,
                 optimizationTag = run {
@@ -108,9 +109,13 @@ fun createCxxVariantModel(
 }
 
 val CxxVariantModel.prefabClassPath : File?
-    get() = prefabClassPathFileCollection?.singleFile
+    get() = prefabClassPaths?.singleFile
 
 val CxxVariantModel.prefabPackageDirectoryList : List<File>
-    get() = prefabPackageDirectoryListFileCollection?.toList()?:listOf()
+    get() = prefabPackages?.toList()?:listOf()
+
+val CxxVariantModel.prefabPackageConfigurationDirectoriesList : List<File>
+    get() = prefabPackageConfigurations?.toList()?:listOf()
+
 
 

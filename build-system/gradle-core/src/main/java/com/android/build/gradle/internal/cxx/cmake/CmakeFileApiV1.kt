@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.cxx.cmake
 
+import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder.Companion.BUILD_TARGETS_PLACEHOLDER
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Artifacts
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.CompileGroups
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Dependencies
@@ -94,6 +95,7 @@ data class CmakeFileApiSourceFile(
  */
 fun readCmakeFileApiReply(
     replyFolder: File,
+    createNinjaCommand : (String) -> List<String>,
     sourceFlagAction: (CmakeFileApiSourceFile) -> Unit
 ) : NativeBuildConfigValue {
     val indexFile = findCmakeQueryApiIndexFile(replyFolder)!!
@@ -106,7 +108,6 @@ fun readCmakeFileApiReply(
     val cache = index.getIndexObject("cache", replyFolder, CmakeFileApiCacheDataV2::class.java)!!
     val ld = cache.getCacheString(CmakeProperty.CMAKE_LINKER)!!
     val abi = cache.getCacheString(CmakeProperty.CMAKE_ANDROID_ARCH_ABI)
-    val ninja = cache.getCacheString(CmakeProperty.CMAKE_MAKE_PROGRAM)
     val toolchain = NativeToolchainValue()
     toolchain.cCompilerExecutable = inferToolExeFromExistingTool(ld, "clang")
     toolchain.cppCompilerExecutable = inferToolExeFromExistingTool(ld, "clang++")
@@ -130,7 +131,7 @@ fun readCmakeFileApiReply(
             }
             .distinct()
             .sorted()
-    config.cleanCommandsComponents = listOf(listOf(ninja, "-C", rootBuildFolder.path, "clean"))
+    config.cleanCommandsComponents = listOf(createNinjaCommand("clean"))
 
     // This is a compound function that collects symbols directories and also
     // issues callbacks to [sourceFlagAction] for each source file. It's compound
@@ -502,10 +503,10 @@ fun parseCmakeFileApiReply(
     androidGradleBuildJsonFile : File,
     compileCommandsJsonFile : File,
     compileCommandsJsonBinFile : File,
-    buildTargetsCommand : List<String>) {
+    createNinjaCommand : (String) -> List<String>) {
     try {
         val extra = mutableSetOf<String>()
-        val config = readCmakeFileApiReply(replyFolder) { source ->
+        val config = readCmakeFileApiReply(replyFolder, createNinjaCommand) { source ->
             if (source.sourceGroup != "Source Files") {
                 extra += source.rootSourceFolder.resolve(source.sourcePath).absolutePath
             }
@@ -513,7 +514,7 @@ fun parseCmakeFileApiReply(
         additionalFiles.writeText(extra.joinToString("\n"))
 
         // Write the ninja build command, possibly with user settings from CMakeSettings.json.
-        config.buildTargetsCommandComponents = buildTargetsCommand
+        config.buildTargetsCommandComponents = createNinjaCommand(BUILD_TARGETS_PLACEHOLDER)
 
         writeNativeBuildConfigValueToJsonFile(
             androidGradleBuildJsonFile,

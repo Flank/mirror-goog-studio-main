@@ -306,8 +306,8 @@ fun CxxAbiModel.buildIsPrefabCapable(): Boolean = variant.module.project.isPrefa
         && variant.module.ndkVersion.major >= 17
 
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean = buildIsPrefabCapable()
-        && variant.prefabPackageDirectoryListFileCollection != null
-        && !variant.prefabPackageDirectoryListFileCollection.isEmpty
+        && variant.prefabPackages != null
+        && !variant.prefabPackages.isEmpty
 
 /**
  * Call [compute] if logging native configure to lifecycle
@@ -403,5 +403,18 @@ val CxxAbiModel.platformCode
                 .minByOrNull { (alias, _) -> alias.length }
                 ?.first
     } ?: ""
+
+/**
+ * Construct a ninja command-line with [args] at the end.
+ */
+fun CxxAbiModel.createNinjaCommand(vararg args: String) : List<String> {
+    val command = mutableListOf<String>()
+    command.add(variant.module.ninjaExe!!.absolutePath)
+    command.addAll(getBuildCommandArguments())
+    command.add("-C")
+    command.add(cxxBuildFolder.absolutePath)
+    command.addAll(args.asList())
+    return command
+}
 
 

@@ -33,7 +33,8 @@ open class BasicNdkBuildMock : BasicModuleModelMock() {
             sdkComponents,
             androidLocationProvider,
             configurationParameters,
-            cmakeFinder
+            cmakeFinder,
+            ninjaFinder
         )
     }
     val variant by lazy { createCxxVariantModel(configurationParameters, module) }

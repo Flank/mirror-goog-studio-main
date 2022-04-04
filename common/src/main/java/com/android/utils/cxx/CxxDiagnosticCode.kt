@@ -58,6 +58,7 @@ enum class CxxDiagnosticCode(val errorCode: Int) {
     LIBRARY_ABI_NAME_DID_NOT_EXIST(1413),
     LIBRARY_HAD_MULTIPLE_ABIS(1414),
     LIBRARY_ABI_NAME_IS_INVALID(1415),
+    NINJA_IS_MISSING(1416),
 
     // Build cache config messages
     BUILD_CACHE_DISABLED_ACCESS(1500);
