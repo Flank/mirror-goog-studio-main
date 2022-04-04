@@ -42,11 +42,9 @@ interface AndroidResources {
     val aaptAdditionalParameters: ListProperty<String>
 
     /**
-     * Extensions of files that will not be stored compressed in the APK. Adding an empty
-     * extension, i.e., setting `noCompress ''` will trivially disable compression
-     * for all files.
-     *
-     * Equivalent of the -0 flag. See `aapt --help`
+     * File extensions of Android resources, assets, and Java resources to be stored uncompressed in
+     * the APK. Adding an empty extension (e.g., `noCompress.add("")`) will disable compression for
+     * all Android resources, assets, and Java resources.
      */
     @get:Incubating
     val noCompress: ListProperty<String>

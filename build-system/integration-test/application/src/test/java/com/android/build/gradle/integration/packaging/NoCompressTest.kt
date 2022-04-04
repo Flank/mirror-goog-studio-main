@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
@@ -29,6 +30,7 @@ import com.android.tools.build.apkzlib.zip.CompressionMethod
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.truth.Expect
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -133,6 +135,30 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
             )
         assertThat(unitTestApk).exists()
         verifyCompression(unitTestApk, checkJavaResources = false)
+    }
+
+    @Test
+    fun noCompressWithEmptyString() {
+        TestFileUtils.searchAndReplace(
+            project.buildFile,
+            "noCompress = [",
+            "noCompress = ['', "
+        )
+        project.execute(":assembleDebug")
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(apk).exists()
+        val uncompressedPaths =
+            apk.entries
+                .map { FileUtils.toSystemIndependentPath(it.toString()).removePrefix("/") }
+                .filter {
+                    it.startsWith("jres.") || it.startsWith("assets/") || it.startsWith("res/")
+                }
+        Truth.assertThat(uncompressedPaths.size).isEqualTo(36)
+        ZFile.openReadOnly(apk.file.toFile()).use {
+            uncompressedPaths.forEach { path ->
+                it.expectCompressionMethodOf(path).isEqualTo(CompressionMethod.STORE)
+            }
+        }
     }
 
     @Test

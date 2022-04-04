@@ -35,26 +35,24 @@ interface AndroidResources {
     val ignoreAssetsPatterns: MutableCollection<String>
 
     /**
-     * Extensions of files that will not be stored compressed in the APK. Adding an empty
-     * extension, i.e., setting `noCompress ''` will trivially disable compression
-     * for all files.
-     *
-     * Equivalent of the -0 flag. See `aapt --help`
+     * File extensions of Android resources, assets, and Java resources to be stored uncompressed in
+     * the APK. Adding an empty extension (e.g., setting `noCompress ''`) will disable compression
+     * for all Android resources, assets, and Java resources.
      */
     val noCompress: MutableCollection<String>
 
     /**
-     * Adds extensions of files that will not be stored compressed in the APK.
-     *
-     * Equivalent of the -0 flag. See `aapt --help`
+     * Adds a file extension of Android resources, assets, and Java resources to be stored
+     * uncompressed in the APK. Adding an empty extension (i.e., `noCompress('')`) will disable
+     * compression for all Android resources, assets, and Java resources.
      */
     @Incubating
     fun noCompress(noCompress: String)
 
     /**
-     * Adds extensions of files that will not be stored compressed in the APK.
-     *
-     * Equivalent of the -0 flag. See `aapt --help`
+     * Adds file extensions of Android resources, assets, and Java resources to be stored
+     * uncompressed in the APK. Adding an empty extension (e.g., `noCompress('')`) will disable
+     * compression for all Android resources, assets, and Java resources.
      */
     @Incubating
     fun noCompress(vararg noCompress: String)
