@@ -396,7 +396,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             project.dependencies
                     .add(variantDependencies.runtimeClasspath.name, multiDexDependency)
         }
-        if (variantProperties.renderscript?.supportModeEnabled?.get() == true) {
+        if (variantProperties.renderscriptCreationConfig?.renderscript?.supportModeEnabled?.get()
+            == true) {
             val fileCollection = project.files(
                 globalConfig.versionedSdkLoader.flatMap {
                         it.renderScriptSupportJarProvider
@@ -662,7 +663,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         createAssembleTask(testVariant)
         val testedVariant = testVariant.mainVariant
         val variantDependencies = testVariant.variantDependencies
-        if (testedVariant.renderscript?.supportModeEnabled?.get() == true) {
+        if (testedVariant?.renderscriptCreationConfig?.renderscript?.supportModeEnabled?.get()
+            == true) {
             project.dependencies
                     .add(
                             variantDependencies.compileClasspath.name,
@@ -938,16 +940,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createRenderscriptTask(creationConfig: ConsumableCreationConfig) {
-        if (creationConfig.buildFeatures.renderScript) {
-            val renderscript = creationConfig.renderscript
-                ?: throw RuntimeException(
-                        "Renderscript is enabled but no configuration available, please file a bug.")
+        if (creationConfig.renderscriptCreationConfig != null) {
             val taskContainer = creationConfig.taskContainer
             val rsTask = taskFactory.register(
                 RenderscriptCompile.
                 CreationAction(
                     creationConfig,
-                    renderscript,
                     ndkConfig = if (creationConfig is AndroidTestCreationConfig) {
                         creationConfig.mainVariant.ndkConfig
                     } else (creationConfig as VariantCreationConfig).ndkConfig

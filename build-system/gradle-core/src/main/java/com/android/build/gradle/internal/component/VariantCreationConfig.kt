@@ -41,6 +41,4 @@ interface VariantCreationConfig: ConsumableCreationConfig {
     var unitTest: UnitTestImpl?
 
     var testFixturesComponent: TestFixturesCreationConfig?
-
-    fun addRenderscriptSources(sourceSets: MutableList<DirectoryEntry>)
 }

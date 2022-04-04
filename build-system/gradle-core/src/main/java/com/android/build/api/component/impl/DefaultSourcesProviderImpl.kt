@@ -24,7 +24,7 @@ import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.compiling.BuildConfigType
@@ -163,9 +163,9 @@ class DefaultSourcesProviderImpl(
             }
             addDataBindingSources(sourceSets)
         }
-        if (this is VariantCreationConfig) {
-            addRenderscriptSources(sourceSets)
-        }
+        (component as? ConsumableCreationConfig)
+            ?.renderscriptCreationConfig
+            ?.addRenderscriptSources(sourceSets)
         if (buildFeatures.mlModelBinding) {
             sourceSets.add(
                 TaskProviderBasedDirectoryEntryImpl(

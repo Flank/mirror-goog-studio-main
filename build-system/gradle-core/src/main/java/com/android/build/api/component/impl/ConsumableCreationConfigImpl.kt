@@ -16,13 +16,11 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 
@@ -124,15 +122,4 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
 
      open val minSdkVersionForDexing: AndroidVersion
         get() = config.minSdkVersion
-
-    fun renderscript(internalServices: VariantServices): Renderscript? {
-        return if (config.buildFeatures.renderScript) {
-            internalServices.newInstance(Renderscript::class.java).also {
-                it.supportModeEnabled.set(dslInfo.renderscriptSupportModeEnabled)
-                it.supportModeBlasEnabled.set(dslInfo.renderscriptSupportModeBlasEnabled)
-                it.ndkModeEnabled.set(dslInfo.renderscriptNdkModeEnabled)
-                it.optimLevel.set(dslInfo.renderscriptOptimLevel)
-            }
-        } else null
-    }
 }

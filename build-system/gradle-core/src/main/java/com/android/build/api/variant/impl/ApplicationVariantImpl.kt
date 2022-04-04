@@ -151,7 +151,7 @@ open class ApplicationVariantImpl @Inject constructor(
     override var testFixtures: TestFixturesImpl? = null
 
     override val renderscript: Renderscript? by lazy {
-        delegate.renderscript(internalServices)
+        renderscriptCreationConfig?.renderscript
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -217,11 +217,6 @@ open class ApplicationVariantImpl @Inject constructor(
             Int::class.java,
             dslInfo.versionCode,
         )
-
-    override val renderscriptTargetApi: Int
-        get() {
-            return variantBuilder.renderscriptTargetApi
-        }
 
     override val dexingType: DexingType
         get() = delegate.dexingType

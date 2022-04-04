@@ -132,7 +132,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override var testFixtures: TestFixturesImpl? = null
 
     override val renderscript: Renderscript? by lazy {
-        delegate.renderscript(internalServices)
+        renderscriptCreationConfig?.renderscript
     }
 
 // ---------------------------------------------------------------------------------------------

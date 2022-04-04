@@ -1181,14 +1181,16 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
         // this is incorrect as it cannot get the final value, we should always add the folder
         // as a potential source origin and let the IDE deal with it.
-        boolean ndkMode;
+        boolean ndkMode = false;
+        VariantCreationConfig mainVariant;
         if (component instanceof NestedComponentCreationConfig) {
-            ndkMode =
-                    ((NestedComponentCreationConfig) component)
-                            .getMainVariant()
-                            .getRenderscriptNdkModeEnabled();
+            mainVariant = ((NestedComponentCreationConfig) component).getMainVariant();
         } else {
-            ndkMode = ((VariantCreationConfig) component).getRenderscriptNdkModeEnabled();
+            mainVariant = (VariantCreationConfig) component;
+        }
+        if (mainVariant.getRenderscriptCreationConfig() != null) {
+            ndkMode =
+                    mainVariant.getRenderscriptCreationConfig().getDslRenderscriptNdkModeEnabled();
         }
         if (!ndkMode) {
             Callable<Directory> renderscriptCallable =

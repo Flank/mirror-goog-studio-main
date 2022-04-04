@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
+import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -44,6 +45,7 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -203,7 +205,7 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val renderscript: Renderscript? by lazy {
-        delegate.renderscript(internalServices)
+        renderscriptCreationConfig?.renderscript
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
@@ -257,6 +259,19 @@ open class AndroidTestImpl @Inject constructor(
         }
     }
 
+    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
+        if (buildFeatures.renderScript) {
+            RenderscriptCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices,
+                renderscriptTargetApi = mainVariant.renderscriptCreationConfig!!.renderscriptTargetApi
+            )
+        } else {
+            null
+        }
+    }
+
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride
 
@@ -282,9 +297,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val isTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
-
-    override val renderscriptTargetApi: Int
-        get() = mainVariant.renderscriptTargetApi
 
     /**
      * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk
@@ -343,9 +355,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         dslInfo.signingConfig
-
-    override val renderscriptNdkModeEnabled: Boolean
-        get() = dslInfo.renderscriptNdkModeEnabled
 
     override val defaultGlslcArgs: List<String>
         get() = dslInfo.defaultGlslcArgs

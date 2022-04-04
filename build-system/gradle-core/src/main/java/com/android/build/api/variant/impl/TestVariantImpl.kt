@@ -147,7 +147,7 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val renderscript: Renderscript? by lazy {
-        delegate.renderscript(internalServices)
+        renderscriptCreationConfig?.renderscript
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {

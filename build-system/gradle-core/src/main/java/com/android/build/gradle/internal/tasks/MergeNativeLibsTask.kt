@@ -295,7 +295,7 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
                 .from(getProjectNativeLibs(
                     creationConfig,
                     task.buildTools,
-                    creationConfig.renderscript
+                    creationConfig.renderscriptCreationConfig?.renderscript
                 ).asFileTree.matching(patternSet))
                 .disallowChanges()
 
@@ -315,8 +315,8 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
                 .from(getProjectNativeLibs(
                     creationConfig,
                     task.buildTools,
-                    creationConfig.renderscript)
-                ).disallowChanges()
+                    creationConfig.renderscriptCreationConfig?.renderscript
+                )).disallowChanges()
         }
     }
 

@@ -19,6 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
+import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.component.impl.warnAboutAccessingVariantApiValueForDisabledFeature
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -33,6 +34,7 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantSources
@@ -41,7 +43,6 @@ import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOption
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -170,6 +171,19 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         }
     }
 
+    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
+        if (buildFeatures.renderScript) {
+            RenderscriptCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices,
+                renderscriptTargetApi = variantBuilder.renderscriptTargetApi
+            )
+        } else {
+            null
+        }
+    }
+
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
@@ -195,9 +209,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
-    override val renderscriptTargetApi: Int
-        get() = variantBuilder.renderscriptTargetApi
-
     private var _isMultiDexEnabled: Boolean? = dslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean
         get() {
@@ -214,26 +225,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = variantScope.isCoreLibraryDesugaringEnabled(this)
 
     override var unitTest: UnitTestImpl? = null
-
-    /**
-     * adds renderscript sources if present.
-     */
-    override fun addRenderscriptSources(
-            sourceSets: MutableList<DirectoryEntry>,
-    ) {
-        renderscript?.let {
-            if (!it.ndkModeEnabled.get()
-                && artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR).isPresent
-            ) {
-                sourceSets.add(
-                    TaskProviderBasedDirectoryEntryImpl(
-                        name = "generated_renderscript",
-                        directoryProvider = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR),
-                    )
-                )
-            }
-        }
-    }
 
     override val pseudoLocalesEnabled: Property<Boolean> by lazy {
         androidResourcesCreationConfig?.pseudoLocalesEnabled
@@ -285,8 +276,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val scopedGlslcArgs: Map<String, List<String>>
         get() = dslInfo.scopedGlslcArgs
 
-    override val renderscriptNdkModeEnabled: Boolean
-        get() = dslInfo.renderscriptNdkModeEnabled
     override val ndkConfig: MergedNdkConfig
         get() = dslInfo.ndkConfig
     override val isJniDebuggable: Boolean
