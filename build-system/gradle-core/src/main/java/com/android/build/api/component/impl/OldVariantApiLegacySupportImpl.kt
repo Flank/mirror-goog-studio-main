@@ -16,10 +16,13 @@
 
 package com.android.build.api.component.impl
 
+import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.api.JavaCompileOptions
+import com.android.build.gradle.internal.DependencyConfigurator
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
@@ -29,6 +32,8 @@ import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraA
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -37,7 +42,8 @@ import java.io.Serializable
 
 class OldVariantApiLegacySupportImpl(
     private val component: ComponentCreationConfig,
-    private val variantDslInfo: VariantDslInfoImpl
+    private val variantDslInfo: VariantDslInfoImpl,
+    override val variantData: BaseVariantData
 ): OldVariantApiLegacySupport {
 
     override val buildTypeObj: BuildType
@@ -61,7 +67,7 @@ class OldVariantApiLegacySupportImpl(
                 classesType
             )
         val extraArtifact = component.services.provider {
-            component.variantData.getGeneratedBytecode(generatedBytecodeKey)
+            variantData.getGeneratedBytecode(generatedBytecodeKey)
         }
         val combinedCollection = component.services.fileCollection(
             mainCollection.artifactFiles, extraArtifact
@@ -124,8 +130,8 @@ class OldVariantApiLegacySupportImpl(
 
         allRawAndroidResources!!.from(
             component.services.fileCollection(
-                component.variantData.extraGeneratedResFolders
-            ).builtBy(listOfNotNull(component.variantData.extraGeneratedResFolders.builtBy))
+                variantData.extraGeneratedResFolders
+            ).builtBy(listOfNotNull(variantData.extraGeneratedResFolders.builtBy))
         )
 
         component.taskContainer.generateApkDataTask?.let {
@@ -150,5 +156,33 @@ class OldVariantApiLegacySupportImpl(
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
         variantDslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
+    }
+
+    override fun handleMissingDimensionStrategy(
+        dimension: String,
+        alternatedValues: List<String>
+    ) {
+
+        // First, setup the requested value, which isn't the actual requested value, but
+        // the variant name, modified
+        val requestedValue = VariantManager.getModifiedName(component.name)
+        val attributeKey = ProductFlavorAttr.of(dimension)
+        val attributeValue: ProductFlavorAttr = component.services.named(
+            ProductFlavorAttr::class.java, requestedValue
+        )
+
+        component.variantDependencies.compileClasspath.attributes.attribute(attributeKey, attributeValue)
+        component.variantDependencies.runtimeClasspath.attributes.attribute(attributeKey, attributeValue)
+        component.variantDependencies
+            .annotationProcessorConfiguration
+            .attributes
+            .attribute(attributeKey, attributeValue)
+
+        // then add the fallbacks which contain the actual requested value
+        DependencyConfigurator.addFlavorStrategy(
+            component.services.dependencies.attributesSchema,
+            dimension,
+            ImmutableMap.of(requestedValue, alternatedValues)
+        )
     }
 }

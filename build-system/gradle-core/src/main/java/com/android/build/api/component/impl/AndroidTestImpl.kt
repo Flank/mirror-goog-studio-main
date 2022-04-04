@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -80,6 +81,7 @@ open class AndroidTestImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
     variantServices: VariantServices,
@@ -95,6 +97,7 @@ open class AndroidTestImpl @Inject constructor(
     artifacts,
     variantScope,
     variantData,
+    taskContainer,
     mainVariant,
     transformManager,
     variantServices,

@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOption
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -50,6 +51,8 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
+import com.android.utils.appendCapitalized
+import com.android.utils.capitalizeAndAppend
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -67,6 +70,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     transformManager: TransformManager,
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -81,11 +85,23 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     artifacts,
     variantScope,
     variantData,
+    taskContainer,
     transformManager,
     variantServices,
     taskCreationServices,
     global
 ), Variant, VariantCreationConfig {
+
+    override val description: String
+        get() = if (componentIdentity.productFlavors.isNotEmpty()) {
+            val sb = StringBuilder(50)
+            componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            sb.append(" build for flavor ")
+            componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
+            sb.toString()
+        } else {
+            componentIdentity.buildType!!.capitalizeAndAppend(" build")
+        }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API

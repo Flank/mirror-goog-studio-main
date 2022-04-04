@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentIdentityImpl
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
@@ -36,7 +35,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.profile.NameAnonymizer
 import com.android.builder.profile.NameAnonymizerSerializer
@@ -68,7 +66,6 @@ class CompatibleScreensManifestTest {
     @Suppress("DEPRECATION")
     @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer
-    @Mock private lateinit var variantData: BaseVariantData
     @Mock private lateinit var appVariant: ApplicationVariantImpl
 
     private lateinit var task: CompatibleScreensManifest
@@ -103,9 +100,8 @@ class CompatibleScreensManifestTest {
         `when`(appVariant.taskContainer).thenReturn(taskContainer)
         `when`(appVariant.variantScope).thenReturn(scope)
         `when`(appVariant.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
-        `when`(appVariant.variantData).thenReturn(variantData)
         `when`(appVariant.services).thenReturn(services)
-        `when`<AndroidVersion>(appVariant.minSdkVersion).thenReturn(AndroidVersionImpl(21))
+        `when`(appVariant.minSdkVersion).thenReturn(AndroidVersionImpl(21))
 
 
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))

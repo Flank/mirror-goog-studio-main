@@ -30,6 +30,7 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport;
 import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -94,6 +95,8 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     @NonNull protected final NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
+    @NonNull private final OldVariantApiLegacySupport oldVariantApiLegacySupport;
+
     BaseVariantImpl(
             @NonNull ComponentCreationConfig component,
             @NonNull DslServices services,
@@ -103,6 +106,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         this.services = services;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
         this.outputs = outputs;
+        this.oldVariantApiLegacySupport = component.getOldVariantApiLegacySupport();
     }
 
     @NonNull
@@ -121,7 +125,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     @NonNull
     public String getDescription() {
-        return getVariantData().getDescription();
+        return component.getDescription();
     }
 
     @Override
@@ -153,14 +157,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public BuildType getBuildType() {
         // this is to be removed when we can get rid of the old API.
         return readOnlyObjectProvider.getBuildType(
-                (BuildType) component.getOldVariantApiLegacySupport().getBuildTypeObj());
+                (BuildType) oldVariantApiLegacySupport.getBuildTypeObj());
     }
 
     @Override
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
         List<ProductFlavor> flavors =
-                component.getOldVariantApiLegacySupport().getProductFlavorList().stream()
+                oldVariantApiLegacySupport.getProductFlavorList().stream()
                         .map(it -> (ProductFlavor) it)
                         .collect(Collectors.toList());
         return new ImmutableFlavorList(flavors, readOnlyObjectProvider);
@@ -170,13 +174,13 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     public MergedFlavor getMergedFlavor() {
         // this is to be removed when we can get rid of the old API.
-        return component.getOldVariantApiLegacySupport().getMergedFlavor();
+        return oldVariantApiLegacySupport.getMergedFlavor();
     }
 
     @NonNull
     @Override
     public JavaCompileOptions getJavaCompileOptions() {
-        return component.getOldVariantApiLegacySupport().getJavaCompileOptions();
+        return oldVariantApiLegacySupport.getJavaCompileOptions();
     }
 
     @NonNull
@@ -204,19 +208,19 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public Configuration getCompileConfiguration() {
-        return getVariantData().getVariantDependencies().getCompileClasspath();
+        return component.getVariantDependencies().getCompileClasspath();
     }
 
     @NonNull
     @Override
     public Configuration getRuntimeConfiguration() {
-        return getVariantData().getVariantDependencies().getRuntimeClasspath();
+        return component.getVariantDependencies().getRuntimeClasspath();
     }
 
     @NonNull
     @Override
     public Configuration getAnnotationProcessorConfiguration() {
-        return getVariantData().getVariantDependencies().getAnnotationProcessorConfiguration();
+        return component.getVariantDependencies().getAnnotationProcessorConfiguration();
     }
 
     @Override
@@ -364,7 +368,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
         //noinspection unchecked
         return (TaskProvider<RenderscriptCompile>)
-                getVariantData().getTaskContainer().getRenderscriptCompileTask();
+                component.getTaskContainer().getRenderscriptCompileTask();
     }
 
     @Override
@@ -401,7 +405,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public TaskProvider<MergeSourceSetFolders> getMergeAssetsProvider() {
         //noinspection unchecked
         return (TaskProvider<MergeSourceSetFolders>)
-                getVariantData().getTaskContainer().getMergeAssetsTask();
+                component.getTaskContainer().getMergeAssetsTask();
     }
 
     @Override
@@ -439,7 +443,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public TaskProvider<JavaCompile> getJavaCompileProvider() {
         //noinspection unchecked
-        return (TaskProvider<JavaCompile>) getVariantData().getTaskContainer().getJavacTask();
+        return (TaskProvider<JavaCompile>) component.getTaskContainer().getJavacTask();
     }
 
     @NonNull
@@ -545,9 +549,9 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public TaskProvider<AbstractCopyTask> getProcessJavaResourcesProvider() {
         // Double cast needed to satisfy the compiler
-        //noinspection unchecked
+        //noinspection unchecked,RedundantCast
         return (TaskProvider<AbstractCopyTask>)
-                (TaskProvider<?>) getVariantData().getTaskContainer().getProcessJavaResourcesTask();
+                (TaskProvider<?>) component.getTaskContainer().getProcessJavaResourcesTask();
     }
 
     @Override
@@ -726,19 +730,22 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull String requestedValue) {
-        component.handleMissingDimensionStrategy(dimension, ImmutableList.of(requestedValue));
+        oldVariantApiLegacySupport.handleMissingDimensionStrategy(
+                dimension, ImmutableList.of(requestedValue));
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull String... requestedValues) {
-        component.handleMissingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
+        oldVariantApiLegacySupport.handleMissingDimensionStrategy(
+                dimension, ImmutableList.copyOf(requestedValues));
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull List<String> requestedValues) {
-        component.handleMissingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
+        oldVariantApiLegacySupport.handleMissingDimensionStrategy(
+                dimension, ImmutableList.copyOf(requestedValues));
     }
 
     @Override
@@ -754,7 +761,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public FileCollection getAllRawAndroidResources() {
-        return component.getOldVariantApiLegacySupport().getAllRawAndroidResources(component);
+        return oldVariantApiLegacySupport.getAllRawAndroidResources(component);
     }
 
     @Override

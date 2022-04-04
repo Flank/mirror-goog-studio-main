@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -61,6 +62,7 @@ open class LibraryVariantImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     transformManager: TransformManager,
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -75,6 +77,7 @@ open class LibraryVariantImpl @Inject constructor(
     artifacts,
     variantScope,
     variantData,
+    taskContainer,
     transformManager,
     internalServices,
     taskCreationServices,

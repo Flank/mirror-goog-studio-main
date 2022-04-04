@@ -50,7 +50,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -151,9 +150,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     fun computeTaskName(prefix: String, suffix: String): String
     fun computeTaskName(prefix: String): String
 
-    // TODO : Remove BaseVariantData.
-    val variantData: BaseVariantData
-
     /**
      * Get the compile classpath for compiling sources in this component
      */
@@ -189,8 +185,6 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val isAndroidTestCoverageEnabled: Boolean
 
-    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
-
     fun addDataBindingSources(sourceSets: MutableList<DirectoryEntry>)
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
@@ -210,5 +204,5 @@ interface ComponentCreationConfig : ComponentIdentity {
     val modelV1LegacySupport: ModelV1LegacySupport
 
     @Deprecated("DO NOT USE, this is just for old variant API legacy support")
-    val oldVariantApiLegacySupport: OldVariantApiLegacySupport
+    val oldVariantApiLegacySupport: OldVariantApiLegacySupport?
 }

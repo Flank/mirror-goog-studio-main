@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.AndroidTestBuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
@@ -96,6 +97,7 @@ class ApplicationVariantFactory(
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
+        taskContainer: MutableTaskContainer,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
@@ -113,6 +115,7 @@ class ApplicationVariantFactory(
                 artifacts,
                 variantScope,
                 variantData,
+                taskContainer,
                 variantBuilder.dependenciesInfo,
                 transformManager,
                 variantServices,

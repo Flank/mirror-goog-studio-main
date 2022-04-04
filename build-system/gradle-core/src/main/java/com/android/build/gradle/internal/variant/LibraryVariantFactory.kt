@@ -88,6 +88,7 @@ class LibraryVariantFactory(
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
+        taskContainer: MutableTaskContainer,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
@@ -105,6 +106,7 @@ class LibraryVariantFactory(
                         artifacts,
                         variantScope,
                         variantData,
+                        taskContainer,
                         transformManager,
                         variantServices,
                         taskCreationServices,
@@ -179,23 +181,16 @@ class LibraryVariantFactory(
 
     override fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: LibraryVariantDslInfo,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         services: VariantServices,
         taskContainer: MutableTaskContainer
     ): BaseVariantData {
         return LibraryVariantData(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                services,
-                taskContainer)
+            componentIdentity,
+            artifacts,
+            services,
+            taskContainer
+        )
     }
 
     override val variantImplementationClass: Class<out BaseVariantImpl?>

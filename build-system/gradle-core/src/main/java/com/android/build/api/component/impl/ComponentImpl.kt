@@ -18,7 +18,6 @@ package com.android.build.api.component.impl
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.AssetsCreationConfigImpl
 import com.android.build.api.component.impl.features.ResValuesCreationConfigImpl
@@ -41,13 +40,12 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
-import com.android.build.gradle.internal.DependencyConfigurator
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
@@ -68,6 +66,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -78,7 +77,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.SelfResolvingDependency
@@ -104,7 +102,8 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val paths: VariantPathHelper,
     override val artifacts: ArtifactsImpl,
     override val variantScope: VariantScope,
-    override val variantData: BaseVariantData,
+    private val variantData: BaseVariantData? = null,
+    override val taskContainer: MutableTaskContainer,
     override val transformManager: TransformManager,
     protected val internalServices: VariantServices,
     final override val services: TaskCreationServices,
@@ -196,9 +195,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
 
-    // Move as direct delegates
-    override val taskContainer = variantData.taskContainer
-
     override val componentType: ComponentType
         get() = dslInfo.componentType
 
@@ -207,9 +203,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val baseName: String
         get() = paths.baseName
-
-    override val description: String
-        get() = variantData.description
 
     override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
         ProductFlavor(it)
@@ -332,7 +325,11 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     ): FileCollection {
         var mainCollection = variantDependencies
             .getArtifactFileCollection(configType, ArtifactScope.ALL, classesType)
-        mainCollection = mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey))
+        oldVariantApiLegacySupport?.let {
+            mainCollection = mainCollection.plus(
+                it.variantData.getGeneratedBytecode(generatedBytecodeKey)
+            )
+        }
         // Add R class jars to the front of the classpath as libraries might also export
         // compile-only classes. This behavior is verified in CompileRClassFlowTest
         // While relying on this order seems brittle, it avoids doubling the number of
@@ -435,34 +432,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    override fun handleMissingDimensionStrategy(
-        dimension: String,
-        alternatedValues: List<String>
-    ) {
-
-        // First, setup the requested value, which isn't the actual requested value, but
-        // the variant name, modified
-        val requestedValue = VariantManager.getModifiedName(name)
-        val attributeKey = ProductFlavorAttr.of(dimension)
-        val attributeValue: ProductFlavorAttr = internalServices.named(
-            ProductFlavorAttr::class.java, requestedValue
-        )
-
-        variantDependencies.compileClasspath.attributes.attribute(attributeKey, attributeValue)
-        variantDependencies.runtimeClasspath.attributes.attribute(attributeKey, attributeValue)
-        variantDependencies
-            .annotationProcessorConfiguration
-            .attributes
-            .attribute(attributeKey, attributeValue)
-
-        // then add the fallbacks which contain the actual requested value
-        DependencyConfigurator.addFlavorStrategy(
-            services.dependencies.attributesSchema,
-            dimension,
-            ImmutableMap.of(requestedValue, alternatedValues)
-        )
-    }
-
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
@@ -501,10 +470,12 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val modelV1LegacySupport =
         ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)
-    override val oldVariantApiLegacySupport by lazy {
+
+    override val oldVariantApiLegacySupport: OldVariantApiLegacySupport? by lazy {
         OldVariantApiLegacySupportImpl(
             this,
-            dslInfo as VariantDslInfoImpl
+            dslInfo as VariantDslInfoImpl,
+            variantData!!
         )
     }
 

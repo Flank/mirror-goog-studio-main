@@ -876,9 +876,17 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(
-                component.getVariantData().getAllPreJavacGeneratedBytecode().getFiles());
+                component
+                        .getOldVariantApiLegacySupport()
+                        .getVariantData()
+                        .getAllPreJavacGeneratedBytecode()
+                        .getFiles());
         additionalTestClasses.addAll(
-                component.getVariantData().getAllPostJavacGeneratedBytecode().getFiles());
+                component
+                        .getOldVariantApiLegacySupport()
+                        .getVariantData()
+                        .getAllPostJavacGeneratedBytecode()
+                        .getFiles());
         if (component.getGlobal().getTestOptions().getUnitTests().isIncludeAndroidResources()) {
             additionalTestClasses.add(
                     artifacts
@@ -910,7 +918,10 @@ public class ModelBuilder<Extension extends BaseExtension>
                 getGeneratedSourceFoldersForUnitTests(component),
                 artifacts.get(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,
-                component.getVariantData().getJavaResourcesForUnitTesting(),
+                component
+                        .getOldVariantApiLegacySupport()
+                        .getVariantData()
+                        .getJavaResourcesForUnitTesting(),
                 mockableJar,
                 result.getFirst(),
                 result.getSecond(),
@@ -998,9 +1009,17 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         Set<File> additionalClasses = new HashSet<>();
         additionalClasses.addAll(
-                component.getVariantData().getAllPreJavacGeneratedBytecode().getFiles());
+                component
+                        .getOldVariantApiLegacySupport()
+                        .getVariantData()
+                        .getAllPreJavacGeneratedBytecode()
+                        .getFiles());
         additionalClasses.addAll(
-                component.getVariantData().getAllPostJavacGeneratedBytecode().getFiles());
+                component
+                        .getOldVariantApiLegacySupport()
+                        .getVariantData()
+                        .getAllPostJavacGeneratedBytecode()
+                        .getFiles());
         if (component.getAndroidResourcesCreationConfig() != null) {
             additionalClasses.addAll(
                     component
@@ -1051,7 +1070,11 @@ public class ModelBuilder<Extension extends BaseExtension>
                 ProjectInfo.getBaseName(project) + "-" + component.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
                 artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE.INSTANCE).getOrNull(),
-                isSigningReady || component.getVariantData().outputsAreSigned,
+                isSigningReady
+                        || component
+                                .getOldVariantApiLegacySupport()
+                                .getVariantData()
+                                .outputsAreSigned,
                 signingConfigName,
                 taskContainer.getSourceGenTask().getName(),
                 taskContainer.getCompileTask().getName(),
@@ -1059,7 +1082,10 @@ public class ModelBuilder<Extension extends BaseExtension>
                 getGeneratedResourceFolders(component),
                 artifacts.get(JAVAC.INSTANCE).get().getAsFile(),
                 additionalClasses,
-                component.getVariantData().getJavaResourcesForUnitTesting(),
+                component
+                        .getOldVariantApiLegacySupport()
+                        .getVariantData()
+                        .getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
                 dependencies.getSecond(),
                 additionalRuntimeApks,
@@ -1150,7 +1176,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 directoryEntry ->
                                         directoryEntry.isGenerated()
                                                 && directoryEntry.getShouldBeAddedToIdeModel()));
-        fileCollection.from(component.getVariantData().getExtraGeneratedSourceFoldersOnlyInModel());
+        if (component.getOldVariantApiLegacySupport() != null) {
+            fileCollection.from(
+                    component
+                            .getOldVariantApiLegacySupport()
+                            .getVariantData()
+                            .getExtraGeneratedSourceFoldersOnlyInModel());
+        }
         fileCollection.from(
                 component.getArtifacts().get(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE));
         fileCollection.disallowChanges();
@@ -1219,7 +1251,13 @@ public class ModelBuilder<Extension extends BaseExtension>
     public static FileCollection getGeneratedResourceFoldersFileCollection(
             @NonNull ComponentCreationConfig component) {
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
-        fileCollection.from(component.getVariantData().getExtraGeneratedResFolders());
+        if (component.getOldVariantApiLegacySupport() != null) {
+            fileCollection.from(
+                    component
+                            .getOldVariantApiLegacySupport()
+                            .getVariantData()
+                            .getExtraGeneratedResFolders());
+        }
         if (component.getBuildFeatures().getRenderScript()) {
             fileCollection.from(component.getArtifacts()
                     .get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES.INSTANCE));

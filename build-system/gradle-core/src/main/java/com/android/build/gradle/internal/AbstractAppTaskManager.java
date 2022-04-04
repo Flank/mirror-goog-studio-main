@@ -271,7 +271,7 @@ public abstract class AbstractAppTaskManager<
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
-        creationConfig.getVariantData().applicationIdTextResource =
+        creationConfig.getOldVariantApiLegacySupport().getVariantData().applicationIdTextResource =
                 resources.fromFile(applicationIdWriterTask);
     }
 

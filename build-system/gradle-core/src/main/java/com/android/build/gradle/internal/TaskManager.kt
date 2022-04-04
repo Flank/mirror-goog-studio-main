@@ -910,7 +910,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createMergeApkManifestsTask(creationConfig: ApkCreationConfig) {
-        val apkVariantData = creationConfig.variantData as ApkVariantData
+        val apkVariantData = creationConfig.oldVariantApiLegacySupport!!.variantData as ApkVariantData
         val screenSizes = apkVariantData.compatibleScreens
         taskFactory.register(
                 CompatibleScreensManifest.CreationAction(creationConfig, screenSizes))
@@ -1142,8 +1142,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             return
         }
         val scope = creationConfig.variantScope
-        val variantData = creationConfig.variantData
-        variantData.calculateFilters(creationConfig.global.splits)
+        creationConfig.oldVariantApiLegacySupport?.variantData?.calculateFilters(
+            creationConfig.global.splits
+        )
 
         // The manifest main dex list proguard rules are always needed for the bundle,
         // even if legacy multidex is not explicitly enabled.
@@ -1360,43 +1361,49 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     protected open fun postJavacCreation(creationConfig: ComponentCreationConfig) {
-        // Use the deprecated public artifac types to register the pre/post JavaC hooks as well as
+        // Use the deprecated public artifact types to register the pre/post JavaC hooks as well as
         // the javac output itself.
         // It is necessary to do so in case some third-party plugin is using those deprecated public
         // artifact type to append/transform/replace content.
         // Once the deprecated types can be removed, all the methods below should use the
         // [ScopedArtifacts.setInitialContent] methods to initialize directly the scoped container.
-        creationConfig
+        creationConfig.oldVariantApiLegacySupport?.variantData?.let { variantData ->
+            creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.ALL_CLASSES_JARS,
-                        creationConfig.variantData.allPreJavacGeneratedBytecode.getRegularFiles(
-                                project.layout.projectDirectory
-                        ));
+                    MultipleArtifact.ALL_CLASSES_JARS,
+                    variantData.allPreJavacGeneratedBytecode.getRegularFiles(
+                        project.layout.projectDirectory
+                    )
+                )
 
-        creationConfig
+            creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.ALL_CLASSES_DIRS,
-                        creationConfig.variantData.allPreJavacGeneratedBytecode.getDirectories(
-                            project.layout.projectDirectory
-                        ));
+                    MultipleArtifact.ALL_CLASSES_DIRS,
+                    variantData.allPreJavacGeneratedBytecode.getDirectories(
+                        project.layout.projectDirectory
+                    )
+                )
 
-        creationConfig
+            creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.ALL_CLASSES_JARS,
-                        creationConfig.variantData.allPostJavacGeneratedBytecode.getRegularFiles(
-                            project.layout.projectDirectory
-                        ));
+                    MultipleArtifact.ALL_CLASSES_JARS,
+                    variantData.allPostJavacGeneratedBytecode.getRegularFiles(
+                        project.layout.projectDirectory
+                    )
+                )
 
-        creationConfig
+            creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.ALL_CLASSES_DIRS,
-                        creationConfig.variantData.allPostJavacGeneratedBytecode.getDirectories(
-                            project.layout.projectDirectory
-                        ));
+                    MultipleArtifact.ALL_CLASSES_DIRS,
+                    variantData.allPostJavacGeneratedBytecode.getDirectories(
+                        project.layout.projectDirectory
+                    )
+                )
+        }
         creationConfig
                 .artifacts
                 .appendTo(
@@ -2445,7 +2452,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
         // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
         // new variant API.
-        creationConfig.oldVariantApiLegacySupport.addDataBindingArgsToOldVariantApi(dataBindingArgs)
+        creationConfig.oldVariantApiLegacySupport?.addDataBindingArgsToOldVariantApi(dataBindingArgs)
 
         // add it the new Variant API objects, this is what our tasks use.
         processorOptions.argumentProviders.add(dataBindingArgs)
@@ -2923,7 +2930,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         createVariantPreBuildTask(creationConfig)
 
         // also create sourceGenTask
-        val variantData = creationConfig.variantData
         creationConfig
                 .taskContainer
                 .sourceGenTask = taskFactory.register(
@@ -2933,7 +2939,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             if (creationConfig.componentType.isAar) {
                 task.dependsOn(PrepareLintJarForPublish.NAME)
             }
-            task.dependsOn(variantData.extraGeneratedResFolders)
+            creationConfig.oldVariantApiLegacySupport?.variantData?.extraGeneratedResFolders?.let {
+                task.dependsOn(it)
+            }
         }
         // and resGenTask
         creationConfig
@@ -2982,7 +2990,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         override fun handleProvider(taskProvider: TaskProvider<TaskT>) {
             super.handleProvider(taskProvider)
-            creationConfig.variantData.taskContainer.preBuildTask = taskProvider
+            creationConfig.taskContainer.preBuildTask = taskProvider
         }
 
         override fun configure(task: TaskT) {

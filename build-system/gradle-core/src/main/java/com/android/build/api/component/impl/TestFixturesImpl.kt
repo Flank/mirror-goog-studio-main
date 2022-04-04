@@ -35,12 +35,14 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -48,8 +50,9 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_COMPILE_SDK_EXTENSION
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.build.gradle.internal.variant.TestFixturesVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.utils.appendCapitalized
+import com.android.utils.capitalizeAndAppend
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -65,7 +68,7 @@ open class TestFixturesImpl @Inject constructor(
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
-    variantData: TestFixturesVariantData,
+    taskContainer: MutableTaskContainer,
     override val mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
     variantServices: VariantServices,
@@ -80,12 +83,26 @@ open class TestFixturesImpl @Inject constructor(
     paths,
     artifacts,
     variantScope,
-    variantData,
-    transformManager,
-    variantServices,
-    taskCreationServices,
-    global
+    taskContainer = taskContainer,
+    transformManager = transformManager,
+    internalServices = variantServices,
+    services = taskCreationServices,
+    global = global
 ), TestFixtures, TestFixturesCreationConfig {
+
+    override val description: String
+        get() = if (dslInfo.hasFlavors()) {
+            val sb = StringBuilder(50)
+            dslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            sb.append(" build for flavor ")
+            dslInfo.componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
+            sb.toString()
+        } else {
+            dslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
+        }
+
+    // test fixtures doesn't exist in the old variant api
+    override val oldVariantApiLegacySupport: OldVariantApiLegacySupport? = null
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API

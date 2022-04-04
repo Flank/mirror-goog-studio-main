@@ -80,6 +80,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
+        taskContainer: MutableTaskContainer,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
@@ -95,7 +96,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
-        variantData: TestFixturesVariantData,
+        taskContainer: MutableTaskContainer,
         mainVariant: VariantCreationConfig,
         transformManager: TransformManager,
         variantServices: VariantServices,
@@ -113,6 +114,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: TestVariantData,
+        taskContainer: MutableTaskContainer,
         testedVariantProperties: VariantCreationConfig,
         transformManager: TransformManager,
         variantServices: VariantServices,
@@ -130,6 +132,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: TestVariantData,
+        taskContainer: MutableTaskContainer,
         testedVariantProperties: VariantCreationConfig,
         transformManager: TransformManager,
         variantServices: VariantServices,
@@ -139,10 +142,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
 
     fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfoT,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         services: VariantServices,
         taskContainer: MutableTaskContainer

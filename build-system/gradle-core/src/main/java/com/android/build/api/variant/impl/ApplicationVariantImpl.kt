@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -67,6 +68,7 @@ open class ApplicationVariantImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     dependenciesInfoBuilder: DependenciesInfoBuilder,
     transformManager: TransformManager,
     internalServices: VariantServices,
@@ -82,6 +84,7 @@ open class ApplicationVariantImpl @Inject constructor(
     artifacts,
     variantScope,
     variantData,
+    taskContainer,
     transformManager,
     internalServices,
     taskCreationServices,

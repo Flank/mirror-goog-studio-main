@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.feature
 
 import com.android.SdkConstants.FN_CLASSES_JAR
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -200,9 +201,11 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 }
             } else {
                 task.inputDirs.from(
-                    creationConfig.artifacts.get(InternalArtifactType.JAVAC),
-                    creationConfig.variantData.allPreJavacGeneratedBytecode,
-                    creationConfig.variantData.allPostJavacGeneratedBytecode
+                    listOfNotNull(
+                        creationConfig.artifacts.get(InternalArtifactType.JAVAC),
+                        creationConfig.oldVariantApiLegacySupport?.variantData?.allPreJavacGeneratedBytecode,
+                        creationConfig.oldVariantApiLegacySupport?.variantData?.allPostJavacGeneratedBytecode
+                    )
                 )
                 if (creationConfig.global.namespacedAndroidResources) {
                     task.inputJars.fromDisallowChanges(

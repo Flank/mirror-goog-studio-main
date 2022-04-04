@@ -22,9 +22,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.api.ApplicationVariantImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
-import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -51,23 +49,16 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilder, Varia
 
     override fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfoT,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         services: VariantServices,
         taskContainer: MutableTaskContainer
     ): BaseVariantData {
         return ApplicationVariantData(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                services,
-                taskContainer)
+            componentIdentity,
+            artifacts,
+            services,
+            taskContainer
+        )
     }
 
     override val variantImplementationClass: Class<out BaseVariantImpl?>

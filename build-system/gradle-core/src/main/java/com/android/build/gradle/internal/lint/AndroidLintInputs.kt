@@ -1364,10 +1364,12 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(creationConfig.artifacts.get(InternalArtifactType.JAVAC))
 
-            classesOutputDirectories.from(
-                creationConfig.variantData.allPreJavacGeneratedBytecode
-            )
-            classesOutputDirectories.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
+            creationConfig.oldVariantApiLegacySupport?.variantData?.let {
+                classesOutputDirectories.from(
+                    it.allPreJavacGeneratedBytecode
+                )
+                classesOutputDirectories.from(it.allPostJavacGeneratedBytecode)
+            }
             creationConfig.androidResourcesCreationConfig?.let {
                 classesOutputDirectories.from(
                     it.getCompiledRClasses(
@@ -1473,13 +1475,14 @@ abstract class JavaArtifactInput : ArtifactInput() {
         includeClassesOutputDirectories: Boolean
     ): JavaArtifactInput {
         if (includeClassesOutputDirectories) {
-            classesOutputDirectories.from(
-                creationConfig.artifacts.get(InternalArtifactType.JAVAC)
-            )
-            classesOutputDirectories.from(
-                creationConfig.variantData.allPreJavacGeneratedBytecode
-            )
-            classesOutputDirectories.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
+            classesOutputDirectories.from(creationConfig.artifacts.get(InternalArtifactType.JAVAC))
+
+            creationConfig.oldVariantApiLegacySupport?.variantData?.let {
+                classesOutputDirectories.from(
+                    it.allPreJavacGeneratedBytecode
+                )
+                classesOutputDirectories.from(it.allPostJavacGeneratedBytecode)
+            }
             creationConfig.androidResourcesCreationConfig?.let {
                 classesOutputDirectories.from(
                     it.getCompiledRClasses(

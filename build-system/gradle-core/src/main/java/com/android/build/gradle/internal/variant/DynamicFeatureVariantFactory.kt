@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.AndroidTestBuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
@@ -79,6 +80,7 @@ internal class DynamicFeatureVariantFactory(
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
+        taskContainer: MutableTaskContainer,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
@@ -96,6 +98,7 @@ internal class DynamicFeatureVariantFactory(
                 artifacts,
                 variantScope,
                 variantData,
+                taskContainer,
                 transformManager,
                 variantServices,
                 taskCreationServices,

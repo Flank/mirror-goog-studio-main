@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
+import com.android.build.gradle.internal.variant.BaseVariantData
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import java.io.Serializable
@@ -32,6 +33,7 @@ interface OldVariantApiLegacySupport {
     val productFlavorList: List<ProductFlavor>
     val mergedFlavor: MergedFlavor
     val javaCompileOptions: JavaCompileOptions
+    val variantData: BaseVariantData
 
     fun getJavaClasspathArtifacts(
         configType: AndroidArtifacts.ConsumedConfigType,
@@ -48,4 +50,6 @@ interface OldVariantApiLegacySupport {
     // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
     // switches to the new variant API.
     fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
+
+    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
 }
