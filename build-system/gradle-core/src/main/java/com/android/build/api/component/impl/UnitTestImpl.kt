@@ -31,6 +31,7 @@ import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
+import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
@@ -158,7 +159,7 @@ open class UnitTestImpl @Inject constructor(
     /**
      * There is no build config fields for unit tests.
      */
-    override val buildConfigEnabled: Boolean = false
+    override val buildConfigCreationConfig: BuildConfigCreationConfig? = null
 
     // TODO: Remove
     override val isUnitTestCoverageEnabled: Boolean

@@ -20,6 +20,7 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
+import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -41,6 +42,8 @@ import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
+import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
+import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -173,18 +176,16 @@ open class AndroidTestImpl @Inject constructor(
         internalServices.nullablePropertyOf(String::class.java, dslInfo.testLabel)
 
     override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
-        internalServices.mapPropertyOf(
-            String::class.java,
-            BuildConfigField::class.java,
-            dslInfo.getBuildConfigFields()
-        )
-    }
-
-    override val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
-        get() = dslInfo.getBuildConfigFields()
-
-    override fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
-        buildConfigFields.put(key, BuildConfigField(type, value, comment))
+        buildConfigCreationConfig?.buildConfigFields
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = FeatureNames.BUILD_CONFIG,
+                apiName = "buildConfigFields",
+                value = internalServices.mapPropertyOf(
+                    String::class.java,
+                    BuildConfigField::class.java,
+                    dslInfo.getBuildConfigFields()
+                )
+            )
     }
 
     override val signingConfig: SigningConfig?
@@ -218,7 +219,7 @@ open class AndroidTestImpl @Inject constructor(
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         resValuesCreationConfig?.resValues
             ?: warnAboutAccessingVariantApiValueForDisabledFeature(
-                featureName = "resValues",
+                featureName = FeatureNames.RES_VALUES,
                 apiName = "resValues",
                 value = internalServices.mapPropertyOf(
                     ResValue.Key::class.java,
@@ -240,6 +241,18 @@ open class AndroidTestImpl @Inject constructor(
             dslInfo,
             internalServices,
         )
+    }
+
+    override val buildConfigCreationConfig: BuildConfigCreationConfig? by lazy {
+        if (buildFeatures.buildConfig) {
+            BuildConfigCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices
+            )
+        } else {
+            null
+        }
     }
 
     override val targetSdkVersionOverride: AndroidVersion?

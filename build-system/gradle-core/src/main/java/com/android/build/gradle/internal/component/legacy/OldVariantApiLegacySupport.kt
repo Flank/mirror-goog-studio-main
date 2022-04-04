@@ -22,19 +22,30 @@ import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
+import java.io.Serializable
 
 interface OldVariantApiLegacySupport {
     val buildTypeObj: BuildType
     val productFlavorList: List<ProductFlavor>
     val mergedFlavor: MergedFlavor
     val javaCompileOptions: JavaCompileOptions
+
     fun getJavaClasspathArtifacts(
         configType: AndroidArtifacts.ConsumedConfigType,
         classesType: AndroidArtifacts.ArtifactType,
         generatedBytecodeKey: Any?
     ): ArtifactCollection
+
+    fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?)
+
     // TODO : b/214316660
     fun getAllRawAndroidResources(component: ComponentCreationConfig): FileCollection
+
+    // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
+    // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
+    // switches to the new variant API.
+    fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
 }

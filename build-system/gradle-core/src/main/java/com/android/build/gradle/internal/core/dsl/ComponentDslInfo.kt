@@ -142,18 +142,6 @@ interface ComponentDslInfo: DimensionCombination {
     fun getPostProcessingOptions(): PostProcessingOptions
 
     /**
-     * Returns a list of items for the BuildConfig class.
-     *
-     *
-     * Items can be either fields (instance of [com.android.builder.model.ClassField]) or
-     * comments (instance of String).
-     *
-     * @return a list of items.
-     */
-    // TODO: Move to ConsumableComponentDslInfo
-    fun getBuildConfigFields(): Map<String, BuildConfigField<out Serializable>>
-
-    /**
      * TODO: Clean this up
      */
     val isAndroidTestCoverageEnabled: Boolean

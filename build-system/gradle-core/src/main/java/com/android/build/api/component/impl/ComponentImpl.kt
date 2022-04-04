@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
@@ -69,12 +68,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
 import com.google.common.collect.ImmutableMap
@@ -249,10 +246,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         get() = registeredDependenciesClassesVisitors.isNotEmpty() ||
                 (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
 
-    // by default, we delegate to the build features flags.
-    override val buildConfigEnabled: Boolean
-        get() = buildFeatures.buildConfig
-
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
@@ -337,7 +330,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             internalServices.fileCollection(
                 *listOfNotNull(
                     androidResourcesCreationConfig?.getCompiledRClasses(configType),
-                    getCompiledBuildConfig(),
+                    buildConfigCreationConfig?.compiledBuildConfig,
                     getCompiledManifest(),
                     mainCollection
                 ).toTypedArray()
@@ -416,21 +409,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         )
     }
 
-    override fun getCompiledBuildConfig(): FileCollection {
-        val isBuildConfigJar = getBuildConfigType() == BuildConfigType.JAR
-        // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
-        // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
-        return if (isBuildConfigJar && this !is TestComponentCreationConfig) {
-            internalServices.fileCollection(
-                artifacts.get(
-                    COMPILE_BUILD_CONFIG_JAR
-                )
-            )
-        } else {
-            internalServices.fileCollection()
-        }
-    }
-
     private fun getCompiledManifest(): FileCollection {
         val manifestClassRequired = dslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
@@ -471,20 +449,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         )
     }
 
-    override fun getBuildConfigType() : BuildConfigType {
-        return if (!buildConfigEnabled) {
-            BuildConfigType.NONE
-        } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
-            // TODO(b/224758957): This is wrong we need to check the final build config fields from
-            //  the variant API
-            && dslInfo.getBuildConfigFields().none()
-        ) {
-            BuildConfigType.JAR
-        } else {
-            BuildConfigType.JAVA_SOURCE
-        }
-    }
-
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
@@ -520,11 +484,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val isAndroidTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
-
-    override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
-        dslInfo.javaCompileOptions.annotationProcessorOptions
-            .compilerArgumentProviders.add(args)
-    }
 
     override val modelV1LegacySupport =
         ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)

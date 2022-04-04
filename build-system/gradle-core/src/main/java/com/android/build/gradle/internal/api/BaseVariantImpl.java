@@ -693,7 +693,8 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public void buildConfigField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
         if (component instanceof ConsumableCreationConfig) {
-            ((ConsumableCreationConfig) component)
+            component
+                    .getOldVariantApiLegacySupport()
                     .addBuildConfigField(type, name, value, "Field from the variant API");
         } else {
             throw new RuntimeException(

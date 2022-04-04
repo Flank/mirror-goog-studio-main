@@ -34,14 +34,6 @@ import java.io.Serializable
  * like APKs or AABs or used by other projects as a versioned reusable logic like AARs.
  */
 interface ConsumableCreationConfig: ComponentCreationConfig {
-    val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
-
-    @Deprecated("DO NOT USE, use buildConfigFields map property")
-    val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
-
-    @Deprecated("DO NOT USE, use buildConfigFields map property, this is for compatibility with old variant API.")
-    fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?)
-
     val packaging: Packaging
 
     /**

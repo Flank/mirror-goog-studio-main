@@ -1053,7 +1053,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createBuildConfigTask(creationConfig: ConsumableCreationConfig) {
-        if (creationConfig.buildConfigEnabled) {
+        creationConfig.buildConfigCreationConfig?.let { buildConfigCreationConfig ->
             val generateBuildConfigTask =
                     taskFactory.register(GenerateBuildConfig.CreationAction(creationConfig))
             val isBuildConfigBytecodeEnabled = creationConfig
@@ -1062,7 +1062,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             if (!isBuildConfigBytecodeEnabled
                     // TODO(b/224758957): This is wrong we need to check the final build config
                     //  fields from the variant API
-                    || creationConfig.dslBuildConfigFields.isNotEmpty()
+                    || buildConfigCreationConfig.dslBuildConfigFields.isNotEmpty()
             ) {
                 creationConfig.taskContainer.sourceGenTask.dependsOn(generateBuildConfigTask)
             }
@@ -2430,7 +2430,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
         // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
         // new variant API.
-        creationConfig.addDataBindingArgsToOldVariantApi(dataBindingArgs)
+        creationConfig.oldVariantApiLegacySupport.addDataBindingArgsToOldVariantApi(dataBindingArgs)
 
         // add it the new Variant API objects, this is what our tasks use.
         processorOptions.argumentProviders.add(dataBindingArgs)
