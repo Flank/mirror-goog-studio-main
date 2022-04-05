@@ -64,7 +64,7 @@ setlocal
     set INVOCATIONID=%%f
   )
   if exist %DISTDIR%\ (
-    echo ^<head^>^<meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" /^>^</head^> > %DISTDIR%\upsalite_test_results.html
+    echo ^<head^>^<meta http-equiv="refresh" content="0; url='https://fusion2.corp.google.com/invocations/%INVOCATIONID%'" /^>^</head^> > %DISTDIR%\upsalite_test_results.html
   )
 
   set TARGETS=
@@ -83,6 +83,8 @@ setlocal
   %BAZELRC_FLAGS% ^
   test ^
   --config=dynamic ^
+  --config=sponge ^
+  --tool_tag=studio_win.cmd ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^
   --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
