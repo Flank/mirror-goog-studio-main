@@ -552,6 +552,7 @@ public class LocalMavenRepositoryGenerator {
      */
     private static class CustomMavenRepository {
 
+        private final DefaultServiceLocator serviceLocator;
         private final RepositorySystem system;
         private final DefaultRepositorySystemSession session;
         private final List<RemoteRepository> repositories;
@@ -559,7 +560,8 @@ public class LocalMavenRepositoryGenerator {
 
         public CustomMavenRepository(
                 String repoPath, List<RemoteRepository> repositories, boolean verbose) {
-            system = CustomAetherUtils.newRepositorySystem(verbose);
+            serviceLocator = CustomAetherUtils.newServiceLocator(verbose);
+            system = CustomAetherUtils.newRepositorySystem(serviceLocator);
             session = CustomAetherUtils.newSession(system, repoPath);
             this.repositories = repositories;
             modelBuilder = new DefaultModelBuilderFactory().newInstance();
@@ -671,15 +673,14 @@ public class LocalMavenRepositoryGenerator {
                     Class.forName("org.apache.maven.repository.internal.DefaultModelResolver")
                             .getConstructors()[0];
             constructor.setAccessible(true);
-            DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
             return (ModelResolver)
                     constructor.newInstance(
                             session,
                             null,
                             null,
-                            locator.getService(ArtifactResolver.class),
-                            locator.getService(VersionRangeResolver.class),
-                            locator.getService(RemoteRepositoryManager.class),
+                            serviceLocator.getService(ArtifactResolver.class),
+                            serviceLocator.getService(VersionRangeResolver.class),
+                            serviceLocator.getService(RemoteRepositoryManager.class),
                             repositories);
         }
     }
@@ -696,7 +697,7 @@ public class LocalMavenRepositoryGenerator {
      */
     private static class CustomAetherUtils {
 
-        public static RepositorySystem newRepositorySystem(boolean verbose) {
+        public static DefaultServiceLocator newServiceLocator(boolean verbose) {
             DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
             locator.addService(
                     RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
@@ -704,7 +705,10 @@ public class LocalMavenRepositoryGenerator {
             locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
             locator.setServices(
                     VersionRangeResolver.class, new CustomVersionRangeResolver(verbose));
+            return locator;
+        }
 
+        public static RepositorySystem newRepositorySystem(DefaultServiceLocator locator) {
             // Note that, if any of the inputs transitively depend on an artifact using a version
             // range, the default version range resolver will not be able to resolve the version,
             // because our prebuilts repository does NOT have any maven-metadata.xml files.
