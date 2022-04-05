@@ -54,7 +54,8 @@ setlocal
   ) else if %BUILD_TYPE%==POSTSUBMIT (
     set NOCACHE=--nocache_test_results
     set FLAKY_ATTEMPTS=--flaky_test_attempts=2
-    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS!
+    set ANTS=--config=ants
+    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS! !ANTS!
   )
 
   set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate
