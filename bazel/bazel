@@ -14,6 +14,7 @@ def main():
   workspace = find_workspace(os.path.dirname(os.path.realpath(__file__)))
   if not workspace:
     sys.exit('Must run %s within a workspace.' % os.path.basename(sys.argv[0]))
+  print_bazelrc_deprecation_warning(workspace)
   if sys.platform.startswith('linux'):
     platform = 'linux-x86_64'
   elif sys.platform == 'darwin':
@@ -81,6 +82,22 @@ def main():
                                               'base', 'bazel',
                                               'common.bazelrc')
   sys.exit(subprocess.call([bazel, bazelrc_arg] + args, env=env))
+
+
+def print_bazelrc_deprecation_warning(workspace):
+  bazelrc = os.path.join(workspace, '.bazelrc')
+  user_bazelrc = os.path.join(workspace, 'user.bazelrc')
+  if os.path.exists(bazelrc):
+    print('''WARNING: You have a .bazelrc file located at: %s
+
+This file will soon be overwritten by an update to the repo manifest!
+
+To continue using a user-specific .bazelrc, please move the .bazelrc
+file to user.bazelrc with the following command:
+
+mv %s %s
+          ''' % (bazelrc, bazelrc, user_bazelrc))
+    sys.exit(1)
 
 
 def define_env(env, var, value, msg=None):
