@@ -152,6 +152,7 @@ class ManagedDeviceCleanTaskTest {
 
         verify(avdService).allAvds()
         verify(avdService).deleteAvds(listOf("an_avd", "another_avd", "one_more_avd"))
+        verify(avdService).deleteLegacyGradleManagedDeviceAvdDirectory()
         verifyNoMoreInteractions(avdService)
     }
 
@@ -172,6 +173,7 @@ class ManagedDeviceCleanTaskTest {
         verify(avdService).allAvds()
         // "an_avd" should not be deleted.
         verify(avdService).deleteAvds(listOf("another_avd", "one_more_avd"))
+        verify(avdService).deleteLegacyGradleManagedDeviceAvdDirectory()
         verifyNoMoreInteractions(avdService)
     }
 

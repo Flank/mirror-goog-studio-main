@@ -25,6 +25,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.repository.Revision
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.utils.ILogger
+import com.android.utils.PathUtils
 import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -105,6 +106,15 @@ abstract class AvdComponentsBuildService @Inject constructor(
      */
     fun deleteAvds(avds: List<String>) {
         avdManager.deleteAvds(avds)
+    }
+
+    /**
+     * Removes the legacy Gradle Managed Device Avd directory (.android/gradle/avd), which had
+     * been used until 7.3.0-alpha08.
+     */
+    fun deleteLegacyGradleManagedDeviceAvdDirectory() {
+        PathUtils.deleteRecursivelyIfExists(
+            parameters.androidLocationsService.get().prefsLocation.resolve("gradle").resolve("avd"))
     }
 
     fun avdProvider(
