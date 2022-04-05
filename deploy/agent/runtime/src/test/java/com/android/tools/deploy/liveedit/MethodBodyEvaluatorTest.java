@@ -24,6 +24,17 @@ public class MethodBodyEvaluatorTest {
     private static final float NO_DELTA = 0.0f;
 
     @org.junit.Test
+    public void testMissingMethod() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        try {
+            MethodBodyEvaluator mbe = new MethodBodyEvaluator(classInput, "nope", "()I");
+            mbe.evalStatic(new Object[] {});
+            Assert.fail("Calling nope method should have failed");
+        } catch (IllegalStateException ignored) {
+        }
+    }
+
+    @org.junit.Test
     public void testSimpleReturn() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         TestTarget owner = new TestTarget();
