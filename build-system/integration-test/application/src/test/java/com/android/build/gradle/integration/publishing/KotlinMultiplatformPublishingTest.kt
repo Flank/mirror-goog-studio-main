@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.integration.publishing
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.model.normalizeAgpVersion
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestUtils
 import org.junit.Rule
 import org.junit.Test
@@ -63,7 +65,11 @@ class KotlinMultiplatformPublishingTest {
 
     @Test
     fun testKotlinMultiplatform() {
-        project.executor().run("publishAllPublicationsToBuildDirRepository")
+        // TODO(b/228332425): disallow dependency resolution at configuration
+        project.executor()
+            .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .run("publishAllPublicationsToBuildDirRepository")
 
         val mainModule =
             project.projectDir.resolve("build/testRepo/com/example/project/0.1.2/project-0.1.2.module")

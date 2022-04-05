@@ -18,7 +18,7 @@
       "name": "metadataApiElements",
       "attributes": {
         "org.gradle.category": "library",
-        "org.gradle.usage": "kotlin-api",
+        "org.gradle.usage": "kotlin-metadata",
         "org.jetbrains.kotlin.platform.type": "common"
       },
       "files": [

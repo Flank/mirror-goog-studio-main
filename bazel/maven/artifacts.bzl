@@ -359,6 +359,7 @@ DATA = [
     "org.jetbrains.dokka:javadoc-plugin:1.4.32",
     "org.jetbrains.kotlin:jvm-abi-gen:1.6.10",
     "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:1.6.10",
+    "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:1.6.20",
     "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.3.41",
     "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.3.72",
     "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.4.32",

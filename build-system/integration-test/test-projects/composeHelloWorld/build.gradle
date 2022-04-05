@@ -4,6 +4,7 @@ buildscript {
     apply from: "../commonBuildScript.gradle"
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
+        // TODO(b/228340676): update Kotlin after a compatible compose version is released.
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
     }
 }
