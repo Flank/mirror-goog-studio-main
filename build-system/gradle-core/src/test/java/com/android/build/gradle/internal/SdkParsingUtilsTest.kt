@@ -298,11 +298,12 @@ class SdkParsingUtilsTest {
     }
 
     @Test
-    fun `warn when using a newer preview version`() {
+    fun `warn when using a newer stable version`() {
         val issueReporter = FakeSyncIssueReporter(throwOnError = true)
         warnIfCompileSdkTooNew(
             version = AndroidVersion(31),
-            issueReporter = issueReporter, maxVersion = AndroidVersion(30, "S"),
+            issueReporter = issueReporter,
+            maxVersion = AndroidVersion(30, "S"),
             androidGradlePluginVersion = "7.0.0-beta01"
         )
         assertThat(issueReporter.messages).containsExactly(
@@ -322,7 +323,7 @@ class SdkParsingUtilsTest {
     }
 
     @Test
-    fun `warn when using a newer stable version`() {
+    fun `don't warn when using a newer preview version`() {
         val issueReporter = FakeSyncIssueReporter(throwOnError = true)
         warnIfCompileSdkTooNew(
             version = AndroidVersion(30, "S"),
@@ -331,19 +332,7 @@ class SdkParsingUtilsTest {
             androidGradlePluginVersion = "7.0.0-beta01"
         )
         assertThat(issueReporter.errors).isEmpty()
-        assertThat(issueReporter.messages).containsExactly(
-            """
-                We recommend using a newer Android Gradle plugin to use compileSdkPreview = "S"
-
-                This Android Gradle plugin (7.0.0-beta01) was tested up to compileSdk = 30
-
-                This warning can be suppressed by adding
-                    android.suppressUnsupportedCompileSdk=S
-                to this project's gradle.properties
-
-                The build will continue, but you are strongly encouraged to update your project to
-                use a newer Android Gradle Plugin that has been tested with compileSdkPreview = "S"
-        """.trimIndent())
+        assertThat(issueReporter.messages).isEmpty()
     }
 
     @Test

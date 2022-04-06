@@ -142,6 +142,7 @@ internal fun warnIfCompileSdkTooNew(
     suppressWarningIfTooNewForVersions: String? = null,
     ) {
     if (version <= maxVersion) return
+    if (version.isPreview) return // No message if the SDK is a preview version
     val suppressName = version.apiString
     val suppressSet = suppressWarningIfTooNewForVersions?.splitToSequence(",")?.filter(String::isNotEmpty)?.toSet() ?: setOf()
     if (suppressSet.contains(suppressName)) return
