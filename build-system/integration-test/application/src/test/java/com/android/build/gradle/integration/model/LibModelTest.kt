@@ -86,7 +86,7 @@ class DisabledAndroidResourcesInLibModelTest: ReferenceModelComparator(
 
     @Test
     fun `test AndroidDsl model`() {
-        ensureAndroidDslDeltaIsEmpty()
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }
 
