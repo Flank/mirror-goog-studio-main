@@ -34,6 +34,7 @@ import com.android.testutils.MockitoKt.eq
 import com.android.testutils.SystemPropertyOverrides
 import com.android.utils.Environment
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -124,6 +125,8 @@ class ManagedDeviceSetupTaskTest {
         doReturn(realPropertyFor("aosp")).`when`(task).systemImageVendor
         doReturn(realPropertyFor("Pixel 2")).`when`(task).hardwareProfile
         doReturn(realPropertyFor("auto-no-window")).`when`(task).emulatorGpuFlag
+        doReturn(realPropertyFor("someDeviceName")).`when`(task).managedDeviceName
+        doReturn(realPropertyFor(true)).`when`(task).require64Bit
 
 
         doReturn(FakeGradleWorkExecutor(project.objects, temporaryFolderRule.newFolder()))
@@ -185,17 +188,15 @@ class ManagedDeviceSetupTaskTest {
         `when`(mockVersionedSdkLoader.sdkImageDirectoryProvider(any()))
             .thenReturn(FakeGradleProperty(null))
 
-        try {
+        val error = assertThrows(IllegalStateException::class.java) {
             task.taskAction()
-
-            error("Should not reach")
-        } catch (e: IllegalStateException) {
-            assertThat(e.message).isEqualTo(
-                """
-                    system-images;android-29;default;x86_64 is not available, and could not be downloaded while in offline mode.
-                """.trimIndent()
-            )
         }
+        assertThat(error.message).isEqualTo(
+            """
+                The system image for someDeviceName is not available and Gradle is in offline mode.
+                Could not download the image or find other compatible images.
+            """.trimIndent()
+        )
 
         verify(mockVersionedSdkLoader)
             .sdkImageDirectoryProvider("system-images;android-29;default;x86_64")
@@ -252,6 +253,8 @@ class ManagedDeviceSetupTaskTest {
                 val systemImageVendor = mockEmptyProperty<String>()
                 val hardwareProfile = mockEmptyProperty<String>()
                 val emulatorGpuFlag = mockEmptyProperty<String>()
+                val managedDeviceName = mockEmptyProperty<String>()
+                val require64Bit = mockEmptyProperty<Boolean>()
 
                 `when`(task.sdkService).thenReturn(sdkProperty)
                 `when`(task.avdService).thenReturn(avdProperty)
@@ -262,6 +265,8 @@ class ManagedDeviceSetupTaskTest {
                 `when`(task.systemImageVendor).thenReturn(systemImageVendor)
                 `when`(task.hardwareProfile).thenReturn(hardwareProfile)
                 `when`(task.emulatorGpuFlag).thenReturn(emulatorGpuFlag)
+                `when`(task.managedDeviceName).thenReturn(managedDeviceName)
+                `when`(task.require64Bit).thenReturn(require64Bit)
 
                 config.configure(task)
 
@@ -300,6 +305,14 @@ class ManagedDeviceSetupTaskTest {
                 verify(emulatorGpuFlag).set("auto-no-window")
                 verify(emulatorGpuFlag).disallowChanges()
                 verifyNoMoreInteractions(emulatorGpuFlag)
+
+                verify(managedDeviceName).set("testName")
+                verify(managedDeviceName).disallowChanges()
+                verifyNoMoreInteractions(managedDeviceName)
+
+                verify(require64Bit).set(false)
+                verify(require64Bit).disallowChanges()
+                verifyNoMoreInteractions(require64Bit)
             }
         } finally {
             Environment.instance = Environment.SYSTEM
@@ -307,66 +320,41 @@ class ManagedDeviceSetupTaskTest {
     }
 
     @Test
-    fun generateSystemImageErrorMessage_Offline() {
+    fun generateSystemErrorMessage_offlineMode() {
         `when`(mockVersionedSdkLoader.offlineMode).thenReturn(true)
-        val errorMessage = ManagedDeviceSetupTask.generateSystemImageErrorMessage(
-            "system-images;android-29;default;x86",
+
+        val result = ManagedDeviceSetupTask.generateSystemImageErrorMessage(
+            "test_device_name",
+            28,
+            "aosp",
+            true,
             mockVersionedSdkLoader
         )
-        assertThat(errorMessage).isEqualTo(
+
+        assertThat(result).isEqualTo(
             """
-                system-images;android-29;default;x86 is not available, and could not be downloaded while in offline mode.
+                The system image for test_device_name is not available and Gradle is in offline mode.
+                Could not download the image or find other compatible images.
             """.trimIndent()
         )
     }
 
     @Test
-    fun generateSystemImageErrorMessage_licensingError() {
-        `when`(mockVersionedSdkLoader.allSystemImageHashes())
-            .thenReturn(listOf("system-images;android-29;default;x86"))
-
-        val errorMessage = ManagedDeviceSetupTask.generateSystemImageErrorMessage(
-            "system-images;android-29;default;x86",
-            mockVersionedSdkLoader
-        )
-        assertThat(errorMessage).isEqualTo(
-            """
-                System image hash: system-images;android-29;default;x86 exists, but could not be downloaded. This is
-                likely due to a licensing exception. See above errors for clarification.
-            """.trimIndent()
-        )
-    }
-
-    @Test
-    fun generateSystemImageErrorMessage_similarImages() {
-        `when`(mockVersionedSdkLoader.allSystemImageHashes())
-            .thenReturn(
-                listOf("system-images;android-29;default;x86_64"))
-
-        val errorMessage = ManagedDeviceSetupTask.generateSystemImageErrorMessage(
-            "system-images;android-29;default;x86",
-            mockVersionedSdkLoader
-        )
-        assertThat(errorMessage).isEqualTo(
-            """
-                System image hash: system-images;android-29;default;x86 does not exist. However, here is a list of similar
-                images:
-                [system-images;android-29;default;x86_64]
-            """.trimIndent()
-        )
-    }
-
-    @Test
-    fun generateSystemImageErrorMessage_invalidHash() {
+    fun generateSystemErrorMessage_onlineMode() {
+        `when`(mockVersionedSdkLoader.offlineMode).thenReturn(false)
         `when`(mockVersionedSdkLoader.allSystemImageHashes()).thenReturn(listOf())
 
-        val errorMessage = ManagedDeviceSetupTask.generateSystemImageErrorMessage(
-            "system-images;android-29;default;x86",
+        val result = ManagedDeviceSetupTask.generateSystemImageErrorMessage(
+            "some_test_device",
+            28,
+            "aosp",
+            true,
             mockVersionedSdkLoader
         )
-        assertThat(errorMessage).isEqualTo(
-            "Generated invalid hash string \"system-images;android-29;default;x86\" from the " +
-                    "DSL. This should not occur."
+
+        assertThat(result).isEqualTo(
+            "System Image specified by some_test_device does not exist.\n\n" +
+                    "Try one of the following fixes:"
         )
     }
 }

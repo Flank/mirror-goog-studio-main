@@ -29,10 +29,13 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.testing.utp.ManagedDeviceImageSuggestionGenerator
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.repository.Revision
 import com.android.testing.utils.computeSystemImageHashFromDsl
-import com.android.testing.utils.findClosestHashes
+import com.android.utils.CpuArchitecture
+import com.android.utils.osArchitecture
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -85,6 +88,14 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
     @get: Input
     abstract val emulatorGpuFlag: Property<String>
 
+    // Used in error messaging
+    @get: Internal
+    abstract val managedDeviceName: Property<String>
+
+    // Used in error messaging.
+    @get: Internal
+    abstract val require64Bit: Property<Boolean>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
             it.initializeWith(projectPath,  path, analyticsService)
@@ -92,12 +103,16 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             it.compileSdkVersion.set(compileSdkVersion)
             it.buildToolsRevision.set(buildToolsRevision)
             it.avdService.set(avdService)
-            it.imageHash.set(computeImageHash())
             it.deviceName.set(
                 computeAvdName(
                     apiLevel.get(), systemImageVendor.get(), abi.get(), hardwareProfile.get()))
             it.hardwareProfile.set(hardwareProfile)
             it.emulatorGpuFlag.set(emulatorGpuFlag)
+            it.managedDeviceName.set(managedDeviceName)
+            it.systemImageVendor.set(systemImageVendor)
+            it.apiLevel.set(apiLevel)
+            it.require64Bit.set(require64Bit)
+            it.abi.set(abi)
         }
     }
 
@@ -107,14 +122,19 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 compileSdkVersion = parameters.compileSdkVersion,
                 buildToolsRevision = parameters.buildToolsRevision
             )
-            val imageHash = parameters.imageHash.get()
+            val imageHash = computeImageHash()
             val sdkImageProvider = versionedSdkLoader.sdkImageDirectoryProvider(imageHash)
             if (!sdkImageProvider.isPresent) {
-                error(generateSystemImageErrorMessage(imageHash, versionedSdkLoader))
+                error(generateSystemImageErrorMessage(
+                    parameters.managedDeviceName.get(),
+                    parameters.apiLevel.get(),
+                    parameters.systemImageVendor.get(),
+                    parameters.require64Bit.get(),
+                    versionedSdkLoader))
             }
             parameters.avdService.get().avdProvider(
                 sdkImageProvider,
-                parameters.imageHash.get(),
+                imageHash,
                 parameters.deviceName.get(),
                 parameters.hardwareProfile.get()).get()
 
@@ -122,6 +142,12 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 parameters.deviceName.get(),
                 parameters.emulatorGpuFlag.get())
         }
+
+        private fun computeImageHash(): String =
+            computeSystemImageHashFromDsl(
+                parameters.apiLevel.get(),
+                parameters.systemImageVendor.get(),
+                parameters.abi.get())
     }
 
     abstract class ManagedDeviceSetupParams : ProfileAwareWorkAction.Parameters() {
@@ -129,14 +155,14 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
         abstract val compileSdkVersion: Property<String>
         abstract val buildToolsRevision: Property<Revision>
         abstract val avdService: Property<AvdComponentsBuildService>
-        abstract val imageHash: Property<String>
         abstract val deviceName: Property<String>
         abstract val hardwareProfile: Property<String>
         abstract val emulatorGpuFlag: Property<String>
-    }
-
-    private fun computeImageHash(): String {
-        return computeSystemImageHashFromDsl(apiLevel.get(), systemImageVendor.get(), abi.get())
+        abstract val managedDeviceName: Property<String>
+        abstract val systemImageVendor: Property<String>
+        abstract val apiLevel: Property<Int>
+        abstract val require64Bit: Property<Boolean>
+        abstract val abi: Property<String>
     }
 
     class CreationAction(
@@ -145,6 +171,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
         private val apiLevel: Int,
         private val abi: String,
         private val hardwareProfile: String,
+        private val managedDeviceName: String,
+        private val require64Bit: Boolean,
         creationConfig: GlobalTaskCreationConfig
     ) : GlobalTaskCreationAction<ManagedDeviceSetupTask>(creationConfig) {
 
@@ -158,6 +186,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             managedDevice.apiLevel,
             computeAbiFromArchitecture(managedDevice),
             managedDevice.device,
+            managedDevice.name,
+            managedDevice.require64Bit,
             creationConfig)
 
         override val type: Class<ManagedDeviceSetupTask>
@@ -182,48 +212,39 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             task.emulatorGpuFlag.setDisallowChanges(
                 computeManagedDeviceEmulatorMode(creationConfig.services.projectOptions)
             )
+
+            task.managedDeviceName.setDisallowChanges(managedDeviceName)
+            task.require64Bit.setDisallowChanges(require64Bit)
         }
     }
 
     companion object {
+        @VisibleForTesting
         fun generateSystemImageErrorMessage(
-            imageHash: String,
+            deviceName: String,
+            apiLevel: Int,
+            systemImageSource: String,
+            require64Bit: Boolean,
             versionedSdkLoader: VersionedSdkLoader
         ) : String {
             // If the system image wasn't available. Check to see if we are offline.
             if (versionedSdkLoader.offlineMode) {
                 return """
-                    $imageHash is not available, and could not be downloaded while in offline mode.
+                    The system image for $deviceName is not available and Gradle is in offline mode.
+                    Could not download the image or find other compatible images.
                 """.trimIndent()
             }
 
             val allImages = versionedSdkLoader.allSystemImageHashes() ?: listOf()
-            val targetHashes = findClosestHashes(
-                imageHash,
-                allImages
-            )
 
-            // Now need to figure out if it was a licensing issue or if the system
-            // image did not exist.
-            if (targetHashes.isEmpty()) {
-                // Don't know how we got here, this implies we generated an invalid hash string
-                return "Generated invalid hash string \"$imageHash\" from the DSL. This should" +
-                        " not occur."
-            }
-            if (targetHashes.first() == imageHash) {
-                // If the imageHash exists, the most likely scenario is that there is a licensing
-                // issue. This will already be reported by the SdkHandler, so we just reiterate
-                // here.
-                return """
-                    System image hash: $imageHash exists, but could not be downloaded. This is
-                    likely due to a licensing exception. See above errors for clarification.
-                """.trimIndent()
-            }
-            return """
-                System image hash: $imageHash does not exist. However, here is a list of similar
-                images:
-                $targetHashes
-            """.trimIndent()
+            return ManagedDeviceImageSuggestionGenerator(
+                osArchitecture,
+                deviceName,
+                apiLevel,
+                systemImageSource,
+                require64Bit,
+                allImages
+            ).message
         }
     }
 }

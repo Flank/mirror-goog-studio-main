@@ -74,18 +74,20 @@ fun computeAbiFromArchitecture(device: ManagedVirtualDevice): String =
         device.systemImageSource
     )
 
-fun computeAbiFromArchitecture(require64Bit: Boolean, apiLevel: Int, vendor: String): String {
-    val cpuArchitecture = osArchitecture
-    return when {
-        cpuArchitecture == CpuArchitecture.ARM
-            || cpuArchitecture == CpuArchitecture.X86_ON_ARM-> "arm64-v8a"
-        require64Bit -> "x86_64"
-        // Neither system-images;android-30;default;x86 nor system-images;android-26;default;x86
-        // exist, but the google images do.
-        vendor == "aosp" && apiLevel in listOf(26, 30) -> "x86_64"
-        apiLevel <= 30 -> "x86"
-        else -> "x86_64"
-    }
+fun computeAbiFromArchitecture(
+    require64Bit: Boolean,
+    apiLevel: Int,
+    vendor: String,
+    cpuArch: CpuArchitecture = osArchitecture
+): String = when {
+    cpuArch == CpuArchitecture.ARM
+            || cpuArch == CpuArchitecture.X86_ON_ARM-> "arm64-v8a"
+    require64Bit -> "x86_64"
+    // Neither system-images;android-30;default;x86 nor system-images;android-26;default;x86
+    // exist, but the google images do.
+    vendor == "aosp" && apiLevel in listOf(26, 30) -> "x86_64"
+    apiLevel <= 30 -> "x86"
+    else -> "x86_64"
 }
 
 fun computeManagedDeviceEmulatorMode(projectOptions: ProjectOptions) =
