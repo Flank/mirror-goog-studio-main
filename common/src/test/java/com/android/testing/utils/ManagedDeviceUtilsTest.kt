@@ -30,8 +30,13 @@ class ManagedDeviceUtilsTest {
 
         assertEquals(expectedHash, computedHash)
 
-        expectedHash = "system-images;android-30;google_apis_playstore;x86_64"
+        expectedHash = "system-images;android-30;google_apis;x86_64"
         computedHash = computeSystemImageHashFromDsl(30, "google", "x86_64")
+
+        assertEquals(expectedHash, computedHash)
+
+        expectedHash = "system-images;android-31;android-wear;x86_64"
+        computedHash = computeSystemImageHashFromDsl(31, "android-wear", "x86_64")
 
         assertEquals(expectedHash, computedHash)
     }
