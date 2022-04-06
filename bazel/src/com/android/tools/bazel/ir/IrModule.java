@@ -39,7 +39,7 @@ public class IrModule extends IrNode {
     private final List<File> excludes = new ArrayList<>();
     private final String name;
     private final Path baseDir;
-    private String compilerOptions;
+    private final List<String> javacOpts = new ArrayList<>();
 
     public IrModule(String name, File iml, File base) {
         this.name = name;
@@ -82,8 +82,8 @@ public class IrModule extends IrNode {
         return baseDir;
     }
 
-    public String getCompilerOptions() {
-        return compilerOptions;
+    public List<String> getJavacOpts() {
+        return javacOpts;
     }
 
     public List<File> getSources() {
@@ -146,8 +146,8 @@ public class IrModule extends IrNode {
         resources.add(file);
     }
 
-    public void setCompilerOptions(String compilerOptions) {
-        this.compilerOptions = compilerOptions;
+    public void addJavacOption(String javacOption) {
+        javacOpts.add(javacOption);
     }
 
     public enum Scope {

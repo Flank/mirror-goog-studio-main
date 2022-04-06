@@ -20,6 +20,7 @@ import com.android.tools.bazel.ir.IrLibrary;
 import com.android.tools.bazel.ir.IrModule;
 import com.android.tools.bazel.ir.IrProject;
 import com.google.common.io.Files;
+import com.intellij.util.execution.ParametersListUtil;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -89,11 +90,10 @@ public class ImlToIr {
 
         IrProject irProject = new IrProject(workspace.toFile(), projectPath);
 
-        JpsJavaCompilerConfiguration compilerConfiguration =
-                JpsJavaExtensionService.getInstance().getOrCreateCompilerConfiguration(project);
-        JpsCompilerExcludes excludes = compilerConfiguration.getCompilerExcludes();
-        JpsJavaCompilerOptions compilerOptions =
-                compilerConfiguration.getCompilerOptions(compilerConfiguration.getJavaCompilerId());
+        JpsCompilerExcludes excludes =
+                JpsJavaExtensionService.getInstance()
+                        .getCompilerConfiguration(project)
+                        .getCompilerExcludes();
         List<File> excludedFiles = excludedFiles(excludes);
 
         JpsGraph graph = new JpsGraph(project, logger);
@@ -105,7 +105,7 @@ public class ImlToIr {
         Map<JpsModule, IrModule> imlToIr = new HashMap<>();
         Map<JpsLibrary, IrLibrary> libraryToIr = new HashMap<>();
         for (JpsModule jpsModule : graph.getModulesInTopologicalOrder()) {
-            IrModule module = createIrModule(jpsModule, compilerOptions);
+            IrModule module = createIrModule(jpsModule);
             if (config.ignoreModule(workspace, module)) {
                 continue;
             }
@@ -305,8 +305,7 @@ public class ImlToIr {
         return "";
     }
 
-    private static IrModule createIrModule(
-            JpsModule module, JpsJavaCompilerOptions jpsCompilerOptions) {
+    private static IrModule createIrModule(JpsModule module) {
 
         File base = JpsModelSerializationDataService.getBaseDirectory(module);
         if (base == null) {
@@ -319,16 +318,17 @@ public class ImlToIr {
         }
         IrModule irModule = new IrModule(module.getName(), moduleFile, base);
 
-        String additionalOptions =
-                jpsCompilerOptions.ADDITIONAL_OPTIONS_OVERRIDE.getOrDefault(
-                        module.getName(), jpsCompilerOptions.ADDITIONAL_OPTIONS_STRING);
-        if (additionalOptions != null && !additionalOptions.isEmpty()) {
-            String currentOptions = irModule.getCompilerOptions();
-            if (currentOptions == null) {
-                irModule.setCompilerOptions(additionalOptions);
-            } else if (!currentOptions.equals(additionalOptions)) {
-                throw new IllegalStateException(
-                        "Conflicting compiler options specified by module " + module.getName());
+        JpsJavaExtensionService javaJpsService = JpsJavaExtensionService.getInstance();
+        JpsJavaCompilerConfiguration javaConfig =
+                javaJpsService.getCompilerConfiguration(module.getProject());
+        JpsJavaCompilerOptions javacOptions =
+                javaConfig.getCompilerOptions(javaConfig.getJavaCompilerId());
+        String javacAdditionalOptions =
+                javacOptions.ADDITIONAL_OPTIONS_OVERRIDE.getOrDefault(
+                        module.getName(), javacOptions.ADDITIONAL_OPTIONS_STRING);
+        if (javacAdditionalOptions != null) {
+            for (String javacOption : ParametersListUtil.parse(javacAdditionalOptions)) {
+                irModule.addJavacOption(javacOption);
             }
         }
 
