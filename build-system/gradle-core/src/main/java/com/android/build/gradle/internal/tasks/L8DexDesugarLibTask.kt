@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
@@ -133,7 +133,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                 )
 
                 // make sure non-minified release build is not obfuscated
-                if (creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8) {
+                if (creationConfig.getJava8LangSupportType() == Java8LangSupport.D8) {
                     task.keepRulesConfigurations.set(listOf("-dontobfuscate"))
                 }
             }
@@ -207,7 +207,7 @@ fun setDesugarLibKeepRules(
                 InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
     }
 
-    val nonMinified = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8
+    val nonMinified = creationConfig.getJava8LangSupportType() == Java8LangSupport.D8
     if (creationConfig.global.hasDynamicFeatures && nonMinified) {
         keepRulesFiles.from(
             creationConfig.variantDependencies.getArtifactFileCollection(

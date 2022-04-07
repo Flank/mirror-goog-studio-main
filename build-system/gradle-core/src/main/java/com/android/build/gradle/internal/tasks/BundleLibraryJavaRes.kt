@@ -81,7 +81,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         creationConfig
     ) {
 
-        private val projectJavaResFromStreams = if (creationConfig.variantScope.needsJavaResStreams) {
+        private val projectJavaResFromStreams = if (creationConfig.needsJavaResStreams) {
             // Because ordering matters for TransformAPI, we need to fetch java res from the
             // transform pipeline as soon as this creation action is instantiated, in needed.
             creationConfig.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
@@ -109,7 +109,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            var resources: FileCollection?
+            val resources: FileCollection?
             // we should have two tasks with each input and ensure that only one runs for any build.
             if (projectJavaResFromStreams != null) {
                 task.unfilteredResources = projectJavaResFromStreams
@@ -123,7 +123,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
                 .skipWhenEmpty()
                 .ignoreEmptyDirectories(false)
                 .withPathSensitivity(PathSensitivity.RELATIVE)
-            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
+            task.jarCreatorType = creationConfig.global.jarCreatorType
             task.debuggable
                 .setDisallowChanges(creationConfig.debuggable)
         }
@@ -131,7 +131,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 }
 
 abstract class BundleLibraryJavaResRunnable : ProfileAwareWorkAction<BundleLibraryJavaResRunnable.Params>() {
-    abstract class Params : ProfileAwareWorkAction.Parameters() {
+    abstract class Params : Parameters() {
         abstract val output: RegularFileProperty
         abstract val inputs: ConfigurableFileCollection
         abstract val jarCreatorType: Property<JarCreatorType>

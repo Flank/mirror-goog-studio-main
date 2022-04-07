@@ -23,6 +23,7 @@ import com.android.build.api.variant.ScopedArtifacts.Scope
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -171,7 +172,8 @@ abstract class ProguardConfigurableTask(
         creationConfig
     ) {
 
-        private val includeFeaturesInScopes: Boolean = creationConfig.variantScope.consumesFeatureJars()
+        private val includeFeaturesInScopes: Boolean = (creationConfig as? ApplicationCreationConfig)
+            ?.consumesFeatureJars == true
         protected val componentType: ComponentType = creationConfig.componentType
         private val testedConfig = (creationConfig as? TestComponentCreationConfig)?.mainVariant
 
@@ -395,7 +397,7 @@ abstract class ProguardConfigurableTask(
             task: ProguardConfigurableTask,
             creationConfig: ConsumableCreationConfig
         ) {
-            val postprocessingFeatures = creationConfig.variantScope.postprocessingFeatures
+            val postprocessingFeatures = creationConfig.postProcessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
             val aaptProguardFile =

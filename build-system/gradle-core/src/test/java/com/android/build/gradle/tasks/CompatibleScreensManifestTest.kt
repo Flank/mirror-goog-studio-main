@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
@@ -62,7 +61,6 @@ class CompatibleScreensManifestTest {
     @get:Rule var projectFolder = TemporaryFolder()
     @get:Rule var temporaryFolder = TemporaryFolder()
 
-    @Mock internal lateinit var scope: VariantScope
     @Suppress("DEPRECATION")
     @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer
@@ -98,7 +96,6 @@ class CompatibleScreensManifestTest {
         `when`(appVariant.baseName).thenReturn("baseName")
         `when`(appVariant.artifacts).thenReturn(artifacts)
         `when`(appVariant.taskContainer).thenReturn(taskContainer)
-        `when`(appVariant.variantScope).thenReturn(scope)
         `when`(appVariant.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
         `when`(appVariant.services).thenReturn(services)
         `when`(appVariant.minSdkVersion).thenReturn(AndroidVersionImpl(21))

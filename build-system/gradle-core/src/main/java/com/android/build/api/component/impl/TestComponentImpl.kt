@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -44,7 +43,6 @@ abstract class TestComponentImpl<DslInfoT: TestComponentDslInfo> @Inject constru
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
     taskContainer: MutableTaskContainer,
     override val mainVariant: VariantCreationConfig,
@@ -60,7 +58,6 @@ abstract class TestComponentImpl<DslInfoT: TestComponentDslInfo> @Inject constru
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
     taskContainer,
     transformManager,

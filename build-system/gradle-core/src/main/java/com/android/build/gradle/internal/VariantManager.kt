@@ -66,9 +66,8 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -385,18 +384,6 @@ class VariantManager<
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
 
-        // create the obsolete VariantScope
-        val variantScope = VariantScopeImpl(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                pathHelper,
-                artifacts,
-                taskCreationServices,
-                getCompileSdkVersion(),
-                hasDynamicFeatures(),
-                null /* testedVariantProperties*/)
-
         // and the obsolete variant data
         val variantData = variantFactory.createVariantData(
             componentIdentity,
@@ -415,7 +402,6 @@ class VariantManager<
             variantSources,
             pathHelper,
             artifacts,
-            variantScope,
             variantData,
             taskContainer,
             transformManager,
@@ -567,17 +553,6 @@ class VariantManager<
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
-        val variantScope = VariantScopeImpl(
-            componentIdentity,
-            variantDslInfo,
-            variantDependencies,
-            pathHelper,
-            artifacts,
-            taskCreationServices,
-            getCompileSdkVersion(),
-            hasDynamicFeatures(),
-            null
-        )
         val testFixturesBuildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
             dslExtension.buildFeatures,
             dslServices.projectOptions,
@@ -592,7 +567,6 @@ class VariantManager<
             variantSources,
             pathHelper,
             artifacts,
-            variantScope,
             taskContainer,
             mainComponentInfo.variant,
             transformManager,
@@ -736,16 +710,6 @@ class VariantManager<
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
-        val variantScope = VariantScopeImpl(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                pathHelper,
-                artifacts,
-                taskCreationServices,
-                getCompileSdkVersion(),
-                hasDynamicFeatures(),
-                testedComponentInfo.variant)
 
         // create the internal storage for this variant.
         val testVariantData = TestVariantData(
@@ -769,7 +733,6 @@ class VariantManager<
                 variantSources,
                 pathHelper,
                 artifacts,
-                variantScope,
                 testVariantData,
                 taskContainer,
                 testedComponentInfo.variant,
@@ -794,7 +757,6 @@ class VariantManager<
                 variantSources,
                 pathHelper,
                 artifacts,
-                variantScope,
                 testVariantData,
                 taskContainer,
                 testedComponentInfo.variant,
@@ -993,8 +955,8 @@ class VariantManager<
                             ApiVersion.newBuilder().setApiLevel(version.toLong()))
                     }
                     val supportType = variant.getJava8LangSupportType()
-                    if (supportType != VariantScope.Java8LangSupport.INVALID
-                        && supportType != VariantScope.Java8LangSupport.UNUSED) {
+                    if (supportType != Java8LangSupport.INVALID
+                        && supportType != Java8LangSupport.UNUSED) {
                         variantAnalytics.java8LangSupport = AnalyticsUtil.toProto(supportType)
                     }
                 }

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -130,9 +131,8 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             task: MergeClassesTask
         ) {
             super.configure(task)
-            task.inputFiles.setFrom(inputFiles)
-            task.inputFiles.disallowChanges()
-            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
+            task.inputFiles.fromDisallowChanges(inputFiles)
+            task.jarCreatorType = creationConfig.global.jarCreatorType
         }
     }
 }

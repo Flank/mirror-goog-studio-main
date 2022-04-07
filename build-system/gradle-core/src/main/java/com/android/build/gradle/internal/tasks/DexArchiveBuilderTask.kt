@@ -17,28 +17,17 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ScopedArtifact
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.impl.getFeatureLevel
-import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.dependency.BaseDexingTransform
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
 import com.android.build.gradle.internal.dexing.DexParameters
-import com.android.build.gradle.internal.pipeline.StreamFilter
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.sdklib.AndroidVersion
@@ -337,7 +326,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             val minSdkVersionForDexing = creationConfig.minSdkVersionForDexing.getFeatureLevel()
             task.dexParams.minSdkVersion.set(minSdkVersionForDexing)
             val languageDesugaring =
-                creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8
+                creationConfig.getJava8LangSupportType() == Java8LangSupport.D8
             task.dexParams.withDesugaring.set(languageDesugaring)
 
             // If min sdk version for dexing is >= N(24) then we can avoid adding extra classes to

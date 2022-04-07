@@ -50,7 +50,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.UnitTestBuildFeatureValuesImpl;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantServices;
@@ -87,7 +86,6 @@ public abstract class BaseVariantFactory<
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
             @NonNull MutableTaskContainer taskContainer,
             @NonNull VariantCreationConfig mainVariant,
             @NonNull TransformManager transformManager,
@@ -104,7 +102,6 @@ public abstract class BaseVariantFactory<
                         variantSources,
                         paths,
                         artifacts,
-                        variantScope,
                         taskContainer,
                         mainVariant,
                         transformManager,
@@ -133,7 +130,6 @@ public abstract class BaseVariantFactory<
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull MutableTaskContainer taskContainer,
             @NonNull VariantCreationConfig testedVariant,
@@ -151,7 +147,6 @@ public abstract class BaseVariantFactory<
                         variantSources,
                         paths,
                         artifacts,
-                        variantScope,
                         variantData,
                         taskContainer,
                         testedVariant,
@@ -176,7 +171,6 @@ public abstract class BaseVariantFactory<
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull MutableTaskContainer taskContainer,
             @NonNull VariantCreationConfig testedVariant,
@@ -194,7 +188,6 @@ public abstract class BaseVariantFactory<
                         variantSources,
                         paths,
                         artifacts,
-                        variantScope,
                         variantData,
                         taskContainer,
                         testedVariant,

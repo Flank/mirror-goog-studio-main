@@ -29,6 +29,8 @@ import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
+import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -44,10 +46,10 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.utils.immutableListBuilder
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
@@ -58,6 +60,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.File
 import java.io.Serializable
 
 abstract class VariantImpl<DslInfoT: VariantDslInfo>(
@@ -68,7 +71,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
     taskContainer: MutableTaskContainer,
     transformManager: TransformManager,
@@ -83,7 +85,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
     taskContainer,
     transformManager,
@@ -236,10 +237,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
                 && global.hasDynamicFeatures
                 && dexingType.needsMainDexList
 
-    // TODO: Move down to lower type and remove from VariantScope.
-    override val isCoreLibraryDesugaringEnabled: Boolean
-        get() = variantScope.isCoreLibraryDesugaringEnabled(this)
-
     override var unitTest: UnitTestImpl? = null
 
     override val pseudoLocalesEnabled: Property<Boolean> by lazy {
@@ -298,4 +295,16 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = dslInfo.isJniDebuggable
     override val supportedAbis: Set<String>
         get() = dslInfo.supportedAbis
+
+    override val postProcessingFeatures: PostprocessingFeatures?
+        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
+    override val consumerProguardFiles: List<File> by lazy {
+        immutableListBuilder<File> {
+            addAll(dslInfo.gatherProguardFiles(ProguardFileType.CONSUMER))
+            // We include proguardFiles if we're in a dynamic-feature module.
+            if (dslInfo.componentType.isDynamicFeature) {
+                addAll(dslInfo.gatherProguardFiles(ProguardFileType.EXPLICIT))
+            }
+        }
+    }
 }

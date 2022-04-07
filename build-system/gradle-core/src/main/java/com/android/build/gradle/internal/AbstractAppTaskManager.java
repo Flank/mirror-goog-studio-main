@@ -27,7 +27,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
@@ -248,9 +247,11 @@ public abstract class AbstractAppTaskManager<
     protected Set<ScopeType> getJavaResMergingScopes(
             @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
-        if (creationConfig.getVariantScope().consumesFeatureJars()
+        if (creationConfig instanceof ApplicationCreationConfig
+                && ((ApplicationCreationConfig) creationConfig).getConsumesFeatureJars()
                 && contentType == RESOURCES
-                && !(creationConfig instanceof ConsumableCreationConfig)) {
+                // if minification is enabled, we rely on R8 to merge the dynamic feature java res
+                && !((ApplicationCreationConfig) creationConfig).getMinifiedEnabled()) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;

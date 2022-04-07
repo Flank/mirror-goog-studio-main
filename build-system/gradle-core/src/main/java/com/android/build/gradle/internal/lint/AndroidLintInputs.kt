@@ -937,7 +937,7 @@ abstract class VariantInputs {
                 InternalArtifactType.DEFAULT_PROGUARD_FILES
             )
         )
-        consumerProguardFiles.setDisallowChanges(creationConfig.variantScope.consumerProguardFiles)
+        consumerProguardFiles.setDisallowChanges(creationConfig.consumerProguardFiles)
 
         val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
         variantWithTests.unitTest?.let { unitTestCreationConfig ->

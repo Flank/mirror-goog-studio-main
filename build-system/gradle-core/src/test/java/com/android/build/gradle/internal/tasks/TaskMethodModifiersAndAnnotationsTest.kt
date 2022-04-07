@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
@@ -180,11 +179,6 @@ class TaskMethodModifiersAndAnnotationsTest {
     @Test
     fun checkWorkerFacadeIsNotAField() {
         Truth.assertThat(findTaskFieldsOfType(WorkerExecutorFacade::class.java)).isEmpty()
-    }
-
-    @Test
-    fun checkVariantScopeIsNotAField() {
-        Truth.assertThat(findTaskFieldsOfType(VariantScope::class.java)).isEmpty()
     }
 
     @Test

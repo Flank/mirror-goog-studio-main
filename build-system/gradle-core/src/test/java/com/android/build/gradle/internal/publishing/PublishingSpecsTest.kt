@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.publishing
 
-import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantSpec
+import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantPublishingSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.core.ComponentTypeImpl
 import com.google.common.truth.Truth.assertThat
@@ -34,7 +34,7 @@ class PublishingSpecsTest {
 
     @Test
     fun `check output spec of CLASSES_DIR artifact type`() {
-        val outputSpec = getVariantSpec(ComponentTypeImpl.LIBRARY).getSpec(
+        val outputSpec = getVariantPublishingSpec(ComponentTypeImpl.LIBRARY).getSpec(
             AndroidArtifacts.ArtifactType.CLASSES_DIR,
             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
         )
@@ -64,8 +64,8 @@ class PublishingSpecsTest {
             AndroidArtifacts.ArtifactType.JAVA_DOC_JAR,
         )
 
-        val libraryOutputs = getVariantSpec(ComponentTypeImpl.LIBRARY).outputs
-        val testFixturesOutputs = getVariantSpec(ComponentTypeImpl.TEST_FIXTURES).outputs
+        val libraryOutputs = getVariantPublishingSpec(ComponentTypeImpl.LIBRARY).outputs
+        val testFixturesOutputs = getVariantPublishingSpec(ComponentTypeImpl.TEST_FIXTURES).outputs
         assertThat(libraryOutputs.filterNot {
             testFixturesExcludedArtifacts.contains(it.artifactType)
         }).containsExactlyElementsIn(testFixturesOutputs)

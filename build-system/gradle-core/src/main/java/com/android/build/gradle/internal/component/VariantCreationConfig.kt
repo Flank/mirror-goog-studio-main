@@ -17,12 +17,13 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.component.impl.UnitTestImpl
-import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.builder.core.ComponentType
 import org.gradle.api.provider.MapProperty
+import java.io.File
 
 interface VariantCreationConfig: ConsumableCreationConfig {
+    val consumerProguardFiles: List<File>
 
     val maxSdkVersion: Int?
 

@@ -98,7 +98,7 @@ private fun BundleLibraryClassesInputs.configure(
         )
     }
     this.packageRClass.setDisallowChanges(packageRClass)
-    jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
+    jarCreatorType.setDisallowChanges(creationConfig.global.jarCreatorType)
 
     dataBindingExcludeDelegate.configureFrom(creationConfig)
 }

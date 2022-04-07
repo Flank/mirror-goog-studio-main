@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -68,7 +67,6 @@ open class TestFixturesImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     taskContainer: MutableTaskContainer,
     override val mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
@@ -83,7 +81,6 @@ open class TestFixturesImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     taskContainer = taskContainer,
     transformManager = transformManager,
     internalServices = variantServices,

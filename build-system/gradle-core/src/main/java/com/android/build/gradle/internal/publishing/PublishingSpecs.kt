@@ -312,7 +312,7 @@ class PublishingSpecs {
         }
 
         @JvmStatic
-        fun getVariantSpec(componentType: ComponentType): VariantSpec {
+        fun getVariantPublishingSpec(componentType: ComponentType): VariantSpec {
             return variantMap[componentType]!!
         }
 

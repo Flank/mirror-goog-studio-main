@@ -20,8 +20,8 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
+import static com.android.build.gradle.internal.scope.Java8LangSupport.D8;
+import static com.android.build.gradle.internal.scope.Java8LangSupport.R8;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -32,7 +32,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.desugar.resources.TestClass;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.Java8LangSupport;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.TestInputsGenerator;
@@ -66,7 +66,7 @@ public class DesugarAppTest {
         NO_DESUGARING,
     }
 
-    @NonNull private final VariantScope.Java8LangSupport java8LangSupport;
+    @NonNull private final Java8LangSupport java8LangSupport;
     @NonNull private final ArtifactTransform artifactTransforms;
 
     @Rule
@@ -87,14 +87,15 @@ public class DesugarAppTest {
     }
 
     public DesugarAppTest(
-            @NonNull VariantScope.Java8LangSupport java8LangSupport, @NonNull ArtifactTransform artifactTransforms) {
+            @NonNull Java8LangSupport java8LangSupport,
+            @NonNull ArtifactTransform artifactTransforms) {
         this.java8LangSupport = java8LangSupport;
         this.artifactTransforms = artifactTransforms;
     }
 
     @Before
     public void setUp() {
-        if (java8LangSupport == VariantScope.Java8LangSupport.R8) {
+        if (java8LangSupport == Java8LangSupport.R8) {
             configureR8Desugaring(project);
         }
     }
@@ -134,7 +135,7 @@ public class DesugarAppTest {
     @Test
     public void testNonDesugaredLibraryDependency() throws IOException, InterruptedException {
         // see b/72994228
-        Assume.assumeTrue(java8LangSupport != VariantScope.Java8LangSupport.R8);
+        Assume.assumeTrue(java8LangSupport != Java8LangSupport.R8);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.compileOptions.sourceCompatibility 1.7\n"

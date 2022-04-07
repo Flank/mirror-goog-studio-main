@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.coverage
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -80,7 +81,7 @@ abstract class JacocoPropertiesTask : NonIncrementalTask() {
 
         init {
             // Do immediately as transform API is sensitive to the execution order.
-            if (creationConfig.variantScope.needsJavaResStreams) {
+            if (creationConfig.needsJavaResStreams) {
                 val taskOutput =
                     creationConfig.artifacts.get(InternalArtifactType.JACOCO_CONFIG_RESOURCES_JAR)
                 @Suppress("DEPRECATION") // Legacy support

@@ -43,9 +43,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -86,7 +84,6 @@ class LibraryVariantFactory(
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
         variantData: BaseVariantData,
         taskContainer: MutableTaskContainer,
         transformManager: TransformManager,
@@ -104,7 +101,6 @@ class LibraryVariantFactory(
                         variantSources,
                         paths,
                         artifacts,
-                        variantScope,
                         variantData,
                         taskContainer,
                         transformManager,

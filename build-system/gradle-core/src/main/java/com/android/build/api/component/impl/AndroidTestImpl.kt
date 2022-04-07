@@ -39,6 +39,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
+import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -51,8 +52,8 @@ import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -79,7 +80,6 @@ open class AndroidTestImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
     taskContainer: MutableTaskContainer,
     mainVariant: VariantCreationConfig,
@@ -95,7 +95,6 @@ open class AndroidTestImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
     taskContainer,
     mainVariant,
@@ -212,11 +211,13 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantServices.listPropertyOf(
-            RegularFile::class.java) { list ->
-            dslInfo.gatherProguardFiles(ProguardFileType.TEST) {
-                list.add(it)
-            }
+        variantServices.listPropertyOf(RegularFile::class.java) {
+            val projectDir = services.projectInfo.projectDirectory
+            it.addAll(
+                dslInfo.gatherProguardFiles(ProguardFileType.TEST).map { file ->
+                    projectDir.file(file.absolutePath)
+                }
+            )
         }
     }
 
@@ -351,10 +352,10 @@ open class AndroidTestImpl @Inject constructor(
 
     override val advancedProfilingTransforms: List<String> = emptyList()
 
-    override fun getNeedsMergedJavaResStream(): Boolean =
+    override val needsMergedJavaResStream: Boolean =
         delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         dslInfo.signingConfig
@@ -377,6 +378,9 @@ open class AndroidTestImpl @Inject constructor(
     // Only instrument library androidTests. In app modules, the main classes are instrumented.
     override val useJacocoTransformInstrumentation: Boolean
         get() = isTestCoverageEnabled && mainVariant.componentType.isAar
+
+    override val postProcessingFeatures: PostprocessingFeatures?
+        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

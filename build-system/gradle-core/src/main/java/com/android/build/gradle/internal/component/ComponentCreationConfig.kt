@@ -46,7 +46,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -121,7 +120,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // INTERNAL DELEGATES
     // ---------------------------------------------------------------------------------------------
     val buildFeatures: BuildFeatureValues
-    val variantScope: VariantScope
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
     val sources: SourcesImpl
@@ -161,6 +159,8 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val compileClasspath: FileCollection
 
+    val providedOnlyClasspath: FileCollection
+
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
 
     fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
@@ -182,6 +182,8 @@ interface ComponentCreationConfig : ComponentIdentity {
      * Returns the artifact name modified depending on the component type.
      */
     fun getArtifactName(name: String): String
+
+    val needsJavaResStreams: Boolean
 
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS

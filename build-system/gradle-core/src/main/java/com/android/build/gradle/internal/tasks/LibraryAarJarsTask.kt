@@ -319,7 +319,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             )
 
             task.namespace.setDisallowChanges(creationConfig.namespace)
-            task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
+            task.jarCreatorType.setDisallowChanges(creationConfig.global.jarCreatorType)
             task.debugBuild.setDisallowChanges(creationConfig.debuggable)
 
             /*

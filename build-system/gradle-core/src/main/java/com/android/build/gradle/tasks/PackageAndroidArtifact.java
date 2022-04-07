@@ -1318,8 +1318,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
 
-            packageAndroidArtifact.apkCreatorType =
-                    creationConfig.getVariantScope().getApkCreatorType();
+            packageAndroidArtifact.apkCreatorType = creationConfig.getGlobal().getApkCreatorType();
 
             packageAndroidArtifact.getCreatedBy().set(creationConfig.getGlobal().getCreatedBy());
 
@@ -1397,7 +1396,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public static FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
-            if (creationConfig.getVariantScope().consumesFeatureJars()) {
+            if (creationConfig instanceof ApplicationCreationConfig
+                    && ((ApplicationCreationConfig) creationConfig).getConsumesFeatureJars()) {
                 return creationConfig
                         .getServices()
                         .fileCollection(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))

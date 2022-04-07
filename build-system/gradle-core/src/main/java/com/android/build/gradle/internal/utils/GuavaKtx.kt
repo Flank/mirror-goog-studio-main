@@ -63,3 +63,11 @@ inline fun <K, V> immutableMapBuilder(block: ImmutableMap.Builder<K,V>.() -> Uni
 
     return builder.build()
 }
+
+inline fun <T> immutableListBuilder(block: ImmutableList.Builder<T>.() -> Unit): ImmutableList<T> {
+    val builder: ImmutableList.Builder<T> = ImmutableList.builder()
+
+    block(builder)
+
+    return builder.build()
+}

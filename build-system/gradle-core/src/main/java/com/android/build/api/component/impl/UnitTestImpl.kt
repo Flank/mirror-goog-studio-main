@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -58,7 +57,6 @@ open class UnitTestImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
     taskContainer: MutableTaskContainer,
     testedVariant: VariantCreationConfig,
@@ -74,7 +72,6 @@ open class UnitTestImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
     taskContainer,
     testedVariant,

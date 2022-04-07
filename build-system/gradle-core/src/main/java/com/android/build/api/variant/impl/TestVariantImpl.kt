@@ -40,8 +40,8 @@ import com.android.build.gradle.internal.dsl.ModulePropertyKeys
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -65,7 +65,6 @@ open class TestVariantImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
     taskContainer: MutableTaskContainer,
     transformManager: TransformManager,
@@ -80,7 +79,6 @@ open class TestVariantImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
     taskContainer,
     transformManager,
@@ -154,10 +152,13 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        internalServices.listPropertyOf(RegularFile::class.java) { list ->
-            dslInfo.gatherProguardFiles(ProguardFileType.TEST) {
-                list.add(it)
-            }
+        internalServices.listPropertyOf(RegularFile::class.java) {
+            val projectDir = services.projectInfo.projectDirectory
+            it.addAll(
+                dslInfo.gatherProguardFiles(ProguardFileType.TEST).map { file ->
+                    projectDir.file(file.absolutePath)
+                }
+            )
         }
     }
 
@@ -184,6 +185,8 @@ open class TestVariantImpl @Inject constructor(
         get() = delegate.isDebuggable
     override val profileable: Boolean
         get() = delegate.isProfileable
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = delegate.isCoreLibraryDesugaringEnabled
 
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()
@@ -253,9 +256,9 @@ open class TestVariantImpl @Inject constructor(
     override val minSdkVersionForDexing: AndroidVersion
         get() = delegate.minSdkVersionForDexing
 
-    override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
+    override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
 

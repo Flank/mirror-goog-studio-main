@@ -20,7 +20,6 @@ import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.transform.Transform
-import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
@@ -33,11 +32,9 @@ import com.android.builder.core.ComponentType
 import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import java.io.Serializable
+import java.io.File
 
 /**
  * Contains the final dsl info computed from the DSL object model (extension, default config,
@@ -146,7 +143,7 @@ interface ComponentDslInfo: DimensionCombination {
      */
     val isAndroidTestCoverageEnabled: Boolean
 
-    fun gatherProguardFiles(type: ProguardFileType, into: (RegularFile) -> Unit)
+    fun gatherProguardFiles(type: ProguardFileType): Collection<File>
 
     // TODO: Move to VariantDslInfo
     val experimentalProperties: Map<String, Any>

@@ -19,10 +19,12 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.PublishingSpecs
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.FileCollection
@@ -50,7 +52,7 @@ class ClassesClasspathUtils(
     init {
         @Suppress("DEPRECATION") // Legacy support
         val classesFilter =
-            StreamFilter { types, _ -> com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES in types }
+            StreamFilter { types, _ -> QualifiedContent.DefaultContentType.CLASSES in types }
 
         val transformManager = creationConfig.transformManager
 
@@ -98,14 +100,14 @@ class ClassesClasspathUtils(
         else {
             @Suppress("DEPRECATION") // Legacy support
             transformManager.getPipelineOutputAsFileCollection(
-                StreamFilter { _, scopes -> scopes == setOf(QualifiedContent.Scope.PROJECT) },
+                { _, scopes -> scopes == setOf(QualifiedContent.Scope.PROJECT) },
                 classesFilter
             )
         }
 
         @Suppress("DEPRECATION") // Legacy support
-        val desugaringClasspathScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> =
-            mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
+        val desugaringClasspathScopes: MutableSet<QualifiedContent.ScopeType> =
+            mutableSetOf(QualifiedContent.Scope.PROVIDED_ONLY)
         if (classesAlteredTroughVariantAPI) {
             subProjectsClasses = creationConfig.services.fileCollection()
             externalLibraryClasses = creationConfig.services.fileCollection()
@@ -119,11 +121,11 @@ class ClassesClasspathUtils(
 
             @Suppress("DEPRECATION") // Legacy support
             run {
-                desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
-                desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
+                desugaringClasspathScopes.add(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                desugaringClasspathScopes.add(QualifiedContent.Scope.TESTED_CODE)
+                desugaringClasspathScopes.add(QualifiedContent.Scope.SUB_PROJECTS)
             }
-        } else if (creationConfig.variantScope.consumesFeatureJars()) {
+        } else if ((creationConfig as? ApplicationCreationConfig)?.consumesFeatureJars == true) {
             subProjectsClasses = creationConfig.services.fileCollection()
             externalLibraryClasses = creationConfig.services.fileCollection()
             dexExternalLibsInArtifactTransform = false
@@ -139,9 +141,9 @@ class ClassesClasspathUtils(
             )
             @Suppress("DEPRECATION") // Legacy support
             run {
-                desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
-                desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
+                desugaringClasspathScopes.add(QualifiedContent.Scope.TESTED_CODE)
+                desugaringClasspathScopes.add(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                desugaringClasspathScopes.add(QualifiedContent.Scope.SUB_PROJECTS)
             }
             desugaringClasspathScopes.add(InternalScope.FEATURES)
         }
@@ -166,13 +168,13 @@ class ClassesClasspathUtils(
             @Suppress("DEPRECATION") // Legacy support
             subProjectsClasses =
                 transformManager.getPipelineOutputAsFileCollection(
-                    { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS) },
+                    { _, scopes -> scopes == setOf(QualifiedContent.Scope.SUB_PROJECTS) },
                     classesFilter
                 )
             @Suppress("DEPRECATION") // Legacy support
             externalLibraryClasses =
                 transformManager.getPipelineOutputAsFileCollection(
-                    { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES) },
+                    { _, scopes -> scopes == setOf(QualifiedContent.Scope.EXTERNAL_LIBRARIES) },
                     classesFilter
                 )
             // Get all classes that have more than 1 scope. E.g. project & subproject, or
@@ -199,7 +201,7 @@ class ClassesClasspathUtils(
             // external libraries, we explicitly remove it.
             val testedProject = (creationConfig as? TestComponentCreationConfig)?.onTestedVariant {
                 val artifactType =
-                    it.variantScope.publishingSpec.getSpec(
+                    PublishingSpecs.getVariantPublishingSpec(it.componentType).getSpec(
                         AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
                     )!!.outputType
@@ -224,7 +226,7 @@ class ClassesClasspathUtils(
         desugaringClasspathClasses =
             creationConfig.transformManager.getPipelineOutputAsFileCollection(
                 { _, scopes ->
-                    scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
+                    scopes.contains(QualifiedContent.Scope.TESTED_CODE)
                             || scopes.subtract(desugaringClasspathScopes).isEmpty()
                 },
                 classesFilter

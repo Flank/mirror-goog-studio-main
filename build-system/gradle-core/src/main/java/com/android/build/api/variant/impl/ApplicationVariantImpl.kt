@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.getAndroidResources
+import com.android.build.api.component.impl.isTestApk
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -43,8 +44,8 @@ import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -52,8 +53,11 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
+import com.android.sdklib.AndroidTargetHash
+import com.google.common.base.Strings
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import javax.inject.Inject
@@ -66,14 +70,13 @@ open class ApplicationVariantImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
     taskContainer: MutableTaskContainer,
     dependenciesInfoBuilder: DependenciesInfoBuilder,
     transformManager: TransformManager,
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
-    globalTaskCreationConfig: GlobalTaskCreationConfig,
+    globalTaskCreationConfig: GlobalTaskCreationConfig
 ) : VariantImpl<ApplicationVariantDslInfo>(
     variantBuilder,
     buildFeatureValues,
@@ -82,7 +85,6 @@ open class ApplicationVariantImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
     taskContainer,
     transformManager,
@@ -162,7 +164,7 @@ open class ApplicationVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val testOnlyApk: Boolean
-        get() = variantScope.isTestOnly(this)
+        get() = isTestApk()
 
     override val needAssetPackTasks: Boolean
         get() = global.assetPacks.isNotEmpty()
@@ -173,6 +175,8 @@ open class ApplicationVariantImpl @Inject constructor(
         get() = delegate.isDebuggable
     override val profileable: Boolean
         get() = delegate.isProfileable
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = delegate.isCoreLibraryDesugaringEnabled
 
     override val shouldPackageProfilerDependencies: Boolean
         get() = advancedProfilingTransforms.isNotEmpty()
@@ -209,6 +213,9 @@ open class ApplicationVariantImpl @Inject constructor(
     // Private stuff
     // ---------------------------------------------------------------------------------------------
 
+    override val consumesFeatureJars: Boolean =
+        dslInfo.getPostProcessingOptions().codeShrinkerEnabled() && global.hasDynamicFeatures
+
     override fun createVersionNameProperty(): Property<String?> =
         internalServices.newNullablePropertyBackingDeprecatedApi(
             String::class.java,
@@ -242,9 +249,9 @@ open class ApplicationVariantImpl @Inject constructor(
     override val minSdkVersionForDexing: AndroidVersion
         get() = delegate.minSdkVersionForDexing
 
-    override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
+    override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary

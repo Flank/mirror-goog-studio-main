@@ -209,7 +209,7 @@ abstract class MergeJavaResourceTask
             get() = MergeJavaResourceTask::class.java
 
         init {
-            if (creationConfig.variantScope.needsJavaResStreams) {
+            if (creationConfig.needsJavaResStreams) {
                 // Because ordering matters for Transform pipeline, we need to fetch the java res
                 // as soon as this creation action is instantiated, if needed.
                 projectJavaResFromStreams =

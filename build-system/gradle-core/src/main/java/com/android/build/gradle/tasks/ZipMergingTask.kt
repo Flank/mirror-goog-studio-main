@@ -120,7 +120,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
             )
-            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
+            task.jarCreatorType = creationConfig.global.jarCreatorType
         }
     }
 }

@@ -791,7 +791,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         // used for test only modules
         Collection<TestedTargetVariant> testTargetVariants = getTestTargetVariants(component);
 
-        checkProguardFiles(component);
+        if (component instanceof VariantCreationConfig) {
+            checkProguardFiles((VariantCreationConfig) component);
+        }
 
         return new VariantImpl(
                 variantName,
@@ -809,14 +811,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                 ImmutableList.of());
     }
 
-    private void checkProguardFiles(@NonNull ComponentCreationConfig component) {
+    private void checkProguardFiles(@NonNull VariantCreationConfig component) {
         // We check for default files unless it's a base module, which can include default files.
         boolean isBaseModule = component.getComponentType().isBaseModule();
         boolean isDynamicFeature = component.getComponentType().isDynamicFeature();
 
         if (!isBaseModule) {
-            List<File> consumerProguardFiles =
-                    component.getVariantScope().getConsumerProguardFilesForFeatures();
+            List<File> consumerProguardFiles = component.getConsumerProguardFiles();
 
             ExportConsumerProguardFilesTask.checkProguardFiles(
                     project.getLayout().getBuildDirectory(),
@@ -870,7 +871,6 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         SourceProviders sourceProviders = determineSourceProviders(component);
 
-        // final VariantScope scope = variantData.getScope();
         Pair<Dependencies, DependencyGraphs> result =
                 getDependencies(component, buildMapping, modelLevel, modelWithFullDependency);
 

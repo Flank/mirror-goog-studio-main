@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.dsl.Bundle
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
@@ -26,7 +25,6 @@ import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.createDslServices
@@ -202,7 +200,6 @@ class ParseIntegrityConfigTaskTest {
         val componentProperties = Mockito.mock(VariantCreationConfig::class.java)
         val componentType = Mockito.mock(ComponentType::class.java)
         val globalConfig = Mockito.mock(GlobalTaskCreationConfig::class.java)
-        val variantScope = Mockito.mock(VariantScope::class.java)
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
 
@@ -211,7 +208,6 @@ class ParseIntegrityConfigTaskTest {
         Mockito.`when`(componentProperties.name).thenReturn("variant")
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(componentProperties.global).thenReturn(globalConfig)
-        Mockito.`when`(componentProperties.variantScope).thenReturn(variantScope)
         Mockito.`when`(globalConfig.bundleOptions).thenReturn(bundleOptions)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 

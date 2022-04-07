@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
@@ -78,7 +77,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
         variantData: BaseVariantData,
         taskContainer: MutableTaskContainer,
         transformManager: TransformManager,
@@ -95,7 +93,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
         taskContainer: MutableTaskContainer,
         mainVariant: VariantCreationConfig,
         transformManager: TransformManager,
@@ -112,7 +109,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
         variantData: TestVariantData,
         taskContainer: MutableTaskContainer,
         testedVariantProperties: VariantCreationConfig,
@@ -130,7 +126,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
         variantData: TestVariantData,
         taskContainer: MutableTaskContainer,
         testedVariantProperties: VariantCreationConfig,

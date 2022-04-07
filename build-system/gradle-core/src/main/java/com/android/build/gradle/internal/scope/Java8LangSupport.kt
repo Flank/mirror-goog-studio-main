@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.scope
 
-package com.android.build.gradle.internal.component
-
-import com.android.build.api.variant.impl.BundleConfigImpl
-import com.android.build.gradle.internal.dsl.NdkOptions
-
-interface ApplicationCreationConfig: ApkCreationConfig, VariantCreationConfig, PublishableCreationConfig {
-    val consumesFeatureJars: Boolean
-    val needAssetPackTasks: Boolean
-    val nativeDebugSymbolLevel: NdkOptions.DebugSymbolLevel
-    val isWearAppUnbundled: Boolean?
-    override val bundleConfig: BundleConfigImpl
+enum class Java8LangSupport {
+    INVALID, UNUSED, D8, RETROLAMBDA, R8
 }

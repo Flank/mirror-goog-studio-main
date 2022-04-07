@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantPublishingSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -86,7 +87,7 @@ class OldVariantApiLegacySupportImpl(
             // Because jar containing all classes of the main artifact is in the classpath when
             // compiling test, we need to add TestedComponentIdentifierImpl artifact with that file.
             // This is needed when compiling test variants that access internal members.
-            val internalArtifactType = testedVariant.variantScope.publishingSpec
+            val internalArtifactType = getVariantPublishingSpec(testedVariant.componentType)
                 .getSpec(classesType, configType.publishedTo)!!.outputType
 
             @Suppress("USELESS_CAST") // Explicit cast needed here.

@@ -222,7 +222,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 }
             }
             task.modulePath = task.project.path
-            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
+            task.jarCreatorType = creationConfig.global.jarCreatorType
         }
     }
 }
