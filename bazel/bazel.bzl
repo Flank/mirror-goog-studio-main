@@ -98,13 +98,16 @@ def _iml_module_jar_impl(
     full_ijar = ctx.actions.declare_file(name + ".merged-ijar-iml.jar") if use_ijar else None
 
     # Compiler args and JVM target.
-    # TODO(b/227814536): Support Java 11 too, and set the --release Javac flag.
     java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
     jvm_target = ctx.attr.jvm_target if ctx.attr.jvm_target else java_toolchain.target_version
     javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts
     kotlinc_opts = list(ctx.attr.kotlinc_opts)
     if jvm_target == "8":
+        javac_opts += ["--release", "8"]
         kotlinc_opts += ["-jvm-target", "1.8"]
+    elif jvm_target == "11":
+        # Ideally we use "--release 11" for javac too, but that is incompatible with "--add-exports".
+        kotlinc_opts += ["-jvm-target", "11"]
     else:
         fail("JVM target " + jvm_target + " is not currently supported in iml_module")
 
@@ -382,7 +385,7 @@ _iml_module_ = rule(
         "test_friends": attr.label_list(providers = [JavaInfo]),
         "data": attr.label_list(allow_files = True),
         "test_data": attr.label_list(allow_files = True),
-        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
+        "_java_toolchain": attr.label(default = Label("//prebuilts/studio/jdk:jdk11_toolchain_java11")),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
