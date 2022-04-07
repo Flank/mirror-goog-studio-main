@@ -127,6 +127,7 @@ function run_bazel_test() {
   elif [[ $BUILD_TYPE == "POSTSUBMIT" ]]; then
     conditional_flags+=(--nocache_test_results)
     conditional_flags+=(--flaky_test_attempts=2)
+    conditional_flags+=(--config=ants)
   fi
 
   # Generate a UUID for use as the bazel test invocation id
