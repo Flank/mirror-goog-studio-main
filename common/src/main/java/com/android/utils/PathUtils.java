@@ -18,6 +18,7 @@ package com.android.utils;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.io.CancellableFileIo;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -29,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -49,7 +51,8 @@ public final class PathUtils {
     /**
      * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
      * be deleted recursively. Symbolic links to files or directories will be removed, but the files
-     * or directories they link will not be altered. See https://issuetracker.google.com/71843178
+     * or directories they link will not be altered. See <a
+     * href="https://issuetracker.google.com/71843178">b/71843178</a>
      *
      * @param path the file or directory to delete. The file/directory may not exist; if the
      *     directory exists, it may be non-empty.
@@ -128,7 +131,7 @@ public final class PathUtils {
                 throw new RuntimeException(
                         String.format(
                                 "Unable to delete directory '%s' after %d attempts",
-                                path.toString(), failedAttempts),
+                                path, failedAttempts),
                         exception);
             }
         }
@@ -205,5 +208,16 @@ public final class PathUtils {
                                                 .log(Level.WARNING, "Unable to delete " + path, e);
                                     }
                                 }));
+    }
+
+    /**
+     * Similar to {@link Files#createDirectories(Path, FileAttribute[])}, but handles the case where
+     * {@code path} is a symlink to a directory.
+     */
+    public static Path createDirectories(@NonNull Path path) throws IOException {
+        if (CancellableFileIo.exists(path)) {
+            path = path.toRealPath();
+        }
+        return Files.createDirectories(path);
     }
 }
