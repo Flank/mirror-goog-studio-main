@@ -114,6 +114,8 @@ public class IrToBazel {
                 iml.addExclude(pkg.getRelativePath(file) + (file.isDirectory() ? "/*" : ""));
             }
 
+            iml.setJvmTarget(bazelModule.getJvmTarget());
+
             for (String javacOption : bazelModule.getJavacOpts()) {
                 iml.addJavacOption(javacOption);
             }

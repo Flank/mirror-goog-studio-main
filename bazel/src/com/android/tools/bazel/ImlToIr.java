@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.jps.model.JpsCompositeElement;
@@ -43,6 +44,9 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaDependencyExtension;
 import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
+import org.jetbrains.jps.model.java.JpsJavaProjectExtension;
+import org.jetbrains.jps.model.java.JpsJavaSdkType;
+import org.jetbrains.jps.model.java.LanguageLevel;
 import org.jetbrains.jps.model.java.compiler.JpsCompilerExcludes;
 import org.jetbrains.jps.model.java.compiler.JpsJavaCompilerConfiguration;
 import org.jetbrains.jps.model.java.compiler.JpsJavaCompilerOptions;
@@ -307,25 +311,61 @@ public class ImlToIr {
 
     private static IrModule createIrModule(JpsModule module) {
 
+        String moduleName = module.getName();
         File base = JpsModelSerializationDataService.getBaseDirectory(module);
         if (base == null) {
             throw new IllegalStateException(
-                    "Cannot determine base directory of module " + module.getName());
+                    "Cannot determine base directory of module " + moduleName);
         }
-        File moduleFile = new File(base, module.getName() + ".iml");
+        File moduleFile = new File(base, moduleName + ".iml");
         if (!moduleFile.exists()) {
             throw new IllegalStateException("Cannot find module iml file: " + moduleFile);
         }
-        IrModule irModule = new IrModule(module.getName(), moduleFile, base);
+        IrModule irModule = new IrModule(moduleName, moduleFile, base);
 
+        // Sync JVM target level.
+        // Simplification: we assume that the JVM target is the same for both Java and Kotlin.
+        // We do not currently consult the Kotlin module facet for Kotlin-specific settings.
+        JpsProject project = module.getProject();
         JpsJavaExtensionService javaJpsService = JpsJavaExtensionService.getInstance();
-        JpsJavaCompilerConfiguration javaConfig =
-                javaJpsService.getCompilerConfiguration(module.getProject());
+        JpsJavaCompilerConfiguration javaConfig = javaJpsService.getCompilerConfiguration(project);
+        int jvmTarget = JpsJavaSdkType.parseVersion(javaConfig.getByteCodeTargetLevel(moduleName));
+
+        LanguageLevel javaLangLevelEnum = javaJpsService.getLanguageLevel(module);
+        int javaLangLevel = Objects.requireNonNull(javaLangLevelEnum).toJavaVersion().feature;
+        if (jvmTarget == 0) {
+            // If the bytecode level is unset, then we use the language level instead.
+            // This matches the semantics of JPS in JavaBuilder.getModuleBytecodeTarget.
+            jvmTarget = javaLangLevel;
+        }
+
+        // Simplification: we only support the case where language level and bytecode level are
+        // equal. That way we can use the --release Javac flag in Bazel.
+        if (jvmTarget != javaLangLevel) {
+            throw new IllegalStateException(
+                    "Module " + moduleName + " has Java language level " + javaLangLevel +
+                            " but targets JVM version " + jvmTarget +
+                            " which is a mismatch not currently supported in iml_to_build");
+        }
+
+        // We only propagate the JVM target if it differs from the project settings.
+        // Project settings are assumed to already be in sync with Bazel via toolchain defaults.
+        int projectJvmTarget = JpsJavaSdkType.parseVersion(javaConfig.getByteCodeTargetLevel(null));
+        if (projectJvmTarget == 0) {
+            JpsJavaProjectExtension javaProjectExt = javaJpsService.getProjectExtension(project);
+            LanguageLevel projLangLevel = Objects.requireNonNull(javaProjectExt).getLanguageLevel();
+            projectJvmTarget = projLangLevel.toJavaVersion().feature;
+        }
+        if (jvmTarget != projectJvmTarget) {
+            irModule.setJvmTarget(String.valueOf(jvmTarget));
+        }
+
+        // Sync additional Javac options.
         JpsJavaCompilerOptions javacOptions =
                 javaConfig.getCompilerOptions(javaConfig.getJavaCompilerId());
         String javacAdditionalOptions =
                 javacOptions.ADDITIONAL_OPTIONS_OVERRIDE.getOrDefault(
-                        module.getName(), javacOptions.ADDITIONAL_OPTIONS_STRING);
+                        moduleName, javacOptions.ADDITIONAL_OPTIONS_STRING);
         if (javacAdditionalOptions != null) {
             for (String javacOption : ParametersListUtil.parse(javacAdditionalOptions)) {
                 irModule.addJavacOption(javacOption);

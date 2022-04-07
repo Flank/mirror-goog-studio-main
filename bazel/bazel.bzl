@@ -97,6 +97,17 @@ def _iml_module_jar_impl(
     kotlin_ijar = ctx.actions.declare_file(name + ".kotlin-ijar.jar") if kotlin_srcs and use_ijar else None
     full_ijar = ctx.actions.declare_file(name + ".merged-ijar-iml.jar") if use_ijar else None
 
+    # Compiler args and JVM target.
+    # TODO(b/227814536): Support Java 11 too, and set the --release Javac flag.
+    java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
+    jvm_target = ctx.attr.jvm_target if ctx.attr.jvm_target else java_toolchain.target_version
+    javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts
+    kotlinc_opts = list(ctx.attr.kotlinc_opts)
+    if jvm_target == "8":
+        kotlinc_opts += ["-jvm-target", "1.8"]
+    else:
+        fail("JVM target " + jvm_target + " is not currently supported in iml_module")
+
     # Kotlin
     kotlin_providers = []
     if kotlin_srcs:
@@ -109,7 +120,7 @@ def _iml_module_jar_impl(
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
             jre = ctx.files._bootclasspath,
-            kotlinc_opts = ctx.attr.kotlinc_opts,
+            kotlinc_opts = kotlinc_opts,
             transitive_classpath = False,  # Matches JPS.
         )]
         jars += [kotlin_jar]
@@ -128,14 +139,13 @@ def _iml_module_jar_impl(
     if java_srcs:
         compiled_java = ctx.actions.declare_file(name + ".pjava.jar") if form_srcs else java_jar
         formc_input_jars = [compiled_java] + ([kotlin_jar] if kotlin_jar else [])
-        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
 
         java_provider = java_common.compile(
             ctx,
             source_files = java_srcs,
             output = compiled_java,
             deps = java_deps + kotlin_providers,
-            javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
+            javac_opts = javac_opts,
             java_toolchain = java_toolchain,
             sourcepath = sourcepath,
             # TODO(b/216385876) After updating to Bazel 5.0, use enable_compile_jar_action = use_ijar,
@@ -353,6 +363,7 @@ _iml_module_ = rule(
         "java_test_srcs": attr.label_list(allow_files = True),
         "kotlin_test_srcs": attr.label_list(allow_files = True),
         "form_test_srcs": attr.label_list(allow_files = True),
+        "jvm_target": attr.string(),
         "javacopts": attr.string_list(),
         "kotlinc_opts": attr.string_list(),
         "resources": attr.label_list(allow_files = True),
@@ -502,6 +513,7 @@ def iml_module(
         visibility = [],
         exports = [],
         plugins = [],
+        jvm_target = None,
         javacopts = [],
         javacopts_from_jps = [],
         test_data = [],
@@ -548,6 +560,7 @@ def iml_module(
         test_resources = split_test_srcs.resources,
         test_roots = split_test_srcs.roots,
         package_prefixes = package_prefixes,
+        jvm_target = jvm_target,
         javacopts = javacopts + javacopts_from_jps,
         iml_files = iml_files,
         exports = exports,

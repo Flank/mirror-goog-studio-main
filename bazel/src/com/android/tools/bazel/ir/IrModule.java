@@ -39,6 +39,7 @@ public class IrModule extends IrNode {
     private final List<File> excludes = new ArrayList<>();
     private final String name;
     private final Path baseDir;
+    private String jvmTarget = "";
     private final List<String> javacOpts = new ArrayList<>();
 
     public IrModule(String name, File iml, File base) {
@@ -80,6 +81,10 @@ public class IrModule extends IrNode {
 
     public Path getBaseDir() {
         return baseDir;
+    }
+
+    public String getJvmTarget() {
+        return jvmTarget;
     }
 
     public List<String> getJavacOpts() {
@@ -144,6 +149,10 @@ public class IrModule extends IrNode {
 
     public void addResource(File file) {
         resources.add(file);
+    }
+
+    public void setJvmTarget(String jvmTarget) {
+        this.jvmTarget = jvmTarget;
     }
 
     public void addJavacOption(String javacOption) {
