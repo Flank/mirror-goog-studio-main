@@ -109,6 +109,7 @@ def _iml_module_jar_impl(
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
             jre = ctx.files._bootclasspath,
+            kotlinc_opts = ctx.attr.kotlinc_opts,
             transitive_classpath = False,  # Matches JPS.
         )]
         jars += [kotlin_jar]
@@ -353,6 +354,7 @@ _iml_module_ = rule(
         "kotlin_test_srcs": attr.label_list(allow_files = True),
         "form_test_srcs": attr.label_list(allow_files = True),
         "javacopts": attr.string_list(),
+        "kotlinc_opts": attr.string_list(),
         "resources": attr.label_list(allow_files = True),
         "manifests": attr.label_list(allow_files = True),
         "res_zips": attr.label_list(allow_files = True),
