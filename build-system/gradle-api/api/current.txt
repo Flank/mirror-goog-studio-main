@@ -229,10 +229,13 @@ package com.android.build.api.dsl {
   public interface AarMetadata {
     method @org.gradle.api.Incubating public String? getMinAgpVersion();
     method public Integer? getMinCompileSdk();
+    method @org.gradle.api.Incubating public Integer? getMinCompileSdkExtension();
     method @org.gradle.api.Incubating public void setMinAgpVersion(String? minAgpVersion);
     method public void setMinCompileSdk(Integer? minCompileSdk);
+    method @org.gradle.api.Incubating public void setMinCompileSdkExtension(Integer? minCompileSdkExtension);
     property @org.gradle.api.Incubating public abstract String? minAgpVersion;
     property public abstract Integer? minCompileSdk;
+    property @org.gradle.api.Incubating public abstract Integer? minCompileSdkExtension;
   }
 
   public interface AbiSplit extends com.android.build.api.dsl.Split {
@@ -1951,8 +1954,10 @@ package com.android.build.api.variant {
   public interface AarMetadata {
     method @org.gradle.api.Incubating public org.gradle.api.provider.Property<java.lang.String> getMinAgpVersion();
     method public org.gradle.api.provider.Property<java.lang.Integer> getMinCompileSdk();
+    method @org.gradle.api.Incubating public org.gradle.api.provider.Property<java.lang.Integer> getMinCompileSdkExtension();
     property @org.gradle.api.Incubating public abstract org.gradle.api.provider.Property<java.lang.String> minAgpVersion;
     property public abstract org.gradle.api.provider.Property<java.lang.Integer> minCompileSdk;
+    property @org.gradle.api.Incubating public abstract org.gradle.api.provider.Property<java.lang.Integer> minCompileSdkExtension;
   }
 
   public interface AndroidComponentsExtension<DslExtensionT extends com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>, VariantBuilderT extends com.android.build.api.variant.VariantBuilder, VariantT extends com.android.build.api.variant.Variant> extends com.android.build.api.variant.DslLifecycle<DslExtensionT> {

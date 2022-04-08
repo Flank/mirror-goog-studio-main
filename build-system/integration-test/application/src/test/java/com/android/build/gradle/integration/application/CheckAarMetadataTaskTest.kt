@@ -19,24 +19,30 @@ import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_EXTENSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.compileSdkHash
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.builder.core.ToolsRevisionUtils
+import com.android.prefs.AndroidLocationsSingleton
+import com.android.repository.testframework.FakeProgressIndicator
+import com.android.sdklib.repository.AndroidSdkHandler
+import com.android.testutils.truth.PathSubject
 import com.android.utils.FileUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
-import java.lang.StringBuilder
 import java.nio.file.Files
 import java.util.zip.Deflater
 
@@ -396,7 +402,8 @@ class CheckAarMetadataTaskTest {
             aarFormatVersion = "invalid",
             aarMetadataVersion = "invalid",
             minCompileSdk = "invalid",
-            minAgpVersion = "invalid"
+            minAgpVersion = "invalid",
+            minCompileSdkExtension = "invalid"
         )
         // Test that build fails with desired error message.
         try {
@@ -408,9 +415,12 @@ class CheckAarMetadataTaskTest {
             assertThat(Throwables.getRootCause(e).message).contains(MIN_COMPILE_SDK_PROPERTY)
             assertThat(Throwables.getRootCause(e).message)
                 .contains(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
+            assertThat(Throwables.getRootCause(e).message)
+                .contains(MIN_COMPILE_SDK_EXTENSION_PROPERTY)
         }
     }
 
+    @Ignore("b/231439912")
     @Test
     fun testPassingWithForceCompileSdkPreview() {
         addAarWithPossiblyInvalidAarMetadataToAppProject(
@@ -434,14 +444,6 @@ class CheckAarMetadataTaskTest {
             forceCompileSdkPreview = "Tiramisu"
         )
 
-        // Set app's compileSdkVersion to 30 for consistent error message.
-        project.getSubproject("app").buildFile
-        TestFileUtils.searchRegexAndReplace(
-            project.getSubproject("app").buildFile,
-            "compileSdkVersion \\d+",
-            "compileSdkVersion 30"
-        )
-
         // Test that build fails with desired error message.
         try {
             project.executor().run(":app:checkDebugAarMetadata")
@@ -456,11 +458,73 @@ class CheckAarMetadataTaskTest {
                               depend on it to compile against codename "Tiramisu" of the
                               Android APIs.
 
-                              :app is currently compiled against android-30.
+                              :app is currently compiled against $compileSdkHash.
 
                               Recommended action: Use a different version of dependency 'library.aar',
                               or set compileSdkPreview to "Tiramisu" in your build.gradle
                               file if you intend to experiment with that preview SDK.
+                    """.trimIndent()
+                )
+        }
+    }
+
+    @Test
+    fun testPassingWithMinCompileSdkExtension() {
+        // Test with minCompileSdkExtension = "1" to test that CheckAarMetadataTask can actually
+        //  parse the platform extension level correctly. This means that we have to inject a
+        //  non-zero extension level because all current SDKs omit the extension level. android-33
+        //  should have a non-zero extension level, so we can stop injecting the extension level
+        //  once android-33 is released.
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            minCompileSdkExtension = "1"
+        )
+        val sdkLocation = project.androidSdkDir
+        val progress = FakeProgressIndicator()
+        val sdkHandler =
+            AndroidSdkHandler.getInstance(AndroidLocationsSingleton, sdkLocation!!.toPath())
+        val targetManager = sdkHandler.getAndroidTargetManager(progress)
+        val target = targetManager.getTargetFromHashString(compileSdkHash, progress)
+        val targetLocation = File(target.location)
+        val packageXml = targetLocation.resolve("package.xml")
+        PathSubject.assertThat(packageXml).exists()
+        if (!packageXml.readText().contains("<extension-level>")) {
+            TestFileUtils.searchAndReplace(
+                packageXml,
+                "</codename>",
+                "</codename><extension-level>1</extension-level>"
+            )
+        }
+
+        val result = project.executor().run(":app:checkDebugAarMetadata")
+        ScannerSubject.assertThat(result.stdout).contains("BUILD SUCCESSFUL")
+    }
+
+    @Test
+    fun testFailsWithMinCompileSdkExtension() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            minCompileSdkExtension = "1000"
+        )
+
+        // Test that build fails with desired error message.
+        try {
+            project.executor().run(":app:checkDebugAarMetadata")
+            Assert.fail("Expected build failure")
+        } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message)
+                .startsWith(
+                    """
+                        An issue was found when checking AAR metadata:
+
+                          1.  Dependency 'library.aar' requires libraries and applications that
+                              depend on it to compile against an SDK with an extension level of
+                              1000 or higher.
+
+                              Recommended action: Update this project to use a compileSdkExtension
+                              value of at least 1000.
                     """.trimIndent()
                 )
         }
@@ -471,7 +535,8 @@ class CheckAarMetadataTaskTest {
         aarMetadataVersion: String?,
         minCompileSdk: String? = null,
         minAgpVersion: String? = null,
-        forceCompileSdkPreview: String? = null
+        forceCompileSdkPreview: String? = null,
+        minCompileSdkExtension: String? = null
     ) {
         project.executor().run(":lib:assembleDebug")
         // Copy lib's .aar build output to the app's libs directory
@@ -489,6 +554,7 @@ class CheckAarMetadataTaskTest {
             aarFormatVersion?.let { sb.appendln("$AAR_FORMAT_VERSION_PROPERTY=$it") }
             aarMetadataVersion?.let { sb.appendln("$AAR_METADATA_VERSION_PROPERTY=$it") }
             minCompileSdk?.let { sb.appendln("$MIN_COMPILE_SDK_PROPERTY=$it") }
+            minCompileSdkExtension?.let { sb.appendln("$MIN_COMPILE_SDK_EXTENSION_PROPERTY=$it") }
             minAgpVersion?.let { sb.appendln("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$it") }
             forceCompileSdkPreview?.let { sb.appendln("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
             aar.add(

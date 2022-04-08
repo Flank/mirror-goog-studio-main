@@ -23,16 +23,21 @@ class MergedAarMetadata : MergedOptions<AarMetadata> {
     var minCompileSdk: Int? = null
         private set
 
+    var minCompileSdkExtension: Int? = null
+        private set
+
     var minAgpVersion: String? = null
         private set
 
     override fun reset() {
         minCompileSdk = null
+        minCompileSdkExtension = null
         minAgpVersion = null
     }
 
     override fun append(option: AarMetadata) {
         option.minCompileSdk?.let { minCompileSdk = it }
+        option.minCompileSdkExtension?.let { minCompileSdkExtension = it }
         option.minAgpVersion?.let { minAgpVersion = it }
     }
 }

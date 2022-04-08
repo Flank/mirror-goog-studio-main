@@ -20,6 +20,7 @@ import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_EXTENSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.apksig.internal.util.ByteBufferUtils.toByteArray
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -46,6 +47,7 @@ class AarMetadataTaskTest {
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=1
+                |$MIN_COMPILE_SDK_EXTENSION_PROPERTY=0
                 |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=1.0.0
                 |"""
                 .trimMargin()
@@ -69,6 +71,7 @@ class AarMetadataTaskTest {
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=27
+                |$MIN_COMPILE_SDK_EXTENSION_PROPERTY=2
                 |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.0.0
                 |"""
                  .trimMargin()
@@ -80,6 +83,7 @@ class AarMetadataTaskTest {
                         aarMetadata {
                             minCompileSdk 27
                             minAgpVersion '3.0.0'
+                            minCompileSdkExtension 2
                         }
                     }
                 }
@@ -104,6 +108,7 @@ class AarMetadataTaskTest {
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=28
+                |$MIN_COMPILE_SDK_EXTENSION_PROPERTY=3
                 |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.1.0
                 |"""
                 .trimMargin()
@@ -117,6 +122,7 @@ class AarMetadataTaskTest {
                         aarMetadata {
                             minCompileSdk 27
                             minAgpVersion '3.0.0'
+                            minCompileSdkExtension 2
                         }
                     }
                     flavorDimensions 'foo'
@@ -125,6 +131,7 @@ class AarMetadataTaskTest {
                             aarMetadata {
                                 minCompileSdk 28
                                 minAgpVersion '3.1.0'
+                                minCompileSdkExtension 3
                             }
                         }
                     }
@@ -150,6 +157,7 @@ class AarMetadataTaskTest {
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=29
+                |$MIN_COMPILE_SDK_EXTENSION_PROPERTY=4
                 |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.2.0
                 |"""
                 .trimMargin()
@@ -163,6 +171,7 @@ class AarMetadataTaskTest {
                         aarMetadata {
                             minCompileSdk 27
                             minAgpVersion '3.0.0'
+                            minCompileSdkExtension 2
                         }
                     }
                     flavorDimensions 'foo'
@@ -171,6 +180,7 @@ class AarMetadataTaskTest {
                             aarMetadata {
                                 minCompileSdk 28
                                 minAgpVersion '3.1.0'
+                                minCompileSdkExtension 3
                             }
                         }
                     }
@@ -179,6 +189,7 @@ class AarMetadataTaskTest {
                             aarMetadata {
                                 minCompileSdk 29
                                 minAgpVersion '3.2.0'
+                                minCompileSdkExtension 4
                             }
                         }
                     }
@@ -204,6 +215,7 @@ class AarMetadataTaskTest {
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=27
+                |$MIN_COMPILE_SDK_EXTENSION_PROPERTY=2
                 |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.0.0
                 |"""
                 .trimMargin()
@@ -215,6 +227,7 @@ class AarMetadataTaskTest {
                         aarMetadata {
                             minCompileSdk 26
                             minAgpVersion '2.0.0'
+                            minCompileSdkExtension 1
                         }
                     }
                 }
@@ -222,6 +235,7 @@ class AarMetadataTaskTest {
                     onVariants(selector().all(), {
                         aarMetadata.minCompileSdk.set(27)
                         aarMetadata.minAgpVersion.set("3.0.0")
+                        aarMetadata.minCompileSdkExtension.set(2)
                     })
                 }
                 """.trimIndent()

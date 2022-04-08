@@ -70,6 +70,7 @@ class CheckAarMetadataTaskTest {
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                                 minCompileSdk = 28,
+                                minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0"
                             )
                         },
@@ -93,6 +94,7 @@ class CheckAarMetadataTaskTest {
                 aarFormatVersion = "2.0",
                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                 minCompileSdk = 28,
+                minCompileSdkExtension = 0,
                 minAgpVersion = "3.0.0"
             )
         }
@@ -134,6 +136,7 @@ class CheckAarMetadataTaskTest {
                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                 aarMetadataVersion = "2.0",
                 minCompileSdk = 28,
+                minCompileSdkExtension = 0,
                 minAgpVersion = "3.0.0"
             )
         }
@@ -179,6 +182,7 @@ class CheckAarMetadataTaskTest {
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                                 minCompileSdk = 28,
+                                minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0"
                             )
                         },
@@ -232,6 +236,7 @@ class CheckAarMetadataTaskTest {
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                                 minCompileSdk = 47,
+                                minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0"
                             )
                         },
@@ -286,6 +291,7 @@ class CheckAarMetadataTaskTest {
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                                 minCompileSdk = 28,
+                                minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0"
                             )
                         },
@@ -325,6 +331,7 @@ class CheckAarMetadataTaskTest {
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                                 minCompileSdk = 28,
+                                minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0",
                                 forceCompileSdkPreview = "Tiramisu"
                             )
@@ -353,6 +360,7 @@ class CheckAarMetadataTaskTest {
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
                                 minCompileSdk = 28,
+                                minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0",
                                 forceCompileSdkPreview = "Tiramisu"
                             )
@@ -388,6 +396,105 @@ class CheckAarMetadataTaskTest {
         }
     }
 
+    @Test
+    fun testPassingWithMinCompileSdkExtension_withSdkExtensionFromHash() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28,
+                                minCompileSdkExtension = 1,
+                                minAgpVersion = "3.0.0",
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-28-ext1")
+        task.agpVersion.set("3.0.0")
+        task.projectPath.set(":app")
+        task.taskAction()
+    }
+
+    @Test
+    fun testPassingWithMinCompileSdkExtension_withExplicitPlatformSdkExtension() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28,
+                                minCompileSdkExtension = 1,
+                                minAgpVersion = "3.0.0",
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-28")
+        task.platformSdkExtension.set(1)
+        task.agpVersion.set("3.0.0")
+        task.projectPath.set(":app")
+        task.taskAction()
+    }
+
+    @Test
+    fun testFailsOnMinCompileSdkExtension() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28,
+                                minCompileSdkExtension = 1,
+                                minAgpVersion = "3.0.0"
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-28")
+        task.agpVersion.set("3.0.0")
+        task.projectPath.set(":app")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).isEqualTo(
+                """
+                    An issue was found when checking AAR metadata:
+
+                      1.  Dependency 'displayName' requires libraries and applications that
+                          depend on it to compile against an SDK with an extension level of
+                          1 or higher.
+
+                          Recommended action: Update this project to use a compileSdkExtension
+                          value of at least 1.
+                """.trimIndent())
+        }
+    }
 
     @Test
     fun tesMultipleFailures() {
@@ -397,6 +504,7 @@ class CheckAarMetadataTaskTest {
                 aarFormatVersion = "2.0",
                 aarMetadataVersion = "2.0",
                 minCompileSdk = 28,
+                minCompileSdkExtension = 0,
                 minAgpVersion = "3.0.0"
             )
         }
