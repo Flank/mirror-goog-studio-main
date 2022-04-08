@@ -40,6 +40,8 @@ import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
 import com.android.build.gradle.internal.tasks.JarsIdentityMapping
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.InstrumentationTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.InstrumentationTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.files.SerializableFileChanges
 import com.android.builder.utils.isValidZipEntryName
@@ -458,7 +460,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         component: ComponentCreationConfig
     ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentCreationConfig>(
         component
-    ) {
+    ), InstrumentationTaskCreationAction by InstrumentationTaskCreationActionImpl(component) {
 
         override val name: String = computeTaskName("transform", "ClassesWithAsm")
         override val type: Class<TransformClassesWithAsmTask> =
@@ -481,13 +483,17 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             super.configure(task)
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(task.name)
 
-            task.visitorsList.setDisallowChanges(creationConfig.registeredProjectClassesVisitors)
+            task.visitorsList.setDisallowChanges(
+                instrumentationCreationConfig.registeredProjectClassesVisitors
+            )
 
-            task.framesComputationMode.setDisallowChanges(creationConfig.asmFramesComputationMode)
+            task.framesComputationMode.setDisallowChanges(
+                instrumentationCreationConfig.asmFramesComputationMode
+            )
 
             task.asmApiVersion.setDisallowChanges(creationConfig.global.asmApiVersion)
 
-            task.excludes.setDisallowChanges(creationConfig.instrumentation.excludes)
+            task.excludes.setDisallowChanges(instrumentationCreationConfig.instrumentation.excludes)
 
             val projectClasses = creationConfig.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
                 .getFinalArtifacts(ScopedArtifact.CLASSES)

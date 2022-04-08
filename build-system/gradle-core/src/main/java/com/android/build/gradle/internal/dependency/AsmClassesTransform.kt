@@ -64,19 +64,21 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
             dependencyHandler: DependencyHandler,
             creationConfig: ComponentCreationConfig
         ) {
-            if (creationConfig.dependenciesClassesAreInstrumented) {
+            val instrumentationCreationConfig = creationConfig.instrumentationCreationConfig
+                ?: return
+            if (instrumentationCreationConfig.dependenciesClassesAreInstrumented) {
                 dependencyHandler.registerTransform(AsmClassesTransform::class.java) { spec ->
                     spec.parameters { parameters ->
                         parameters.projectName.set(projectName)
                         parameters.asmApiVersion.set(creationConfig.global.asmApiVersion)
                         parameters.framesComputationMode.set(
-                            creationConfig.asmFramesComputationMode
+                            instrumentationCreationConfig.asmFramesComputationMode
                         )
                         parameters.excludes.set(
-                            creationConfig.instrumentation.excludes
+                            instrumentationCreationConfig.instrumentation.excludes
                         )
                         parameters.visitorsList.set(
-                            creationConfig.registeredDependenciesClassesVisitors
+                            instrumentationCreationConfig.registeredDependenciesClassesVisitors
                         )
                         parameters.bootClasspath.set(creationConfig.global.fullBootClasspathProvider)
                         parameters.classesHierarchyBuildService.set(
@@ -99,7 +101,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                     )
 
                     getAttributesForConfig(creationConfig)
-                        .stringAttributes?.forEach { name, value ->
+                        .stringAttributes?.forEach { (name, value) ->
                             spec.from.attribute(name, value)
                             spec.to.attribute(name, value)
                         }

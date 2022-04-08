@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.feature
 
 import com.android.SdkConstants.FN_CLASSES_JAR
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -170,8 +169,8 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             super.configure(task)
             // Only add the instrumented classes to the runtime jar
             if (publishedType == AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS &&
-                creationConfig.projectClassesAreInstrumented) {
-                if (creationConfig.asmFramesComputationMode ==
+                creationConfig.instrumentationCreationConfig?.projectClassesAreInstrumented == true) {
+                if (creationConfig.instrumentationCreationConfig?.asmFramesComputationMode ==
                     FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                     task.inputDirs.from(
                         creationConfig.artifacts.get(

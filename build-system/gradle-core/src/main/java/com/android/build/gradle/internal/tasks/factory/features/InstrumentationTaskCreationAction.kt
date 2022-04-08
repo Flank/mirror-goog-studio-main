@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.tasks.factory.features
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
+import com.android.build.gradle.internal.component.features.InstrumentationCreationConfig
 
 /**
- * Creation action for tasks that requires build config support.
+ * Creation action for tasks that requires instrumentation support.
  *
  * Example:
  * ```
@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.component.features.BuildConfigCreationC
  *     creationConfig: ComponentCreationConfig
  *   ) : VariantTaskCreationAction<Task, ComponentCreationConfig>(
  *     creationConfig
- *   ), BuildConfigTaskCreationAction by BuildConfigTaskCreationActionImpl(
+ *   ), InstrumentationTaskCreationAction by InstrumentationTaskCreationActionImpl(
  *     creationConfig
  *   ) {
  *     ...
@@ -37,14 +37,14 @@ import com.android.build.gradle.internal.component.features.BuildConfigCreationC
  * }
  * ```
  */
-interface BuildConfigTaskCreationAction {
-    val buildConfigCreationConfig: BuildConfigCreationConfig
+interface InstrumentationTaskCreationAction {
+    val instrumentationCreationConfig: InstrumentationCreationConfig
 }
 
-class BuildConfigTaskCreationActionImpl(
+class InstrumentationTaskCreationActionImpl(
     creationConfig: ComponentCreationConfig
-): BuildConfigTaskCreationAction {
+): InstrumentationTaskCreationAction {
 
-    override val buildConfigCreationConfig: BuildConfigCreationConfig =
-        creationConfig.buildConfigCreationConfig!!
+    override val instrumentationCreationConfig: InstrumentationCreationConfig =
+        creationConfig.instrumentationCreationConfig!!
 }

@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.InstrumentationTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.InstrumentationTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -94,10 +96,11 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
 
     class CreationAction(
         creationConfig: ComponentCreationConfig
-    ) :
-        VariantTaskCreationAction<RecalculateStackFramesTask, ComponentCreationConfig>(
-            creationConfig
-        ) {
+    ): VariantTaskCreationAction<RecalculateStackFramesTask, ComponentCreationConfig>(
+        creationConfig
+    ), InstrumentationTaskCreationAction by InstrumentationTaskCreationActionImpl(
+        creationConfig
+    ) {
 
         override val name = computeTaskName("fixInstrumented", "ClassesStackFrames")
         override val type = RecalculateStackFramesTask::class.java
@@ -137,7 +140,7 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
             task.referencedClasses
                 .from(creationConfig.providedOnlyClasspath)
                 .from(
-                    creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
+                    instrumentationCreationConfig.getDependenciesClassesJarsPostInstrumentation(
                         AndroidArtifacts.ArtifactScope.ALL
                     )
                 ).disallowChanges()

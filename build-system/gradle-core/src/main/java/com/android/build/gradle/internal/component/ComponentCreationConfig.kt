@@ -19,22 +19,19 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.instrumentation.AsmClassVisitorFactory
-import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
+import com.android.build.gradle.internal.component.features.InstrumentationCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
@@ -44,7 +41,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -52,9 +48,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -86,13 +80,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // needed by resource compilation/link
     val applicationId: Provider<String>
     val namespace: Provider<String>
-    val asmFramesComputationMode: FramesComputationMode
-    val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
-    val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
-    val allProjectClassesPostAsmInstrumentation: FileCollection
-    val projectClassesAreInstrumented: Boolean
-    val dependenciesClassesAreInstrumented: Boolean
-    val instrumentation: Instrumentation
     val debuggable: Boolean
     val profileable: Boolean
     val manifestPlaceholders: MapProperty<String, String>
@@ -110,6 +97,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val androidResourcesCreationConfig: AndroidResourcesCreationConfig?
     val resValuesCreationConfig: ResValuesCreationConfig?
     val buildConfigCreationConfig: BuildConfigCreationConfig?
+    val instrumentationCreationConfig: InstrumentationCreationConfig?
 
     // TODO figure out whether these properties are needed by all
     // TODO : remove as it is now in Variant.
@@ -157,10 +145,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val compileClasspath: FileCollection
 
     val providedOnlyClasspath: FileCollection
-
-    fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
-
-    fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
 
     val packageJacocoRuntime: Boolean
 

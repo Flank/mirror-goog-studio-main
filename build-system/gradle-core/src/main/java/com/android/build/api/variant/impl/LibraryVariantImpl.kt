@@ -92,12 +92,6 @@ open class LibraryVariantImpl @Inject constructor(
             value = dslInfo.namespace
         )
 
-    override val instrumentation = InstrumentationImpl(
-        services,
-        internalServices,
-        isLibraryVariant = true
-    )
-
     override var androidTest: AndroidTestImpl? = null
 
     override var testFixtures: TestFixturesImpl? = null

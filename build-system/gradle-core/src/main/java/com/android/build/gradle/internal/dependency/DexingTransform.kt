@@ -336,7 +336,11 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
         enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
         asmTransformedVariant =
-            if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null,
+            if (creationConfig.instrumentationCreationConfig?.dependenciesClassesAreInstrumented == true) {
+                creationConfig.name
+            } else {
+                null
+            },
         useJacocoTransformInstrumentation = creationConfig.useJacocoTransformInstrumentation
     )
 }
