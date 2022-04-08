@@ -24,18 +24,20 @@ def main():
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
+  env = {}
+  env['USE_BAZEL_VERSION'] = os.environ.get('USE_BAZEL_VERSION', '5.1.1')
   bazel = os.path.join(workspace, 'prebuilts', 'tools', platform, 'bazel',
-                       'bazel-real')
+                       'bazelisk')
   args = sys.argv[1:]
   command = bazel_command(args)
 
-  env = {}
   env['TERM'] = os.environ.get('TERM', '')
   env['MAVEN_FETCH'] = os.environ.get('MAVEN_FETCH', '')
   env['SHELL'] = os.environ.get('SHELL', '')
   env['HOME'] = os.environ.get('HOME', '')
   env['DISPLAY'] = os.environ.get('DISPLAY', '')
   env['GOOGLE_APPLICATION_CREDENTIALS'] = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
+  env['PATH'] = os.environ.get('PATH','')
   if 'QA_ANDROID_SDK_ROOT' in os.environ:
     env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':
@@ -71,9 +73,9 @@ def main():
     # will hang.
     env['SYSTEMROOT'] = 'C:\\Windows'
     env['TMP'] = os.environ.get('TMP','')
-    env['PATH'] = os.environ.get('PATH','')
     env['USERPROFILE'] = os.environ.get('USERPROFILE', '')
     env['APPDATA'] = os.environ.get('APPDATA', '')
+    env['LOCALAPPDATA'] = os.environ.get('LOCALAPPDATA', '')
 
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
