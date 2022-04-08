@@ -2271,7 +2271,7 @@ package com.android.build.api.variant {
     property public abstract boolean enableTestFixtures;
   }
 
-  @org.gradle.api.Incubating public interface Instrumentation {
+  public interface Instrumentation {
     method public org.gradle.api.provider.SetProperty<java.lang.String> getExcludes();
     method public void setAsmFramesComputationMode(com.android.build.api.instrumentation.FramesComputationMode mode);
     method public <ParamT extends com.android.build.api.instrumentation.InstrumentationParameters> void transformClassesWith(Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>> classVisitorFactoryImplClass, com.android.build.api.instrumentation.InstrumentationScope scope, kotlin.jvm.functions.Function1<? super ParamT,kotlin.Unit> instrumentationParamsConfig);
