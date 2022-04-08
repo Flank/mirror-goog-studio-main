@@ -507,7 +507,12 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.MANIFEST
                 )
-            task.placeholdersValues.setDisallowChanges(creationConfig.manifestPlaceholders)
+            task.placeholdersValues.setDisallowChanges(
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = {
+                    empty()
+                }
+            )
             if (!creationConfig.global.namespacedAndroidResources) {
                 task.navigationJsons = project.files(
                     creationConfig

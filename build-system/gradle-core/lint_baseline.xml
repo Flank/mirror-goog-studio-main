@@ -14,7 +14,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="152"/>
+            line="155"/>
     </issue>
 
     <issue
@@ -22,7 +22,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="158"/>
+            line="161"/>
     </issue>
 
     <issue
@@ -30,7 +30,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="195"/>
+            line="198"/>
     </issue>
 
     <issue
@@ -38,7 +38,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="201"/>
+            line="204"/>
     </issue>
 
     <issue
@@ -209,7 +209,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="114"/>
+            line="116"/>
     </issue>
 
     <issue
@@ -217,7 +217,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="143"/>
+            line="145"/>
     </issue>
 
     <issue
@@ -225,7 +225,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="151"/>
+            line="153"/>
     </issue>
 
     <issue
@@ -233,15 +233,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="225"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="258"/>
+            line="227"/>
     </issue>
 
     <issue
@@ -457,7 +449,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="205"/>
+            line="293"/>
     </issue>
 
     <issue
@@ -465,7 +457,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="301"/>
+            line="374"/>
     </issue>
 
     <issue
@@ -481,15 +473,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="390"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="420"/>
+            line="412"/>
     </issue>
 
     <issue
@@ -497,7 +481,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/cxx/gradle/generator/CxxConfigurationModel.kt"
-            line="75"/>
+            line="76"/>
     </issue>
 
     <issue
@@ -666,6 +650,14 @@
         <location
             file="src/main/java/com/android/build/gradle/internal/generators/ManifestClassGenerator.kt"
             line="46"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/api/component/impl/features/ManifestPlaceholdersCreationConfigImpl.kt"
+            line="28"/>
     </issue>
 
     <issue
@@ -921,7 +913,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="135"/>
+            line="137"/>
     </issue>
 
     <issue
@@ -929,15 +921,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="206"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="300"/>
+            line="215"/>
     </issue>
 
     <issue
@@ -1057,7 +1041,7 @@
         message="This reference is unused: FD_OUTPUT">
         <location
             file="src/main/java/com/android/build/gradle/tasks/FusedLibraryManifestMergerTask.kt"
-            line="173"/>
+            line="176"/>
     </issue>
 
     <issue
@@ -1081,7 +1065,7 @@
         message="This reference is unused: FD_OUTPUT">
         <location
             file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkManifestMergerTask.kt"
-            line="80"/>
+            line="83"/>
     </issue>
 
     <issue

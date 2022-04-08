@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
@@ -143,6 +144,9 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val buildConfigCreationConfig: BuildConfigCreationConfig? = null
+
+    override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig?
+        get() = mainVariant.manifestPlaceholdersCreationConfig
 
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride

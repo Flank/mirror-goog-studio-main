@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.component.features.AndroidResourcesCrea
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.InstrumentationCreationConfig
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
@@ -49,7 +50,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.function.Predicate
@@ -82,7 +82,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val namespace: Provider<String>
     val debuggable: Boolean
     val profileable: Boolean
-    val manifestPlaceholders: MapProperty<String, String>
     val supportedAbis: Set<String>
 
     val minSdkVersion: AndroidVersion
@@ -98,6 +97,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val resValuesCreationConfig: ResValuesCreationConfig?
     val buildConfigCreationConfig: BuildConfigCreationConfig?
     val instrumentationCreationConfig: InstrumentationCreationConfig?
+    val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig?
 
     // TODO figure out whether these properties are needed by all
     // TODO : remove as it is now in Variant.

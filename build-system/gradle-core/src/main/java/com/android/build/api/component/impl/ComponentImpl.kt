@@ -202,14 +202,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         ProductFlavor(it)
     }
 
-    override val manifestPlaceholders: MapProperty<String, String> by lazy {
-        internalServices.mapPropertyOf(
-            String::class.java,
-            String::class.java,
-            dslInfo.manifestPlaceholders
-        )
-    }
-
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------

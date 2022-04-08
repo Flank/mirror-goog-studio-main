@@ -298,8 +298,8 @@ class ProcessTestManifestTest {
         """.trimIndent())
         project.file("src/main/AndroidManifest.xml").delete()
         FileUtils.createFile(
-                project.file("src/main/AndroidManifest.xml"),
-                """
+            project.file("src/main/AndroidManifest.xml"),
+            """
                 <?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                             android:versionCode="1"
