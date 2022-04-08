@@ -2138,7 +2138,13 @@ public class AvdManager {
             String path = sdcardFile.toAbsolutePath().toString();
 
             // execute mksdcard with the proper parameters.
-            LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
+            LoggerProgressIndicatorWrapper progress =
+                    new LoggerProgressIndicatorWrapper(log) {
+                        @Override
+                        public void logVerbose(@NonNull String s) {
+                            // Skip verbose messages
+                        }
+                    };
             LocalPackage p = mSdkHandler.getLocalPackage(SdkConstants.FD_EMULATOR, progress);
             if (p == null) {
                 progress.logWarning(
