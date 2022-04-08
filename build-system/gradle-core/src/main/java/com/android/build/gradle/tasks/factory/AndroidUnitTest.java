@@ -23,8 +23,10 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.ScopedArtifact;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.dsl.TestOptions;
+import com.android.build.api.variant.ScopedArtifacts;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
@@ -193,7 +195,11 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setDescription("Run unit tests for the " + testedVariant.getName() + " build.");
 
-            task.setTestClassesDirs(creationConfig.getArtifacts().getAllClasses());
+            task.setTestClassesDirs(
+                    creationConfig
+                            .getArtifacts()
+                            .forScope(ScopedArtifacts.Scope.PROJECT)
+                            .getFinalArtifacts$gradle_core(ScopedArtifact.CLASSES.INSTANCE));
             task.setClasspath(computeClasspath(creationConfig, includeAndroidResources));
 
             if (includeAndroidResources) {

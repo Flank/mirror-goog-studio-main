@@ -74,7 +74,6 @@ class AnalyticsEnabledLibraryVariantTest {
         Mockito.verify(delegate, Mockito.times(1)).packaging
     }
 
-
     @Test
     fun aarMetadata() {
         val aarMetadata = Mockito.mock(AarMetadata::class.java)

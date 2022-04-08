@@ -25,7 +25,7 @@ import kotlin.test.assertNotNull
 
 class GetApkFromBundleTest: VariantApiBaseTest(TestType.Script) {
     @Test
-    fun getApksTest() {
+    fun getApksFromBundleTest() {
         given {
             tasksToInvoke.addAll(listOf("clean", ":app:debugDisplayApkFromBundle"))
             addModule(":app") {

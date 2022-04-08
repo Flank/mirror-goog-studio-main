@@ -18,12 +18,13 @@ package com.android.build.api.apiTest.kotlin
 
 import com.android.build.api.apiTest.VariantApiBaseTest
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.options.BooleanOption
 import com.android.tools.apk.analyzer.AaptInvoker
 import com.android.tools.apk.analyzer.ApkAnalyzerImpl
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.ArtifactAccess
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
+import com.google.wireless.android.sdk.stats.VariantPropertiesAccess
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.ByteArrayOutputStream
@@ -54,9 +55,9 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script) {
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
-            import com.android.build.api.artifact.MultipleArtifact
+            import com.android.build.api.variant.ScopedArtifacts
+            import com.android.build.api.artifact.ScopedArtifact
             ${testingElements.getAllClassesAccessTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
@@ -64,10 +65,14 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script) {
 
             androidComponents {
                 onVariants { variant ->
-                    project.tasks.register<GetAllClassesTask>("${'$'}{variant.name}GetAllClasses") {
-                        allClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS))
-                        allJarsWithClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS))
-                    }
+                    val taskProvider = project.tasks.register<GetAllClassesTask>("${'$'}{variant.name}GetAllClasses")
+                    variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+                        .use(taskProvider)
+                        .toGet(
+                            ScopedArtifact.CLASSES,
+                            GetAllClassesTask::allJars,
+                            GetAllClassesTask::allDirectories
+                        )
                 }
             }
         """.trimIndent()
@@ -79,15 +84,23 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script) {
             index =
                     // language=markdown
                 """
-# artifacts.getAll in Kotlin
+# Scoped Artifacts toGet example in Kotlin
 This sample shows how to obtain all the classes that will be used to create the dex files.
 There are two lists that need to be used to obtain the complete set of classes because some
 classes are present as .class files in directories and others are present in jar files.
 Therefore, you must query both [ListProperty] of [Directory] and [RegularFile] to get the full list.
 
 The [onVariants] block will wire the [GetAllClassesTask] input properties (allClasses and allJarsWithClasses)
-by using the [Artifacts.getAll] method with the right [MultipleArtifact].
-`allClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS))`
+by using the [ScopedArtifactsOperation.toGet] method with the right [ScopedArtifact].
+`
+    variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+        .use(taskProvider)
+        .toGet(
+            ScopedArtifact.CLASSES,
+            GetAllClassesTask::allJarsWithClasses,
+            GetAllClassesTask::allClasses
+        )
+`
 ## To Run
 ./gradlew debugGetAllClasses
 expected result : a list of classes and jar files.
@@ -102,22 +115,23 @@ expected result : a list of classes and jar files.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 if (it.isDebug) {
-                    Truth.assertThat(it.variantApiAccess.artifactAccessList).hasSize(2)
-                    it.variantApiAccess.artifactAccessList.forEach { artifactAccess ->
-                        Truth.assertThat(artifactAccess.type).isEqualTo(
-                            ArtifactAccess.AccessType.GET_ALL
-                        )
-                    }
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(3)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(0).type)
+                        .isEqualTo(VariantPropertiesMethodType.ARTIFACTS_VALUE)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(1).type)
+                        .isEqualTo(VariantPropertiesMethodType.FOR_SCOPE_VALUE)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(2).type)
+                        .isEqualTo(VariantPropertiesMethodType.SCOPED_ARTIFACTS_TO_GET_VALUE)
                 }
             }
         }
     }
 
     @Test
-    fun modifyAllClasses() {
+    fun modifyProjectClasses() {
         given {
             tasksToInvoke.addAll(listOf("clean", ":app:assembleDebug"))
-            addClasspath("org.javassist:javassist:3.22.0-GA")
+            addClasspath("org.javassist:javassist:3.26.0-GA")
             addModule(":app") {
                 addSource("src/main/java/com/android/api/tests/SomeSource.kt", """
                     package com.android.api.tests
@@ -133,66 +147,118 @@ expected result : a list of classes and jar files.
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
-            }
-            import com.android.build.api.artifact.MultipleArtifact
+           }
+           import com.android.build.api.variant.ScopedArtifacts
+           import com.android.build.api.artifact.ScopedArtifact
 
-            import org.gradle.api.DefaultTask
-            import org.gradle.api.file.Directory
-            import org.gradle.api.provider.ListProperty
-            import org.gradle.api.tasks.InputFiles
-            import org.gradle.api.tasks.TaskAction
-            import javassist.ClassPool
-            import javassist.CtClass
-            import java.io.FileInputStream
+           import org.gradle.api.DefaultTask
+           import org.gradle.api.file.Directory
+           import org.gradle.api.provider.ListProperty
+           import org.gradle.api.tasks.InputFiles
+           import org.gradle.api.tasks.TaskAction
+           import javassist.ClassPool
+           import javassist.CtClass
+           import java.io.FileInputStream
+           import java.io.FileOutputStream
+           import java.io.BufferedOutputStream
+           import java.io.File
+           import java.util.jar.JarFile
+           import java.util.jar.JarEntry
+           import java.util.jar.JarOutputStream
 
-            abstract class ModifyClassesTask: DefaultTask() {
+           abstract class ModifyClassesTask: DefaultTask() {
 
-                @get:InputFiles
-                abstract val allClasses: ListProperty<Directory>
+               @get:InputFiles
+               abstract val allJars: ListProperty<RegularFile>
 
-                @get:OutputFiles
-                abstract val output: DirectoryProperty
+               @get:InputFiles
+               abstract val allDirectories: ListProperty<Directory>
 
-                @TaskAction
-                fun taskAction() {
+               @get:OutputFile
+               abstract val output: RegularFileProperty
 
-                    val pool = ClassPool(ClassPool.getDefault())
+               @TaskAction
+               fun taskAction() {
 
-                    allClasses.get().forEach { directory ->
-                        println("Directory : ${'$'}{directory.asFile.absolutePath}")
-                        directory.asFile.walk().filter(File::isFile).forEach { file ->
-                            if (file.name == "SomeSource.class") {
-                                println("File : ${'$'}{file.absolutePath}")
-                                val interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface");
-                                println("Adding ${'$'}interfaceClass")
-                                interfaceClass.writeFile(output.get().asFile.absolutePath)
-                                FileInputStream(file).use {
-                                    val ctClass = pool.makeClass(it);
+                   val pool = ClassPool(ClassPool.getDefault())
+
+                   val jarOutput = JarOutputStream(BufferedOutputStream(FileOutputStream(
+                        output.get().asFile
+                   )))
+                   allJars.get().forEach { file ->
+                       println("handling " + file.asFile.getAbsolutePath())
+                       val jarFile = JarFile(file.asFile)
+                       jarFile.entries().iterator().forEach { jarEntry ->
+                            println("Adding from jar ${'$'}{jarEntry.name}")
+                            jarOutput.putNextEntry(JarEntry(jarEntry.name))
+                            jarFile.getInputStream(jarEntry).use {
+                                it.copyTo(jarOutput)
+                            }
+                            jarOutput.closeEntry()
+                       }
+                       jarFile.close()
+                   }
+                   allDirectories.get().forEach { directory ->
+                        println("handling " + directory.asFile.getAbsolutePath())
+                        directory.asFile.walk().forEach { file ->
+                           if (file.isFile) {
+                                if (file.name.endsWith("SomeSource.class")) {
+                                    println("Found ${'$'}file.name")
+                                    val interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface");
+                                    println("Adding ${'$'}interfaceClass")
+                                    jarOutput.putNextEntry(JarEntry("com/android/api/tests/SomeInterface.class"))
+                                    jarOutput.write(interfaceClass.toBytecode())
+                                    jarOutput.closeEntry()
+                                    val ctClass = file.inputStream().use {
+                                        pool.makeClass(it);
+                                    }
                                     ctClass.addInterface(interfaceClass)
+
                                     val m = ctClass.getDeclaredMethod("toString");
                                     if (m != null) {
                                         m.insertBefore("{ System.out.println(\"Some Extensive Tracing\"); }");
-                                    }
-                                    ctClass.writeFile(output.get().asFile.absolutePath)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            android {
-                ${testingElements.addCommonAndroidBuildLogic()}
-            }
 
-            androidComponents {
-                onVariants { variant ->
-                    val taskProvider = project.tasks.register<ModifyClassesTask>("${'$'}{variant.name}ModifyClasses")
-                    variant.artifacts.use<ModifyClassesTask>(taskProvider)
-                        .wiredWith(ModifyClassesTask::allClasses, ModifyClassesTask::output)
-                        .toTransform(MultipleArtifact.ALL_CLASSES_DIRS)
-                }
-            }
+                                    val relativePath = directory.asFile.toURI().relativize(file.toURI()).getPath()
+                                    jarOutput.putNextEntry(JarEntry(relativePath.replace(File.separatorChar, '/')))
+                                    jarOutput.write(ctClass.toBytecode())
+                                    jarOutput.closeEntry()
+                               } else {
+                                    val relativePath = directory.asFile.toURI().relativize(file.toURI()).getPath()
+                                    println("Adding from directory ${'$'}{relativePath.replace(File.separatorChar, '/')}")
+                                    jarOutput.putNextEntry(JarEntry(relativePath.replace(File.separatorChar, '/')))
+                                    file.inputStream().use { inputStream ->
+                                        inputStream.copyTo(jarOutput)
+                                    }
+                                    jarOutput.closeEntry()
+                               }
+                           }
+                        }
+                     }
+                   }
+                   jarOutput.close()
+               }
+           }
+           android {
+               namespace = "com.android.build.example.minimal"
+               compileSdkVersion(29)
+               defaultConfig {
+                   minSdkVersion(21)
+               }
+           }
+
+           androidComponents {
+               onVariants { variant ->
+                   val taskProvider = project.tasks.register<ModifyClassesTask>("${'$'}{variant.name}ModifyClasses")
+                    variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+                        .use(taskProvider)
+                        .toTransform(
+                            ScopedArtifact.CLASSES,
+                            ModifyClassesTask::allJars,
+                            ModifyClassesTask::allDirectories,
+                            ModifyClassesTask::output
+                        )
+               }
+           }
         """.trimIndent()
                 testingElements.addManifest(this)
             }
@@ -232,12 +298,13 @@ expected result : a list of classes and jar files.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 if (it.isDebug) {
-                    Truth.assertThat(it.variantApiAccess.artifactAccessList).hasSize(1)
-                    it.variantApiAccess.artifactAccessList.forEach { artifactAccess ->
-                        Truth.assertThat(artifactAccess.type).isEqualTo(
-                            ArtifactAccess.AccessType.TRANSFORM
-                        )
-                    }
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(3)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(0).type)
+                        .isEqualTo(VariantPropertiesMethodType.ARTIFACTS_VALUE)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(1).type)
+                        .isEqualTo(VariantPropertiesMethodType.FOR_SCOPE_VALUE)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(2).type)
+                        .isEqualTo(VariantPropertiesMethodType.SCOPED_ARTIFACTS_TO_TRANSFORM_VALUE)
                 }
             }
             val outFolder = File(testProjectDir.root, "${testName.methodName}/app/build/outputs/apk/debug/")
@@ -259,10 +326,151 @@ expected result : a list of classes and jar files.
     }
 
     @Test
-    fun addToAllClasses() {
+    fun replaceProjectClasses() {
         given {
             tasksToInvoke.addAll(listOf("clean", ":app:assembleDebug"))
-            addClasspath("org.javassist:javassist:3.22.0-GA")
+            addClasspath("org.javassist:javassist:3.26.0-GA")
+            addModule(":app") {
+                addSource("src/main/java/com/android/api/tests/SomeSource.kt", """
+                    package com.android.api.tests
+
+                    class SomeSource {
+                        override fun toString() = "Something !"
+                    }
+                """.trimIndent())
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=kotlin
+                    """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+           }
+           import com.android.build.api.variant.ScopedArtifacts
+           import com.android.build.api.artifact.ScopedArtifact
+
+           import org.gradle.api.DefaultTask
+           import org.gradle.api.file.Directory
+           import org.gradle.api.provider.ListProperty
+           import org.gradle.api.tasks.InputFiles
+           import org.gradle.api.tasks.TaskAction
+           import javassist.ClassPool
+           import javassist.CtClass
+           import java.io.FileInputStream
+           import java.io.FileOutputStream
+           import java.io.BufferedOutputStream
+           import java.io.File
+           import java.util.jar.JarFile
+           import java.util.jar.JarEntry
+           import java.util.jar.JarOutputStream
+
+           abstract class ReplaceClassesTask: DefaultTask() {
+
+               @get:OutputFile
+               abstract val output: RegularFileProperty
+
+               @TaskAction
+               fun taskAction() {
+
+                   val pool = ClassPool(ClassPool.getDefault())
+
+                   JarOutputStream(BufferedOutputStream(FileOutputStream(
+                        output.get().asFile
+                   ))).use  {
+                        val interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface");
+                        println("Adding ${'$'}interfaceClass")
+                        it.putNextEntry(JarEntry("com/android/api/tests/SomeInterface.class"))
+                        it.write(interfaceClass.toBytecode())
+                        it.closeEntry()
+                   }
+               }
+           }
+           android {
+               namespace = "com.android.build.example.minimal"
+               compileSdkVersion(29)
+               defaultConfig {
+                   minSdkVersion(21)
+               }
+           }
+
+           androidComponents {
+               onVariants { variant ->
+                   val taskProvider = project.tasks.register<ReplaceClassesTask>("${'$'}{variant.name}ModifyClasses")
+                    variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+                        .use(taskProvider)
+                        .toReplace(
+                            ScopedArtifact.CLASSES,
+                            ReplaceClassesTask::output
+                        )
+               }
+           }
+        """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
+        withDocs {
+            index =
+                    // language=markdown
+                """
+# Scoped Artifacts toReplace Project classes in Kotlin
+This sample shows how to replace all the project classes that will be used to create the dex files.
+
+The [onVariants] block will wire [ReplaceClassesTask]'s [output] folder to contain all the new
+project classes :
+`
+    variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+        .use(taskProvider)
+        .toReplace(
+            ScopedArtifact.CLASSES,
+            ModifyClassesTask::output
+        )
+`
+
+## To Run
+./gradlew :app:assembleDebug
+expected result : a list of classes and jar files.
+            """.trimIndent()
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("interface class com.android.api.tests.SomeInterface")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            super.onVariantStats {
+                if (it.isDebug) {
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(3)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(0).type)
+                        .isEqualTo(VariantPropertiesMethodType.ARTIFACTS_VALUE)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(1).type)
+                        .isEqualTo(VariantPropertiesMethodType.FOR_SCOPE_VALUE)
+                    Truth.assertThat(it.variantApiAccess.getVariantPropertiesAccess(2).type)
+                        .isEqualTo(VariantPropertiesMethodType.SCOPED_ARTIFACTS_TO_REPLACE_VALUE)
+                }
+            }
+            val outFolder = File(testProjectDir.root, "${testName.methodName}/app/build/outputs/apk/debug/")
+            Truth.assertThat(outFolder.listFiles()?.asList()?.map { it.name }).containsExactly(
+                "app-debug.apk", BuiltArtifactsImpl.METADATA_FILE_NAME
+            )
+            // check that resulting APK contains the newly added interface
+            val apk = File(outFolder, "app-debug.apk").toPath()
+            val byteArrayOutputStream = object : ByteArrayOutputStream() {
+                @Synchronized
+                override fun toString(): String =
+                    super.toString().replace(System.getProperty("line.separator"), "\n")
+            }
+            val ps = PrintStream(byteArrayOutputStream)
+            val apkAnalyzer = ApkAnalyzerImpl(ps, Mockito.mock(AaptInvoker::class.java))
+            apkAnalyzer.dexCode(apk, "com.android.api.tests.SomeInterface", null, null, null)
+            Truth.assertThat(byteArrayOutputStream.toString()).contains("SomeInterface")
+            Truth.assertThat(byteArrayOutputStream.toString()).doesNotContain("SourceSource")
+        }
+    }
+
+    @Test
+    fun appendToProjectClasses() {
+        given {
+            tasksToInvoke.addAll(listOf("clean", ":app:assembleDebug"))
+            addClasspath("org.javassist:javassist:3.26.0-GA")
             addModule(":app") {
                 addSource("src/main/java/com/android/api/tests/SomeSource.kt", """
                     package com.android.api.tests
@@ -280,7 +488,8 @@ expected result : a list of classes and jar files.
                     kotlin("android")
                     kotlin("android.extensions")
             }
-            import com.android.build.api.artifact.MultipleArtifact
+            import com.android.build.api.variant.ScopedArtifacts
+            import com.android.build.api.artifact.ScopedArtifact
 
             import org.gradle.api.DefaultTask
             import org.gradle.api.file.Directory
@@ -314,9 +523,13 @@ expected result : a list of classes and jar files.
             androidComponents {
                 onVariants { variant ->
                     val taskProvider = project.tasks.register<AddClassesTask>("${'$'}{variant.name}AddClasses")
-                    variant.artifacts.use<AddClassesTask>(taskProvider)
-                        .wiredWith(AddClassesTask::output)
-                        .toAppendTo(MultipleArtifact.ALL_CLASSES_DIRS)
+                    variant.artifacts
+                        .forScope(ScopedArtifacts.Scope.PROJECT)
+                        .use(taskProvider)
+                        .toAppend(
+                            ScopedArtifact.CLASSES,
+                            AddClassesTask::output
+                        )
                 }
             }
         """.trimIndent()
@@ -351,7 +564,15 @@ expected result : an APK with added types in its dex files.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 if (it.isDebug) {
-                    Truth.assertThat(it.variantApiAccess.artifactAccessList).hasSize(1)
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList).hasSize(3)
+                    Truth.assertThat(it.variantApiAccess.variantPropertiesAccessList
+                        .map(VariantPropertiesAccess::getType))
+                        .containsExactly(
+                            VariantPropertiesMethodType.ARTIFACTS_VALUE,
+                            VariantPropertiesMethodType.FOR_SCOPE_VALUE,
+                            VariantPropertiesMethodType.SCOPED_ARTIFACTS_APPEND_VALUE,
+                        )
+
                     it.variantApiAccess.artifactAccessList.forEach { artifactAccess ->
                         Truth.assertThat(artifactAccess.type).isEqualTo(
                             ArtifactAccess.AccessType.APPEND

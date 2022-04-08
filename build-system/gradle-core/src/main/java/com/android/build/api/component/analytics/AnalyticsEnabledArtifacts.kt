@@ -21,6 +21,7 @@ import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.TaskBasedOperation
 import com.android.build.api.variant.BuiltArtifactsLoader
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.ArtifactAccess
@@ -74,5 +75,16 @@ open class AnalyticsEnabledArtifacts @Inject constructor(
             stats,
             objectFactory
         ) as TaskBasedOperation<TaskT>
+    }
+
+    override fun forScope(scope: ScopedArtifacts.Scope): ScopedArtifacts {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.FOR_SCOPE_VALUE
+        return objectFactory.newInstance(
+            AnalyticsEnabledScopedArtifacts::class.java,
+            delegate.forScope(scope),
+            stats,
+            objectFactory,
+        )
     }
 }

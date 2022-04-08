@@ -16,7 +16,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
@@ -366,19 +367,18 @@ abstract class JacocoTask : NewIncrementalTask() {
 
         override fun configure(task: JacocoTask) {
             super.configure(task)
+            val projectClasses = creationConfig.artifacts
+                .forScope(ScopedArtifacts.Scope.PROJECT)
+                .getFinalArtifacts(ScopedArtifact.CLASSES)
+
             task.jarsWithIdentity
                 .inputJars
-                .from(
-                    creationConfig
-                        .artifacts
-                        .getAll(MultipleArtifact.PROJECT_CLASSES_JARS)
+                .from(projectClasses
+                        .getRegularFiles(creationConfig.services.projectInfo.projectDirectory)
                 )
             task.classesDir
-                .from(
-                    creationConfig
-                        .artifacts
-                        .getAll(MultipleArtifact.PROJECT_CLASSES_DIRS)
-                )
+                .from(projectClasses
+                    .getDirectories(creationConfig.services.projectInfo.projectDirectory))
         }
     }
 

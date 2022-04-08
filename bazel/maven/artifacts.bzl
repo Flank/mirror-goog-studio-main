@@ -353,6 +353,7 @@ DATA = [
     "org.jacoco:org.jacoco.agent:0.8.7",
     "org.jacoco:org.jacoco.agent:jar:runtime:0.8.7",
     "org.jacoco:org.jacoco.ant:0.8.7",
+    "org.javassist:javassist:3.26.0-GA",
     "org.jdeferred:jdeferred-android-aar:1.2.2",
     "org.jdeferred:jdeferred-android-aar:1.2.3",
     "org.jetbrains.dokka:dokka-base:1.4.32",

@@ -17,6 +17,7 @@
 package com.android.build.api.artifact
 
 import com.android.build.api.variant.BuiltArtifactsLoader
+import com.android.build.api.variant.ScopedArtifacts
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
@@ -72,4 +73,22 @@ interface Artifacts {
      * @return A thread safe implementation of [BuiltArtifactsLoader] that can be reused.
      */
     fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
+
+    /**
+     * Some artifacts do not have a single origin (like compiled from source code). Some artifacts
+     * can be obtained from a combination of [Task]s running or incoming dependencies. For example,
+     * classes used for dexing can come from compilation related tasks as well as .aar or .jar
+     * files expressed as a project dependency.
+     *
+     * Therefore, these artifacts values can have a scope like [ScopedArtifacts.Scope.PROJECT] for
+     * values directly produced by this module (as a [Task] output most likely). Alternatively,
+     * the [ScopedArtifacts.Scope.ALL] adds all incoming dependencies (including transitive ones)
+     * to the previous scope.
+     *
+     * For such cases, the artifact is represented as [ScopedArtifact] and can be manipulated by
+     * its own set of API that are scope aware.
+     *
+     * Return [ScopedArtifacts] for a [ScopedArtifacts.Scope]
+     */
+    fun forScope(scope: ScopedArtifacts.Scope): ScopedArtifacts
 }

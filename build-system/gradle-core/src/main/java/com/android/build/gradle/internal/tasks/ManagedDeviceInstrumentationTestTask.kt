@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_EMULATOR
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -494,7 +496,11 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                     task.buddyApks.from(it)
                 }
 
-            task.classes.from(creationConfig.artifacts.getAllClasses())
+            task.classes.from(
+                creationConfig.artifacts
+                    .forScope(ScopedArtifacts.Scope.PROJECT)
+                    .getFinalArtifacts(ScopedArtifact.CLASSES)
+            )
             task.classes.disallowChanges()
             creationConfig.buildConfigCreationConfig?.let {
                 task.buildConfigClasses.from(it.compiledBuildConfig)

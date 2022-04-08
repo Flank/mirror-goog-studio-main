@@ -39,7 +39,6 @@ sealed class SingleArtifact<T : FileSystemLocation>(
     override fun getFileSystemLocationName(): String {
         return fileName ?: ""
     }
-
     /**
      * Directory where APK files will be located. Some builds can be optimized for testing when
      * invoked from Android Studio. In such cases, the APKs are not suitable for deployment to
@@ -47,9 +46,10 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      */
     object APK:
         SingleArtifact<Directory>(DIRECTORY),
-        Transformable,
+        ContainsMany,
         Replaceable,
-        ContainsMany
+        Transformable
+
 
     /**
      * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.
@@ -112,7 +112,10 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      */
 
     @Incubating
-    object METADATA_LIBRARY_DEPENDENCIES_REPORT: SingleArtifact<RegularFile>(FILE), Replaceable, Transformable
+    object METADATA_LIBRARY_DEPENDENCIES_REPORT: SingleArtifact<RegularFile>(FILE),
+        Replaceable,
+        Transformable
+
 
     /**
      * Assets that will be packaged in the resulting APK or Bundle.
@@ -125,8 +128,8 @@ sealed class SingleArtifact<T : FileSystemLocation>(
     @Incubating
     object ASSETS:
         SingleArtifact<Directory>(DIRECTORY),
-        Transformable,
-        Replaceable
+        Replaceable,
+        Transformable
 
     /**
      *  Universal APK that contains assets for all screen densities.
@@ -141,6 +144,5 @@ sealed class SingleArtifact<T : FileSystemLocation>(
     @Incubating
     object APK_FROM_BUNDLE:
         SingleArtifact<RegularFile>(FILE, Category.OUTPUTS),
-        Transformable,
-        Replaceable
+        Transformable
 }

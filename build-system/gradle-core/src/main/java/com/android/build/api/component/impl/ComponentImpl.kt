@@ -29,6 +29,8 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
@@ -245,7 +247,9 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                     )
                 }
             } else {
-                artifacts.getAllClasses()
+                artifacts
+                    .forScope(ScopedArtifacts.Scope.PROJECT)
+                    .getFinalArtifacts(ScopedArtifact.CLASSES)
             }
 
     override val projectClassesAreInstrumented: Boolean

@@ -731,10 +731,7 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         }
         checkSplitConfiguration()
         variantManager.setHasCreatedTasks(true)
-        for (variant in variants) {
-            variant.variant.artifacts.ensureAllOperationsAreSatisfied()
-            wireAllFinalizedBy(variant.variant)
-        }
+        variantManager.finalizeAllVariants()
     }
 
     private fun findHighestSdkInstalled(): String? {

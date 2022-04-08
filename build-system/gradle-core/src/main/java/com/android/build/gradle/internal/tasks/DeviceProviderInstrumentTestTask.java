@@ -30,8 +30,10 @@ import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHE
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.ScopedArtifact;
 import com.android.build.api.dsl.Installation;
 import com.android.build.api.dsl.TestOptions;
+import com.android.build.api.variant.ScopedArtifacts;
 import com.android.build.gradle.internal.BuildToolsExecutableInput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
@@ -870,7 +872,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             // This task should never be UP-TO-DATE as we don't model the device state as input yet.
             task.getOutputs().upToDateWhen(it -> false);
 
-            task.getClasses().from(creationConfig.getArtifacts().getAllClasses());
+            task.getClasses()
+                    .from(
+                            creationConfig
+                                    .getArtifacts()
+                                    .forScope(ScopedArtifacts.Scope.PROJECT)
+                                    .getFinalArtifacts$gradle_core(
+                                            ScopedArtifact.CLASSES.INSTANCE));
             task.getClasses().disallowChanges();
             if (creationConfig.getBuildConfigCreationConfig() != null) {
                 task.getBuildConfigClasses()

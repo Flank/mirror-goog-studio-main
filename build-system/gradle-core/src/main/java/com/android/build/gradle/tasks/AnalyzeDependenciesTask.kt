@@ -18,6 +18,8 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
@@ -43,7 +45,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
-import java.util.concurrent.Callable
 import java.util.function.Function
 
 // TODO: Make incremental
@@ -197,7 +198,11 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             super.configure(task)
             val resDirFunction = Function<SourceProvider, Collection<File>> { it.resDirectories }
 
-            task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
+            task.variantArtifact.from(
+                creationConfig.artifacts
+                    .forScope(ScopedArtifacts.Scope.PROJECT)
+                    .getFinalArtifacts(ScopedArtifact.CLASSES)
+            )
 
             task.resourceSymbolsArtifactCollection = creationConfig
                 .variantDependencies.getArtifactCollection(

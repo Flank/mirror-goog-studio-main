@@ -20,6 +20,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.TaskBasedOperation
 import com.android.build.api.variant.BuiltArtifactsLoader
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -108,5 +109,22 @@ class AnalyticsEnabledArtifactsTest {
         ).isEqualTo(VariantPropertiesMethodType.USE_TASK_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
             .use(taskProvider)
+    }
+
+    @Test
+    fun testForProjectScope() {
+        val scopedArtifacts = Mockito.mock(ScopedArtifacts::class.java)
+
+        Mockito.`when`(delegate.forScope(ScopedArtifacts.Scope.PROJECT)).thenReturn(scopedArtifacts)
+        Truth.assertThat(proxy.forScope(ScopedArtifacts.Scope.PROJECT)).isInstanceOf(
+            ScopedArtifacts::class.java
+        )
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.FOR_SCOPE_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .forScope(ScopedArtifacts.Scope.PROJECT)
     }
 }

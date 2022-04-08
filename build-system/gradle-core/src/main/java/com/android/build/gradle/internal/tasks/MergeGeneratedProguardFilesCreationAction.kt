@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -54,13 +56,16 @@ class MergeGeneratedProguardFilesCreationAction(
     ) {
         super.configure(task)
 
-        val allClasses = creationConfig.artifacts.getAllClasses()
-        val proguardFiles = allClasses.asFileTree.filter { f ->
-            val baseFolders = allClasses.files
-            val baseFolder = baseFolders.first { f.startsWith(it) }
-            isProguardRule(f.relativeTo(baseFolder).invariantSeparatorsPath)
+        val allClasses = creationConfig.artifacts
+            .forScope(ScopedArtifacts.Scope.PROJECT)
+            .getFinalArtifacts(ScopedArtifact.CLASSES)
+        val proguardFiles = allClasses.elements.map { _ ->
+            allClasses.asFileTree.filter { f ->
+                val baseFolders = allClasses.files
+                val baseFolder = baseFolders.first { it -> f.startsWith(it) }
+                isProguardRule(f.relativeTo(baseFolder).invariantSeparatorsPath)
+            }
         }
-
         task.inputFiles.fromDisallowChanges(proguardFiles)
     }
 }

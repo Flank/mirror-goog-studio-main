@@ -90,6 +90,7 @@ package com.android.build.api.artifact {
   }
 
   public interface Artifacts {
+    method public com.android.build.api.variant.ScopedArtifacts forScope(com.android.build.api.variant.ScopedArtifacts.Scope scope);
     method public <FileTypeT extends org.gradle.api.file.FileSystemLocation> org.gradle.api.provider.Provider<FileTypeT> get(com.android.build.api.artifact.SingleArtifact<FileTypeT> type);
     method public <FileTypeT extends org.gradle.api.file.FileSystemLocation> org.gradle.api.provider.Provider<java.util.List<FileTypeT>> getAll(com.android.build.api.artifact.MultipleArtifact<FileTypeT> type);
     method public com.android.build.api.variant.BuiltArtifactsLoader getBuiltArtifactsLoader();
@@ -124,17 +125,16 @@ package com.android.build.api.artifact {
     field public static final com.android.build.api.artifact.MultipleArtifact.MULTIDEX_KEEP_PROGUARD INSTANCE;
   }
 
-  @org.gradle.api.Incubating public static final class MultipleArtifact.PROJECT_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Appendable {
-    field public static final com.android.build.api.artifact.MultipleArtifact.PROJECT_CLASSES_DIRS INSTANCE;
-  }
-
-  @org.gradle.api.Incubating public static final class MultipleArtifact.PROJECT_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Appendable {
-    field public static final com.android.build.api.artifact.MultipleArtifact.PROJECT_CLASSES_JARS INSTANCE;
-  }
-
   public interface OutOperationRequest<FileTypeT extends org.gradle.api.file.FileSystemLocation> {
     method public <ArtifactTypeT extends com.android.build.api.artifact.Artifact.Multiple<FileTypeT> & com.android.build.api.artifact.Artifact.Appendable> void toAppendTo(ArtifactTypeT type);
     method public <ArtifactTypeT extends com.android.build.api.artifact.Artifact.Single<FileTypeT> & com.android.build.api.artifact.Artifact.Replaceable> void toCreate(ArtifactTypeT type);
+  }
+
+  public abstract sealed class ScopedArtifact extends com.android.build.api.artifact.Artifact.Single<org.gradle.api.file.RegularFile> {
+  }
+
+  public static final class ScopedArtifact.CLASSES extends com.android.build.api.artifact.ScopedArtifact {
+    field public static final com.android.build.api.artifact.ScopedArtifact.CLASSES INSTANCE;
   }
 
   public abstract sealed class SingleArtifact<T extends org.gradle.api.file.FileSystemLocation> extends com.android.build.api.artifact.Artifact.Single<T> {
@@ -148,7 +148,7 @@ package com.android.build.api.artifact {
     field public static final com.android.build.api.artifact.SingleArtifact.APK INSTANCE;
   }
 
-  @org.gradle.api.Incubating public static final class SingleArtifact.APK_FROM_BUNDLE extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+  @org.gradle.api.Incubating public static final class SingleArtifact.APK_FROM_BUNDLE extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.SingleArtifact.APK_FROM_BUNDLE INSTANCE;
   }
 
@@ -2368,6 +2368,22 @@ package com.android.build.api.variant {
     property public abstract org.gradle.api.provider.SetProperty<java.lang.String> excludes;
     property public abstract org.gradle.api.provider.SetProperty<java.lang.String> merges;
     property public abstract org.gradle.api.provider.SetProperty<java.lang.String> pickFirsts;
+  }
+
+  public interface ScopedArtifacts {
+    method public <T extends org.gradle.api.Task> com.android.build.api.variant.ScopedArtifactsOperation<T> use(org.gradle.api.tasks.TaskProvider<T> taskProvider);
+  }
+
+  public enum ScopedArtifacts.Scope {
+    enum_constant public static final com.android.build.api.variant.ScopedArtifacts.Scope ALL;
+    enum_constant public static final com.android.build.api.variant.ScopedArtifacts.Scope PROJECT;
+  }
+
+  public interface ScopedArtifactsOperation<T extends org.gradle.api.Task> {
+    method public void toAppend(com.android.build.api.artifact.ScopedArtifact to, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.provider.Property<? extends org.gradle.api.file.FileSystemLocation>> with);
+    method public void toGet(com.android.build.api.artifact.ScopedArtifact type, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile>> inputJars, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.provider.ListProperty<org.gradle.api.file.Directory>> inputDirectories);
+    method public void toReplace(com.android.build.api.artifact.ScopedArtifact type, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.file.RegularFileProperty> into);
+    method public void toTransform(com.android.build.api.artifact.ScopedArtifact type, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile>> inputJars, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.provider.ListProperty<org.gradle.api.file.Directory>> inputDirectories, kotlin.jvm.functions.Function1<? super T,? extends org.gradle.api.file.RegularFileProperty> into);
   }
 
   public interface SigningConfig {
