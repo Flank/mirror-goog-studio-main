@@ -33,6 +33,8 @@ import com.android.build.gradle.internal.testing.utp.ManagedDeviceImageSuggestio
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.repository.Revision
 import com.android.testing.utils.computeSystemImageHashFromDsl
+import com.android.testing.utils.isWearTvOrAutoDevice
+import com.android.testing.utils.isWearTvOrAutoSource
 import com.android.utils.CpuArchitecture
 import com.android.utils.osArchitecture
 import com.google.common.annotations.VisibleForTesting
@@ -97,6 +99,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
     abstract val require64Bit: Property<Boolean>
 
     override fun doTaskAction() {
+        assertNoWearTvOrAuto()
+
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
             it.initializeWith(projectPath,  path, analyticsService)
             it.sdkService.set(sdkService)
@@ -113,6 +117,30 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             it.apiLevel.set(apiLevel)
             it.require64Bit.set(require64Bit)
             it.abi.set(abi)
+        }
+    }
+
+    private fun assertNoWearTvOrAuto() {
+        // Since we presently don't support wear and tv devices, we need to check
+        // if the developer is trying to use an image from those sources.
+        if (isWearTvOrAutoSource(systemImageVendor.get())) {
+            error(
+                """
+                    ${managedDeviceName.get()} has a systemImageSource of ${systemImageVendor.get()}.
+                    Wear, TV and Auto devices are presently not supported with Gradle Managed Devices.
+                """.trimIndent()
+            )
+        }
+
+        // Or is attempting to use a wear, tv, or automotive device profile.
+        if (isWearTvOrAutoDevice(hardwareProfile.get())) {
+
+            error(
+                """
+                    ${managedDeviceName.get()} has a device profile of ${hardwareProfile.get()}.
+                    Wear, TV and Auto devices are presently not supported with Gradle Managed Devices.
+                """.trimIndent()
+            )
         }
     }
 

@@ -207,6 +207,39 @@ class ManagedDeviceSetupTaskTest {
     }
 
     @Test
+    fun testTaskAction_errorOnWearSource() {
+        val task = basicTaskSetup()
+        doReturn(realPropertyFor("android-wear")).`when`(task).systemImageVendor
+
+        val error = assertThrows(IllegalStateException::class.java) {
+            task.taskAction()
+        }
+        assertThat(error.message).isEqualTo(
+            """
+                someDeviceName has a systemImageSource of android-wear.
+                Wear, TV and Auto devices are presently not supported with Gradle Managed Devices.
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun testTaskAction_errorOnAutoProfile() {
+        val task = basicTaskSetup()
+        doReturn(realPropertyFor("Automotive (1024p landscape)"))
+            .`when`(task).hardwareProfile
+
+        val error = assertThrows(IllegalStateException::class.java) {
+            task.taskAction()
+        }
+        assertThat(error.message).isEqualTo(
+            """
+                someDeviceName has a device profile of Automotive (1024p landscape).
+                Wear, TV and Auto devices are presently not supported with Gradle Managed Devices.
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun creationAction_configureTask() {
         try {
             // Need to use a custom set up environment to ensure deterministic behavior.
