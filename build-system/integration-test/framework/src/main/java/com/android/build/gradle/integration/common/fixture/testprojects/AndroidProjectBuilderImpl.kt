@@ -102,12 +102,18 @@ internal class AndroidProjectBuilderImpl(
 
         sb.append("android {\n")
 
-        compileSdk?.let {
-            sb.append("  compileSdk = $it\n")
-        }
-
         namespace?.let {
             sb.append("    namespace = \"$it\"\n")
+        }
+        // Fused libraries currently support limited dsl options, so only options common to all
+        // plugin android blocks should be added above.
+        if (appliedPlugins.contains(PluginType.FUSED_LIBRARY)) {
+            sb.append("  minSdk = $minSdk\n")
+            sb.append("}\n")
+            return
+        }
+        compileSdk?.let {
+            sb.append("  compileSdk = $it\n")
         }
 
         sb.append("  defaultConfig {\n")

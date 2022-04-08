@@ -86,7 +86,7 @@ enum class PluginType(
     ),
     FUSED_LIBRARY(
         id = "com.android.fused-library",
-        isAndroid = false,
+        isAndroid = true,
         useNewDsl = true,
     ),
     ANDROID_SETTINGS(

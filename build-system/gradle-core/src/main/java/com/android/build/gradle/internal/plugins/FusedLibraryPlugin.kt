@@ -30,6 +30,7 @@ import com.android.build.gradle.tasks.FusedLibraryBundleAar
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
+import com.android.build.gradle.tasks.FusedLibraryManifestMergerTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -109,6 +110,7 @@ class FusedLibraryPlugin @Inject constructor(
         TaskFactoryImpl(project.tasks).let { taskFactory ->
             listOf(
                     FusedLibraryClassesRewriteTask.CreateAction::class.java,
+                    FusedLibraryManifestMergerTask.CreationAction::class.java,
                     FusedLibraryMergeClasses.CreationAction::class.java,
                     FusedLibraryBundleClasses.CreationAction::class.java,
                     FusedLibraryBundleAar.CreationAction::class.java,
@@ -124,7 +126,7 @@ class FusedLibraryPlugin @Inject constructor(
         // create anchor tasks
 
         project.tasks.register("assemble") {
-            it.dependsOn(variantScope.artifacts.get(FusedLibraryInternalArtifactType.BUNDLED_Library))
+            it.dependsOn(variantScope.artifacts.get(FusedLibraryInternalArtifactType.BUNDLED_LIBRARY))
         }
     }
 
@@ -230,7 +232,7 @@ class FusedLibraryPlugin @Inject constructor(
         val bundleTaskProvider =
             variantScope
                 .artifacts
-                .getArtifactContainer(FusedLibraryInternalArtifactType.BUNDLED_Library)
+                .getArtifactContainer(FusedLibraryInternalArtifactType.BUNDLED_LIBRARY)
                 .getTaskProviders()
                 .last()
 

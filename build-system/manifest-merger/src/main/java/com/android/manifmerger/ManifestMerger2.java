@@ -16,12 +16,6 @@
 
 package com.android.manifmerger;
 
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_SPLIT;
-import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -44,6 +38,14 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,13 +61,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
+import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
 
 /**
  * merges android manifest files, idempotent.
@@ -367,7 +368,7 @@ public class ManifestMerger2 {
             // been overridden so the problem was transient. However, with the final document
             // ready, all placeholders values must have been provided.
             MergingReport.Record.Severity severity =
-                    mMergeType == MergeType.LIBRARY
+                    !mMergeType.isFullPlaceholderSubstitutionRequired()
                             ? MergingReport.Record.Severity.INFO
                             : MergingReport.Record.Severity.ERROR;
             performPlaceHolderSubstitution(
@@ -386,8 +387,9 @@ public class ManifestMerger2 {
         XmlDocument finalMergedDocument = xmlDocumentOptional;
 
         Optional<XmlAttribute> packageAttr = finalMergedDocument.getPackage();
-        // We allow single word package name for library... so far...
-        if (mMergeType != MergeType.LIBRARY && packageAttr.isPresent()) {
+        // We allow single word package name for library and fused libraries, the platform does
+        // not allow for single word application package names.
+        if (mMergeType == MergeType.APPLICATION && packageAttr.isPresent()) {
             XmlAttribute packageNameAttribute = packageAttr.get();
             String packageName = packageNameAttribute.getValue();
             // We accept absence of dot only if NO_PLACEHOLDER_REPLACEMENT is true and packageName
@@ -1047,7 +1049,7 @@ public class ManifestMerger2 {
         // perform place holder substitution, this is necessary to do so early in case placeholders
         // are used in key attributes.
         MergingReport.Record.Severity severity =
-                mMergeType == MergeType.LIBRARY
+                !mMergeType.isFullPlaceholderSubstitutionRequired()
                         ? MergingReport.Record.Severity.INFO
                         : MergingReport.Record.Severity.ERROR;
         performPlaceHolderSubstitution(
@@ -1299,7 +1301,7 @@ public class ManifestMerger2 {
          * libraries. The resulting merged android manifest is final and is not expected to be
          * imported in another application.
          */
-        APPLICATION,
+        APPLICATION(true, true),
 
         /**
          * Library merging type is used when packaging a library. The resulting android manifest
@@ -1307,7 +1309,29 @@ public class ManifestMerger2 {
          * annotations will not be removed as they can be useful when later importing the resulting
          * merged android manifest into an application.
          */
-        LIBRARY
+        LIBRARY(false, false),
+
+        /**
+         * Fused library merging type is similar to application manifest merging as library
+         * manifests are merged, however tools annotations are kept for application merging,
+         * placeholder replacements are non-exhaustive and final validation is not performed.
+         * merging.
+         */
+        FUSED_LIBRARY(false, false);
+
+        private final boolean isKeepToolsAttributeRequired;
+        private final boolean isFullPlaceholderSubstitutionRequired;
+
+        public boolean isKeepToolsAttributeRequired() { return isKeepToolsAttributeRequired; }
+
+        public boolean isFullPlaceholderSubstitutionRequired() {
+            return isFullPlaceholderSubstitutionRequired;
+        }
+
+        MergeType(boolean isKeepToolsAttributeRequired, boolean isFullPlaceholderSubstitutionRequired) {
+            this.isKeepToolsAttributeRequired = isKeepToolsAttributeRequired;
+            this.isFullPlaceholderSubstitutionRequired = isFullPlaceholderSubstitutionRequired;
+        }
     }
 
     /**

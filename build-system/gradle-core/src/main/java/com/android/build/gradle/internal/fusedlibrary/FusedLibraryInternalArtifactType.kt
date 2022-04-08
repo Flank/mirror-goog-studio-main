@@ -33,7 +33,9 @@ FusedLibraryInternalArtifactType<T : FileSystemLocation>(
     object FINAL_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     object MERGED_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     object CLASSES_JAR: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
-    object BUNDLED_Library: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object BUNDLED_LIBRARY: FusedLibraryInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
     // R Class containing all Android resource symbols from libraries contained in a fused library.
     object FUSED_R_CLASS : FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
+    object MERGED_MANIFEST: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
+    object MANIFEST_MERGE_REPORT: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
 }

@@ -75,6 +75,7 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
             super.configure(task)
             task.archiveFileName.set("bundle.aar")
             task.from(
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_MANIFEST),
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES),
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS)
             )
@@ -89,7 +90,7 @@ abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
         creationConfig: FusedLibraryVariantScope,
     ): FusedLibraryBundle.CreationAction<FusedLibraryBundleClasses>(
             creationConfig,
-            FusedLibraryInternalArtifactType.BUNDLED_Library
+            FusedLibraryInternalArtifactType.BUNDLED_LIBRARY
     ) {
         override val name: String
             get() = "packageJar"

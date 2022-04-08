@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.library
 
+import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -59,6 +60,13 @@ class FusedLibraryTest(
                 }
                 """.trimIndent())
         }
+        it.appendToBuild(
+                """
+                android {
+                    minSdk = $DEFAULT_MIN_SDK_VERSION
+                }
+                """.trimIndent()
+        )
     }
 
     @JvmField
