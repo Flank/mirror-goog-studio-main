@@ -196,4 +196,35 @@ class ManagedDeviceImageSuggestionGeneratorTest {
                     "for apiLevel 31. Set apiLevel = 31 to use."
         )
     }
+
+    @Test
+    fun noSuggestionsRecommendsImageChange() {
+        val generator = ManagedDeviceImageSuggestionGenerator(
+            CpuArchitecture.X86_64,
+            "invalid_source_and_api",
+            400,
+            "foo",
+            false,
+            listOf(
+                "system-images;android-29;default;x86",
+                "system-images;android-31;aosp_atd;x86",
+                "system-images;android-29;google_apis;x86",
+                "system-images;android-31;google_atd;x86",
+                // Irrelevant images are ignored.
+                "system-images;android-29;google_apis_playstore;arm64-v8a",
+                // Wear images are ignored
+                "system-images;android-30;android-wear;x86"
+            )
+        )
+
+        assertThat(generator.message).isEqualTo(
+            "System Image specified by invalid_source_and_api does not exist.\n\n" +
+                    "Try one of the following fixes:\n" +
+                    "Could not form a valid suggestion for the device invalid_source_and_api.\n" +
+                    "This is likely due to an invalid image source. The source specified by " +
+                    "invalid_source_and_api is \"foo\".\n" +
+                    "Set systemImageSource to any of [default, aosp_atd, google_apis, " +
+                    "google_atd, aosp, aosp-atd, google, google-atd] to get more suggestions."
+        )
+    }
 }

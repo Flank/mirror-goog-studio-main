@@ -19,6 +19,8 @@ package com.android.testing.utils
 private const val SYSTEM_IMAGE_PREFIX = "system-images;"
 private const val API_PREFIX = "android-"
 private const val API_OFFSET = 1
+private const val VENDOR_OFFSET = 2
+private const val ABI_OFFSET = 3
 
 /**
  * Computes the system image repository hash from the information supplied on the managed
@@ -70,3 +72,9 @@ fun parseApiFromHash(systemImageHash: String): Int? {
         null
     }
 }
+
+fun parseVendorFromHash(systemImageHash: String): String? =
+    systemImageHash.split(";").getOrNull(VENDOR_OFFSET)
+
+fun parseAbiFromHash(systemImageHash: String): String? =
+    systemImageHash.split(";").getOrNull(ABI_OFFSET)

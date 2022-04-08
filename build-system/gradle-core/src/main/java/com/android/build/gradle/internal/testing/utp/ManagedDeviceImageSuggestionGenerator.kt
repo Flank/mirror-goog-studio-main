@@ -19,7 +19,10 @@ package com.android.build.gradle.internal.testing.utp
 import com.android.build.api.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.testing.utils.computeSystemImageHashFromDsl
+import com.android.testing.utils.isWearTvOrAutoSource
 import com.android.testing.utils.parseApiFromHash
+import com.android.testing.utils.parseVendorFromHash
+import com.android.testing.utils.parseAbiFromHash
 import com.android.utils.CpuArchitecture
 import kotlin.math.min
 
@@ -67,12 +70,16 @@ class ManagedDeviceImageSuggestionGenerator (
      * the images are different from the desired image specified by the DSL.
      *
      * 1. Recommend a compatible non-ATD (Automated Test Device) image. (Only for aosp-atd and
-     * google-atd images).
+     *     google-atd images).
      * 2. Recommend a compatible image from a different image source. (google-apis -> aosp, etc.)
      * 3a. Recommend the next available API level for the device.
      * 3b. If there is not available higher API level, recommend the highest available api level
      * 4. Recommend not requiring a 64 bit image, as this may change what tests are run in native
-     * code this is the last recommendation given.
+     *     code this is the last recommendation given.
+     *
+     * If no suggestion could be made, this likely means the system image source is invalid, and
+     * another value in the dsl needs to be changed. In this case, we recommend the image source be
+     * changed to one of the other available sources, in order to make suggestions on the next run.
      */
     val message: String by lazy {
         val suggestionMessage = StringBuilder()
@@ -97,8 +104,19 @@ class ManagedDeviceImageSuggestionGenerator (
             yield(checkFor32BitSuggestion())
         }
 
-        suggestions.filterNotNull().take(MAX_SUGGESTIONS).forEachIndexed { index, suggestion ->
-            suggestionMessage.appendLine().append("${index + 1}. $suggestion")
+        val recommendations = suggestions.filterNotNull().take(MAX_SUGGESTIONS).toList()
+
+        if (recommendations.isNotEmpty()) {
+            recommendations.forEachIndexed { index, suggestion ->
+                suggestionMessage.appendLine().append("${index + 1}. $suggestion")
+            }
+        } else {
+            // If we couldn't find a suggestion, and the image definition is invalid. We should let
+            // them select a valid source. This will at least help us make suggestions in the
+            // future.
+            suggestValidSource()?.also {
+                suggestionMessage.appendLine().append(it)
+            }
         }
 
         suggestionMessage.toString()
@@ -226,5 +244,33 @@ class ManagedDeviceImageSuggestionGenerator (
         return "There is an available X86 image for apiLevel $apiLevel. Set require64Bit = false " +
                 "to use. Be aware tests involving native X86_64 code will not be run with this " +
                 "change."
+    }
+
+    private fun suggestValidSource(): String? {
+        val sources = allImages.filter {
+                if (isArm(architecture)) {
+                    parseAbiFromHash(it) == "arm64-v8a"
+                } else {
+                    parseAbiFromHash(it)?.startsWith("x86") == true
+                }
+            }.mapNotNull {
+                parseVendorFromHash(it)
+            }.filterNot {
+                // Remove wear, tv, and auto sources
+                isWearTvOrAutoSource(it)
+            }.toMutableSet()
+        if (sources.isEmpty() ) {
+            return null
+        }
+        sources.addAll(
+            listOf("aosp", "aosp-atd", "google", "google-atd")
+        )
+        // Do not recommend what has already been tried.
+        sources.remove(systemImageSource)
+
+        return "Could not form a valid suggestion for the device $deviceName.\n" +
+                "This is likely due to an invalid image source. The source specified by " +
+                "$deviceName is \"$systemImageSource\".\n" +
+                "Set systemImageSource to any of $sources to get more suggestions."
     }
 }
