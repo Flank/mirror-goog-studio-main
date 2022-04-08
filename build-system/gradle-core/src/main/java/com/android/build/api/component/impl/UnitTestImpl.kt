@@ -27,7 +27,6 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
@@ -121,10 +120,6 @@ open class UnitTestImpl @Inject constructor(
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
         get() = dslInfo.isUnitTestCoverageEnabled
-
-    override fun addDataBindingSources(
-        sourceSets: MutableList<DirectoryEntry>
-    ) {}
 
     override val androidResourcesCreationConfig: AndroidResourcesCreationConfig? by lazy {
         // in case of unit tests, we add the R jar even if android resources are

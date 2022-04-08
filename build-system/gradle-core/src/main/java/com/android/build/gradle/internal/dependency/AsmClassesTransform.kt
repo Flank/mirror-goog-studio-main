@@ -68,7 +68,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                 dependencyHandler.registerTransform(AsmClassesTransform::class.java) { spec ->
                     spec.parameters { parameters ->
                         parameters.projectName.set(projectName)
-                        parameters.asmApiVersion.set(creationConfig.asmApiVersion)
+                        parameters.asmApiVersion.set(creationConfig.global.asmApiVersion)
                         parameters.framesComputationMode.set(
                             creationConfig.asmFramesComputationMode
                         )

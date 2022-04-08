@@ -2554,7 +2554,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        val manifestType: InternalArtifactType<Directory> = creationConfig.manifestArtifactType
+        val manifestType: InternalArtifactType<Directory> =
+            creationConfig.global.manifestArtifactType
         val manifests = creationConfig.artifacts.get(manifestType)
 
         // Common code for both packaging tasks.

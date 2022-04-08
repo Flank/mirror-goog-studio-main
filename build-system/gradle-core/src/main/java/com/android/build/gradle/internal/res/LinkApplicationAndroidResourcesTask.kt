@@ -524,7 +524,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 }
             )
 
-            task.taskInputType = creationConfig.manifestArtifactType
+            task.taskInputType = creationConfig.global.manifestArtifactType
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
             )

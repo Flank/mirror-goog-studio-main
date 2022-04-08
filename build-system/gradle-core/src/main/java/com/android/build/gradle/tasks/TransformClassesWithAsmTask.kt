@@ -485,7 +485,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
             task.framesComputationMode.setDisallowChanges(creationConfig.asmFramesComputationMode)
 
-            task.asmApiVersion.setDisallowChanges(creationConfig.asmApiVersion)
+            task.asmApiVersion.setDisallowChanges(creationConfig.global.asmApiVersion)
 
             task.excludes.setDisallowChanges(creationConfig.instrumentation.excludes)
 

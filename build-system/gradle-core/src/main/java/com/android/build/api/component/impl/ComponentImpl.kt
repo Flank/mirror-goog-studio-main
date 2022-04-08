@@ -31,11 +31,9 @@ import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.SourcesImpl
-import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
@@ -57,7 +55,6 @@ import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransf
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dependency.getProvidedClasspath
 import com.android.build.gradle.internal.dsl.InstrumentationImpl
-import com.android.build.gradle.internal.instrumentation.ASM_API_VERSION_FOR_INSTRUMENTATION
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -68,7 +65,6 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.ge
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
@@ -89,7 +85,6 @@ import org.gradle.api.artifacts.SelfResolvingDependency
 import com.google.common.base.Preconditions
 import org.gradle.api.attributes.DocsType
 import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.model.ObjectFactory
@@ -196,8 +191,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
-
-    override val asmApiVersion = ASM_API_VERSION_FOR_INSTRUMENTATION
 
     // this is technically a public API for the Application Variant (only)
     override val outputs: VariantOutputList
@@ -372,14 +365,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         )
     }
 
-    // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
-
-    override val manifestArtifactType: InternalArtifactType<Directory>
-        get() = if (internalServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
-            INSTANT_APP_MANIFEST
-        else
-            PACKAGED_MANIFESTS
-
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
     override fun publishBuildArtifacts() {
         for (outputSpec in getVariantPublishingSpec(componentType).outputs) {
@@ -425,20 +410,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    /**
-     * adds databinding sources to the list of sources.
-     */
-    override fun addDataBindingSources(
-        sourceSets: MutableList<DirectoryEntry>
-    ) {
-        sourceSets.add(
-            TaskProviderBasedDirectoryEntryImpl(
-                "databinding_generated",
-                artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT),
-            )
-        )
-    }
-
     private fun getCompiledManifest(): FileCollection {
         val manifestClassRequired = dslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
@@ -452,7 +423,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     }
 
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
-        instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
+        instrumentation.configureAndLockAsmClassesVisitors(objectFactory, global.asmApiVersion)
     }
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
