@@ -55,6 +55,5 @@ interface Component: ComponentIdentity {
     /**
      * Access to the variant's instrumentation options.
      */
-    @get:Incubating
     val instrumentation: Instrumentation
 }

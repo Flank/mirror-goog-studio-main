@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-84f885356bcb08817f3f983ea7c490935b0a6891dbd56ab69cef53472d6f2cd0
+d1839046e8f355a5e1172727db4bad414b52417a47857586a7a0c4b23168cd96
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -417,6 +417,7 @@ com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.v
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.Component implements com.android.build.api.variant.ComponentIdentity
 com.android.build.api.variant.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
+com.android.build.api.variant.Component.getInstrumentation: com.android.build.api.variant.Instrumentation ()
 com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
 com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.ComponentBuilder implements com.android.build.api.variant.ComponentIdentity
@@ -478,6 +479,10 @@ com.android.build.api.variant.HasAndroidTestBuilder.getAndroidTestEnabled: boole
 com.android.build.api.variant.HasAndroidTestBuilder.getEnableAndroidTest: boolean ()
 com.android.build.api.variant.HasAndroidTestBuilder.setAndroidTestEnabled: void (boolean)
 com.android.build.api.variant.HasAndroidTestBuilder.setEnableAndroidTest: void (boolean)
+com.android.build.api.variant.Instrumentation
+com.android.build.api.variant.Instrumentation.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.Instrumentation.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
+com.android.build.api.variant.Instrumentation.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.JniLibsApkPackaging implements com.android.build.api.variant.JniLibsPackaging
 com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackaging: org.gradle.api.provider.Provider<java.lang.Boolean> ()
 com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackagingFromBundle: org.gradle.api.provider.Provider<java.lang.Boolean> ()
