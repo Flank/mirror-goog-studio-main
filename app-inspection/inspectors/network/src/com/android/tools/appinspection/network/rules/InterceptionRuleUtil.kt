@@ -33,8 +33,8 @@ fun MatchingText.matches(text: String): Boolean {
     }
 }
 
-fun wildCardMatches(pattern: String, text: String): Boolean {
-    return (pattern.isBlank()) || wildCardToRegex(pattern).matches(text)
+fun wildCardMatches(pattern: String, text: String?): Boolean {
+    return (pattern.isBlank()) || text?.let { wildCardToRegex(pattern).matches(text) } == true
 }
 
 fun MatchingText.toRegex(): Regex =

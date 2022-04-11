@@ -41,6 +41,8 @@ class InterceptionRuleTest {
 
     @Test
     fun matchingTextMatchesTargets() {
+        assertThat(wildCardMatches("", null)).isTrue()
+
         val plainMatchingText = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
             text = "myText"
