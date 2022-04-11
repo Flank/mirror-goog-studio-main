@@ -65,7 +65,8 @@ class KotlinMultiplatformPublishingTest {
 
     @Test
     fun testKotlinMultiplatform() {
-        // TODO(b/228332425): disallow dependency resolution at configuration
+        // Allow dependency resolution at configuration and disable configuration cache
+        // https://youtrack.jetbrains.com/issue/KT-49933 and https://youtrack.jetbrains.com/issue/KT-51940
         project.executor()
             .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
