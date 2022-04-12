@@ -53,8 +53,14 @@ fun computeAvdName(
     apiLevel: Int,
     vendor: String,
     abi: String,
-    hardwareProfile: String) =
-    "dev${apiLevel}_${vendor}_${abi}_${hardwareProfile.replace(' ', '_')}"
+    hardwareProfile: String
+): String {
+    val sanitizedProfile = sanitizeProfileName(hardwareProfile)
+    return "dev${apiLevel}_${vendor}_${abi}_$sanitizedProfile"
+}
+
+fun sanitizeProfileName(hardwareProfile: String) =
+    hardwareProfile.replace(Regex("[() ]"), "_")
 
 fun setupTaskName(device: ManagedVirtualDevice): String = "${device.name}Setup"
 

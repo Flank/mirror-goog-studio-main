@@ -26,6 +26,18 @@ class ManagedDeviceUtilsTest {
     }
 
     @Test
+    fun computeAvdName_worksWithParenthesis() {
+        val computedName = computeAvdName(
+            29,
+            "google_apis",
+            "x86",
+            "Pixel 2 (something)"
+        )
+
+        assertThat(computedName).isEqualTo("dev29_google_apis_x86_Pixel_2__something_")
+    }
+
+    @Test
     fun computeAbiFromArchitecture_useX86Over64IfAvailable() {
         SystemPropertyOverrides().use { systemPropertyOverrides ->
             systemPropertyOverrides.setProperty("os.arch", "x86_64")
