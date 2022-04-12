@@ -28,11 +28,12 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.utils.FileUtils;
@@ -150,7 +151,7 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull T transform) {
         return addTransform(taskFactory, creationConfig, transform, null, null, null);
     }
@@ -174,7 +175,7 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull T transform,
             @Nullable PreConfigAction preConfigAction,
             @Nullable TaskConfigAction<TransformTask> configAction,
@@ -242,6 +243,12 @@ public class TransformManager extends FilterableStreamCollection {
                         configAction.configure(t);
                     }
                 };
+
+        boolean allowIncremental =
+                !creationConfig
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL);
         // create the task...
         return Optional.of(
                 taskFactory.register(
@@ -251,7 +258,8 @@ public class TransformManager extends FilterableStreamCollection {
                                 transform,
                                 inputStreams,
                                 referencedStreams,
-                                outputStream),
+                                outputStream,
+                                allowIncremental),
                         preConfigAction,
                         wrappedConfigAction,
                         providerCallback));
@@ -304,7 +312,7 @@ public class TransformManager extends FilterableStreamCollection {
     @Nullable
     private IntermediateStream findTransformStreams(
             @NonNull Transform transform,
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull List<TransformStream> inputStreams,
             @NonNull String taskName,
             @NonNull File buildDir) {

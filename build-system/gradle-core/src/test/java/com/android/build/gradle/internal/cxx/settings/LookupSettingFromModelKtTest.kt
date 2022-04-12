@@ -76,7 +76,9 @@ class LookupSettingFromModelKtTest {
             val abi = createInitialCxxModel(
                     sdkComponents,
                     androidLocationProvider,
-                    listOf(parameters))
+                    listOf(parameters),
+                    providers,
+                    layout)
                     .single { abi -> abi.abi == Abi.X86_64 }
 
             Macro.values()
@@ -95,7 +97,7 @@ class LookupSettingFromModelKtTest {
                     )
             )
             val allAbis = createInitialCxxModel(
-                it.sdkComponents, it.androidLocationProvider, listOf(configurationParameters)
+                it.sdkComponents, it.androidLocationProvider, listOf(configurationParameters), it.providers, it.layout
             )
             val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 
@@ -136,7 +138,9 @@ class LookupSettingFromModelKtTest {
                     createInitialCxxModel(
                         it.sdkComponents,
                         it.androidLocationProvider,
-                        listOf(it.configurationParameters)
+                        listOf(it.configurationParameters),
+                        it.providers,
+                        it.layout
                     )
             val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 

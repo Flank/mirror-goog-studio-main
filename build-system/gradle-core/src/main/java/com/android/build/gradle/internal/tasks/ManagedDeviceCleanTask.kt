@@ -68,6 +68,7 @@ abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
             parameters.avdService.get().deleteAvds(allAvds.filterNot {
                 parameters.ignoredDevices.get().contains(it)
             })
+            parameters.avdService.get().deleteLegacyGradleManagedDeviceAvdDirectory()
         }
     }
 

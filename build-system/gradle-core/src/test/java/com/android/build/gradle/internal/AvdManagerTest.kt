@@ -29,7 +29,6 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,10 +37,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 
 @RunWith(JUnit4::class)
 class AvdManagerTest {
@@ -95,15 +94,11 @@ class AvdManagerTest {
 
     @Test
     fun noDevicesFromEmptyFolder() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         assertThat(manager.allAvds()).hasSize(0)
     }
 
     @Test
     fun addSingleDevice() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -117,8 +112,6 @@ class AvdManagerTest {
 
     @Test
     fun addMultipleDevices() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -144,8 +137,6 @@ class AvdManagerTest {
 
     @Test
     fun addSameDeviceDoesNotDuplicate() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -164,8 +155,6 @@ class AvdManagerTest {
 
     @Test
     fun testDeleteDevices() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createAvd(
             FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
@@ -189,9 +178,6 @@ class AvdManagerTest {
 
     @Test
     fun testSnapshotCreation() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-
         `when`(snapshotHandler.getEmulatorExecutable(versionedSdkLoader.emulatorDirectoryProvider))
             .thenReturn(FileOpUtils.toFile(emulatorFolder.resolve("emulator")))
         `when`(
@@ -225,9 +211,6 @@ class AvdManagerTest {
 
     @Test
     fun testSnapshotSkippedIfValid() {
-        //TODO(b/169661721): add support for windows.
-        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
-
         `when`(snapshotHandler.getEmulatorExecutable(versionedSdkLoader.emulatorDirectoryProvider))
             .thenReturn(FileOpUtils.toFile(emulatorFolder.resolve("emulator")))
         `when`(
@@ -256,6 +239,25 @@ class AvdManagerTest {
                 any(File::class.java),
                 anyString(),
                 any(ILogger::class.java))
+    }
+
+    @Test
+    fun synchronizationLockFileIsCleanedUpAfterUse() {
+        manager.createAvd(
+            FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
+            "system-images;android-29;default;x86",
+            "device1",
+            "Pixel 2")
+
+        val allAvds = manager.allAvds()
+        assertThat(allAvds).hasSize(1)
+        assertThat(allAvds.first()).isEqualTo("device1")
+
+        assertThat(avdFolder.toFile().list()).isNotEmpty()
+
+        manager.deleteAvds(allAvds)
+
+        assertThat(avdFolder.toFile().list()).isEmpty()
     }
 
     private fun setupVersionedSdkLoader(): SdkComponentsBuildService.VersionedSdkLoader =

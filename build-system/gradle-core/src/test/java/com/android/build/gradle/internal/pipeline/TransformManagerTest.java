@@ -50,6 +50,10 @@ public class TransformManagerTest extends TaskTestUtils {
     public final ExpectedException exception = ExpectedException.none();
     private FileCollection fileCollection;
 
+    public TransformManagerTest() {
+        super(false);
+    }
+
     @Before
     @Override
     public void setUp() throws IOException {

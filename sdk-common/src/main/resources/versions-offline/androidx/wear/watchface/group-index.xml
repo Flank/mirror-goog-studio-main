@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<androidx.wear.watchface>
+  <watchface versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-client versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-client-guava versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-complications versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-complications-data versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-complications-data-source versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-complications-data-source-ktx versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-complications-rendering versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-data versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-editor versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-editor-guava versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-guava versions="1.0.1,1.1.0-alpha04"/>
+  <watchface-style versions="1.0.1,1.1.0-alpha04"/>
+</androidx.wear.watchface>
+

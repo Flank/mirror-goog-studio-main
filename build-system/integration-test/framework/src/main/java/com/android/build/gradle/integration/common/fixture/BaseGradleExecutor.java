@@ -266,10 +266,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             case OFF:
                 arguments.add("--no-configuration-cache");
                 break;
-            case WARN:
-                arguments.add("--configuration-cache");
+            case PROJECT_ISOLATION:
+                arguments.add("-Dorg.gradle.unsafe.isolated-projects=true");
                 arguments.add("--configuration-cache-problems=warn");
-                break;
         }
 
         if (!localPrefsRoot) {
@@ -459,7 +458,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         ON,
         OFF,
         NONE,
-        WARN,
+        PROJECT_ISOLATION,
     }
 
     @NonNull

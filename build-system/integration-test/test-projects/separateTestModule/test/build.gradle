@@ -38,5 +38,6 @@ tasks.register('checkDependencies') {
         // :test:assembleDebug will fail if the app module is not built, so other tests verify
         // that this ends up compiling the app module.
     }
+    // b/224561168
     notCompatibleWithConfigurationCache("doLast block uses project instance")
 }

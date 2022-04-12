@@ -40,13 +40,26 @@ internal class LayoutlibDispatcherFactory : MainDispatcherFactory {
   override fun createDispatcher(allFactories: List<MainDispatcherFactory>): MainCoroutineDispatcher = mainDispatcher
 }
 
+private const val RENDER_THREAD_NAME = "Layoutlib Render Thread"
+
 private val mainDispatcher = object : MainCoroutineDispatcher() {
   var executor: ExecutorService? = null
-  override val immediate: MainCoroutineDispatcher
-    get() = this
+  override val immediate: MainCoroutineDispatcher = this
 
   override fun dispatch(context: CoroutineContext, block: Runnable) {
-    executor?.asCoroutineDispatcher()?.dispatch(context, block)
+    /**
+     * If we are in Layoutlib Render Thread we can (and should) just execute the block straight
+     * away. Only if we are called from another thread (should not generally happen) we should
+     * schedule the block to the main thread (handled by the executor).
+     *
+     * We check with [startsWith] because coroutines can rename the thread (see
+     * https://github.com/Kotlin/kotlinx.coroutines/blob/master/kotlinx-coroutines-core/jvm/src/CoroutineContext.kt#L174)
+     */
+    if (Thread.currentThread().name.startsWith(RENDER_THREAD_NAME)) {
+        block.run()
+    } else {
+        executor?.asCoroutineDispatcher()?.dispatch(context, block)
+    }
   }
 }
 

@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NdkHandlerInput;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -253,9 +253,9 @@ public abstract class ShaderCompile extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ShaderCompile, VariantCreationConfig> {
+            extends VariantTaskCreationAction<ShaderCompile, ConsumableCreationConfig> {
 
-        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
+        public CreationAction(@NonNull ConsumableCreationConfig creationConfig) {
             super(creationConfig);
         }
 

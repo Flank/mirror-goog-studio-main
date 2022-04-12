@@ -33,7 +33,6 @@ public class LintResourceResolveTest {
     public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("lintResourceResolve")
-                    .withConfigurationCacheMaxProblems(44)
                     .create();
 
     @Test

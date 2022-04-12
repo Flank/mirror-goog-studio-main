@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
@@ -66,10 +65,16 @@ class CompileAndRuntimeClasspathTest {
 
         // DependencyReportTask is not compatible with configuration caching
         // See (https://github.com/gradle/gradle/issues/17470)
-        val result =
-            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-                .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=2")
-                .run("dependencies")
+        project.buildFile.appendText(
+            """
+
+                tasks.findByPath(":dependencies").configure {
+                    notCompatibleWithConfigurationCache("broken")
+                }
+            """.trimIndent()
+        )
+
+        val result = project.executor().run("dependencies")
         result.stdout.use {
             ScannerSubject.assertThat(it).contains(
                 """debugCompileClasspath - Resolved configuration for compilation for variant: debug

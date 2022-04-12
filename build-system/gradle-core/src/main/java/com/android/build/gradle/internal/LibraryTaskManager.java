@@ -211,7 +211,8 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libraryVariant));
 
-        createCxxVariantBuildTask(taskFactory, variantInfo.getVariant());
+        createCxxVariantBuildTask(
+                taskFactory, variantInfo.getVariant(), project.getProviders(), project.getLayout());
 
         createMergeJniLibFoldersTasks(libraryVariant);
 

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.io.CancellableFileIo;
 import com.android.prefs.AbstractAndroidLocations;
+import com.android.prefs.AndroidLocationsException;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.devices.Device;
@@ -52,6 +53,8 @@ public class AvdManagerTest extends TestCase {
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
     private Path mAvdFolder;
+    private AvdManager mGradleManagedDeviceAvdManager;
+    private Path mGradleManagedDeviceAvdFolder;
     private SystemImage mSystemImageAosp;
     private SystemImage mSystemImageApi21;
     private SystemImage mSystemImageGoogle;
@@ -85,6 +88,15 @@ public class AvdManagerTest extends TestCase {
                         prefsRoot.resolve(AbstractAndroidLocations.FOLDER_AVD),
                         new NullLogger());
         mAvdFolder = AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), false);
+        mGradleManagedDeviceAvdManager =
+                AvdManager.getInstance(
+                        mAndroidSdkHandler,
+                        prefsRoot
+                                .resolve(AbstractAndroidLocations.FOLDER_AVD)
+                                .resolve(AbstractAndroidLocations.FOLDER_GRADLE_AVD),
+                        new NullLogger());
+        mGradleManagedDeviceAvdFolder =
+                AvdInfo.getDefaultAvdFolder(mGradleManagedDeviceAvdManager, getName(), false);
 
         for (SystemImage si : mAndroidSdkHandler.getSystemImageManager(new FakeProgressIndicator()).getImages()) {
             final String tagId = si.getTag().getId();
@@ -274,6 +286,30 @@ public class AvdManagerTest extends TestCase {
                 AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals("false", properties.get("hw.arc"));
         assertEquals("x86", properties.get("hw.cpu.arch"));
+    }
+
+    public void testCreateAvdForGradleManagedDevice() throws AndroidLocationsException {
+        MockLog log = new MockLog();
+        mGradleManagedDeviceAvdManager.createAvd(
+                mGradleManagedDeviceAvdFolder,
+                this.getName(),
+                mSystemImageAosp,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                false,
+                log);
+
+        assertThat(mGradleManagedDeviceAvdManager.getAllAvds()).hasLength(1);
+
+        // Creating AVD in Gradle Managed Device folder (.android/avd/gradle-managed) should not
+        // confuse the standard AVD manager (.android/avd).
+        mAvdManager.reloadAvds(log);
+        assertThat(mAvdManager.getAllAvds()).isEmpty();
     }
 
     public void testRenameAvd() {

@@ -15,9 +15,9 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
@@ -76,7 +76,7 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
  */
 fun createCxxConfigureTask(
     globalConfig: GlobalTaskCreationConfig,
-    creationConfig: VariantImpl,
+    creationConfig: VariantCreationConfig,
     abi: CxxAbiModel,
     name: String
 ) = object : GlobalTaskCreationAction<ExternalNativeBuildJsonTask>(globalConfig) {

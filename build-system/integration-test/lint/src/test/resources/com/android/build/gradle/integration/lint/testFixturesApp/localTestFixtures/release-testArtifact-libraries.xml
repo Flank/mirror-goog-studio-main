@@ -30,7 +30,7 @@
       resolved="::"/>
   <library
       name="${projectDir}@@:lib::release::testFixtures"
-      jars="${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures/jars/classes.jar"
+      jars="${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures/jars/classes.jar:${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures/jars/libs/R.jar"
       resolved="testFixturesApp:lib:unspecified"
       folder="${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures"
       manifest="AndroidManifest.xml"

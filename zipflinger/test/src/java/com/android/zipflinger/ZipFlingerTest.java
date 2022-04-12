@@ -1178,4 +1178,18 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
             archive.add(Sources.dir(dirName));
         }
     }
+
+    @Test
+    public void testDirectoryPermission() throws Exception {
+        Path archPath = getTestPath("testDirectoryPermission.zip");
+        String dirName = Source.directoryName("dir");
+        try (ZipArchive archive = new ZipArchive(archPath)) {
+            archive.add(Sources.dir(dirName));
+        }
+
+        try (ZipRepo repo = new ZipRepo((archPath))) {
+            Entry dir = repo.getEntries().get(dirName);
+            Assert.assertEquals("", Source.PERMISSION_DIR_DEFAULT, dir.getExternalAttributes());
+        }
+    }
 }

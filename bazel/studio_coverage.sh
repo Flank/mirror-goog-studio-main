@@ -34,7 +34,7 @@ collect_and_exit() {
   if [[ -d "${dist_dir}" ]]; then
     "${script_dir}/bazel" \
     run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
-    --config=rcache \
+    --config=rcache --config=sponge \
     -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
@@ -61,7 +61,7 @@ readonly invocation_id="$(uuidgen)"
 
 if [[ -d "${dist_dir}" ]]; then
   # Link to test results
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 fi
 
 declare -a bazelrc_flags
@@ -90,8 +90,9 @@ fi
 "${script_dir}/bazel" \
   "${bazelrc_flags[@]}" \
   test \
-  --config=dynamic \
+  --config=dynamic --config=sponge \
   --invocation_id=${invocation_id} \
+  --tool_tag="studio_coverage.sh" \
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --profile="${dist_dir:-/tmp}/profile-${build_number}.json.gz" \
   --build_metadata=ANDROID_BUILD_ID="${build_number}" \
@@ -109,13 +110,13 @@ readonly report_invocation_id="$(uuidgen)"
 
 if [[ -d "${dist_dir}" ]]; then
   # Link to test results
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${report_invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_build_report_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${report_invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_build_report_results.html
 fi
 
 # Build the lcov file
 "${script_dir}/bazel" \
   build \
-  --config=rcache \
+  --config=rcache --config=sponge \
   --invocation_id=${report_invocation_id} \
   --jobs=HOST_CPUS*.5 \
   ${auth_options} \

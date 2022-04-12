@@ -22,6 +22,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.provider.ProviderFactory
 import java.io.File
 import java.io.StringReader
 import java.io.StringWriter
@@ -59,10 +61,15 @@ fun createSettingsFromJsonString(
  * Given a file with json construct [Settings].
  */
 fun createSettingsFromJsonFile(
-    json: File
+    json: File,
+    providers: ProviderFactory,
+    layout: ProjectLayout
 ) : Settings {
     PassThroughPrefixingLoggingEnvironment(file = json).use {
-        return createSettingsFromJsonString(json.readText())
+        val jsonContent = providers.fileContents(
+            layout.file(providers.provider { json })
+        ).asText.get()
+        return createSettingsFromJsonString(jsonContent)
     }
 }
 

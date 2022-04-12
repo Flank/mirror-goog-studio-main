@@ -22,7 +22,7 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.computeManagedDeviceEmulatorMode
@@ -49,7 +49,6 @@ import com.android.build.gradle.internal.testing.utp.shouldEnableUtp
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
-import com.android.builder.core.BuilderConstants
 import com.android.builder.model.TestOptions
 import com.android.repository.Revision
 import com.android.utils.FileUtils
@@ -340,16 +339,16 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
+        creationConfig: InstrumentedTestCreationConfig,
         private val device: ManagedVirtualDevice,
         private val testData: AbstractTestDataImpl,
         private val testResultOutputDir: File,
         private val testReportOutputDir: File,
         private val additionalTestOutputDir: File,
         private val coverageOutputDir: File,
-        private val nameSuffix: String = "",
+        nameSuffix: String = "",
     ) : VariantTaskCreationAction<
-            ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
+            ManagedDeviceInstrumentationTestTask, InstrumentedTestCreationConfig>(creationConfig) {
 
         override val name = computeTaskName(device.name, nameSuffix)
 

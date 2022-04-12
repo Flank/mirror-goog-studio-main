@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <androidx.biometric>
-  <biometric versions="1.1.0,1.2.0-alpha03"/>
-  <biometric-ktx versions="1.2.0-alpha03"/>
+  <biometric versions="1.1.0,1.2.0-alpha04"/>
+  <biometric-ktx versions="1.2.0-alpha04"/>
 </androidx.biometric>
 

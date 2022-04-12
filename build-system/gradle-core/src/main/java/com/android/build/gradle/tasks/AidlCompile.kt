@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.BuildToolsExecutableInput
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -147,8 +147,8 @@ abstract class AidlCompile : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<AidlCompile, VariantCreationConfig>(
+        creationConfig: ConsumableCreationConfig
+    ) : VariantTaskCreationAction<AidlCompile, ConsumableCreationConfig>(
         creationConfig
     ) {
 
@@ -200,7 +200,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
     abstract class AidlCompileRunnable : ProfileAwareWorkAction<AidlCompileRunnable.Params>() {
 
-        abstract class Params: ProfileAwareWorkAction.Parameters() {
+        abstract class Params: Parameters() {
             abstract val aidlExecutable: RegularFileProperty
             abstract val frameworkLocation: DirectoryProperty
             abstract val importFolders: ConfigurableFileCollection

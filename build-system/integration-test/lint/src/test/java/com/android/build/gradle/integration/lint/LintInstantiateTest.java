@@ -30,7 +30,6 @@ public class LintInstantiateTest {
     public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("lintInstantiate")
-                    .withConfigurationCacheMaxProblems(87)
                     .create();
 
     @Test

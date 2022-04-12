@@ -47,7 +47,6 @@ public class LintKotlinTest {
     public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("lintKotlin")
-                    .withConfigurationCacheMaxProblems(4)
                     .create();
 
     @Test

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <androidx.mediarouter>
-  <mediarouter versions="1.2.4"/>
+  <mediarouter versions="1.2.6,1.3.0-rc01"/>
 </androidx.mediarouter>
 

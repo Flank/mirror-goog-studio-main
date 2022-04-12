@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
@@ -23,7 +24,6 @@ import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS_FOR_UNIT_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -165,7 +165,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
             resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS_FOR_UNIT_TEST)
+            mergedAssets = testedVariant.artifacts.get(SingleArtifact.ASSETS)
             mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.namespace

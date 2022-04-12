@@ -54,7 +54,8 @@ setlocal
   ) else if %BUILD_TYPE%==POSTSUBMIT (
     set NOCACHE=--nocache_test_results
     set FLAKY_ATTEMPTS=--flaky_test_attempts=2
-    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS!
+    set ANTS=--config=ants
+    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS! !ANTS!
   )
 
   set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate
@@ -64,7 +65,7 @@ setlocal
     set INVOCATIONID=%%f
   )
   if exist %DISTDIR%\ (
-    echo ^<head^>^<meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" /^>^</head^> > %DISTDIR%\upsalite_test_results.html
+    echo ^<head^>^<meta http-equiv="refresh" content="0; url='https://fusion2.corp.google.com/invocations/%INVOCATIONID%'" /^>^</head^> > %DISTDIR%\upsalite_test_results.html
   )
 
   set TARGETS=
@@ -83,11 +84,15 @@ setlocal
   %BAZELRC_FLAGS% ^
   test ^
   --config=dynamic ^
+  --config=sponge ^
+  --tool_tag=studio_win.cmd ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^
   --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
   --test_tag_filters=%TESTTAGFILTERS% ^
   --build_metadata=ANDROID_BUILD_ID=%BUILDNUMBER% ^
+  --build_metadata=ab_build_id=%BUILDNUMBER% ^
+  --build_metadata=ab_target=studio-win ^
   --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
   %CONDITIONAL_FLAGS% ^
   -- ^

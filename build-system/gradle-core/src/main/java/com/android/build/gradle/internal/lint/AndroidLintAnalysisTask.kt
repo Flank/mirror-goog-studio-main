@@ -21,7 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -157,7 +157,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             arguments += "--fatalOnly"
         }
         arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
-        arguments += listOf("--sdk-home", androidSdkHome.get())
+        androidSdkHome.orNull?.let { arguments.add("--sdk-home", it) }
 
         arguments += "--lint-model"
         arguments += listOf(lintModelDirectory.get().asFile.absolutePath).asLintPaths()
@@ -215,7 +215,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     /**
      * CreationAction for the lintVitalAnalyzeVariant task. Does not use the variant with tests
      */
-    class LintVitalCreationAction(variant: ConsumableCreationConfig) :
+    class LintVitalCreationAction(variant: VariantCreationConfig) :
         VariantCreationAction(VariantWithTests(
             variant,
             androidTest = null,
@@ -313,12 +313,16 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
-        this.androidSdkHome.setDisallowChanges(
-            sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }
-                .map { it.asFile.absolutePath }
-        )
-        this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
+
         this.android.setDisallowChanges(isAndroid)
+        if(isAndroid) {
+            this.androidSdkHome.set(
+                sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }
+                    .map { it.asFile.absolutePath }
+            )
+        }
+        this.androidSdkHome.disallowChanges()
+        this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
 
         // Include Lint jars set via the environment variable ANDROID_LINT_JARS
         val globalLintJarsFromEnvVariable: Provider<List<String>> =

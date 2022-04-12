@@ -21,6 +21,7 @@ import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -380,7 +381,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                             null
                         else creationConfig.targetSdkVersion.getApiString()
                 )
-            task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
+            task.maxSdkVersion.setDisallowChanges(
+                (creationConfig as VariantCreationConfig).maxSdkVersion
+            )
             task.optionalFeatures.setDisallowChanges(creationConfig.services.provider {
                 getOptionalFeatures(
                     creationConfig

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ENUMERATED_RUNTIME_CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -59,8 +59,8 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig)
-        : VariantTaskCreationAction<CheckDuplicateClassesTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ComponentCreationConfig)
+        : VariantTaskCreationAction<CheckDuplicateClassesTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

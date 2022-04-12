@@ -291,9 +291,6 @@ InternalArtifactType<T : FileSystemLocation>(
     object SHADER_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     object LIBRARY_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // assets built by AGP and possible additions from the variant API are merged into this
-    // private type for 'test_config.properties' creation.
-    object MERGED_ASSETS_FOR_UNIT_TEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // compressed assets, ready to be packaged in the APK.
     object COMPRESSED_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 

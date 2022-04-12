@@ -60,6 +60,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
     private static final Object LOCK = new Object();
 
     private final Collection<SchemaModule<?>> mAllowedModules;
+    private final Collection<SchemaModule<?>> mAllowedGoogleModules;
 
     private RepoManager mRepoManager;
 
@@ -68,11 +69,16 @@ public class LocalSourceProvider implements RepositorySourceProvider {
      *
      * @param location The file to load from and save to.
      * @param allowedModules The {@link SchemaModule}s that are allowed to be used by sources
-     *     provided by this provider.
+     *     provided by this provider with non-Google-owned URLs.
+     * @param allowedGoogleModules The {@link SchemaModule}s that are allowed to be used by sources
+     *     provided by this provider with Google-owned URLs.
      */
     public LocalSourceProvider(
-            @NonNull Path location, @NonNull Collection<SchemaModule<?>> allowedModules) {
+            @NonNull Path location,
+            @NonNull Collection<SchemaModule<?>> allowedModules,
+            @NonNull Collection<SchemaModule<?>> allowedGoogleModules) {
         mAllowedModules = allowedModules;
+        mAllowedGoogleModules = allowedGoogleModules;
         mLocation = location;
     }
 
@@ -81,6 +87,17 @@ public class LocalSourceProvider implements RepositorySourceProvider {
      */
     public void setRepoManager(@NonNull RepoManager manager) {
         mRepoManager = manager;
+    }
+
+    /**
+     * A user can add an update site with any URL. Google URLs are allowed to contain modules of any
+     * type (e.g. platforms, tools, etc.). Non-Google URLs are only allowed to use system images and
+     * addons.
+     */
+    @NonNull
+    public Collection<SchemaModule<?>> getAllowedModulesBasedOnUrl(@NonNull String url) {
+        final boolean isGoogleUrl = url.startsWith("https://dl.google.com/");
+        return isGoogleUrl ? mAllowedGoogleModules : mAllowedModules;
     }
 
     /**
@@ -123,9 +140,11 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                         enabled = Boolean.parseBoolean(enabledStr);
                     }
                     if (url != null) {
+                        Collection<SchemaModule<?>> allowedModules =
+                                getAllowedModulesBasedOnUrl(url);
                         result.add(
                                 new SimpleRepositorySource(
-                                        url, disp, enabled, mAllowedModules, this));
+                                        url, disp, enabled, allowedModules, this));
                     }
                 }
             } catch (NoSuchFileException ignore) {

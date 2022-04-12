@@ -18,11 +18,19 @@ package com.android.tools.profgen
 
 import java.io.File
 
-fun dumpProfile(os: Appendable, profile: ArtProfile, apk: Apk, obf: ObfuscationMap) {
+fun dumpProfile(
+    os: Appendable,
+    profile: ArtProfile,
+    apk: Apk, obf: ObfuscationMap,
+    strict: Boolean = true,
+) {
     for ((dexFile, dexFileData) in profile.profileData) {
-        val file =
-            apk.dexes.find { it.name == dexFile.name }
-                ?: error("Couldn't find dex: ${dexFile.name}")
+        val file = apk.dexes.find { it.name == dexFile.name }
+          ?: if (strict) {
+              throw IllegalStateException("Cannot find Dex File ${dexFile.name}")
+          } else {
+              continue
+          }
         for ((key, method) in dexFileData.methods) {
             if (method.flags != 0) {
                 val dexMethod = file.methodPool[key]

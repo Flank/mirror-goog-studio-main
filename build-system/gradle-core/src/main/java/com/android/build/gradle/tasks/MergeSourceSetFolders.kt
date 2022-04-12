@@ -15,13 +15,13 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.AssetSourceDirectoriesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
@@ -443,9 +443,10 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.use(taskProvider)
-                .wiredWith { it.outputDir }
-                .toAppendTo(MultipleArtifact.ASSETS)
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    MergeSourceSetFolders::outputDir
+            ).on(SingleArtifact.ASSETS)
         }
     }
 
@@ -470,7 +471,7 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
         }
     }
 
-    class MergeJniLibFoldersCreationAction(creationConfig: VariantCreationConfig) :
+    class MergeJniLibFoldersCreationAction(creationConfig: ConsumableCreationConfig) :
         CreationAction(creationConfig) {
 
         override val name: String
@@ -494,7 +495,7 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
         }
     }
 
-    class MergeShaderSourceFoldersCreationAction(creationConfig: VariantCreationConfig) :
+    class MergeShaderSourceFoldersCreationAction(creationConfig: ConsumableCreationConfig) :
         CreationAction(creationConfig) {
 
         override val name: String

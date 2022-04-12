@@ -2,7 +2,10 @@ package com.android.tools.profgen
 
 import com.google.common.truth.Truth.assertThat
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.InputStream
 import java.util.zip.CRC32
+import java.util.zip.ZipFile
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -247,6 +250,32 @@ class ArtProfileTests {
         println(hrf)
         println("-------------------------------------")
         assert(hrf.isNotEmpty())
+    }
+
+    @Test
+    fun testDumpProfiles_allowInvalidDexFiles() {
+        // b/227394536 AGP only generates valid profiles for some dex files in the APK.
+        // This can be worked around by using strict = false
+        val obf = ObfuscationMap(testData("now-in-android/b-227394536/mapping.txt"))
+        val apkFile = testData("now-in-android/b-227394536/app-release.apk")
+        val apk = Apk(apkFile)
+        val input = inputStreamOf(apkFile, "assets/dexopt/baseline.prof")
+        input.use {
+            val prof = ArtProfile(input)!!
+            val builder = StringBuilder()
+            dumpProfile(builder, prof, apk, obf, strict = false)
+            val hrf = builder.toString()
+            println("--- Output Human readable profile ---")
+            println(hrf)
+            println("-------------------------------------")
+            assert(hrf.isNotEmpty())
+        }
+    }
+
+    private fun inputStreamOf(apkFile: File, name: String): InputStream {
+        val zip = ZipFile(apkFile)
+        val entry = zip.entries().asSequence().first { it.name == name }
+        return zip.getInputStream(entry)
     }
 
     private fun assertSerializationIntegrity(

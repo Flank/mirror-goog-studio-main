@@ -18,6 +18,7 @@ package com.android.fakeadbserver.shellcommandhandlers
 import com.android.fakeadbserver.CommandHandler
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
+import com.android.fakeadbserver.shellcommandhandlers.ShellConstants
 import java.io.IOException
 import java.net.Socket
 import java.util.regex.Pattern
@@ -38,6 +39,7 @@ class PackageManagerCommandHandler : SimpleShellHandler("pm") {
       val response: String = when {
         args == "list users" -> listUsers()
         args.startsWith("path ") -> pathToApp(args)
+        args.startsWith("uninstall") -> uninstall(args)
         else -> ""
       }
 
@@ -52,6 +54,16 @@ class PackageManagerCommandHandler : SimpleShellHandler("pm") {
   private fun listUsers(): String {
     return "Users:\n" +
          "\tUserInfo{0:Owner:13} running\n"
+  }
+
+  private fun uninstall(args : String?) : String{
+      args ?: return "Error: package name not specified"
+      val param = args.split(" ")
+      val applicationId = param[param.size - 1]
+      if (applicationId == ShellConstants.NON_INSTALLED_APP_ID) {
+          return "Failure [DELETE_FAILED_INTERNAL_ERROR]"
+      }
+      return "Success"
   }
 
   /**

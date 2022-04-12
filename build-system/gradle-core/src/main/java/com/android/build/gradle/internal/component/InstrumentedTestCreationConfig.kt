@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.component
 
 import org.gradle.api.provider.Provider
 
-interface InstrumentedTestCreationConfig {
+interface InstrumentedTestCreationConfig: ConsumableCreationConfig {
 
     /**
      * Returns the instrumentationRunner to use to test this variant, or if the variant is a test,

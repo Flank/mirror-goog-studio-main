@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -129,7 +130,6 @@ import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestR
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
-import com.android.build.gradle.internal.tasks.MergeAssetsForUnitTest
 import com.android.build.gradle.internal.tasks.MergeClassesTask
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
@@ -350,7 +350,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             globalConfig.services.issueReporter,
             taskFactory,
             globalConfig.services.projectOptions,
-            variants
+            variants,
+            project.providers,
+            project.layout
         )
     }
 
@@ -1055,7 +1057,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(MergeNativeLibsTask.CreationAction(creationConfig))
     }
 
-    fun createBuildConfigTask(creationConfig: VariantCreationConfig) {
+    fun createBuildConfigTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildConfigEnabled) {
             val generateBuildConfigTask =
                     taskFactory.register(GenerateBuildConfig.CreationAction(creationConfig))
@@ -1092,7 +1094,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createApkProcessResTask(creationConfig: VariantCreationConfig) {
+    fun createApkProcessResTask(creationConfig: ConsumableCreationConfig) {
         val componentType = creationConfig.componentType
         val packageOutputType: InternalArtifactType<Directory>? =
                 if (componentType.isApk && !componentType.isForTesting) FEATURE_RESOURCE_PKG else null
@@ -1336,7 +1338,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createAidlTask(creationConfig: VariantCreationConfig) {
+    fun createAidlTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildFeatures.aidl) {
             val taskContainer = creationConfig.taskContainer
             val aidlCompileTask = taskFactory.register(AidlCompile.CreationAction(creationConfig))
@@ -1344,7 +1346,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createShaderTask(creationConfig: VariantCreationConfig) {
+    fun createShaderTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildFeatures.shaders) {
             // merge the shader folders together using the proper priority.
             taskFactory.register(
@@ -1450,9 +1452,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // process java resources
         createProcessJavaResTask(unitTestCreationConfig)
         if (includeAndroidResources) {
-            // merging task for assets in unit tests.
-            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig))
-
             if (testedVariant.componentType.isAar) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(unitTestCreationConfig)
@@ -1477,7 +1476,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .copy(PROCESSED_RES, testedVariant.artifacts)
                 unitTestCreationConfig
                         .artifacts
-                        .copy(MultipleArtifact.ASSETS, testedVariant.artifacts)
+                        .copy(SingleArtifact.ASSETS, testedVariant.artifacts)
                 taskFactory.register(PackageForUnitTest.CreationAction(unitTestCreationConfig))
             } else {
                 throw IllegalStateException(
@@ -1487,7 +1486,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 + project.path
                                 + " must be a library or an application to have unit tests.")
             }
-            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig.testedConfig))
             val generateTestConfig = taskFactory.register(
                     GenerateTestConfig.
                     CreationAction(unitTestCreationConfig))
@@ -1805,7 +1803,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      * used if the test config's name does not include a test suffix.
      */
     protected fun createTestDevicesForVariant(
-        creationConfig: VariantCreationConfig,
+        creationConfig: InstrumentedTestCreationConfig,
         testData: AbstractTestDataImpl,
         variant: VariantImpl?,
         variantName: String,
@@ -3204,7 +3202,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun configureTestData(
-            creationConfig: VariantCreationConfig, testData: AbstractTestDataImpl) {
+            creationConfig: TestCreationConfig, testData: AbstractTestDataImpl) {
         testData.animationsDisabled = creationConfig
                 .services
                 .provider(globalConfig.testOptions::animationsDisabled)
@@ -3216,7 +3214,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     private fun maybeCreateCheckDuplicateClassesTask(
-            creationConfig: VariantCreationConfig) {
+            creationConfig: ComponentCreationConfig) {
         if (creationConfig
                         .services
                         .projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {

@@ -26,6 +26,7 @@ import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.ide.ModelBuilder
@@ -1086,7 +1087,7 @@ abstract class BuildFeaturesInput {
     @get:Input
     abstract val namespacingMode: Property<LintModelNamespacingMode>
 
-    fun initialize(creationConfig: ConsumableCreationConfig) {
+    fun initialize(creationConfig: VariantCreationConfig) {
         viewBinding.setDisallowChanges(creationConfig.buildFeatures.viewBinding)
         coreLibraryDesugaringEnabled.setDisallowChanges(creationConfig.isCoreLibraryDesugaringEnabled)
         namespacingMode.setDisallowChanges(

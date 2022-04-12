@@ -16,15 +16,57 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.Renderscript
+import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.dexing.DexingType
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 /**
  * CreationConfig for variants that produces an artifact that is directly install-able to devices
  * like APKs or AABs or used by other projects as a versioned reusable logic like AARs.
  */
-interface ConsumableCreationConfig: VariantCreationConfig {
+interface ConsumableCreationConfig: ComponentCreationConfig {
+    val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
+
+    @Deprecated("DO NOT USE, use buildConfigFields map property")
+    val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
+
+    val resValues: MapProperty<ResValue.Key, ResValue>
+
+    val packaging: Packaging
+
+    /**
+     * Returns the minimum SDK version for which is used for dexing this variant.
+     * See [ApkCreationConfigImpl.minSdkVersionForDexing] for details.
+     */
+    val minSdkVersionForDexing: AndroidVersion
+
+    val isMultiDexEnabled: Boolean
+
+    val isCoreLibraryDesugaringEnabled: Boolean
+
+    val proguardFiles: ListProperty<RegularFile>
+
+    /**
+     * Returns the component ids of those library dependencies whose keep rules are ignored when
+     * building the project.
+     */
+    val ignoredLibraryKeepRules: Provider<Set<String>>
+
+    /**
+     * Returns whether to ignore all keep rules from external library dependencies.
+     */
+    val ignoreAllLibraryKeepRules: Boolean
+
     val renderscriptTargetApi: Int
 
     val dexingType: DexingType

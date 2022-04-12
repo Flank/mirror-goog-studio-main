@@ -46,6 +46,22 @@ public class MethodBodyEvaluator {
     public MethodBodyEvaluator(
             LiveEditContext context, Interpretable clazz, String methodName, String methodDesc) {
         MethodNode methodNode = clazz.getMethod(methodName, methodDesc);
+
+        // Make sure the bytecode contained the method we need.
+        if (methodNode == null) {
+            String lookup = methodName + methodDesc;
+            String msg =
+                    String.format(
+                            "Unable to find method '%s' in '%s' (%s)\n",
+                            lookup, clazz.getInternalName(), clazz.getFilename());
+            StringBuilder errorMsg = new StringBuilder(msg);
+            errorMsg.append("Found:\n");
+            for (String m : clazz.getMethodNames()) {
+                errorMsg.append(String.format("   %s\n", m));
+            }
+            throw new IllegalStateException(errorMsg.toString());
+        }
+
         InterpretedMethod method =
                 new InterpretedMethod(
                         methodNode, clazz.getFilename(), methodName, clazz.getInternalName());

@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <androidx.wear.compose>
-  <compose-foundation versions="1.0.0-alpha01"/>
-  <compose-material versions="1.0.0-alpha01"/>
+  <compose-foundation versions="1.0.0-alpha19"/>
+  <compose-material versions="1.0.0-alpha19"/>
+  <compose-navigation versions="1.0.0-alpha19"/>
 </androidx.wear.compose>
 

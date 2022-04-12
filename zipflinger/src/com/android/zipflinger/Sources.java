@@ -37,7 +37,9 @@ public class Sources {
         if (!Source.isNameDirectory(name)) {
             name = Source.directoryName(name);
         }
-        return new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
+        Source source = new BytesSource(new byte[0], name, Deflater.NO_COMPRESSION);
+        source.setExternalAttributes(Source.PERMISSION_DIR_DEFAULT);
+        return source;
     }
 
     public static Source from(Path path, @NonNull String name, int compressionLevel)

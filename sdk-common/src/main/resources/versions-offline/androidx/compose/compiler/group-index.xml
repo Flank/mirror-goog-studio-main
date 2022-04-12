@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <androidx.compose.compiler>
-  <compiler versions="1.0.0-rc01"/>
+  <compiler versions="1.1.1,1.2.0-alpha06"/>
 </androidx.compose.compiler>
 

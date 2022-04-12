@@ -49,7 +49,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -67,7 +69,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val result = createFoldedCxxTaskDependencyModel(allAbis)
             val variantBuild = result.tasks["externalNativeBuildDebug"] as VariantBuild
@@ -94,7 +98,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -121,7 +127,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -147,7 +155,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -166,7 +176,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -195,7 +207,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -224,7 +238,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -253,7 +269,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -282,7 +300,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -315,7 +335,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2, config3)
+                listOf(config1, config2, config3),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -371,7 +393,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -402,7 +426,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
@@ -431,7 +457,9 @@ class CxxConfigurationFoldingTest {
             val allAbis = createInitialCxxModel(
                 sdkComponents,
                 androidLocationProvider,
-                listOf(config1, config2)
+                listOf(config1, config2),
+                providers,
+                layout
             )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(

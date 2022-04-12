@@ -18,6 +18,7 @@ package com.android.repository.impl.sources;
 import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystemAndFolder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -44,8 +45,10 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +56,7 @@ import org.junit.Test;
 
 /** Tests for {@link LocalSourceProvider} */
 public class LocalSourceProviderTest {
+
     @Test
     public void loadSources() throws Exception {
         FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
@@ -68,6 +72,7 @@ public class LocalSourceProviderTest {
         LocalSourceProvider provider =
                 new LocalSourceProvider(
                         fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources")),
+                        ImmutableList.of(RepoManager.getGenericModule()),
                         ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         Iterator<RepositorySource> sources =
@@ -89,8 +94,8 @@ public class LocalSourceProviderTest {
         FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         LocalSourceProvider provider =
                 new LocalSourceProvider(
-                        fs.getPath(
-                                InMemoryFileSystems.getPlatformSpecificPath("/doesntExist")),
+                        fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/doesntExist")),
+                        ImmutableList.of(RepoManager.getGenericModule()),
                         ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         FakeProgressIndicator logger = new FakeProgressIndicator();
@@ -107,7 +112,9 @@ public class LocalSourceProviderTest {
                 sourcesPath, "enabled00=true\n" + "src00=http\\://example.com/foo\n" + "count=1");
         LocalSourceProvider provider =
                 new LocalSourceProvider(
-                        sourcesPath, ImmutableList.of(RepoManager.getGenericModule()));
+                        sourcesPath,
+                        ImmutableList.of(RepoManager.getGenericModule()),
+                        ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false);
@@ -131,7 +138,10 @@ public class LocalSourceProviderTest {
         FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         Path file = fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources"));
         LocalSourceProvider provider =
-                new LocalSourceProvider(file, ImmutableList.of(RepoManager.getGenericModule()));
+                new LocalSourceProvider(
+                        file,
+                        ImmutableList.of(RepoManager.getGenericModule()),
+                        ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         provider.getSources(null, progress, false);
@@ -201,11 +211,52 @@ public class LocalSourceProviderTest {
                         + "src01=http\\://example.com/foo2\n"
                         + "count=2");
         ImmutableList<SchemaModule<?>> modules = ImmutableList.of(fakeSchema);
-        LocalSourceProvider provider = new LocalSourceProvider(sourcesPath, modules);
+        LocalSourceProvider provider = new LocalSourceProvider(sourcesPath, modules, modules);
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false);
         assertEquals(modules, sources.iterator().next().getPermittedModules());
+    }
+
+    @Test
+    public void allowedModulesBasedOnUrl() {
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
+        Path sourcesPath = fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources"));
+
+        ImmutableList<SchemaModule<?>> allowedModules =
+                ImmutableList.of(RepoManager.getGenericModule());
+        ImmutableList<SchemaModule<?>> allowedGoogleModules =
+                ImmutableList.of(RepoManager.getCommonModule());
+
+        // Ensure these sets of modules are different, otherwise the test won't actually be testing
+        // anything.
+        assertNotEquals(allowedModules, allowedGoogleModules);
+
+        LocalSourceProvider provider =
+                new LocalSourceProvider(sourcesPath, allowedModules, allowedGoogleModules);
+        Map<String, Boolean> testCases = new HashMap<>();
+        testCases.put("not a real URL", false);
+        testCases.put("https://example.com/some/repository.xml", false);
+        testCases.put("http://localhost:8080/some/repository.xml", false);
+
+        // Test trickiness with subdomains
+        testCases.put("https://dl.google.example.com/", false);
+        testCases.put("https://dl.google.com.example.com/", false);
+
+        // Test trickiness with extra path segments
+        testCases.put("https://example.com/https/dl.google.com/", false);
+
+        // Test HTTP vs. HTTPS
+        testCases.put("http://dl.google.com/some/repository.xml", false);
+        testCases.put("https://dl.google.com/", true);
+        testCases.put("https://dl.google.com/some/repository.xml", true);
+        for (Map.Entry<String, Boolean> testCase : testCases.entrySet()) {
+            String url = testCase.getKey();
+            Boolean expectedGoogleModules = testCase.getValue();
+            boolean actualGoogleModules =
+                    provider.getAllowedModulesBasedOnUrl(url).equals(allowedGoogleModules);
+            assertEquals(url, expectedGoogleModules, actualGoogleModules);
+        }
     }
 
     @Test
@@ -236,6 +287,7 @@ public class LocalSourceProviderTest {
         LocalSourceProvider provider =
                 new LocalSourceProvider(
                         fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources")),
+                        ImmutableList.of(),
                         ImmutableList.of());
         provider.setRepoManager(mock(RepoManager.class));
         provider.getSources(null, new FakeProgressIndicator(), false);

@@ -113,4 +113,18 @@ sealed class SingleArtifact<T : FileSystemLocation>(
 
     @Incubating
     object METADATA_LIBRARY_DEPENDENCIES_REPORT: SingleArtifact<RegularFile>(FILE), Replaceable, Transformable
+
+    /**
+     * Assets that will be packaged in the resulting APK or Bundle.
+     *
+     * When used as an input, the content will be the merged assets.
+     * For the APK, the assets will be compressed before packaging.
+     *
+     * To add new folders to [ASSETS], you must use [com.android.build.api.variant.Sources.assets]
+     */
+    @Incubating
+    object ASSETS:
+        SingleArtifact<Directory>(DIRECTORY),
+        Transformable,
+        Replaceable
 }

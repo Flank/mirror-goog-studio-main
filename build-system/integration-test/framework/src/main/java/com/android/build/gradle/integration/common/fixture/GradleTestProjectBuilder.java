@@ -304,14 +304,6 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    public GradleTestProjectBuilder withConfigurationCacheMaxProblems(int maxProblems) {
-        Preconditions.checkArgument(maxProblems > 0, "No need for this method if maxProblems is 0");
-        this.withConfigurationCaching = BaseGradleExecutor.ConfigurationCaching.WARN;
-        this.addGradleProperties(
-                "org.gradle.unsafe.configuration-cache.max-problems=" + maxProblems);
-        return this;
-    }
-
     public GradleTestProjectBuilder withIncludedBuilds(String... relativePaths) {
         withIncludedBuilds.addAll(Arrays.asList(relativePaths));
         return this;

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.build.api.dsl.DeviceGroup
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -27,7 +27,6 @@ import com.android.utils.osArchitecture
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
-import java.io.File
 
 private const val GRADLE_AVD_DIRECTORY_PATH = "gradle/avd"
 
@@ -65,7 +64,7 @@ fun managedDeviceGroupAllVariantsTaskName(deviceGroup: DeviceGroup): String =
     "${deviceGroup.name}GroupCheck"
 
 fun managedDeviceGroupSingleVariantTaskName(
-    creationConfig: VariantCreationConfig, deviceGroup: DeviceGroup): String =
+    creationConfig: InstrumentedTestCreationConfig, deviceGroup: DeviceGroup): String =
     creationConfig.computeTaskName("${deviceGroup.name}Group")
 
 fun computeAbiFromArchitecture(device: ManagedVirtualDevice): String =

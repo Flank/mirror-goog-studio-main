@@ -29,7 +29,7 @@ import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -82,7 +82,7 @@ abstract class VariantImpl(
     variantServices,
     taskCreationServices,
     global
-), Variant, ConsumableCreationConfig {
+), Variant, VariantCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API

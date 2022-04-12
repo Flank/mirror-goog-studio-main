@@ -118,6 +118,18 @@ public class Zip64Test extends AbstractZipflingerTest {
     }
 
     @Test
+    public void testForbiddenZip64EntriesExactLimit() throws Exception {
+        Path dst = getTestPath("testForbiddenZip64EntriesExactLimit.zip");
+        long numEntries = Ints.USHRT_MAX;
+        try {
+            createArchive(dst, numEntries, Zip64.Policy.FORBID);
+            verifyArchive(dst);
+        } catch (IllegalStateException e) {
+            Assert.fail("Archive with " + numEntries + " entries should have passed");
+        }
+    }
+
+    @Test
     public void testAllowedZip64Entries() throws Exception {
         Path dst = getTestPath("testAllowedZip64Entries.zip");
         long numEntries = Ints.USHRT_MAX + 1;

@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
-import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigImpl
 import com.android.build.gradle.internal.testing.utp.TEST_RESULT_PB_FILE_NAME
 import com.android.testutils.MockitoKt
 import com.android.testutils.MockitoKt.any
@@ -58,9 +57,7 @@ class ManagedDeviceInstrumentationTestResultAggregationTaskTest {
     var temporaryFolderRule = TemporaryFolder()
 
     @Mock(answer = RETURNS_DEEP_STUBS)
-    private lateinit var creationConfig: VariantCreationConfig
-    @Mock(answer = RETURNS_DEEP_STUBS)
-    private lateinit var globalConfig: GlobalTaskCreationConfigImpl
+    private lateinit var creationConfig: InstrumentedTestCreationConfig
 
     @Before
     fun setUpMocks() {

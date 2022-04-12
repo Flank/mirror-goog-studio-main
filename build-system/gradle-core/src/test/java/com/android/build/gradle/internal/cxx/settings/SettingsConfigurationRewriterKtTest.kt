@@ -43,11 +43,11 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_DIR
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
@@ -78,8 +78,9 @@ class SettingsConfigurationRewriterKtTest {
                       }]
                     }
                 """.trimIndent())
+                Mockito.doReturn(FakeGradleProvider(cmakeSettingsFile.readText())).`when`(fileContents).asText
                 abi.toJsonString() // Force lazy fields to evaluate
-                val rewritten = abi.calculateConfigurationArguments()
+                val rewritten = abi.calculateConfigurationArguments(providers, layout)
                 rewritten.toJsonString() // Force lazy fields to evaluate
             }
         }
@@ -96,7 +97,7 @@ class SettingsConfigurationRewriterKtTest {
                 configurationParameters,
                 variant,
                 Abi.X86)
-            val rewritten = abi.calculateConfigurationArguments()
+            val rewritten = abi.calculateConfigurationArguments(providers, layout)
             assertThat(rewritten.cxxBuildFolder.path).contains("some other build root folder")
             assertThat(rewritten.variant.module.cmake!!.cmakeExe!!.path
                 .replace('\\', '/')).isEqualTo("my/path/to/cmake")
@@ -112,7 +113,7 @@ class SettingsConfigurationRewriterKtTest {
     fun `basic check`() {
         BasicCmakeMock().apply {
             val rewritten = abi
-                .calculateConfigurationArguments()
+                .calculateConfigurationArguments(providers, layout)
             val variables = rewritten.configurationArguments.toCmakeArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeGenerator()).isEqualTo("Ninja")
@@ -132,7 +133,7 @@ class SettingsConfigurationRewriterKtTest {
                 sdkComponents,
                 configurationParameters,
                 variant,
-                Abi.X86).calculateConfigurationArguments()
+                Abi.X86).calculateConfigurationArguments(providers, layout)
             val variables = abi.configurationArguments.toCmakeArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeGenerator()).isEqualTo("some other generator")
@@ -153,7 +154,9 @@ class SettingsConfigurationRewriterKtTest {
                     createInitialCxxModel(
                         sdkComponents,
                         androidLocationProvider,
-                        listOf(configurationParameters)
+                        listOf(configurationParameters),
+                        providers,
+                        layout
                     )
             val abi = model.single { it.abi == Abi.X86 }
             val variables = abi.configurationArguments.toCmakeArguments()
@@ -176,7 +179,9 @@ class SettingsConfigurationRewriterKtTest {
                     createInitialCxxModel(
                         sdkComponents,
                         androidLocationProvider,
-                        listOf(configurationParameters)
+                        listOf(configurationParameters),
+                        providers,
+                        layout
                     )
             abis.forEach { abi ->
                 abi.configurationArguments
@@ -206,7 +211,7 @@ class SettingsConfigurationRewriterKtTest {
                     sdkComponents,
                     configurationParameters,
                     variant,
-                    Abi.X86).calculateConfigurationArguments()
+                    Abi.X86).calculateConfigurationArguments(providers, layout)
             println(abi.toJsonString())
             assertThat(abi.configurationArguments).contains("-CD:\\Test\\TargetProperties.cmake")
             assertThat(abi.configurationArguments).contains("--log-level=VERBOSE")
@@ -224,7 +229,7 @@ class SettingsConfigurationRewriterKtTest {
                     sdkComponents,
                     configurationParameters,
                     variant,
-                    Abi.X86).calculateConfigurationArguments()
+                    Abi.X86).calculateConfigurationArguments(providers, layout)
             println(abi.toJsonString())
             assertThat(abi.variant.stlType).contains("c++_shared")
             assertThat(abi.stlLibraryFile!!.toString()).endsWith("libc++_shared.so")
@@ -245,7 +250,7 @@ class SettingsConfigurationRewriterKtTest {
                 sdkComponents,
                 configurationParameters,
                 variant,
-                Abi.X86).calculateConfigurationArguments()
+                Abi.X86).calculateConfigurationArguments(providers, layout)
             val variables = abi.configurationArguments.toCmakeArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(abi.variant.optimizationTag).isEqualTo("PrecedenceCheckingBuildType")
@@ -266,7 +271,7 @@ class SettingsConfigurationRewriterKtTest {
                     sdkComponents,
                     configurationParameters,
                     variant,
-                    Abi.X86).calculateConfigurationArguments()
+                    Abi.X86).calculateConfigurationArguments(providers, layout)
             val variables = abi.configurationArguments.toCmakeArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(abi.variant.optimizationTag).isEqualTo("MinSizeRel")
@@ -314,7 +319,7 @@ class SettingsConfigurationRewriterKtTest {
     @Test
     fun `no macro values are left unexpanded after final rewrite`() {
         CmakeSettingsMock().apply {
-            val abi = abi.calculateConfigurationArguments()
+            val abi = abi.calculateConfigurationArguments(providers, layout)
             abi.toJsonString().lines().forEach { line ->
                 if (line.contains("\${")) {
                     error("Final rewritten ABI [$abi] still has unexpanded macro: $line")
@@ -344,7 +349,7 @@ class SettingsConfigurationRewriterKtTest {
                 """.trimIndent()
             )
 
-            val rewritten = abi.calculateConfigurationArguments()
+            val rewritten = abi.calculateConfigurationArguments(providers, layout)
 
             assertThat(abi.buildSettings.environmentVariables).isEqualTo(
                 listOf(
@@ -389,6 +394,7 @@ class SettingsConfigurationRewriterKtTest {
                 }]
                 }""".trimIndent()
             )
+            Mockito.doReturn(FakeGradleProvider(settings.readText())).`when`(fileContents).asText
             setup(this, 1)
 
             val configurationModel1 = tryCreateConfigurationParameters(
@@ -397,7 +403,7 @@ class SettingsConfigurationRewriterKtTest {
             val variant1 = createCxxVariantModel(configurationModel1, module)
             val result1 = createCxxAbiModel(
                 sdkComponents, configurationModel1,
-                variant1, abi1).calculateConfigurationArguments()
+                variant1, abi1).calculateConfigurationArguments(providers, layout)
             result1.toJsonString() // Force all lazy values
 
             setup(this, 2)
@@ -407,7 +413,7 @@ class SettingsConfigurationRewriterKtTest {
             val variant2 = createCxxVariantModel(configurationModel2, module)
             val result2 = createCxxAbiModel(
                 sdkComponents, configurationModel2,
-                variant2, abi2).calculateConfigurationArguments()
+                variant2, abi2).calculateConfigurationArguments(providers, layout)
             result2.toJsonString() // Force all lazy values
 
             return Pair(result1, result2)

@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
+import com.android.build.gradle.internal.component.TestVariantCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask;
@@ -141,7 +142,8 @@ public class TestApplicationTaskManager
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
                     taskFactory.register(
-                            new CheckTestedAppObfuscation.CreationAction(creationConfig));
+                            new CheckTestedAppObfuscation.CreationAction(
+                                    (TestVariantCreationConfig) creationConfig));
             Preconditions.checkNotNull(creationConfig.getTaskContainer().getJavacTask());
             TaskFactoryUtils.dependsOn(
                     creationConfig.getTaskContainer().getJavacTask(), checkObfuscation);

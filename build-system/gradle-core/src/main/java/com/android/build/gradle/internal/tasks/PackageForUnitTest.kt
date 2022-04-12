@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -170,8 +171,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             super.configure(task)
             val artifacts = creationConfig.artifacts
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
-            task.mergedAssetsDirectory.setDisallowChanges(artifacts.get(
-                InternalArtifactType.MERGED_ASSETS_FOR_UNIT_TEST))
+            task.mergedAssetsDirectory.setDisallowChanges(artifacts.get(SingleArtifact.ASSETS))
             task.noCompress.setDisallowChanges(creationConfig.dslAndroidResources.noCompress)
         }
     }

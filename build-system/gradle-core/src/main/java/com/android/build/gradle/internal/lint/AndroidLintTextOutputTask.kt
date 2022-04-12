@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Lint
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_CREATED_BASELINE
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_ERRORS
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.maybeThrowException
@@ -135,13 +135,13 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
         }.toString()
     }
 
-    class SingleVariantCreationAction(variant: VariantCreationConfig) :
-            VariantCreationAction(variant) {
+    class SingleVariantCreationAction(creationConfig: ComponentCreationConfig) :
+            VariantCreationAction(creationConfig) {
         override val name: String = computeTaskName("lint")
         override val fatalOnly = false
     }
 
-    class LintVitalCreationAction(variant: VariantCreationConfig) :
+    class LintVitalCreationAction(variant: ComponentCreationConfig) :
         VariantCreationAction(variant) {
         override val name: String = computeTaskName("lintVital")
         override val fatalOnly = true
@@ -151,8 +151,8 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
         }
     }
 
-    abstract class VariantCreationAction(variant: VariantCreationConfig) :
-        VariantTaskCreationAction<AndroidLintTextOutputTask, VariantCreationConfig>(variant) {
+    abstract class VariantCreationAction(variant: ComponentCreationConfig) :
+        VariantTaskCreationAction<AndroidLintTextOutputTask, ComponentCreationConfig>(variant) {
 
         override val type: Class<AndroidLintTextOutputTask>
             get() = AndroidLintTextOutputTask::class.java

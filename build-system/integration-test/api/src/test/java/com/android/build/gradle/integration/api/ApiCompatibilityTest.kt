@@ -26,7 +26,6 @@ class ApiCompatibilityTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("apiBinaryCompatibility")
-        .withConfigurationCacheMaxProblems(4) // https://youtrack.jetbrains.com/issue/KT-43605
         .create()
 
     @Test

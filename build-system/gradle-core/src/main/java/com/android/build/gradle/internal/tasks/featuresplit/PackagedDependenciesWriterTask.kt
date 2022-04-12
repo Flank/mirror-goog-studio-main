@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.gradle.internal.attributes.VariantAttr
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.ide.dependencies.getIdString
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
@@ -107,8 +107,8 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
      *
      * This cannot depend on preBuild as it would introduce a dependency cycle.
      */
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<PackagedDependenciesWriterTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<PackagedDependenciesWriterTask, ComponentCreationConfig>(
             creationConfig,
             dependsOnPreBuildTask = false
         ) {

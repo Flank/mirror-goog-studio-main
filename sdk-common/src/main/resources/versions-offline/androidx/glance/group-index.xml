@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<androidx.glance>
+  <glance versions="1.0.0-alpha03"/>
+  <glance-appwidget versions="1.0.0-alpha03"/>
+  <glance-appwidget-proto versions="1.0.0-alpha03"/>
+  <glance-wear-tiles versions="1.0.0-alpha03"/>
+</androidx.glance>
+

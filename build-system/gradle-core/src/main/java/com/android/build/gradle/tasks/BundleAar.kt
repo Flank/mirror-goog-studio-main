@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.tasks.AarMetadataTask
-import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
@@ -242,6 +241,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             // No need to compress this archive because it's just an intermediate artifact.
             task.entryCompression = ZipEntryCompression.STORED
+
+            // Need R.jar in case a consuming module uses import alias for R class (Issue 188871862)
+            if (creationConfig.androidResourcesEnabled) {
+                task.from(
+                    creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR),
+                    prependToCopyPath(SdkConstants.LIBS_FOLDER)
+                )
+            }
         }
     }
 
@@ -284,6 +291,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             // No need to compress this archive because it's just an intermediate artifact.
             task.entryCompression = ZipEntryCompression.STORED
+
+            // Need R.jar in case a consuming module uses import alias for R class (Issue 188871862)
+            if (creationConfig.androidResourcesEnabled) {
+                task.from(
+                    creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR),
+                    prependToCopyPath(SdkConstants.LIBS_FOLDER)
+                )
+            }
         }
     }
 

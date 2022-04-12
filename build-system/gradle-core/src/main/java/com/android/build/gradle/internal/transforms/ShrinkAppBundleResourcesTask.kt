@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
 import com.android.build.gradle.internal.res.shrinker.gatherer.ProtoResourceTableGatherer
@@ -100,8 +100,8 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<ShrinkAppBundleResourcesTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ConsumableCreationConfig) :
+        VariantTaskCreationAction<ShrinkAppBundleResourcesTask, ConsumableCreationConfig>(
             creationConfig
         ) {
 
