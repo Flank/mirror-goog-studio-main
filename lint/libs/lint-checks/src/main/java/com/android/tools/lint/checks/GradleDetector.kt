@@ -224,7 +224,7 @@ open class GradleDetector : Detector(), GradleScanner {
         statementCookie: Any
     ) {
         if (parent == "defaultConfig") {
-            if (property == "targetSdkVersion") {
+            if (property == "targetSdkVersion" || property == "targetSdk") {
                 val version = getSdkVersion(value)
                 if (version > 0 && version < context.client.highestKnownApiLevel) {
                     var warned = false
@@ -265,7 +265,7 @@ open class GradleDetector : Detector(), GradleScanner {
                                     "November 2021."
 
                             val highest = context.client.highestKnownApiLevel
-                            val label = "Update targetSdkVersion to $highest"
+                            val label = "Update $property to $highest"
                             val fix = fix().name(label)
                                 .replace()
                                 .text(value)
@@ -308,7 +308,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 } else {
                     checkIntegerAsString(context, value, statementCookie)
                 }
-            } else if (property == "minSdkVersion") {
+            } else if (property == "minSdkVersion" || property == "minSdk") {
                 val version = getSdkVersion(value)
                 if (version > 0) {
                     minSdkVersion = version
@@ -542,7 +542,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 val message = "Application ID suffix should probably start with a \".\""
                 report(context, statementCookie, PATH, message)
             }
-        } else if (property == "minSdkVersion" &&
+        } else if ((property == "minSdkVersion" || property == "minSdk") &&
             parent == "dev" &&
             "21" == value &&
             // Don't flag this error from Gradle; users invoking lint from Gradle may

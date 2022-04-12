@@ -804,7 +804,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "build.gradle:8: Warning: The value of minSdkVersion is too low. It can be incremented without noticeably reducing the number of supported devices. [MinSdkTooLow]\n" +
                 "        minSdkVersion 7\n" +
                 "        ~~~~~~~~~~~~~~~\n" +
-                "0 errors, 1 warnings\n"
+                "build.gradle:9: Warning: The value of minSdkVersion is too low. It can be incremented without noticeably reducing the number of supported devices. [MinSdkTooLow]\n" +
+                "        minSdk 7\n" +
+                "        ~~~~~~~~\n" +
+                "0 errors, 2 warnings"
             )
 
         lint().files(
@@ -818,6 +821,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "    defaultConfig {\n" +
                     "        minSdkVersion 7\n" +
+                    "        minSdk 7\n" +
                     "        targetSdkVersion 19\n" +
                     "        versionCode 1\n" +
                     "        versionName \"1.0\"\n" +
@@ -830,6 +834,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             @@ -8 +8
             -         minSdkVersion 7
             +         minSdkVersion $LOWEST_ACTIVE_API
+            Fix for build.gradle line 9: Update minSdkVersion to $LOWEST_ACTIVE_API:
+            @@ -9 +9
+            -         minSdk 7
+            +         minSdk $LOWEST_ACTIVE_API
             """
         )
     }
@@ -2675,7 +2683,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:9: Warning: You no longer need a dev mode to enable multi-dexing during development, and this can break API version checks [DevModeObsolete]\n" +
             "            minSdkVersion 21\n" +
             "            ~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 1 warnings\n"
+            "build.gradle:10: Warning: You no longer need a dev mode to enable multi-dexing during development, and this can break API version checks [DevModeObsolete]\n" +
+            "            minSdk 21\n" +
+            "            ~~~~~~~~~\n" +
+            "0 errors, 2 warnings"
         lint().files(
             gradle(
                 "" +
@@ -2688,6 +2699,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        dev {\n" +
                     "            // To avoid using legacy multidex, set minSdkVersion to 21 or higher.\n" +
                     "            minSdkVersion 21\n" +
+                    "            minSdk 21\n" +
                     "            versionNameSuffix \"-dev\"\n" +
                     "            applicationIdSuffix '.dev'\n" +
                     "        }\n" +
@@ -2898,6 +2910,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "android {\n" +
                         "    defaultConfig {\n" +
                         "        targetSdkVersion 17\n" +
+                        "        targetSdk 17\n" +
                         "    }\n" +
                         "}\n"
                 )
@@ -2911,7 +2924,11 @@ class GradleDetectorTest : AbstractCheckTest() {
                      [ExpiredTargetSdkVersion]
                             targetSdkVersion 17
                             ~~~~~~~~~~~~~~~~~~~
-                    1 errors, 0 warnings
+                    build.gradle:6: Error: Google Play requires that apps target API level 29 or higher.
+                     [ExpiredTargetSdkVersion]
+                            targetSdk 17
+                            ~~~~~~~~~~~~
+                    2 errors, 0 warnings
                     """
                 )
                 .expectFixDiffs(
@@ -2920,6 +2937,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                     @@ -5 +5
                     -         targetSdkVersion 17
                     +         targetSdkVersion $HIGHEST_KNOWN_STABLE_API
+                    Fix for build.gradle line 6: Update targetSdk to $HIGHEST_KNOWN_STABLE_API:
+                    @@ -6 +6
+                    -         targetSdk 17
+                    +         targetSdk $HIGHEST_KNOWN_STABLE_API
                     """
                 )
         } finally {
