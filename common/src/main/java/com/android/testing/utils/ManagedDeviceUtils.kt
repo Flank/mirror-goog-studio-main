@@ -39,7 +39,7 @@ fun computeSystemImageHashFromDsl(version: Int, imageSource: String, abi: String
 
 private fun computeVersionString(version: Int) = "android-${version}"
 
-private fun computeVendorString(imageSource: String) =
+fun computeVendorString(imageSource: String) =
     when (imageSource) {
         "google" -> "google_apis"
         "google-atd" -> "google_atd"

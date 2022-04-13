@@ -26,6 +26,24 @@ class ManagedDeviceUtilsTest {
     }
 
     @Test
+    fun computeAvdName_sameAvdSameVendor() {
+        val google = computeAvdName(
+            30,
+            "google",
+            "x86",
+            "Pixel 2"
+        )
+        val googleApis = computeAvdName(
+            30,
+            "google_apis",
+            "x86",
+            "Pixel 2"
+        )
+
+        assertThat(google).isEqualTo(googleApis)
+    }
+
+    @Test
     fun computeAvdName_worksWithParenthesis() {
         val computedName = computeAvdName(
             29,

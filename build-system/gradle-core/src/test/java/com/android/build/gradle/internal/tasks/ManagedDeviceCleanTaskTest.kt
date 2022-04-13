@@ -229,7 +229,7 @@ class ManagedDeviceCleanTaskTest {
                 verifyNoMoreInteractions(avdProperty)
 
                 verify(dslDevicesProperty).set(
-                    listOf("dev28_aosp_x86_Pixel_3", "dev30_google_x86_64_Nexus_5")
+                    listOf("dev28_default_x86_Pixel_3", "dev30_google_apis_x86_64_Nexus_5")
                 )
                 verify(dslDevicesProperty).disallowChanges()
                 verifyNoMoreInteractions(dslDevicesProperty)

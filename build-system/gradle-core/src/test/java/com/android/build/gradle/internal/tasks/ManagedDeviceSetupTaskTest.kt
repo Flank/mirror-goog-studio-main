@@ -169,12 +169,12 @@ class ManagedDeviceSetupTaskTest {
                     it is FakeGradleProperty && it.get() == imageDirectory
                 },
                 eq("system-images;android-29;default;x86_64"),
-                eq("dev29_aosp_x86_64_Pixel_2"),
+                eq("dev29_default_x86_64_Pixel_2"),
                 eq("Pixel 2")
             )
         verify(avdService)
             .ensureLoadableSnapshot(
-                "dev29_aosp_x86_64_Pixel_2",
+                "dev29_default_x86_64_Pixel_2",
                 "auto-no-window"
             )
         verifyNoMoreInteractions(avdService)

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.prefs.AndroidLocationsProvider
+import com.android.testing.utils.computeVendorString
 import com.android.utils.CpuArchitecture
 import com.android.utils.osArchitecture
 import org.gradle.api.file.DirectoryProperty
@@ -51,11 +52,12 @@ fun computeAvdName(device: ManagedVirtualDevice): String =
 
 fun computeAvdName(
     apiLevel: Int,
-    vendor: String,
+    imageSource: String,
     abi: String,
     hardwareProfile: String
 ): String {
     val sanitizedProfile = sanitizeProfileName(hardwareProfile)
+    val vendor = computeVendorString(imageSource)
     return "dev${apiLevel}_${vendor}_${abi}_$sanitizedProfile"
 }
 
