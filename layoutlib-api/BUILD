@@ -8,6 +8,7 @@ iml_module(
     name = "studio.android.sdktools.layoutlib-api",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.layoutlib-api.iml"],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

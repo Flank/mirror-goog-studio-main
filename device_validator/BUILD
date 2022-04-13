@@ -7,6 +7,7 @@ iml_module(
     name = "studio.android.sdktools.dvlib",
     srcs = ["dvlib/src/main/java"],
     iml_files = ["dvlib/android.sdktools.dvlib.iml"],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     resources = ["dvlib/src/main/resources"],
     visibility = ["//visibility:public"],

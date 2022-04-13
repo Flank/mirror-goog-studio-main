@@ -20,6 +20,7 @@ iml_module(
         "-source 6",
         "-target 6",
     ],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],

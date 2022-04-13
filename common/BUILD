@@ -9,6 +9,7 @@ iml_module(
     name = "studio.android.sdktools.common",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.common.iml"],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     # do not sort: must match IML order
     resources = [

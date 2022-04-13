@@ -5,6 +5,7 @@ iml_module(
     name = "studio.android.sdktools.chunkio-processor",
     srcs = ["src"],
     iml_files = ["android.sdktools.chunkio-processor.iml"],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
