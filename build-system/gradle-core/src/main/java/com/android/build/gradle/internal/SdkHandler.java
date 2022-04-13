@@ -254,7 +254,7 @@ public class SdkHandler {
     /**
      * Ensures that the system image corresponding to the given hash is installed.
      *
-     * <p>Reports an evaluation warning if the system image package is not present and could not be
+     * <p>Throws an exception if the system image package is not present and could not be
      * automatically downloaded and installed.
      *
      * @param imageHash the target hash of the system image.
@@ -262,7 +262,8 @@ public class SdkHandler {
      *     retrieved.
      */
     @Nullable
-    public File installSystemImageWarnOnFailure(@NonNull String imageHash) {
+    public File installSystemImage(@NonNull String imageHash)
+            throws AndroidLocationsException, ExecutionException {
         SdkLoader loader = getSdkLoader();
         if (loader == null) {
             // If the loader is null it means we couldn't set-up one based on a local SDK.
@@ -271,45 +272,23 @@ public class SdkHandler {
             return null;
         }
 
-        try {
-            loader.getSdkInfo(logger);
-            // It fails to download a system image if you try to download the same system image
-            // simultaneously. https://issuetracker.google.com/issues/206798666
-            File imageLocation = SynchronizedFile.getInstanceWithMultiProcessLocking(
-                    androidLocationsProvider.getPrefsLocation().resolve(imageHash).toFile()
-            ).write((file) -> {
-                try {
-                    return loader.installSdkTool(sdkLibData, imageHash);
-                } catch (LicenceNotAcceptedException e) {
-                    issueReporter.reportWarning(
-                            IssueReporter.Type.MISSING_SDK_PACKAGE,
-                            imageHash
-                                    + " package is not installed. Please accept the installation"
-                                    + "licence to continue",
-                            imageHash);
-                } catch (InstallFailedException e) {
-                    issueReporter.reportWarning(
-                            IssueReporter.Type.MISSING_SDK_PACKAGE,
-                            imageHash
-                                    + " package is not installed, and automatic installation failed.",
-                            imageHash);
-                }
-                return null;
-            });
-            if (imageLocation == null) {
-                issueReporter.reportWarning(
-                        Type.MISSING_SDK_PACKAGE,
-                        imageHash + " package is not installed.",
-                        imageHash);
-            }
-            return imageLocation;
-        } catch (AndroidLocationsException | ExecutionException e) {
+        loader.getSdkInfo(logger);
+        // It fails to download a system image if you try to download the same system image
+        // simultaneously. https://issuetracker.google.com/issues/206798666
+        File imageLocation =
+                SynchronizedFile.getInstanceWithMultiProcessLocking(
+                                androidLocationsProvider
+                                        .getPrefsLocation()
+                                        .resolve(imageHash)
+                                        .toFile())
+                        .write((file) -> loader.installSdkTool(sdkLibData, imageHash));
+        if (imageLocation == null) {
             issueReporter.reportWarning(
                     Type.MISSING_SDK_PACKAGE,
                     imageHash + " package is not installed.",
                     imageHash);
         }
-        return null;
+        return imageLocation;
     }
 
     /** Retrieves all repository ids that start with the given prefix. */
