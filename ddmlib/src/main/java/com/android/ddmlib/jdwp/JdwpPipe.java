@@ -24,7 +24,13 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public abstract class JdwpAgent {
+// An unidirectional pipe using JdwpPacket as its unit of work.
+//   1/ When the transport layer has received a *full* JDWPPacket, it calls [incoming] method.
+//   2/ The pipe can then process the packet or even intercept it. Forwarding it done via [send].
+//
+// This class is used in MonitorThread to forward traffic between a Debugger and an App (called
+// client).
+public abstract class JdwpPipe {
 
     /**
      * Interceptors waiting for a specific reply id.
@@ -38,7 +44,7 @@ public abstract class JdwpAgent {
     @NonNull
     private final JdwpProtocol mProtocol;
 
-    public JdwpAgent(@NonNull JdwpProtocol protocol) {
+    public JdwpPipe(@NonNull JdwpProtocol protocol) {
         mReplyInterceptors = new ConcurrentHashMap<Integer, JdwpInterceptor>();
         mInterceptors = new LinkedList<JdwpInterceptor>();
         mProtocol = protocol;
@@ -71,7 +77,9 @@ public abstract class JdwpAgent {
         mInterceptors.remove(interceptor);
     }
 
-    public void incoming(@NonNull JdwpPacket packet, @Nullable JdwpAgent target) throws IOException {
+    // Called by the transport layer when a full packet is available. This is how packet enter the
+    // pipe. Forwards packet to the exit side of the target pipe (which could be [this]).
+    public void incoming(@NonNull JdwpPacket packet, @Nullable JdwpPipe target) throws IOException {
         mProtocol.incoming(packet, target);
         int id = packet.getId();
         if (packet.isReply()) {
