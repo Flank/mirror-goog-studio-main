@@ -2925,7 +2925,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.4.2";
+    public static final String GRADLE_LATEST_VERSION = "7.4";
 
     /**
      * The minimum released version of the Android Gradle Plugin that this version of Studio will
