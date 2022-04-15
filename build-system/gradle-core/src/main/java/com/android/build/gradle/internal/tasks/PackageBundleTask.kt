@@ -493,7 +493,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
             )
-            task.appMetadata
             task.bundleOptions = assetPackBundle.convert();
             task.compressNativeLibs.setDisallowChanges(true)
             task.assetPackOptionsForAssetPackBundle.set(

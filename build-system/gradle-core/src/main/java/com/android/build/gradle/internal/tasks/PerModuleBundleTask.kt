@@ -111,7 +111,12 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
-    abstract val appMetadata: ConfigurableFileCollection
+    abstract val baseModuleMetadata: ConfigurableFileCollection
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
+    abstract val appMetadata: RegularFileProperty
 
     @get:Input
     abstract val fileName: Property<String>
@@ -130,7 +135,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         // will need to uncompress them anyway.
         jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
 
-        val filters = appMetadata.singleOrNull()?.let {
+        val filters = baseModuleMetadata.singleOrNull()?.let {
             ModuleMetadata.load(it).abiFilters.toSet()
         } ?: abiFilters.get()
 
@@ -168,6 +173,11 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             val javaResFilesSet =
                 if (hasFeatureDexFiles()) featureJavaResFiles.files else javaResFiles.files
             addHybridFolder(it, javaResFilesSet, Relocator("root"), JarMerger.EXCLUDE_CLASSES)
+            addHybridFolder(
+                it,
+                appMetadata.orNull?.asFile?.let { metadataFile -> setOf(metadataFile) } ?: setOf(),
+                Relocator("root/META-INF/com/android/build/gradle"),
+                JarMerger.EXCLUDE_CLASSES)
 
             addHybridFolder(it, nativeLibsFiles.files, fileFilter = abiFilter)
         }
@@ -301,7 +311,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
             if (creationConfig.componentType.isDynamicFeature) {
                 // If this is a dynamic feature, we use the abiFilters published by the base module.
-                task.appMetadata.from(
+                task.baseModuleMetadata.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,
@@ -312,7 +322,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 task.abiFilters.set(creationConfig.supportedAbis)
             }
             task.abiFilters.disallowChanges()
-            task.appMetadata.disallowChanges()
+            task.baseModuleMetadata.disallowChanges()
+
+            if (creationConfig.componentType.isBaseModule) {
+                artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.APP_METADATA,
+                    task.appMetadata
+                )
+            }
 
             task.jarCreatorType.set(creationConfig.variantScope.jarCreatorType)
             task.jarCreatorType.disallowChanges()
