@@ -228,28 +228,30 @@ open class GradleDetector : Detector(), GradleScanner {
                 val version = getSdkVersion(value)
                 if (version > 0 && version < context.client.highestKnownApiLevel) {
                     var warned = false
-                    if (version < 30) {
+                    if (version < MINIMUM_TARGET_SDK_VERSION) {
                         val now = calendar ?: Calendar.getInstance()
                         val year = now.get(Calendar.YEAR)
                         val month = now.get(Calendar.MONTH)
 
-                        // After November 1st 2020, the apps are required to use 29 or higher
-                        // (month is zero-based)
+                        // After November 1st 2022, the apps are required to use 31 or higher
                         // https://developer.android.com/distribute/play-policies
                         val required: Int
                         val issue: Issue
-                        if (year > 2021 || month >= 10) {
-                            required = 30
+                        if (year > MINIMUM_TARGET_SDK_VERSION_YEAR || year == MINIMUM_TARGET_SDK_VERSION_YEAR && month >= 10) {
+                            // 10: November, the field is zero-based
+                            // On or after November 1st of the target requirement year, enforce with error severity
+                            required = MINIMUM_TARGET_SDK_VERSION
                             issue = EXPIRED_TARGET_SDK_VERSION
-                        } else if (version < 29 && year > 2019) {
-                            required = 29
+                        } else if (version < PREVIOUS_MINIMUM_TARGET_SDK_VERSION && year >= MINIMUM_TARGET_SDK_VERSION_YEAR - 1) {
+                            // If you're not meeting the previous year's requirement, also enforce with error severity
+                            required = PREVIOUS_MINIMUM_TARGET_SDK_VERSION
                             issue = EXPIRED_TARGET_SDK_VERSION
-                        } else if (year == 2021) {
+                        } else if (year == MINIMUM_TARGET_SDK_VERSION_YEAR && month >= 10 - 6) { // 6 months before October
                             // Meets last year's requirement but not yet the upcoming one.
                             // Start warning 6 months in advance.
-                            // (Check for 2021 here: no, we don't have a time machine, but let's
-                            // allow developers to go back in time.)
-                            required = 30
+                            // (Check for 2022 here: no, we don't have a time machine, but let's
+                            // allow developers to go back in time with their system clock.)
+                            required = MINIMUM_TARGET_SDK_VERSION
                             issue = EXPIRING_TARGET_SDK_VERSION
                         } else {
                             required = -1
@@ -260,9 +262,9 @@ open class GradleDetector : Detector(), GradleScanner {
                                 "Google Play requires that apps target API level $required or higher.\n"
                             else
                                 "Google Play will soon require that apps target API " +
-                                    "level 30 or higher. This will be required for new apps " +
-                                    "in August 2021, and for updates to existing apps in " +
-                                    "November 2021."
+                                    "level 31 or higher. This will be required for new apps " +
+                                    "in August $MINIMUM_TARGET_SDK_VERSION_YEAR, and for updates to existing apps in " +
+                                    "November $MINIMUM_TARGET_SDK_VERSION_YEAR."
 
                             val highest = context.client.highestKnownApiLevel
                             val label = "Update $property to $highest"
@@ -2574,6 +2576,28 @@ open class GradleDetector : Detector(), GradleScanner {
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
+
+        /**
+         * The minimum API required as of August (new
+         * apps) and November (updated apps) of the
+         * year [MINIMUM_TARGET_SDK_VERSION_YEAR]. See
+         * https://developer.android.com/google/play/requirements/target-sdk.
+         */
+        val MINIMUM_TARGET_SDK_VERSION = 31
+
+        /**
+         * The API requirement the previous year. This is normally -1,
+         * but we have a separate constant in case we rev the API level
+         * more than one level in a year (such that we don't have to
+         * find all the "- 1" logic throughout the code.)
+         */
+        val PREVIOUS_MINIMUM_TARGET_SDK_VERSION = MINIMUM_TARGET_SDK_VERSION - 1
+
+        /**
+         * The year that the API requirement of
+         * [MINIMUM_TARGET_SDK_VERSION] is enforced.
+         */
+        val MINIMUM_TARGET_SDK_VERSION_YEAR = 2022
 
         /** targetSdkVersion about to expire */
         @JvmField
