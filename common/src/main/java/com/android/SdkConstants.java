@@ -1210,6 +1210,9 @@ public final class SdkConstants {
     public static final String TAG_SKIP = "skip";
     public static final String TAG_PUBLIC = "public";
     public static final String TAG_PUBLIC_GROUP = "public-group";
+    public static final String TAG_STAGING_PUBLIC_GROUP = "staging-public-group";
+    public static final String TAG_STAGING_PUBLIC_GROUP_FINAL = "staging-public-group-final";
+
 
     // Tags: Adaptive icon
     public static final String TAG_ADAPTIVE_ICON = "adaptive-icon";
