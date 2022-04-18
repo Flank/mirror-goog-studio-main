@@ -22,5 +22,5 @@ import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 public abstract class JdwpInterceptor {
 
     @Nullable
-    public abstract JdwpPacket intercept(@NonNull JdwpAgent agent, @NonNull JdwpPacket packet);
+    public abstract JdwpPacket intercept(@NonNull JdwpPipe pipe, @NonNull JdwpPacket packet);
 }

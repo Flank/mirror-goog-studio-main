@@ -19,9 +19,9 @@ import com.android.annotations.NonNull;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
-import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
+import com.android.ddmlib.jdwp.JdwpPipe;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
@@ -114,7 +114,7 @@ public class DdmJdwpExtension extends JdwpExtension {
         }
 
         @Override
-        public JdwpPacket intercept(@NonNull JdwpAgent agent, @NonNull JdwpPacket packet) {
+        public JdwpPacket intercept(@NonNull JdwpPipe pipe, @NonNull JdwpPacket packet) {
             if (isDdmPacket(packet)) {
                 ddmSeen(mClient);
                 ByteBuffer buf = packet.getPayload();

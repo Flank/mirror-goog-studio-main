@@ -19,11 +19,10 @@ package com.android.ddmlib.internal.jdwp.chunkhandler;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.ByteBufferUtil;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
-import com.android.ddmlib.internal.DeviceImpl;
-import com.android.ddmlib.jdwp.JdwpAgent;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
+import com.android.ddmlib.jdwp.JdwpPipe;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -187,11 +186,11 @@ public abstract class ChunkHandler extends JdwpInterceptor {
     }
 
     @Override
-    public JdwpPacket intercept(@NonNull JdwpAgent agent, @NonNull JdwpPacket packet) {
+    public JdwpPacket intercept(@NonNull JdwpPipe pipe, @NonNull JdwpPacket packet) {
         // TODO: ChunkHandlers are specific to client only packages. Further refactoring
         // is needed to properly generalize them to JdwpInterceptors
-        if (agent instanceof ClientImpl) {
-            ClientImpl client = (ClientImpl) agent;
+        if (pipe instanceof ClientImpl) {
+            ClientImpl client = (ClientImpl) pipe;
             // TODO: ChunkHandlers are currently all static objects created in static
             // initializers. For many different reasons they should not be there and should
             // be moved to another creation mechanism where they are part of the ddm extension

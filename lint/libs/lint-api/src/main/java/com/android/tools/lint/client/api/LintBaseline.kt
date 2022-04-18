@@ -361,6 +361,9 @@ class LintBaseline(
             }
             // Changed error messages to no longer include absolute paths: b/220161119
             "IconMissingDensityFolder", "IconXmlAndPng" -> sameWithAbsolutePath(new, old)
+            "MissingQuantity" -> {
+                sameSuffixFrom("should also be defined", new, old)
+            }
 
             // Sometimes we just append (or remove trailing period in error messages, now
             // flagged by lint)

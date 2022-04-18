@@ -2117,6 +2117,7 @@ com/android/tools/lint/lint-checks
   com/android/tools/
   com/android/tools/lint/
   com/android/tools/lint/checks/
+  plural-examples.txt
   private-apis.txt
   sdks-offline.xml
   typos/

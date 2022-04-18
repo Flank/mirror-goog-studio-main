@@ -29,9 +29,11 @@ import com.android.sdklib.internal.avd.GpuMode
 import com.android.sdklib.internal.avd.HardwareProperties
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
+import com.android.testing.utils.isWearTvOrAutoDevice
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.android.utils.StdLogger
+import com.sun.xml.bind.v2.util.EditDistance
 import java.io.File
 import java.nio.file.Path
 import kotlin.math.min
@@ -131,7 +133,19 @@ class AvdManager(
 
         val device = deviceManager.getDevices(DeviceManager.ALL_DEVICES).find {
             it.displayName == hardwareProfile
-        } ?: error("Failed to find hardware profile for name: $hardwareProfile")
+        }
+        if (device == null) {
+            val availableDevices = getHardwareProfiles(hardwareProfile).ifEmpty {
+                // If there is no good alternative hardware profiles are found,
+                // let's suggest Pixel 6 and other Pixel devices.
+                getHardwareProfiles("Pixel 6")
+            }
+            val errMsg = """
+                Failed to find hardware profile for name: $hardwareProfile
+                Try one of the following device profiles: ${availableDevices.joinToString(", ")}
+                """.trimIndent()
+            error(errMsg)
+        }
 
         val hardwareConfig = defaultHardwareConfig()
         hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
@@ -156,6 +170,28 @@ class AvdManager(
                 false,
                 logger
         )
+    }
+
+    /**
+     * Returns a list of available hardware profile names. The returned list contains up to
+     * [maxSuggestions] hardware profile names that is sorted by edit-distance. Candidates
+     * whose edit-distance is farther than [maxEditDistance] will be excluded.
+     */
+    private fun getHardwareProfiles(
+        hardwareProfile: String,
+        maxEditDistance: Int = 3,
+        maxSuggestions: Int = 5): List<String> {
+        return deviceManager.getDevices(DeviceManager.ALL_DEVICES)
+            .asSequence()
+            .map { it.displayName }
+            .filterNot(::isWearTvOrAutoDevice)
+            .distinct()
+            .map { it to EditDistance.editDistance(hardwareProfile, it) }
+            .filter { (_, distance) -> distance <= maxEditDistance }
+            .sortedBy { (_, distance) ->  distance }
+            .map { (name, _) -> name }
+            .take(maxSuggestions)
+            .toList()
     }
 
     fun loadSnapshotIfNeeded(deviceName: String, emulatorGpuFlag: String) {

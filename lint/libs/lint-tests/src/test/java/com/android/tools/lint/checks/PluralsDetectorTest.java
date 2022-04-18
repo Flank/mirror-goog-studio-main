@@ -29,7 +29,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     public void test1() {
         String expected =
                 ""
-                        + "res/values-pl/plurals2.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
+                        + "res/values-pl/plurals2.xml:3: Error: For locale \"pl\" (Polish) the following quantity should also be defined: many (e.g. \"5 miesięcy\") [MissingQuantity]\n"
                         + "    <plurals name=\"numberOfSongsAvailable\">\n"
                         + "    ^\n"
                         + "1 errors, 0 warnings\n";
@@ -42,7 +42,10 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     public void test2() {
         String expected =
                 ""
-                        + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few, many [MissingQuantity]\n"
+                        + "res/values-fr/plurals.xml:3: Error: For locale \"fr\" (French) the following quantity should also be defined: many (e.g. \"1000000 de jours\") [MissingQuantity]\n"
+                        + "  <plurals name=\"draft\">\n"
+                        + "  ^\n"
+                        + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few (e.g. \"2 dny\"), many (e.g. \"10.0 dne\") [MissingQuantity]\n"
                         + "  <plurals name=\"draft\">\n"
                         + "  ^\n"
                         + "res/values-zh-rCN/plurals3.xml:3: Warning: For language \"zh\" (Chinese) the following quantities are not relevant: one [UnusedQuantity]\n"
@@ -51,7 +54,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         + "res/values-zh-rCN/plurals3.xml:7: Warning: For language \"zh\" (Chinese) the following quantities are not relevant: one [UnusedQuantity]\n"
                         + "  <plurals name=\"title_day_dialog_content\">\n"
                         + "  ^\n"
-                        + "1 errors, 2 warnings\n";
+                        + "2 errors, 2 warnings\n";
         lint().files(
                         xml(
                                 "res/values-zh-rCN/plurals3.xml",
@@ -75,6 +78,16 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "  <plurals name=\"draft\">\n"
                                         + "    <item quantity=\"one\">\"Koncept\"</item>\n"
                                         + "    <item quantity=\"other\">\"Koncepty\"</item>\n"
+                                        + "  </plurals>\n"
+                                        + "</resources>\n"),
+                        xml(
+                                "res/values-fr/plurals.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "  <plurals name=\"draft\">\n"
+                                        + "    <item quantity=\"one\">\"brouillon\"</item>\n"
+                                        + "    <item quantity=\"other\">\"brouillons\"</item>\n"
                                         + "  </plurals>\n"
                                         + "</resources>\n"))
                 .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
@@ -107,7 +120,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
         // Test for https://code.google.com/p/android/issues/detail?id=67803
         String expected =
                 ""
-                        + "res/values-pl/plurals5.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
+                        + "res/values-pl/plurals5.xml:3: Error: For locale \"pl\" (Polish) the following quantity should also be defined: many (e.g. \"5 miesięcy\") [MissingQuantity]\n"
                         + "    <plurals name=\"my_plural\">\n"
                         + "    ^\n"
                         + "res/values-pl/plurals5.xml:3: Warning: For language \"pl\" (Polish) the following quantities are not relevant: zero [UnusedQuantity]\n"

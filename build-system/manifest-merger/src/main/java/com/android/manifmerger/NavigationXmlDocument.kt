@@ -19,6 +19,7 @@ package com.android.manifmerger
 import com.android.SdkConstants
 import com.android.ide.common.blame.SourceFile
 import com.android.ide.common.blame.SourceFilePosition
+import com.android.ide.common.blame.SourceFilePosition.UNKNOWN
 import com.android.manifmerger.DeepLink.DeepLinkException
 import com.android.utils.PositionXmlParser
 import com.android.utils.XmlUtils
@@ -44,11 +45,14 @@ class NavigationXmlDocument private constructor(
     constructor(sourceFile: SourceFile, rootElement: Element) :
             this(sourceFile, rootElement, null)
 
-    fun convertToData(manifestPlaceHolders: Map<String, String>) =
+    fun convertToData(
+        manifestPlaceHolders: Map<String, String>,
+        useUnknownSourceFilePosition: Boolean
+    ) =
         NavigationXmlDocumentData(
             name!!,
             navigationXmlIds,
-            performPlaceholderSubstitution(deepLinks, manifestPlaceHolders)
+            processDeepLinks(deepLinks, manifestPlaceHolders, useUnknownSourceFilePosition)
         )
 
     /**
@@ -160,9 +164,10 @@ class NavigationXmlDocument private constructor(
     class NavigationXmlDocumentException(s: String) : RuntimeException(s)
 }
 
-private fun performPlaceholderSubstitution(
+private fun processDeepLinks(
     deepLinks: List<DeepLink>,
-    manifestPlaceHolders: Map<String, String>
+    manifestPlaceHolders: Map<String, String>,
+    useUnknownSourceFilePosition: Boolean
 ): List<DeepLink> {
     return deepLinks.map { deepLink ->
         DeepLink(
@@ -171,7 +176,7 @@ private fun performPlaceholderSubstitution(
             deepLink.port,
             deepLink.path.performPlaceholderSubstitution(manifestPlaceHolders),
             deepLink.query,
-            deepLink.sourceFilePosition,
+            if (useUnknownSourceFilePosition) UNKNOWN else deepLink.sourceFilePosition,
             deepLink.isAutoVerify
         )
     }

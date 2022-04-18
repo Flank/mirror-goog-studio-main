@@ -19,10 +19,12 @@ package com.android.utils;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -138,5 +140,22 @@ public class PathUtilsTest {
         // Make sure the file and folder were deleted.
         assertThat(file.toFile().exists()).isFalse();
         assertThat(folder.toFile().exists()).isFalse();
+    }
+
+    @Test
+    public void createDirectoriesWithSymlink() throws IOException {
+        Path parent = InMemoryFileSystems.createInMemoryFileSystemAndFolder("parent");
+        Path realDir = PathUtils.createDirectories(parent.resolve("realDir"));
+        Path link = parent.resolve("link");
+        Files.createSymbolicLink(link, realDir);
+        PathUtils.createDirectories(link);
+        PathUtils.createDirectories(link.resolve("foo"));
+        assertThat(InMemoryFileSystems.getExistingFolders(parent.getFileSystem()))
+                .containsExactly(
+                        InMemoryFileSystems.getDefaultWorkingDirectory(),
+                        InMemoryFileSystems.getPlatformSpecificPath("/parent"),
+                        InMemoryFileSystems.getPlatformSpecificPath("/parent/realDir"),
+                        InMemoryFileSystems.getPlatformSpecificPath("/parent/link"),
+                        InMemoryFileSystems.getPlatformSpecificPath("/parent/realDir/foo"));
     }
 }

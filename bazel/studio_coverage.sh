@@ -74,6 +74,7 @@ fi
 declare -a extra_test_flags
 if [[ $postsubmit ]]; then
     extra_test_flags+=(--nocache_test_results)
+    extra_test_flags+=(--config=ants)
     extra_test_flags+=(--flaky_test_attempts=2)
 fi
 
@@ -96,6 +97,8 @@ fi
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --profile="${dist_dir:-/tmp}/profile-${build_number}.json.gz" \
   --build_metadata=ANDROID_BUILD_ID="${build_number}" \
+  --build_metadata=ab_build_id="${build_number}" \
+  --build_metadata=ab_target=studio-coverage \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,-perfgate \
   --define agent_coverage=true \

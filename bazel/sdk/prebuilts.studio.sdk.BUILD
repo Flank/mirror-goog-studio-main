@@ -362,6 +362,14 @@ filegroup(
 )
 
 filegroup(
+    name = "ndk-21",
+    srcs = sdk_glob(
+        include = ["ndk/21.4.7075529/**"],
+    ),
+    visibility = ["//tools/adt/idea/sync-perf-tests:__pkg__"],
+)
+
+filegroup(
     name = "cmake",
     srcs = sdk_glob(
         include = ["cmake/**"],

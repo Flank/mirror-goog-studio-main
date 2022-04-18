@@ -35,7 +35,7 @@ import com.android.ddmlib.internal.jdwp.chunkhandler.HandleProfiling;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleThread;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleViewDebug;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
-import com.android.ddmlib.jdwp.JdwpAgent;
+import com.android.ddmlib.jdwp.JdwpPipe;
 import com.android.ddmlib.jdwp.JdwpProtocol;
 import java.io.IOException;
 import java.nio.BufferOverflowException;
@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
  * ClientData} class. Each <code>Client</code> object has its own <code>ClientData</code> accessed
  * through {@link #getClientData()}.
  */
-public class ClientImpl extends JdwpAgent implements Client {
+public class ClientImpl extends JdwpPipe implements Client {
     /**
      * Users of mChan avoid synchronization issues by taking a local instance of the channel before
      * using it. This class-level shared instance can be nulled by any thread calling #close() so

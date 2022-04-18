@@ -211,7 +211,10 @@ private class ConfigurationAnalyzer(private val configuration: Configuration) {
         dependenciesBeingAnalyzed.add(dependency)
 
         var dependencyPath: DependencyPath? = null
-        if (AndroidXDependencySubstitution.isLegacySupportLibDependency(dependency.requested.displayName)) {
+        if (AndroidXDependencySubstitution.isLegacySupportLibDependency(dependency.requested.displayName)
+            // com.android.databinding:baseLibrary is an exception (see bug 227901182)
+            && !dependency.requested.displayName.startsWith(AndroidXDependencySubstitution.COM_ANDROID_DATABINDING_BASELIBRARY)
+        ) {
             // Support library found -- don't need to visit its children
             dependencyPath = DependencyPath(listOf(dependency.requested.displayName))
         } else {

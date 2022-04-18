@@ -25,9 +25,9 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
-import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpCommands;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
+import com.android.ddmlib.jdwp.JdwpPipe;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -257,7 +257,7 @@ public class DebuggerTest extends TestCase {
                                         @Nullable
                                         @Override
                                         public JdwpPacket intercept(
-                                                @NonNull JdwpAgent agent,
+                                                @NonNull JdwpPipe pipe,
                                                 @NonNull JdwpPacket packet) {
                                             packetReceived.set(true);
                                             return packet;

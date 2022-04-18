@@ -1607,13 +1607,11 @@ com.android.build.gradle.internal.dsl.ManagedDevices.getGroups: org.gradle.api.N
 com.android.build.gradle.internal.dsl.ManagedDevices.setDevices: void (org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device>)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice implements com.android.build.api.dsl.ManagedVirtualDevice
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.<init>: com.android.build.gradle.internal.dsl.ManagedVirtualDevice (java.lang.String)
-com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getApiLevel: int ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getDevice: java.lang.String ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getName: java.lang.String ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getRequire64Bit: boolean ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getSystemImageSource: java.lang.String ()
-com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setAbi: void (java.lang.String)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setApiLevel: void (int)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setDevice: void (java.lang.String)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.setRequire64Bit: void (boolean)

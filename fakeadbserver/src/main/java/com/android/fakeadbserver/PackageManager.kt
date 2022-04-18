@@ -1,0 +1,126 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.android.fakeadbserver
+
+// TODO: Add all package management app (create,write,commit,abandon) and list here.
+class PackageManager {
+    companion object {
+
+        const val BAD_FLAG = "-BAD_FLAG"
+        const val BAD_SESSION = "FAIL_ME_SESSION"
+    }
+
+    fun processPackageCommand(args: List<String>, serviceOutput: ServiceOutput) {
+        val cmd = args[0]
+
+        return when {
+            cmd == "path" -> {
+                val appId = args[1]
+                serviceOutput.writeStdout("/data/app/$appId/base.apk")
+                serviceOutput.writeExitCode(0)
+            }
+
+            cmd.startsWith("install-create") -> {
+                if (args.contains(PackageManager.BAD_FLAG)) {
+                    serviceOutput.writeStderr("Error: (requested to fail via flag))")
+                    serviceOutput.writeExitCode(1)
+                } else {
+                    serviceOutput.writeStdout("Success: created install session [1234]")
+                    serviceOutput.writeExitCode(0)
+                }
+            }
+
+            cmd.startsWith("install-write") -> {
+                installWrite(args.joinToString(" "), serviceOutput)
+            }
+
+            cmd.startsWith("install-commit") -> {
+                if (args.contains(PackageManager.BAD_SESSION)) {
+                    serviceOutput.writeStderr("Error: (request with FAIL_ME session)")
+                    serviceOutput.writeExitCode(1)
+                } else {
+                    commit(args.drop(1), serviceOutput)
+                }
+            }
+            cmd.startsWith("install-abandon") -> {
+                serviceOutput.writeStdout("Success\n")
+                serviceOutput.writeExitCode(0)
+            }
+
+            else -> {
+                serviceOutput.writeStderr("Error: Package command '$cmd' is not supported")
+                serviceOutput.writeExitCode(1)
+            }
+        }
+    }
+
+    private fun commit(slice: List<String>, serviceOutput: ServiceOutput) {
+        val sessionID = slice[0]
+        if (sessionID == "FAIL_ME") {
+            serviceOutput.writeStderr("Error (requested a FAIL_ME session)\n")
+            serviceOutput.writeExitCode(1)
+        } else {
+            serviceOutput.writeStdout("Success\n")
+            serviceOutput.writeExitCode(0)
+        }
+    }
+
+    private fun installWrite(args: String, serviceOutput: ServiceOutput) {
+        val parameters = args.split(" ")
+        if (parameters.isEmpty()) {
+            serviceOutput.writeStderr("Malformed install-write request")
+            serviceOutput.writeExitCode(1)
+            return
+        }
+
+        if (parameters.last() != "-") {
+            val sessionID = parameters[1]
+            if (sessionID == PackageManager.BAD_SESSION) {
+                serviceOutput.writeStderr("Error: (request with FAIL_ME session)")
+                serviceOutput.writeExitCode(1)
+                return
+            }
+            // This is a remote apk write (the apk is somewhere on the device, likely /data/local"..)
+            // Use a random value
+            serviceOutput.writeStdout("Success: streamed 123456789 bytes\n")
+            serviceOutput.writeExitCode(0)
+            return
+        }
+
+        // This is a streamed install
+        val sizeIndex = parameters.indexOf("-S") + 1
+        if (sizeIndex == 0) {
+            serviceOutput.writeStderr("Malformed install-write request")
+            serviceOutput.writeExitCode(1)
+            return
+        }
+
+        val expectedBytesLength = parameters[sizeIndex].toInt()
+        val buffer = ByteArray(1024)
+        var totalBytesRead = 0
+        while (totalBytesRead < expectedBytesLength) {
+            val length = Integer.min(buffer.size, expectedBytesLength - totalBytesRead)
+            val numRead = serviceOutput.readStdin(buffer, 0, length)
+            if (numRead < 0) {
+                break
+            }
+            totalBytesRead += numRead
+        }
+
+        serviceOutput.writeStdout("Success: streamed $totalBytesRead bytes\n")
+        serviceOutput.writeExitCode(0)
+    }
+}

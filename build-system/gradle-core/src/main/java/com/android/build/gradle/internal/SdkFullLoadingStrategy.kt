@@ -94,7 +94,7 @@ class SdkFullLoadingStrategy(
     }
 
     fun getSystemImageLibFolder(imageHash: String) =
-        sdkHandler.installSystemImageWarnOnFailure(imageHash)
+        sdkHandler.installSystemImage(imageHash)
 
     fun getEmulatorLibFolder() =
         sdkHandler.localEmulator

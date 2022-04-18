@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.prefs.AndroidLocationsProvider
+import com.android.testing.utils.computeVendorString
 import com.android.utils.CpuArchitecture
 import com.android.utils.osArchitecture
 import org.gradle.api.file.DirectoryProperty
@@ -51,10 +52,17 @@ fun computeAvdName(device: ManagedVirtualDevice): String =
 
 fun computeAvdName(
     apiLevel: Int,
-    vendor: String,
+    imageSource: String,
     abi: String,
-    hardwareProfile: String) =
-    "dev${apiLevel}_${vendor}_${abi}_${hardwareProfile.replace(' ', '_')}"
+    hardwareProfile: String
+): String {
+    val sanitizedProfile = sanitizeProfileName(hardwareProfile)
+    val vendor = computeVendorString(imageSource)
+    return "dev${apiLevel}_${vendor}_${abi}_$sanitizedProfile"
+}
+
+fun sanitizeProfileName(hardwareProfile: String) =
+    hardwareProfile.replace(Regex("[() ]"), "_")
 
 fun setupTaskName(device: ManagedVirtualDevice): String = "${device.name}Setup"
 
@@ -74,18 +82,20 @@ fun computeAbiFromArchitecture(device: ManagedVirtualDevice): String =
         device.systemImageSource
     )
 
-fun computeAbiFromArchitecture(require64Bit: Boolean, apiLevel: Int, vendor: String): String {
-    val cpuArchitecture = osArchitecture
-    return when {
-        cpuArchitecture == CpuArchitecture.ARM
-            || cpuArchitecture == CpuArchitecture.X86_ON_ARM-> "arm64-v8a"
-        require64Bit -> "x86_64"
-        // Neither system-images;android-30;default;x86 nor system-images;android-26;default;x86
-        // exist, but the google images do.
-        vendor == "aosp" && apiLevel in listOf(26, 30) -> "x86_64"
-        apiLevel <= 30 -> "x86"
-        else -> "x86_64"
-    }
+fun computeAbiFromArchitecture(
+    require64Bit: Boolean,
+    apiLevel: Int,
+    vendor: String,
+    cpuArch: CpuArchitecture = osArchitecture
+): String = when {
+    cpuArch == CpuArchitecture.ARM
+            || cpuArch == CpuArchitecture.X86_ON_ARM-> "arm64-v8a"
+    require64Bit -> "x86_64"
+    // Neither system-images;android-30;default;x86 nor system-images;android-26;default;x86
+    // exist, but the google images do.
+    vendor == "aosp" && apiLevel in listOf(26, 30) -> "x86_64"
+    apiLevel <= 30 -> "x86"
+    else -> "x86_64"
 }
 
 fun computeManagedDeviceEmulatorMode(projectOptions: ProjectOptions) =

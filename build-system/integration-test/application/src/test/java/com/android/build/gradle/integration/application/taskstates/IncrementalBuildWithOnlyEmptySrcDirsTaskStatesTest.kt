@@ -50,6 +50,7 @@ class IncrementalBuildWithOnlyEmptySrcDirsTaskStatesTest {
                             ":app:desugarDebugFileDependencies",
                             ":app:dexBuilderDebug",
                             ":app:extractDeepLinksDebug",
+                            ":lib:extractDeepLinksForAarDebug",
                             ":app:generateDebugAssets",
                             ":app:generateDebugBuildConfig",
                             ":app:generateDebugResources",

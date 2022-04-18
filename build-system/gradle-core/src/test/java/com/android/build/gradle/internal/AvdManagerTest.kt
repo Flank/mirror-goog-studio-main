@@ -29,6 +29,7 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -258,6 +259,38 @@ class AvdManagerTest {
         manager.deleteAvds(allAvds)
 
         assertThat(avdFolder.toFile().list()).isEmpty()
+    }
+
+    @Test
+    fun invalidHardwareProfileShouldSuggestNearMatchDevices() {
+        val errorMessage = assertThrows(IllegalStateException::class.java) {
+            manager.createAvd(
+                FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
+                "system-images;android-29;default;x86",
+                "device1",
+                "Pixel 300")
+        }
+
+        assertThat(errorMessage.message).isEqualTo("""
+            Failed to find hardware profile for name: Pixel 300
+            Try one of the following device profiles: Pixel 3, Pixel 3a, Pixel C, Pixel XL, Pixel 2
+        """.trimIndent())
+    }
+
+    @Test
+    fun invalidHardwareProfileShouldSuggestPixel6IfNoGoodOtherCandidates() {
+        val errorMessage = assertThrows(IllegalStateException::class.java) {
+            manager.createAvd(
+                FakeGradleProvider(FakeGradleDirectory(FileOpUtils.toFile(systemImageFolder))),
+                "system-images;android-29;default;x86",
+                "device1",
+                "r4ndom-device")
+        }
+
+        assertThat(errorMessage.message).isEqualTo("""
+            Failed to find hardware profile for name: r4ndom-device
+            Try one of the following device profiles: Pixel 6, Pixel C, Pixel 2, Pixel 3, Pixel 4
+        """.trimIndent())
     }
 
     private fun setupVersionedSdkLoader(): SdkComponentsBuildService.VersionedSdkLoader =

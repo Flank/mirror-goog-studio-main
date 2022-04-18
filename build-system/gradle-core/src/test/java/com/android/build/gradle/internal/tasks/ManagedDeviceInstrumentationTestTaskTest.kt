@@ -357,7 +357,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
                 verifyNoMoreInteractions(deviceName)
 
                 // Should be x86, as require64Bit is not set and api is 27
-                verify(avdName).set("dev27_aosp_x86_Pixel_2")
+                verify(avdName).set("dev27_default_x86_Pixel_2")
                 verify(avdName).disallowChanges()
                 verifyNoMoreInteractions(avdName)
 

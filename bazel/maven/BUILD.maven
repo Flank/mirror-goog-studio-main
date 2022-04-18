@@ -27709,6 +27709,17 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.6.20",
+    pom = "repository/org/jetbrains/kotlin/jvm/org.jetbrains.kotlin.jvm.gradle.plugin/1.6.20/org.jetbrains.kotlin.jvm.gradle.plugin-1.6.20.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jetbrains/kotlin/jvm/org.jetbrains.kotlin.jvm.gradle.plugin/1.6.20",
+    deps = [
+        "org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.20",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.jetbrains.kotlin.jvm-abi-gen_1.6.10",
     pom = "repository/org/jetbrains/kotlin/jvm-abi-gen/1.6.10/jvm-abi-gen-1.6.10.pom",
     repo_root_path = "repository",

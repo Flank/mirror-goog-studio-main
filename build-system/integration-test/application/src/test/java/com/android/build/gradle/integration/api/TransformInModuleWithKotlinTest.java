@@ -16,13 +16,9 @@
 
 package com.android.build.gradle.integration.api;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
 import com.android.ide.common.process.ProcessException;
@@ -31,6 +27,11 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import org.apache.commons.io.IOUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,10 +43,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipFile;
-import org.apache.commons.io.IOUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.google.common.truth.Truth.assertThat;
 
 public class TransformInModuleWithKotlinTest {
 
@@ -70,9 +70,7 @@ public class TransformInModuleWithKotlinTest {
                 "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
                 project.getSubproject("lib").getBuildFile(),
                 Charsets.UTF_8);
-        project.executor()
-                .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, true)
-                .run("lib:assembleDebug");
+        project.executor().run("lib:assembleDebug");
         File libraryPublishedAar =
                 FileUtils.join(librarySubproject.getOutputDir(), "aar", "lib-debug.aar");
         File tempTestData = temporaryDirectory.newFolder("testData");

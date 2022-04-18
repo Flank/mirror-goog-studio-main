@@ -32,7 +32,6 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class JacocoWithUnitTestReportTest(
-    private val isJacocoTransformEnabled: Boolean,
     private val isJacocoPluginAppliedFromBuildFile: Boolean) {
 
     @get:Rule
@@ -43,13 +42,8 @@ class JacocoWithUnitTestReportTest(
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters(name="isJacocoTransformEnabled_{0}_isJacocoPluginAppliedFromBuildFile_{1}")
-        fun params() = listOf(
-            arrayOf(true, true),
-            arrayOf(false, false),
-            arrayOf(true, false),
-            arrayOf(false, true)
-        )
+        @Parameterized.Parameters(name="isJacocoPluginAppliedFromBuildFile_{0}")
+        fun params() = arrayOf(true, false)
     }
 
     @Before
@@ -68,9 +62,7 @@ class JacocoWithUnitTestReportTest(
 
     @Test
     fun `test expected report contents`() {
-        val run = testProject.executor()
-            .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, isJacocoTransformEnabled)
-            .run("createDebugUnitTestCoverageReport")
+        val run = testProject.executor().run("createDebugUnitTestCoverageReport")
         checkHighlitedSourceCodeReportFiles(testProject.buildDir)
         val generatedCoverageReport = FileUtils.join(
             testProject.buildDir,
@@ -124,8 +116,6 @@ class JacocoWithUnitTestReportTest(
     fun `report not generated for build types with unit test coverage disabled`() {
         // Build fails as the code coverage report task has not been registered as there is no
         // code coverage data for the release build type.
-        testProject.executor()
-            .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, isJacocoTransformEnabled)
-            .run("createReleaseUnitTestCoverageReport")
+        testProject.execute("createReleaseUnitTestCoverageReport")
     }
 }

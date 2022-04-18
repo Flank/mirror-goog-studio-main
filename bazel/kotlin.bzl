@@ -12,7 +12,7 @@ def test_kotlin_use_ir():
         "//conditions:default": True,
     })
 
-def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, transitive_classpath):
+def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotlinc_opts, transitive_classpath):
     """Runs kotlinc on the given source files.
 
     Args:
@@ -24,6 +24,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, trans
         out: the output jar file
         out_ijar: the output ijar file or None to disable ijar creation
         jre: list of jars from the JRE bootclasspath
+        kotlinc_opts: list of additional flags to pass to the Kotlin compiler
         transitive_classpath: whether to include transitive deps in the compile classpath
 
     Returns:
@@ -79,6 +80,9 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, trans
     args.add("-o", out)
     args.add_all(srcs)
 
+    # Add custom kotlinc options last so that they override the global options.
+    args.add_all(kotlinc_opts)
+
     # To enable persistent Bazel workers, all arguments must come in an argfile.
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
@@ -100,6 +104,7 @@ def kotlin_test(
         deps = [],
         runtime_deps = [],
         friends = [],
+        kotlinc_opts = [],
         visibility = None,
         lint_baseline = None,
         lint_classpath = [],
@@ -116,6 +121,7 @@ def kotlin_test(
         lint_is_test_sources = True,
         visibility = visibility,
         friends = friends,
+        kotlinc_opts = kotlinc_opts,
     )
 
     coverage_java_test(
@@ -282,6 +288,7 @@ def _kotlin_library_impl(ctx):
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
             jre = ctx.files._bootclasspath,
+            kotlinc_opts = ctx.attr.kotlinc_opts,
             transitive_classpath = True,  # Matches Java rules (sans strict-deps enforcement)
         )]
         jars += [kotlin_jar]
@@ -376,6 +383,7 @@ _kotlin_library = rule(
         ),
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
+        "kotlinc_opts": attr.string_list(),
         "kotlin_use_ir": attr.bool(),
         "compress_resources": attr.bool(),
         "plugins": attr.label_list(

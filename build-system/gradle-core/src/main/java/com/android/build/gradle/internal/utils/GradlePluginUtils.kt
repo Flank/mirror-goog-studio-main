@@ -62,15 +62,35 @@ private val pluginList = listOf(
         "org.jetbrains.kotlin",
         "kotlin-gradle-plugin",
         GradleVersion.parse("1.5.20")
+    ),
+
+    // https://issuetracker.google.com/215545075
+    // Remove this and the corresponding tests in PluginVersionCheckTest once the minimum kotlin
+    // version reaches 1.6.20.
+    DependencyInfo(
+        "kotlin-android-extensions",
+        "org.jetbrains.kotlin",
+        "kotlin-gradle-plugin",
+        GradleVersion.parse("1.6.20"),
+        "org.jetbrains.kotlin.android.extensions"
     )
 )
 
+
+/**
+ * A data class to specify a [minimumVersion] requirement for a given [dependencyGroup] and
+ * [dependencyName].
+ *
+ * If [pluginId] is specified, the [minimumVersion] requirement is enforced only if [pluginId] is
+ * applied.
+ */
 @VisibleForTesting
 internal data class DependencyInfo(
     val displayName: String,
     val dependencyGroup: String,
     val dependencyName: String,
-    val minimumVersion: GradleVersion
+    val minimumVersion: GradleVersion,
+    val pluginId: String? = null
 )
 
 /**
@@ -88,20 +108,31 @@ fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: IssueReport
         val projectsToCheck = mutableSetOf<Project>()
         gradle.allprojects {
             // Check only projects that have AGP applied (see bug 148776286).
-            // Also check their parent projects recursively because the buildscript classpath(s) of
-            // parent projects are available to child projects.
             if (it.pluginManager.hasPlugin(ANDROID_GRADLE_PLUGIN_ID)) {
                 var current: Project? = it
+                // Also check their parent projects recursively because the buildscript classpath(s)
+                // of parent projects are available to child projects.
                 while (current != null && projectsToCheck.add(current)) {
                     current = current.parent
                 }
+            }
+        }
+        val pluginsToCheck = mutableSetOf<DependencyInfo>()
+        gradle.allprojects {
+            if (it.pluginManager.hasPlugin(ANDROID_GRADLE_PLUGIN_ID)) {
+                pluginsToCheck.addAll(
+                    pluginList.filter { dependencyInfo ->
+                        dependencyInfo.pluginId == null
+                                || it.pluginManager.hasPlugin(dependencyInfo.pluginId)
+                    }
+                )
             }
         }
         // Calling allprojects again is needed as Gradle doesn't allow cross-project resolution of
         // buildscript classpath
         gradle.allprojects {
             if (it in projectsToCheck) {
-                for (pluginToCheck in pluginList) {
+                for (pluginToCheck in pluginsToCheck) {
                     enforceMinimumVersionOfPlugin(it, pluginToCheck, issueReporter)
                 }
             }

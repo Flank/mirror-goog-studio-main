@@ -26,7 +26,7 @@ import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
-import com.android.ddmlib.jdwp.JdwpAgent;
+import com.android.ddmlib.jdwp.JdwpPipe;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -38,10 +38,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
-/**
- * This represents a pending or established connection with a JDWP debugger.
- */
-public class Debugger extends JdwpAgent {
+/** This represents a pending or established connection with a JDWP debugger. */
+public class Debugger extends JdwpPipe {
 
     enum ConnectionState {
         ST_NOT_CONNECTED,

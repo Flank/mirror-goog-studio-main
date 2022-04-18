@@ -14,7 +14,5 @@ open class ManagedVirtualDevice @Inject constructor(private val name: String) :
 
     override var systemImageSource = "google"
 
-    override var abi = ""
-
     override var require64Bit = false
 }

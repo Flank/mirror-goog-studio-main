@@ -65,23 +65,26 @@ public class JdwpProtocol {
         return new String(utf8, Charsets.UTF_8);
     }
 
-    public void incoming(@NonNull JdwpPacket packet, @NonNull JdwpAgent target) {
+    public void incoming(@NonNull JdwpPacket packet, @NonNull JdwpPipe pipe) {
         if (packet.is(JdwpCommands.SET_VM, JdwpCommands.CMD_VM_IDSIZES)) {
-            target.addReplyInterceptor(packet.getId(), new JdwpInterceptor() {
-                @Override
-                public JdwpPacket intercept(@NonNull JdwpAgent agent, @NonNull JdwpPacket packet) {
-                    mIdSizes = new IdSizesReply();
-                    mIdSizes.parse(packet.getPayload(), JdwpProtocol.this);
-                    return packet;
-                }
-            });
-        } else if (packet.is(JdwpCommands.SET_VM, JdwpCommands.CMD_VM_CAPABILITIESNEW)) {
-            target.addReplyInterceptor(
+            pipe.addReplyInterceptor(
                     packet.getId(),
                     new JdwpInterceptor() {
                         @Override
                         public JdwpPacket intercept(
-                                @NonNull JdwpAgent agent, @NonNull JdwpPacket packet) {
+                                @NonNull JdwpPipe pipe, @NonNull JdwpPacket packet) {
+                            mIdSizes = new IdSizesReply();
+                            mIdSizes.parse(packet.getPayload(), JdwpProtocol.this);
+                            return packet;
+                        }
+                    });
+        } else if (packet.is(JdwpCommands.SET_VM, JdwpCommands.CMD_VM_CAPABILITIESNEW)) {
+            pipe.addReplyInterceptor(
+                    packet.getId(),
+                    new JdwpInterceptor() {
+                        @Override
+                        public JdwpPacket intercept(
+                                @NonNull JdwpPipe pipe, @NonNull JdwpPacket packet) {
                             CapabilitiesNewReply reply = new CapabilitiesNewReply();
                             reply.parse(packet.getPayload(), JdwpProtocol.this);
                             packet.setPayload(reply.getConverted());

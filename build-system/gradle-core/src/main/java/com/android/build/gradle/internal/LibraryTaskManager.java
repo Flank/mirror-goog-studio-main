@@ -133,6 +133,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         if (buildFeatures.getAndroidResources()) {
             createGenerateResValuesTask(libraryVariant);
             taskFactory.register(new ExtractDeepLinksTask.CreationAction(libraryVariant));
+            taskFactory.register(new ExtractDeepLinksTask.AarCreationAction(libraryVariant));
         } else { // Resource processing is disabled.
             // TODO(b/147579629): add a warning for manifests containing resource references.
             if (globalConfig.getNamespacedAndroidResources()) {

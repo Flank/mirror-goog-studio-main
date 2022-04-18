@@ -29,30 +29,21 @@ interface ManagedVirtualDevice : Device {
 
     /**
      * Which source the system image should come from. Either "google", "google-atd", "aosp", or
-     * "aosp-atd"
+     * "aosp-atd". You can also specify an explicit source such as "google_apis_playstore".
      *
-     * "google", the default, will select Google Play images for the device.
-     * "google-atd" will use automated test device images from Google Play.
-     * "aosp" will use aosp images for the device.
-     * "aosp-atd" will use automated test device image from aosp.
+     * "google", the default, will select Google APIs images for the device.
+     * "google-atd" will use automated test device images from Google APIs.
+     * "aosp" will use the Android Open Source Project images for the device.
+     * "aosp-atd" will use automated test device image from the Android Open Source Project.
      */
     var systemImageSource: String
-
-    /**
-     * The application binary interface for the device image.
-     *
-     * [abi] is deprecated. Use [require64Bit] instead which will allow you to select between the
-     * 32 bit and 64 bit system image if appropriate for your development environment.
-     */
-    @Deprecated("Replaced with: require64Bit")
-    var abi: String
 
     /**
      * Whether the image must be a 64 bit image. Defaults to false.
      *
      * On x86_64 machines:
      *   When false, the managed device will use the 32 bit image if available with the given api
-     *   level and source, otherwise fallback to the 64 bit image.
+     *   level and source, otherwise the 64 bit image will be used.
      *   When true, the 64 image must be used and setup will fail if an appropriate image does not
      *   exist.
      * On arm machines:

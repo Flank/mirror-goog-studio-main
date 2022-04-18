@@ -371,13 +371,13 @@
       jars="${mavenRepo}/org/jetbrains/kotlin/kotlin-stdlib/${kotlinVersion}/kotlin-stdlib-${kotlinVersion}.jar"
       resolved="org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"/>
   <library
-      name="org.jetbrains:annotations:13.0@jar"
-      jars="${mavenRepo}/org/jetbrains/annotations/13.0/annotations-13.0.jar"
-      resolved="org.jetbrains:annotations:13.0"/>
-  <library
       name="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}@jar"
       jars="${mavenRepo}/org/jetbrains/kotlin/kotlin-stdlib-common/${kotlinVersion}/kotlin-stdlib-common-${kotlinVersion}.jar"
       resolved="org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}"/>
+  <library
+      name="org.jetbrains:annotations:13.0@jar"
+      jars="${mavenRepo}/org/jetbrains/annotations/13.0/annotations-13.0.jar"
+      resolved="org.jetbrains:annotations:13.0"/>
   <library
       name="${projectDir}@@:app::debug"
       jars="${projectDir}/app/build/intermediates/compile_app_classes_jar/debug/classes.jar"
