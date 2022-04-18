@@ -122,6 +122,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -1817,10 +1818,48 @@ public class TestLintClient extends LintCliClient {
     @Nullable
     @Override
     public URLConnection openConnection(@NonNull URL url, int timeout) throws IOException {
-        if (task.mockNetworkData != null) {
+        Map<String, byte[]> mockNetworkData = task.mockNetworkData;
+        Map<String, Integer> mockNetworkErrorCodes = task.mockNetworkErrorCodes;
+        if (mockNetworkData != null || mockNetworkErrorCodes != null) {
             String query = url.toExternalForm();
-            byte[] bytes = task.mockNetworkData.get(query);
-            if (bytes != null) {
+            Integer response =
+                    mockNetworkErrorCodes != null ? mockNetworkErrorCodes.get(query) : null;
+            byte[] bytes = mockNetworkData != null ? mockNetworkData.get(query) : null;
+            if (bytes != null || response != null) {
+                String protocol = url.getProtocol();
+                if (protocol.equals("http") || protocol.equals("https") || response != null) {
+                    return new HttpURLConnection(url) {
+                        @Override
+                        public void connect() {}
+
+                        @Override
+                        public void disconnect() {}
+
+                        @Override
+                        public boolean usingProxy() {
+                            return false;
+                        }
+
+                        @Override
+                        public InputStream getInputStream() {
+                            if (response != null) {
+                                return null;
+                            }
+                            return new ByteArrayInputStream(bytes);
+                        }
+
+                        @Override
+                        public int getResponseCode() {
+                            if (response != null) {
+                                return response;
+                            } else {
+                                // HTTP OK status code. We assume getInputStream will succeed.
+                                return 200;
+                            }
+                        }
+                    };
+                }
+
                 return new URLConnection(url) {
                     @Override
                     public void connect() {}

@@ -125,6 +125,7 @@ public class TestLintTask {
     boolean vital;
     TextFormat textFormat = TextFormat.TEXT;
     Map<String, byte[]> mockNetworkData;
+    Map<String, Integer> mockNetworkErrorCodes;
     boolean allowNetworkAccess;
     boolean allowDuplicates;
     boolean showSecondaryLintContent = false;
@@ -1243,6 +1244,24 @@ public class TestLintTask {
     @NonNull
     public TestLintTask networkData(@NonNull String url, @NonNull String data) {
         return networkData(url, data.getBytes(Charsets.UTF_8));
+    }
+
+    /**
+     * Provides mock data to feed back to the URL connection if a detector calls {@link
+     * LintClient#openConnection(URL, int)} and then attempts to read data from that connection.
+     *
+     * <p>Here, the data is an HTTP return code, such as 404, used to test error handling (and
+     * should only be used with http/https URLs.)
+     *
+     * @return this, for constructor chaining
+     */
+    @NonNull
+    public TestLintTask networkData(@NonNull String url, int data) {
+        if (mockNetworkErrorCodes == null) {
+            mockNetworkErrorCodes = Maps.newHashMap();
+        }
+        mockNetworkErrorCodes.put(url, data);
+        return this;
     }
 
     /**
