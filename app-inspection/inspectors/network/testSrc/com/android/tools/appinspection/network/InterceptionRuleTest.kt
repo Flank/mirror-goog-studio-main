@@ -20,6 +20,8 @@ import com.android.tools.appinspection.network.rules.BodyModifiedTransformation
 import com.android.tools.appinspection.network.rules.BodyReplacedTransformation
 import com.android.tools.appinspection.network.rules.HeaderAddedTransformation
 import com.android.tools.appinspection.network.rules.HeaderReplacedTransformation
+import com.android.tools.appinspection.network.rules.InterceptionCriteria
+import com.android.tools.appinspection.network.rules.NetworkConnection
 import com.android.tools.appinspection.network.rules.NetworkResponse
 import com.android.tools.appinspection.network.rules.StatusCodeReplacedTransformation
 import com.android.tools.appinspection.network.rules.matches
@@ -27,6 +29,7 @@ import com.android.tools.appinspection.network.rules.wildCardMatches
 import com.android.tools.idea.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import studio.network.inspection.NetworkInspectorProtocol
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyModified
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
@@ -42,6 +45,12 @@ class InterceptionRuleTest {
     @Test
     fun matchingTextMatchesTargets() {
         assertThat(wildCardMatches("", null)).isTrue()
+
+        val matchesAll = MatchingText.newBuilder().apply {
+            type = MatchingText.Type.PLAIN
+            text = ""
+        }.build()
+        assertThat(matchesAll.matches(null)).isTrue()
 
         val plainMatchingText = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
@@ -62,6 +71,72 @@ class InterceptionRuleTest {
         assertThat(regexMatchingText.matches("oneBtwobthreeX")).isTrue()
         assertThat(regexMatchingText.matches("oneBtwoBthreeX")).isFalse()
         assertThat(regexMatchingText.matches("one[A-Z]two[a-z]three.")).isFalse()
+    }
+
+    @Test
+    fun interceptionCriteriaMatchesConnections() {
+        val emptyCriteria = InterceptionCriteria(
+            NetworkInspectorProtocol.InterceptCriteria.getDefaultInstance()
+        )
+        val connection = NetworkConnection("https://www.google.com", "GET")
+        assertThat(emptyCriteria.appliesTo(connection)).isTrue()
+
+        val criteria = InterceptionCriteria(
+            NetworkInspectorProtocol.InterceptCriteria.newBuilder().apply {
+                protocol = "https"
+                host = "www.google.com"
+                port = ""
+                query = ""
+                path = ""
+                method = "GET"
+            }.build()
+        )
+        assertThat(criteria.appliesTo(connection)).isTrue()
+        assertThat(
+            criteria.appliesTo(NetworkConnection("https://www.google.com:8080", "POST"))
+        ).isFalse()
+        assertThat(
+            criteria.appliesTo(NetworkConnection("http://www.google.com", "GET"))
+        ).isFalse()
+        assertThat(
+            criteria.appliesTo(NetworkConnection("https://www.google.com", "POST"))
+        ).isFalse()
+
+        val detailedCriteria = InterceptionCriteria(
+            NetworkInspectorProtocol.InterceptCriteria.newBuilder().apply {
+                protocol = "https"
+                host = "www.google.com"
+                port = "8080"
+                query = "query"
+                path = "/path"
+                method = "GET"
+            }.build()
+        )
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path?query", "GET")
+            )
+        ).isTrue()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com/path?query", "GET")
+            )
+        ).isFalse()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path?query2", "GET")
+            )
+        ).isFalse()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path2?query", "GET")
+            )
+        ).isFalse()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path?query", "POST")
+            )
+        ).isFalse()
     }
 
     @Test

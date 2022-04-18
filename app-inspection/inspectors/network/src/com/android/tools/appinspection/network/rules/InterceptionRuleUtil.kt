@@ -25,12 +25,14 @@ const val FIELD_CONTENT_TYPE = "content-type"
 const val FIELD_CONTENT_ENCODING = "content-encoding"
 const val FIELD_RESPONSE_STATUS_CODE = "response-status-code"
 
-fun MatchingText.matches(text: String): Boolean {
-    return this.text.isBlank() || when (type) {
-        MatchingText.Type.PLAIN -> this.text == text
-        MatchingText.Type.REGEX -> Regex(this.text).matches(text)
-        else -> throw RuntimeException(MATCHING_TEXT_TYPE_NOT_SPECIFIED)
-    }
+fun MatchingText.matches(text: String?): Boolean {
+    return this.text.isBlank() || text?.let { nonNullText ->
+        when (type) {
+            MatchingText.Type.PLAIN -> this.text == nonNullText
+            MatchingText.Type.REGEX -> Regex(this.text).matches(nonNullText)
+            else -> throw RuntimeException(MATCHING_TEXT_TYPE_NOT_SPECIFIED)
+        }
+    } == true
 }
 
 fun wildCardMatches(pattern: String, text: String?): Boolean {
