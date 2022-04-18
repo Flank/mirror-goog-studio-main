@@ -82,7 +82,7 @@ class InstallClient {
   RunasExecutor executor_;
 
   // Writes a serialized protobuf message to the connected client.
-  bool Write(const proto::InstallServerRequest& request) const;
+  bool WriteBlocking(const proto::InstallServerRequest& request) const;
 
   // Waits up for a message to be available from the client, then attempts to
   // parse the data read into the specified proto.

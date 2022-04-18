@@ -30,7 +30,7 @@ const std::array<unsigned char, 8> MAGIC_NUMBER = {0xAC, 0xA5, 0xAC, 0xA5,
 
 namespace deploy {
 
-bool MessagePipeWrapper::Write(const std::string& message) const {
+bool MessagePipeWrapper::WriteBlocking(const std::string& message) const {
   if (!WriteBytes(MAGIC_NUMBER.data(), MAGIC_NUMBER.size())) {
     ErrEvent("Unable to write magic number to pipe");
     return false;
@@ -50,7 +50,7 @@ bool MessagePipeWrapper::Write(const std::string& message) const {
   return true;
 }
 
-bool MessagePipeWrapper::Read(std::string* message) const {
+bool MessagePipeWrapper::ReadBlocking(std::string* message) const {
   std::array<unsigned char, 8> header;
   header.fill(0);
   if (!ReadBytes(header.data(), header.size()) || header != MAGIC_NUMBER) {
@@ -87,7 +87,7 @@ bool MessagePipeWrapper::Read(int timeout_ms, std::string* message) {
     return false;
   }
 
-  return Read(message);
+  return ReadBlocking(message);
 }
 
 void MessagePipeWrapper::Close() {

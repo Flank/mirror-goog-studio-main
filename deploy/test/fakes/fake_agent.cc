@@ -29,7 +29,7 @@ bool FakeAgent::RespondSuccess() {
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
-  return socket_.Write(response_bytes);
+  return socket_.WriteBlocking(response_bytes);
 }
 
 bool FakeAgent::RespondFailure() {
@@ -39,7 +39,7 @@ bool FakeAgent::RespondFailure() {
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
-  return socket_.Write(response_bytes);
+  return socket_.WriteBlocking(response_bytes);
 }
 
 // TODO(noahz): Refactor protocol logic out of sockets/messagepipewrappers to
@@ -55,7 +55,7 @@ bool FakeAgent::RespondCrash() {
   // Write half the message before exiting.
   response_bytes = response_bytes.substr(0, response_bytes.size() / 2);
 
-  if (!socket_.Write(response_bytes)) {
+  if (!socket_.WriteBlocking(response_bytes)) {
     return false;
   }
 
@@ -65,7 +65,7 @@ bool FakeAgent::RespondCrash() {
 
 bool FakeAgent::ReceiveMessage(proto::SwapRequest* request) {
   std::string request_bytes;
-  return socket_.Read(&request_bytes) &&
+  return socket_.ReadBlocking(&request_bytes) &&
          request->ParseFromString(request_bytes);
 }
 
