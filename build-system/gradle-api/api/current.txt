@@ -2092,7 +2092,7 @@ package com.android.build.api.variant {
     method public com.android.build.api.artifact.Artifacts getArtifacts();
     method @org.gradle.api.Incubating public org.gradle.api.file.FileCollection getCompileClasspath();
     method @org.gradle.api.Incubating public org.gradle.api.artifacts.Configuration getCompileConfiguration();
-    method @org.gradle.api.Incubating public com.android.build.api.variant.Instrumentation getInstrumentation();
+    method public com.android.build.api.variant.Instrumentation getInstrumentation();
     method @org.gradle.api.Incubating public com.android.build.api.variant.JavaCompilation getJavaCompilation();
     method @org.gradle.api.Incubating public org.gradle.api.artifacts.Configuration getRuntimeConfiguration();
     method @org.gradle.api.Incubating public com.android.build.api.variant.Sources getSources();
@@ -2102,7 +2102,7 @@ package com.android.build.api.variant {
     property public abstract com.android.build.api.artifact.Artifacts artifacts;
     property @org.gradle.api.Incubating public abstract org.gradle.api.file.FileCollection compileClasspath;
     property @org.gradle.api.Incubating public abstract org.gradle.api.artifacts.Configuration compileConfiguration;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.variant.Instrumentation instrumentation;
+    property public abstract com.android.build.api.variant.Instrumentation instrumentation;
     property @org.gradle.api.Incubating public abstract com.android.build.api.variant.JavaCompilation javaCompilation;
     property @org.gradle.api.Incubating public abstract org.gradle.api.artifacts.Configuration runtimeConfiguration;
     property @org.gradle.api.Incubating public abstract com.android.build.api.variant.Sources sources;
