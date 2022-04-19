@@ -39,6 +39,7 @@ test:ignored --jvmopt=-Dignored.tests.only=true
 test --aspects=tools/base/bazel/validations/timeout.bzl%no_eternal_tests
 test --aspects=tools/base/bazel/validations/flaky.bzl%limit_flaky_tests
 test --aspects=tools/base/bazel/validations/py2.bzl%no_py2_targets
+build --aspects=tools/base/bazel/validations/exec_props.bzl%limit_exec_properties
 # Generates a ${TARGET}.datasize.txt output which shows the size of data
 # dependencies for each target. See the aspect definition for more.
 build:datasize_aspect --aspects=tools/base/bazel/validations/size.bzl%data_size
