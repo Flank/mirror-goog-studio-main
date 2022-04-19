@@ -2044,7 +2044,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 import android.net.Uri;
 
                 fun test(resolver: ContentResolver, uri: Uri, projection: Array<String>) {
-                    resolver.query(uri, projection, null, null, null).use { // OK
+                    resolver.query(uri, projection, null, null, null).use { cursor -> // OK
                         cursor.moveToNext()
                     }
 
