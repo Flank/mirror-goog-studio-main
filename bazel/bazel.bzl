@@ -105,9 +105,11 @@ def _iml_module_jar_impl(
     if jvm_target == "8":
         javac_opts += ["--release", "8"]
         kotlinc_opts += ["-jvm-target", "1.8"]
+        kt_java_runtime = ctx.attr._kt_java_runtime_8[java_common.JavaRuntimeInfo]
     elif jvm_target == "11":
         # Ideally we use "--release 11" for javac too, but that is incompatible with "--add-exports".
         kotlinc_opts += ["-jvm-target", "11"]
+        kt_java_runtime = ctx.attr._kt_java_runtime_11[java_common.JavaRuntimeInfo]
     else:
         fail("JVM target " + jvm_target + " is not currently supported in iml_module")
 
@@ -122,7 +124,7 @@ def _iml_module_jar_impl(
             friend_jars = friend_jars,
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
-            java_runtime = ctx.attr._kt_java_runtime_8[java_common.JavaRuntimeInfo],
+            java_runtime = kt_java_runtime,
             kotlinc_opts = kotlinc_opts,
             transitive_classpath = False,  # Matches JPS.
         )]
@@ -390,6 +392,13 @@ _iml_module_ = rule(
             # We need this to be able to target JRE 8 in Kotlin, because
             # Kotlinc does not support the --release 8 Javac option.
             default = Label("//prebuilts/studio/jdk:jdk_runtime"),
+            providers = [java_common.JavaRuntimeInfo],
+            cfg = "exec",
+        ),
+        "_kt_java_runtime_11": attr.label(
+            # We need this to be able to target JRE 11 in Kotlin, because
+            # Kotlinc does not support the --release 11 Javac option.
+            default = Label("//prebuilts/studio/jdk:jdk11_runtime"),
             providers = [java_common.JavaRuntimeInfo],
             cfg = "exec",
         ),
