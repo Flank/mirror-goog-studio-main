@@ -50,7 +50,7 @@ class LiveEditClass {
     // Named method descriptors of methods that have been live edited.
     private final HashSet<String> liveEditedMethods;
 
-    public LiveEditClass(LiveEditContext context, byte[] bytecode, boolean isProxyClass) {
+    public LiveEditClass(LiveEditContext context, Interpretable bytecode, boolean isProxyClass) {
         this.context = context;
         this.staticFields = new HashMap<>();
         this.castableTypes = new HashSet<>();
@@ -60,8 +60,8 @@ class LiveEditClass {
         updateBytecode(bytecode, isProxyClass);
     }
 
-    public void updateBytecode(byte[] newBytecode, boolean isProxyClass) {
-        bytecode = new Interpretable(newBytecode);
+    public void updateBytecode(Interpretable bytecode, boolean isProxyClass) {
+        this.bytecode = bytecode;
         if (isProxyClass) {
             try {
                 // Initializes proxyClass, castableTypes, superReflectedFields, and

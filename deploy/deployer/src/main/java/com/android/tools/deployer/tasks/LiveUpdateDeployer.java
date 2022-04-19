@@ -21,9 +21,11 @@ import com.android.tools.deployer.AdbClient;
 import com.android.tools.deployer.Installer;
 import com.android.tools.idea.protobuf.ByteString;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -105,6 +107,40 @@ public class LiveUpdateDeployer {
         public UpdateLiveEditError(String msg) {
             this.msg = msg;
         }
+
+        public UpdateLiveEditError(Deploy.UnsupportedChange error) {
+            switch (error.getType()) {
+                case ADDED_CLASS:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    "Unsupported addition of new class '%s' in file '%s'.\nApplication must be restarted.",
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                case ADDED_METHOD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    "Unsupported addition of new method '%s.%s' in file '%s', line %d.\nApplication must be restarted.",
+                                    error.getClassName(),
+                                    error.getMethodName(),
+                                    error.getFileName(),
+                                    error.getLineNumber());
+                    break;
+                case REMOVED_METHOD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    "Unsupported deletion of method '%s.%s' in file '%s'.\nApplication must be restarted.",
+                                    error.getClassName(),
+                                    error.getMethodName(),
+                                    error.getFileName());
+                    break;
+                default:
+                    msg = "Unknown error";
+            }
+        }
     }
 
     /** Temp solution. Going to refactor / move this elsewhere later. */
@@ -152,6 +188,12 @@ public class LiveUpdateDeployer {
     public List<UpdateLiveEditError> updateLiveEdit(
             Installer installer, AdbClient adb, String packageName, UpdateLiveEditsParam param) {
 
+        // Sometimes we get a PSI event for a top-level file when no top-level class exists. In this
+        // case, just treat it as a no-op success.
+        if (param.classData.length == 0) {
+            return new ArrayList<>();
+        }
+
         List<Integer> pids = adb.getPids(packageName);
         Deploy.Arch arch = adb.getArch(pids);
 
@@ -192,8 +234,15 @@ public class LiveUpdateDeployer {
 
         try {
             Deploy.LiveEditResponse response = installer.liveEdit(request);
-            for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
-                errors.add(new UpdateLiveEditError(failure.getLiveLiteralResponse().getExtra()));
+            if (response.getStatus() == Deploy.LiveEditResponse.Status.AGENT_ERROR) {
+                for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
+                    failure.getLeResponse()
+                            .getErrorsList()
+                            .forEach(error -> errors.add(new UpdateLiveEditError(error)));
+                }
+            }
+            if (response.getStatus() != Deploy.LiveEditResponse.Status.OK) {
+                errors.add(new UpdateLiveEditError(response.getStatus().toString()));
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -199,6 +199,20 @@ message LiveLiteralUpdateResponse {
   repeated AgentExceptionLog agent_logs = 4;
 }
 
+message LiveEditResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    READY_FOR_AGENTS_NOT_RECEIVED = 2;
+    AGENT_ATTACH_FAILED = 3;
+    INSTALL_SERVER_COM_ERR = 4;       // InstallServer internal or pipe rw error
+    AGENT_ERROR = 5;                  // One or more of the agents reported failure
+  }
+
+  Status status = 1;
+  repeated AgentResponse failed_agents = 2;
+}
+
 message JvmtiError {
   message Details {
     enum Type {
@@ -233,6 +247,7 @@ message AgentResponse {
 
     SWAP_FAILURE = 7;             // Has a corresponding AgentSwapResponse with error.
     LITERAL_FAILURE = 8;          // Has a corresponding AgentLiveLiteralUpdateResponse with error.
+    LIVE_EDIT_FAILURE = 9;        // Has a corresponding AgentLiveEditResponse with error.
   }
   Status status = 1;
 
@@ -244,7 +259,7 @@ message AgentResponse {
   oneof response {
     AgentSwapResponse swap_response = 4;
     AgentLiveLiteralUpdateResponse live_literal_response = 5;
-    LiveEditResponse le_response = 6;
+    AgentLiveEditResponse le_response = 6;
   }
 }
 
@@ -290,6 +305,34 @@ message AgentLiveLiteralUpdateResponse {
   }
   Status status = 1;
   string extra = 2;
+}
+
+message AgentLiveEditResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+    INSTRUMENTATION_FAILED = 3;
+    LAMBDA_DEX_LOAD_FAILED = 4;
+    UNSUPPORTED_CHANGE = 5;
+  }
+
+  Status status = 1;
+  repeated UnsupportedChange errors = 2;
+}
+
+message UnsupportedChange {
+  enum Type {
+    UNKNOWN = 0;
+    ADDED_METHOD = 1;
+    REMOVED_METHOD = 2;
+    ADDED_CLASS = 3;
+  }
+  Type type = 1;
+  string class_name = 2;
+  string method_name = 3;
+  string file_name = 4;
+  int32 line_number = 5;
 }
 
 message InstallCoroutineAgentResponse {
@@ -666,21 +709,6 @@ message LiveEditClass {
   // Not set for support classes.
   string method_name = 3;
   string method_desc = 4;
-}
-
-message LiveEditResponse {
-  enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-    INSTRUMENTATION_FAILED = 3;
-    LAMBDA_DEX_LOAD_FAILED = 4;
-  }
-
-  Status status = 1;
-  string error_message = 2;
-
-  repeated AgentResponse failed_agents = 4;
 }
 
 message NetworkTestRequest {

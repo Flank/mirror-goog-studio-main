@@ -56,8 +56,8 @@ public class MethodBodyEvaluator {
                             lookup, clazz.getInternalName(), clazz.getFilename());
             StringBuilder errorMsg = new StringBuilder(msg);
             errorMsg.append("Found:\n");
-            for (String m : clazz.getMethodNames()) {
-                errorMsg.append(String.format("   %s\n", m));
+            for (MethodNode m : clazz.getMethods()) {
+                errorMsg.append(String.format("   %s\n", m.name + m.desc));
             }
             throw new IllegalStateException(errorMsg.toString());
         }

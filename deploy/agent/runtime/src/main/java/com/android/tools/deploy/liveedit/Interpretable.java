@@ -22,9 +22,9 @@ import com.android.deploy.asm.MethodVisitor;
 import com.android.deploy.asm.Opcodes;
 import com.android.deploy.asm.commons.TryCatchBlockSorter;
 import com.android.deploy.asm.tree.MethodNode;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 // A class parsed from JVM bytecode. Contains a map of method descriptor to method nodes that is
 // used by LiveEditClass to
@@ -109,8 +109,8 @@ class Interpretable extends ClassVisitor {
         return declaredMethods.get(name + desc);
     }
 
-    public Set<String> getMethodNames() {
-        return declaredMethods.keySet();
+    public Collection<MethodNode> getMethods() {
+        return declaredMethods.values();
     }
 
     public Map<String, Object> getDefaultFieldValues() {

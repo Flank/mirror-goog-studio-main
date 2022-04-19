@@ -17,6 +17,7 @@
 
 #include "tools/base/deploy/agent/native/live_edit.h"
 
+#include <unordered_map>
 #include <unordered_set>
 
 #include "tools/base/deploy/agent/native/instrumenter.h"
@@ -56,7 +57,8 @@ jobjectArray UpdateClassBytecode(JNIEnv* jni, JniClass* live_edit_stubs,
   jni->SetByteArrayRegion(target_bytes, 0, target_class.class_data().size(),
                           (jbyte*)target_class.class_data().data());
 
-  jobjectArray proxy_arr = jni->NewObjectArray(req.support_classes_size(), jni->FindClass("[B"), nullptr);
+  jobjectArray proxy_arr = jni->NewObjectArray(req.support_classes_size(),
+                                               jni->FindClass("[B"), nullptr);
   for (int i = 0; i < req.support_classes_size(); ++i) {
     auto support_class = req.support_classes()[i];
     jbyteArray proxy_bytes =
@@ -124,13 +126,18 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
   jobjectArray errors = UpdateClassBytecode(jni, &live_edit_stubs, req);
   auto err_count = jni->GetArrayLength(errors);
+
+  // Must stay in sync with the enum in BytecodeValidator.UnsupportedChange
+  static std::unordered_map<std::string, proto::UnsupportedChange::Type>
+      type_map({{"ADDED_METHOD", proto::UnsupportedChange::ADDED_METHOD},
+                {"REMOVED_METHOD", proto::UnsupportedChange::REMOVED_METHOD},
+                {"ADDED_CLASS", proto::UnsupportedChange::ADDED_CLASS}});
+
   if (err_count > 0) {
     resp.set_status(proto::AgentLiveEditResponse::UNSUPPORTED_CHANGE);
     for (int i = 0; i < err_count; ++i) {
       JniObject error(jni, jni->GetObjectArrayElement(errors, i));
       auto proto = resp.add_errors();
-      proto->set_type(static_cast<proto::UnsupportedChange::Type>(
-          error.GetIntField("type", "I")));
       proto->set_class_name(
           error.GetJniObjectField("className", "Ljava/lang/String;")
               .ToString());
@@ -140,6 +147,13 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
       proto->set_file_name(
           error.GetJniObjectField("fileName", "Ljava/lang/String;").ToString());
       proto->set_line_number(error.GetIntField("lineNumber", "I"));
+
+      // The type field in the proto defaults to UNKNOWN if no value is found.
+      auto type = type_map.find(
+          error.GetJniObjectField("type", "Ljava/lang/String;").ToString());
+      if (type != type_map.end()) {
+        proto->set_type(type->second);
+      }
     }
     return resp;
   }

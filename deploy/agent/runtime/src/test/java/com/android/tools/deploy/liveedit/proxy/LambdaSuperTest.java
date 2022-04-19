@@ -49,13 +49,13 @@ public class LambdaSuperTest {
         for (JarEntry entry : files) {
             if (entry.getName().equals(TEST_CLASS + ".class")) {
                 byte[] classData = ByteStreams.toByteArray(jar.getInputStream(entry));
-                LiveEditStubs.addClass(TEST_CLASS, classData, false);
+                LiveEditStubs.addClass(TEST_CLASS, new Interpretable(classData), false);
             }
             if (entry.getName().startsWith(TEST_CLASS + "$")) {
                 String internalName =
                         entry.getName().substring(0, entry.getName().length() - ".class".length());
                 byte[] classData = ByteStreams.toByteArray(jar.getInputStream(entry));
-                LiveEditStubs.addClass(internalName, classData, true);
+                LiveEditStubs.addClass(internalName, new Interpretable(classData), true);
             }
         }
     }

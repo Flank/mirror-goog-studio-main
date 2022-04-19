@@ -105,6 +105,8 @@ coverage_java_test(
         ":liveedit_lambdalib_java",
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
+        "//tools/base/bazel:studio-proto",
+        "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/testutils:tools.testutils",
         "@maven//:junit.junit",
         "@maven//:org.mockito.mockito-core",
