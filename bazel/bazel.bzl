@@ -122,7 +122,7 @@ def _iml_module_jar_impl(
             friend_jars = friend_jars,
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
-            jre = ctx.files._bootclasspath,
+            java_runtime = ctx.attr._kt_java_runtime_8[java_common.JavaRuntimeInfo],
             kotlinc_opts = kotlinc_opts,
             transitive_classpath = False,  # Matches JPS.
         )]
@@ -386,6 +386,13 @@ _iml_module_ = rule(
         "data": attr.label_list(allow_files = True),
         "test_data": attr.label_list(allow_files = True),
         "_java_toolchain": attr.label(default = Label("//prebuilts/studio/jdk:jdk11_toolchain_java11")),
+        "_kt_java_runtime_8": attr.label(
+            # We need this to be able to target JRE 8 in Kotlin, because
+            # Kotlinc does not support the --release 8 Javac option.
+            default = Label("//prebuilts/studio/jdk:jdk_runtime"),
+            providers = [java_common.JavaRuntimeInfo],
+            cfg = "exec",
+        ),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
@@ -405,10 +412,6 @@ _iml_module_ = rule(
             default = Label("//prebuilts/tools/common/m2:jvm-abi-gen-plugin"),
             cfg = "host",
             allow_single_file = [".jar"],
-        ),
-        "_bootclasspath": attr.label(
-            default = Label("@bazel_tools//tools/jdk:platformclasspath"),
-            cfg = "host",
         ),
         "_kotlin": attr.label(
             default = Label("@maven//:org.jetbrains.kotlin.kotlin-stdlib"),

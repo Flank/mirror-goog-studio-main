@@ -12,7 +12,7 @@ def test_kotlin_use_ir():
         "//conditions:default": True,
     })
 
-def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotlinc_opts, transitive_classpath):
+def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runtime, kotlinc_opts, transitive_classpath):
     """Runs kotlinc on the given source files.
 
     Args:
@@ -23,7 +23,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotli
         friend_jars: a list of friend jars (allowing access to 'internal' members)
         out: the output jar file
         out_ijar: the output ijar file or None to disable ijar creation
-        jre: list of jars from the JRE bootclasspath
+        java_runtime: a JavaRuntimeInfo provider corresponding to the target JVM
         kotlinc_opts: list of additional flags to pass to the Kotlin compiler
         transitive_classpath: whether to include transitive deps in the compile classpath
 
@@ -42,12 +42,12 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotli
     merged_deps = java_common.merge(deps)
     if transitive_classpath:
         merged_deps = java_common.make_non_strict(merged_deps)
+    classpath = merged_deps.compile_jars
 
     args = ctx.actions.args()
 
     args.add("-module-name", name)
     args.add("-nowarn")  # Mirrors the default javac opts.
-    args.add("-jvm-target", "1.8")
     args.add("-api-version", "1.5")
     args.add("-language-version", "1.5")
     args.add("-Xjvm-default=enable")
@@ -69,8 +69,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotli
         args.add("-Xuse-ir")
 
     # Use custom JRE instead of the default one picked by kotlinc.
-    args.add("-no-jdk")
-    classpath = depset(direct = jre, transitive = [merged_deps.compile_jars])
+    args.add("-jdk-home", java_runtime.java_home)
 
     # Note: there are some open questions regarding the transitivity of friends.
     # See https://github.com/bazelbuild/rules_kotlin/issues/211.
@@ -87,7 +86,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, jre, kotli
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
     ctx.actions.run(
-        inputs = depset(direct = srcs, transitive = [classpath]),
+        inputs = depset(direct = srcs, transitive = [classpath, java_runtime.files]),
         outputs = [out, out_ijar] if out_ijar else [out],
         tools = tools,
         mnemonic = "kotlinc",
@@ -179,6 +178,7 @@ def kotlin_library(
         srcs,
         deps = None,
         javacopts = [],
+        kotlinc_opts = [],
         lint_baseline = None,
         lint_classpath = [],
         lint_is_test_sources = False,
@@ -208,7 +208,10 @@ def kotlin_library(
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
     source_jars = [src for src in srcs if src.endswith(".srcjar")]
-    final_javacopts = javacopts + ["--release", "8"]
+
+    # Target JRE 8 because AGP still needs to support it (b/166472930).
+    javacopts = javacopts + ["--release", "8"]
+    kotlinc_opts = kotlinc_opts + ["-jvm-target", "1.8"]
 
     # Include non-test kotlin libraries in coverage
     if not testonly:
@@ -227,7 +230,8 @@ def kotlin_library(
         source_jars = source_jars,
         compress_resources = compress_resources,
         kotlin_use_ir = test_kotlin_use_ir(),
-        javacopts = final_javacopts if javas else None,
+        javacopts = javacopts,
+        kotlinc_opts = kotlinc_opts,
         testonly = testonly,
         stdlib = stdlib,
         **kwargs
@@ -287,7 +291,7 @@ def _kotlin_library_impl(ctx):
             friend_jars = friend_jars,
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
-            jre = ctx.files._bootclasspath,
+            java_runtime = ctx.attr._kt_java_runtime[java_common.JavaRuntimeInfo],
             kotlinc_opts = ctx.attr.kotlinc_opts,
             transitive_classpath = True,  # Matches Java rules (sans strict-deps enforcement)
         )]
@@ -391,10 +395,13 @@ _kotlin_library = rule(
         ),
         "stdlib": attr.label(),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
-        "_bootclasspath": attr.label(
+        "_kt_java_runtime": attr.label(
             # Use JDK 8 because AGP still needs to support it (b/166472930).
-            default = Label("//prebuilts/studio/jdk:bootclasspath"),
-            allow_files = [".jar"],
+            # We need to pass JDK 8 to Kotlinc explicitly because
+            # Kotlinc does not support the --release 8 Javac flag.
+            default = Label("//prebuilts/studio/jdk:jdk_runtime"),
+            providers = [java_common.JavaRuntimeInfo],
+            cfg = "exec",
         ),
         "_kotlinc": attr.label(
             executable = True,
