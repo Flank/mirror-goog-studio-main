@@ -132,6 +132,7 @@ import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
@@ -2299,53 +2300,20 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     }
 
     // Kotlin? If not, mapping is trivial
-    val receiver = call.psi as? KtElement ?: return null
+    if (call.psi !is KtElement) return null
 
-    val service = receiver.project.getService(KotlinUastResolveProviderService::class.java) ?: return null
-    val bindingContext = service.getBindingContext(receiver)
     val parameters = method.parameterList.parameters
-    val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
-    val valueArguments = resolvedCall.valueArguments
-    val elementMap = mutableMapOf<PsiElement, UExpression>()
-    for (parameter in call.valueArguments) {
-        elementMap[parameter.psi ?: continue] = parameter
-    }
     if (parameters.isNotEmpty()) {
         val mapping = mutableMapOf<UExpression, PsiParameter>()
 
-        var firstParameterIndex = 0
-
-        // Kotlin extension method? Not included in valueArguments indices.
-        // check if "$self" for UltraLightParameter
-        val firstParameter = parameters.first()
-        if (firstParameter.isReceiver()) {
-            val callReceiver = call.receiver
-            if (callReceiver != null) {
-                mapping[callReceiver] = firstParameter
-            }
-            firstParameterIndex++
-        }
-
-        for ((parameterDescriptor, valueArgument) in valueArguments) {
-            for (argument in valueArgument.arguments) {
-                val expression = argument.getArgumentExpression() ?: continue
-                // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
-                @Suppress("USELESS_CAST")
-                val arg = elementMap[expression as PsiElement]
-                val index = firstParameterIndex + parameterDescriptor.index
-                if (index < parameters.size) {
-                    if (arg != null) {
-                        mapping[arg] = parameters[index]
-                    } else {
-                        // Somehow the argument we received as the argument child isn't present;
-                        // try to find it in some other way
-                        for ((a, b) in elementMap) {
-                            if (mapping[b] == null && a.parent === expression) {
-                                mapping[b] = parameters[index]
-                                break
-                            }
-                        }
+        parameters.forEachIndexed { index, psiParameter ->
+            call.getArgumentForParameter(index)?.let { argument ->
+                if (argument is UExpressionList) { // vararg
+                    argument.expressions.forEach {
+                        mapping[it] = psiParameter
                     }
+                } else {
+                    mapping[argument] = psiParameter
                 }
             }
         }
