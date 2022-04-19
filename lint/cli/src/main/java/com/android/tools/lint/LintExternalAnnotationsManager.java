@@ -30,6 +30,7 @@ import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.util.io.URLUtil;
 import java.io.File;
 import java.nio.file.Files;
@@ -67,6 +68,14 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
         File sdkAnnotations = findSdkAnnotations(client, target, nonAndroid);
         List<File> libraryAnnotations = client.getExternalAnnotations(projects);
         updateAnnotationRoots(sdkAnnotations, libraryAnnotations);
+    }
+
+    @Override
+    public boolean hasConfiguredAnnotationRoot(@NonNull PsiModifierListOwner owner) {
+        // This method is used by AddAnnotationPsiFix to determine whether it is possible to add
+        // new external annotations without user interaction. This does not apply to us because
+        // our external annotations are read-only.
+        return false;
     }
 
     @Nullable
