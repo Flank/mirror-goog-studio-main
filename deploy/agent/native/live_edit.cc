@@ -49,16 +49,30 @@ void PrimeClass(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& class_name) {
   }
 }
 
-void UpdateClassBytecode(JNIEnv* jni, JniClass* live_edit_stubs,
-                         const std::string& internal_name,
-                         const std::string& bytecode, bool isProxyClass) {
-  jstring class_name = jni->NewStringUTF(internal_name.c_str());
-  jbyteArray bytecode_arr = jni->NewByteArray(bytecode.size());
-  jni->SetByteArrayRegion(bytecode_arr, 0, bytecode.size(),
-                          (jbyte*)bytecode.data());
-  live_edit_stubs->CallStaticVoidMethod("addClass", "(Ljava/lang/String;[BZ)V",
-                                        class_name, bytecode_arr, isProxyClass);
+jobjectArray UpdateClassBytecode(JNIEnv* jni, JniClass* live_edit_stubs,
+                                 const proto::LiveEditRequest& req) {
+  auto target_class = req.target_class();
+  jbyteArray target_bytes = jni->NewByteArray(target_class.class_data().size());
+  jni->SetByteArrayRegion(target_bytes, 0, target_class.class_data().size(),
+                          (jbyte*)target_class.class_data().data());
+
+  jobjectArray proxy_arr = jni->NewObjectArray(req.support_classes_size(), jni->FindClass("[B"), nullptr);
+  for (int i = 0; i < req.support_classes_size(); ++i) {
+    auto support_class = req.support_classes()[i];
+    jbyteArray proxy_bytes =
+        jni->NewByteArray(support_class.class_data().size());
+    jni->SetByteArrayRegion(proxy_bytes, 0, support_class.class_data().size(),
+                            (jbyte*)support_class.class_data().data());
+    jni->SetObjectArrayElement(proxy_arr, i, proxy_bytes);
+  }
+
+  return (jobjectArray)live_edit_stubs->CallStaticObjectMethod(
+      "addClasses",
+      "([B[[B)[Lcom/"
+      "android/tools/deploy/liveedit/BytecodeValidator$UnsupportedChange;",
+      target_bytes, proxy_arr);
 }
+
 void SetDebugMode(JNIEnv* jni, bool debugMode) {
   jni->ExceptionClear();
   JniClass clazz(jni, "com/android/tools/deploy/interpreter/Config");
@@ -84,13 +98,12 @@ void SetDebugMode(JNIEnv* jni, bool debugMode) {
 }
 }  // namespace
 
-proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
-                                 const proto::LiveEditRequest& req) {
-  proto::LiveEditResponse resp;
+proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
+                                      const proto::LiveEditRequest& req) {
+  proto::AgentLiveEditResponse resp;
 
   if (SetUpInstrumentationJar(jvmti, jni, req.package_name()).empty()) {
-    resp.set_status(proto::LiveEditResponse::INSTRUMENTATION_FAILED);
-    resp.set_error_message("Could not set up instrumentation jar");
+    resp.set_status(proto::AgentLiveEditResponse::INSTRUMENTATION_FAILED);
     return resp;
   }
 
@@ -98,8 +111,7 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
   // Add the LiveEdit dex library to the application classloader.
   if (!SetUpLiveEditDex(jvmti, jni, req.package_name())) {
-    resp.set_status(proto::LiveEditResponse::LAMBDA_DEX_LOAD_FAILED);
-    resp.set_error_message("Could not set up live edit dex");
+    resp.set_status(proto::AgentLiveEditResponse::LAMBDA_DEX_LOAD_FAILED);
     return resp;
   }
 
@@ -110,14 +122,31 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
   live_edit_stubs.CallStaticVoidMethod("init", "(Ljava/lang/ClassLoader;)V",
                                        app_loader);
 
-  const auto& target_class = req.target_class();
-  UpdateClassBytecode(jni, &live_edit_stubs, target_class.class_name(),
-                      target_class.class_data(), /* isProxyClass */ false);
-  PrimeClass(jvmti, jni, target_class.class_name());
+  jobjectArray errors = UpdateClassBytecode(jni, &live_edit_stubs, req);
+  auto err_count = jni->GetArrayLength(errors);
+  if (err_count > 0) {
+    resp.set_status(proto::AgentLiveEditResponse::UNSUPPORTED_CHANGE);
+    for (int i = 0; i < err_count; ++i) {
+      JniObject error(jni, jni->GetObjectArrayElement(errors, i));
+      auto proto = resp.add_errors();
+      proto->set_type(static_cast<proto::UnsupportedChange::Type>(
+          error.GetIntField("type", "I")));
+      proto->set_class_name(
+          error.GetJniObjectField("className", "Ljava/lang/String;")
+              .ToString());
+      proto->set_method_name(
+          error.GetJniObjectField("methodName", "Ljava/lang/String;")
+              .ToString());
+      proto->set_file_name(
+          error.GetJniObjectField("fileName", "Ljava/lang/String;").ToString());
+      proto->set_line_number(error.GetIntField("lineNumber", "I"));
+    }
+    return resp;
+  }
 
+  const auto& target_class = req.target_class();
+  PrimeClass(jvmti, jni, target_class.class_name());
   for (auto support_class : req.support_classes()) {
-    UpdateClassBytecode(jni, &live_edit_stubs, support_class.class_name(),
-                        support_class.class_data(), /* isProxyClass */ true);
     PrimeClass(jvmti, jni, support_class.class_name());
   }
 
@@ -145,7 +174,7 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
              req.end_offset());
       if (!result) {
         Log::E("%s", error.c_str());
-        resp.set_status(proto::LiveEditResponse::ERROR);
+        resp.set_status(proto::AgentLiveEditResponse::ERROR);
         return resp;
       }
     } else {
@@ -154,7 +183,7 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     }
   }
 
-  resp.set_status(proto::LiveEditResponse::OK);
+  resp.set_status(proto::AgentLiveEditResponse::OK);
   return resp;
 }
 
