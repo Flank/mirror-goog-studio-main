@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.utils.ILogger;
 import java.io.File;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -70,7 +71,8 @@ public class GeneratedResourceSet extends ResourceSet {
     }
 
     @Override
-    public void loadFromFiles(ILogger logger) throws MergingException {
+    public void loadFromFiles(ILogger logger, DocumentBuilderFactory factory)
+            throws MergingException {
         // Do nothing, the original set will hand us the generated files.
     }
 

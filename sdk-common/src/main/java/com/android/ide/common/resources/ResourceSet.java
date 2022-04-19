@@ -32,7 +32,6 @@ import com.android.resources.ResourceType;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -43,7 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -128,7 +127,8 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     }
 
     @Override
-    protected ResourceFile createFileAndItems(File sourceFolder, File file, ILogger logger)
+    protected ResourceFile createFileAndItems(
+            File sourceFolder, File file, ILogger logger, DocumentBuilderFactory factory)
             throws MergingException {
         // get the type.
         FolderData folderData = getFolderData(file.getParentFile());
@@ -137,7 +137,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
             return null;
         }
 
-        return createResourceFile(file, folderData, logger);
+        return createResourceFile(file, folderData, logger, factory);
     }
 
     @Override
@@ -270,7 +270,8 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     }
 
     @Override
-    protected void readSourceFolder(File sourceFolder, ILogger logger)
+    protected void readSourceFolder(
+            File sourceFolder, ILogger logger, DocumentBuilderFactory factory)
             throws MergingException {
         List<Message> errors = Lists.newArrayList();
         File[] folders = sourceFolder.listFiles();
@@ -280,7 +281,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                     FolderData folderData = getFolderData(folder);
                     if (folderData != null) {
                         try {
-                            parseFolder(sourceFolder, folder, folderData, logger);
+                            parseFolder(sourceFolder, folder, folderData, logger, factory);
                         } catch (MergingException e) {
                             errors.addAll(e.getMessages());
                         }
@@ -306,9 +307,10 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
 
     @Nullable
     @Override
-    protected ResourceFile handleNewFile(File sourceFolder, File file, ILogger logger)
+    protected ResourceFile handleNewFile(
+            File sourceFolder, File file, ILogger logger, DocumentBuilderFactory factory)
             throws MergingException {
-        ResourceFile resourceFile = createFileAndItems(sourceFolder, file, logger);
+        ResourceFile resourceFile = createFileAndItems(sourceFolder, file, logger, factory);
         processNewResourceFile(sourceFolder, resourceFile);
         return resourceFile;
     }
@@ -326,7 +328,9 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     protected boolean handleChangedFile(
             @NonNull File sourceFolder,
             @NonNull File changedFile,
-            @NonNull ILogger logger) throws MergingException {
+            @NonNull ILogger logger,
+            @NonNull DocumentBuilderFactory factory)
+            throws MergingException {
         FolderData folderData = getFolderData(changedFile.getParentFile());
         if (folderData == null) {
             return true;
@@ -335,7 +339,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         ResourceFile resourceFile = getDataFile(changedFile);
         if (mGeneratedSet == null) {
             // This is a generated set.
-            doHandleChangedFile(changedFile, resourceFile);
+            doHandleChangedFile(changedFile, resourceFile, factory);
             return true;
         }
 
@@ -346,23 +350,23 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         if (resourceFile != null && generatedSetResourceFile == null && needsPreprocessing) {
             // It didn't use to need preprocessing, but it does now.
             handleRemovedFile(changedFile);
-            mGeneratedSet.handleNewFile(sourceFolder, changedFile, logger);
+            mGeneratedSet.handleNewFile(sourceFolder, changedFile, logger, factory);
         } else if (resourceFile == null
                 && generatedSetResourceFile != null
                 && !needsPreprocessing) {
             // It used to need preprocessing, but not anymore.
             mGeneratedSet.handleRemovedFile(changedFile);
-            handleNewFile(sourceFolder, changedFile, logger);
+            handleNewFile(sourceFolder, changedFile, logger, factory);
         } else if (resourceFile == null
                 && generatedSetResourceFile != null
                 && needsPreprocessing) {
             // Delegate to the generated set.
-            mGeneratedSet.handleChangedFile(sourceFolder, changedFile, logger);
+            mGeneratedSet.handleChangedFile(sourceFolder, changedFile, logger, factory);
         } else if (resourceFile != null
                 && !needsPreprocessing
                 && generatedSetResourceFile == null) {
             // The "normal" case, handle it here.
-            doHandleChangedFile(changedFile, resourceFile);
+            doHandleChangedFile(changedFile, resourceFile, factory);
         } else {
             // Something strange happened.
             throw MergingException.withMessage("In DataSet '%s', no data file for changedFile. "
@@ -374,7 +378,10 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         return true;
     }
 
-    private void doHandleChangedFile(@NonNull File changedFile, ResourceFile resourceFile)
+    private void doHandleChangedFile(
+            @NonNull File changedFile,
+            ResourceFile resourceFile,
+            @NonNull DocumentBuilderFactory factory)
             throws MergingException {
         switch (resourceFile.getType()) {
             case SINGLE_FILE:
@@ -392,7 +399,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 parser.setCheckDuplicates(mCheckDuplicates);
 
-                List<ResourceMergerItem> parsedItems = parser.parseFile();
+                List<ResourceMergerItem> parsedItems = parser.parseFile(factory);
                 handleChangedItems(resourceFile, parsedItems);
                 break;
             default:
@@ -457,15 +464,18 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
      * Reads the content of a typed resource folder (sub folder to the root of res folder), and
      * loads the resources from it.
      *
-     *
      * @param sourceFolder the main res folder
      * @param folder the folder to read.
      * @param folderData the folder Data
      * @param logger a logger object
-     *
      * @throws MergingException if something goes wrong
      */
-    private void parseFolder(File sourceFolder, File folder, FolderData folderData, ILogger logger)
+    private void parseFolder(
+            File sourceFolder,
+            File folder,
+            FolderData folderData,
+            ILogger logger,
+            DocumentBuilderFactory factory)
             throws MergingException {
         File[] files = folder.listFiles();
         if (files != null && files.length > 0) {
@@ -474,7 +484,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                     continue;
                 }
 
-                ResourceFile resourceFile = createResourceFile(file, folderData, logger);
+                ResourceFile resourceFile = createResourceFile(file, folderData, logger, factory);
                 processNewResourceFile(sourceFolder, resourceFile);
             }
         }
@@ -492,8 +502,12 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         }
     }
 
-    private ResourceFile createResourceFile(@NonNull File file,
-            @NonNull FolderData folderData, @NonNull ILogger logger) throws MergingException {
+    private ResourceFile createResourceFile(
+            @NonNull File file,
+            @NonNull FolderData folderData,
+            @NonNull ILogger logger,
+            @NonNull DocumentBuilderFactory factory)
+            throws MergingException {
         if (getValidateEnabled()) {
             FileResourceNameValidator.validate(file, folderData.folderType);
         }
@@ -543,7 +557,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                         new ValueResourceParser2(file, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 parser.setCheckDuplicates(mCheckDuplicates);
-                List<ResourceMergerItem> items = parser.parseFile();
+                List<ResourceMergerItem> items = parser.parseFile(factory);
 
                 return new ResourceFile(file, items, folderData.folderConfiguration);
             } catch (MergingException e) {

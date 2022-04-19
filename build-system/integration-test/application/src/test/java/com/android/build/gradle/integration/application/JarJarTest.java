@@ -35,7 +35,9 @@ public class JarJarTest {
 
     @Test
     public void checkRepackagedGsonLibraryFormonodex() throws Exception {
-        project.executeAndReturnModel("assembleDebug");
+        // legacy incremental transform uses deprecated gradle api
+        project.executor().withFailOnWarning(false).run("assembleDebug");
+        project.model().withFailOnWarning(false).fetchAndroidProjects();
         verifyApk();
     }
 
@@ -58,7 +60,9 @@ public class JarJarTest {
                         + "    multiDexEnabled true\n"
                         + "}\n");
 
-        project.executeAndReturnModel("assembleDebug");
+        // legacy incremental transform uses deprecated gradle api
+        project.executor().withFailOnWarning(false).run("assembleDebug");
+        project.model().withFailOnWarning(false).fetchAndroidProjects();
         verifyApk();
     }
 
@@ -71,8 +75,9 @@ public class JarJarTest {
                         + "    multiDexEnabled true\n"
                         + "}\n");
 
-        project.executor().run("assembleDebug");
-        project.model().fetchAndroidProjects().getOnlyModel();
+        // legacy incremental transform uses deprecated gradle api
+        project.executor().withFailOnWarning(false).run("assembleDebug");
+        project.model().withFailOnWarning(false).fetchAndroidProjects().getOnlyModel();
         verifyApk();
     }
 

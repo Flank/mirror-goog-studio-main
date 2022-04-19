@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.ILogger;
 import java.io.File;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
@@ -45,7 +46,8 @@ public class AssetSet extends DataSet<AssetItem, AssetFile> {
     }
 
     @Override
-    protected AssetFile createFileAndItems(File sourceFolder, File file, ILogger logger) {
+    protected AssetFile createFileAndItems(
+            File sourceFolder, File file, ILogger logger, DocumentBuilderFactory factory) {
         // key is the relative path to the sourceFolder
         // e.g. foo/icon.png
 
@@ -83,21 +85,26 @@ public class AssetSet extends DataSet<AssetItem, AssetFile> {
     }
 
     @Override
-    protected void readSourceFolder(@NonNull File sourceFolder, @NonNull ILogger logger)
+    protected void readSourceFolder(
+            @NonNull File sourceFolder, @NonNull ILogger logger, DocumentBuilderFactory factory)
             throws MergingException {
-        readFiles(sourceFolder, sourceFolder, logger);
+        readFiles(sourceFolder, sourceFolder, logger, factory);
     }
 
-    private void readFiles(@NonNull File sourceFolder, @NonNull File folder, @NonNull ILogger logger)
+    private void readFiles(
+            @NonNull File sourceFolder,
+            @NonNull File folder,
+            @NonNull ILogger logger,
+            DocumentBuilderFactory factory)
             throws MergingException {
         File[] files = folder.listFiles();
         if (files != null && files.length > 0) {
             for (File file : files) {
                 if (!isIgnored(file)) {
                     if (file.isFile()) {
-                        handleNewFile(sourceFolder, file, logger);
+                        handleNewFile(sourceFolder, file, logger, factory);
                     } else if (file.isDirectory()) {
-                        readFiles(sourceFolder, file, logger);
+                        readFiles(sourceFolder, file, logger, factory);
                     }
                 }
             }

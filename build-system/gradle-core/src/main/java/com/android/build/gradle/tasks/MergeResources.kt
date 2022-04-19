@@ -98,6 +98,7 @@ import java.util.Locale
 import java.util.function.Supplier
 import java.util.stream.Collectors
 import javax.xml.bind.JAXBException
+import javax.xml.parsers.DocumentBuilderFactory
 
 @CacheableTask
 abstract class MergeResources : NewIncrementalTask() {
@@ -214,7 +215,8 @@ abstract class MergeResources : NewIncrementalTask() {
         val resourceSets = getConfiguredResourceSets(preprocessor, aaptEnv.orNull)
 
         // create a new merger and populate it with the sets.
-        val merger = ResourceMerger(minSdk.get())
+        val documentBuilderFactory = DocumentBuilderFactory.newInstance()
+        val merger = ResourceMerger(minSdk.get(), documentBuilderFactory)
         var mergingLog: MergingLog? = null
         if (blameLogOutputFolder.isPresent) {
             val blameLogFolder = blameLogOutputFolder.get().asFile

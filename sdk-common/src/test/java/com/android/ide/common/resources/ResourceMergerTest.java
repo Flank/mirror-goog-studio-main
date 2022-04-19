@@ -522,7 +522,9 @@ public class ResourceMergerTest extends BaseTestCase {
         File layoutDir = new File(root, "layout");
         File layoutFile = new File(layoutDir, "layout_for_id_scan.xml");
         resourceSet.setShouldParseResourceIds(true);
-        final ResourceFile parsedFile = resourceSet.loadFile(root, layoutFile, logger);
+        final ResourceFile parsedFile =
+                resourceSet.loadFile(
+                        root, layoutFile, logger, DocumentBuilderFactory.newInstance());
         assertNotNull(parsedFile);
         assertTrue(parsedFile.getFile().equals(layoutFile));
         assertEquals("", parsedFile.getQualifiers());
@@ -636,13 +638,17 @@ public class ResourceMergerTest extends BaseTestCase {
         RecordingLogger logger = new RecordingLogger();
 
         // Try first with normalization, which tacks on a -v4 qualifier.
-        ResourceFile parsedFile = resourceSet.loadFile(copiedRoot, layoutFile, logger);
+        ResourceFile parsedFile =
+                resourceSet.loadFile(
+                        copiedRoot, layoutFile, logger, DocumentBuilderFactory.newInstance());
         assertNotNull(parsedFile);
         assertEquals("xlarge-land-v4", parsedFile.getQualifiers());
 
         // Now try without normalization.
         resourceSet.setDontNormalizeQualifiers(true);
-        parsedFile = resourceSet.loadFile(copiedRoot, layoutFile, logger);
+        parsedFile =
+                resourceSet.loadFile(
+                        copiedRoot, layoutFile, logger, DocumentBuilderFactory.newInstance());
         assertNotNull(parsedFile);
         assertEquals("xlarge-land", parsedFile.getQualifiers());
 
@@ -1876,7 +1882,9 @@ public class ResourceMergerTest extends BaseTestCase {
             throws IOException, MergingException {
         Map<String, String> result = Maps.newHashMap();
 
-        Document document = ValueResourceParser2.parseDocument(file, true);
+        Document document =
+                ValueResourceParser2.parseDocument(
+                        file, true, DocumentBuilderFactory.newInstance());
 
         // get the root node
         Node rootNode = document.getDocumentElement();

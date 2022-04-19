@@ -55,9 +55,9 @@ class FakeMapProperty<K, V>(
         TODO("Not yet implemented")
     }
 
-    override fun <B : Any?, R : Any?> zip(
-        p0: Provider<B>,
-        p1: BiFunction<MutableMap<K, V>, B, R>
+    override fun <U : Any?, R : Any?> zip(
+        p0: Provider<U>,
+        p1: BiFunction<in MutableMap<K, V>, in U, out R>
     ): Provider<R> {
         TODO("Not yet implemented")
     }

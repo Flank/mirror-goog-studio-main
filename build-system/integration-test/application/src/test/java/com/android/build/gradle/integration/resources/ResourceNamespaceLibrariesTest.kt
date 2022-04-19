@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.options.BooleanOption
 import org.jf.dexlib2.dexbacked.DexBackedClassDef
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.Opcodes

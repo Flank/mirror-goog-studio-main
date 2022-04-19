@@ -53,7 +53,10 @@ class FakeGradleProvider<T>(private val v: (()-> T)?): Provider<T> {
         TODO("Not yet implemented")
     }
 
-    override fun <B : Any?, R : Any?> zip(p0: Provider<B>, p1: BiFunction<T, B, R>): Provider<R> {
+    override fun <U : Any?, R : Any?> zip(
+        p0: Provider<U>,
+        p1: BiFunction<in T, in U, out R>
+    ): Provider<R> {
         TODO("Not yet implemented")
     }
 }

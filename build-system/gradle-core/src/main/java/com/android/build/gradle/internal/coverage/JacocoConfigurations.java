@@ -26,10 +26,10 @@ public final class JacocoConfigurations {
     public static final String ANT_CONFIGURATION_NAME = "androidJacocoAnt";
 
     /** Version of Jacoco to be used with DX, see https://issuetracker.google.com/37116789. */
-    public static final String VERSION_FOR_DX = "0.8.7";
+    public static final String VERSION_FOR_DX = "0.8.8";
 
     // See http://b/62623509.
-    public static final GradleVersion MIN_WITHOUT_BROKEN_BYTECODE = GradleVersion.parse("0.8.7");
+    public static final GradleVersion MIN_WITHOUT_BROKEN_BYTECODE = GradleVersion.parse("0.8.8");
 
     @NonNull
     public static String getAgentRuntimeDependency(@NonNull String jacocoVersion) {

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.gradleapi
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.google.common.truth.StreamSubject
@@ -34,7 +34,7 @@ class TransformVariantApiTest {
 
     @Test
     fun checkNotRunForDebug() {
-        project.executor().run("assemblePlayFreeDebug")
+        executor().run("assemblePlayFreeDebug")
         project.getApk(GradleTestProject.ApkType.DEBUG, "play", "free").use { outputFile ->
             assertThat(outputFile).doesNotContainJavaResource(TRANSFORM_MARKER_FILE)
         }
@@ -42,7 +42,7 @@ class TransformVariantApiTest {
 
     @Test
     fun checkRunForRelease() {
-        val result = project.executor().run("assemblePlayFreeRelease")
+        val result = executor().run("assemblePlayFreeRelease")
 
         project.getApk(GradleTestProject.ApkType.RELEASE, "play", "free")
             .use { outputFile -> assertThat(outputFile).containsJavaResource(TRANSFORM_MARKER_FILE) }
@@ -144,5 +144,8 @@ class TransformVariantApiTest {
                 )
         }
     }
+
+    // legacy incremental transform uses deprecated gradle api
+    private fun executor() : GradleTaskExecutor = project.executor().withFailOnWarning(false)
 }
 private const val TRANSFORM_MARKER_FILE = "my_custom_transform_ran.txt"

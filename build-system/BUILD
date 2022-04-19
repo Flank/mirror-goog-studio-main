@@ -90,7 +90,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.4"
+GRADLE_VERSION = "7.5-rc-1"
 
 filegroup(
     name = "gradle-distrib",

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -126,18 +127,20 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     /**
      * Reads the content of a data folders and loads the DataItem.
      *
-     * This should generate DataFiles, and process them with
-     * {@link #processNewDataFile(java.io.File, DataFile, boolean)}.
+     * <p>This should generate DataFiles, and process them with {@link
+     * #processNewDataFile(java.io.File, DataFile, boolean)}.
      *
      * @param sourceFolder the source folder to load the resources from.
-     *
+     * @param factory
      * @throws MergingException if something goes wrong
      */
-    protected abstract void readSourceFolder(File sourceFolder, ILogger logger)
+    protected abstract void readSourceFolder(
+            File sourceFolder, ILogger logger, DocumentBuilderFactory factory)
             throws MergingException;
 
     @Nullable
-    protected abstract F createFileAndItems(File sourceFolder, File file, ILogger logger)
+    protected abstract F createFileAndItems(
+            File sourceFolder, File file, ILogger logger, DocumentBuilderFactory factory)
             throws MergingException;
 
     /**
@@ -236,29 +239,34 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         return mItems;
     }
 
+    public void loadFromFiles(ILogger logger) throws MergingException {
+        loadFromFiles(logger, DocumentBuilderFactory.newInstance());
+    }
+
     /**
      * Loads the DataSet from the files its source folders contain.
      *
-     * All loaded items are set to TOUCHED. This is so that after loading the resources from
-     * the files, they can be written directly (since touched force them to be written).
+     * <p>All loaded items are set to TOUCHED. This is so that after loading the resources from the
+     * files, they can be written directly (since touched force them to be written).
      *
-     * This also checks for duplicates items.
+     * <p>This also checks for duplicates items.
      *
      * @throws MergingException if something goes wrong
      */
-    public void loadFromFiles(ILogger logger) throws MergingException {
+    public void loadFromFiles(ILogger logger, DocumentBuilderFactory factory)
+            throws MergingException {
         List<Message> errors = new ArrayList<>();
         for (File file : mSourceFiles) {
             if (file.isDirectory()) {
                 try {
-                    readSourceFolder(file, logger);
+                    readSourceFolder(file, logger, factory);
                 } catch (MergingException e) {
                     errors.addAll(e.getMessages());
                 }
 
             } else if (file.isFile()) {
                 // TODO support resource bundle
-                loadFile(file, file, logger);
+                loadFile(file, file, logger, factory);
             }
         }
         MergingException.throwIfNonEmpty(errors);
@@ -277,9 +285,13 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
      * @return a DataFile if successfully loaded, and null otherwise
      */
     @Nullable
-    public F loadFile(@NonNull File sourceFolder, @NonNull File dataFile, @NonNull ILogger logger)
+    public F loadFile(
+            @NonNull File sourceFolder,
+            @NonNull File dataFile,
+            @NonNull ILogger logger,
+            DocumentBuilderFactory factory)
             throws MergingException {
-        return handleNewFile(sourceFolder, dataFile, logger);
+        return handleNewFile(sourceFolder, dataFile, logger, factory);
     }
 
     /**
@@ -515,10 +527,12 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
             throws MergingException {
         switch (fileStatus) {
             case NEW:
-                handleNewFile(sourceFolder, changedFile, logger);
+                handleNewFile(
+                        sourceFolder, changedFile, logger, DocumentBuilderFactory.newInstance());
                 return true;
             case CHANGED:
-                return handleChangedFile(sourceFolder, changedFile, logger);
+                return handleChangedFile(
+                        sourceFolder, changedFile, logger, DocumentBuilderFactory.newInstance());
             case REMOVED:
                 return handleRemovedFile(changedFile);
         }
@@ -545,9 +559,10 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     }
 
     @Nullable
-    protected F handleNewFile(File sourceFolder, File file, ILogger logger)
+    protected F handleNewFile(
+            File sourceFolder, File file, ILogger logger, DocumentBuilderFactory factory)
             throws MergingException {
-        F dataFile = createFileAndItems(sourceFolder, file, logger);
+        F dataFile = createFileAndItems(sourceFolder, file, logger, factory);
         if (dataFile != null) {
             processNewDataFile(sourceFolder, dataFile, true /*setTouched*/);
         }
@@ -572,7 +587,9 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     protected boolean handleChangedFile(
             @NonNull File sourceFolder,
             @NonNull File changedFile,
-            @NonNull ILogger logger) throws MergingException {
+            @NonNull ILogger logger,
+            @NonNull DocumentBuilderFactory factory)
+            throws MergingException {
         F dataFile = mDataFileMap.get(changedFile);
         for (I item : dataFile.getItems()) {
             item.setTouched();

@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -87,8 +88,8 @@ class ValueResourceParser2 {
      * @throws MergingException if a merging exception happens
      */
     @NonNull
-    List<ResourceMergerItem> parseFile() throws MergingException {
-        Document document = parseDocument(mFile, mTrackSourcePositions);
+    List<ResourceMergerItem> parseFile(DocumentBuilderFactory factory) throws MergingException {
+        Document document = parseDocument(mFile, mTrackSourcePositions, factory);
 
         // get the root node
         Node rootNode = document.getDocumentElement();
@@ -200,16 +201,20 @@ class ValueResourceParser2 {
 
     /**
      * Loads the DOM for a given file and returns a {@link Document} object.
+     *
      * @param file the file to parse
      * @param trackPositions should track XML node positions
      * @return a Document object.
      * @throws MergingException if a merging exception happens
      */
     @NonNull
-    static Document parseDocument(@NonNull File file, boolean trackPositions) throws MergingException {
+    static Document parseDocument(
+            @NonNull File file, boolean trackPositions, DocumentBuilderFactory factory)
+            throws MergingException {
         try {
             if (trackPositions) {
-                return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(file)));
+                return PositionXmlParser.parse(
+                        new BufferedInputStream(new FileInputStream(file)), factory);
             }
             else {
                 return XmlUtils.parseUtfXmlFile(file, true);
