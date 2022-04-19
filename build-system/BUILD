@@ -180,13 +180,6 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
-# repos for the gradle plugin and the offline repo packaged inside Studio
-
-# m2 repository to run the Gradle plugin minus the data-binding dependency.
-# When running the gradle plugin, prefer this one to gradle_plugin_repo if you don't
-# need data-binding. Data-binding requires much more work/dependencies, as it builds
-# the data-binding runtime library with the Gradle plugin.
-
 GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/base/build-system/aapt2:aapt2",
     "//tools/base/build-system/gradle-core:gradle-core",
@@ -194,22 +187,58 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "@maven//:com.github.javaparser.javaparser-core",
 ]
 
+# This doesn't correspond to anything we publish and is obsolete.
+#
+# Tests that depend on this should migrate to using the Android Gradle plugin
+# as built with Gradle (wrapped in Bazel), i.e.
+#
+#    "//tools/base/build-system:android_gradle_plugin.zip",
+#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
+#
+# For an example of a migration, see
+# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
 maven_repository(
     name = "gradle_plugin_no_databinding_repo",
     artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//tools/base/build-system/integration-test/application:__pkg__",
+        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:__pkg__",
+        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:__pkg__",
+        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:__pkg__",
+        "//tools/base/build-system/integration-test/connected:__pkg__",
+        "//tools/base/build-system/integration-test/lint:__pkg__",
+        "//tools/base/build-system/integration-test/managed-devices:__pkg__",
+        "//tools/base/build-system/integration-test/native:__pkg__",
+    ],
 )
 
-# Full m2 repository to run the Gradle plugin.
-# Only use if you need data-binding, otherwise use gradle_plugin_no_databinding_repo
 GRADLE_PLUGIN_ARTIFACTS = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS + [
     "//tools/data-binding:tools.compiler",
 ]
 
+# Legacy maven repository representing what used to be packaged inside Studio
+#
+# This doesn't correspond to anything we publish and is obsolete.
+#
+# Tests that depend on this should migrate to using the Android Gradle plugin
+# as built with Gradle (wrapped in Bazel), i.e.
+#
+#    "//tools/base/build-system:android_gradle_plugin.zip",
+#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
+#
+# For an example of a migration, see
+# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
 maven_repository(
     name = "gradle_plugin_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//tools/base/build-system/integration-test/connected:__pkg__",
+        "//tools/base/build-system/integration-test/databinding:__pkg__",
+        "//tools/base/build-system/integration-test/databinding/incremental:__pkg__",
+        "//tools/data-binding:__pkg__",
+        "//tools/vendor/google/android-ndk:__pkg__",
+        "//tools/vendor/google/real-world-integration-test:__pkg__",
+    ],
 )
 
 # m2 repository used by performance tests
