@@ -18,6 +18,7 @@ ImlModuleInfo = provider(
         "module_deps",
         "plugin_deps",
         "external_deps",
+        "jvm_target",
         "names",
     ],
 )
@@ -252,6 +253,14 @@ def _iml_module_impl(ctx):
     for dep in ctx.attr.deps:
         if ImlModuleInfo in dep:
             module_deps += [dep]
+            if ctx.attr.jvm_target:
+                if not dep[ImlModuleInfo].jvm_target or int(dep[ImlModuleInfo].jvm_target) > int(ctx.attr.jvm_target):
+                    fail("The module %s has a jvm_target of \"%s\", but depends on module %s with target \"%s\"" % (
+                        ctx.attr.name,
+                        ctx.attr.jvm_target,
+                        dep[ImlModuleInfo].names[0],
+                        dep[ImlModuleInfo].jvm_target,
+                    ))
         elif hasattr(dep, "plugin_info"):
             plugin_deps += [dep]
         elif hasattr(dep, "platform_info"):
@@ -345,6 +354,7 @@ def _iml_module_impl(ctx):
         module_deps = depset(direct = module_deps),
         plugin_deps = depset(direct = plugin_deps),
         external_deps = depset(direct = external_deps),
+        jvm_target = ctx.attr.jvm_target,
         names = names,
     )
 
