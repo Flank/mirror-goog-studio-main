@@ -261,8 +261,11 @@ single_gradle_integration_test_per_source(
         ],
     ),
     data = TEST_DATA + OLD_SDKS,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:androidx_test_latest",
         "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
@@ -290,8 +293,11 @@ gradle_integration_test(
         ],
     ),
     data = TEST_DATA + ["//prebuilts/studio/jdk"],
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
@@ -307,8 +313,11 @@ gradle_integration_test(
         ],
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test/application:prebuilts",
         "//tools/base/build-system/previous-versions:7.1.0",
     ],
@@ -326,8 +335,11 @@ gradle_integration_test(
         exclude = CONNECTED_TESTS,
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
@@ -349,8 +361,11 @@ gradle_integration_test(
         exclude = CONNECTED_TESTS,
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
@@ -372,8 +387,11 @@ gradle_integration_test(
         exclude = CONNECTED_TESTS,
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
@@ -397,8 +415,11 @@ gradle_integration_test(
         exclude = CONNECTED_TESTS,
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
@@ -422,8 +443,11 @@ gradle_integration_test(
     data = TEST_DATA + [
         "//prebuilts/tools/common/mlkit/testData",
     ],
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
@@ -445,8 +469,11 @@ single_gradle_integration_test_per_source(
         ],
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
@@ -463,8 +490,11 @@ gradle_integration_test(
     ),
     data = TEST_DATA,
     #keep sorted
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
@@ -482,8 +512,11 @@ gradle_integration_test(
     srcs = glob(CHECK_ALL_SOURCES),
     data = AUTOMATIC_TEST_DATA,
     #keep sorted
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_1_4_32_prebuilts",
