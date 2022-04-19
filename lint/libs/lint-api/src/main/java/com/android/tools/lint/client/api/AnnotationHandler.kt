@@ -66,7 +66,7 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.util.PsiTypesUtil
-import org.jetbrains.kotlin.asJava.classes.KtUltraLightClass
+import org.jetbrains.kotlin.asJava.classes.KtLightClass
 import org.jetbrains.kotlin.asJava.elements.KtLightMember
 import org.jetbrains.kotlin.asJava.elements.KtLightParameter
 import org.jetbrains.kotlin.asJava.unwrapped
@@ -451,7 +451,7 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
         }
 
         val ktFile = topLevelClass.containingFile as? KtFile
-            ?: (topLevelClass as? KtUltraLightClass)?.kotlinOrigin?.containingKtFile
+            ?: (topLevelClass as? KtLightClass)?.kotlinOrigin?.containingKtFile
         ktFile?.annotationEntries?.forEach { entry ->
             val annotation = UastFacade.convertElement(entry, null) as? UAnnotation
             if (annotation != null) {
