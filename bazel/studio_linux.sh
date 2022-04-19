@@ -121,13 +121,11 @@ function run_bazel_test() {
   elif [[ " ${ARGV[@]} " =~ " --very_flaky " ]];
   then
     conditional_flags+=(--build_tests_only)
-    conditional_flags+=(--config=ants)
     target_name="studio-linux_very_flaky"
     test_tag_filters=-no_linux,-no_test_linux,very_flaky
   elif [[ $BUILD_TYPE == "POSTSUBMIT" ]]; then
     conditional_flags+=(--nocache_test_results)
     conditional_flags+=(--flaky_test_attempts=2)
-    conditional_flags+=(--config=ants)
   fi
 
   # Generate a UUID for use as the bazel test invocation id
@@ -154,7 +152,7 @@ function run_bazel_test() {
     --max_idle_secs=60 \
     "${bazelrc_flags[@]}" \
     test \
-    ${CONFIG_OPTIONS} \
+    ${CONFIG_OPTIONS} --config=ants \
     --worker_max_instances=${worker_instances} \
     --invocation_id=${invocation_id} \
     --build_tag_filters=${build_tag_filters} \
