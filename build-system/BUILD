@@ -202,7 +202,6 @@ maven_repository(
     artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
     visibility = [
         "//tools/base/build-system/integration-test/connected:__pkg__",
-        "//tools/base/build-system/integration-test/lint:__pkg__",
         "//tools/base/build-system/integration-test/managed-devices:__pkg__",
         "//tools/base/build-system/integration-test/native:__pkg__",
     ],

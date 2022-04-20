@@ -68,7 +68,9 @@ fun checkLintModels(
 
 private val cacheReplace = Regex("""/[a-zA-Z0-9]{32}/""")
 
-private val localRepositories = GradleTestProject.localRepositories.map { it.toAbsolutePath().toString() }
+private val localRepositories = GradleTestProject.localRepositories
+        .map { it.toAbsolutePath().toString() }
+        .sortedByDescending { it.length }
 
 fun applyReplacements(original: String, replacements: Map<String, String>): String {
     var normalized = original
