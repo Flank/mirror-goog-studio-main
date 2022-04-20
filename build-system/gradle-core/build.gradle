@@ -258,12 +258,6 @@ clean {
 }
 
 apiTest {
-    // Gradle embeds kotlin when dealing with kts files and that version can be different from
-    // the version Android Studio bundles. This is usually not an issue, but when generating
-    // build.gradle.kts files, we need to use the bundled Android Studio version so all dependencies
-    // are present in prebuilts.
-    environment("KOTLIN_PLUGIN", libs.kotlin_gradle_plugin)
-
     maxParallelForks = Runtime.runtime.availableProcessors()
 
     environment("API_TESTS_OUTDIR", apiTestsOutDir.toString())
