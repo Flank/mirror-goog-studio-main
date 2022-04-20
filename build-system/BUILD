@@ -201,9 +201,6 @@ maven_repository(
     name = "gradle_plugin_no_databinding_repo",
     artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
     visibility = [
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:__pkg__",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:__pkg__",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:__pkg__",
         "//tools/base/build-system/integration-test/connected:__pkg__",
         "//tools/base/build-system/integration-test/lint:__pkg__",
         "//tools/base/build-system/integration-test/managed-devices:__pkg__",
