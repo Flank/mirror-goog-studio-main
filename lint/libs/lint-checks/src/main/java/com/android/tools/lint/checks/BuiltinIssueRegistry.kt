@@ -318,6 +318,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ParcelDetector.ISSUE,
                 PendingIntentMutableFlagDetector.ISSUE,
                 PermissionDetector.MISSING_PERMISSION,
+                PermissionErrorDetector.KNOWN_PERMISSION_ERROR,
                 PluralsDetector.EXTRA,
                 PluralsDetector.IMPLIED_QUANTITY,
                 PluralsDetector.MISSING,
