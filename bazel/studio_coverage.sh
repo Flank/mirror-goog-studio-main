@@ -74,7 +74,6 @@ fi
 declare -a extra_test_flags
 if [[ $postsubmit ]]; then
     extra_test_flags+=(--nocache_test_results)
-    extra_test_flags+=(--config=ants)
     extra_test_flags+=(--flaky_test_attempts=2)
 fi
 
@@ -91,7 +90,7 @@ fi
 "${script_dir}/bazel" \
   "${bazelrc_flags[@]}" \
   test \
-  --config=dynamic --config=sponge \
+  --config=dynamic --config=sponge --config=ants \
   --invocation_id=${invocation_id} \
   --tool_tag="studio_coverage.sh" \
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
