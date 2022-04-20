@@ -47,18 +47,12 @@ public class TraceUtils {
      */
     @NonNull
     public static String getCurrentStack(int numberOfTopFramesToRemove) {
-        StringWriter stringWriter = new StringWriter();
-        try (PrintWriter writer = new PrintWriter(stringWriter)) {
-            Throwable throwable =
-                    new Throwable() {
-                        @Override
-                        public String toString() {
-                            return "";
-                        }
-                    };
-            throwable.printStackTrace(writer);
-        }
-        String fullStack = stringWriter.toString();
+        String fullStack = getStackTrace(new Throwable() {
+            @Override
+            public String toString() {
+                return "";
+            }
+        });
         // Remove our own frame and numberOfTopFramesToRemove frames requested by the caller.
         int start = 0;
         if (numberOfTopFramesToRemove < 0) {
