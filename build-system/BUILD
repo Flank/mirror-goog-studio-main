@@ -180,32 +180,11 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
-GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
+GRADLE_PLUGIN_ARTIFACTS = [
     "//tools/base/build-system/aapt2:aapt2",
     "//tools/base/build-system/gradle-core:gradle-core",
     "//tools/base/lint:tools.lint-gradle",
     "@maven//:com.github.javaparser.javaparser-core",
-]
-
-# This doesn't correspond to anything we publish and is obsolete.
-#
-# Tests that depend on this should migrate to using the Android Gradle plugin
-# as built with Gradle (wrapped in Bazel), i.e.
-#
-#    "//tools/base/build-system:android_gradle_plugin.zip",
-#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
-#
-# For an example of a migration, see
-# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
-maven_repository(
-    name = "gradle_plugin_no_databinding_repo",
-    artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
-    visibility = [
-        "//tools/base/build-system/integration-test/managed-devices:__pkg__",
-    ],
-)
-
-GRADLE_PLUGIN_ARTIFACTS = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS + [
     "//tools/data-binding:tools.compiler",
 ]
 
