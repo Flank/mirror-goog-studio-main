@@ -384,6 +384,10 @@ class TypesTest : TestCase() {
                 "        UMethod (name = getResId) [public final fun getResId() : int = UastEmptyExpression] : PsiType:int\n" +
                 "        UMethod (name = KotlinEnum) [private fun KotlinEnum(@org.jetbrains.annotations.NotNull resId: int) = UastEmptyExpression]\n" +
                 "            UParameter (name = resId) [@org.jetbrains.annotations.NotNull var resId: int] : PsiType:int\n" +
+                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
+                "        UMethod (name = values) [public static fun values() : test.pkg.KotlinEnum[] = UastEmptyExpression] : PsiType:KotlinEnum[]\n" +
+                "        UMethod (name = valueOf) [public static fun valueOf(@org.jetbrains.annotations.NotNull name: java.lang.String) : test.pkg.KotlinEnum = UastEmptyExpression] : PsiType:KotlinEnum\n" +
+                "            UParameter (name = name) [@org.jetbrains.annotations.NotNull var name: java.lang.String] : PsiType:String\n" +
                 "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n",
             file?.asLogTypes()
         )
