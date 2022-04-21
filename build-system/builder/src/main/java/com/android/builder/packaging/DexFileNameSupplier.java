@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.builder.internal.packaging;
+package com.android.builder.packaging;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Supplier;
 import java.util.Locale;
 
-/**
- * Supplier that provides sequential names for dex files.
- */
-class DexFileNameSupplier implements Supplier<String> {
+/** Supplier that provides sequential names for dex files. */
+public class DexFileNameSupplier implements Supplier<String> {
 
-    /**
-     * Current dex-file index.
-     */
+    /** Current dex-file index. */
     private int mIndex;
 
-    /**
-     * Creates a new renamer.
-     */
-    DexFileNameSupplier() {
+    /** Creates a new renamer. */
+    public DexFileNameSupplier() {
         mIndex = 1;
     }
 

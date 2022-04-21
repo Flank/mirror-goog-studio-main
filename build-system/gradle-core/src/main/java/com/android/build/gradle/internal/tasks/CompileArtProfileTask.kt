@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.PackageAndroidArtifact
+import com.android.builder.packaging.DexFileComparator
+import com.android.builder.packaging.DexFileNameSupplier
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.ArtProfileSerializer
 import com.android.tools.profgen.DexFile
@@ -89,6 +91,7 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
                 "Merged ${SdkConstants.FN_ART_PROFILE} cannot be parsed successfully."
             )
 
+            val supplier = DexFileNameSupplier()
             val artProfile = ArtProfile(
                     humanReadableProfile,
                     if (parameters.obfuscationMappingFile.isPresent) {
@@ -96,8 +99,9 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
                     } else {
                         ObfuscationMap.Empty
                     },
-                    parameters.dexFolders.asFileTree.files.map {
-                        DexFile(it)
+                    //need to rename dex files with sequential numbers the same way [DexIncrementalRenameManager] does
+                    parameters.dexFolders.asFileTree.files.sortedWith(DexFileComparator()).map {
+                        DexFile(it.inputStream(), supplier.get())
                     }
             )
             // the P compiler is always used, the server side will transcode if necessary.
