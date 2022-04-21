@@ -19,6 +19,7 @@ package com.android.builder.internal.packaging;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.files.RelativeFile;
+import com.android.builder.packaging.DexFileNameSupplier;
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

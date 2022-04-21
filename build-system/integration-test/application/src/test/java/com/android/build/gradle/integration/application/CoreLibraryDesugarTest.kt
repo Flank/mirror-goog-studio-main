@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.Adb
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -39,6 +38,7 @@ import com.android.testutils.apk.Dex
 import com.android.testutils.generateAarWithContent
 import com.android.testutils.truth.DexClassSubject
 import com.android.testutils.truth.DexSubject
+import com.android.tools.profgen.ArtProfile
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.jf.dexlib2.immutable.debug.ImmutableStartLocal
@@ -47,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
+import java.util.zip.ZipFile
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -519,6 +520,23 @@ class CoreLibraryDesugarTest {
         desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $desugarConfigClass")
         DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
+    }
+
+    @Test
+    fun testArtProfileDexNaming() {
+      TestFileUtils.appendToFile(
+            FileUtils.join(app .getMainSrcDir(""),"baseline-prof.txt"),
+          programClass + "\n" + usedDesugarClass +"\n")
+
+        executor().run(":app:assembleRelease")
+
+        val apkFile = app.getApk(GradleTestProject.ApkType.RELEASE).file.toFile()
+        val zip = ZipFile(apkFile)
+        val entry = zip.entries().asSequence().first { it.name == "assets/dexopt/baseline.prof" }
+        zip.getInputStream(entry)
+        val profile = ArtProfile(zip.getInputStream(entry))
+        Truth.assertThat(profile!!.profileData.keys.map { it.name })
+            .containsExactly("classes.dex","classes2.dex")
     }
 
     @Test

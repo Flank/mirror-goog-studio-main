@@ -25,7 +25,7 @@ internal val MAGIC = byteArrayOf('p', 'r', 'o', '\u0000')
 
 
 class ArtProfile internal constructor(
-    internal val profileData: Map<DexFile, DexFileData>,
+    val profileData: Map<DexFile, DexFileData>,
     private val apkName: String = ""
 ) {
     fun print(os: PrintStream, obf: ObfuscationMap) {
