@@ -22,7 +22,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = PermissionErrorDetector()
 
     @Test
-    fun testDocumentationExample() {
+    fun testDocumentationExampleKnownPermissionError() {
         lint().files(
             manifest(
                 """
@@ -68,7 +68,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
     }
 
     @Test
-    fun testOk() {
+    fun testKnownPermissionErrorOk() {
         lint().files(
             manifest(
                 """
@@ -77,6 +77,53 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                   package="com.example.helloworld">
                   <application>
                     <activity android:permission="android.permission.BIND" />
+                  </application>
+                </manifest>
+                """
+            ).indented()
+        )
+            .run()
+            .expectClean()
+    }
+
+    @Test
+    fun testDocumentationExampleReservedSystemPermission() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
+                  <permission android:name="android.permission.BIND_APPWIDGET" />
+                  <application>
+                    <service android:permission="android.permission.BIND_APPWIDGET" />
+                  </application>
+                </manifest>
+                """
+            ).indented()
+        )
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:4: Warning: android.permission.BIND_APPWIDGET is a reserved permission for the system [ReservedSystemPermission]
+                  <permission android:name="android.permission.BIND_APPWIDGET" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                """.trimIndent()
+            )
+    }
+
+    @Test
+    fun testReservedSystemPermissionOk() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
+                  <permission android:name="com.example.BIND_APPWIDGET" />
+                  <application>
+                    <service android:permission="android.permission.BIND_APPWIDGET" />
                   </application>
                 </manifest>
                 """

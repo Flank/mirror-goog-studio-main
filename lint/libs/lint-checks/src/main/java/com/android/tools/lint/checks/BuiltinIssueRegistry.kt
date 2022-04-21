@@ -319,6 +319,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 PendingIntentMutableFlagDetector.ISSUE,
                 PermissionDetector.MISSING_PERMISSION,
                 PermissionErrorDetector.KNOWN_PERMISSION_ERROR,
+                PermissionErrorDetector.RESERVED_SYSTEM_PERMISSION,
                 PluralsDetector.EXTRA,
                 PluralsDetector.IMPLIED_QUANTITY,
                 PluralsDetector.MISSING,
@@ -544,7 +545,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
             when {
                 scope.contains(Scope.JAVA_FILE) -> initialSize += 180
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
-                scope.contains(Scope.MANIFEST) -> initialSize += 70
+                scope.contains(Scope.MANIFEST) -> initialSize += 80
                 scope.contains(Scope.GRADLE_FILE) -> initialSize += 24
             }
             initialSize

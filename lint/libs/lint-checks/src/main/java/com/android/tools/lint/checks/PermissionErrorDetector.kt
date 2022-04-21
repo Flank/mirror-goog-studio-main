@@ -16,13 +16,16 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PERMISSION
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
 import com.android.SdkConstants.TAG_APPLICATION
+import com.android.SdkConstants.TAG_PERMISSION
 import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.SdkConstants.TAG_SERVICE
+import com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -32,6 +35,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import org.w3c.dom.Element
+import java.util.Arrays
 
 /**
  * looks for obvious errors in the guarding of components with a permission via the android:permission attribute
@@ -44,22 +48,41 @@ class PermissionErrorDetector : Detector(), XmlScanner {
         TAG_RECEIVER,
         TAG_SERVICE,
         TAG_PROVIDER,
+        TAG_PERMISSION,
     )
 
     override fun visitElement(context: XmlContext, element: Element) {
-        element.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let { attr ->
-            if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
-                context.report(
-                    KNOWN_PERMISSION_ERROR,
-                    element,
-                    context.getValueLocation(attr),
-                    "${attr.value} is not a valid permission value"
-                )
+        if (element.tagName == TAG_PERMISSION) {
+            element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let {
+                if (isSystemPermission(it.value)) {
+                    context.report(
+                        RESERVED_SYSTEM_PERMISSION,
+                        element,
+                        context.getValueLocation(it),
+                        "`${it.value}` is a reserved permission for the system"
+                    )
+                }
+            }
+        } else {
+            element.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let { attr ->
+                if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
+                    context.report(
+                        KNOWN_PERMISSION_ERROR,
+                        element,
+                        context.getValueLocation(attr),
+                        "`${attr.value}` is not a valid permission value"
+                    )
+                }
             }
         }
     }
 
     companion object {
+        private val IMPLEMENTATION = Implementation(
+            PermissionErrorDetector::class.java,
+            Scope.MANIFEST_SCOPE
+        )
+
         @JvmField
         val KNOWN_PERMISSION_ERROR: Issue = Issue.create(
             id = "KnownPermissionError",
@@ -74,12 +97,30 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             category = Category.SECURITY,
             priority = 5,
             severity = Severity.ERROR,
-            implementation = Implementation(
-                PermissionErrorDetector::class.java,
-                Scope.MANIFEST_SCOPE
-            )
+            androidSpecific = true,
+            implementation = IMPLEMENTATION
+        )
+
+        val RESERVED_SYSTEM_PERMISSION: Issue = Issue.create(
+            id = "ReservedSystemPermission",
+            briefDescription = "Permission name is a reserved system permission",
+            explanation = """
+                This check looks for custom permission declarations whose names are reserved values \
+                for system permissions.
+
+                Please double check the permission name you have supplied.  Attempting to redeclare a system \
+                permission will be ignored.
+                """,
+            category = Category.SECURITY,
+            priority = 5,
+            severity = Severity.WARNING,
+            androidSpecific = true,
+            implementation = IMPLEMENTATION
         )
 
         val KNOWN_PERMISSION_ERROR_VALUES = listOf("true", "false") // TODO: additional obvious values?
+
+        fun isSystemPermission(permissionName: String): Boolean =
+            Arrays.binarySearch(SYSTEM_PERMISSIONS, permissionName) >= 0
     }
 }
