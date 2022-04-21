@@ -204,8 +204,6 @@ maven_repository(
     name = "gradle_plugin_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     visibility = [
-        "//tools/base/build-system/integration-test/databinding:__pkg__",
-        "//tools/base/build-system/integration-test/databinding/incremental:__pkg__",
         "//tools/data-binding:__pkg__",
         "//tools/vendor/google/android-ndk:__pkg__",
         "//tools/vendor/google/real-world-integration-test:__pkg__",
