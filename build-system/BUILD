@@ -203,7 +203,6 @@ maven_repository(
     visibility = [
         "//tools/base/build-system/integration-test/connected:__pkg__",
         "//tools/base/build-system/integration-test/managed-devices:__pkg__",
-        "//tools/base/build-system/integration-test/native:__pkg__",
     ],
 )
 
