@@ -20,6 +20,7 @@ import com.android.SdkConstants.ATTR_VALUE
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.BooleanOption
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
@@ -28,6 +29,9 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.uast.UElement
 import java.util.EnumSet
@@ -38,6 +42,18 @@ import java.util.EnumSet
  */
 class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
     companion object {
+        val ALLOW_COMMENT = BooleanOption(
+            "allow-comments",
+            "Whether to allow a comment next to the @Ignore tag to be considered providing a reason",
+            true,
+            """
+                Normally you have to specify an annotation argument to the `@Ignore` \
+                annotation, but with this option you can configure whether it should \
+                also allow ignore reasons to specified by a comment adjacent to \
+                the ignore tag.
+                """
+        )
+
         @JvmField
         val ISSUE = Issue.create(
             id = "IgnoreWithoutReason",
@@ -53,7 +69,7 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
                 EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
                 Scope.JAVA_FILE_SCOPE
             )
-        )
+        ).setOptions(listOf(ALLOW_COMMENT))
     }
 
     override fun applicableAnnotations(): List<String> = listOf("org.junit.Ignore")
@@ -82,6 +98,10 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
                     value != null && value.isNotBlank() && value != "TODO"
                 }
         if (!hasDescription) {
+            if (ALLOW_COMMENT.getValue(context.configuration) && hasComment(node.sourcePsi)) {
+                return
+            }
+
             val fix =
                 if (attribute == null || node.attributeValues.isEmpty()) {
                     fix()
@@ -99,5 +119,35 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
                 "Test is ignored without giving any explanation", fix
             )
         }
+    }
+
+    /**
+     * Returns true if the given annotation element is adjacent (modulo
+     * whitespace, as long as the whitespace does not contain a blank
+     * line) to a comment
+     */
+    private fun hasComment(element: PsiElement?): Boolean {
+        element ?: return false
+        var curr = element.nextSibling
+        while (curr is PsiWhiteSpace) {
+            if (curr.text.contains("\n")) {
+                break
+            }
+            curr = curr.nextSibling ?: break
+        }
+        if (curr is PsiComment) {
+            return true
+        }
+        curr = element.prevSibling
+        if (curr == null) {
+            curr = element.parent.prevSibling
+        }
+        while (curr is PsiWhiteSpace) {
+            if (curr.text.contains("\n\n")) {
+                break
+            }
+            curr = curr.prevSibling ?: break
+        }
+        return curr is PsiComment
     }
 }
