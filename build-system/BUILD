@@ -201,7 +201,6 @@ maven_repository(
     name = "gradle_plugin_no_databinding_repo",
     artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
     visibility = [
-        "//tools/base/build-system/integration-test/connected:__pkg__",
         "//tools/base/build-system/integration-test/managed-devices:__pkg__",
     ],
 )
@@ -226,7 +225,6 @@ maven_repository(
     name = "gradle_plugin_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     visibility = [
-        "//tools/base/build-system/integration-test/connected:__pkg__",
         "//tools/base/build-system/integration-test/databinding:__pkg__",
         "//tools/base/build-system/integration-test/databinding/incremental:__pkg__",
         "//tools/data-binding:__pkg__",
