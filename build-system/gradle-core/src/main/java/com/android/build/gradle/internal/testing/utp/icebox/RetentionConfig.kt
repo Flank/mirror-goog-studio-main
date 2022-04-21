@@ -22,6 +22,7 @@ import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.base.Preconditions
 import java.io.Serializable
+import org.gradle.api.logging.Logging
 
 /**
  * A data class to hold the vaules from android.testOptions.emulatorSnapshots, as documented here:
@@ -59,6 +60,11 @@ fun createRetentionConfig(
         "android.emulatorSnapshots.maxSnapshotsForTestFailures should be >0, actual value "
                 + emulatorSnapshots.maxSnapshotsForTestFailures
     )
+    if (enableFailureRetention) {
+        Logging.getLogger(RetentionConfig::class.java)
+            .warn("WARNING: The Emulator Snapshot for Test Failures DSL and associated tests "
+                    + "are experimental")
+    }
     val compressSnapshots = projectOptions.get(
         OptionalBooleanOption.ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT
     ) ?: emulatorSnapshots.compressSnapshots
