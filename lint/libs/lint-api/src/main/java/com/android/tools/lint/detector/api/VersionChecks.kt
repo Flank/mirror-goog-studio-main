@@ -19,13 +19,13 @@ import com.android.SdkConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.support.AndroidxName
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations
+import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.above
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.atLeast
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.atMost
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.below
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.range
-import com.android.tools.lint.client.api.JavaEvaluator
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.VersionChecks.SdkIntAnnotation.Companion.findSdkIntAnnotation
 import com.android.utils.SdkUtils
 import com.google.common.annotations.VisibleForTesting

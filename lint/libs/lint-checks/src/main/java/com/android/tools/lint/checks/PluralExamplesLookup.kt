@@ -60,22 +60,22 @@ data class PluralExample(val language: String, val keyword: String, val number: 
 // 1E6 as 1.0), so the code below will work around that bug by directly accessing the lower-level data in the ICU data, but this requires
 // making some private fields of the IUC classes public.
 //
-//import com.ibm.icu.impl.ICUData
-//import com.ibm.icu.impl.ICUResourceBundle
-//import com.ibm.icu.text.PluralRules
-//import com.ibm.icu.util.ULocale
-//import java.io.File
-//import java.util.*
+// import com.ibm.icu.impl.ICUData
+// import com.ibm.icu.impl.ICUResourceBundle
+// import com.ibm.icu.text.PluralRules
+// import com.ibm.icu.util.ULocale
+// import java.io.File
+// import java.util.*
 //
-//data class PluralEntry(val keyword: String, val number: String, val example: String?) {
+// data class PluralEntry(val keyword: String, val number: String, val example: String?) {
 //    override fun toString() = "$keyword:$number:${example ?: ""}"
-//}
+// }
 //
-//data class PluralSet(val language: String, val entries: List<PluralEntry>) {
+// data class PluralSet(val language: String, val entries: List<PluralEntry>) {
 //    override fun toString() = "$language/${entries.joinToString("|")}"
-//}
+// }
 //
-//fun main() {
+// fun main() {
 //    val sets = mutableListOf<PluralSet>()
 //    val processedLanguages = mutableSetOf<String>()
 //    for (locale in Locale.getAvailableLocales()) {
@@ -129,4 +129,4 @@ data class PluralExample(val language: String, val keyword: String, val number: 
 //            writer.newLine()
 //        }
 //    }
-//}
+// }

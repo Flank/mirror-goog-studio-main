@@ -25,11 +25,8 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.ULiteralExpression
-import org.jetbrains.uast.skipParenthesizedExprDown
 
 /**
  * Detector looking for usages of Resources.getIdentifier(insetName, "dimen", "android") for
