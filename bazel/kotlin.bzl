@@ -92,7 +92,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runti
         mnemonic = "kotlinc",
         arguments = [args],
         executable = ctx.executable._kotlinc,
-        execution_requirements = {"supports-workers": "1"},
+        execution_requirements = {"supports-multiplex-workers": "1"},
     )
 
     return JavaInfo(output_jar = out, compile_jar = out_ijar or out)
