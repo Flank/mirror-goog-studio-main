@@ -191,7 +191,7 @@ GRADLE_PLUGIN_ARTIFACTS = [
 # m2 repository used by performance tests
 maven_repository(
     name = "performance_test_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS + [
+    artifacts = [
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.10",
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.20",
         "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.6.10",

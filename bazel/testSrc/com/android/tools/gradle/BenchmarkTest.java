@@ -44,7 +44,7 @@ public class BenchmarkTest {
     private static final String ROOT = "prebuilts/studio/";
 
     private File distribution = null;
-    private File repo = null;
+    private List<File> repos = new ArrayList<>();
     private String project = null;
     private String benchmarkName = null;
     private String benchmarkBaseName = null;
@@ -84,7 +84,12 @@ public class BenchmarkTest {
         String value;
         project = System.getProperty("project");
         distribution = getFileProperty("distribution");
-        repo = getFileProperty("repo");
+        value = System.getProperty("repos");
+        if (value != null && !value.isEmpty()) {
+            for (String repo : value.split(",")) {
+                repos.add(new File(repo));
+            }
+        }
 
         benchmarkBaseName = getStringProperty("benchmark_base_name");
         benchmarkCodeType = getStringProperty("benchmark_code_type");
@@ -312,7 +317,9 @@ public class BenchmarkTest {
         addJvmArgs(
                 new File(projectRoot, "gradle.properties"), enableYourKit, src, yourKitAgentPath);
         try (Gradle gradle = new Gradle(projectRoot, out, distribution)) {
-            gradle.addRepo(repo);
+            for (File repo : repos) {
+                gradle.addRepo(repo);
+            }
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
