@@ -88,11 +88,10 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
 
         mFinder = new InstrumentationClassFinder(urls.toArray(new URL[0]));
         try {
-            instrumentForms(mFinder, mForms);
+            return instrumentForms(mFinder, mForms);
         } finally {
             mFinder.releaseResources();
         }
-        return true;
     }
 
     private void addUrlsTo(String classPath, ArrayList<URL> urls) throws MalformedURLException {
@@ -101,7 +100,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         }
     }
 
-    private void instrumentForms(final InstrumentationClassFinder finder, List<File> forms) {
+    private boolean instrumentForms(final InstrumentationClassFinder finder, List<File> forms) {
         if (forms.isEmpty()) {
             throw new IllegalArgumentException("No forms to instrument found");
         }
@@ -157,9 +156,10 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
                 err.println(form.getAbsolutePath() + ": " + error.getErrorMessage());
             }
             if (errors.length > 0) {
-                throw new RuntimeException("Errors found during form compilation");
+                return false;
             }
         }
+        return true;
     }
 
     /**
