@@ -16,7 +16,6 @@
 
 package com.android.builder.internal.aapt.v2
 
-import com.android.SdkConstants
 import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
@@ -24,7 +23,6 @@ import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.SettableFuture
-import java.io.File
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
@@ -107,7 +105,7 @@ class Aapt2DaemonImpl(
         } catch (e: TimeoutException) {
             stopQuietly("Failed to start AAPT2 process $displayName. " +
                     "Not ready within ${daemonTimeouts.start} " +
-                    "${daemonTimeouts.startUnit.name.toLowerCase(Locale.US)}.", e)
+                    "${daemonTimeouts.startUnit.name.lowercase(Locale.US)}.", e)
         } catch (e: Exception) {
             stopQuietly("Failed to start AAPT2 process.", e)
         }
@@ -148,8 +146,7 @@ class Aapt2DaemonImpl(
                     Files.write(toPath(), ImmutableList.of("default int $type $nameWithoutExtension"))
                 }
             }
-            val result = waitForTask.future.get(daemonTimeouts.compile, daemonTimeouts.compileUnit)
-            when (result) {
+            when (val result = waitForTask.future.get(daemonTimeouts.compile, daemonTimeouts.compileUnit)) {
                 is WaitForTaskCompletion.Result.Succeeded -> {}
                 is WaitForTaskCompletion.Result.Failed -> {
                     val args = makeCompileCommand(request).joinToString(" \\\n        ")
@@ -176,8 +173,7 @@ class Aapt2DaemonImpl(
         try {
             processOutput.delegate = waitForTask
             Aapt2DaemonUtil.requestLink(writer, request)
-            val result = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)
-            when (result) {
+            when (val result = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)) {
                 is WaitForTaskCompletion.Result.Succeeded -> { }
                 is WaitForTaskCompletion.Result.Failed -> {
                     val configWithResourcesListed =
@@ -211,8 +207,7 @@ class Aapt2DaemonImpl(
         try {
             processOutput.delegate = waitForTask
             Aapt2DaemonUtil.requestConvert(writer, request)
-            val result = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)
-            when (result) {
+            when (val result = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)) {
                 is WaitForTaskCompletion.Result.Succeeded -> { }
                 is WaitForTaskCompletion.Result.Failed -> {
                     val args = makeConvertCommand(request).joinToString("\\\n        ")
@@ -253,7 +248,7 @@ class Aapt2DaemonImpl(
         throw TimeoutException(
                 "$displayName: Failed to shut down within " +
                         "${daemonTimeouts.stop} " +
-                        "${daemonTimeouts.stopUnit.name.toLowerCase(Locale.US)}. " +
+                        "${daemonTimeouts.stopUnit.name.lowercase(Locale.US)}. " +
                         "Forcing shutdown").apply {
             suppressed?.let { addSuppressed(it) }
             try {
@@ -285,7 +280,7 @@ class Aapt2DaemonImpl(
     class WaitForReadyOnStdOut(private val displayName: String,
             val logger: ILogger) : GrabProcessOutput.IProcessOutput {
 
-        val future: SettableFuture<Boolean> = SettableFuture.create<Boolean>()
+        val future: SettableFuture<Boolean> = SettableFuture.create()
 
         override fun out(line: String?) {
             when (line) {

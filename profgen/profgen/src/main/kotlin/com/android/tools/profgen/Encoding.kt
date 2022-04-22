@@ -68,31 +68,30 @@ internal val ByteBuffer.leb128: Int
  * Decodes bytes from the ByteBuffer until a delimiter 0x00 is
  * encountered. Returns a new string containing the decoded characters.
  */
-@OptIn(ExperimentalUnsignedTypes::class)
 internal fun ByteBuffer.mutf8(encodedSize: Int): String {
     val out = CharArray(encodedSize)
     var s = 0
     while (true) {
-        val a = get().toChar()
-        if (a.toInt() == 0) {
+        val a = get().toInt().toChar()
+        if (a.code == 0) {
             return String(out, 0, s)
         }
         out[s] = a
         if (a < '\u0080') {
             s++
-        } else if (a.toInt() and 0xe0 == 0xc0) {
+        } else if (a.code and 0xe0 == 0xc0) {
             val b = ubyte
             if (b and 0xC0 != 0x80) {
                 throw UTFDataFormatException("bad second byte")
             }
-            out[s++] = (a.toInt() and 0x1F shl 6 or (b and 0x3F)).toChar()
-        } else if (a.toInt() and 0xf0 == 0xe0) {
+            out[s++] = (a.code and 0x1F shl 6 or (b and 0x3F)).toChar()
+        } else if (a.code and 0xf0 == 0xe0) {
             val b = ubyte
             val c = ubyte
             if (b and 0xC0 != 0x80 || c and 0xC0 != 0x80) {
                 throw UTFDataFormatException("bad second or third byte")
             }
-            out[s++] = (a.toInt() and 0x0F shl 12 or (b and 0x3F shl 6) or (c and 0x3F)).toChar()
+            out[s++] = (a.code and 0x0F shl 12 or (b and 0x3F shl 6) or (c and 0x3F)).toChar()
         } else {
             throw UTFDataFormatException("bad byte")
         }
@@ -105,11 +104,9 @@ internal fun Long.toIntSaturated(): Int = when {
     else -> toInt()
 }
 
-@OptIn(ExperimentalUnsignedTypes::class)
 internal val ByteBuffer.ushort: Int
     get() = short.toUShort().toInt()
 
-@OptIn(ExperimentalUnsignedTypes::class)
 internal val ByteBuffer.ubyte: Int
     get() = get().toUByte().toInt()
 
@@ -132,7 +129,7 @@ internal const val UINT_8_SIZE = 1
 internal const val UINT_16_SIZE = 2
 internal const val UINT_32_SIZE = 4
 
-internal fun byteArrayOf(vararg chars: Char) = ByteArray(chars.size) { chars[it].toByte() }
+internal fun byteArrayOf(vararg chars: Char) = ByteArray(chars.size) { chars[it].code.toByte() }
 
 internal fun OutputStream.writeUInt(value: Long, numberOfBytes: Int) {
     val buffer = ByteArray(numberOfBytes)
@@ -232,7 +229,6 @@ internal fun InputStream.readUInt32(): Long = readUInt(UINT_32_SIZE)
  *
  * @param numberOfBytes the size of the integer in bytes
  */
-@OptIn(ExperimentalUnsignedTypes::class)
 internal fun InputStream.readUInt(numberOfBytes: Int): Long {
     val buffer = read(numberOfBytes)
     // We use a long to cover for unsigned integer.

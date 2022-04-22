@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
 class LocaleValueTest {
 
   fun testLanguage(input: String, expectedLang: String, expectFailure: Boolean = false) {
-    val parts = input.split('-').map { it.toLowerCase() }
+    val parts = input.split('-').map { it.lowercase() }
     val locale = LocaleValue()
 
     val count = locale.initFromParts(parts, 0)
@@ -18,7 +18,7 @@ class LocaleValueTest {
   }
 
   fun testLanguageRegion(input: String, expectedLang: String, expectedRegion: String) {
-    val parts = input.split('-').map { it.toLowerCase() }
+    val parts = input.split('-').map { it.lowercase() }
     val locale = LocaleValue()
 
     val count = locale.initFromParts(parts, 0)
@@ -41,7 +41,7 @@ class LocaleValueTest {
   @Test
   fun testWritingLocaleToResTableConfig() {
     val languageLocaleValue = "b+be+tarask"
-    val parts = languageLocaleValue.split('-').map(String::toLowerCase)
+    val parts = languageLocaleValue.split('-').map(String::lowercase)
     val locale = LocaleValue()
     locale.initFromParts(parts, 0)
 
