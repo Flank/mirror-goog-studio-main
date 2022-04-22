@@ -126,9 +126,6 @@ open class AndroidTestImpl @Inject constructor(
     override val debuggable: Boolean
         get() = dslInfo.isDebuggable
 
-    override val profileable: Boolean
-        get() = dslInfo.isProfileable
-
     override val namespaceForR: Provider<String> = dslInfo.namespaceForR
 
     override val minSdkVersion: AndroidVersion
@@ -152,7 +149,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            dslInfo.testedVariant!!.packaging,
+            dslInfo.testedVariantDslInfo.packaging,
             variantServices,
             minSdkVersion.apiLevel
         )
@@ -162,9 +159,9 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             return when {
                 mainVariant.componentType.isAar -> false
-                !dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration() ->
+                !dslInfo.postProcessingOptions.hasPostProcessingConfiguration() ->
                     mainVariant.minifiedEnabled
-                else -> dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+                else -> dslInfo.postProcessingOptions.codeShrinkerEnabled()
             }
         }
 
@@ -172,9 +169,9 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             return when {
                 mainVariant.componentType.isAar -> false
-                !dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration() ->
+                !dslInfo.postProcessingOptions.hasPostProcessingConfiguration() ->
                     mainVariant.resourcesShrink
-                else -> dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()
+                else -> dslInfo.postProcessingOptions.resourcesShrinkingEnabled()
             }
         }
 
@@ -380,9 +377,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
 
-    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        dslInfo.signingConfig
-
     override val defaultGlslcArgs: List<String>
         get() = dslInfo.defaultGlslcArgs
     override val scopedGlslcArgs: Map<String, List<String>>
@@ -402,7 +396,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = isTestCoverageEnabled && mainVariant.componentType.isAar
 
     override val postProcessingFeatures: PostprocessingFeatures?
-        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
+        get() = dslInfo.postProcessingOptions.getPostprocessingFeatures()
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

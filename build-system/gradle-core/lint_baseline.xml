@@ -208,6 +208,22 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/AndroidTestComponentDslInfoImpl.kt"
+            line="70"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/AndroidTestComponentDslInfoImpl.kt"
+            line="133"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
             line="116"/>
     </issue>
@@ -258,6 +274,14 @@
         <location
             file="src/main/java/com/android/build/api/variant/impl/ApplicationVariantBuilderImpl.kt"
             line="55"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/ApplicationVariantDslInfoImpl.kt"
+            line="76"/>
     </issue>
 
     <issue
@@ -440,8 +464,8 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
-            file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="169"/>
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/ComponentDslInfoImpl.kt"
+            line="79"/>
     </issue>
 
     <issue
@@ -449,7 +473,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="293"/>
+            line="167"/>
     </issue>
 
     <issue
@@ -457,7 +481,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="374"/>
+            line="291"/>
     </issue>
 
     <issue
@@ -465,7 +489,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="382"/>
+            line="371"/>
     </issue>
 
     <issue
@@ -473,7 +497,15 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="412"/>
+            line="379"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
+            line="409"/>
     </issue>
 
     <issue
@@ -856,6 +888,22 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/TestProjectVariantDslInfoImpl.kt"
+            line="128"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/TestProjectVariantDslInfoImpl.kt"
+            line="140"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
             file="src/main/java/com/android/build/api/variant/impl/TestVariantImpl.kt"
             line="97"/>
     </issue>
@@ -896,6 +944,14 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/UnitTestComponentDslInfoImpl.kt"
+            line="59"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
             file="src/main/java/com/android/build/api/variant/impl/VariantBuilderImpl.kt"
             line="137"/>
     </issue>
@@ -904,8 +960,8 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="151"/>
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/VariantDslInfoImpl.kt"
+            line="135"/>
     </issue>
 
     <issue
@@ -929,7 +985,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="54"/>
+            line="129"/>
     </issue>
 
     <issue
@@ -937,7 +993,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="119"/>
+            line="194"/>
     </issue>
 
     <issue
@@ -945,7 +1001,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="160"/>
+            line="235"/>
     </issue>
 
     <issue
@@ -953,7 +1009,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="163"/>
+            line="238"/>
     </issue>
 
     <issue
@@ -961,7 +1017,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="171"/>
+            line="246"/>
     </issue>
 
     <issue
@@ -969,7 +1025,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="200"/>
+            line="275"/>
     </issue>
 
     <issue
@@ -977,7 +1033,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="210"/>
+            line="285"/>
     </issue>
 
     <issue
@@ -985,7 +1041,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="215"/>
+            line="290"/>
     </issue>
 
     <issue
@@ -1066,46 +1122,6 @@
         <location
             file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkManifestMergerTask.kt"
             line="83"/>
-    </issue>
-
-    <issue
-        id="NoOp"
-        message="This reference is unused: testApplicationId">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="225"/>
-    </issue>
-
-    <issue
-        id="NoOp"
-        message="This reference is unused: testApplicationId">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="321"/>
-    </issue>
-
-    <issue
-        id="NoOp"
-        message="This reference is unused: testInstrumentationRunner">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="493"/>
-    </issue>
-
-    <issue
-        id="NoOp"
-        message="This reference is unused: testHandleProfiling">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="536"/>
-    </issue>
-
-    <issue
-        id="NoOp"
-        message="This reference is unused: testFunctionalTest">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="557"/>
     </issue>
 
     <issue

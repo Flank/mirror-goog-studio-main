@@ -50,11 +50,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
      */
     val signingConfigImpl: SigningConfigImpl?
 
-    /**
-     * DO NOT USE, only present for old variant API.
-     */
-    val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig?
-
     val multiDexKeepFile: File?
 
     val bundleConfig: BundleConfigImpl?

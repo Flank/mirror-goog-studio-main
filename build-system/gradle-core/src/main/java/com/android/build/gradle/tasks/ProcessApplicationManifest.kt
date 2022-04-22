@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier
@@ -456,7 +457,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
             task.namespace.setDisallowChanges(creationConfig.namespace)
-            task.profileable.setDisallowChanges(creationConfig.profileable)
+            task.profileable.setDisallowChanges(
+                (creationConfig as? ApplicationCreationConfig)?.profileable ?: false
+            )
             task.testOnly.setDisallowChanges(
                 ProfilingMode.getProfilingModeType(
                     creationConfig.services.projectOptions[StringOption.PROFILING_MODE]

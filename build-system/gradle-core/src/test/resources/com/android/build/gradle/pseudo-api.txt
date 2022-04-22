@@ -1455,7 +1455,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: v
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.InitWithUtilKt
 com.android.build.gradle.internal.dsl.InitWithUtilKt.initExtensions: void (org.gradle.api.plugins.ExtensionAware, org.gradle.api.plugins.ExtensionAware)
-com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.bundle: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptions>)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.dependenciesInfo: void (org.gradle.api.Action<com.android.build.api.dsl.DependenciesInfo>)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
@@ -1502,8 +1502,8 @@ com.android.build.gradle.internal.dsl.InternalCommonExtension.splits: void (org.
 com.android.build.gradle.internal.dsl.InternalCommonExtension.testCoverage: void (org.gradle.api.Action<com.android.build.api.dsl.TestCoverage>)
 com.android.build.gradle.internal.dsl.InternalCommonExtension.testOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions>)
 com.android.build.gradle.internal.dsl.InternalCommonExtension.viewBinding: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl>)
-com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
-com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension
+com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.LibraryPublishing>)
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.setAidlPackagedList: void (java.util.Collection<java.lang.String>)
@@ -1511,7 +1511,7 @@ com.android.build.gradle.internal.dsl.InternalPrivacySandboxSdkExtension impleme
 com.android.build.gradle.internal.dsl.InternalPrivacySandboxSdkExtension.bundle: void (org.gradle.api.Action<com.android.build.api.dsl.PrivacySandboxSdkBundle>)
 com.android.build.gradle.internal.dsl.InternalSigningConfig implements com.android.build.api.dsl.SigningConfig, com.android.build.api.dsl.ApkSigningConfig, org.gradle.api.Named, com.android.builder.model.SigningConfig
 com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
-com.android.build.gradle.internal.dsl.InternalTestedExtension implements com.android.build.api.dsl.TestedExtension
+com.android.build.gradle.internal.dsl.InternalTestedExtension implements com.android.build.api.dsl.TestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalTestedExtension.testFixtures: void (org.gradle.api.Action<com.android.build.api.dsl.TestFixtures>)
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions, com.android.build.api.dsl.JavaCompileOptions
 com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions ()

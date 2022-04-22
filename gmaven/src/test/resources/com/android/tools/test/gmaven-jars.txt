@@ -420,6 +420,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/component/legacy/
   com/android/build/gradle/internal/core/
   com/android/build/gradle/internal/core/dsl/
+  com/android/build/gradle/internal/core/dsl/impl/
   com/android/build/gradle/internal/coverage/
   com/android/build/gradle/internal/crash/
   com/android/build/gradle/internal/cxx/

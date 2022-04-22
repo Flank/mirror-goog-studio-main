@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
+import com.android.builder.errors.IssueReporter
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -91,6 +92,17 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 ), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest, HasTestFixtures {
 
     init {
+        // TODO: Should be removed once we stop implementing all build type interfaces in one class
+        if (dslInfo.isMultiDexSetFromDsl) {
+            services.issueReporter
+                .reportWarning(
+                    IssueReporter.Type.GENERIC,
+                    "Native multidex is always used for dynamic features. Please " +
+                            "remove 'multiDexEnabled true|false' from your " +
+                            "build.gradle file."
+                )
+        }
+
         dslInfo.multiDexKeepProguard?.let {
             artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                 .addInitialProvider(null, internalServices.toRegularFileProvider(it))
@@ -171,8 +183,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val shouldPackageDesugarLibDex: Boolean = false
     override val debuggable: Boolean
         get() = delegate.isDebuggable
-    override val profileable: Boolean
-        get() = delegate.isProfileable
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = delegate.isCoreLibraryDesugaringEnabled
 
@@ -189,12 +199,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val useJacocoTransformInstrumentation: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
-
-    // ---------------------------------------------------------------------------------------------
-    // DO NOT USE, only present for old variant API.
-    // ---------------------------------------------------------------------------------------------
-    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        dslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

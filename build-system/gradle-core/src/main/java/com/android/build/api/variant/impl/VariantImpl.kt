@@ -212,7 +212,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
-    val externalExtensions: Map<Class<*>, Any>? by lazy {
+    private val externalExtensions: Map<Class<*>, Any>? by lazy {
         variantBuilder.getRegisteredExtensions()
     }
 
@@ -305,7 +305,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = dslInfo.supportedAbis
 
     override val postProcessingFeatures: PostprocessingFeatures?
-        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
+        get() = dslInfo.postProcessingOptions.getPostprocessingFeatures()
     override val consumerProguardFiles: List<File> by lazy(LazyThreadSafetyMode.NONE) {
         immutableListBuilder<File> {
             addAll(dslInfo.gatherProguardFiles(ProguardFileType.CONSUMER))

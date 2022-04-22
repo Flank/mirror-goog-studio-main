@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.core.dsl
 
-import com.android.build.api.dsl.TestFixtures
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 
 /**
  * Contains the final dsl info computed from the DSL object model (extension, default config,
- * build type, flavors) that are needed by tested components.
+ * build type, flavors) that are needed by publishable components.
  */
-interface TestedComponentDslInfo: VariantDslInfo {
-    val testFixtures: TestFixtures
+interface PublishableComponentDslInfo {
+    val publishInfo: VariantPublishingInfo
 }

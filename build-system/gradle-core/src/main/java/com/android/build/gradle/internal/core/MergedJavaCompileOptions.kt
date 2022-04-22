@@ -17,30 +17,23 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.api.JavaCompileOptions
-import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
 
 /** Implementation of CoreJavaCompileOptions used to merge multiple configs together.  */
-abstract class MergedJavaCompileOptions : JavaCompileOptions,
+class MergedJavaCompileOptions : JavaCompileOptions,
     com.android.build.api.dsl.JavaCompileOptions,
     MergedOptions<JavaCompileOptions> {
 
-    abstract override val annotationProcessorOptions: AnnotationProcessorOptions
+    override val annotationProcessorOptions = MergedAnnotationProcessorOptions()
+
+    override fun annotationProcessorOptions(action: com.android.build.api.dsl.AnnotationProcessorOptions.() -> Unit) {
+        action.invoke(annotationProcessorOptions)
+    }
 
     override fun reset() {
-        annotationProcessorOptions.classNames.clear()
-        annotationProcessorOptions.arguments.clear()
-        annotationProcessorOptions.compilerArgumentProviders.clear()
+        annotationProcessorOptions.reset()
     }
 
     override fun append(option: JavaCompileOptions) {
-        annotationProcessorOptions.classNames.addAll(
-            option.annotationProcessorOptions.classNames
-        )
-        annotationProcessorOptions.arguments.putAll(
-            option.annotationProcessorOptions.arguments
-        )
-        annotationProcessorOptions.compilerArgumentProviders.addAll(
-            option.annotationProcessorOptions.compilerArgumentProviders
-        )
+        annotationProcessorOptions.append(option.annotationProcessorOptions)
     }
 }

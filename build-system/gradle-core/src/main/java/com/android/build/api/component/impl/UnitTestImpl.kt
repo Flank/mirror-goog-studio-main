@@ -33,10 +33,9 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.DEFAULT_TEST_RUNNER
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -109,16 +108,13 @@ open class UnitTestImpl @Inject constructor(
      * the instrumentation tag to be present in the merged manifest to process android resources.
      */
     override val instrumentationRunner: Provider<String>
-        get() = services.provider { VariantDslInfoImpl.DEFAULT_TEST_RUNNER }
+        get() = services.provider { DEFAULT_TEST_RUNNER }
 
     override val testedApplicationId: Provider<String>
         get() = mainVariant.applicationId
 
     override val debuggable: Boolean
         get() = mainVariant.debuggable
-
-    override val profileable: Boolean
-        get() = mainVariant.profileable
 
     override val manifestPlaceholders: MapProperty<String, String>
         get() = manifestPlaceholdersCreationConfig.placeholders
@@ -145,7 +141,7 @@ open class UnitTestImpl @Inject constructor(
 
     override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
         ManifestPlaceholdersCreationConfigImpl(
-            dslInfo.testedVariant as ConsumableComponentDslInfo,
+            dslInfo.testedVariantDslInfo,
             internalServices
         )
     }

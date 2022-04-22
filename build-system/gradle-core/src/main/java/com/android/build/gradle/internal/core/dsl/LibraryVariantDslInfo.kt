@@ -16,19 +16,21 @@
 
 package com.android.build.gradle.internal.core.dsl
 
+import com.android.build.gradle.internal.core.MergedAarMetadata
+
 /**
  * Represents the dsl info for a library variant, initialized from the DSL object model
  * (extension, default config, build type, flavors)
  *
  * This class allows querying for the values set via the DSL model.
  *
- * Use [VariantDslInfoBuilder] to instantiate.
+ * Use [DslInfoBuilder] to instantiate.
  *
  * @see [com.android.build.gradle.internal.component.LibraryCreationConfig]
  */
-interface LibraryVariantDslInfo: VariantDslInfo, AarProducingComponentDslInfo, PublishableVariantDslInfo, TestedComponentDslInfo {
+interface LibraryVariantDslInfo: VariantDslInfo, AarProducingComponentDslInfo, PublishableComponentDslInfo, TestedVariantDslInfo {
+    val aarMetadata: MergedAarMetadata
 
     // TODO: Clean this up
     val isDebuggable: Boolean
-    val isProfileable: Boolean
 }

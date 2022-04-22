@@ -45,10 +45,9 @@ import com.android.build.gradle.internal.component.features.InstrumentationCreat
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.ProductFlavor
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
-import com.android.build.gradle.internal.core.dsl.PublishableVariantDslInfo
+import com.android.build.gradle.internal.core.dsl.PublishableComponentDslInfo
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dependency.getProvidedClasspath
@@ -84,7 +83,6 @@ import org.gradle.api.attributes.DocsType
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -324,7 +322,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                     outputSpec.publishedConfigTypes.any { it.isPublicationConfig }
 
                 if (isPublicationConfigs) {
-                    val components = (dslInfo as PublishableVariantDslInfo).publishInfo!!.components
+                    val components = (dslInfo as PublishableComponentDslInfo).publishInfo!!.components
                     for(component in components) {
                         publishIntermediateArtifact(
                                 artifactProvider,
@@ -368,13 +366,12 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val isAndroidTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
 
-    override val modelV1LegacySupport =
-        ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)
+    override val modelV1LegacySupport = ModelV1LegacySupportImpl(dslInfo)
 
     override val oldVariantApiLegacySupport: OldVariantApiLegacySupport? by lazy {
         OldVariantApiLegacySupportImpl(
             this,
-            dslInfo as VariantDslInfoImpl,
+            dslInfo,
             variantData!!
         )
     }

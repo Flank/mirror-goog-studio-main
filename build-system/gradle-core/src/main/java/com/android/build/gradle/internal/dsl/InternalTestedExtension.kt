@@ -21,6 +21,11 @@ import com.android.build.api.dsl.TestedExtension
 import org.gradle.api.Action
 
 /** See [InternalCommonExtension] */
-interface InternalTestedExtension: TestedExtension {
+interface InternalTestedExtension<BuildFeaturesT : com.android.build.api.dsl.BuildFeatures,
+        BuildTypeT : com.android.build.api.dsl.BuildType,
+        DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor>
+    : TestedExtension,
+    InternalCommonExtension<BuildFeaturesT, BuildTypeT, DefaultConfigT, ProductFlavorT> {
     fun testFixtures(action: Action<TestFixtures>)
 }

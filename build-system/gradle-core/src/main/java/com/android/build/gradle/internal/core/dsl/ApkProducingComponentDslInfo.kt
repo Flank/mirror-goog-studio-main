@@ -27,8 +27,6 @@ interface ApkProducingComponentDslInfo: ConsumableComponentDslInfo {
 
     val isDebuggable: Boolean
 
-    val isProfileable: Boolean
-
     /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
     val signingConfig: SigningConfig?
 

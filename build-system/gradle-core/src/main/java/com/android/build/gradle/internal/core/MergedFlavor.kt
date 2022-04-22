@@ -20,7 +20,7 @@ import com.android.build.api.component.impl.ENABLE_LEGACY_API
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.dsl.VectorDrawablesOptions
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultVectorDrawablesOptions
@@ -36,7 +36,7 @@ import org.gradle.api.provider.Property
 class MergedFlavor(
     name: String,
     private val _applicationId: Property<String>,
-    private val dslServices: DslServices
+    private val services: VariantServices
 ) : AbstractProductFlavor(name), InternalBaseVariant.MergedFlavor {
 
     override var dimension: String? = null
@@ -48,8 +48,8 @@ class MergedFlavor(
     override var testHandleProfiling: Boolean? = null
     override var testFunctionalTest: Boolean? = null
     override var wearAppUnbundled: Boolean? = null
-    protected override var _versionCode: Int? = null
-    protected override var _versionName: String? = null
+    override var _versionCode: Int? = null
+    override var _versionName: String? = null
     override val resourceConfigurations: MutableSet<String> = mutableSetOf()
 
     // in the merged flavor scenario which is still accessible from the old variant API, we need
@@ -57,7 +57,7 @@ class MergedFlavor(
     override var applicationId: String?
         get() {
             // consider throwing an exception instead, as this is not reliable.
-            dslServices.deprecationReporter
+            services.deprecationReporter
                 .reportDeprecatedApi(
                     "Variant.getApplicationId()",
                     "MergedFlavor.getApplicationId()",
@@ -65,8 +65,8 @@ class MergedFlavor(
                     DeprecationReporter.DeprecationTarget.USE_PROPERTIES
                 )
 
-            if (!dslServices.projectOptions.get(BooleanOption.ENABLE_LEGACY_API)) {
-                dslServices.issueReporter
+            if (!services.projectOptions.get(BooleanOption.ENABLE_LEGACY_API)) {
+                services.issueReporter
                     .reportError(
                         IssueReporter.Type.GENERIC,
                         RuntimeException(
@@ -99,8 +99,8 @@ class MergedFlavor(
          * @return a new MergedFlavor instance that is a clone of the flavor.
          */
         @JvmStatic
-        fun clone(productFlavor: ProductFlavor, applicationId: Property<String>, dslServices: DslServices): MergedFlavor {
-            val mergedFlavor = MergedFlavor(productFlavor.name, applicationId, dslServices)
+        fun clone(productFlavor: ProductFlavor, applicationId: Property<String>, services: VariantServices): MergedFlavor {
+            val mergedFlavor = MergedFlavor(productFlavor.name, applicationId, services)
             mergedFlavor._initWith(productFlavor)
             return mergedFlavor
         }
@@ -123,9 +123,9 @@ class MergedFlavor(
             lowestPriority: ProductFlavor,
             flavors: List<ProductFlavor>,
             applicationId: Property<String>,
-            dslServices: DslServices
+            services: VariantServices
         ): MergedFlavor {
-            val mergedFlavor = clone(lowestPriority, applicationId, dslServices)
+            val mergedFlavor = clone(lowestPriority, applicationId, services)
             for (flavor in Lists.reverse(flavors)) {
                 mergedFlavor.mergeWithHigherPriorityFlavor(flavor)
             }
@@ -202,6 +202,6 @@ class MergedFlavor(
                 |    }
                 |}""".trimMargin()
 
-        dslServices.issueReporter.reportError(IssueReporter.Type.GENERIC, message)
+        services.issueReporter.reportError(IssueReporter.Type.GENERIC, message)
     }
 }

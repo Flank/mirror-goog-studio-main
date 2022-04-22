@@ -18,16 +18,15 @@ package com.android.build.gradle.internal.variant
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.ComponentType
 import com.android.builder.core.ComponentTypeImpl
+import com.android.utils.appendCapitalized
 
 /**
  * Abstract Class responsible for handling the DSL containers of flavors/build types and processing
@@ -174,6 +173,24 @@ abstract class AbstractVariantInputManager<
     }
 
     companion object {
+        /**
+         * Turns a string into a valid source set name for the given [ComponentType], e.g.
+         * "fooBarUnitTest" becomes "testFooBar".
+         */
+        private fun computeSourceSetName(
+            baseName: String,
+            componentType: ComponentType
+        ): String {
+            var name = baseName
+            if (name.endsWith(componentType.suffix)) {
+                name = name.substring(0, name.length - componentType.suffix.length)
+            }
+            if (!componentType.prefix.isEmpty()) {
+                name = componentType.prefix.appendCapitalized(name)
+            }
+            return name
+        }
+
         private fun checkName(name: String, displayName: String) {
             checkPrefix(
                 name,

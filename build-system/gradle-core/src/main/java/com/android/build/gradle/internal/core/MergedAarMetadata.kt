@@ -40,4 +40,10 @@ class MergedAarMetadata : MergedOptions<AarMetadata> {
         option.minCompileSdkExtension?.let { minCompileSdkExtension = it }
         option.minAgpVersion?.let { minAgpVersion = it }
     }
+
+    fun append(option: MergedAarMetadata) {
+        option.minCompileSdk?.let { minCompileSdk = it }
+        option.minCompileSdkExtension?.let { minCompileSdkExtension = it }
+        option.minAgpVersion?.let { minAgpVersion = it }
+    }
 }

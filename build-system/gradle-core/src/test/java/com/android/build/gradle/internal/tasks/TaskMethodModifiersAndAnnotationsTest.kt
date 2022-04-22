@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
@@ -183,7 +183,7 @@ class TaskMethodModifiersAndAnnotationsTest {
 
     @Test
     fun checkVariantConfigurationIsNotAField() {
-        Truth.assertThat(findTaskFieldsOfType(VariantDslInfo::class.java)).isEmpty()
+        Truth.assertThat(findTaskFieldsOfType(ComponentDslInfo::class.java)).isEmpty()
     }
 
     @Test

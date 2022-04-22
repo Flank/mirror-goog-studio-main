@@ -125,9 +125,6 @@ open class LibraryVariantImpl @Inject constructor(
     override val debuggable: Boolean
         get() = dslInfo.isDebuggable
 
-    override val profileable: Boolean
-        get() = dslInfo.isProfileable
-
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = delegate.isCoreLibraryDesugaringEnabled
 
@@ -151,7 +148,7 @@ open class LibraryVariantImpl @Inject constructor(
     override val resourcesShrink: Boolean
         // need to return shrink flag for PostProcessing as this API has the flag for libraries
         // return false otherwise
-        get() = dslInfo.getPostProcessingOptions()
+        get() = dslInfo.postProcessingOptions
             .let { it.hasPostProcessingConfiguration() && it.resourcesShrinkingEnabled() }
 
     override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()

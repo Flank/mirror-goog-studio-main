@@ -185,8 +185,6 @@ open class TestVariantImpl @Inject constructor(
     override val shouldPackageDesugarLibDex: Boolean = delegate.isCoreLibraryDesugaringEnabled(this)
     override val debuggable: Boolean
         get() = delegate.isDebuggable
-    override val profileable: Boolean
-        get() = delegate.isProfileable
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = delegate.isCoreLibraryDesugaringEnabled
 
@@ -206,12 +204,6 @@ open class TestVariantImpl @Inject constructor(
 
     override val useJacocoTransformInstrumentation: Boolean
         get() = false
-
-    // ---------------------------------------------------------------------------------------------
-    // DO NOT USE, only present for old variant API.
-    // ---------------------------------------------------------------------------------------------
-    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        dslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

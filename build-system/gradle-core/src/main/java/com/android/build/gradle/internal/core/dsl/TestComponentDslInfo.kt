@@ -28,6 +28,5 @@ interface TestComponentDslInfo: ComponentDslInfo {
      *
      * @see ComponentType.isTestComponent
      */
-    // TODO: remove nullability when implementation is split up
-    val testedVariant: TestedComponentDslInfo?
+    val testedVariantDslInfo: TestedVariantDslInfo
 }

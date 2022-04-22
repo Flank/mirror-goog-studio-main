@@ -20,7 +20,7 @@ import com.android.AndroidProjectTypes
 import com.android.build.api.variant.VariantFilter
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder
+import com.android.build.gradle.internal.core.dsl.impl.computeName
 import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -492,7 +492,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         Mockito.`when`(globalTaskCreationConfig.services).thenReturn(dslServices)
 
         for (variant in variantComputer.computeVariants()) {
-            val name = VariantDslInfoBuilder.computeName(variant, componentType)
+            val name = computeName(variant, componentType)
 
             val flavors = variant.productFlavors.map {
                 (given.productFlavors[it.second] ?: error("Cant find flavor ${it.second}")).productFlavor

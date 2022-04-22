@@ -27,8 +27,7 @@ import org.gradle.api.Action
 /** See [InternalCommonExtension] */
 interface InternalLibraryExtension :
     LibraryExtension,
-    InternalTestedExtension,
-    InternalCommonExtension<
+    InternalTestedExtension<
             LibraryBuildFeatures,
             LibraryBuildType,
             LibraryDefaultConfig,
