@@ -321,6 +321,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 PermissionDetector.MISSING_PERMISSION,
                 PermissionErrorDetector.KNOWN_PERMISSION_ERROR,
                 PermissionErrorDetector.RESERVED_SYSTEM_PERMISSION,
+                PermissionErrorDetector.SYSTEM_PERMISSION_TYPO,
                 PluralsDetector.EXTRA,
                 PluralsDetector.IMPLIED_QUANTITY,
                 PluralsDetector.MISSING,
