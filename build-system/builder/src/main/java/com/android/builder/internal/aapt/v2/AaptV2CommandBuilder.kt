@@ -55,7 +55,7 @@ fun makeCompileCommand(request: CompileResourceRequest): ImmutableList<String> {
 
     if (!request.isPngCrunching) {
         // Only pass --no-crunch for png files and not for 9-patch files as that breaks them.
-        val lowerName = request.inputFile.path.toLowerCase(Locale.US)
+        val lowerName = request.inputFile.path.lowercase(Locale.US)
         if (lowerName.endsWith(SdkConstants.DOT_PNG)
                 && !lowerName.endsWith(SdkConstants.DOT_9PNG)) {
             parameters.add("--no-crunch")
@@ -110,7 +110,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     if (config.mergeOnly) {
         builder.add("--merge-only")
     } else {
-        builder.add("-I", Preconditions.checkNotNull(config.androidJarPath))
+        builder.add("-I", config.androidJarPath!!)
     }
 
     config.imports.forEach { file -> builder.add("-I", file.absolutePath) }
@@ -140,7 +140,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
                 for (dir in config.resourceDirs) {
                     FileOutputStream(resourceListFile).use { fos ->
                         PrintWriter(fos).use { pw ->
-                            dir.listFiles()
+                            dir.listFiles()!!
                                 .filter { it.isFile }
                                 .sortedBy { it.path }
                                 .forEach { pw.print(it.absolutePath + " ") }
@@ -150,7 +150,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
                 builder.add("-R", "@" + resourceListFile.absolutePath)
             } else {
                 for (dir in config.resourceDirs) {
-                    dir.listFiles()
+                    dir.listFiles()!!
                         .filter { it.isFile }
                         .sortedBy { it.path }
                         .forEach { builder.add("-R", it.absolutePath) }
@@ -260,7 +260,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         ImmutableList.of()
 
     if ((preferredDensity != null || densityResSplits.iterator().hasNext())
-            && !densityResourceConfigs.isEmpty()) {
+            && densityResourceConfigs.isNotEmpty()) {
         throw AaptException(
                 String.format(
                         "When using splits in tools 21 and above, "
@@ -281,7 +281,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
 
     // if we are in split mode and resConfigs has been specified, we need to add all the
     // non density based splits back to the resConfigs otherwise they will be filtered out.
-    if (!otherResourceConfigs.isEmpty() && config.splits != null) {
+    if (otherResourceConfigs.isNotEmpty() && config.splits != null) {
         val nonDensitySplits = AaptUtils.getNonDensityResConfigs(config.splits)
         otherResourceConfigs.addAll(Lists.newArrayList(nonDensitySplits))
     }
@@ -290,7 +290,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         preferredDensity = Iterables.getOnlyElement(densityResourceConfigs)
     }
 
-    if (!otherResourceConfigs.isEmpty()) {
+    if (otherResourceConfigs.isNotEmpty()) {
         val joiner = Joiner.on(',')
         builder.add("-c", joiner.join(otherResourceConfigs))
     }

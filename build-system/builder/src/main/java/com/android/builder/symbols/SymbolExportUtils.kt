@@ -123,21 +123,21 @@ internal fun processLibraryMainSymbolTable(
 
 fun writeSymbolListWithPackageName(table: SymbolTable, writer: Writer) {
     writer.write(table.tablePackage)
-    writer.write('\n'.toInt())
+    writer.write('\n'.code)
 
     for (resourceType in ResourceType.values()) {
         val symbols = table.getSymbolByResourceType(resourceType)
         for (symbol in symbols) {
             writer.write(resourceType.getName())
-            writer.write(' '.toInt())
+            writer.write(' '.code)
             writer.write(symbol.canonicalName)
             if (symbol is Symbol.StyleableSymbol) {
                 for (child in symbol.children) {
-                    writer.write(' '.toInt())
+                    writer.write(' '.code)
                     writer.write(child)
                 }
             }
-            writer.write('\n'.toInt())
+            writer.write('\n'.code)
         }
     }
 }
@@ -155,9 +155,9 @@ fun writePublicTxtFile(table: SymbolTable, writer: Writer) {
             table.getSymbolByResourceType(resType)
         for (s in symbols) {
             writer.write(s.resourceType.getName())
-            writer.write(' '.toInt())
+            writer.write(' '.code)
             writer.write(s.canonicalName)
-            writer.write('\n'.toInt())
+            writer.write('\n'.code)
         }
     }
 }

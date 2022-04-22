@@ -16,7 +16,6 @@
 
 package com.android.builder.signing
 
-import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig
 import com.google.common.base.MoreObjects
 import java.io.File
@@ -122,8 +121,11 @@ abstract class DefaultSigningConfig constructor(private val mName: String) : Sig
         if (storeType != that.storeType) {
             return false
         }
-        if (isV1SigningEnabled != that.isV1SigningEnabled) return false
-        if (isV2SigningEnabled != that.isV2SigningEnabled) return false
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        run {
+            if (isV1SigningEnabled != that.isV1SigningEnabled) return false
+            if (isV2SigningEnabled != that.isV2SigningEnabled) return false
+        }
         if (enableV1Signing != that.enableV1Signing) return false
         if (enableV2Signing != that.enableV2Signing) return false
         if (enableV3Signing != that.enableV3Signing) return false
@@ -139,8 +141,11 @@ abstract class DefaultSigningConfig constructor(private val mName: String) : Sig
         result = 31 * result + (keyAlias?.hashCode() ?: 0)
         result = 31 * result + (keyPassword?.hashCode() ?: 0)
         result = 31 * result + (storeType?.hashCode() ?: 0)
-        result = 31 * result + (if (isV1SigningEnabled) 17 else 0)
-        result = 31 * result + (if (isV2SigningEnabled) 17 else 0)
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        run {
+            result = 31 * result + (if (isV1SigningEnabled) 17 else 0)
+            result = 31 * result + (if (isV2SigningEnabled) 17 else 0)
+        }
         result = 31 * result + (enableV1Signing?.hashCode() ?: 0)
         result = 31 * result + (enableV2Signing?.hashCode() ?: 0)
         result = 31 * result + (enableV3Signing?.hashCode() ?: 0)
@@ -149,6 +154,7 @@ abstract class DefaultSigningConfig constructor(private val mName: String) : Sig
     }
 
     override fun toString(): String {
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
         return MoreObjects.toStringHelper(this)
             .add("storeFile", storeFile?.absolutePath)
             .add("storePassword", storePassword)
