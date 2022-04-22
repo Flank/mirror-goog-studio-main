@@ -18,14 +18,15 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.repository.Revision
-import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
 
 class SdkParsingUtilsTest {
 
@@ -61,6 +62,26 @@ class SdkParsingUtilsTest {
             <localPackage path="build-tools;28.0.3" obsolete="false">
                 <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns3:genericDetailsType"/>
                 <revision><major>28</major><minor>0</minor><micro>3</micro></revision>
+                <display-name>Android SDK Build-Tools 28.0.3</display-name>
+                <uses-license ref="android-sdk-license"/>
+            </localPackage>
+        </ns2:repository>
+    """.trimIndent()
+
+    private val BUILD_TOOL_FUTURE_88_0_0_XML = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ns2:repository
+            xmlns:ns2="http://schemas.android.com/repository/android/common/01"
+            xmlns:ns3="http://schemas.android.com/repository/android/generic/01"
+            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/01"
+            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/01"
+            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+
+            <license id="android-sdk-license" type="text">Very valid license</license>
+            <localPackage path="build-tools;88.0.0" obsolete="false">
+                <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns3:genericDetailsType"/>
+                <new-tag>new-value</new-tag>
+                <revision><major>88</major><minor>0</minor><micro>0</micro></revision>
                 <display-name>Android SDK Build-Tools 28.0.3</display-name>
                 <uses-license ref="android-sdk-license"/>
             </localPackage>
@@ -197,6 +218,41 @@ class SdkParsingUtilsTest {
 
         val buildTool = buildBuildTools(sdkDir, revision)
         assertThat(buildTool).isNull()
+    }
+
+    private fun verifyErrorOutput(
+        f: () -> Unit,
+        verifyOutput: (err: ByteArrayOutputStream) -> Unit
+    ) {
+        val originalErr = System.err;
+        val errContent = ByteArrayOutputStream()
+        try {
+            System.setErr(PrintStream(errContent))
+            f.invoke()
+        } finally {
+            System.setErr(originalErr)
+        }
+        verifyOutput(errContent)
+    }
+
+    @Test
+    fun buildBuildTools_validationFutureFormatWarnings() {
+        val sdkDir = testFolder.newFolder("sdk")
+        val buildToolDir = testFolder.newFolder("sdk", "build-tools", "88.0.0")
+        val revision = Revision.parseRevision("88.0.0")
+        populateBuildToolDirectory(
+            buildToolDir, revision, setOf(BuildToolInfo.PathId.CORE_LAMBDA_STUBS)
+        )
+
+        val packageXml = buildToolDir.resolve("package.xml")
+        packageXml.createNewFile()
+        packageXml.writeText(BUILD_TOOL_FUTURE_88_0_0_XML, Charsets.UTF_8)
+
+        verifyErrorOutput({ buildBuildTools(sdkDir, revision) }
+        ) { errContent: ByteArrayOutputStream ->
+            assertThat(errContent.toString("UTF-8"))
+                .contains("Warning: SDK processing. package.xml parsing problem. unexpected element (uri:")
+        }
     }
 
     @Test

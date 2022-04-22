@@ -319,7 +319,8 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                                     CancellableFileIo.newInputStream(packageXml),
                                     mRepoManager.getSchemaModules(),
                                     false,
-                                    progress);
+                                    progress,
+                                    packageXml.getFileName().toString());
         } catch (IOException e) {
             // This shouldn't ever happen
             progress.logError(String.format("XML file %s doesn't exist", packageXml), e);

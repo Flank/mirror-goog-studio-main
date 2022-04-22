@@ -266,7 +266,8 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                                     repoStream,
                                     source.getPermittedModules(),
                                     true,
-                                    unmarshalProgress);
+                                    unmarshalProgress,
+                                    source.getUrl());
         } catch (JAXBException e) {
             errors.add(e.toString());
         }

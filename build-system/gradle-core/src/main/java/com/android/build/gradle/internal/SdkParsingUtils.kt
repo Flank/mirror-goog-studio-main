@@ -33,7 +33,6 @@ import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.meta.DetailsTypes
 import com.android.sdklib.repository.targets.PlatformTarget
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
 import java.io.File
 import java.io.FileInputStream
@@ -67,14 +66,29 @@ fun parsePackage(packageXml: File): LocalPackage? {
         return null
     }
 
-    val progress = ConsoleProgressIndicator()
+    val progress = object : ConsoleProgressIndicator() {
+        val prefix = "SDK processing. "
+        override fun logWarning(s: String, e: Throwable?) {
+            super.logWarning(prefix + s, e)
+        }
+
+        override fun logError(s: String, e: Throwable?) {
+            super.logError(prefix + s, e)
+        }
+
+        override fun logInfo(s: String) {
+            super.logInfo(prefix + s)
+        }
+    }
+
     lateinit var repo: Repository
     try {
         val parsedObject = SchemaModuleUtil.unmarshal(
             FileInputStream(packageXml),
             AndroidSdkHandler.getAllModules(),
             false,
-            progress) ?: return null
+            progress,
+            packageXml.name) ?: return null
         repo = parsedObject as Repository
     } catch (e: IOException) {
         // This shouldn't ever happen

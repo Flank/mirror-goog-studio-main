@@ -358,7 +358,8 @@ public class LegacyLocalRepoTest extends TestCase {
                                 CancellableFileIo.newInputStream(root.resolve(packagePath)),
                                 extensions,
                                 true,
-                                progress);
+                                progress,
+                                packagePath);
         if (!allowWarnings) {
             progress.assertNoErrorsOrWarnings();
         }
