@@ -23,6 +23,12 @@ class ServiceManager {
     private val packageManager = PackageManager()
     private val log = java.util.Collections.synchronizedList(mutableListOf<List<String>>())
 
+    // Returns a list of all service request received.
+    // Each entry is a list of all parameters for that request.
+    fun getLogs() : List<ServiceRequest> {
+        return Collections.unmodifiableList(log)
+    }
+
     fun processCommand(args: List<String>, output: ServiceOutput) {
         // We log received commands to allow tests to inspect call history
         log.add(Collections.unmodifiableList(args))
@@ -46,3 +52,5 @@ class ServiceManager {
         return null
     }
 }
+
+typealias ServiceRequest = List<String>
