@@ -147,7 +147,7 @@ internal class PMClient(private val service : AdbDeviceServices, private val dev
         // Error message vary from properly formatted output to Java StackTrace
         private val createSessionPattern = Pattern.compile("""Success: .*\[(\d*)\].*""")
         internal fun parseSessionID(output: String): String {
-            val matcher: Matcher = createSessionPattern.matcher(output)
+            val matcher: Matcher = createSessionPattern.matcher(output.trim())
             if (matcher.matches()) {
                 return matcher.group(1)
             } else {
