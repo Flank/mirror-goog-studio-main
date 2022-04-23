@@ -72,7 +72,7 @@ class TestInstallOutput {
     fun testCommitResult() {
         // Get the Success message
         val sessionID = "1741914381"
-        var id = parseSessionID("Success: created install session [$sessionID]")
+        var id = parseSessionID("Success: created install session [$sessionID]\n")
         Assert.assertEquals(sessionID, id)
 
         // In case of recognized failure, the error message captures it.

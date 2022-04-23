@@ -19,8 +19,7 @@ iml_module(
 kotlin_library(
     name = "adblib.tools",
     srcs = glob([
-        "src/**/*.kt",
-        "src/**/*.java",
+        "src/com/android/adblib/tools/*.kt",
     ]),
     friends = [
         "//tools/base/adblib:adblib",
@@ -31,6 +30,20 @@ kotlin_library(
         "//tools/base/adblib",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
+)
+
+kotlin_library(
+    name = "adblib.tools.cli",
+    srcs = glob([
+        "src/com/android/adblib/tools/cli/*.kt",
+    ]),
+    friends = [
+        ":adblib.tools",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":adblib.tools",
     ],
 )
 
