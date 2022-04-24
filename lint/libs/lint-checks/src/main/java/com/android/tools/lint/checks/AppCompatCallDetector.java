@@ -129,8 +129,10 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
             // such as PreferenceActivity (see b.android.com/58512)
             UClass cls = UastUtils.getParentOfType(node, UClass.class, true);
             return cls != null
-                    && evaluator.extendsClass(
-                            cls, "android.support.v7.app.ActionBarActivity", false);
+                    && (evaluator.extendsClass(
+                                    cls, "androidx.appcompat.app.AppCompatActivity", false)
+                            || evaluator.extendsClass(
+                                    cls, "android.support.v7.app.ActionBarActivity", false));
         }
         return false;
     }

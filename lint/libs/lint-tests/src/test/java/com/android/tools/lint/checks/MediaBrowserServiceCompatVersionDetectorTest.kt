@@ -17,9 +17,14 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.infrastructure.TestFile
+import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Detector
 
 class MediaBrowserServiceCompatVersionDetectorTest : AbstractCheckTest() {
+    override fun lint(): TestLintTask {
+        // This only applies to the old support library, not AndroidX
+        return super.lint().skipTestModes(ANDROIDX_TEST_MODE)
+    }
 
     private val mediaBrowserCompat: TestFile =
         java(

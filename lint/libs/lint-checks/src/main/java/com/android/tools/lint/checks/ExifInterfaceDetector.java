@@ -113,9 +113,9 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
         PsiClass supportClass = evaluator.findClass("android.support.media.ExifInterface");
         return "Avoid using `android.media.ExifInterface`; use `"
                 + (supportClass != null
-                        ? "android.support.media.ExifInterface` from the support library"
-                        : "androidx.media.ExifInterface`")
-                + " instead";
+                        ? "android.support.media.ExifInterface"
+                        : "androidx.exifinterface.media.ExifInterface")
+                + "` instead";
     }
 
     @Override

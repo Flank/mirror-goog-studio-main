@@ -36,13 +36,13 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
     public void testAndroidX() {
         String expected =
                 ""
-                        + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use androidx.media.ExifInterface instead [ExifInterface]\n"
+                        + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]\n"
                         + "import android.media.ExifInterface;\n"
                         + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use androidx.media.ExifInterface instead [ExifInterface]\n"
+                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]\n"
                         + "        android.media.ExifInterface exif2 =\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/ExifUsage.java:14: Warning: Avoid using android.media.ExifInterface; use androidx.media.ExifInterface instead [ExifInterface]\n"
+                        + "src/test/pkg/ExifUsage.java:14: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]\n"
                         + "            new android.media.ExifInterface(path);\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings";
@@ -75,13 +75,13 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
     public void testAndroidSupportLibrary() {
         String expected =
                 ""
-                        + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface instead [ExifInterface]\n"
                         + "import android.media.ExifInterface;\n"
                         + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface instead [ExifInterface]\n"
                         + "        android.media.ExifInterface exif2 =\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/ExifUsage.java:14: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "src/test/pkg/ExifUsage.java:14: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface instead [ExifInterface]\n"
                         + "            new android.media.ExifInterface(path);\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings";

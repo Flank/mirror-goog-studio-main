@@ -21,7 +21,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 public class AppCompatCallDetectorTest extends AbstractCheckTest {
-    public void testArguments() {
+    public void testArgumentsSupportV4() {
         String expected =
                 ""
                         + "src/test/pkg/AppCompatTest.java:5: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
@@ -51,6 +51,73 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                         // appcompat jar
                         mActionBarActivity,
                         mActionMode)
+                .skipTestModes(ANDROIDX_TEST_MODE) // tested separately in testArgumentsAndroidX
+                .run()
+                .expect(expected)
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/AppCompatTest.java line 4: Replace with getSupportActionBar():\n"
+                                + "@@ -5 +5\n"
+                                + "-         getActionBar();                                     // ERROR\n"
+                                + "+         getSupportActionBar();                                     // ERROR\n"
+                                + "Fix for src/test/pkg/AppCompatTest.java line 7: Replace with startSupportActionMode():\n"
+                                + "@@ -8 +8\n"
+                                + "-         startActionMode(null);                              // ERROR\n"
+                                + "+         startSupportActionMode(null);                              // ERROR\n"
+                                + "Fix for src/test/pkg/AppCompatTest.java line 10: Replace with supportRequestWindowFeature():\n"
+                                + "@@ -11 +11\n"
+                                + "-         requestWindowFeature(0);                            // ERROR\n"
+                                + "+         supportRequestWindowFeature(0);                            // ERROR\n"
+                                + "Fix for src/test/pkg/AppCompatTest.java line 13: Replace with setSupportProgressBarVisibility():\n"
+                                + "@@ -14 +14\n"
+                                + "-         setProgressBarVisibility(true);                     // ERROR\n"
+                                + "+         setSupportProgressBarVisibility(true);                     // ERROR\n"
+                                + "Fix for src/test/pkg/AppCompatTest.java line 14: Replace with setSupportProgressBarIndeterminate():\n"
+                                + "@@ -15 +15\n"
+                                + "-         setProgressBarIndeterminate(true);                  // ERROR\n"
+                                + "+         setSupportProgressBarIndeterminate(true);                  // ERROR\n"
+                                + "Fix for src/test/pkg/AppCompatTest.java line 15: Replace with setSupportProgressBarIndeterminateVisibility():\n"
+                                + "@@ -16 +16\n"
+                                + "-         setProgressBarIndeterminateVisibility(true);        // ERROR\n"
+                                + "+         setSupportProgressBarIndeterminateVisibility(true);        // ERROR\n");
+    }
+
+    public void testArgumentsAndroidX() {
+        // Like testArgumentsSupportV4, but for AndroidX libraries. We can't just
+        // rely on the normal ANDROIDX_TEST_MODE to do the mapping because here we're
+        // switching between ActionBarActivity and AppCompatActivity, which are not
+        // identical.
+
+        String expected =
+                ""
+                        + "src/test/pkg/AppCompatTest.java:5: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
+                        + "        getActionBar();                                     // ERROR\n"
+                        + "        ~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AppCompatTest.java:8: Warning: Should use startSupportActionMode instead of startActionMode name [AppCompatMethod]\n"
+                        + "        startActionMode(null);                              // ERROR\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AppCompatTest.java:11: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [AppCompatMethod]\n"
+                        + "        requestWindowFeature(0);                            // ERROR\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AppCompatTest.java:14: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [AppCompatMethod]\n"
+                        + "        setProgressBarVisibility(true);                     // ERROR\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AppCompatTest.java:15: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [AppCompatMethod]\n"
+                        + "        setProgressBarIndeterminate(true);                  // ERROR\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n"
+                        + "        setProgressBarIndeterminateVisibility(true);        // ERROR\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 6 warnings\n";
+        lint().files(
+                        mAppCompatJar,
+                        mAppCompatTest,
+                        mapTestFileToAndroidX(mIntermediateActivity),
+                        // Stubs just to be able to do type resolution without needing the full
+                        // appcompat jar
+                        mapTestFileToAndroidX(mActionBarActivity),
+                        mapTestFileToAndroidX(mActionMode))
+                .skipTestModes(ANDROIDX_TEST_MODE) // already an AndroidX test
                 .run()
                 .expect(expected)
                 .expectFixDiffs(
@@ -157,6 +224,14 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                             + "    public void setSupportProgressBarIndeterminate(boolean indeterminate) {\n"
                             + "    }\n"
                             + "}\n");
+
+    private TestFile mapTestFileToAndroidX(TestFile file) {
+        return java(
+                file.contents
+                        .replace("android.support.v7.app", "androidx.appcompat.app")
+                        .replace("android.support.v7.view", "androidx.appcompat.view")
+                        .replace("ActionBarActivity", "AppCompatActivity"));
+    }
 
     @SuppressWarnings("all") // Sample code
     private TestFile mActionMode =

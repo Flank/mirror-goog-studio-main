@@ -445,7 +445,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 COMMIT_NOW_ALLOWING_LOSS == methodName ||
                 COMMIT_NOW == methodName
             ) && isMethodOnFragmentClass(
-            context, call, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true
+            context, call, FRAGMENT_TRANSACTION_ANDROIDX_CLS, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true
         )
     }
 
@@ -455,7 +455,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     ): Boolean {
         val methodName = getMethodName(call)
         return SHOW == methodName && isMethodOnFragmentClass(
-            context, call, DIALOG_FRAGMENT, DIALOG_V4_FRAGMENT, true
+            context, call, DIALOG_ANDROIDX_FRAGMENT, DIALOG_FRAGMENT, DIALOG_V4_FRAGMENT, true
         )
     }
 
@@ -463,6 +463,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         call: UCallExpression,
         fragmentClass: String,
+        platformFragmentClass: String,
         v4FragmentClass: String,
         returnForUnresolved: Boolean
     ): Boolean {
@@ -472,6 +473,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val containingClass = method.containingClass
         val evaluator = context.evaluator
         return evaluator.extendsClass(containingClass, fragmentClass, false) ||
+            evaluator.extendsClass(containingClass, platformFragmentClass, false) ||
             evaluator.extendsClass(containingClass, v4FragmentClass, false)
     }
 
@@ -657,11 +659,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         if (BEGIN_TRANSACTION == methodName) {
             val containingClass = method.containingClass
             val evaluator = context.evaluator
-            if (evaluator.extendsClass(
-                    containingClass,
-                    FRAGMENT_MANAGER_CLS,
-                    false
-                ) || evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
+            if (evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_ANDROIDX_CLS, false) ||
+                evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_CLS, false) ||
+                evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
             ) {
                 return true
             }
@@ -782,10 +782,13 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val VELOCITY_TRACKER_CLS = "android.view.VelocityTracker"
         private const val DIALOG_FRAGMENT = "android.app.DialogFragment"
         private const val DIALOG_V4_FRAGMENT = "android.support.v4.app.DialogFragment"
+        private const val DIALOG_ANDROIDX_FRAGMENT = "androidx.fragment.app.DialogFragment"
         private const val FRAGMENT_MANAGER_CLS = "android.app.FragmentManager"
         private const val FRAGMENT_MANAGER_V4_CLS = "android.support.v4.app.FragmentManager"
+        private const val FRAGMENT_MANAGER_ANDROIDX_CLS = "androidx.fragment.app.FragmentManager"
         private const val FRAGMENT_TRANSACTION_CLS = "android.app.FragmentTransaction"
         private const val FRAGMENT_TRANSACTION_V4_CLS = "android.support.v4.app.FragmentTransaction"
+        private const val FRAGMENT_TRANSACTION_ANDROIDX_CLS = "androidx.fragment.app.FragmentTransaction"
         private const val VALUE_ANIMATOR_CLS = "android.animation.ValueAnimator"
         private const val OBJECT_ANIMATOR_CLS = "android.animation.ObjectAnimator"
         private const val ANIMATOR_SET_CLS = "android.animation.AnimatorSet"

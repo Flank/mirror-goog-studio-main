@@ -3935,6 +3935,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .allowCompilationErrors(true)
                 .allowSystemErrors(false)
                 .checkMessage(this::checkReportedError)
+                // the AndroidX test mode does not rewrite bytecode, and here we have
+                // the support library fragment stubs as bytecode
+                .skipTestModes(ANDROIDX_TEST_MODE)
                 .run()
                 .expect(expected);
     }
@@ -7833,6 +7836,95 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "    cursor.use {\n"
                                 + "           ~~~\n"
                                 + "2 errors, 0 warnings");
+    }
+
+    public void testNestedSame() {
+        // Tests scenario where you have an outer annotation that is the same API level
+        // as the inner annotation.
+        lint().files(
+                        kotlin(
+                                        ""
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "fun test() {\n"
+                                                + "    val test = MyClass()    // ERROR 1\n"
+                                                + "    MyClass.staticMethod1() // ERROR 2\n"
+                                                + "    MyClass.staticMethod2() // ERROR 3\n"
+                                                + "    test.instanceMethod1()  // ERROR 4\n"
+                                                + "    test.instanceMethod2()  // ERROR 5\n"
+                                                + "}\n"
+                                                + "\n"
+                                                + "@androidx.annotation.RequiresApi(32)\n"
+                                                + "class MyClass {\n"
+                                                + "    fun instanceMethod2() {}\n"
+                                                + "    @androidx.annotation.RequiresApi(32)\n"
+                                                + "    fun instanceMethod1() {\n"
+                                                + "    }\n"
+                                                + "\n"
+                                                + "    companion object {\n"
+                                                + "        fun staticMethod1() {}\n"
+                                                + "        @androidx.annotation.RequiresApi(32)\n"
+                                                + "        fun staticMethod2() {\n"
+                                                + "        }\n"
+                                                + "    }\n"
+                                                + "}\n")
+                                .indented(),
+                        java(""
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "public class Test {\n"
+                                        + "    public void test() {\n"
+                                        + "        MyClass test = new MyClass();   // ERROR 6\n"
+                                        + "        MyClass.staticMethod1();        // ERROR 7\n"
+                                        + "        MyClass.staticMethod2();        // ERROR 8\n"
+                                        + "        test.instanceMethod1();         // ERROR 9\n"
+                                        + "        test.instanceMethod2();         // ERROR 10\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(32)\n"
+                                        + "    public static class MyClass {\n"
+                                        + "        public void instanceMethod2() { }\n"
+                                        + "        public static void staticMethod1() { }\n"
+                                        + "        @RequiresApi(32) public void instanceMethod1() { }\n"
+                                        + "        @RequiresApi(32) public static void staticMethod2() { }\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented(),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/MyClass.kt:4: Error: Call requires API level 32 (current min is 1): MyClass [NewApi]\n"
+                                + "    val test = MyClass()    // ERROR 1\n"
+                                + "               ~~~~~~~~~\n"
+                                + "src/test/pkg/MyClass.kt:5: Error: Call requires API level 32 (current min is 1): staticMethod1 [NewApi]\n"
+                                + "    MyClass.staticMethod1() // ERROR 2\n"
+                                + "            ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MyClass.kt:6: Error: Call requires API level 32 (current min is 1): staticMethod2 [NewApi]\n"
+                                + "    MyClass.staticMethod2() // ERROR 3\n"
+                                + "            ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MyClass.kt:7: Error: Call requires API level 32 (current min is 1): instanceMethod1 [NewApi]\n"
+                                + "    test.instanceMethod1()  // ERROR 4\n"
+                                + "         ~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MyClass.kt:8: Error: Call requires API level 32 (current min is 1): instanceMethod2 [NewApi]\n"
+                                + "    test.instanceMethod2()  // ERROR 5\n"
+                                + "         ~~~~~~~~~~~~~~~\n"
+                                + "src/Test.java:5: Error: Call requires API level 32 (current min is 1): MyClass [NewApi]\n"
+                                + "        MyClass test = new MyClass();   // ERROR 6\n"
+                                + "                       ~~~~~~~~~~~\n"
+                                + "src/Test.java:6: Error: Call requires API level 32 (current min is 1): staticMethod1 [NewApi]\n"
+                                + "        MyClass.staticMethod1();        // ERROR 7\n"
+                                + "                ~~~~~~~~~~~~~\n"
+                                + "src/Test.java:7: Error: Call requires API level 32 (current min is 1): staticMethod2 [NewApi]\n"
+                                + "        MyClass.staticMethod2();        // ERROR 8\n"
+                                + "                ~~~~~~~~~~~~~\n"
+                                + "src/Test.java:8: Error: Call requires API level 32 (current min is 1): instanceMethod1 [NewApi]\n"
+                                + "        test.instanceMethod1();         // ERROR 9\n"
+                                + "             ~~~~~~~~~~~~~~~\n"
+                                + "src/Test.java:9: Error: Call requires API level 32 (current min is 1): instanceMethod2 [NewApi]\n"
+                                + "        test.instanceMethod2();         // ERROR 10\n"
+                                + "             ~~~~~~~~~~~~~~~\n"
+                                + "10 errors, 0 warnings");
     }
 
     @Override
